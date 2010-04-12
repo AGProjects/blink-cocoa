@@ -1,0 +1,415 @@
+<html>
+<head>
+
+<style>
+
+body
+{
+  margin: 18px;
+}
+
+.sys {
+  background-color: #ACA892;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #ACA892;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+  color: white
+}
+
+.sysmsg {
+  padding: 8px 8px 8px 8px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox {
+  background-color: white;
+  color: #404040;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_sending {
+  background-color: white;
+  color: #404040;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_failed {
+  background-color: #eeaaaa;
+  color: #404040;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_dropped {
+  background-color: #aaaaaa;
+  color: #404040;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_deferred {
+  background-color: #EDF2FF;
+  color: #404040;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_old {
+  background-color: white;
+  color: #898989;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_old_failed {
+  background-color: #eeaaaa;
+  color: #898989;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.message {
+  padding: 0px 8px 8px 8px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+  margin-left: 30px;
+}
+
+.header {
+  padding: 0px 8px 8px 0px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.recipient {
+  color: #436294;
+  font-weight: bold;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  text-align: left;
+  padding-top: 4px;
+  padding-left: 8px;
+}
+
+.recipient_self {
+  color: #629443;
+  font-weight: bold;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  text-align: left;
+  padding-top: 4px;
+  padding-left: 8px;
+}
+
+.body {
+  width: 100%;
+}
+
+.photobox {
+  margin: 5px;
+  width: 32px;
+  float: left;
+  -webkit-border-radius: 3px;
+}
+
+.timestamp {
+  color: #436294;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  float: right; /*width: 150px;*/
+  text-align: right;
+}
+
+.systimestamp {
+  color: #436294;
+  padding-top: 8px;
+  padding-right: 8px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  float: right; /*width: 150px;*/
+  text-align: right;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+
+</style>
+
+<script type="text/javascript">
+
+var lastSender;
+var lastTimestamp;
+
+
+function clear()
+{
+  var placeholder;
+  placeholder = document.getElementById("placeholder"); 
+  placeholder.innerHTML = "";
+}
+
+function formatTimestamp(timestamp)
+{
+    return timestamp;
+
+    var ts = timestamp.split(" ");
+    var date = ts[0];
+    var time = ts[1];
+    
+    var ts = time.split(":");
+    
+    return ts[0]+":"+ts[1]+":"+ts[2];
+}
+
+
+function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
+{
+  var placeholder;
+  var content;
+  var idstr;
+  var message_class;
+  
+  timestamp = formatTimestamp(timestamp);
+  
+  placeholder = document.getElementById("placeholder");
+  
+  if (msgid  != null)
+  {
+    idstr = "id='"+msgid+"'";
+    box_class = "msgbox_sending";
+  }
+  else
+  {
+    idstr = "";
+    box_class = "msgbox";
+  }
+
+  if (state == "deferred") {
+      box_class = "msgbox_deferred";
+  } else if (state == "failed") {
+      box_class = "msgbox_failed"
+  } else if (state == "dropped") {
+      box_class = "msgbox_dropped"
+  }
+
+  if (content != null)
+      content.id = "";
+
+  placeholder.innerHTML += 
+    "<div>"+
+    "<img class='photobox' src='file:"+iconpath+"'/>"+
+    "<div class='"+box_class+"' "+idstr+">"+
+         "<div class='header'>"+
+             "<div class='"+(msgid != null ? "recipient_self" : "recipient")+"'>"+sender+"</div>"+
+             "<div class='timestamp'>"+timestamp+"</div>"+
+         "</div>"+
+         "<div class='message'>"+
+            "<span class='body'>"+text+"</span>"+
+        "</div>"+
+    "</div>"+
+    "</div>";
+  
+  lastSender = sender;
+  lastTimestamp = timestamp;
+  
+  scrollToBottom();
+}
+
+
+function fixupMessageId(oldid, msgid)
+{
+  var msg = document.getElementById(oldid);
+  if (msg != null)
+  {
+    msg.id = msgid;
+  }
+}
+
+
+function markDelivered(msgid)
+{
+  var msg = document.getElementById(msgid);
+  if (msg != null)
+  {
+    msg.className = "msgbox";
+  }
+}
+
+
+function markDeferred(msgid)
+{
+  var msg = document.getElementById(msgid);
+  if (msg != null)
+    msg.className = "msgbox_deferred";
+
+  msg = document.getElementById('t'+msgid)
+  if (msg != null)
+    msg.style.display = "block";
+  msg = document.getElementById('s'+msgid)
+  if (msg != null)
+    msg.style.display = "none";
+    msg.innerHTML = "(deferred) ";
+}
+
+
+function markFailed(msgid)
+{
+  var msg = document.getElementById(msgid);
+  if (msg != null)
+  {
+    msg.className = "msgbox_failed";
+  }
+}
+
+
+function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state)
+{
+  var placeholder;
+  var content;
+
+  timestamp = formatTimestamp(timestamp);
+  
+  placeholder = document.getElementById("placeholder");
+  
+  if (content != null)
+      content.id = "";
+
+  later_txt = '';
+
+  if (state == "deferred") {
+      _class = "msgbox_deferred";
+      later_txt = "(Deferred for later)&nbsp;";
+  } else if (state == "failed") {
+      _class = "msgbox_failed"
+  } else if (state == "dropped") {
+      _class = "msgbox_dropped"
+  } else {
+      _class = "msgbox_old"
+  }
+    
+  if (msgid  != null)
+  {
+    idstr = "id='"+msgid+"'";
+  }
+  else
+  {
+    idstr = "";
+  }
+
+  placeholder.innerHTML += 
+    "<div>"+
+    "<img class='photobox' src='file:"+iconpath+"'/>"+
+    "<div class='"+ _class + "' "+idstr+">"+
+         "<div class='header'>"+
+             "<div class='"+(isme ? "recipient_self" : "recipient")+"'>"+sender+"</div>"+
+             "<div class='timestamp'>" + later_txt + timestamp+"</div>"+
+         "</div>"+
+         "<div class='message'>"+
+            "<span class='body'>"+text+"</span>"+
+        "</div>"+
+    "</div>"+
+    "</div>";
+
+  lastSender = ">"+sender;
+  lastTimestamp = timestamp;
+  
+  scrollToBottom();
+}
+
+
+function addSysMessage(text, timestamp)
+{
+  var placeholder;
+  var content;
+  
+  timestamp = formatTimestamp(timestamp);
+  
+  placeholder = document.getElementById("placeholder");
+  content = document.getElementById("content");
+  
+  if (content != null)
+      content.id = "";
+
+  placeholder.innerHTML += 
+    "<div class='sys'>"+
+            "<div class='systimestamp'>"+timestamp+"</div>"+
+            "<div class='sysmsg'>"+
+                text+
+            "</div>"+
+    "</div>";
+
+  lastSender = "";
+  
+  scrollToBottom();
+  
+  return 0;
+}
+
+
+function scrollToBottom()
+{
+    window.scroll(0, document.body.scrollHeight);
+}
+
+</script>
+</head>
+<body>
+
+<div id="placeholder"></div>
+
+</body>
+</html>
