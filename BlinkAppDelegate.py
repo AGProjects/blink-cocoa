@@ -208,7 +208,7 @@ You might need to Replace it and re-enter your account information. Your old fil
         handler(notification)
 
     def _NH_SIPApplicationDidEnd(self, notification):
-        call_in_gui_thread(lambda: NSApp.replyToApplicationShouldTerminate_(NSTerminateNow))
+        call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
 
     def _NH_SIPSessionNewIncoming(self, notification):
         self.incomingSessions.add(notification.sender)

@@ -349,9 +349,9 @@ class AlertPanel(NSObject, object):
         data = notification.data
 
         if name in ("SIPSessionDidFail", "SIPSessionGotRejectProposal"):
-            call_in_gui_thread(lambda: self.cancelSession(session, data.reason))
+            call_in_gui_thread(self.cancelSession, session, data.reason)
         elif name == "SIPSessionDidEnd":
-            call_in_gui_thread(lambda: self.cancelSession(session, data.end_reason))
+            call_in_gui_thread(self.cancelSession, session, data.end_reason)
         elif name == "CFGSettingsObjectDidChange":
             if data.modified.has_key("answering_machine.enabled"):
                 if SIPSimpleSettings().answering_machine.enabled:

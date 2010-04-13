@@ -894,7 +894,7 @@ class SIPManager(object):
         return AccountManager().find_account(contact)
 
     def post_in_main(self, name, sender, data=None):
-        call_in_gui_thread(lambda:self.notification_center.post_notification(name, sender, data))
+        call_in_gui_thread(self.notification_center.post_notification, name, sender, data)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -932,31 +932,19 @@ class SIPManager(object):
     def _NH_DNSLookupDidFail(self, dnsobj, data):
         self.notification_center.remove_observer(self, sender=dnsobj)
 
-        name = ""
-
-        callback = None
-
         if self._stun_lookups.has_key(dnsobj):
-            name = self._stun_lookups[dnsobj].id.domain
-
+            message = u"DNS Lookup for %s failed: %s" % (self._stun_lookups[dnsobj].id.domain, data.error)
             del self._stun_lookups[dnsobj]
             # stun lookup errors can be ignored
         elif self._routes_lookups.has_key(dnsobj):
             requestor_session_controller = self._routes_lookups[dnsobj]
-            name = unicode(requestor_session_controller.target_uri)
-            
-            callback = lambda: requestor_session_controller.setRoutesFailed(msg)
-
-        if name:
-            msg= "DNS Lookup for %s failed: %s" % (name, data.error)
-        else:
-            msg= "DNS Lookup failed: %s" % (data.error)
-
-        BlinkLogger().log_error(msg)
-
-        if callback is not None:
-            call_in_gui_thread(callback)
+            message = u"DNS Lookup for %s failed: %s" % (unicode(requestor_session_controller.target_uri), data.error)
+            call_in_gui_thread(requestor_session_controller.setRoutesFailed, message)
             del self._routes_lookups[dnsobj]
+        else:
+            message = u"DNS Lookup failed: %s" % data.error
+
+        BlinkLogger().log_error(message)
 
     def _NH_DNSLookupDidSucceed(self, dnsobj, data):
         self.notification_center.remove_observer(self, sender=dnsobj)
@@ -978,9 +966,9 @@ class SIPManager(object):
             routes = data.result
             if not routes:
                 msg = "No routes found to SIP Proxy"
-                call_in_gui_thread(lambda:requestor_session_controller.setRoutesFailed(msg))
+                call_in_gui_thread(requestor_session_controller.setRoutesFailed, msg)
             else:
-                call_in_gui_thread(lambda:requestor_session_controller.setRoutesResolved(routes))
+                call_in_gui_thread(requestor_session_controller.setRoutesResolved, routes)
             del self._routes_lookups[dnsobj]
 
     def _NH_SIPEngineGotException(self, sender, data):
@@ -1000,15 +988,15 @@ class SIPManager(object):
         if len(contact_header_list) > 1:
             message += 'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         BlinkLogger().log_info(message)
-        call_in_gui_thread(lambda:self._delegate.sip_account_registration_succeeded(account))
+        call_in_gui_thread(self._delegate.sip_account_registration_succeeded, account)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info("%s was unregistered" % account)
-        call_in_gui_thread(lambda:self._delegate.sip_account_registration_ended(account))
+        call_in_gui_thread(self._delegate.sip_account_registration_ended, account)
 
     def _NH_SIPAccountRegistrationDidFail(self, account, data):
         BlinkLogger().log_info("%s failed to register: %s (retrying in %.2f seconds)" % (account, data.error, data.timeout))
-        call_in_gui_thread(lambda:self._delegate.sip_account_registration_failed(account, data.error))
+        call_in_gui_thread(self._delegate.sip_account_registration_failed, account, data.error)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
@@ -1016,7 +1004,7 @@ class SIPManager(object):
 
     def _NH_SIPSessionNewIncoming(self, session, data):
         self.ringer.add_incoming(session, data.streams)
-        call_in_gui_thread(lambda:self._delegate.handle_incoming_session(session, data.streams))
+        call_in_gui_thread(self._delegate.handle_incoming_session, session, data.streams)
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
         BlinkLogger().log_info("Outgoing Session request to %s (%s)" % (session.remote_identity, [s.type for s in data.streams]))
@@ -1024,7 +1012,7 @@ class SIPManager(object):
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:
-            call_in_gui_thread(lambda: self._delegate.sip_nat_detected(data.nat_type))
+            call_in_gui_thread(self._delegate.sip_nat_detected, data.nat_type)
 
     def _NH_SIPSessionDidEnd(self, session, data):
         if session.direction == "incoming":

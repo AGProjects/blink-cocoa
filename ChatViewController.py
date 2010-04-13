@@ -236,17 +236,17 @@ class ChatViewController(NSObject):
     def markMessage(self, msgid, state): # delegate
         if state == MSG_STATE_DELIVERED:
             script = "markDelivered('%s')"%msgid 
-            call_in_gui_thread(lambda:self.outputView.stringByEvaluatingJavaScriptFromString_(script))
+            call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
             if self.history:
                 self.history.set_delivered(msgid)
         elif state == MSG_STATE_DEFERRED:
             script = "markDeferred('%s')"%msgid
-            call_in_gui_thread(lambda:self.outputView.stringByEvaluatingJavaScriptFromString_(script))
+            call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
             if self.history:
                 self.history.set_deferred(msgid)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
-            call_in_gui_thread(lambda:self.outputView.stringByEvaluatingJavaScriptFromString_(script))
+            call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
             if self.history:
                 self.history.set_failed(msgid)
 

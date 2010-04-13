@@ -413,12 +413,12 @@ class ContactWindowController(NSWindowController):
         if diff:
             new_device = diff.pop()
             BlinkLogger().log_info("New device %s detected, checking if we should switch to it..." % new_device)
-            call_in_gui_thread(lambda:self.notifyNewDevice(new_device))
+            call_in_gui_thread(self.notifyNewDevice, new_device)
         else:
-            call_in_gui_thread(lambda:self.menuWillOpen_(self.audioMenu))
+            call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
 
     def _NH_DefaultAudioDeviceDidChange(self, notification):
-        call_in_gui_thread(lambda:self.menuWillOpen_(self.audioMenu))
+        call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         if notification.data.uri:

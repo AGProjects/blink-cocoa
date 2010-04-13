@@ -235,11 +235,11 @@ def makedirs(path, mode=0777):
         raise
 
 
-def call_in_gui_thread(func, wait=False):
+def call_in_gui_thread(func, *args, **kwargs):
     if NSThread.isMainThread():
-        func()
+        func(*args, **kwargs)
     else:
-        NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", func, wait)
+        NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kwargs), False)
 
 
 @decorator
