@@ -7,8 +7,10 @@ from AppKit import *
 from application.notification import NotificationCenter
 
 
-from BlinkBase import NotificationObserverBase, run_in_gui_thread
+from BlinkBase import NotificationObserverBase
 from BlinkLogger import BlinkLogger
+from util import run_in_gui_thread
+
 
 class DesktopViewerController(NotificationObserverBase):
     window = objc.IBOutlet()

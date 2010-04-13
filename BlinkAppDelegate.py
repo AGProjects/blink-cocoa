@@ -19,7 +19,6 @@ from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
 from SIPManager import SIPManager
-from BlinkBase import call_in_gui_thread
 from BlinkLogger import BlinkLogger
 from SmileyManager import SmileyManager
 from EnrollmentController import EnrollmentController
@@ -27,6 +26,7 @@ from EnrollmentController import EnrollmentController
 import PreferencesController
 from DesktopSharingController import DesktopSharingController
 from interfaces.itunes import ITunesInterface
+from util import call_in_gui_thread
 
 
 def fourcharToInt(fourCharCode):

@@ -8,7 +8,7 @@ from sipsimple.core import SIPURI, ToHeader
 from AppKit import NSRunAlertPanel, NSAlertDefaultReturn
 
 from AudioController import AudioController
-from BlinkBase import NotificationObserverBase, run_in_gui_thread
+from BlinkBase import NotificationObserverBase
 from BaseStream import *
 from BlinkLogger import BlinkLogger
 from ChatController import ChatController

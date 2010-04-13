@@ -10,7 +10,6 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
-from BlinkBase import call_in_gui_thread
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 from util import *

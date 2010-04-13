@@ -11,8 +11,8 @@ from application.python.util import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
-from BlinkBase import run_in_gui_thread
 from BlinkLogger import BlinkLogger
+from util import run_in_gui_thread
 
 
 def append_line(textView, line):

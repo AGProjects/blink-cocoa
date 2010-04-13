@@ -24,7 +24,6 @@ import PresencePolicy
 from PresencePolicy import fillPresenceMenu
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
-from BlinkBase import call_in_gui_thread
 from BlinkLogger import BlinkLogger
 from ChatHistoryViewer import ChatHistoryViewer
 from ContactCell import ContactCell

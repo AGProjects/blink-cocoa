@@ -33,7 +33,6 @@ from sipsimple.util import TimestampedNotificationData, run_in_green_thread, run
 
 from SessionRinger import Ringer
 from FileTransferSession import OutgoingFileTransfer
-from BlinkBase import call_in_gui_thread, run_in_gui_thread
 from BlinkLogger import BlinkLogger, FileLogger
 from BlinkHistory import BlinkHistory
 

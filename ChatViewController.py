@@ -20,9 +20,9 @@ import re
 from application.notification import NotificationCenter
 from sipsimple.util import TimestampedNotificationData
 
-from BlinkBase import NotificationObserverBase, call_in_gui_thread
+from BlinkBase import NotificationObserverBase
 from SmileyManager import SmileyManager
-from util import format_identity, escape_html
+from util import call_in_gui_thread, escape_html, format_identity
 
 
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent

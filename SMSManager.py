@@ -15,7 +15,7 @@ from zope.interface import implements
 
 import SIPManager
 
-from BlinkBase import NotificationObserverBase, run_in_gui_thread
+from BlinkBase import NotificationObserverBase
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
 from util import *

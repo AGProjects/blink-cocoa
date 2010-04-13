@@ -8,7 +8,7 @@ from application.notification import NotificationCenter
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
 from BaseStream import *
-from BlinkBase import run_in_gui_thread
+from util import run_in_gui_thread
 
 
 DS_CLEANUP_DELAY = 4.0 

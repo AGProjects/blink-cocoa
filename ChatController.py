@@ -19,7 +19,7 @@ import SessionController
 import SessionManager
 
 from BaseStream import *
-from BlinkBase import NotificationObserverBase, run_in_gui_thread
+from BlinkBase import NotificationObserverBase
 from BlinkHistory import BlinkHistory
 from BlinkLogger import BlinkLogger
 from ChatViewController import *

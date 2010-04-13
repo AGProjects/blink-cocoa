@@ -15,7 +15,7 @@ from sipsimple.payloads.iscomposing import IsComposingMessage, State, LastActive
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.util import run_in_green_thread
 
-from BlinkBase import NotificationObserverBase, run_in_gui_thread
+from BlinkBase import NotificationObserverBase
 from BlinkLogger import BlinkLogger
 from BlinkHistory import BlinkHistory
 from ChatViewController import *

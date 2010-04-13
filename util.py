@@ -2,7 +2,8 @@
 #
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
-           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs', 'parse_datetime']
+           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs', 'parse_datetime',
+           'call_in_gui_thread', 'run_in_gui_thread']
 
 import datetime
 import errno
@@ -10,9 +11,13 @@ import os
 import re
 import shlex
 
+from application.python.decorator import decorator, preserve_signature
+
 from AppKit import NSApp
+from Foundation import NSAutoreleasePool, NSThread
 
 from sipsimple.core import SIPURI
+
 
 def format_identity(identity, check_contact=False):
     """
@@ -228,5 +233,25 @@ def makedirs(path, mode=0777):
         if e.errno == errno.EEXIST and os.path.isdir(path): # directory exists
             return
         raise
+
+
+def call_in_gui_thread(func, wait=False):
+    pool = NSAutoreleasePool.alloc().init()
+    if NSThread.isMainThread():
+        func()
+    else:
+        NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", func, wait)
+
+
+@decorator
+def run_in_gui_thread(func):
+    @preserve_signature(func)
+    def wrapper(*args, **kw):
+        pool = NSAutoreleasePool.alloc().init()
+        if NSThread.isMainThread():
+            func(*args, **kw)
+        else:
+            NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kw), False)
+    return wrapper
 
 

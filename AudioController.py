@@ -16,7 +16,6 @@ from sipsimple.util import TimestampedNotificationData
 import SessionBox
 
 from BaseStream import *
-from BlinkBase import run_in_gui_thread
 from SIPManager import SIPManager
 from AnsweringMachine import AnsweringMachine
 from util import *
