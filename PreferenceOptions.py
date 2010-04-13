@@ -20,7 +20,7 @@ from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, SoundFile
-from util import makedirs
+from util import allocate_autorelease_pool, makedirs
 
 
 LABEL_WIDTH = 120
@@ -833,7 +833,7 @@ class SoundFileOption(Option):
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
 
-
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if self.sound == notification.sender:
@@ -959,7 +959,7 @@ class AnsweringMessageOption(Option):
         NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
         self.sound.start()
 
-
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if self.sound == notification.sender:

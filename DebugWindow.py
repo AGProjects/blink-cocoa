@@ -12,7 +12,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
-from util import run_in_gui_thread
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 def append_line(textView, line):
@@ -145,8 +145,8 @@ class EngineLogger(NSObject, object):
     def enableFullSIPTrace(self, flag):
         self.fullTrace = flag
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
@@ -341,6 +341,7 @@ class DebugWindow(NSObject):
             return
         self.gui_handle_notification(notification.name, notification.sender, notification.data)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def gui_handle_notification(self, name, sender, data):
         if name == "SIPSessionDidStart":
@@ -471,6 +472,7 @@ class DebugWindow(NSObject):
         if not self.msrpTrace == "full":
             append_line(self.msrpLog, self.engineLogger.newline)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_general(self, text):
         iserror = text.lower().startswith("error")

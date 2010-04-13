@@ -342,6 +342,7 @@ class AlertPanel(NSObject, object):
         text = "Answering Machine will auto-answer in %i seconds..." % (info["delay"] - int(time.time() - info["time"]))
         info["label"].setStringValue_(text)
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         name = notification.name
         session = notification.sender

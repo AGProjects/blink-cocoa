@@ -12,7 +12,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from FileTransferSession import OutgoingFileTransfer
-from util import format_size
+from util import allocate_autorelease_pool, format_size
 
 
 class FileTransferItem(NSView):
@@ -139,6 +139,7 @@ class FileTransferItem(NSView):
         frame.size.height = self.originalHeight
         self.setFrame_(frame)
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)

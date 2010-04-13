@@ -8,7 +8,7 @@ from application.notification import IObserver, NotificationCenter
 
 
 from BlinkLogger import BlinkLogger
-from util import run_in_gui_thread
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 class DesktopViewerController(NSObject):
@@ -95,6 +95,7 @@ class DesktopViewerController(NSObject):
         newFrame = self.window.frameRectForContentRect_(newFrame)
         self.window.setFrame_display_animate_(newFrame, True, True)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

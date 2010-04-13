@@ -11,6 +11,7 @@ from zope.interface import implements
 import ListView
 from BlinkHistory import BlinkHistory
 from FileTransferItem import FileTransferItem
+from util import allocate_autorelease_pool
 
 
 class FileTransferWindowController(NSObject, object):
@@ -64,6 +65,7 @@ class FileTransferWindowController(NSObject, object):
         h = self.listView.minimumHeight()
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)

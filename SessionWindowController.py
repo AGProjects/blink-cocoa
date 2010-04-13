@@ -10,8 +10,8 @@ from application.notification import NotificationCenter, IObserver, Any
 
 import SessionController
 import SessionManager
-
 import FancyTabSwitcher
+from util import allocate_autorelease_pool
 
 
 class SessionWindowController(NSWindowController):
@@ -162,6 +162,7 @@ class SessionWindowController(NSWindowController):
         if session and session.streamHandlerOfType("chat"):
             self.window().makeFirstResponder_(session.streamHandlerOfType("chat").chatViewController.inputText)
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         name = notification.name
         sender = notification.sender

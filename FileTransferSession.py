@@ -129,6 +129,7 @@ class FileTransfer(object):
                 path=self.file_path, bytes_transfered=self.file_pos, bytes_total=self.file_size,
                 status=status)
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)

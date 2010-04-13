@@ -26,7 +26,7 @@ from EnrollmentController import EnrollmentController
 import PreferencesController
 from DesktopSharingController import DesktopSharingController
 from interfaces.itunes import ITunesInterface
-from util import call_in_gui_thread
+from util import allocate_autorelease_pool, call_in_gui_thread
 
 
 def fourcharToInt(fourCharCode):
@@ -202,6 +202,7 @@ You might need to Replace it and re-enter your account information. Your old fil
 
         return NSTerminateLater
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)

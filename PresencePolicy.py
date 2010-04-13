@@ -13,6 +13,7 @@ from Foundation import *
 from AppKit import *
 
 import SIPManager
+from util import allocate_autorelease_pool
 
 
 def fillPresenceMenu(presenceMenu, target, action, attributes=None):
@@ -283,25 +284,22 @@ class PresencePolicy(NSWindowController):
                 self.newWatcherWindow.makeKeyAndOrderFront_(None)
                 break
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
     def _NH_SIPAccountWatcherInfoGotUpdate(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         self.performSelectorOnMainThread_withObject_waitUntilDone_("updateWatchers:", notification, False)
 
     def _NH_SIPAccountDidActivate(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         self.performSelectorOnMainThread_withObject_waitUntilDone_("refreshAccountList", None, False)
 
     def _NH_SIPAccountDidDeactivate(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         self.performSelectorOnMainThread_withObject_waitUntilDone_("refreshAccountList", None, False)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if 'presence.enabled' in notification.data.modified or 'xcap.enabled' in notification.data.modified:
-            pool = NSAutoreleasePool.alloc().init()
             self.performSelectorOnMainThread_withObject_waitUntilDone_("refreshAccountList", None, False)
 
     @objc.IBAction

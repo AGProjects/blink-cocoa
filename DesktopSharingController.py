@@ -11,7 +11,7 @@ from zope.interface import implements
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
 from BaseStream import *
-from util import run_in_gui_thread
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 DS_CLEANUP_DELAY = 4.0 
@@ -260,6 +260,7 @@ class DesktopSharingController(BaseStream):
             self.statusWindow.close()
             self.statusWindow = None
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

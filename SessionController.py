@@ -226,6 +226,7 @@ class SessionController(NSObject):
             return
         self.streamHandlers.remove(streamHandler)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def changeSessionState(self, newstate, fail_reason=None):
         log_debug(self, "Changing Session state to " + newstate)
@@ -372,6 +373,7 @@ class SessionController(NSObject):
         self.changeSessionState(STATE_DNS_FAILED, msg)
         self.end()
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         if self.routes != routes:
@@ -399,6 +401,7 @@ class SessionController(NSObject):
 
             log_info(self, "Connecting Session...")
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

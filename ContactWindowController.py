@@ -401,9 +401,8 @@ class ContactWindowController(NSWindowController):
             session.reject_proposal()
             log_error("Cannot find session controller for session: %s" % session)
 
-    # notification handlers
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 

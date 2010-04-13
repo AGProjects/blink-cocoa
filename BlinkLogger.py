@@ -15,9 +15,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 from pprint import pformat
 
-from Foundation import NSAutoreleasePool
-
-from util import makedirs
+from util import allocate_autorelease_pool, makedirs
 
 
 class BlinkLogger(object):
@@ -168,8 +166,8 @@ class FileLogger(object):
     def handle_notification(self, notification):
         self._event_queue.put(notification)
 
+    @allocate_autorelease_pool
     def _process_notification(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         settings = SIPSimpleSettings()
         handler = getattr(self, '_NH_%s' % notification.name, None)
         if handler is not None:

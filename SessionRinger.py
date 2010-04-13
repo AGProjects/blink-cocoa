@@ -15,6 +15,7 @@ from sipsimple.application import SIPApplication
 
 from BlinkLogger import BlinkLogger
 from configuration.datatypes import ResourcePath
+from util import allocate_autorelease_pool
 
 
 HANGUP_TONE_THROTLE_DELAY = 2.0
@@ -247,6 +248,7 @@ class Ringer(object):
             hangup_tone.start()
             self.last_hangup_tone_time = time.time()
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         session = notification.sender
         name = notification.name

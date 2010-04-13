@@ -14,6 +14,7 @@ from zope.interface import implements
 from EnrollmentController import EnrollmentController
 from PreferenceOptions import PreferenceOptionTypes, formatName
 from VerticalBoxView import VerticalBoxView
+from util import allocate_autorelease_pool
 
 
 class PreferencesController(NSWindowController, object):
@@ -273,6 +274,7 @@ class PreferencesController(NSWindowController, object):
             return None
         return accounts[row]
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
@@ -293,11 +295,9 @@ class PreferencesController(NSWindowController, object):
             self.accountTable.reloadData()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         self.performSelectorOnMainThread_withObject_waitUntilDone_("updateSettings:", notification, True)
 
     def _NH_AudioDevicesDidChange(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         self.performSelectorOnMainThread_withObject_waitUntilDone_("updateAudioDevices:", None, True)
 
     def updateSettings_(self, notification):

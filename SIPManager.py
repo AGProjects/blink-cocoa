@@ -491,6 +491,7 @@ class SIPManager(object):
         return open(fname, "a+")
 
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_incoming_session_missed(self, session, dt):
         f = self._open_call_history_file()
@@ -503,7 +504,7 @@ class SIPManager(object):
             f.write(line+"\n")
             f.close()
 
-
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_incoming_session_ended(self, session):
         f = self._open_call_history_file()
@@ -517,7 +518,7 @@ class SIPManager(object):
             f.write(line+"\n")
             f.close()
 
-
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_incoming_session_answered_elsewhere(self, session, dt):
         f = self._open_call_history_file()
@@ -530,7 +531,7 @@ class SIPManager(object):
             f.write(line+"\n")
             f.close()
 
-
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_outgoing_session_failed(self, session, dt):
         f = self._open_call_history_file()
@@ -543,6 +544,7 @@ class SIPManager(object):
             f.write(line+"\n")
             f.close()
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_outgoing_session_cancelled(self, session, dt):
         f = self._open_call_history_file()
@@ -555,6 +557,7 @@ class SIPManager(object):
             f.write(line+"\n")
             f.close()
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def log_outgoing_session_ended(self, session):
         f = self._open_call_history_file()
@@ -893,6 +896,7 @@ class SIPManager(object):
     def post_in_main(self, name, sender, data=None):
         call_in_gui_thread(lambda:self.notification_center.post_notification(name, sender, data))
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -1028,6 +1032,7 @@ class SIPManager(object):
         else:
             self.log_outgoing_session_ended(session)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def _NH_SIPSessionDidFail(self, session, data):
         if session.direction == "incoming":

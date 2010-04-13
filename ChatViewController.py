@@ -234,7 +234,6 @@ class ChatViewController(NSObject):
             self.history.set_sent(oldid, newid)
 
     def markMessage(self, msgid, state): # delegate
-        pool = NSAutoreleasePool.alloc().init()
         if state == MSG_STATE_DELIVERED:
             script = "markDelivered('%s')"%msgid 
             call_in_gui_thread(lambda:self.outputView.stringByEvaluatingJavaScriptFromString_(script))

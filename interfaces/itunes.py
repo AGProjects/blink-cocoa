@@ -8,9 +8,11 @@ from application.notification import NotificationCenter
 from application.python.queue import EventQueue
 from application.python.util import Singleton
 
-from Foundation import NSAppleScript, NSAutoreleasePool
+from Foundation import NSAppleScript
 
 from sipsimple.util import Command, TimestampedNotificationData
+
+from util import allocate_autorelease_pool
 
 
 class ITunesInterface(object):
@@ -58,8 +60,8 @@ class ITunesInterface(object):
     def resume(self):
         self.event_queue.put(Command('resume'))
 
+    @allocate_autorelease_pool
     def handle_command(self, command):
-        pool = NSAutoreleasePool.alloc().init()
         handler = getattr(self, '_CH_%s' % command.name)
         handler(command)
 

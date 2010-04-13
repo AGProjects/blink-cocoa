@@ -174,6 +174,7 @@ class MessageHandler(NSObject):
         message.state = state
         self.delegate.markMessage(message.id, state)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -353,6 +354,7 @@ class ChatController(BaseStream):
         elif newstate == STATE_DNS_FAILED:
             self.changeStatus(STREAM_FAILED, detail)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
         ended = False
@@ -607,6 +609,7 @@ class ChatController(BaseStream):
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

@@ -13,6 +13,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 
 from BlinkLogger import BlinkLogger
 from configuration.datatypes import ResourcePath
+from util import allocate_autorelease_pool
 
 
 class AnsweringMachine(object):
@@ -67,6 +68,7 @@ class AnsweringMachine(object):
         if self.stream.recording_active:
             self.stream.stop_recording()
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)

@@ -599,8 +599,8 @@ class AudioController(BaseStream):
             self.stream.muted = self.mutedInConference
             sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
-        pool = NSAutoreleasePool.alloc().init()
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
