@@ -6,7 +6,10 @@ from AppKit import *
 
 import datetime
 
-from application.notification import NotificationCenter
+from application.notification import IObserver, NotificationCenter
+from application.python.util import Null
+from zope.interface import implements
+
 from sipsimple.account import Account
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -15,7 +18,6 @@ from sipsimple.payloads.iscomposing import IsComposingMessage, State, LastActive
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.util import run_in_green_thread
 
-from BlinkBase import NotificationObserverBase
 from BlinkLogger import BlinkLogger
 from BlinkHistory import BlinkHistory
 from ChatViewController import *
@@ -47,7 +49,9 @@ class SMSSplitView(NSSplitView):
             self.text.drawAtPoint_withAttributes_(point, self.attributes)
 
 
-class SMSViewController(NotificationObserverBase):
+class SMSViewController(NSObject):
+    implements(IObserver)
+
     chatViewController = objc.IBOutlet()
     splitView = objc.IBOutlet()
     smileyButton = objc.IBOutlet()
@@ -220,6 +224,10 @@ class SMSViewController(NotificationObserverBase):
         window.noteView_isComposing_(self, flag)
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_SIPMessageDidSucceed(self, sender, data):
         if (data.code == 202):
             self.chatViewController.markMessage(str(sender), MSG_STATE_DEFERRED)
@@ -227,7 +235,6 @@ class SMSViewController(NotificationObserverBase):
             self.chatViewController.markMessage(str(sender), MSG_STATE_DELIVERED)
         NotificationCenter().remove_observer(self, sender=sender)
 
-    @run_in_gui_thread
     def _NH_SIPMessageDidFail(self, sender, data):
         BlinkLogger().log_warning("SMS message delivery failed: %s" % data.reason)
         self.chatViewController.markMessage(str(sender), MSG_STATE_FAILED)        

@@ -4,7 +4,10 @@
 from Foundation import *
 from AppKit import *
 
-from application.notification import NotificationCenter
+from application.notification import IObserver, NotificationCenter
+from application.python.util import Null
+from zope.interface import implements
+
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
 from BaseStream import *
@@ -69,6 +72,8 @@ class StatusItem(NSObject):
 
 
 class DesktopSharingController(BaseStream):
+    implements(IObserver)
+
     viewer = None
     vncServerPort = None
     
@@ -256,10 +261,13 @@ class DesktopSharingController(BaseStream):
             self.statusWindow = None
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_MediaStreamDidStart(self, sender, data):
         self.changeStatus(STREAM_CONNECTED)
 
-    @run_in_gui_thread
     def _NH_MediaStreamDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
             self.changeStatus(STREAM_IDLE)
@@ -269,12 +277,10 @@ class DesktopSharingController(BaseStream):
             data.failure.printTraceback()
             self.changeStatus(STREAM_FAILED)
 
-    @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
         log_info(self, "Desktop stream ended")
         self.changeStatus(STREAM_IDLE)
 
-    @run_in_gui_thread
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
             log_info(self, "Desktop sharing: %s" % data.reason)

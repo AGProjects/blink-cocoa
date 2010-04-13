@@ -7,7 +7,10 @@ from Foundation import *
 import datetime
 import time
 
-from application.notification import NotificationCenter
+from application.notification import IObserver, NotificationCenter
+from application.python.util import Null
+from zope.interface import implements
+
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import AudioStream
@@ -32,6 +35,8 @@ AUDIO_CLEANUP_DELAY = 4.0
 
 
 class AudioController(BaseStream):
+    implements(IObserver)
+
     view = objc.IBOutlet()
     label = objc.IBOutlet()
     elapsed = objc.IBOutlet()
@@ -594,7 +599,11 @@ class AudioController(BaseStream):
             self.stream.muted = self.mutedInConference
             sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
 
-    # Notification Handlers
+    def handle_notification(self, notification):
+        pool = NSAutoreleasePool.alloc().init()
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_BlinkAudioStreamUnholdRequested(self, sender, data):
         if sender is self or (sender.isConferencing and self.isConferencing):
             return

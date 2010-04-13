@@ -10,7 +10,10 @@ import time
 from itertools import dropwhile, takewhile
 
 from application import log
-from application.notification import NotificationCenter
+from application.notification import IObserver, NotificationCenter
+from application.python.util import Null
+from zope.interface import implements
+
 from sipsimple.account import Account
 from sipsimple.streams import ChatStream
 from sipsimple.util import TimestampedNotificationData
@@ -19,7 +22,6 @@ import SessionController
 import SessionManager
 
 from BaseStream import *
-from BlinkBase import NotificationObserverBase
 from BlinkHistory import BlinkHistory
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
@@ -40,7 +42,7 @@ class MessageInfo(object):
         self.state = state
 
 
-class MessageHandler(NotificationObserverBase):
+class MessageHandler(NSObject):
     """
     Track what messages typed by local user were sent.
 
@@ -54,6 +56,8 @@ class MessageHandler(NotificationObserverBase):
     all unconfirmed and subsequent messages will be marked as undelivered in the UI
     until things are detected as normalized.
     """
+
+    implements(IObserver)
 
     messages = None
     pending = None
@@ -171,6 +175,10 @@ class MessageHandler(NotificationObserverBase):
         self.delegate.markMessage(message.id, state)
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_ChatStreamGotMessage(self, sender, data):
         message = data.message
 
@@ -193,19 +201,19 @@ class MessageHandler(NotificationObserverBase):
                 growl_data.content = message.body[0:400]
             NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
-    @run_in_gui_thread
     def _NH_ChatStreamDidDeliverMessage(self, sender, data):
         message = self.messages.pop(data.message_id)
         self.markMessage(message, MSG_STATE_DELIVERED)
         self.lastDeliveredTime = time.time()
 
-    @run_in_gui_thread
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
         message = self.messages.pop(data.message_id)
         self.markMessage(message, MSG_STATE_FAILED)
 
 
 class ChatController(BaseStream):
+    implements(IObserver)
+
     chatViewController = objc.IBOutlet()
     smileyButton = objc.IBOutlet()
     upperContainer = objc.IBOutlet()
@@ -600,6 +608,10 @@ class ChatController(BaseStream):
             window.noteSession_isComposing_(self.sessionController, False)
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_ChatStreamGotComposingIndication(self, sender, data):
         window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
         if window:
@@ -623,7 +635,6 @@ class ChatController(BaseStream):
 
             window.noteSession_isComposing_(self.sessionController, flag)
 
-    @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
         if self.handler:
             log_info(self, "Chat stream started")
@@ -631,7 +642,6 @@ class ChatController(BaseStream):
             self.handler.setConnected()
             self.changeStatus(STREAM_CONNECTED)
 
-    @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
         log_info(self, "Chat stream ended: %s" % sender)
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
@@ -643,7 +653,6 @@ class ChatController(BaseStream):
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
-    @run_in_gui_thread
     def _NH_MediaStreamDidFail(self, sender, data):
         log_error(self, "Chat stream failed: %s (%s)" % (sender, data))
         self.chatViewController.writeSysMessage("Media stream failed: %s" % data.reason)

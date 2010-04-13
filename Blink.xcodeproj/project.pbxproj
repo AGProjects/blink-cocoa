@@ -180,7 +180,6 @@
 		2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
 		2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
 		2BF430E91082F32500F04A6C /* SessionManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430E81082F32500F04A6C /* SessionManager.py */; };
-		2BF4325B1083CCA600F04A6C /* BlinkBase.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF4325A1083CCA600F04A6C /* BlinkBase.py */; };
 		2BF432B61084187100F04A6C /* BaseStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* BaseStream.py */; };
 		2BFB33E4101674BD002D79FB /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
 		2BFB33E5101674BD002D79FB /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
@@ -483,7 +482,6 @@
 		2BF42BA3107D8B4D00F04A6C /* bellon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bellon.png; path = icons/bellon.png; sourceTree = "<group>"; };
 		2BF430B01082EEFE00F04A6C /* AudioController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioController.py; sourceTree = "<group>"; };
 		2BF430E81082F32500F04A6C /* SessionManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionManager.py; sourceTree = "<group>"; };
-		2BF4325A1083CCA600F04A6C /* BlinkBase.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlinkBase.py; sourceTree = "<group>"; };
 		2BF432B51084187100F04A6C /* BaseStream.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BaseStream.py; sourceTree = "<group>"; };
 		2BFB33E2101674BD002D79FB /* muted.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = muted.png; path = icons/muted.png; sourceTree = "<group>"; };
 		2BFB33E3101674BD002D79FB /* srtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = srtp.png; path = icons/srtp.png; sourceTree = "<group>"; };
@@ -522,7 +520,6 @@
 				2B7FC8221132D3EF008C07BF /* PresencePolicy */,
 				2B01283F109391FF009B2112 /* AccountSettings */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
-				2BF4325A1083CCA600F04A6C /* BlinkBase.py */,
 				2BF432B51084187100F04A6C /* BaseStream.py */,
 				2B11B0B10FF55C3A007FC176 /* Logging */,
 				2BEFC1A00FD1C2DE00447EFB /* Controls */,
@@ -1089,7 +1086,6 @@
 				2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */,
 				2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */,
 				2BF430E91082F32500F04A6C /* SessionManager.py in Resources */,
-				2BF4325B1083CCA600F04A6C /* BlinkBase.py in Resources */,
 				2BF432B61084187100F04A6C /* BaseStream.py in Resources */,
 				2B01284A1093922A009B2112 /* AccountSettings.py in Resources */,
 				2B01284E10939236009B2112 /* AccountSettings.xib in Resources */,

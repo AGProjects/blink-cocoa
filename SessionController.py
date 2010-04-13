@@ -1,14 +1,17 @@
 # Copyright (C) 2009 AG Projects. See LICENSE for details.
 #
 
-from application.notification import NotificationCenter
+from application.notification import IObserver, NotificationCenter
+from application.python.util import Null
+from zope.interface import implements
+
 from sipsimple.session import Session
 from sipsimple.core import SIPURI, ToHeader
 
 from AppKit import NSRunAlertPanel, NSAlertDefaultReturn
+from Foundation import NSObject
 
 from AudioController import AudioController
-from BlinkBase import NotificationObserverBase
 from BaseStream import *
 from BlinkLogger import BlinkLogger
 from ChatController import ChatController
@@ -65,7 +68,9 @@ StreamHandlerForType = {
 }
 
 
-class SessionController(NotificationObserverBase):
+class SessionController(NSObject):
+    implements(IObserver)
+
     owner = None
     session = None
     state = STATE_IDLE
@@ -395,6 +400,10 @@ class SessionController(NotificationObserverBase):
             log_info(self, "Connecting Session...")
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_ITunesPauseDidExecute(self, sender, data):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, sender=sender)
@@ -402,16 +411,13 @@ class SessionController(NotificationObserverBase):
         if self.routes:
             self.connectSession()
 
-    @run_in_gui_thread
     def _NH_SIPSessionGotRingIndication(self, sender, data):
         for sc in self.streamHandlers:
             sc.sessionRinging()
 
-    @run_in_gui_thread
     def _NH_SIPSessionWillStart(self, sender, data):
         log_info(self, "Session will start")
 
-    @run_in_gui_thread
     def _NH_SIPSessionDidStart(self, sender, data):
         self.remoteParty = format_identity(self.session.remote_identity)
         self.changeSessionState(STATE_CONNECTED)
@@ -425,12 +431,10 @@ class SessionController(NotificationObserverBase):
         #            self.end()
             
 
-    @run_in_gui_thread
     def _NH_SIPSessionWillEnd(self, sender, data):
         log_info(self, "Session will end (%s)"%data.originator)
         self.endingBy = data.originator
 
-    @run_in_gui_thread
     def _NH_SIPSessionDidFail(self, sender, data):
         failureCode = data.code
         #if data.code:
@@ -473,7 +477,6 @@ class SessionController(NotificationObserverBase):
                 else:
                     self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
-    @run_in_gui_thread
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.changeSessionState(STATE_FINISHED, data.originator)
         log_info(self, "Session ended")
@@ -482,7 +485,6 @@ class SessionController(NotificationObserverBase):
         self.session = None
         self.cancelledStream = None
 
-    @run_in_gui_thread
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True
         if data.originator != "local":
@@ -490,7 +492,6 @@ class SessionController(NotificationObserverBase):
             log_info(self, "Got a Stream proposal from %s with streams %s" % (sender.remote_identity, stream_names))
             self.owner.handle_incoming_proposal(sender, data.streams)
   
-    @run_in_gui_thread
     def _NH_SIPSessionGotRejectProposal(self, sender, data):
         self.inProposal = False
         #log_info(self, "Proposal got rejected %s (%s)"%(data.reason, data.code))
@@ -517,7 +518,6 @@ class SessionController(NotificationObserverBase):
                 else:
                     log_error(self, "Got reject proposal for unhandled stream type: %r" % stream)
 
-    @run_in_gui_thread
     def _NH_SIPSessionGotAcceptProposal(self, sender, data):        
         self.inProposal = False
         log_info(self, "Proposal accepted")
@@ -529,7 +529,6 @@ class SessionController(NotificationObserverBase):
                     self.session.remove_stream(stream)
                     self.cancelledStream = None
 
-    @run_in_gui_thread
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
         log_info(self, "Proposal failure %s" % data)

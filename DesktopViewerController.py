@@ -4,15 +4,16 @@
 from Foundation import *
 from AppKit import *
 
-from application.notification import NotificationCenter
+from application.notification import IObserver, NotificationCenter
 
 
-from BlinkBase import NotificationObserverBase
 from BlinkLogger import BlinkLogger
 from util import run_in_gui_thread
 
 
-class DesktopViewerController(NotificationObserverBase):
+class DesktopViewerController(NSObject):
+    implements(IObserver)
+
     window = objc.IBOutlet()
     rfbView = objc.IBOutlet()
     statusLabel = objc.IBOutlet()
@@ -95,6 +96,10 @@ class DesktopViewerController(NotificationObserverBase):
         self.window.setFrame_display_animate_(newFrame, True, True)
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_DesktopSharingStreamGotData(self, sender, data):
         self.rfbView.handleIncomingData_(NSData.dataWithBytes_length_(data.data, len(data.data)))
 

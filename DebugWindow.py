@@ -70,10 +70,6 @@ class EngineLogger(NSObject, object):
         # that is automatically discarded when the object is lost. -Dan
         NotificationCenter().discard_observer(self)
 
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
-
     def printSIP_(self, event_data):
         if self._siptrace_start_time is None:
             self._siptrace_start_time = event_data.timestamp
@@ -148,6 +144,11 @@ class EngineLogger(NSObject, object):
 
     def enableFullSIPTrace(self, flag):
         self.fullTrace = flag
+
+    def handle_notification(self, notification):
+        pool = NSAutoreleasePool.alloc().init()
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
 
     @run_in_gui_thread
     def _NH_SIPEngineLog(self, notification):

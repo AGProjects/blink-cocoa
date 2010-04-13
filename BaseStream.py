@@ -7,7 +7,8 @@ __all__ = ['BaseStream', 'log_debug', 'log_error', 'log_info', 'STATE_IDLE', 'ST
 
 from application.notification import NotificationCenter
 
-from BlinkBase import NotificationObserverBase
+from Foundation import NSObject
+
 from BlinkLogger import BlinkLogger
 
 
@@ -45,7 +46,7 @@ def log_error(session, text):
     BlinkLogger().log_error(u"[session to %s] %s" % (session.remoteParty, text))
 
 
-class BaseStream(NotificationObserverBase):
+class BaseStream(NSObject):
     sessionController = None
     stream = None
     status = None

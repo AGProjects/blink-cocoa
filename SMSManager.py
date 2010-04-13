@@ -6,16 +6,17 @@ from AppKit import *
 
 import re
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import IObserver, NotificationCenter
+from application.python.util import Null
+from zope.interface import implements
+
 from sipsimple.core import SIPURI
 from sipsimple.util import TimestampedNotificationData
 from sipsimple.payloads.iscomposing import IsComposingMessage
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
-from zope.interface import implements
 
 import SIPManager
 
-from BlinkBase import NotificationObserverBase
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
 from util import *
@@ -160,7 +161,9 @@ def SMSManager():
     return SMSManagerInstance
 
 
-class SMSManagerClass(NotificationObserverBase):
+class SMSManagerClass(NSObject):
+    implements(IObserver)
+
     #__metaclass__ = Singleton
 
     windows = []
@@ -221,6 +224,10 @@ class SMSManagerClass(NotificationObserverBase):
             return None
 
     @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
     def _NH_SIPEngineGotMessage(self, sender, data):
         account = SIPManager.SIPManager().account_for_contact(data.request_uri)
         if not account:

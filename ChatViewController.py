@@ -20,7 +20,6 @@ import re
 from application.notification import NotificationCenter
 from sipsimple.util import TimestampedNotificationData
 
-from BlinkBase import NotificationObserverBase
 from SmileyManager import SmileyManager
 from util import call_in_gui_thread, escape_html, format_identity
 
@@ -148,7 +147,7 @@ class ChatWebView(WebView):
         return False
 
 
-class ChatViewController(NotificationObserverBase):
+class ChatViewController(NSObject):
     view = objc.IBOutlet()
     outputView = objc.IBOutlet()
     inputText = objc.IBOutlet()
