@@ -423,7 +423,7 @@ class ContactWindowController(NSWindowController):
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         if notification.data.uri:
             BlinkLogger().log_info("Discovered new Bonjour neighbour: %s %s" % (notification.data.display_name, notification.data.uri))
-            self.model.bonjourgroup.addBonjourNeighbour(str(notification.data.uri), notification.data.display_name)
+            self.model.bonjourgroup.addBonjourNeighbour(str(notification.data.uri), '%s (%s)' % (notification.data.display_name or 'Unknown', notification.data.host))
             call_in_gui_thread(self.contactOutline.reloadData)
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
