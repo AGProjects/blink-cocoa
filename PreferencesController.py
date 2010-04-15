@@ -300,10 +300,10 @@ class PreferencesController(NSWindowController, object):
             self.accountTable.reloadData()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateSettings:", notification, True)
+        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateSettings:", notification, False)
 
     def _NH_AudioDevicesDidChange(self, notification):
-        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateAudioDevices:", None, True)
+        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateAudioDevices:", None, False)
 
     def updateSettings_(self, notification):
         sender = notification.sender
