@@ -143,7 +143,7 @@ class EnrollmentController(NSObject):
             NSRunAlertPanel("Sign In to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
             return False
         account.display_name = display_name
-        account.password = password
+        account.auth.password = password
         account.enabled = True
         account.save()
 
@@ -214,7 +214,7 @@ class EnrollmentController(NSObject):
         account.tls.certificate = tls_path
         account.server.settings_url = settings_url
         account.display_name = display_name.encode("utf8")
-        account.password = password
+        account.auth.password = password
         account.nat_traversal.use_ice = True
         account.save()
                 

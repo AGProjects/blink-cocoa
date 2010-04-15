@@ -145,6 +145,11 @@ class PreferencesController(NSWindowController, object):
         options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
         assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
         for option_name in options:
+            if section_name == 'auth' and option_name == 'password':
+                # Horrible hack employed to skip the password setting which resides
+                # in the auth group of Account. The settings panel should not have
+                # been automatically generated in the first place. -Luci
+                continue
             option = getattr(section, option_name, None)
             controlFactory = PreferenceOptionTypes.get(section_name+"."+option_name, None)
             if not controlFactory:
@@ -180,7 +185,7 @@ class PreferencesController(NSWindowController, object):
 
         if not isinstance(account, BonjourAccount):
             self.addressText.setStringValue_(str(account.id))
-            self.passwordText.setStringValue_(account.password)
+            self.passwordText.setStringValue_(account.auth.password)
 
             userdef = NSUserDefaults.standardUserDefaults()
             section = userdef.integerForKey_("SelectedAdvancedSection")
@@ -252,7 +257,7 @@ class PreferencesController(NSWindowController, object):
                 account.display_name = unicode(self.displayNameText.stringValue()).encode("utf8")
                 account.save()
             elif notification.object() == self.passwordText and self.passwordText.stringValue().length() > 0:
-                account.password = unicode(self.passwordText.stringValue()).encode("utf8")
+                account.auth.password = unicode(self.passwordText.stringValue()).encode("utf8")
                 account.save()
 
     def selectedAccount(self):

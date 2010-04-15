@@ -138,7 +138,7 @@ class AccountSettings(NSObject):
             self.loadingText.setHidden_(True)
         else:
             BlinkLogger().log_info("Sending credentials for authentication request (account = %s)" % self._account.id)
-            credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id, self._account.password, NSURLCredentialPersistenceNone)
+            credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id, self._account.auth.password, NSURLCredentialPersistenceNone)
             challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
     def webView_resource_didCancelAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):

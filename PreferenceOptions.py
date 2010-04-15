@@ -38,6 +38,7 @@ def makeLabel(label):
 
 def formatName(name):
     d = {
+    "auth": "Authentication",
     "ip": "IP",
     "ca": "CA",
     "tls": "TLS",
