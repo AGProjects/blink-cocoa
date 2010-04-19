@@ -493,6 +493,9 @@ class AudioController(BaseStream):
             self.stream.bridge.remove(self.outbound_ringtone)
             self.outbound_ringtone = None
 
+        if status in (STREAM_IDLE, STREAM_FAILED):
+            self.view.setDelegate_(None)
+
         BaseStream.changeStatus(self, newstate, fail_reason)
 
     def updateTimeElapsed(self):

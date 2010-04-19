@@ -362,6 +362,7 @@ class PhotoPicker(NSObject):
         #device = self.captureDeviceInput.device()
         #if device.isOpen():
         #    device.close()
+        self.captureDecompressedVideoOutput.setDelegate_(None)
         NSApp.stopModalWithCode_(0)
 
     def runModal(self):

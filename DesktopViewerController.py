@@ -68,6 +68,7 @@ class DesktopViewerController(NSObject):
 
     def close(self):
         self.window.orderOut_(None)
+        self.rfbView.setDelegate_(None)
 
     def rfbView_sendData_(self, sender, data):
         self.handler.send(str(data.bytes()))
