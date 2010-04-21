@@ -186,32 +186,32 @@ class Ringer(object):
 
         msg_out_sound = settings.sounds.message_sent
         if msg_out_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.alert_audio_mixer, str(msg_out_sound.path.normalized), volume=msg_out_sound.volume)
-            app.alert_audio_bridge.add(new_tone)
+            new_tone = WavePlayer(app.voice_audio_mixer, str(msg_out_sound.path.normalized), volume=msg_out_sound.volume)
+            app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("msg_out_sound", new_tone)
 
         msg_in_sound = settings.sounds.message_received
         if msg_in_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.alert_audio_mixer, str(msg_in_sound.path.normalized), volume=msg_in_sound.volume)
-            app.alert_audio_bridge.add(new_tone)
+            new_tone = WavePlayer(app.voice_audio_mixer, str(msg_in_sound.path.normalized), volume=msg_in_sound.volume)
+            app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("msg_in_sound", new_tone)
 
         file_out_sound = settings.sounds.file_sent
         if file_out_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.alert_audio_mixer, str(file_out_sound.path.normalized), volume=file_out_sound.volume)
-            app.alert_audio_bridge.add(new_tone)
+            new_tone = WavePlayer(app.voice_audio_mixer, str(file_out_sound.path.normalized), volume=file_out_sound.volume)
+            app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("file_out_sound", new_tone)
 
         file_in_sound = settings.sounds.file_received
         if file_in_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.alert_audio_mixer, str(file_in_sound.path.normalized), volume=file_in_sound.volume)
-            app.alert_audio_bridge.add(new_tone)
+            new_tone = WavePlayer(app.voice_audio_mixer, str(file_in_sound.path.normalized), volume=file_in_sound.volume)
+            app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("file_in_sound", new_tone)
