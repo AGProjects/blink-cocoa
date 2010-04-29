@@ -440,9 +440,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidFail(self, sender, data):
         failureCode = data.code
-        #if data.code:
-        #    status = u"%s (%d)" % (data.reason, data.code)
-        if getattr(data, "failure_reason", None):
+        if data.failure_reason != 'user request':
             status = u"%s" % data.failure_reason
             self.failureReason = data.failure_reason
         elif data.reason:
