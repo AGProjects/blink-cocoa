@@ -442,12 +442,12 @@ class SessionController(NSObject):
         failureCode = data.code
         #if data.code:
         #    status = u"%s (%d)" % (data.reason, data.code)
-        if data.reason:
-            status = u"%s" % data.reason
-            self.failureReason = data.reason
-        elif getattr(data, "failure_reason", None):
+        if getattr(data, "failure_reason", None):
             status = u"%s" % data.failure_reason
             self.failureReason = data.failure_reason
+        elif data.reason:
+            status = u"%s" % data.reason
+            self.failureReason = data.reason
         else:
             status = u"Session Failed"
             self.failureReason = "failed"
