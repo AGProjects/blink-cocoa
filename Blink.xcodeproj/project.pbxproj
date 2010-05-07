@@ -1400,6 +1400,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				PRODUCT_NAME = Blink;
+				VALID_ARCHS = i386;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
 			};
