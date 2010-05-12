@@ -490,7 +490,10 @@ class AudioController(BaseStream):
             self.outbound_ringtone.start()
         elif status in (STREAM_CONNECTED, STREAM_DISCONNECTING, STREAM_IDLE, STREAM_FAILED) and self.outbound_ringtone is not None:
             self.outbound_ringtone.stop()
-            self.stream.bridge.remove(self.outbound_ringtone)
+            try:
+                self.stream.bridge.remove(self.outbound_ringtone)
+            except ValueError:
+                pass # there is currently a hack in the middleware which stops the bridge when the audio stream ends
             self.outbound_ringtone = None
 
         if status in (STREAM_IDLE, STREAM_FAILED):
