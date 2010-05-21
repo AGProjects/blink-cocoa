@@ -274,8 +274,6 @@ class SIPManager(object):
         # start session mgr
         sm = SessionManager()
 
-        self.request_dns_lookup_for_account(self._selected_account)
-
     def request_dns_lookup_for_account(self, account):
         stun_dns = DNSLookup()
         self.notification_center.add_observer(self, sender=stun_dns)
@@ -924,6 +922,8 @@ class SIPManager(object):
             for transport in SIPSimpleSettings().sip.transport_list:
                 contact = bonjour_account.contact[transport]
                 BlinkLogger().log_info('Bonjour Account listens on sip:%s@%s:%d;transport=%s' % (contact.user, contact.host, contact.port, contact.parameters['transport'] if 'transport' in contact.parameters else 'udp'))
+
+        self.request_dns_lookup_for_account(self._selected_account)
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()
