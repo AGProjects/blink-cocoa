@@ -659,7 +659,7 @@ class ChatController(BaseStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         log_error(self, "Chat stream failed: %s (%s)" % (sender, data))
         self.chatViewController.writeSysMessage("Media stream failed: %s" % data.reason)
-        self.changeStatus(STREAM_FAILED, data.reason)
+        self.changeStatus(STREAM_FAILED)
         if self.wasRemoved:
             if self.history:
                 self.history.close()
