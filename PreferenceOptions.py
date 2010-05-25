@@ -1152,7 +1152,7 @@ class ObjectTupleOption(Option):
 
 class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option):
-        ObjectTupleOption.__init__(self, object, name, option, [("Hostname", 142), ("Port",50)])
+        ObjectTupleOption.__init__(self, object, name, option, [("IP Address", 142), ("Port",50)])
 
         self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add new")
 
