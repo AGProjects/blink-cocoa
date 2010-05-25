@@ -61,7 +61,8 @@ def formatName(name):
     "plus": "+",
     "url": "URL",
     "ice": "ICE",
-    "pidf": "PIDF"
+    "pidf": "PIDF",
+    "acm": "ACM"
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
