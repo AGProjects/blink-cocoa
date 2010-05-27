@@ -594,20 +594,6 @@ class ImageDepthOption(PopUpMenuOption):
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
-class MSRPFailureReportOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
-        for item in option.type.available_values:
-            self.popup.addItemWithTitle_(str(item))
-        self.popup.sizeToFit()
-
-class MSRPSuccessReportOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
-        for item in option.type.available_values:
-            self.popup.addItemWithTitle_(str(item))
-        self.popup.sizeToFit()
-
 class MSRPTransportOption(PopUpMenuOption):
     def __init__(self, object, name, option):
         PopUpMenuOption.__init__(self, object, name, option)
@@ -1279,8 +1265,6 @@ PreferenceOptionTypes = {
 "ImageDepth" : ImageDepthOption,
 "DomainList" : StringTupleOption,
 "MSRPRelayAddress" : MSRPRelayAddresOption,
-"MSRPFailureReport" : MSRPFailureReportOption,
-"MSRPSuccessReport" : MSRPSuccessReportOption,
 "MSRPTransport" : MSRPTransportOption,
 "XCAPRoot" : NullableStringOption,
 "SRTPEncryption" : SRTPEncryptionOption,
