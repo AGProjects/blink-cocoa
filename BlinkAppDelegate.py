@@ -55,6 +55,8 @@ class BlinkAppDelegate(NSObject):
             
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPSessionNewIncoming")
+            nc.add_observer(self, name="SIPSessionGotProposal")
+            nc.add_observer(self, name="SIPSessionGotRejectProposal")
             nc.add_observer(self, name="SIPSessionDidFail")
             nc.add_observer(self, name="SIPSessionDidStart")
             nc.add_observer(self, name="MediaStreamDidInitialize")
@@ -215,8 +217,23 @@ You might need to Replace it and re-enter your account information. Your old fil
         itunes_interface = ITunesInterface()
         itunes_interface.pause()
 
+    def _NH_SIPSessionGotProposal(self, notification):
+        if any(stream.type == 'audio' for stream in notification.data.streams):
+            itunes_interface = ITunesInterface()
+            itunes_interface.pause()
+
+    def _NH_SIPSessionGotRejectProposal(self, notification):
+        if any(stream.type == 'audio' for stream in notification.data.streams):
+            if not self.activeAudioStreams and not self.incomingSessions:
+                itunes_interface = ITunesInterface()
+                itunes_interface.resume()
+
     def _NH_SIPSessionDidStart(self, notification):
         self.incomingSessions.discard(notification.sender)
+        if all(stream.type != 'audio' for stream in notification.data.streams):
+            if not self.activeAudioStreams and not self.incomingSessions:
+                itunes_interface = ITunesInterface()
+                itunes_interface.resume()
 
     def _NH_SIPSessionDidFail(self, notification):
         itunes_interface = ITunesInterface()
