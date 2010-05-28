@@ -1155,6 +1155,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
         if object is None and column is None: # delete row
             if row < len(self.values):
                 del self.values[row]
+                self.store()
                 table.reloadData()
             return
 
