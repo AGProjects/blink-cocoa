@@ -453,9 +453,11 @@ class ContactListModel(NSObject):
             new_contact.stored_in_account = str(acct.id)
         else:
             new_contact.stored_in_account = None
-        
-        controller = AddContactController(new_contact, group or self.contactGroupsList[0].name)
-        controller.setGroupNames([g.name for g in self.contactGroupsList if not g.dynamic])
+
+        groups = [g.name for g in self.contactGroupsList if not g.dynamic]
+        first_group = groups and groups[0] or None
+        controller = AddContactController(new_contact, group or first_group)
+        controller.setGroupNames(groups)
 
         result, groupName = controller.runModal()
         if result:     

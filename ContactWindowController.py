@@ -807,12 +807,12 @@ class ContactWindowController(NSWindowController):
                     self.contactOutline.scrollRowToVisible_(row)
                     self.window().makeFirstResponder_(self.contactOutline)
         else:
-            contact = self.contactOutline.itemAtRow_(self.contactOutline.selectedRow())
-            if type(contact) == Contact:
-                group = self.contactOutline.parentForItem_(contact)
+            item = self.contactOutline.itemAtRow_(self.contactOutline.selectedRow())
+            if type(item) == Contact:
+                group = self.contactOutline.parentForItem_(item)
             else:
-                group = contact
-            contact = self.model.addNewContact(group=group.name if group else None)
+                group = item
+            contact = self.model.addNewContact(group=group.name if group and not group.dynamic else None)
             if contact:
                 self.refreshContactsList()
                 self.performSearch()
