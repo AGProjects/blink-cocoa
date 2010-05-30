@@ -6,6 +6,39 @@
 
 <body>
 
+<h2>Version 0.18.3</h2>
+
+<p>Jun 25th, 2010
+
+<h3>Features</h3>
+<ul>
+<li> Added support for MSRP Alternative Connection Model (ACM)
+</ul>
+
+<h3>Bug fixes</h3>
+<ul>
+<li> Do not propose the bonjour group when adding contacts
+<li> Avoid printing stream failure reason twice in chat window
+<li> Fixed deletion of STUN servers from the list
+<li> Change column header from Hostname to IP address for STUN server list
+<li> Fixed race when NAT type detection is initiated before SIPApplication starts
+<li> Fixed ICE support detection
+<li> Simplified ICE related properties in SDP objects
+<li> Fixed handling of the case when ICE candidates could not be chosen
+<li> Added NAT detector to SIPApplication object
+<li> Only accept IP addresses for the STUN server list
+<li> Remove notifications sent when stream ended while starting/initializing
+<li> Fixed use of the Reason header for determining call disconnect reason
+<li> Fixed handling of stream added to conference
+<li> Generate notification when Session ended while stream was starting/initalizing
+<li> Fixed starting of recording on AudioStream while on hold
+<li> Moved MSRP transport setting to the account
+<li> Fixed MSRP transport used for contacting relay
+<li> Fixed error message in SIPProxyAddress configuration data type
+<li> Modified DNSLookup to not timeout completely if NS queries fail
+</ul>
+
+
 <h2>Version 0.18.2</h2>
 
 <p>May 12th, 2010
@@ -153,7 +186,6 @@
 
 <p>February 25th, 2010
 
-<h3>Features</h3>
 <ul>
 <li>Show currently selected audio devices in Alert Panel
 <li>Allow Drag & Drop of files into the entire Chat window
