@@ -10,32 +10,27 @@
 
 <p>Jun 25th, 2010
 
-<h3>Features</h3>
 <ul>
-<li> Added support for MSRP Alternative Connection Model (ACM)
-</ul>
-
-<h3>Bug fixes</h3>
-<ul>
-<li> Do not propose the bonjour group when adding contacts
-<li> Avoid printing stream failure reason twice in chat window
-<li> Fixed deletion of STUN servers from the list
-<li> Change column header from Hostname to IP address for STUN server list
-<li> Fixed race when NAT type detection is initiated before SIPApplication starts
-<li> Fixed ICE support detection
-<li> Simplified ICE related properties in SDP objects
-<li> Fixed handling of the case when ICE candidates could not be chosen
-<li> Added NAT detector to SIPApplication object
-<li> Only accept IP addresses for the STUN server list
-<li> Remove notifications sent when stream ended while starting/initializing
-<li> Fixed use of the Reason header for determining call disconnect reason
-<li> Fixed handling of stream added to conference
-<li> Generate notification when Session ended while stream was starting/initalizing
-<li> Fixed starting of recording on AudioStream while on hold
-<li> Moved MSRP transport setting to the account
-<li> Fixed MSRP transport used for contacting relay
-<li> Fixed error message in SIPProxyAddress configuration data type
-<li> Modified DNSLookup to not timeout completely if NS queries fail
+<li>Added support for MSRP Alternative Connection Model (ACM)
+<li>Enhance iTunes pause/resume behavior with chat streams
+<li>Do not propose the bonjour group when adding contacts
+<li>Avoid printing stream failure reason twice in chat window
+<li>Fixed deletion of STUN servers from the list
+<li>Change column header from Hostname to IP address for STUN server list
+<li>Fixed race when NAT type detection is initiated before SIPApplication starts
+<li>Fixed ICE proposal detection when ICE attributes are set at session level
+<li>Fixed handling of the case when no ICE candidates were chosen
+<li>Added NAT detector to SIPApplication object
+<li>Only accept IP addresses for the STUN server list
+<li>Remove notifications sent when stream ended while starting/initializing
+<li>Fixed use of the Reason header for determining call disconnect reason
+<li>Fixed handling of audio stream added to conference
+<li>Generate notification when Session ended while stream was starting/initalizing
+<li>Fixed starting of recording on AudioStream while on session is on hold
+<li>Moved MSRP transport settings to the account level
+<li>Fixed MSRP transport used for contacting the MSRP relay
+<li>Fixed error message in SIPProxyAddress configuration data type
+<li>Modified DNSLookup to not timeout completely if NS queries fail
 </ul>
 
 
