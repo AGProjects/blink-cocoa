@@ -28,8 +28,14 @@ def contactIconPathForURI(uri):
 def saveContactIcon(image, uri):
     path = contactIconPathForURI(uri)
     makedirs(os.path.dirname(path))
-    data = image.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
-    data.writeToFile_atomically_(path, False)        
+    if image is not None:
+        data = image.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
+        data.writeToFile_atomically_(path, False)
+    else:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
 
 def loadContactIcon(uri):
     path = contactIconPathForURI(uri)
@@ -157,8 +163,7 @@ class Contact(NSObject):
 
     def setIcon(self, icon):
         self.icon = icon
-        if self.icon:
-            saveContactIcon(self.icon, str(self.uri))
+        saveContactIcon(self.icon, str(self.uri))
 
 
 class ContactGroup(NSObject):
