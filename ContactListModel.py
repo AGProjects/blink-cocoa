@@ -10,9 +10,7 @@ from Foundation import *
 from AppKit import *
 
 from sipsimple.core import FrozenSIPURI, SIPURI
-from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager
-from sipsimple.configuration.settings import SIPSimpleSettings
 
 from SIPManager import SIPManager, strip_addressbook_special_characters
 from AddContactController import AddContactController, EditContactController
@@ -65,7 +63,7 @@ class Contact(NSObject):
 
     def __repr__(self):
         return "<Contact: %s>" % self.uri
-    
+
     def __contains__(self, text):
         text = text.lower()
         return text in self.uri.lower() or text in self.name.lower()
@@ -185,7 +183,7 @@ class ContactGroup(NSObject):
 
     def copyWithZone_(self, zone):
         return self
-        
+
     def setBonjourNeighbours(self, contact_list):
         self.contacts = []
         for display_name, uri in contact_list:
@@ -216,7 +214,7 @@ class ContactGroup(NSObject):
         result = []
         for match in book.people():
             person_id = match.uniqueId()
-        
+
             first = match.valueForProperty_(AddressBook.kABFirstNameProperty)
             last = match.valueForProperty_(AddressBook.kABLastNameProperty)
             middle = match.valueForProperty_(AddressBook.kABMiddleNameProperty)
@@ -282,7 +280,7 @@ class ContactGroup(NSObject):
                             pass
                     else:
                         pass
-                        
+
             if not sip_addresses: continue
 
             idata = match.imageData()
@@ -299,7 +297,7 @@ class ContactGroup(NSObject):
                     detail = "%s (%s)"%(sip_address, address_type)
                 else:
                     detail = sip_address
-                
+
                 # strip everything that's not numbers from the URIs if they are not SIP URIs
                 if "@" not in sip_address:
                     if sip_address.startswith("sip:"):
@@ -311,7 +309,7 @@ class ContactGroup(NSObject):
                     contact_uri += "".join(c for c in sip_address if c in "0123456789#*")
                 else:
                     contact_uri = sip_address
-                
+
                 contact = Contact(name=name, display_name=display_name, uri=contact_uri, icon=photo or default_icon, preferred_media="audio", detail=detail, editable=False, addressbook_id=person_id)
                 self.contacts.append(contact)
 
@@ -450,7 +448,7 @@ class ContactListModel(NSObject):
       try:
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
-        
+
         new_contact = Contact(uri=address, name=display_name)
         # When Add Contact, the XCAP storage must have by default selected the current account if xcap is enabled or Local otherwise
         acct = AccountManager().default_account
@@ -477,7 +475,7 @@ class ContactListModel(NSObject):
                             NSRunAlertPanel("Add Contact",
                                 "Contact %s already exists (%s)"%(address, c.name), "OK", None, None)
                             return None
-            
+
             if "@" not in new_contact.uri:
                 account = AccountManager().default_account
                 if account:
@@ -487,7 +485,7 @@ class ContactListModel(NSObject):
                 account = AccountManager().default_account
                 if account:
                     new_contact.uri += "." + account.id.domain
-            
+
             if not group:
                 group = ContactGroup(groupName, [])
                 # insert after last non-dynamic group
@@ -497,10 +495,10 @@ class ContactListModel(NSObject):
                         break
                     index += 1
                 self.contactGroupsList.insert(index, group)
-            
+
             group.contacts.append(new_contact)
             self.saveContacts()
-            
+
             return new_contact
         return None
       except:
@@ -608,7 +606,7 @@ class ContactListModel(NSObject):
 
     def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
         return item.name
-        
+
     def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
         if type(item) == ContactGroup:
             if object != item.name:
@@ -792,9 +790,7 @@ class ContactListModel(NSObject):
             if contact_index is not None:
                 pboard.declareTypes_owner_(["dragged-contact", "x-blink-sip-uri"], self)
                 pboard.setString_forType_(str((g, contact_index)), "dragged-contact")
-                
                 pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
-                
                 return True
         return False
 
