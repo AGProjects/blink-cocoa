@@ -5,6 +5,7 @@ from AppKit import *
 from Foundation import *
 
 import datetime
+import os
 import time
 
 from application.notification import IObserver, NotificationCenter
@@ -590,7 +591,13 @@ class AudioController(BaseStream):
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
             else:
-                self.stream.start_recording()
+                settings = SIPSimpleSettings()
+                session = self.sessionController.session
+                direction = session.direction
+                remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
+                filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
+                path = os.path.join(settings.audio.directory.normalized, session.account.id)
+                self.stream.start_recording(os.path.join(path, filename))
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
         elif seg == 2: # stop audio

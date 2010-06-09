@@ -2,6 +2,7 @@
 #
 
 import datetime
+import os
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -81,8 +82,13 @@ class AnsweringMachine(object):
             self.beep.start()
         elif notification.sender is self.beep:
             # start recording after the beep
+            settings = SIPSimpleSettings()
             self.stream.bridge.remove(self.beep)
-            self.stream.start_recording()
+            direction = self.session.direction
+            remote = "%s@%s" % (self.session.remote_identity.uri.user, self.session.remote_identity.uri.host)
+            filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
+            path = os.path.join(settings.audio.directory.normalized, self.session.account.id)
+            self.stream.start_recording(os.path.join(path, filename))
             self.start_time = datetime.datetime.now()
 
     def _NH_MediaStreamDidFail(self, notification):
