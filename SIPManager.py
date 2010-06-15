@@ -290,7 +290,6 @@ class SIPManager(object):
             if account.nat_traversal.stun_server_list:
                 account.nat_traversal.stun_server_list = [STUNServerAddress(gethostbyname(address.host), address.port) for address in account.nat_traversal.stun_server_list]
                 address = account.nat_traversal.stun_server_list[0]
-                self._app.engine.detect_nat_type(address.host, address.port)
             else:
                 stun_dns.lookup_service(SIPURI(host=account.id.domain), "stun")
                 self._stun_lookups[stun_dns] = account
@@ -952,16 +951,12 @@ class SIPManager(object):
         if self._stun_lookups.has_key(dnsobj):
             BlinkLogger().log_info("DNS Lookup for STUN servers of domain %s succeeded: %s"%
                 (self._stun_lookups[dnsobj].id.domain, data.result))
-            
-            #account = self._stun_lookups[dnsobj]
-            #account.nat_traversal.stun_server_list = data.result
-            if data.result:
-                self._app.engine.detect_nat_type(*data.result[0])
+
             del self._stun_lookups[dnsobj]
         elif self._routes_lookups.has_key(dnsobj):
             BlinkLogger().log_info("DNS Lookup for SIP routes of %s succeeded: %s"%
                 (self._routes_lookups[dnsobj].target_uri, data.result))
-            
+
             requestor_session_controller = self._routes_lookups[dnsobj]
             routes = data.result
             if not routes:
