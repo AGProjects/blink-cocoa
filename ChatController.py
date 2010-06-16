@@ -222,6 +222,7 @@ class ChatController(BaseStream):
     addContactLabel = objc.IBOutlet()
 
     document = None
+    fail_reason = None
     sessionController = None
     stream = None
     finishedLoading = False
@@ -237,7 +238,7 @@ class ChatController(BaseStream):
 
     lastDeliveredTime = None
     undeliveredMessages = {} # id -> message
-    
+
     # timer is reset whenever remote end sends is-composing active, when it times out, go to idle
     remoteTypingTimer = None
 
@@ -250,13 +251,15 @@ class ChatController(BaseStream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
-            NotificationCenter().add_observer(self, sender=stream)
+            notification_center = NotificationCenter()
+            notification_center.add_observer(self, sender=stream)
+            notification_center.add_observer(self, sender=self.sessionController.session)
 
             NSBundle.loadNibNamed_owner_("SessionChat", self)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("chat", "html"))
             self.chatViewController.setAccount_(self.sessionController.account)
-            
+
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
 
@@ -346,14 +349,6 @@ class ChatController(BaseStream):
         if autoclose or status == STREAM_DISCONNECTING:
             self.closeChatWindow()
 
-    def sessionStateChanged(self, newstate, detail):
-        if newstate == STATE_CONNECTED:
-            pass
-        elif newstate == STATE_FAILED:
-            self.changeStatus(STREAM_FAILED, detail)
-        elif newstate == STATE_DNS_FAILED:
-            self.changeStatus(STREAM_FAILED, detail)
-
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
@@ -380,11 +375,12 @@ class ChatController(BaseStream):
                 ended = True
         elif newstate == STREAM_FAILED:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
-                BlinkLogger().log_error("Chat Session ended: %s" % fail_reason)
                 if fail_reason:
-                    self.chatViewController.writeSysMessage("Chat Session ended: %s" % fail_reason, datetime.datetime.utcnow())
+                    BlinkLogger().log_error("Chat Session failed: %s" % fail_reason)
+                    self.chatViewController.writeSysMessage("Chat Session failed: %s" % fail_reason, datetime.datetime.utcnow())
                 else:
-                    self.chatViewController.writeSysMessage("Chat Session ended", datetime.datetime.utcnow())
+                    BlinkLogger().log_error("Chat Session failed")
+                    self.chatViewController.writeSysMessage("Chat Session failed", datetime.datetime.utcnow())
                 ended = True
         self.status = newstate
         BaseStream.changeStatus(self, newstate, fail_reason)
@@ -638,15 +634,15 @@ class ChatController(BaseStream):
 
             window.noteSession_isComposing_(self.sessionController, flag)
 
-    def _NH_MediaStreamDidStart(self, sender, data):
+    def _NH_SIPSessionDidStart(self, sender, data):
         if self.handler:
             log_info(self, "Chat stream started")
-            self.handler.setStream(sender)
-            self.handler.setConnected()
+            streams = [stream for stream in data.streams if isinstance(stream, ChatStream)]
+            self.setStream(streams[0], connected=True)
             self.changeStatus(STREAM_CONNECTED)
 
-    def _NH_MediaStreamDidEnd(self, sender, data):
-        log_info(self, "Chat stream ended: %s" % sender)
+    def _NH_SIPSessionDidEnd(self, sender, data):
+        log_info(self, "Chat stream ended: %s" % self.stream)
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         if self.wasRemoved:
             if self.history:
@@ -656,14 +652,42 @@ class ChatController(BaseStream):
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
-    def _NH_MediaStreamDidFail(self, sender, data):
-        log_error(self, "Chat stream failed: %s (%s)" % (sender, data))
-        self.chatViewController.writeSysMessage("Media stream failed: %s" % data.reason)
-        self.changeStatus(STREAM_FAILED)
+    def _NH_SIPSessionDidFail(self, sender, data):
+        log_info(self, "Chat stream failed: %s" % self.stream)
+        self.changeStatus(STREAM_FAILED, self.fail_reason or data.reason)
+        self.fail_reason = None
         if self.wasRemoved:
             if self.history:
                 self.history.close()
                 self.history = None
+        window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+        if window:
+            window.noteSession_isComposing_(self.sessionController, False)
+
+    def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
+        if data.action == 'remove' and self.stream in data.streams:
+            if self.fail_reason is not None:
+                log_info(self, "Chat stream failed: %s" % self.fail_reason)
+                self.fail_reason = None
+            else:
+                log_info(self, "Chat stream ended: %s" % self.stream)
+            self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
+            if self.wasRemoved:
+                if self.history:
+                    self.history.close()
+                    self.history = None
+            window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+            if window:
+                window.noteSession_isComposing_(self.sessionController, False)
+        elif data.action == 'add' and self.handler and not self.stream:
+            streams = [stream for stream in data.streams if isinstance(stream, ChatStream)]
+            if streams:
+                log_info(self, "Chat stream started")
+                self.setStream(streams[0], connected=True)
+                self.changeStatus(STREAM_CONNECTED)
+
+    def _NH_MediaStreamDidFail(self, sender, data):
+        self.fail_reason = data.reason
 
     def didRemove(self):
         self.chatViewController.close()
