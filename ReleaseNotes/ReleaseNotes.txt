@@ -30,6 +30,14 @@ The complete list of features and implemented standards are available at:
 http://icanblink.com/features.phtml
 
 
+Installation
+------------ 
+
+Installation instructions can be found at:
+
+http://icanblink.com/download.phtml
+
+
 Support
 -------
 
