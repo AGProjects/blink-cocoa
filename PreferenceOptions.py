@@ -601,6 +601,13 @@ class MSRPTransportOption(PopUpMenuOption):
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
+class MSRPConnectionModelOption(PopUpMenuOption):
+    def __init__(self, object, name, option):
+        PopUpMenuOption.__init__(self, object, name, option)
+        for item in option.type.available_values:
+            self.popup.addItemWithTitle_(str(item))
+        self.popup.sizeToFit()
+
 class TLSProtocolOption(PopUpMenuOption):
     def __init__(self, object, name, option):
         PopUpMenuOption.__init__(self, object, name, option)
@@ -1267,6 +1274,7 @@ PreferenceOptionTypes = {
 "DomainList" : StringTupleOption,
 "MSRPRelayAddress" : MSRPRelayAddresOption,
 "MSRPTransport" : MSRPTransportOption,
+"MSRPConnectionModel" : MSRPConnectionModelOption,
 "XCAPRoot" : NullableStringOption,
 "SRTPEncryption" : SRTPEncryptionOption,
 "NonNegativeInteger" : NonNegativeIntegerOption,
