@@ -679,9 +679,9 @@ class ChatController(BaseStream):
             window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
             if window:
                 window.noteSession_isComposing_(self.sessionController, False)
-        elif data.action == 'add' and self.handler and not self.stream:
+        elif data.action == 'add' and self.handler:
             streams = [stream for stream in data.streams if isinstance(stream, ChatStream)]
-            if streams:
+            if self.stream == streams[0]:
                 log_info(self, "Chat stream started")
                 self.setStream(streams[0], connected=True)
                 self.changeStatus(STREAM_CONNECTED)
