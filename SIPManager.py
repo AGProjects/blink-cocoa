@@ -5,6 +5,7 @@ from zope.interface import implements, Interface
 
 from application.python.util import Singleton
 
+import cjson
 import datetime
 import os
 import re
@@ -16,7 +17,8 @@ from socket import gethostbyname
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
-from application.system import host
+from application.system import host, unlink
+from collections import defaultdict
 from eventlet import api
 
 from sipsimple.application import SIPApplication
@@ -374,6 +376,46 @@ class SIPManager(object):
             crt_fname = crt_fname.replace(home_directory, '~/')
 
         return crt_fname
+
+    def fetch_account(self):
+        """Fetch the SIP account from ~/.blink_account and create/update it as needed"""
+        filename = os.path.expanduser('~/.blink_account')
+        try:
+            data = open(filename).read()
+            data = cjson.decode(urllib.unquote(data).replace('\\/', '/'))
+        except (OSError, IOError), e:
+            BlinkLogger().log_error("Failed to read json data from ~/.blink_account: %s" % e)
+            return
+        except cjson.DecodeError, e:
+            BlinkLogger().log_error("Failed to decode json data from ~/.blink_account: %s" % e)
+            return
+        finally:
+            unlink(filename)
+        data = defaultdict(lambda: None, data)
+        account_id = data['sip_address']
+        if account_id is None:
+            return
+        account_manager = AccountManager()
+        try:
+            account = account_manager.get_account(account_id)
+        except KeyError:
+            account = Account(account_id)
+            account.display_name = data['display_name']
+            default_account = account
+        else:
+            default_account = account_manager.default_account
+        account.auth.username = data['auth_username']
+        account.auth.password = data['password'] or ''
+        account.sip.outbound_proxy = data['outbound_proxy']
+        account.xcap.xcap_root = data['xcap_root']
+        account.nat_traversal.msrp_relay = data['msrp_relay']
+        account.server.settings_url = data['settings_url']
+        if data['passport'] is not None:
+            cert_path = self.save_certificates(data)
+            account.tls.certificate = cert_path
+        account.enabled = True
+        account.save()
+        account_manager.default_account = default_account
 
     def enroll(self, display_name, username, password, email):
         url = SIPSimpleSettings().server.enrollment_url

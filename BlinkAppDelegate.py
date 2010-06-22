@@ -148,6 +148,7 @@ class BlinkAppDelegate(NSObject):
         while True:
             try:
                 self.backend.init(options, version)
+                self.backend.fetch_account()
                 if not self.backend.has_accounts():
                     self.enroll()
                 break
