@@ -137,12 +137,11 @@ class BlinkAppDelegate(NSObject):
                    "resources_directory": str(NSBundle.mainBundle().resourcePath())}
 
         self.backend = SIPManager()
-        
+
         os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool YES")
 
-      
         self.windowController.setup(self.backend)
-        
+
         version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
 
         while True:
@@ -169,7 +168,7 @@ You might need to Replace it and re-enter your account information. Your old fil
                         "Quit", None, None)
                 NSApp.terminate_(None)
                 return
-            
+
         # window should be shown only after enrollment check
         # "pl do not show Main interface at the first start, just show the wizard"
         self.windowController.showWindow_(None)
