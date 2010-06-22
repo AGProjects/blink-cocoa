@@ -445,21 +445,16 @@ class SIPManager(object):
         raw_response = urllib2.urlopen(req)
         json_data = raw_response.read()
 
-        response = eval(json_data, {"__builtins__":None, "false":False, "true":True}, {})
+        response = cjson.decode(json_data.replace('\\/', '/'))
         if response:
             if not response["success"]:
-                BlinkLogger().log_info("Enrollment Server failed to create SIP account: %(error_message)s"%response)
+                BlinkLogger().log_info("Enrollment Server failed to create SIP account: %(error_message)s" % response)
                 raise Exception(response["error_message"])
             else:
-                BlinkLogger().log_info("Enrollment Server successfully created SIP account %(sip_address)s"%response)
-
-                certificate_path = self.save_certificates(response) if "passport" in response else None
-                
-                outbound_proxy = response["outbound_proxy"].replace(r"\/", "/") if "outbound_proxy" in response else None
-                xcap_root = response["xcap_root"].replace(r"\/", "/") if "xcap_root" in response else None
-                msrp_relay = response["msrp_relay"].replace(r"\/", "/") if "msrp_relay" in response else None
-                settings_url = response["settings_url"].replace(r"\/", "/") if "settings_url" in response else None
-                return response["sip_address"], certificate_path, outbound_proxy, xcap_root, msrp_relay, settings_url
+                BlinkLogger().log_info("Enrollment Server successfully created SIP account %(sip_address)s" % response)
+                data = defaultdict(lambda: None, response)
+                certificate_path = None if data['passport'] is None else self.save_certificates(data)
+                return data['sip_address'], certificate_path, data['outbound_proxy'], data['xcap_root'], data['msrp_relay'], data['settings_url']
         else:
             BlinkLogger().log_info("Enrollment Server returned no response")
 
