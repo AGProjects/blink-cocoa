@@ -393,7 +393,7 @@ class SIPManager(object):
             return
         try:
             data = open(filename).read()
-            data = cjson.decode(urllib.unquote(data).replace('\\/', '/'))
+            data = cjson.decode(urllib.unquote_plus(data).replace('\\/', '/'))
         except (OSError, IOError), e:
             BlinkLogger().log_error("Failed to read json data from ~/.blink_account: %s" % e)
             return
