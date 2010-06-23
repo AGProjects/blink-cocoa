@@ -20,6 +20,8 @@ from application.python.util import Null
 from application.system import host, unlink
 from collections import defaultdict
 from eventlet import api
+from gntuls.crypto import X509Certificate, X509PrivateKey
+from gntuls.error import GNUTLSError
 
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
@@ -326,6 +328,14 @@ class SIPManager(object):
         crt = passport["crt"]
         key = passport["key"]
         ca = passport["ca"]
+
+        try:
+            X509Certificate(crt)
+            X509Certificate(ca)
+            X509PrivateKey(key)
+        except GNUTLSError, e:
+            BlinkLogger().log_error("Invalid certificate data: %s" % e)
+            return None
 
         folder = SIPSimpleSettings().user_data_directory+"/tls"
         if not os.path.exists(folder):
