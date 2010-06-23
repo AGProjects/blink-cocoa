@@ -323,9 +323,9 @@ class SIPManager(object):
         passport = response["passport"]
         address = response["sip_address"]
 
-        crt = passport["crt"].replace(r"\/", "/")
-        key = passport["key"].replace(r"\/", "/")
-        ca = passport["ca"].replace(r"\/", "/")
+        crt = passport["crt"]
+        key = passport["key"]
+        ca = passport["ca"]
         ca = "\n".join(line.strip() for line in ca.split("\n"))
 
         folder = SIPSimpleSettings().user_data_directory+"/tls"
