@@ -3,7 +3,7 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">9L31a</string>
-		<string key="IBDocument.InterfaceBuilderVersion">677</string>
+		<string key="IBDocument.InterfaceBuilderVersion">680</string>
 		<string key="IBDocument.AppKitVersion">949.54</string>
 		<string key="IBDocument.HIToolboxVersion">353.00</string>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
@@ -189,7 +189,7 @@ CklFVEYgQ29tbXVuaXR5OiBodHRwOi8vd3d3LmlldGYub3JnA</string>
 							<object class="NSTextFieldCell" key="NSCell" id="534644642">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">A fully featured easy to use SIP client</string>
+								<string key="NSContents">A state the art, easy to use SIP client</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">1.300000e+01</double>
@@ -394,9 +394,9 @@ CklFVEYgQ29tbXVuaXR5OiBodHRwOi8vd3d3LmlldGYub3JnA</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{374, 201}, {343, 464}}</string>
+					<string>{{588, 24}, {343, 464}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{374, 201}, {343, 464}}</string>
+					<string>{{588, 24}, {343, 464}}</string>
 					<boolean value="NO"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
