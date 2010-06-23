@@ -325,9 +325,9 @@ class SIPManager(object):
         passport = response["passport"]
         address = response["sip_address"]
 
-        crt = passport["crt"]
-        key = passport["key"]
-        ca = passport["ca"]
+        crt = passport["crt"].strip() + os.linesep
+        key = passport["key"].strip() + os.linesep
+        ca = passport["ca"].strip() + os.linesep
 
         try:
             X509Certificate(crt)
@@ -337,54 +337,45 @@ class SIPManager(object):
             BlinkLogger().log_error("Invalid certificate data: %s" % e)
             return None
 
-        folder = SIPSimpleSettings().user_data_directory+"/tls"
-        if not os.path.exists(folder):
-            os.mkdir(folder, 0700)
+        home_directory = os.path.expanduser('~/')
+        tls_folder = os.path.join(SIPSimpleSettings().user_data_directory, "tls")
+        if not os.path.exists(tls_folder):
+            os.mkdir(tls_folder, 0700)
 
-        crt_fname = folder+"/"+address+".crt"
-        f = open(crt_fname, "w+")
-        os.chmod(crt_fname, 0600)
+        crt_path = os.path.join(tls_folder, address + ".crt")
+        f = open(crt_path, "w")
+        os.chmod(crt_path, 0600)
         f.write(crt)
         f.write(key)
         f.close()
-        BlinkLogger().log_info("Saved new TLS Certificate and Private Key to %s"%crt_fname)
+        BlinkLogger().log_info("Saved new TLS Certificate and Private Key to %s" % crt_path)
+        if crt_path.startswith(home_directory):
+            crt_path = crt_path.replace(home_directory, '~/')
 
-        found = False
-        if os.path.exists(folder+"/ca.crt"):
-            try:
-                f = open(folder+"/ca.crt", "r")
-                certs = []
-                for line in f:
-                    if line.startswith("-----BEGIN CERTIFICATE-----"):
-                        certs.append(line)
-                    else:
-                        certs[-1] += line
-                f.close()
-                found = ca in certs
-            except:
-                import traceback
-                traceback.print_exc()
-                found = False
+        ca_path = os.path.join(tls_folder, 'ca.crt')
 
-        home_directory = os.path.expanduser('~/')
+        try:
+            existing_cas = open(ca_path, "r").read().strip() + os.linesep
+        except:
+            existing_cas = None
+            ca_list = ca
+        else:
+            ca_list = existing_cas if ca in existing_cas else existing_cas + ca
 
-        if not found:
-            fname = folder+"/ca.crt"
-            f= open(fname, "a+")
-            os.chmod(fname, 0600)
-            f.write(ca)
+        if ca_list != existing_cas:
+            f = open(ca_path, "w")
+            os.chmod(ca_path, 0600)
+            f.write(ca_list)
             f.close()
-            BlinkLogger().log_info("Added new CA to %s"%fname)
-
-            if fname.startswith(home_directory):
-                fname = fname.replace(home_directory, '~/')
-            SIPSimpleSettings().tls.ca_list = fname
+            BlinkLogger().log_info("Added new CA to %s" % ca_path)
+            if ca_path.startswith(home_directory):
+                ca_path = ca_path.replace(home_directory, '~/')
+            SIPSimpleSettings().tls.ca_list = ca_path
             SIPSimpleSettings().save()
+        else:
+            BlinkLogger().log_info("CA already present in %s" % ca_path)
 
-        if crt_fname.startswith(home_directory):
-            crt_fname = crt_fname.replace(home_directory, '~/')
-
-        return crt_fname
+        return crt_path
 
     def fetch_account(self):
         """Fetch the SIP account from ~/.blink_account and create/update it as needed"""
