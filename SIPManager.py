@@ -937,6 +937,9 @@ class SIPManager(object):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    def _NH_SIPApplicationFailedToStartTLS(self, sender, data):
+        BlinkLogger().log_info('Failed to start TLS transport: %s' % data.error)
+
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         settings.user_agent = "blink-"+self._version
