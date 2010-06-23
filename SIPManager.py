@@ -389,6 +389,8 @@ class SIPManager(object):
     def fetch_account(self):
         """Fetch the SIP account from ~/.blink_account and create/update it as needed"""
         filename = os.path.expanduser('~/.blink_account')
+        if not os.path.exists(filename):
+            return
         try:
             data = open(filename).read()
             data = cjson.decode(urllib.unquote(data).replace('\\/', '/'))
