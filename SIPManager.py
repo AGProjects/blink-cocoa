@@ -326,7 +326,6 @@ class SIPManager(object):
         crt = passport["crt"]
         key = passport["key"]
         ca = passport["ca"]
-        ca = "\n".join(line.strip() for line in ca.split("\n"))
 
         folder = SIPSimpleSettings().user_data_directory+"/tls"
         if not os.path.exists(folder):
@@ -347,9 +346,9 @@ class SIPManager(object):
                 certs = []
                 for line in f:
                     if line.startswith("-----BEGIN CERTIFICATE-----"):
-                        certs.append(line.strip()+"\n")
+                        certs.append(line)
                     else:
-                        certs[-1] += line.strip()+"\n"
+                        certs[-1] += line
                 f.close()
                 found = ca in certs
             except:
