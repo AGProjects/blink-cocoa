@@ -20,8 +20,8 @@ from application.python.util import Null
 from application.system import host, unlink
 from collections import defaultdict
 from eventlet import api
-from gntuls.crypto import X509Certificate, X509PrivateKey
-from gntuls.error import GNUTLSError
+from gnutls.crypto import X509Certificate, X509PrivateKey
+from gnutls.error import GNUTLSError
 
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
