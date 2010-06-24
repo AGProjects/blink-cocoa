@@ -680,12 +680,12 @@ class AudioController(BaseStream):
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
-        # Maybe this shouldn't be hardcoded as it's prone to errors if the message changes. -Luci
-        if data.state == 'ICE Session Initialized':
+        if data.state == 'ICE Candidates Gathering':
+            self.audioStatus.setStringValue_("Gathering ICE Candidates...")
+        elif data.state == 'ICE Session Initialized':
             self.audioStatus.setStringValue_("Connecting...")
-            self.audioStatus.sizeToFit()
-        else:
-            self.audioStatus.setStringValue_(data.state)
-            self.audioStatus.sizeToFit()
+        elif data.state == 'ICE Negotiation In Progress':
+            self.audioStatus.setStringValue_("Negotiating ICE...")
+        self.audioStatus.sizeToFit()
 
 
