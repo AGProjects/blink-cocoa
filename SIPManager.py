@@ -942,7 +942,7 @@ class SIPManager(object):
 
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
-        settings.user_agent = "blink-"+self._version
+        settings.user_agent = "Blink %s (MacOSX)" % self._version
         settings.save()
         # Although this settting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
