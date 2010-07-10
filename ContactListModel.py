@@ -204,6 +204,8 @@ class ContactGroup(NSObject):
         default_icon = NSImage.imageNamed_("NSUser")
         labelNames = {
             AddressBook.kABPhoneWorkLabel:   "work",
+            AddressBook.kABPhoneWorkFAXLabel: "fax",
+            AddressBook.kABPhoneHomeFAXLabel: "fax",
             AddressBook.kABPhoneHomeLabel:   "home",
             AddressBook.kABPhoneMainLabel:   "main",
             AddressBook.kABPhoneMobileLabel: "mobile",
@@ -246,7 +248,8 @@ class ContactGroup(NSObject):
                     if uri.startswith("sip:"):
                         uri = uri[4:]
                     try:
-                        sip_addresses.append((labelNames.get(label, None), uri))
+                        if labelNames.get(label) != 'fax':
+                            sip_addresses.append((labelNames.get(label, None), uri))
                     except:
                         pass
 
