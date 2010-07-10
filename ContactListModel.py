@@ -221,16 +221,14 @@ class ContactGroup(NSObject):
             last = match.valueForProperty_(AddressBook.kABLastNameProperty)
             middle = match.valueForProperty_(AddressBook.kABMiddleNameProperty)
             name = u""
-            if first and last:
+            if first and last and middle:
+                name += unicode(first) + " " + unicode(middle) + " " + unicode(last)
+            elif first and last:
                 name += unicode(first) + " " + unicode(last)
             elif last:
                 name += unicode(last)
             elif first:
                 name += unicode(first)
-            if name:
-                name += " "
-            if middle:
-                name += unicode(middle)
             display_name = name
             company = match.valueForProperty_(AddressBook.kABOrganizationProperty)
             if company:
