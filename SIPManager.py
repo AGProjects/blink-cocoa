@@ -944,7 +944,7 @@ class SIPManager(object):
         settings = SIPSimpleSettings()
         settings.user_agent = "Blink %s (MacOSX)" % self._version
         settings.save()
-        # Although this settting is set at enrollment time, people who have downloaded previous versions will not have it
+        # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
             if account.id.domain == "sip2sip.info" and account.server.settings_url is None:
