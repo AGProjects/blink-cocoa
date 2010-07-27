@@ -10,7 +10,7 @@ from Foundation import *
 from AppKit import *
 
 from sipsimple.core import FrozenSIPURI, SIPURI
-from sipsimple.account import AccountManager
+from sipsimple.account import AccountManager, BonjourAccount
 
 from SIPManager import SIPManager, strip_addressbook_special_characters
 from AddContactController import AddContactController, EditContactController
@@ -725,7 +725,7 @@ class ContactListModel(NSObject):
                 else:
                     print "%f : %s"%(f,error)
 
-            account = AccountManager().default_account
+            account = AccountManager().default_account if item not in self.bonjourgroup.contacts else BonjourAccount()
             if names_and_types and account:
                 try:
                     SIPManager().send_files_to_contact(account, item.uri, names_and_types)
