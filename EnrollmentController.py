@@ -133,19 +133,19 @@ class EnrollmentController(NSObject):
             return True
 
     def setupAccount(self):
-        display_name = unicode(self.displayNameText.stringValue())
-        address = unicode(self.addressText.stringValue())
-        password = unicode(self.passwordText.stringValue())
-
         try:
+            display_name = unicode(self.displayNameText.stringValue())
+            address = unicode(self.addressText.stringValue())
+            password = unicode(self.passwordText.stringValue())
+
             account = Account(str(address))
+            account.display_name = display_name
+            account.auth.password = password
+            account.enabled = True
+            account.save()
         except ValueError, e:
             NSRunAlertPanel("Sign In to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
             return False
-        account.display_name = display_name
-        account.auth.password = password
-        account.enabled = True
-        account.save()
 
         AccountManager().default_account = account
 
