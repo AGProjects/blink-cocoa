@@ -37,9 +37,7 @@ class SessionBox(NSView):
     def keyDown_(self, event):
         if self.delegate:
             try:
-                chars = str(event.characters())
-                if chars:
-                    self.delegate.sessionBoxKeyPressed(self, chars[0])
+                self.delegate.sessionBoxKeyPressEvent(self, event)
             except:
                 pass
         if self.window():

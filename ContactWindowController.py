@@ -1152,6 +1152,18 @@ class ContactWindowController(NSWindowController):
         
         self.transcriptViewer.showWindow_(None)
 
+    @objc.IBAction
+    def toggleAudioSessionsDrawer_(self, sender):
+        self.drawer.toggle_(sender)
+        if self.drawer.isOpen():
+            sessionBoxes = self.sessionListView.subviews()
+            if sessionBoxes.count() > 0:
+                selected = [session for session in sessionBoxes if session.selected]
+                if selected:
+                    self.window().makeFirstResponder_(selected[0])
+                else:
+                    self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
+
     def sip_error(self, message):
         NSRunAlertPanel("Error", message, "OK", None, None)
 

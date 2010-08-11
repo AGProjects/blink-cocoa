@@ -198,11 +198,19 @@ class AudioController(BaseStream):
             self.holdByLocal = False
             self.changeStatus(self.status)
 
-    def sessionBoxKeyPressed(self, sender, key):
-        key = key.upper()
-        if self.stream and key in '0123456789*#ABCD':
-            self.stream.send_dtmf(key)
-            SIPManager().play_dtmf(key)
+    def sessionBoxKeyPressEvent(self, sender, event):
+        s = event.characters()
+        if s and self.stream:
+            key = s[0].upper()
+            if key == " ":
+                if not self.isConferencing:
+                    self.toggleHold()
+            elif key == chr(27):
+                if not self.isConferencing:
+                    self.end();
+            elif key in '0123456789*#ABCD':
+                self.stream.send_dtmf(key)
+                SIPManager().play_dtmf(key)
 
     def sessionBoxDidActivate(self, sender):
         if self.isConferencing:
