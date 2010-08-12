@@ -6,7 +6,9 @@ from Foundation import *
 
 import datetime
 import os
+import string
 import time
+from itertools import izip, chain, repeat
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -208,7 +210,10 @@ class AudioController(BaseStream):
             elif key == chr(27):
                 if not self.isConferencing:
                     self.end();
-            elif key in '0123456789*#ABCD':
+            elif key in string.digits+string.uppercase+'#*':
+                letter_map = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
+                letter_map = dict(chain(*(izip(letters, repeat(digit)) for digit, letters in letter_map.iteritems())))
+                key = letter_map.get(key, key)
                 self.stream.send_dtmf(key)
                 SIPManager().play_dtmf(key)
 
