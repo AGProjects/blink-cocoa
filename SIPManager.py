@@ -895,13 +895,6 @@ class SIPManager(object):
         routes_dns.lookup_sip_proxy(uri, settings.sip.transport_list)
         self._routes_lookups[routes_dns] = requestor_session_controller
 
-    def play_dtmf(self, digit):
-        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(digit, digit)
-        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath(filename).normalized)
-        self.notification_center.add_observer(self, sender=wave_player, name="WavePlayerDidEnd")
-        SIPApplication.voice_audio_bridge.add(wave_player)
-        wave_player.start()
-
     def is_muted(self):
         return self._app.voice_audio_mixer and self._app.voice_audio_mixer.muted
 
@@ -1083,9 +1076,16 @@ class SIPManager(object):
                 self.log_outgoing_session_failed(session, data.timestamp)
 
     def _NH_AudioStreamGotDTMF(self, sender, data):
-        self.play_dtmf(data.digit)
+        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(digit, digit)
+        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath(filename).normalized)
+        self.notification_center.add_observer(self, sender=wave_player)
+        SIPApplication.voice_audio_bridge.add(wave_player)
+        wave_player.start()
+
+    def _NH_WavePlayerDidFail(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_WavePlayerDidEnd(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender, name="WavePlayerDidEnd")
+        self.notification_center.remove_observer(self, sender=sender)
 
 
