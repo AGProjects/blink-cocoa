@@ -659,7 +659,7 @@ class ContactWindowController(NSWindowController):
         self.actionButtons.setEnabled_forSegment_(chatOk, 1)
         self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
 
-    def startCallWithURIText(self, text):
+    def startCallWithURIText(self, text, session_type="audio"):
         account = self.activeAccount()
         if not account:
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
@@ -673,7 +673,12 @@ class ContactWindowController(NSWindowController):
             session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
             self.sessionControllers.append(session)
             session.setOwner_(self)
-            session.startAudioSession()
+            if session_type == "audio":
+                session.startAudioSession()
+            elif session_type == "chat":
+                session.startChatSession()
+            else:
+                session.startAudioSession()
             return session
         else:
             print "Error parsing URI %s"%text
@@ -915,11 +920,23 @@ class ContactWindowController(NSWindowController):
                 try:
                     text = unicode(text)
                 except:
-                    NSRunAlertPanel(u"Invalid URI", u"The supplied URI contains invalid characters",
-                                    u"OK", None, None)
+                    NSRunAlertPanel(u"Invalid URI", u"The supplied URI contains invalid characters", u"OK", None, None)
                     return
-                self.startCallWithURIText(text)
-                self.searchBox.setStringValue_(u"")
+                else:
+                    _split = text.split(';')
+                    _text = []
+                    for item in _split[:]:
+                        if not item.startswith("session-type"):
+                            _text.append(item)
+                            _split.remove(item)
+                    text = ";".join(_text)
+                    try:
+                        session_type = _split[0].split("=")[1]
+                    except IndexError:
+                        session_type = None
+
+                    self.startCallWithURIText(text, session_type)
+                    self.searchBox.setStringValue_(u"")
             self.performSearch()
     
     @objc.IBAction
@@ -940,7 +957,7 @@ class ContactWindowController(NSWindowController):
                     return
             else:
                 target = contact.uri
-            session = self.startCallWithURIText(target)
+            session = self.startCallWithURIText(target, "audio")
             handler = session.streamHandlerOfType("audio")
             handler.view.setConferencing_(True)
             handler.addToConference()

@@ -51,7 +51,7 @@ class Contact(NSObject):
         self.name = NSString.alloc().initWithString_(name or uri)
         self.detail = NSString.alloc().initWithString_(detail or uri)
         self.icon = icon
-        self.preferred_media = preferred_media
+        self._preferred_media = preferred_media
         self.editable = editable
         self.addressbook_id = addressbook_id
         self.aliases = aliases or []
@@ -68,11 +68,23 @@ class Contact(NSObject):
         text = text.lower()
         return text in self.uri.lower() or text in self.name.lower()
 
+    @property
+    def preferred_media(self):
+        _split = str(self.uri).split(';')
+        for item in _split[:]:
+            if not item.startswith("session-type"):
+                _split.remove(item)
+        try:
+            session_type = _split[0].split("=")[1]
+        except IndexError:
+            session_type = None
+        return session_type or self._preferred_media
+
     def as_dict(self):
         return {"uri":str(self.uri), 
                 "name":unicode(self.name), 
                 "display_name":unicode(self.display_name), 
-                "preferred_media":self.preferred_media, 
+                "preferred_media":self._preferred_media, 
                 "aliases":self.aliases,
                 "stored_in_account":self.stored_in_account, 
                 "attributes":self.attributes}
@@ -150,7 +162,7 @@ class Contact(NSObject):
         self.detail = NSString.alloc().initWithString_(uri)
 
     def setPreferredMedia(self, media):
-        self.preferred_media = media
+        self._preferred_media = media
 
     def setAliases(self, aliases):
         domain = str(self.uri).partition("@")[-1]

@@ -179,8 +179,8 @@ You might need to Replace it and re-enter your account information. Your old fil
         smileys.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
 
         self.ready = True
-        for uri in self.urisToOpen:
-            self.windowController.startCallWithURIText(uri)
+        for uri, session_type in self.urisToOpen:
+            self.windowController.startCallWithURIText(uri, session_type)
 
     def killSelfAfterTimeout_(self, arg):
         # wait 4 seconds then kill self
@@ -279,10 +279,22 @@ You might need to Replace it and re-enter your account information. Your old fil
 
         BlinkLogger().log_info("Got request to open URL %s" % url)
 
+        _split = url.split(';')
+        _url = []
+        for item in _split[:]:
+            if not item.startswith("session-type"):
+                _url.append(item)
+                _split.remove(item)
+        url = ";".join(_url)
+        try:
+            session_type = _split[0].split("=")[1]
+        except IndexError:
+            session_type = None
+
         if not self.ready:
-            self.urisToOpen.append(unicode(url))
+            self.urisToOpen.append((unicode(url), session_type))
         else:
-            self.windowController.startCallWithURIText(unicode(url))
+            self.windowController.startCallWithURIText(unicode(url), session_type)
 
     def registerURLHandler(self):
         event_class = event_id = fourcharToInt("GURL")
