@@ -15,6 +15,7 @@ from configuration.datatypes import AccountSoundFile, HTTPURL, ReplacePlus
 
 class PSTNSettingsExtension(PSTNSettings):
     replace_plus = Setting(type=ReplacePlus, default=None, nillable=True)
+    prefix = Setting(type=str, default=None, nillable=True)
 
 
 class RTPSettingsExtension(RTPSettings):
