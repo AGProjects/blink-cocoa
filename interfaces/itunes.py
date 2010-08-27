@@ -18,18 +18,14 @@ from util import allocate_autorelease_pool
 class ITunesInterface(object):
     __metaclass__ = Singleton
 
-    status_script = """
-        on itunes_is_active()
-          tell application "System Events"
-              return (name of processes contains "iTunes")
-          end tell
-        end itunes_is_active
+    check_active_script = """
+       tell application "System Events"
+           return (name of processes contains "iTunes")
+       end tell
+    """
 
-        if itunes_is_active() then
-          tell application "iTunes" to player state as string
-        else
-          false
-        end if
+    status_script = """
+       tell application "iTunes" to player state as string
     """
 
     pause_script = """
@@ -70,14 +66,17 @@ class ITunesInterface(object):
         if self.paused:
             notification_center.post_notification('ITunesPauseDidExecute', sender=self, data=TimestampedNotificationData())
         else:
-            script = NSAppleScript.alloc().initWithSource_(self.status_script)
+            script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
             result, error_info = script.executeAndReturnError_(None)
-            if result and result.stringValue()=="playing":
-                script = NSAppleScript.alloc().initWithSource_(self.pause_script)
-                script.executeAndReturnError_(None)
-                self.paused = True
-            else:
-                self.paused = False
+            if result and result.booleanValue():
+                script = NSAppleScript.alloc().initWithSource_(self.status_script)
+                result, error_info = script.executeAndReturnError_(None)
+                if result and result.stringValue()=="playing":
+                    script = NSAppleScript.alloc().initWithSource_(self.pause_script)
+                    script.executeAndReturnError_(None)
+                    self.paused = True
+                else:
+                    self.paused = False
             notification_center.post_notification('ITunesPauseDidExecute', sender=self, data=TimestampedNotificationData())
 
     def _CH_resume(self, command):
