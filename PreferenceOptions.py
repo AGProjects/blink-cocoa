@@ -241,7 +241,7 @@ class NonNegativeIntegerOption(StringOption):
         self.text.setIntegerValue_(value)
 
 
-class ReplacePlusOption(StringOption):
+class DigitsOption(StringOption):
     def _store(self):
         current = self.get()
         nvalue = str(self.text.stringValue())
@@ -1291,7 +1291,7 @@ PreferenceOptionTypes = {
 "CountryCode" : CountryCodeOption,
 "STUNServerAddressList" : STUNServerAddressListOption,
 "SIPProxyAddress" : SIPProxyAddressOption,
-"ReplacePlus" : ReplacePlusOption,
+"Digits" : DigitsOption,
 "HTTPURL": NullableStringOption,
 
 "answering_machine.unavailable_message" : AnsweringMessageOption

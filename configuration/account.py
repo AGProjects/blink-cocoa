@@ -10,12 +10,12 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension']
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.account import PSTNSettings, RTPSettings
 
-from configuration.datatypes import AccountSoundFile, HTTPURL, ReplacePlus
+from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
 
 
 class PSTNSettingsExtension(PSTNSettings):
-    idd_prefix = Setting(type=ReplacePlus, default=None, nillable=True)
-    prefix = Setting(type=ReplacePlus, default=None, nillable=True)
+    idd_prefix = Setting(type=Digits, default=None, nillable=True)
+    prefix = Setting(type=Digits, default=None, nillable=True)
 
 
 class RTPSettingsExtension(RTPSettings):

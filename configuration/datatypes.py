@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['ReplacePlus', 'AccountSoundFile', 'ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL']
+__all__ = ['Digits', 'AccountSoundFile', 'ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL']
 
 import os
 import sys
@@ -19,7 +19,7 @@ from sipsimple.util import classproperty
 
 ## PSTN datatypes
 
-class ReplacePlus(str):
+class Digits(str):
     pass
 
 
