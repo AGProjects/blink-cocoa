@@ -180,13 +180,13 @@ _pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
 _pstn_match_regexp = re.compile("^\+?([0-9]|%s)+$" % _pstn_addressbook_chars)
 _pstn_plus_regexp = re.compile("^\+")
 
-def format_uri(uri, default_domain, replace_plus = None, prefix = None):
+def format_uri(uri, default_domain, idd_prefix = None, prefix = None):
     if default_domain is not None:
         if "@" not in uri:
             if _pstn_match_regexp.match(uri):
                 username = strip_addressbook_special_characters(uri)
-                if replace_plus is not None and replace_plus != '':
-                    username = _pstn_plus_regexp.sub(replace_plus, username)
+                if idd_prefix is not None and idd_prefix != '':
+                    username = _pstn_plus_regexp.sub(idd_prefix, username)
                 if prefix is not None and prefix != '':
                     username = prefix + username
             else:
@@ -479,7 +479,7 @@ class SIPManager(object):
             self._delegate.sip_error("SIP address must contain host in bonjour mode (%s)" % target_uri)
             return None
 
-        target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.replace_plus if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
+        target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
 
         try:
             target_uri = SIPURI.parse(target_uri)
