@@ -34,6 +34,7 @@ from FileTransferWindowController import FileTransferWindowController
 from LogListModel import LogListModel
 from SessionController import SessionController
 from SessionManager import SessionManager
+from SIPManager import MWIData
 from util import *
 
 
@@ -1445,7 +1446,7 @@ class ContactWindowController(NSWindowController):
                     text += ")"
             else:
                 if show_failed:
-                    if item.get("result", None) == "cancelled":
+                    if item.get("result % ", None) == "cancelled":
                         text += " (cancelled)"
                     else:
                         text += " (failed)"
@@ -1453,10 +1454,38 @@ class ContactWindowController(NSWindowController):
             a.appendAttributedString_(t)
             return a
 
+        def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
+            a = NSMutableAttributedString.alloc().init()
+            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+            n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal)
+            a.appendAttributedString_(n)
+            if mwi_data.get('messages_waiting') and mwi_data.get('new_messages') != 0:
+                text = "%d new messages" % mwi_data['new_messages']
+                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_new)
+            else:
+                text = "No new messages"
+                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_nonew)
+            a.appendAttributedString_(t)
+            return a
+
         mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
         mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.redColor(), NSForegroundColorAttributeName)
+
+        if any(account.message_summary.enabled for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled)):
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail Server", "", "")
+            lastItem.setEnabled_(False)
+            for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
+                mwi_data = MWIData.get(account.id)
+                lastItem.setEnabled_(mwi_data is not None and (mwi_data.get('voicemail_uri') is not None or account.message_summary.voicemail_uri is not None))
+                lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, mini_red, mini_blue))
+                lastItem.setIndentationLevel_(1)
+                lastItem.setTag_(555)
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(account)
+            menu.addItem_(NSMenuItem.separatorItem())
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
         lastItem.setEnabled_(False)
@@ -1486,7 +1515,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
-            
+
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "", "")
         lastItem.setEnabled_(in_items or out_items or miss_items)
@@ -1497,6 +1526,20 @@ class ContactWindowController(NSWindowController):
     def historyClicked_(self, sender):
         if sender.tag() == 444:
             self.backend.clear_call_history()
+        elif sender.tag() == 555:
+            # Voicemail
+            account = sender.representedObject()
+            BlinkLogger().log_info("Voicemail option pressed for account %s" % account.id)
+            mwi_data = MWIData.get(account.id)
+            if mwi_data is not None:
+                voicemail_uri = account.message_summary.voicemail_uri or mwi_data.get('voicemail_uri')
+                if voicemail_uri is None:
+                    return
+                target_uri = self.backend.parse_sip_uri(voicemail_uri, account)
+                session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
+                self.sessionControllers.append(session)
+                session.setOwner_(self)
+                session.startAudioSession()
         else:
             item = sender.representedObject()
             who = item["address"]

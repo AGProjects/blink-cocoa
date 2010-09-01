@@ -230,6 +230,7 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidEnd')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidFail')
+        self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
@@ -1012,6 +1013,7 @@ class SIPManager(object):
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_debug("%s deactivated" % account)
+        MWIData.remove(account)
         call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
@@ -1030,8 +1032,25 @@ class SIPManager(object):
         BlinkLogger().log_info("%s failed to register: %s (retrying in %.2f seconds)" % (account, data.error, data.timeout))
         call_in_gui_thread(self._delegate.sip_account_registration_failed, account, data.error)
 
+    @run_in_gui_thread
+    def _NH_SIPAccountMWIDidGetSummary(self, account, data):
+        BlinkLogger().log_info("Got NOTIFY for MWI of account %s" % account.id)
+        summary = data.message_summary
+        if summary.summaries.get('voice-message') is None:
+            return
+        voice_messages = summary.summaries['voice-message']
+        growl_data = TimestampedNotificationData()
+        growl_data.new_messages = int(voice_messages['new_messages'])
+        growl_data.old_messages = int(voice_messages['old_messages'])
+        MWIData.store(account, summary)
+        if summary.messages_waiting and growl_data.new_messages > 0:
+            self.notification_center.post_notification("GrowlGotMWI", sender=self, data=growl_data)
+
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
+            if 'message_summary.enabled' in data.modified:
+                if not account.message_summary.enabled:
+                    MWIData.remove(account)
             call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPSessionNewIncoming(self, session, data):
@@ -1090,4 +1109,25 @@ class SIPManager(object):
     def _NH_WavePlayerDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
 
+
+class MWIData(object):
+    """Saves Message-Summary information in memory"""
+
+    _data = {}
+
+    @classmethod
+    def store(cls, account, message_summary):
+        if message_summary.summaries.get('voice-message') is None:
+            return
+        voice_messages = message_summary.summaries['voice-message']
+        d = dict(messages_waiting=message_summary.messages_waiting, new_messages=int(voice_messages.get('new_messages', 0)), old_messages=int(voice_messages.get('old_messages', 0)), voicemail_uri=message_summary.message_account)
+        cls._data[account.id] = d
+
+    @classmethod
+    def remove(cls, account):
+        cls._data.pop(account.id, None)
+
+    @classmethod
+    def get(cls, account_id):
+        return cls._data.get(account_id, None)
 

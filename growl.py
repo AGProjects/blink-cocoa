@@ -14,7 +14,7 @@ class GrowlNotifications(object):
 
     implements(IObserver)
 
-    notification_names = ('SMS Received', 'Chat Message Received', 'Missed Call', 'Audio Session Recorded')
+    notification_names = ('SMS Received', 'Chat Message Received', 'Missed Call', 'Audio Session Recorded', 'Voicemail Summary')
 
     def __init__(self):
         dir = os.path.dirname(__file__)
@@ -27,6 +27,7 @@ class GrowlNotifications(object):
         notification_center.add_observer(self, name='GrowlGotChatMessage')
         notification_center.add_observer(self, name='GrowlMissedCall')
         notification_center.add_observer(self, name='GrowlAudioSessionRecorded')
+        notification_center.add_observer(self, name='GrowlGotMWI')
 
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -51,6 +52,11 @@ class GrowlNotifications(object):
         title = 'Audio Session Recorded'
         message = '%s\nat %s' % (notification.data.remote_party, notification.data.timestamp.strftime("%Y-%m-%d %H:%M"))
         self.growl.notify('Audio Session Recorded', title, message, sticky=True)
+
+    def _NH_GrowlGotMWI(self, notification):
+        title = 'New Voicemail Message' if notification.data.new_messages == 1 else 'New Voicemail Messages'
+        message = 'You have %d new and %d old voicemail messages' % (notification.data.new_messages, notification.data.old_messages)
+        self.growl.notify('Voicemail Summary', title, message)
 
 
 notifier = GrowlNotifications()
