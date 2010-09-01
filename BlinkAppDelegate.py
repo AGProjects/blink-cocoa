@@ -13,6 +13,7 @@ import struct
 from application.notification import NotificationCenter, IObserver
 from application import log
 from application.python.util import Null
+from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.util import TimestampedNotificationData
@@ -146,9 +147,11 @@ class BlinkAppDelegate(NSObject):
 
         while True:
             try:
+                first_run = True if not os.path.exists(options['config_file']) else False
                 self.backend.init(options, version)
                 self.backend.fetch_account()
-                if not self.backend.has_accounts():
+                account_manager = AccountManager()
+                if account_manager.get_accounts() == [] or (first_run and account_manager.get_accounts() == [BonjourAccount()]):
                     self.enroll()
                 break
             except FileParserError, exc:
