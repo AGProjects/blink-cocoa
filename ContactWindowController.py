@@ -1462,7 +1462,7 @@ class ContactWindowController(NSWindowController):
         lastItem.setEnabled_(False)
         for item in miss_items:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_call_item(item, mini_red))
+            lastItem.setAttributedTitle_(format_call_item(item, mini_blue))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
