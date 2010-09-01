@@ -54,8 +54,12 @@ class GrowlNotifications(object):
         self.growl.notify('Audio Session Recorded', title, message, sticky=True)
 
     def _NH_GrowlGotMWI(self, notification):
+        # new_messages will always be > 0 at this point
         title = 'New Voicemail Message' if notification.data.new_messages == 1 else 'New Voicemail Messages'
-        message = 'You have %d new and %d old voicemail messages' % (notification.data.new_messages, notification.data.old_messages)
+        if notification.data.old_messages > 0:
+            message = 'You have %d new and %d old voicemail messages' % (notification.data.new_messages, notification.data.old_messages)
+        else:
+            message = 'You have %d new voicemail messages' % notification.data.new_messages
         self.growl.notify('Voicemail Summary', title, message)
 
 
