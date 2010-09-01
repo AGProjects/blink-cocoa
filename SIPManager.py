@@ -1097,7 +1097,8 @@ class SIPManager(object):
                 self.log_outgoing_session_failed(session, data.timestamp)
 
     def _NH_AudioStreamGotDTMF(self, sender, data):
-        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(digit, digit)
+        key = data.digit
+        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
         wave_player = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath(filename).normalized)
         self.notification_center.add_observer(self, sender=wave_player)
         SIPApplication.voice_audio_bridge.add(wave_player)
