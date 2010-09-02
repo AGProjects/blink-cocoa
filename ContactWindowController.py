@@ -1474,7 +1474,7 @@ class ContactWindowController(NSWindowController):
             NSColor.redColor(), NSForegroundColorAttributeName)
 
         if any(account.message_summary.enabled for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled)):
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail Server", "", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail", "", "")
             lastItem.setEnabled_(False)
             for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
                 lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
