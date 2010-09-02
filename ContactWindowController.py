@@ -1446,7 +1446,7 @@ class ContactWindowController(NSWindowController):
                     text += ")"
             else:
                 if show_failed:
-                    if item.get("result % ", None) == "cancelled":
+                    if item.get("result", None) == "cancelled":
                         text += " (cancelled)"
                     else:
                         text += " (failed)"
