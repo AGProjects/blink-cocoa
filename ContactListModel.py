@@ -639,7 +639,10 @@ class ContactListModel(NSObject):
         if item is None:
             return self.contactGroupsList[index]
         if isinstance(item, ContactGroup):
-            return item.contacts[index]
+            try:
+                return item.contacts[index]
+            except IndexError:
+                pass
         return None
 
     def outlineView_heightOfRowByItem_(self, outline, item):
