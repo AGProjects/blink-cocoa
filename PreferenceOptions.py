@@ -1275,6 +1275,7 @@ PreferenceOptionTypes = {
 "MSRPRelayAddress" : MSRPRelayAddresOption,
 "MSRPTransport" : MSRPTransportOption,
 "MSRPConnectionModel" : MSRPConnectionModelOption,
+"SIPAddress" : NullableStringOption,
 "XCAPRoot" : NullableStringOption,
 "SRTPEncryption" : SRTPEncryptionOption,
 "NonNegativeInteger" : NonNegativeIntegerOption,
