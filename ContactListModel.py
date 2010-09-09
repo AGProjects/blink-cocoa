@@ -403,10 +403,11 @@ class ContactListModel(NSObject):
                 NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
             # create test contacts
             contactsT = [
-                Contact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC Conference http://vuc.me"),
-                Contact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Play James Bond Theme"),
-                Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Test Your Microphone"),
-                Contact("123@chatserver.ag-projects.com", None, name="Multi-Party Chat", preferred_media="chat")
+                Contact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
+                Contact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Call Test"),
+                Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
+                Contact("123@chatserver.ag-projects.com", None, name="Text Conference", preferred_media="chat"),
+                Contact("conference@sip2sip.info", None, name="Audio Conference")
             ]
             contactGroups = [ContactGroup(u"Test", contactsT)]
 
