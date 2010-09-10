@@ -147,11 +147,11 @@ class BlinkAppDelegate(NSObject):
 
         while True:
             try:
-                first_run = True if not os.path.exists(options['config_file']) else False
+                first_run = not os.path.exists(options['config_file'])
                 self.backend.init(options, version)
                 self.backend.fetch_account()
-                account_manager = AccountManager()
-                if account_manager.get_accounts() == [] or (first_run and account_manager.get_accounts() == [BonjourAccount()]):
+                accounts = AccountManager().get_accounts()
+                if not accounts or (first_run and accounts == [BonjourAccount()]):
                     self.enroll()
                 break
             except FileParserError, exc:

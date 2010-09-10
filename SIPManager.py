@@ -185,9 +185,9 @@ def format_uri(uri, default_domain, idd_prefix = None, prefix = None):
         if "@" not in uri:
             if _pstn_match_regexp.match(uri):
                 username = strip_addressbook_special_characters(uri)
-                if idd_prefix is not None and idd_prefix != '':
+                if idd_prefix:
                     username = _pstn_plus_regexp.sub(idd_prefix, username)
-                if prefix is not None and prefix != '':
+                if prefix:
                     username = prefix + username
             else:
                 username = uri
