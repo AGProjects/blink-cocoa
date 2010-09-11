@@ -174,7 +174,7 @@
 									<reference key="NSTabView" ref="556202494"/>
 								</object>
 								<object class="NSTabViewItem" id="540982908">
-									<string key="NSIdentifier">1</string>
+									<string key="NSIdentifier">capture</string>
 									<object class="NSView" key="NSView" id="653468545">
 										<nil key="NSNextResponder"/>
 										<int key="NSvFlags">256</int>

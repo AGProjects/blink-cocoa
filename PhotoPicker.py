@@ -135,6 +135,12 @@ class PhotoPicker(NSObject):
             
             # Find a video device
             device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
+            if not device:
+                tab_id = self.tabView.indexOfTabViewItemWithIdentifier_("capture")
+                if tab_id:
+                    item = self.tabView.tabViewItemAtIndex_(tab_id)
+                    self.tabView.removeTabViewItem_(item)
+                return self
             success, error = device.open_(None)
             if not success:
                 NSAlert.alertWithError_(error).runModal()
@@ -362,7 +368,8 @@ class PhotoPicker(NSObject):
         #device = self.captureDeviceInput.device()
         #if device.isOpen():
         #    device.close()
-        self.captureDecompressedVideoOutput.setDelegate_(None)
+        if hasattr(self, 'captureDecompressedVideoOutput'):
+            self.captureDecompressedVideoOutput.setDelegate_(None)
         NSApp.stopModalWithCode_(0)
 
     def runModal(self):
