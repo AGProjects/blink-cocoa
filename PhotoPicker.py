@@ -47,7 +47,6 @@ class EditImageView(NSImageView):
     def mouseDown_(self, event):
         if self.cropRectangle:
             p = self.convertPointFromBase_(event.locationInWindow())
-            
             if p.x > NSMinX(self.cropRectangle) and p.x < NSMaxX(self.cropRectangle) and\
                p.y > NSMinY(self.cropRectangle) and p.y < NSMaxY(self.cropRectangle):
                 self.dragPos = p
@@ -74,20 +73,19 @@ class EditImageView(NSImageView):
             if NSMaxY(newRect) > NSHeight(self.frame()):
                 newRect.origin.y = NSHeight(self.frame()) - NSHeight(newRect)
             self.cropRectangle = newRect
-                
             self.setNeedsDisplay_(True)
 
 
     def drawRect_(self, rect):
         NSImageView.drawRect_(self, rect)
-        
+
         if self.cropRectangle:
             rect = NSZeroRect
             rect.size = self.frame().size
-            
+
             NSColor.whiteColor().set()
             NSFrameRect(self.cropRectangle)
-            
+
             clip = NSBezierPath.bezierPathWithRect_(rect)
             clip.setWindingRule_(NSEvenOddWindingRule)
             clip.appendBezierPathWithRect_(self.cropRectangle)
@@ -96,14 +94,12 @@ class EditImageView(NSImageView):
 
             NSColor.blackColor().colorWithAlphaComponent_(0.6).set()
             NSBezierPath.bezierPathWithRect_(rect).fill()
-    
-    
+
 
 class PhotoPicker(NSObject):
     latestImageRep = None
-    
     lock = None
-    
+
     window = objc.IBOutlet()
     tabView = objc.IBOutlet()
     photoView = objc.IBOutlet()
@@ -124,15 +120,13 @@ class PhotoPicker(NSObject):
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
-        
-        
+
     def init(self):
         self = super(PhotoPicker, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("PhotoPicker", self)
-
             self.captureSession = QTKit.QTCaptureSession.alloc().init()
-            
+
             # Find a video device
             device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
             if not device:
@@ -145,14 +139,14 @@ class PhotoPicker(NSObject):
             if not success:
                 NSAlert.alertWithError_(error).runModal()
                 return self
-            
+
             # Add a device input for that device to the capture session
             self.captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
             success, error = self.captureSession.addInput_error_(self.captureDeviceInput, None)
             if not success:
                 NSAlert.alertWithError_(error).runModal()
                 return self
-            
+
             # Add a decompressed video output that returns raw frames to the session
             self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
             self.captureDecompressedVideoOutput.setDelegate_(self)
@@ -160,16 +154,15 @@ class PhotoPicker(NSObject):
             if not success:
                 NSAlert.alertWithError_(error).runModal()
                 return self
-            
+
             # Preview the video from the session in the document window
             self.captureView.setCaptureSession_(self.captureSession)
-            
+
             self.lock = NSLock.alloc().init()
-            
             self.captureButton.setHidden_(True)
             self.previewButton.setHidden_(False)
             self.cancelButton.setHidden_(True)
-                
+
         return self
 
     def refreshLibrary(self):
@@ -183,7 +176,7 @@ class PhotoPicker(NSObject):
         knownFiles = set()
         for item in self.contentArrayController.arrangedObjects():
             knownFiles.add(unicode(item.objectForKey_("path")))
-        
+
         for f in files:
             p = os.path.normpath(path+"/"+f)
             if p not in knownFiles:
@@ -326,7 +319,7 @@ class PhotoPicker(NSObject):
             except:
                 NSRunAlertPanel("Invalid Image", u"%s is not a valid image."%path, "OK", None, None)
                 return
-            
+
             size = image.size()
             if size.width > 128 or size.height > 128:
                 image.setScalesWhenResized_(True)
