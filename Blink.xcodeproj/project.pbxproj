@@ -32,6 +32,7 @@
 		1FB9B12B1095BFF500284E18 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
 		1FB9B12C1095BFF500284E18 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1FB9B12D1095BFF500284E18 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
+		1FCC6796123CD41300F49C2B /* conference@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCC6795123CD41300F49C2B /* conference@sip2sip.info.tiff */; };
 		1FDDE5FB10E9851800B03A52 /* SMSManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSManager.py */; };
 		1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
@@ -332,6 +333,7 @@
 		1FB9B1161095BFF500284E18 /* hold_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = hold_tone.wav; path = sounds/hold_tone.wav; sourceTree = "<group>"; };
 		1FB9B1171095BFF500284E18 /* ring_outbound2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_outbound2.wav; path = sounds/ring_outbound2.wav; sourceTree = "<group>"; };
 		1FB9B1181095BFF500284E18 /* ring_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_tone.wav; path = sounds/ring_tone.wav; sourceTree = "<group>"; };
+		1FCC6795123CD41300F49C2B /* conference@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "conference@sip2sip.info.tiff"; path = "icons/conference@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSManager.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -655,6 +657,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FCC6795123CD41300F49C2B /* conference@sip2sip.info.tiff */,
 				1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */,
 				1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */,
 				1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */,
@@ -1144,6 +1147,7 @@
 				1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */,
 				1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */,
 				1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */,
+				1FCC6796123CD41300F49C2B /* conference@sip2sip.info.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
