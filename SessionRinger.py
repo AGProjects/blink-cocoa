@@ -157,8 +157,14 @@ class Ringer(object):
             inbound_ringtone = None
 
         if inbound_ringtone and not settings.audio.silent:
-            new_tone = WavePlayer(app.alert_audio_mixer, inbound_ringtone.path.normalized, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
-            app.alert_audio_bridge.add(new_tone)
+            # Workaround not to use same device from two bridges. -Saul
+            settings = SIPSimpleSettings()
+            if settings.audio.alert_device is not None and app.alert_audio_mixer.real_output_device == app.voice_audio_mixer.real_output_device:
+                new_tone = WavePlayer(app.voice_audio_mixer, inbound_ringtone.path.normalized, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
+                app.voice_audio_bridge.add(new_tone)
+            else:
+                new_tone = WavePlayer(app.alert_audio_mixer, inbound_ringtone.path.normalized, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
+                app.alert_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("inbound_ringtone", new_tone)
@@ -171,8 +177,14 @@ class Ringer(object):
         change_tone("tone_ringtone", new_tone)
 
         if inbound_ringtone and not settings.audio.silent:
-            new_tone = WavePlayer(app.alert_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
-            app.alert_audio_bridge.add(new_tone)
+            # Workaround not to use same device from two bridges. -Saul
+            settings = SIPSimpleSettings()
+            if settings.audio.alert_device is not None and app.alert_audio_mixer.real_output_device == app.voice_audio_mixer.real_output_device:
+                new_tone = WavePlayer(app.voice_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+                app.voice_audio_bridge.add(new_tone)
+            else:
+                new_tone = WavePlayer(app.alert_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+                app.alert_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("chat_ringtone", new_tone)
