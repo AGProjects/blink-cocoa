@@ -1294,6 +1294,5 @@ PreferenceOptionTypes = {
 "SIPProxyAddress" : SIPProxyAddressOption,
 "Digits" : DigitsOption,
 "HTTPURL": NullableStringOption,
-
 "answering_machine.unavailable_message" : AnsweringMessageOption
 }
