@@ -8,12 +8,12 @@ Blink account settings extensions.
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.account import PSTNSettings, RTPSettings
+from sipsimple.account import RTPSettings
 
 from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
 
 
-class PSTNSettingsExtension(PSTNSettings):
+class PSTNSettingsExtension(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
 
