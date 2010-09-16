@@ -13,7 +13,7 @@ from sipsimple.account import RTPSettings
 from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
 
 
-class PSTNSettingsExtension(SettingsGroup):
+class PSTNSettings(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
 
@@ -33,7 +33,7 @@ class SoundsSettings(SettingsGroup):
 class AccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
-    pstn = PSTNSettingsExtension
+    pstn = PSTNSettings
     rtp = RTPSettingsExtension
     server = ServerSettings
     sounds = SoundsSettings
