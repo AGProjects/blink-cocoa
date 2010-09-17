@@ -414,7 +414,7 @@ class ContactWindowController(NSWindowController):
         if diff:
             new_device = diff.pop()
             BlinkLogger().log_info("New device %s detected, checking if we should switch to it..." % new_device)
-            call_in_gui_thread(self.notifyNewDevice, new_device)
+            call_in_gui_thread(self.switchNewDevice, new_device)
         else:
             call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
 
@@ -447,28 +447,37 @@ class ContactWindowController(NSWindowController):
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
 
-    def notifyNewDevice(self, device):
-        panel = NSGetInformationalAlertPanel("New Audio Device",
-                "Audio device %s has been plugged-in. Would you like to switch to it?" % device,
-                "Switch", "Ignore", None)
-        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(7, self, "newAudioDeviceTimeout:", panel, False)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
-        session = NSApp.beginModalSessionForWindow_(panel)
-        while True:
-            ret = NSApp.runModalSession_(session)
-            if ret != NSRunContinuesResponse:
-                break
-        NSApp.endModalSession_(session)
-        panel.close()
-        NSReleaseAlertPanel(panel)
-
-        if ret == NSAlertDefaultReturn:
-            BlinkLogger().log_info("Switching input/output devices to %s" % device)
+    def switchNewDevice(self, device):
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        if hasAudio:
+            BlinkLogger().log_info("We have active sessions, switching input/output devices to %s" % device)
             settings = SIPSimpleSettings()
             settings.audio.input_device = str(device)
             settings.audio.output_device = str(device)
             settings.save()
+        else:
+            panel = NSGetInformationalAlertPanel("New Audio Device",
+                    "Audio device %s has been plugged-in. Would you like to switch to it?" % device,
+                    "Switch", "Ignore", None)
+            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(7, self, "newAudioDeviceTimeout:", panel, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+            session = NSApp.beginModalSessionForWindow_(panel)
+            while True:
+                ret = NSApp.runModalSession_(session)
+                if ret != NSRunContinuesResponse:
+                    break
+            NSApp.endModalSession_(session)
+            panel.close()
+            NSReleaseAlertPanel(panel)
+
+            if ret == NSAlertDefaultReturn:
+                BlinkLogger().log_info("Switching input/output devices to %s" % device)
+                settings = SIPSimpleSettings()
+                settings.audio.input_device = str(device)
+                settings.audio.output_device = str(device)
+                settings.save()
+
         self.menuWillOpen_(self.audioMenu)
 
     def _NH_BlinkSessionChangedState(self, notification):
