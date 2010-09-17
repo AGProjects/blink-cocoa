@@ -540,7 +540,7 @@ class SIPManager(object):
             when = dt
             account = session.account.id
             line = "missed\t%s\t%s\t%s\t%s" % (streams, account, party, when)
-            f.write(line+"\n")
+            f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
@@ -554,7 +554,7 @@ class SIPManager(object):
             start = session.start_time
             end = session.end_time
             line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account, party, start, end)
-            f.write(line+"\n")
+            f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
@@ -567,7 +567,7 @@ class SIPManager(object):
             when = dt
             account = session.account.id
             line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account, party, when, when)
-            f.write(line+"\n")
+            f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
@@ -580,7 +580,7 @@ class SIPManager(object):
             when = dt
             account = session.account.id
             line = "failed\t%s\t%s\t%s\t%s\t"%(streams,account,party,when)
-            f.write(line+"\n")
+            f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
@@ -593,7 +593,7 @@ class SIPManager(object):
             when = dt
             account = session.account.id
             line = "cancelled\t%s\t%s\t%s\t%s\t"%(streams,account,party,when)
-            f.write(line+"\n")
+            f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
@@ -607,7 +607,7 @@ class SIPManager(object):
             start = session.start_time
             end = session.end_time
             line = "out\t%s\t%s\t%s\t%s\t%s"%(streams,account,party,start,end)
-            f.write(line+"\n")
+            f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     def get_audio_recordings_directory(self):
