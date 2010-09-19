@@ -210,7 +210,7 @@ class SMSManagerClass(NSObject):
     def dettachSMSViewer(self, viewer):
         oldWindow = self.windowForViewer(viewer)
         oldWindow.removeViewer_(viewer)
-        window = SMSWindowController.alloc().init()
+        window = SMSWindowController.alloc().initWithOwner_(self)
         self.windows.append(window)    
         window.addViewer_(viewer)
         window.window().makeKeyAndOrderFront_(None)
