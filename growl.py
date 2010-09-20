@@ -59,7 +59,7 @@ class GrowlNotifications(object):
         if notification.data.old_messages > 0:
             message = 'You have %d new and %d old voicemail messages' % (notification.data.new_messages, notification.data.old_messages)
         else:
-            message = 'You have %d new voicemail messages' % notification.data.new_messages
+            message = 'You have %d new voicemail %s' % (notification.data.new_messages, 'message' if notification.data.new_messages == 1 else 'messages')
         self.growl.notify('Voicemail Summary', title, message)
 
 
