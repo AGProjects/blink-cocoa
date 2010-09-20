@@ -1488,7 +1488,7 @@ class ContactWindowController(NSWindowController):
             for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
                 lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
                 mwi_data = MWIData.get(account.id)
-                lastItem.setEnabled_(mwi_data is not None and account.message_summary.uri is not None)
+                lastItem.setEnabled_(account.message_summary.uri is not None)
                 lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, mini_red, mini_blue))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTag_(555)
