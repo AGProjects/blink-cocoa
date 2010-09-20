@@ -1541,7 +1541,7 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_info("Voicemail option pressed for account %s" % account.id)
             if account.message_summary.uri is None:
                 return
-            target_uri = self.backend.parse_sip_uri(account.mesage_summary.uri, account)
+            target_uri = self.backend.parse_sip_uri(account.message_summary.uri, account)
             session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
             self.sessionControllers.append(session)
             session.setOwner_(self)
