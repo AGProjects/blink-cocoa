@@ -1121,7 +1121,7 @@ class MWIData(object):
         if message_summary.summaries.get('voice-message') is None:
             return
         voice_messages = message_summary.summaries['voice-message']
-        d = dict(messages_waiting=message_summary.messages_waiting, new_messages=int(voice_messages.get('new_messages', 0)), old_messages=int(voice_messages.get('old_messages', 0)), voicemail_uri=message_summary.message_account)
+        d = dict(messages_waiting=message_summary.messages_waiting, new_messages=int(voice_messages.get('new_messages', 0)), old_messages=int(voice_messages.get('old_messages', 0)))
         cls._data[account.id] = d
 
     @classmethod

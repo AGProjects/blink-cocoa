@@ -1488,7 +1488,7 @@ class ContactWindowController(NSWindowController):
             for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
                 lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
                 mwi_data = MWIData.get(account.id)
-                lastItem.setEnabled_(mwi_data is not None and (mwi_data.get('voicemail_uri') is not None or account.message_summary.voicemail_uri is not None))
+                lastItem.setEnabled_(mwi_data is not None and account.message_summary.uri is not None)
                 lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, mini_red, mini_blue))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTag_(555)
@@ -1539,16 +1539,13 @@ class ContactWindowController(NSWindowController):
             # Voicemail
             account = sender.representedObject()
             BlinkLogger().log_info("Voicemail option pressed for account %s" % account.id)
-            mwi_data = MWIData.get(account.id)
-            if mwi_data is not None:
-                voicemail_uri = account.message_summary.voicemail_uri or mwi_data.get('voicemail_uri')
-                if voicemail_uri is None:
-                    return
-                target_uri = self.backend.parse_sip_uri(voicemail_uri, account)
-                session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
-                self.sessionControllers.append(session)
-                session.setOwner_(self)
-                session.startAudioSession()
+            if account.message_summary.uri is None:
+                return
+            target_uri = self.backend.parse_sip_uri(account.mesage_summary.uri, account)
+            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
+            self.sessionControllers.append(session)
+            session.setOwner_(self)
+            session.startAudioSession()
         else:
             item = sender.representedObject()
             who = item["address"]
