@@ -39,13 +39,10 @@ def format_identity(identity, check_contact=False):
     match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
     if match is not None:
         return match.group('number')
-    elif contact:
-        if display_name == user or not display_name:
-            return "%s <%s>" % (contact.name, address)
-        else:
-            return "%s <%s>" % (display_name, address)
+    elif contact and (display_name==user or not display_name):
+        return "%r <%s>" % (contact.name.encode('utf8'), address)
     elif display_name:
-        return "%s <%s>" % (display_name, address)
+        return "%r <%s>" % (display_name.encode('utf8'), address)
     else:
         return address
 
