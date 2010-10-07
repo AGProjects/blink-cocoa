@@ -1033,12 +1033,11 @@ class AccountSoundFileOption(SoundFileOption):
 
     def restore(self):
         value = self.get()
-        
         if str(value) == "DEFAULT":
             self.popup.selectItemAtIndex_(0)
             self.slider.setEnabled_(False)
             return
-        elif value:
+        elif value is not None and value.sound_file is not None:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
             self.volumeText.setStringValue_("Volume: %i%%"%value.sound_file.volume)
@@ -1053,9 +1052,9 @@ class AccountSoundFileOption(SoundFileOption):
                 self.popup.selectItemAtIndex_(i)
                 found = True
                 break
-        if not found and value:
+        if not found and value is not None and value.sound_file is not None:
             self.oldIndex = self.addItemForPath(value)
-                        
+
 
 
 class ObjectTupleOption(Option):
