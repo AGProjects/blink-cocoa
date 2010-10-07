@@ -34,11 +34,8 @@ class AddContactController(NSObject):
         NSBundle.loadNibNamed_owner_("AddContact", self)
         self.presencePopUp.removeAllItems()
         self.presencePopUp.addItemWithTitle_("Local")
-        for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount) and acct.xcap.enabled):
-            if account.enabled:
-                self.presencePopUp.addItemWithTitle_(account.id)
-            else:
-                self.presencePopUp.addItemWithTitle_(account.id + " (disabled)")
+        for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount) and acct.enabled and acct.xcap.enabled and acct.xcap.xcap_root is not None):
+            self.presencePopUp.addItemWithTitle_(account.id)
             item = self.presencePopUp.lastItem()
             item.setRepresentedObject_(account.id)
         
