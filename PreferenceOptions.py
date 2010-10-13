@@ -583,7 +583,7 @@ class SRTPEncryptionOption(PopUpMenuOption):
 class SampleRateOption(PopUpMenuOption):
     def __init__(self, object, name, option):
         PopUpMenuOption.__init__(self, object, name, option)
-        for item in [16000, 22050, 32000, 44100, 48000]:
+        for item in SIPSimpleSettings.audio.sample_rate.type.valid_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
