@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL']
+__all__ = ['Digits', 'AccountSoundFile', 'ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL', 'AudioInputDevice', 'AudioOutputDevice']
 
 import os
 import sys
@@ -218,5 +218,15 @@ class HTTPURL(object):
 
     def __unicode__(self):
         return unicode(self.url.geturl())
+
+
+## Dummy datatypes that only exist so that the preferences can build special controls for them (like a combobox for audio devices)
+
+class AudioInputDevice(str):
+    pass
+
+
+class AudioOutputDevice(str):
+    pass
 
 
