@@ -1280,6 +1280,7 @@ PreferenceOptionTypes = {
 "NonNegativeInteger" : NonNegativeIntegerOption,
 "Port" : PortOption,
 "PortRange" : PortRangeOption,
+"PJSIPLogLevel" : NonNegativeIntegerOption,
 "Resolution" : ResolutionOption,
 "SampleRate" : SampleRateOption,
 "SoundFile" : SoundFileOption,
