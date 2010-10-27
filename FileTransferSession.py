@@ -161,7 +161,7 @@ class FileTransfer(object):
     def _NH_SIPSessionDidFail(self, sender, data):
         log_error(self, "File Transfer Session failed: %s"%(data.reason or data.failure_reason))
         NotificationCenter().remove_observer(self, sender=sender)
-        self.fail_reason = "%s by %s" % (data.reason, data.originator)
+        self.fail_reason = "%s (%s)" % (data.reason or data.failure_reason, data.originator)
 
 
 def _filename_generator(name):
