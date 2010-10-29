@@ -432,10 +432,6 @@ class ContactWindowController(NSWindowController):
         self.model.bonjourgroup.removeBonjourNeighbour(str(notification.data.uri))
         call_in_gui_thread(self.contactOutline.reloadData)
 
-    def _NH_BonjourAccountWillRestartDiscovery(self, notification):
-        self.model.bonjourgroup.setBonjourNeighbours([])
-        call_in_gui_thread(self.contactOutline.reloadData)
-
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
             call_in_gui_thread(self.updateAudioButtons)
