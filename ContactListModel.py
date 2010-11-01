@@ -197,9 +197,7 @@ class ContactGroup(NSObject):
         return self
 
     def setBonjourNeighbours(self, contact_list):
-        self.contacts = []
-        for display_name, uri in contact_list:
-            self.contacts.append(Contact(uri, None, name=display_name))
+        self.contacts = [Contact(uri, None, name=display_name) for display_name, uri in contact_list]
 
     def addBonjourNeighbour(self, uri, display_name=None):
         if uri not in (contact.uri for contact in self.contacts):
@@ -602,36 +600,30 @@ class ContactListModel(NSObject):
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
         if item is None:
             return len(self.contactGroupsList)
-
-        if isinstance(item, ContactGroup):
+        elif isinstance(item, ContactGroup):
             return len(item.contacts)
-
-        return 0
+        else:
+            return 0
 
     def outlineView_shouldEditTableColumn_item_(self, outline, column, item):
-        if type(item) == ContactGroup:
-            return True
-        return False
+        return isinstance(item, ContactGroup)
 
     def outlineView_isItemExpandable_(self, outline, item):
-        if item is None or isinstance(item, ContactGroup):
-            return 1
-        return None
+        return item is None or isinstance(item, ContactGroup)
 
     def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
         return item and item.name
 
     def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
-        if type(item) == ContactGroup:
-            if object != item.name:
-                item.name = object
-                self.saveContacts()
+        if isinstance(item, ContactGroup) and object != item.name:
+            item.name = object
+            self.saveContacts()
 
     def outlineView_itemForPersistentObject_(self, outline, object):
-        for g in self.contactGroupsList:
-            if g.name == object:
-                return g
-        return None
+        try:
+            return (group for group in self.contactGroupsList if group.name == object).next()
+        except StopIteration:
+            return None
 
     def outlineView_persistentObjectForItem_(self, outline, item):
         return item and item.name
@@ -639,23 +631,20 @@ class ContactListModel(NSObject):
     def outlineView_child_ofItem_(self, outline, index, item):
         if item is None:
             return self.contactGroupsList[index]
-        if isinstance(item, ContactGroup):
+        elif isinstance(item, ContactGroup):
             try:
                 return item.contacts[index]
             except IndexError:
-                pass
-        return None
+                return None
+        else:
+            return None
 
     def outlineView_heightOfRowByItem_(self, outline, item):
-        if isinstance(item, ContactGroup):
-            return 18
-        return 34
+        return 18 if isinstance(item, ContactGroup) else 34
 
     # delegate methods
     def outlineView_isGroupItem_(self, outline, item):
-        if isinstance(item, ContactGroup):
-            return 1
-        return 0
+        return isinstance(item, ContactGroup)
 
     def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
         cell.setMessageIcon_(None) 
@@ -666,7 +655,7 @@ class ContactListModel(NSObject):
             cell.setContact_(None)
 
     def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
-        if type(item) == Contact:
+        if isinstance(item, Contact):
             return (item.uri, rect)
         else:
             return (None, rect)
@@ -708,7 +697,7 @@ class ContactListModel(NSObject):
                 if item is None:
                     return NSDragOperationNone
 
-                if type(item) == ContactGroup:
+                if isinstance(item, ContactGroup):
                     if oper == NSOutlineViewDropOnItemIndex:
                         c = len(item.contacts)
                     else:
@@ -723,7 +712,7 @@ class ContactListModel(NSObject):
 
                     draggedContact = self.contactGroupsList[group].contacts[contact]
 
-                    table.setDropItem_dropChildIndex_(targetGroup, oper)                
+                    table.setDropItem_dropChildIndex_(targetGroup, oper)
             return NSDragOperationMove
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
