@@ -619,7 +619,7 @@ class ContactListModel(NSObject):
         return None
 
     def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
-        return item.name
+        return item and item.name
 
     def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
         if type(item) == ContactGroup:
@@ -634,7 +634,7 @@ class ContactListModel(NSObject):
         return None
 
     def outlineView_persistentObjectForItem_(self, outline, item):
-        return item.name
+        return item and item.name
 
     def outlineView_child_ofItem_(self, outline, index, item):
         if item is None:
