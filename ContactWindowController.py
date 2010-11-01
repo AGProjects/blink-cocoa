@@ -127,6 +127,7 @@ class ContactWindowController(NSWindowController):
     searchOutline = objc.IBOutlet()
     notFoundText = objc.IBOutlet()
     notFoundTextOffset = None
+    searchOutlineTopOffset = None
     
     addContactToConference = objc.IBOutlet()
 
@@ -156,6 +157,10 @@ class ContactWindowController(NSWindowController):
 
 
     def awakeFromNib(self):
+        # check how much space there is left for the search Outline, so we can restore it after
+        # minimizing
+        self.searchOutlineTopOffset = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - NSHeight(self.searchOutline.enclosingScrollView().frame())
+
         # save the NSUser icon to disk so that it can be used from html
         icon = NSImage.imageNamed_("NSUser")
         icon.setSize_(NSMakeSize(32, 32))
@@ -231,6 +236,7 @@ class ContactWindowController(NSWindowController):
         self.photoImage.callback = self.photoClicked
 
         self.loaded = True
+        
 
     def setup(self, sipManager):
         self.backend = sipManager
@@ -1306,7 +1312,7 @@ class ContactWindowController(NSWindowController):
     def windowDidResize_(self, notification):
         if NSHeight(self.window().frame()) > 154:
             self.originalSize = None
-            self.setCollapsed(False)
+            self.setCollapsed(False)            
         else:
             self.contactOutline.deselectAll_(None)
 
@@ -1315,6 +1321,12 @@ class ContactWindowController(NSWindowController):
             frame = self.notFoundText.frame()
             frame.origin.y = NSHeight(self.notFoundText.superview().frame()) - self.notFoundTextOffset
             self.notFoundText.setFrame_(frame)
+
+            frame = self.searchOutline.enclosingScrollView().frame()
+            if self.searchOutlineTopOffset:
+                frame.size.height = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - self.searchOutlineTopOffset
+                self.searchOutline.enclosingScrollView().setFrame_(frame)
+
 
     def drawerDidOpen_(self, notification):
         windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
