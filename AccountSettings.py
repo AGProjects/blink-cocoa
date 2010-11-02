@@ -89,6 +89,14 @@ class AccountSettings(NSObject):
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
+        
+    def webView_runOpenPanelForFileButtonWithResultListener_(self, sender, resultListener):
+        panel = NSOpenPanel.openPanel()
+        if panel.runModal() == NSFileHandlingPanelOKButton:
+            resultListener.chooseFilename_(panel.filename())
+        else:
+            resultListener.cancel()
+        
 
     def webView_didStartProvisionalLoadForFrame_(self, sender, frame):
         self._authRequestCount = 0
