@@ -892,6 +892,9 @@ class SIPManager(object):
             uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
                 parameters={'transport': account.sip.outbound_proxy.transport})
             BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through proxy %s)"%(target_uri, uri))
+        elif isinstance(account, Account) and account.sip.always_use_my_proxy:
+            uri = SIPURI(host=account.id.domain)
+            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through account %s proxy)"%(target_uri, account.id))
         else:
             uri = target_uri
             BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s"%target_uri)
