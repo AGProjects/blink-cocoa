@@ -350,6 +350,8 @@ class Ringer(object):
                         self.file_in_sound.start()
         elif name == "CFGSettingsObjectDidChange":
             self.update_settings(data.modified)
+            if 'audio.silent' in data.modified:
+                self.update_playing_ringtones()
         elif name == "WavePlayerDidEnd":
             NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         on_hold_streams = [stream for stream in chain(*(session.streams for session in self.active_sessions if session.streams)) if stream.on_hold]
