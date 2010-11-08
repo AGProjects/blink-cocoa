@@ -7,10 +7,25 @@ Blink account settings extensions.
 
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
+from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.account import RTPSettings
-
+from sipsimple.configuration.datatypes import MSRPConnectionModel, MSRPTransport
 from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
+
+class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
+    transport = Setting(type=MSRPTransport, default='tcp')
+
+
+class MessageSummarySettingsExtension(MessageSummarySettings):
+    enabled = Setting(type=bool, default=True)
+
+
+class MSRPSettingsExtension(MSRPSettings):
+    connection_model = Setting(type=MSRPConnectionModel, default='relay')
+
+
+class NATTraversalSettingsExtension(NATTraversalSettings):
+    use_msrp_relay_for_inbound = Setting(type=bool, default=True)
 
 
 class PSTNSettings(SettingsGroup):
@@ -20,6 +35,12 @@ class PSTNSettings(SettingsGroup):
 
 class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
+    use_srtp_without_tls = Setting(type=bool, default=True)
+
+
+class SIPSettingsExtension(SIPSettings):
+    always_use_my_proxy = Setting(type=bool, default=True)
+    register = Setting(type=bool, default=True)
 
 
 class ServerSettings(SettingsGroup):
@@ -30,19 +51,28 @@ class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=AccountSoundFile, default=AccountSoundFile(AccountSoundFile.DefaultSoundFile('sounds.audio_inbound')), nillable=True)
 
 
+class XCAPSettingsExtension(XCAPSettings):
+    enabled = Setting(type=bool, default=True)
+
+
 class AccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
+    message_summary = MessageSummarySettingsExtension
+    msrp = MSRPSettingsExtension
+    nat_traversal = NATTraversalSettingsExtension
     pstn = PSTNSettings
     rtp = RTPSettingsExtension
     server = ServerSettings
     sounds = SoundsSettings
+    sip = SIPSettingsExtension
+    xcap = XCAPSettingsExtension
 
 
 class BonjourAccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
+    msrp = BonjourMSRPSettingsExtension
     rtp = RTPSettingsExtension
     sounds = SoundsSettings
-
 
