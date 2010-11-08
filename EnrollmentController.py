@@ -215,7 +215,7 @@ class EnrollmentController(NSObject):
         account.server.settings_url = settings_url
         account.display_name = display_name.encode("utf8")
         account.auth.password = password
-        account.nat_traversal.use_ice = True
+        account.nat_traversal.use_ice = False
         account.save()
                 
         NSRunAlertPanel("SIP Account Created", "Your new SIP Address is:\n\n%s"%new_address, "Continue", None, None)
