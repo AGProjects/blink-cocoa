@@ -52,7 +52,7 @@ class SoundsSettings(SettingsGroup):
 
 
 class XCAPSettingsExtension(XCAPSettings):
-    enabled = Setting(type=bool, default=True)
+    enabled = Setting(type=bool, default=False)
 
 
 class AccountExtension(SettingsObjectExtension):
