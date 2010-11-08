@@ -198,7 +198,6 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="MediaStreamDidInitialize")
         nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
-        nc.add_observer(self, name="BonjourAccountWillRestartDiscovery")
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
