@@ -663,7 +663,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSPopUpButtonCell" key="NSCell" id="704779340">
-								<int key="NSCellFlags">-2076049856</int>
+								<int key="NSCellFlags">-1539178944</int>
 								<int key="NSCellFlags2">2048</int>
 								<reference key="NSSupport" ref="756971317"/>
 								<reference key="NSControlView" ref="767719300"/>
