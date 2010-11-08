@@ -64,8 +64,8 @@ class AccountExtension(SettingsObjectExtension):
     pstn = PSTNSettings
     rtp = RTPSettingsExtension
     server = ServerSettings
-    sounds = SoundsSettings
     sip = SIPSettingsExtension
+    sounds = SoundsSettings
     xcap = XCAPSettingsExtension
 
 
