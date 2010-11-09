@@ -257,7 +257,6 @@ class DigitsOption(StringOption):
 class PortOption(NonNegativeIntegerOption):
     def __init__(self, object, name, option):  
         NonNegativeIntegerOption.__init__(self, object, name, option)
-        
         self.formatter.setMaximum_(65535)
 
 
