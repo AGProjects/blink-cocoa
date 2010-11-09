@@ -656,12 +656,10 @@ class AudioOutputDeviceOption(PopUpMenuOption):
             self.popup.lastItem().setRepresentedObject_(item)
 
 
-class PathOption(StringOption):
+class PathOption(NullableStringOption):
     def __init__(self, object, name, option):
-        StringOption.__init__(self, object, name, option)
+        NullableStringOption.__init__(self, object, name, option)
 
-        self.emptyIsNone = True
-        
         frame = self.frame()
         frame.size.height += 4
         self.setFrame_(frame)
