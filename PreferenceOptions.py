@@ -159,11 +159,10 @@ class StringOption(Option):
     def _store(self):
         current = self.get()
         nvalue = str(self.text.stringValue())
-        if current != nvalue and not (current is None and len(nvalue) == 0):
-            if not nvalue and self.emptyIsNone:
-                self.set(None)
-            else:
-                self.set(nvalue)
+        if self.emptyIsNone and not nvalue:
+            nvalue = None
+        if current != nvalue:
+            self.set(nvalue)
 
     def restore(self):
         value = self.get("")
