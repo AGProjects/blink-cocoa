@@ -8,6 +8,7 @@ import os
 import re
 
 from application.notification import NotificationCenter, IObserver
+from gnutls.crypto import X509Certificate
 from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
@@ -685,6 +686,14 @@ class PathOption(NullableStringOption):
             self.store()
 
 
+class TLSCertificatePathOption(PathOption):
+    def _store(self):
+        cert_path = str(self.text.stringValue()) or None
+        if cert_path is not None:
+            certificate = X509Certificate(open(os.path.expanduser(cert_path)).read()) # validate the certificate
+        PathOption._store(self)
+
+
 class MessageRecorder(NSObject):
     window = objc.IBOutlet()
     label = objc.IBOutlet()
@@ -1289,5 +1298,7 @@ PreferenceOptionTypes = {
 "SIPProxyAddress" : SIPProxyAddressOption,
 "Digits" : DigitsOption,
 "HTTPURL": NullableStringOption,
-"answering_machine.unavailable_message" : AnsweringMessageOption
+"answering_machine.unavailable_message" : AnsweringMessageOption,
+"tls.ca_list": TLSCertificatePathOption,
+"tls.certificate": TLSCertificatePathOption
 }
