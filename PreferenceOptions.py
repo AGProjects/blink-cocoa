@@ -261,6 +261,24 @@ class PortOption(NonNegativeIntegerOption):
         self.formatter.setMaximum_(65535)
 
 
+class TCPPortOption(PortOption):
+    def _store(self):
+        new_value = self.text.integerValue()
+        settings = SIPSimpleSettings()
+        if new_value == settings.sip.tls_port != 0:
+            raise ValueError("Invalid SIP port value: TCP and TLS ports cannot be the same")
+        PortOption._store(self)
+
+
+class TLSPortOption(PortOption):
+    def _store(self):
+        new_value = self.text.integerValue()
+        settings = SIPSimpleSettings()
+        if new_value == settings.sip.tcp_port != 0:
+            raise ValueError("Invalid SIP port value: TCP and TLS ports cannot be the same")
+        PortOption._store(self)
+
+
 class MultipleSelectionOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 80))
@@ -1299,6 +1317,9 @@ PreferenceOptionTypes = {
 "Digits" : DigitsOption,
 "HTTPURL": NullableStringOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
+"sip.tcp_port": TCPPortOption,
+"sip.tls_port": TLSPortOption,
 "tls.ca_list": TLSCertificatePathOption,
 "tls.certificate": TLSCertificatePathOption
 }
+
