@@ -170,9 +170,8 @@ class StringOption(Option):
 
 
 class NullableStringOption(StringOption):
-    def __init__(self, object, name, option):  
+    def __init__(self, object, name, option):
         StringOption.__init__(self, object, name, option)
-        
         self.emptyIsNone = True
 
 
@@ -663,23 +662,23 @@ class PathOption(NullableStringOption):
         frame = self.frame()
         frame.size.height += 4
         self.setFrame_(frame)
-        
+
         self.button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 20, 20))
         self.addSubview_(self.button)
-        
+
         self.button.setBezelStyle_(NSRoundedBezelStyle)
         self.button.setTitle_(u"Browse")
         self.button.sizeToFit()
         self.button.setAction_("browse:")
         self.button.setTarget_(self)
-    
+
     def browse_(self, sender):
         panel = NSOpenPanel.openPanel()
 
         panel.setTitle_(u"Select File")
         panel.setCanChooseFiles_(True)
         panel.setCanChooseDirectories_(True)
-        
+
         if panel.runModal() == NSOKButton:
             path = panel.filename()
             self.text.setStringValue_(path)
