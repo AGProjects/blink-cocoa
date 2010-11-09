@@ -1277,7 +1277,6 @@ PreferenceOptionTypes = {
 "SIPAddress" : NullableStringOption,
 "XCAPRoot" : NullableStringOption,
 "SRTPEncryption" : SRTPEncryptionOption,
-"NonNegativeInteger" : NonNegativeIntegerOption,
 "Port" : PortOption,
 "PortRange" : PortRangeOption,
 "PJSIPLogLevel" : NonNegativeIntegerOption,
