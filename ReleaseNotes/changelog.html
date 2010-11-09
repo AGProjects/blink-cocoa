@@ -9,19 +9,30 @@
 
 <h2>Version 0.20.3</h2>
 
-<p>November 8th, 2010
+<p>November 9th, 2010
 
 <ul>
-<li>Added setting Account->SIP->Always Use My Proxy
+<li>Added setting Account -> SIP -> Always Use My Proxy
 <li>Improved resilience during poor connectivity conditions
+<li>Check validity of TCP and TLS port in Preferences
+<li>Check validity of TLS certificates in Preferences
+<li>Allow only supported sample rates for the audio device in Preferences
+<li>Set MSRP Relay address setting default port to 2855 in Preferences
+<li>Removed obsolete TLS protocols from Preferences
+<li>Retry MWI Subscription in 3 hours in case of failure instead of stopping it
+<li>Do not route to unsupported transport returned from DNS lookup
+<li>Prefer the server advertised voicemail URI over the user setting
 <li>Fixed a random crash in the contact model
 <li>Fixed bugs in Bonjour Neighbourhood's discovery mechanism
+<li>Publish all supported SIP transports in Bonjour advertisement
 <li>Fixed overlapping buttons after collapsing the main interface
 <li>Fixed toggling of Silent setting while in a call
-<li>Fixed file upload form element in the SIP settings page
+<li>Fixed the file upload form element in the SIP settings page
 <li>Improved the display of failure reason for failed File Transfers
 <li>Disabled ICE by default, it causes reseting some SIP ALG routers
+<li>Disabled voice activation detection
 <li>Improved helper text in the main search box
+<li>Fixed RTP and SIP port boundry checks
 <li>Many bug fixes inherited from the latest SIP SIMPLE client SDK
 </ul>
 
