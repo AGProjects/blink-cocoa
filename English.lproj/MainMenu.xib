@@ -646,7 +646,7 @@
 								</object>
 								<object class="NSMenuItem" id="624394804">
 									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Buy access to dial phone numbers...</string>
+									<string key="NSTitle">Buy prepaid credit...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
