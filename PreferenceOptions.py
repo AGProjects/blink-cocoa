@@ -984,7 +984,6 @@ class AnsweringMessageOption(Option):
         else:
             path = self.custom_file
         self.play.setImage_(NSImage.imageNamed_("pause"))
-        app = SIPApplication()
         self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path))
         SIPApplication.voice_audio_bridge.add(self.sound)
         NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
@@ -1030,7 +1029,6 @@ class AccountSoundFileOption(SoundFileOption):
             value = self.get()
             if value and value.sound_file:
                 path = value.sound_file.path.normalized
-                app = SIPApplication()
                 self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path), volume=self.slider.integerValue()*10)
                 NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
                 SIPApplication.voice_audio_bridge.add(self.sound)
