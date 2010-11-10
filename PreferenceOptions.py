@@ -8,7 +8,7 @@ import os
 import re
 
 from application.notification import NotificationCenter, IObserver
-from gnutls.crypto import X509Certificate
+from gnutls.crypto import X509Certificate, X509PrivateKey
 from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
@@ -703,11 +703,21 @@ class PathOption(NullableStringOption):
             self.store()
 
 
+class TLSCAListPathOption(PathOption):
+    def _store(self):
+        cert_path = str(self.text.stringValue()) or None
+        if cert_path is not None:
+            X509Certificate(open(os.path.expanduser(cert_path)).read()) # validate the certificate
+        PathOption._store(self)
+
+
 class TLSCertificatePathOption(PathOption):
     def _store(self):
         cert_path = str(self.text.stringValue()) or None
         if cert_path is not None:
-            certificate = X509Certificate(open(os.path.expanduser(cert_path)).read()) # validate the certificate
+            contents = open(os.path.expanduser(cert_path)).read()
+            X509Certificate(contents) # validate the certificate
+            X509PrivateKey(contents)  # validate the private key
         PathOption._store(self)
 
 
@@ -1316,7 +1326,7 @@ PreferenceOptionTypes = {
 "answering_machine.unavailable_message" : AnsweringMessageOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
-"tls.ca_list": TLSCertificatePathOption,
+"tls.ca_list": TLSCAListPathOption,
 "tls.certificate": TLSCertificatePathOption
 }
 
