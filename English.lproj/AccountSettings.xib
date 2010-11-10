@@ -109,7 +109,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="264005088">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">Loading Account Settings...</string>
+								<string key="NSContents">Loading Server page...</string>
 								<object class="NSFont" key="NSSupport" id="48136291">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">1.300000e+01</double>

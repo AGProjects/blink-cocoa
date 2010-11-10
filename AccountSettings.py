@@ -45,7 +45,7 @@ class AccountSettings(NSObject):
     def showSettingsForAccount_(self, account):
         if account.server.settings_url is None:
             return
-        query_string = "realm=%s&user_agent=blink" % account.id
+        query_string = "realm=%s&tab=settings&user_agent=blink" % account.id
         if account.server.settings_url.query:
             query_string = "%s&%s" % (account.server.settings_url.query, query_string)
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
@@ -63,7 +63,7 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_("%s %s SIP Account Settings"%(self._account.id, unichr(0x2014)))
+        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
 
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
@@ -79,9 +79,53 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_("%s %s Search Directory"%(self._account.id, unichr(0x2014)))
+        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
 
         query_string = "realm=%s&tab=contacts&task=directory&user_agent=blink" % self._account.id
+        if account.server.settings_url.query:
+            query_string = "%s&%s" % (account.server.settings_url.query, query_string)
+        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        url = NSURL.URLWithString_(url)
+        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+        self.webView.mainFrame().loadRequest_(request)
+        self.window.makeKeyAndOrderFront_(self)
+
+    def showPSTNAccessforAccount_(self, account):
+        if account.server.settings_url is None:
+            return
+        self._account = account
+
+        self.webView.setHidden_(True)
+        self.loadingText.setHidden_(False)
+        self.spinWheel.setHidden_(False)
+        self.spinWheel.startAnimation_(None)
+        self.errorText.setHidden_(True)
+
+        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
+
+        query_string = "realm=%s&tab=payments&user_agent=blink" % self._account.id
+        if account.server.settings_url.query:
+            query_string = "%s&%s" % (account.server.settings_url.query, query_string)
+        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        url = NSURL.URLWithString_(url)
+        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+        self.webView.mainFrame().loadRequest_(request)
+        self.window.makeKeyAndOrderFront_(self)
+
+    def showServerHistoryForAccount_(self, account):
+        if account.server.settings_url is None:
+            return
+        self._account = account
+
+        self.webView.setHidden_(True)
+        self.loadingText.setHidden_(False)
+        self.spinWheel.setHidden_(False)
+        self.spinWheel.startAnimation_(None)
+        self.errorText.setHidden_(True)
+
+        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
+
+        query_string = "realm=%s&tab=calls&user_agent=blink" % self._account.id
         if account.server.settings_url.query:
             query_string = "%s&%s" % (account.server.settings_url.query, query_string)
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
@@ -100,13 +144,13 @@ class AccountSettings(NSObject):
 
     def webView_didStartProvisionalLoadForFrame_(self, sender, frame):
         self._authRequestCount = 0
-        BlinkLogger().log_info("Loading account settings page for %s..." % self._account.id)
+        BlinkLogger().log_info("Loading Blink Server Tools for %s..." % self._account.id)
         self.errorText.setHidden_(True)
         if self.spinWheel.isHidden():
             self.spinWheel2.startAnimation_(None)
 
     def webView_didFinishLoadForFrame_(self, sender, frame):
-        BlinkLogger().log_info("Loaded account settings page")
+        BlinkLogger().log_info("Loaded Blink Server Tools page")
         self.spinWheel.stopAnimation_(None)
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
@@ -118,9 +162,9 @@ class AccountSettings(NSObject):
         self.spinWheel2.stopAnimation_(None)
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
-        self.errorText.setStringValue_("Could not load Account Settings: %s" % error.localizedDescription())
+        self.errorText.setStringValue_("Could not load Blink Server Tools page: %s" % error.localizedDescription())
         self.errorText.setHidden_(False)
-        BlinkLogger().log_error("Could not load account settings page: %s" % error)
+        BlinkLogger().log_error("Could not load Blink Server Tools page: %s" % error)
 
     def webView_didFailLoadWithError_forFrame_(self, sender, error, frame):
         self.spinWheel.stopAnimation_(None)
@@ -128,8 +172,8 @@ class AccountSettings(NSObject):
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
         self.errorText.setHidden_(False)
-        self.errorText.setStringValue_("Could not load Account Settings: %s" % error.localizedDescription())
-        BlinkLogger().log_error("Could not load account settings page: %s" % error)
+        self.errorText.setStringValue_("Could not load Blink Server Tools page: %s" % error.localizedDescription())
+        BlinkLogger().log_error("Could not load Blink Server Tools page: %s" % error)
 
     def webView_createWebViewWithRequest_(self, sender, request):
         window = AccountSettings.createWithOwner_(self.owner)
@@ -141,7 +185,7 @@ class AccountSettings(NSObject):
         if self._authRequestCount > 2:
             BlinkLogger().log_info("Received duplicated authentication request, probably authentication failure")
             self.errorText.setHidden_(False)
-            self.errorText.setStringValue_("Could not load Account Settings: authentication failure")
+            self.errorText.setStringValue_("Could not load Blink Server Tools page: authentication failure")
             self.spinWheel.stopAnimation_(None)
             self.loadingText.setHidden_(True)
         else:

@@ -139,6 +139,7 @@ class ContactWindowController(NSWindowController):
     contactsMenu = objc.IBOutlet()
     audioMenu = objc.IBOutlet()
     accountsMenu = objc.IBOutlet()
+    toolsMenu = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
@@ -1394,22 +1395,30 @@ class ContactWindowController(NSWindowController):
             item.setState_(self.backend.is_silent() and NSOnState or NSOffState)
 
     def updateAccountsMenu(self):
-        item = self.accountsMenu.itemWithTag_(1)
-        menu = item.submenu()
-
-        item = self.accountsMenu.itemWithTag_(50) # answering machine
-        item.setState_(SIPSimpleSettings().answering_machine.enabled and NSOnState or NSOffState)
-
         item = self.accountsMenu.itemWithTag_(51) # chat
         item.setState_(SIPSimpleSettings().chat.auto_accept and NSOnState or NSOffState)
 
         item = self.accountsMenu.itemWithTag_(52) # file
         item.setState_(SIPSimpleSettings().file_transfer.auto_accept and NSOnState or NSOffState)
-        
+
+    def updateToolsMenu(self):
         account = self.activeAccount()
 
-        item = self.accountsMenu.itemWithTag_(100)
-        item.setEnabled_(AccountSettings.isSupportedAccount_(account))
+        item = self.toolsMenu.itemWithTag_(50) # Answering machine
+        item.setState_(SIPSimpleSettings().answering_machine.enabled and NSOnState or NSOffState)
+
+        item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
+
+        item = self.toolsMenu.itemWithTag_(41) # Search Directory...
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
+
+        item = self.toolsMenu.itemWithTag_(42) # Call History
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
+
+        item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
+
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -1646,6 +1655,20 @@ class ContactWindowController(NSWindowController):
         self.accountSettingsPanels[account].showDirectoryForAccount_(account)
 
     @objc.IBAction
+    def showPSTNAccess_(self, sender):
+        account = self.activeAccount()
+        if not self.accountSettingsPanels.has_key(account):
+            self.accountSettingsPanels[account] = AccountSettings.createWithOwner_(self)
+        self.accountSettingsPanels[account].showPSTNAccessforAccount_(account)
+
+    @objc.IBAction
+    def showServerHistory_(self, sender):
+        account = self.activeAccount()
+        if not self.accountSettingsPanels.has_key(account):
+            self.accountSettingsPanels[account] = AccountSettings.createWithOwner_(self)
+        self.accountSettingsPanels[account].showServerHistoryForAccount_(account)
+
+    @objc.IBAction
     def close_(self, sender):
         self.window().close()
 
@@ -1757,6 +1780,8 @@ class ContactWindowController(NSWindowController):
             self.updateContactContextMenu()
         elif menu == self.accountsMenu:
             self.updateAccountsMenu()
+        elif menu == self.toolsMenu:
+            self.updateToolsMenu()
         elif menu == self.chatMenu:
             self.updateChatMenu()
         elif menu == self.desktopShareMenu:
@@ -1778,9 +1803,6 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(NSApp.keyWindow() == self.window())
             item = self.contactsMenu.itemWithTag_(34) # Delete Group
             item.setEnabled_(NSApp.keyWindow() == self.window())
-            item = self.contactsMenu.itemWithTag_(40) # Search Directory...
-            item.setEnabled_(bool(self.activeAccount().server.settings_url))
-
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
