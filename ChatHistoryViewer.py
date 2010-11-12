@@ -135,9 +135,10 @@ class ChatHistoryViewer(NSWindowController):
                 sender = entry["sender"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
+                state = entry["state"]
                 sender_uri = format_identity_from_text(sender)[0]
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
-                self.chatViewController.showMessage(timestamp, sender, icon, text, timestamp, is_html, history_entry=True)
+                self.chatViewController.showMessage(timestamp, sender, icon, text, timestamp, is_html, True, state)
 
     def tableView_deleteRow_(self, table, row):
         entries = self.entries if self.filtered is None else self.filtered
