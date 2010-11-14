@@ -4,6 +4,10 @@
 <dict>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/BlinkAppcast.xml</string>
+        <key>SUEnableAutomaticChecks</key>
+        <true/>
+        <key>SUAllowsAutomaticUpdates</key>
+        <true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
