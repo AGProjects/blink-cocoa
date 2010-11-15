@@ -4,6 +4,7 @@
 from Foundation import *
 from AppKit import *
 
+import datetime
 import re
 
 from application.notification import IObserver, NotificationCenter
@@ -20,7 +21,6 @@ import SIPManager
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
 from util import *
-
 
 class SMSWindowController(NSWindowController):
     implements(IObserver)
@@ -287,7 +287,26 @@ class SMSManagerClass(NSObject):
         note_new_message = False if replication_message else True
         viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
-        viewer.gotMessage(sender_identity, body, is_html)
+        replication_state=None
+        replication_timestamp=None
+        if replication_message:
+            replicated_response_code = data.headers.get('X-Replication-Code', Null).body
+            if replicated_response_code is not Null:
+                if (replicated_response_code == '202'):
+                    replication_state = 'deferred'
+                elif (replicated_response_code == '200'):
+                    replication_state = 'delivered'
+                else:
+                    replication_state = 'failed'
+
+            replicated_timestamp = data.headers.get('X-Replication-Timestamp', Null).body
+            if replicated_timestamp is not Null:
+                try:
+                    replication_timestamp = datetime.datetime.strptime(replicated_timestamp, '%Y-%m-%d %H:%M:%S')
+                except:
+                    replication_timestamp = datetime.datetime.utcnow()
+
+        viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
         if replication_message:

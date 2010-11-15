@@ -227,7 +227,7 @@ class ChatViewController(NSObject):
         self.delegate.chatView_becameIdle_(self, self.lastTypedTime)
         self.lastTypeNotifyTime = None
 
-    def setMessageSent(self, oldid, newid): # delegate
+    def updateMessageId(self, oldid, newid): # delegate
         script = "fixupMessageId('%s', '%s')"%(oldid, newid)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         if self.history:
@@ -235,7 +235,7 @@ class ChatViewController(NSObject):
 
     def markMessage(self, msgid, state): # delegate
         if state == MSG_STATE_DELIVERED:
-            script = "markDelivered('%s')"%msgid 
+            script = "markDelivered('%s')"%msgid
             call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
             if self.history:
                 self.history.set_delivered(msgid)

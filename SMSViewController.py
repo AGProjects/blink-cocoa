@@ -170,7 +170,7 @@ class SMSViewController(NSObject):
             BlinkLogger().log_info("Sending queued SMS messages...")
         for msgid, msg, content_type in self.queue:
             nmsgid = self.doSendMessage(msg, content_type)
-            self.chatViewController.setMessageSent("-%s" % msgid, nmsgid)
+            self.chatViewController.updateMessageId("-%s" % msgid, nmsgid)
         self.queue = []
 
     def setRoutesFailed(self, msg):
@@ -182,13 +182,17 @@ class SMSViewController(NSObject):
         this_contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
-    def gotMessage(self, sender, message, is_html=False):
+    def gotMessage(self, sender, message, is_html=False, state='', timestamp=''):
         self.enableIsComposing = True
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
-        if self.incoming_queue is not None:
-            self.incoming_queue.append(("", format_identity(sender), icon, message, datetime.datetime.utcnow(), is_html))
+        if timestamp is not None:
+            rendered_timestamp = timestamp
         else:
-            self.chatViewController.showMessage("", format_identity(sender), icon, message, datetime.datetime.utcnow(), is_html)
+            rendered_timestamp = datetime.datetime.utcnow()
+        if self.incoming_queue is not None:
+            self.incoming_queue.append(('', format_identity(sender), icon, message, rendered_timestamp, is_html, False, state))
+        else:
+            self.chatViewController.showMessage('', format_identity(sender), icon, message, rendered_timestamp, is_html, False, state)
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -230,6 +234,10 @@ class SMSViewController(NSObject):
         handler(notification.sender, notification.data)
 
     def _NH_SIPMessageDidSucceed(self, sender, data):
+        BlinkLogger().log_warning("SMS message delivery suceeded: %s" % data.reason)
+
+        self.composeReplicationMessage(sender, data.code)
+
         if (data.code == 202):
             self.chatViewController.markMessage(str(sender), MSG_STATE_DEFERRED)
         else:
@@ -238,7 +246,10 @@ class SMSViewController(NSObject):
 
     def _NH_SIPMessageDidFail(self, sender, data):
         BlinkLogger().log_warning("SMS message delivery failed: %s" % data.reason)
-        self.chatViewController.markMessage(str(sender), MSG_STATE_FAILED)        
+
+        self.composeReplicationMessage(sender, data.code)
+
+        self.chatViewController.markMessage(str(sender), MSG_STATE_FAILED)
         NotificationCenter().remove_observer(self, sender=sender)
 
     def doSendMessage(self, text, content_type="text/plain"):
@@ -253,8 +264,16 @@ class SMSViewController(NSObject):
         message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
         return str(message_request)
 
+    def composeReplicationMessage(self, sent_message, response_code):
+        if isinstance(self.account, Account):
+            settings = SIPSimpleSettings()
+            if settings.chat.sms_replication:
+                contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
+                msg = CPIMMessage(sent_message.body, sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
+                self.sendReplicationMessage(str(msg), response_code, datetime.datetime.utcnow(), 'message/cpim')
+
     @run_in_green_thread
-    def sendReplicationMessage(self, text, content_type="message/cpim"):
+    def sendReplicationMessage(self, text, code, timestamp, content_type="message/cpim"):
         # Lookup routes
         if self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host,
@@ -271,7 +290,7 @@ class SMSViewController(NSObject):
         else:
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             BlinkLogger().log_info("Sending replication SMS message to %s" % self.account.uri)
-            extra_headers = [Header("X-Offline-Storage", "no")]
+            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(code)), Header("X-Replication-Timestamp", str(timestamp)[:-7])]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
@@ -280,14 +299,6 @@ class SMSViewController(NSObject):
         SIPManager().request_routes_lookup(self.account, self.target_uri, self)
         self.queued_serial += 1
         self.queue.append((self.queued_serial, text, content_type))
-
-        # Send the MESSAGE again, this time back to myself
-        if isinstance(self.account, Account):
-            settings = SIPSimpleSettings()
-            if settings.chat.sms_replication:
-                contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
-                msg = CPIMMessage(text, content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
-                self.sendReplicationMessage(str(msg), 'message/cpim')
 
         return "-%s" % self.queued_serial
 

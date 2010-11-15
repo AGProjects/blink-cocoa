@@ -231,9 +231,7 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
   {
     idstr = "id='"+msgid+"'";
     box_class = "msgbox_sending";
-  }
-  else
-  {
+  } else {
     idstr = "";
     box_class = "msgbox";
   }
@@ -302,7 +300,7 @@ function markDeferred(msgid)
   msg = document.getElementById('s'+msgid)
   if (msg != null)
     msg.style.display = "none";
-    msg.innerHTML = "(deferred) ";
+    msg.innerHTML = "Deferred for later ";
 }
 
 
@@ -313,6 +311,10 @@ function markFailed(msgid)
   {
     msg.className = "msgbox_failed";
   }
+  msg = document.getElementById('s'+msgid)
+  if (msg != null)
+    msg.style.display = "none";
+    msg.innerHTML = "Failed ";
 }
 
 
@@ -332,7 +334,7 @@ function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state
 
   if (state == "deferred") {
       _class = "msgbox_deferred";
-      later_txt = "(Deferred for later)&nbsp;";
+      later_txt = "Deferred for later ";
   } else if (state == "failed") {
       _class = "msgbox_failed"
   } else if (state == "dropped") {
@@ -344,9 +346,7 @@ function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state
   if (msgid  != null)
   {
     idstr = "id='"+msgid+"'";
-  }
-  else
-  {
+  } else {
     idstr = "";
   }
 

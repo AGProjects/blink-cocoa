@@ -241,6 +241,24 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
   timestamp = formatTimestamp(timestamp);
   
   placeholder = document.getElementById("placeholder");
+
+  status = ''
+
+  if (msgid  != null)
+  {
+    box_class = "msgbox_sending";
+  } else {
+    box_class = "msgbox";
+    status = timestamp;
+  }
+
+  if (state == "deferred") {
+      box_class = "msgbox_deferred";
+      status = "Deferred for later ";
+  } else if (state == "failed") {
+      box_class = "msgbox_failed"
+      status = "Failed ";
+  }
   
   if (content != null)
       content.id = "";
@@ -250,10 +268,10 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
     placeholder.innerHTML += 
     "<div>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='msgbox_sending' id='"+msgid+"'>"+
+    "<div class='"+box_class+"' id='"+msgid+"'>"+
          "<div class='header'>"+
              "<div class='recipient_self'>"+sender+"</div>"+
-             "<div class='timestamp_hidden' id='t"+msgid+"'>"+timestamp+"</div>"+
+             "<div class='timestamp_hidden' id='t"+msgid+"'>" +timestamp+"</div>"+
              "<div class='state' id='s"+msgid+"'>Sending...</div>"+
          "</div>"+
          "<div class='message'>"+
@@ -261,16 +279,14 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
         "</div>"+
     "</div>"+
     "</div>";
-  }
-  else
-  {
+  } else {
     placeholder.innerHTML += 
     "<div>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='msgbox'>"+
+    "<div class='"+box_class+"'>"+
          "<div class='header'>"+
              "<div class='recipient'>"+sender+"</div>"+
-             "<div class='timestamp'>"+timestamp+"</div>"+
+             "<div class='timestamp'>"+status+"</div>"+
          "</div>"+
          "<div class='message'>"+
             "<span class='body'>"+text+"</span>"+
@@ -324,11 +340,11 @@ function markDeferred(msgid)
 
   msg = document.getElementById('t'+msgid)
   if (msg != null)
-    msg.style.display = "block";
+    msg.style.display = "none";
   msg = document.getElementById('s'+msgid)
   if (msg != null)
     msg.style.display = "block";
-    msg.innerHTML = "(Deferred for later)&nbsp;";
+    msg.innerHTML = "Deferred for later ";
 }
 
 function markFailed(msgid)
@@ -345,7 +361,7 @@ function markFailed(msgid)
   if (msg != null)
   {
     msg.style.display = "block";
-    msg.innerHTML = "failed";
+    msg.innerHTML = "Failed ";
   }
 }
 
@@ -362,15 +378,14 @@ function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state
   if (content != null)
       content.id = "";
 
-  later_txt = '';
+  status = '';
 
   if (state == "deferred") {
       _class = "msgbox_deferred";
-      later_txt = "(Deferred for later)&nbsp;";
+      status = "Deferred for later ";
   } else if (state == "failed") {
       _class = "msgbox_failed"
-  } else if (state == "dropped") {
-      _class = "msgbox_dropped"
+      status = "Failed ";
   } else {
       _class = "msgbox_old"
   }
@@ -381,7 +396,7 @@ function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state
     "<div class='"+ _class + "'>"+
          "<div class='header'>"+
              "<div class='"+(isme ? "recipient_self" : "recipient")+"'>"+sender+"</div>"+
-             "<div class='timestamp'>" + later_txt + timestamp+"</div>"+
+             "<div class='timestamp'>" + timestamp +"</div>"+
          "</div>"+
          "<div class='message'>"+
             "<span class='body'>"+text+"</span>"+
