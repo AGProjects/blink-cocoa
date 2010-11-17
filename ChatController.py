@@ -120,7 +120,7 @@ class MessageHandler(NSObject):
                     BlinkLogger().log_error("Error sending message: %s" % e)
                     self.delegate.writeSysMessage("Error sending message")
                 else:
-                    self.delegate.showMessage(message.id, None, icon, text, message.timestamp)
+                    self.delegate.showMessage(message.id, None, icon, text, now)
             else:
                 self.pending.append((text, now, "-" + str(now)))
                 self.delegate.showMessage("-" + str(now), None, icon, text, now)
@@ -182,11 +182,10 @@ class MessageHandler(NSObject):
 
     def _NH_ChatStreamGotMessage(self, sender, data):
         message = data.message
-
         # display message
         name = format_identity(message.sender)
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
-        self.delegate.showMessage(None, name, icon, message.body, message.timestamp)
+        self.delegate.showMessage(None, name, icon, message.body, datetime.datetime.utcnow())
 
         window = self.delegate.outputView.window()
         window_is_key = window.isKeyWindow() if window else False
