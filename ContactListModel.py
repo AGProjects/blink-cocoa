@@ -45,11 +45,12 @@ class Contact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, icon=None, detail=None, name=None, display_name=None, preferred_media=None, editable=True, addressbook_id=None, aliases=None, stored_in_account=None, attributes=None):
+    def __init__(self, uri, icon=None, detail=None, name=None, display_name=None, bonjour_neighbour=None, preferred_media=None, editable=True, addressbook_id=None, aliases=None, stored_in_account=None, attributes=None):
         self.uri = uri
         self.display_name = display_name or name
         self.name = NSString.alloc().initWithString_(name or uri)
         self.detail = NSString.alloc().initWithString_(detail or uri)
+        self.bonjour_neighbour = bonjour_neighbour
         self.icon = icon
         self._preferred_media = preferred_media
         self.editable = editable
@@ -199,12 +200,21 @@ class ContactGroup(NSObject):
     def setBonjourNeighbours(self, contact_list):
         self.contacts = [Contact(uri, None, name=display_name) for display_name, uri in contact_list]
 
-    def addBonjourNeighbour(self, uri, display_name=None):
-        if uri not in (contact.uri for contact in self.contacts):
-            self.contacts.append(Contact(uri, None, name=display_name, editable=False))
+    def addBonjourNeighbour(self, neighbour, uri, display_name=None):
+        if neighbour not in (contact.bonjour_neighbour for contact in self.contacts):
+            self.contacts.append(Contact(uri, None, name=display_name, bonjour_neighbour=neighbour, editable=False))
 
-    def removeBonjourNeighbour(self, uri):
-        for contact in [c for c in self.contacts if c.uri==uri]:
+    def updateBonjourNeighbour(self, neighbour, uri, display_name=None):
+        try:
+            contact = (contact for contact in self.contacts if contact.bonjour_neighbour==neighbour).next()
+        except StopIteration:
+            self.contacts.append(Contact(uri, None, name=display_name, bonjour_neighbour=neighbour, editable=False))
+        else:
+            contact.setName(display_name)
+            contact.setURI(uri)
+
+    def removeBonjourNeighbour(self, neighbour):
+        for contact in [c for c in self.contacts if c.bonjour_neighbour==neighbour]:
             self.contacts.remove(contact)
 
     def loadAddressBook(self):
