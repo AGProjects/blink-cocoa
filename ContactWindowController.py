@@ -436,6 +436,7 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_info("Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
         self.model.bonjourgroup.addBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
         call_in_gui_thread(self.contactOutline.reloadData)
+        call_in_gui_thread(self.performSearch)
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -451,6 +452,7 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_info("Bonjour neighbour removed: %s" % notification.data.neighbour.name)
         self.model.bonjourgroup.removeBonjourNeighbour(notification.data.neighbour)
         call_in_gui_thread(self.contactOutline.reloadData)
+        call_in_gui_thread(self.performSearch)
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
