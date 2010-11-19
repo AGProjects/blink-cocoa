@@ -156,7 +156,7 @@ class MessageHandler(NSObject):
                 log.err()
                 BlinkLogger().log_error("Error sending queued message: %s" % e)
             else:
-                self.delegate.setMessageSent(msgid, message.id)
+                self.delegate.updateMessageId(msgid, message.id)
         self.pending = []
 
     def setDisconnected(self):
