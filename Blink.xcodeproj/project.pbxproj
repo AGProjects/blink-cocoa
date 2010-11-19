@@ -167,7 +167,6 @@
 		2BC08CC3106679940069AB9A /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
 		2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		2BC596600FCE1EA90017CB1B /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
-		2BD010AA10D7DD0C00D27A92 /* sms.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD010A910D7DD0C00D27A92 /* sms.html */; };
 		2BD011E210D8198400D27A92 /* chat.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* chat.html */; };
 		2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
@@ -471,7 +470,6 @@
 		2BC08CC2106679940069AB9A /* FileTransferSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferSession.py; sourceTree = "<group>"; };
 		2BC594740FCCDA910017CB1B /* ContactCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactCell.py; sourceTree = "<group>"; };
 		2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactListModel.py; sourceTree = "<group>"; };
-		2BD010A910D7DD0C00D27A92 /* sms.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = sms.html; sourceTree = "<group>"; };
 		2BD011E110D8198400D27A92 /* chat.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = chat.html; sourceTree = "<group>"; };
 		2BD014EB10DB239B00D27A92 /* smiley_off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_off.png; path = icons/smiley_off.png; sourceTree = "<group>"; };
 		2BD014EC10DB239B00D27A92 /* smiley_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_on.png; path = icons/smiley_on.png; sourceTree = "<group>"; };
@@ -626,7 +624,6 @@
 		2B0CE72710CD822100325F30 /* SMS */ = {
 			isa = PBXGroup;
 			children = (
-				2BD010A910D7DD0C00D27A92 /* sms.html */,
 				2B0CE73310CDE8CE00325F30 /* SMSView.xib */,
 				2B0CE72910CD824400325F30 /* SMS.xib */,
 				2B06A429111CFE74001D41E5 /* SMSViewController.py */,
@@ -1133,7 +1130,6 @@
 				2B0CE72B10CD824400325F30 /* SMS.xib in Resources */,
 				2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */,
 				2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */,
-				2BD010AA10D7DD0C00D27A92 /* sms.html in Resources */,
 				2BD011E210D8198400D27A92 /* chat.html in Resources */,
 				2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */,
 				2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */,
