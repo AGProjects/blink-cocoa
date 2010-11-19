@@ -303,7 +303,7 @@ class SMSManagerClass(NSObject):
             if replicated_timestamp is not Null:
                 try:
                     replication_timestamp = datetime.datetime.strptime(replicated_timestamp, '%Y-%m-%d %H:%M:%S')
-                except:
+                except (TypeError, ValueError):
                     replication_timestamp = datetime.datetime.utcnow()
 
         viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
