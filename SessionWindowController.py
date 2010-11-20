@@ -7,6 +7,7 @@ from WebKit import *
 
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, Any
+from sipsimple.account import BonjourAccount
 
 import SessionController
 import SessionManager
@@ -126,7 +127,10 @@ class SessionWindowController(NSWindowController):
     def updateTitle(self):
         session = self.selectedSession()
         if session:
-            title = u"Chat to %s" % session.getTitleFull()
+            if isinstance(session.account, BonjourAccount):
+                title = u"Chat to %s" % session.getTitleShort()
+            else:
+                title = u"Chat to %s" % session.getTitleFull()
         else:
             title = u"Chat"
         self.window().setTitle_(title)
