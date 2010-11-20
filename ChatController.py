@@ -331,7 +331,7 @@ class ChatController(BaseStream):
         NotificationCenter().add_observer(self, sender=stream)
 
     def end(self, autoclose=False):
-        log_info(self, "Ending Chat Session in %s"%self.status)
+        log_info(self, "Ending session in %s"%self.status)
         status = self.status
         if status in (STREAM_IDLE, STREAM_FAILED):
             self.closeChatWindow()
@@ -341,7 +341,7 @@ class ChatController(BaseStream):
                 self.sessionController.cancelProposal(self.stream)
                 self.changeStatus(STREAM_CANCELLING)
             elif self.stream and self.session.streams and len(self.session.streams) > 0:
-                log_info(self, "Removing Chat Stream from Session")                    
+                log_info(self, "Removing Chat Stream from session")                    
                 self.sessionController.endStream(self)
             else:
                 self.sessionController.end()
@@ -355,31 +355,29 @@ class ChatController(BaseStream):
         log_debug(self, "Changing chat state to "+newstate)
         if newstate == STREAM_CONNECTED:
             endpoint = str(self.stream.msrp.full_remote_path[0])
-            BlinkLogger().log_info("Chat Session established to %s (%s)"%(endpoint, self.remoteParty))
-            # changed on 2009-08-11
-            #self.chatController.writeSysMessage("Chat session established to %s"%self.remoteParty, datetime.datetime.utcnow())
-            self.chatViewController.writeSysMessage("Chat Session established", datetime.datetime.utcnow())
+            BlinkLogger().log_info("Session established to %s (%s)"%(endpoint, self.remoteParty))
+            self.chatViewController.writeSysMessage("Session established", datetime.datetime.utcnow())
         elif newstate == STREAM_DISCONNECTING:
-            BlinkLogger().log_info("Ending Chat Session")
+            BlinkLogger().log_info("Ending session")
         elif newstate == STREAM_CANCELLING:
             BlinkLogger().log_info("Cancelling Chat Proposal")
         elif newstate == STREAM_IDLE:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
-                BlinkLogger().log_info("Chat Session ended (%s)"%fail_reason)
+                BlinkLogger().log_info("Session ended (%s)"%fail_reason)
                 if fail_reason == "remote":
-                    close_message = "%s has left the conversation" % format_identity_simple(self.handler.session.remote_identity, check_contact=True)
+                    close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
                     self.chatViewController.writeSysMessage(close_message, datetime.datetime.utcnow())
                 else:
-                    self.chatViewController.writeSysMessage("Chat Session ended", datetime.datetime.utcnow())
+                    self.chatViewController.writeSysMessage("Session ended", datetime.datetime.utcnow())
                 ended = True
         elif newstate == STREAM_FAILED:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
                 if fail_reason:
-                    BlinkLogger().log_error("Chat Session failed: %s" % fail_reason)
-                    self.chatViewController.writeSysMessage("Chat Session failed: %s" % fail_reason, datetime.datetime.utcnow())
+                    BlinkLogger().log_error("Session failed: %s" % fail_reason)
+                    self.chatViewController.writeSysMessage("Session failed: %s" % fail_reason, datetime.datetime.utcnow())
                 else:
-                    BlinkLogger().log_error("Chat Session failed")
-                    self.chatViewController.writeSysMessage("Chat Session failed", datetime.datetime.utcnow())
+                    BlinkLogger().log_error("Session failed")
+                    self.chatViewController.writeSysMessage("Session failed", datetime.datetime.utcnow())
                 ended = True
         self.status = newstate
         BaseStream.changeStatus(self, newstate, fail_reason)
@@ -452,7 +450,7 @@ class ChatController(BaseStream):
                 if self.history:
                     self.history.close()
                     self.history = None
-                BlinkLogger().log_info("Chat Session not established, starting it")
+                BlinkLogger().log_info("Session not established, starting it")
                 self.sessionController.startChatSession()
             self.chatViewController.resetTyping()
             return True
@@ -561,7 +559,7 @@ class ChatController(BaseStream):
             SessionManager.SessionManager().pickFileAndSendTo(self.sessionController.account, self.sessionController.session.remote_identity.uri)
         elif tag == SessionController.TOOLBAR_CHAT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
-                log_info(self, "Re-establishing Chat Session to %s" % self.remoteParty)
+                log_info(self, "Re-establishing session to %s" % self.remoteParty)
                 self.sessionController.startChatSession()
         elif tag == SessionController.TOOLBAR_SMILEY:
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
@@ -589,7 +587,7 @@ class ChatController(BaseStream):
         elif tag == SessionController.TOOLBAR_CALL:
             sessionController.startAudioSession()
         elif tag == SessionController.TOOLBAR_CHAT:
-            BlinkLogger().log_info("Re-establishing Chat Session to %s" % sessionController.remoteParty)
+            BlinkLogger().log_info("Re-establishing session to %s" % sessionController.remoteParty)
             sessionController.startChatSession()
         elif tag == SessionController.TOOLBAR_HISTORY:
             contactWindow = sessionController.owner
