@@ -267,7 +267,7 @@ class ChatViewController(NSObject):
                     state = "queued"
                 else:
                     state = "sent"
-            log_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+            log_timestamp = timestamp.strftime("%F %T")
             self.history.log(
                     id=msgid,
                     direction=incoming and "receive" or "send",
