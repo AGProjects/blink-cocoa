@@ -238,7 +238,7 @@ class SMSViewController(NSObject):
 
         self.composeReplicationMessage(sender, data.code)
 
-        if (data.code == 202):
+        if data.code == 202:
             self.chatViewController.markMessage(str(sender), MSG_STATE_DEFERRED)
         else:
             self.chatViewController.markMessage(str(sender), MSG_STATE_DELIVERED)

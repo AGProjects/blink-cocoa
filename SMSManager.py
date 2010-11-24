@@ -292,20 +292,18 @@ class SMSManagerClass(NSObject):
         if replication_message:
             replicated_response_code = data.headers.get('X-Replication-Code', Null).body
             if replicated_response_code is not Null:
-                if (replicated_response_code == '202'):
+                if replicated_response_code == '202':
                     replication_state = 'deferred'
-                elif (replicated_response_code == '200'):
+                elif replicated_response_code == '200':
                     replication_state = 'delivered'
                 else:
                     replication_state = 'failed'
-
             replicated_timestamp = data.headers.get('X-Replication-Timestamp', Null).body
             if replicated_timestamp is not Null:
                 try:
                     replication_timestamp = datetime.datetime.strptime(replicated_timestamp, '%Y-%m-%d %H:%M:%S')
                 except (TypeError, ValueError):
                     replication_timestamp = datetime.datetime.utcnow()
-
         viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
