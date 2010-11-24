@@ -237,7 +237,7 @@ class SMSManagerClass(NSObject):
 
         is_cpim = False
         replication_message = False
-        if data.content_type == 'message' and data.content_subtype == 'cpim':
+        if data.content_type == 'message/cpim':
             try:
                 message = CPIMMessage.parse(data.body)
             except CPIMParserError:
@@ -256,7 +256,7 @@ class SMSManagerClass(NSObject):
                     window_tab_identity = sender_identity
         else:
             body = data.body.decode('utf-8')
-            content_type = '%s/%s' % (data.content_type, data.content_subtype)
+            content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = sender_identity
 
