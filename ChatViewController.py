@@ -256,8 +256,8 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue = []
 
-    def showMessage(self, msgid, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state=""): # delegate
-        astate = state
+    def showMessage(self, msgid, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state=None): # delegate
+        astate = state = state or ''
         if self.history:
             incoming = sender is not None
             if sender is not None:

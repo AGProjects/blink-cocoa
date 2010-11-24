@@ -182,17 +182,14 @@ class SMSViewController(NSObject):
         this_contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
-    def gotMessage(self, sender, message, is_html=False, state='', timestamp=''):
+    def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
-        if timestamp is not None:
-            rendered_timestamp = timestamp
-        else:
-            rendered_timestamp = datetime.datetime.utcnow()
+        timestamp = timestamp or datetime.datetime.utcnow()
         if self.incoming_queue is not None:
-            self.incoming_queue.append(('', format_identity(sender), icon, message, rendered_timestamp, is_html, False, state))
+            self.incoming_queue.append(('', format_identity(sender), icon, message, timestamp, is_html, False, state))
         else:
-            self.chatViewController.showMessage('', format_identity(sender), icon, message, rendered_timestamp, is_html, False, state)
+            self.chatViewController.showMessage('', format_identity(sender), icon, message, timestamp, is_html, False, state)
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -270,10 +267,11 @@ class SMSViewController(NSObject):
             if settings.chat.sms_replication:
                 contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
                 msg = CPIMMessage(sent_message.body, sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
-                self.sendReplicationMessage(str(msg), response_code, datetime.datetime.utcnow(), 'message/cpim')
+                self.sendReplicationMessage(response_code, str(msg), content_type='message/cpim')
 
     @run_in_green_thread
-    def sendReplicationMessage(self, text, code, timestamp, content_type="message/cpim"):
+    def sendReplicationMessage(self, response_code, text, content_type="message/cpim", timestamp=None):
+        timestamp = timestamp or datetime.datetime.utcnow()
         # Lookup routes
         if self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host,
@@ -290,7 +288,7 @@ class SMSViewController(NSObject):
         else:
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             BlinkLogger().log_info("Sending replication SMS message to %s" % self.account.uri)
-            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(code)), Header("X-Replication-Timestamp", str(timestamp)[:-7])]
+            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", timestamp.strftime('%Y-%m-%d %H:%M:%S'))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
