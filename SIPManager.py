@@ -532,81 +532,79 @@ class SIPManager(object):
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_incoming_session_missed(self, session, dt):
+    def log_incoming_session_missed(self, session, timestamp):
+        account = session.account
+        if account is BonjourAccount():
+            return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            party = format_identity(session.remote_identity, check_contact=True)
-            when = dt
-            account = session.account.id
-            line = "missed\t%s\t%s\t%s\t%s" % (streams, account, party, when)
+            line = "missed\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def log_incoming_session_ended(self, session):
+        account = session.account
+        if account is BonjourAccount():
+            return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            account = session.account.id
-            party = format_identity(session.remote_identity, check_contact=True)
-            start = session.start_time
-            end = session.end_time
-            line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account, party, start, end)
+            line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_incoming_session_answered_elsewhere(self, session, dt):
+    def log_incoming_session_answered_elsewhere(self, session, timestamp):
+        account = session.account
+        if account is BonjourAccount():
+            return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            party = format_identity(session.remote_identity, check_contact=True)
-            when = dt
-            account = session.account.id
-            line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account, party, when, when)
+            line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp, timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_outgoing_session_failed(self, session, dt):
+    def log_outgoing_session_failed(self, session, timestamp):
+        account = session.account
+        if account is BonjourAccount():
+            return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            party = format_identity(session.remote_identity, check_contact=True)
-            when = dt
-            account = session.account.id
-            line = "failed\t%s\t%s\t%s\t%s\t"%(streams,account,party,when)
+            line = "failed\t%s\t%s\t%s\t%s\t"%(streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_outgoing_session_cancelled(self, session, dt):
+    def log_outgoing_session_cancelled(self, session, timestamp):
+        account = session.account
+        if account is BonjourAccount():
+            return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            party = format_identity(session.remote_identity, check_contact=True)
-            when = dt
-            account = session.account.id
-            line = "cancelled\t%s\t%s\t%s\t%s\t"%(streams,account,party,when)
+            line = "cancelled\t%s\t%s\t%s\t%s\t"%(streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def log_outgoing_session_ended(self, session):
+        account = session.account
+        if account is BonjourAccount():
+            return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            account = session.account.id
-            party = format_identity(session.remote_identity, check_contact=True)
-            start = session.start_time
-            end = session.end_time
-            line = "out\t%s\t%s\t%s\t%s\t%s"%(streams,account,party,start,end)
+            line = "out\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
