@@ -740,7 +740,7 @@ class ContactListModel(NSObject):
                 else:
                     print "%f : %s"%(f,error)
 
-            account = AccountManager().default_account if item not in self.bonjourgroup.contacts else BonjourAccount()
+            account = BonjourAccount() if item.bonjour_neighbour is not None else AccountManager().default_account
             if names_and_types and account:
                 try:
                     SIPManager().send_files_to_contact(account, item.uri, names_and_types)
