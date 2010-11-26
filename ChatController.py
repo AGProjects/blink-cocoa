@@ -14,7 +14,7 @@ from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
 from zope.interface import implements
 
-from sipsimple.account import Account
+from sipsimple.account import Account, BonjourAccount
 from sipsimple.streams import ChatStream
 from sipsimple.util import TimestampedNotificationData
 
@@ -494,12 +494,15 @@ class ChatController(BaseStream):
                 chatView.writeOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
         else:
             failed_entries = []
-        pending = failed_entries
-        if self.history:
-            pending += self.history.pending
-            self.history.pending = []
-        for entry in pending:
-            self.handler.resend(entry["text"], entry["id"], entry["state"])
+        if self.sessionController.account is not BonjourAccount():
+            # do not resend bonjour messages as they might arive at the wrong recipient who broadcasted the same address
+            pending = failed_entries
+            if self.history:
+                pending += self.history.pending
+                self.history.pending = []
+
+            for entry in pending:
+                self.handler.resend(entry["text"], entry["id"], entry["state"])
 
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
