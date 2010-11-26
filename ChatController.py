@@ -530,7 +530,7 @@ class ChatController(BaseStream):
 
     def validateToolbarButton(self, item):
         tag = item.tag()
-        if tag==SessionController.TOOLBAR_CHAT and self.status in (STREAM_IDLE, STREAM_FAILED):
+        if tag==SessionController.TOOLBAR_RECONNECT and self.status in (STREAM_IDLE, STREAM_FAILED):
             if self.sessionController.inProposal:
                 return False
             return True
@@ -551,7 +551,7 @@ class ChatController(BaseStream):
 
     @classmethod
     def validateToolbarButtonWhileDisconnected(cls, sessionController, item):
-        return item.tag() in (SessionController.TOOLBAR_CHAT, SessionController.TOOLBAR_HISTORY)
+        return item.tag() in (SessionController.TOOLBAR_RECONNECT, SessionController.TOOLBAR_HISTORY)
 
     def userClickedToolbarButton(self, sender):
         """
@@ -566,7 +566,7 @@ class ChatController(BaseStream):
                 self.sessionController.addAudioToSession()
         elif tag == SessionController.TOOLBAR_SEND_FILE:
             SessionManager.SessionManager().pickFileAndSendTo(self.sessionController.account, self.sessionController.session.remote_identity.uri)
-        elif tag == SessionController.TOOLBAR_CHAT:
+        elif tag == SessionController.TOOLBAR_RECONNECT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
                 log_info(self, "Re-establishing session to %s" % self.remoteParty)
                 self.sessionController.startChatSession()
@@ -599,7 +599,7 @@ class ChatController(BaseStream):
             pass
         elif tag == SessionController.TOOLBAR_CALL:
             sessionController.startAudioSession()
-        elif tag == SessionController.TOOLBAR_CHAT:
+        elif tag == SessionController.TOOLBAR_RECONNECT:
             BlinkLogger().log_info("Re-establishing session to %s" % sessionController.remoteParty)
             sessionController.startChatSession()
         elif tag == SessionController.TOOLBAR_HISTORY:
