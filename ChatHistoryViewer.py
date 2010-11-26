@@ -153,7 +153,7 @@ class ChatHistoryViewer(NSWindowController):
                 unlink(entry["file"])
                 entries.removeObjectAtIndex_(row) 
                 self.entries.removeObject_(entry)
-                for key, value in self.keywords.iteritems():
+                for key, value in self.keywords.items():
                     if value.containsObject_(entry):
                         value.removeObject_(entry)
                     if len(value) == 0:
