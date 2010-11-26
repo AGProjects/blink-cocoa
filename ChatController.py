@@ -469,7 +469,11 @@ class ChatController(BaseStream):
             contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
             if contact:
                 uri = str(contact.uri)
-            entries = BlinkHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+            if self.sessionController.account is BonjourAccount():
+                entries = BlinkHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
+            else:
+                entries = BlinkHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
             if len(failed_entries) > MAX_RESEND_LINES:
@@ -572,7 +576,11 @@ class ChatController(BaseStream):
         elif tag == SessionController.TOOLBAR_HISTORY:
             contactWindow = self.sessionController.owner
             contactWindow.showChatTranscripts_(None)
-            contactWindow.transcriptViewer.filterByContactAccount(format_identity(self.sessionController.target_uri), self.sessionController.account)
+            if self.sessionController.account is BonjourAccount():
+                contactWindow.transcriptViewer.filterByContactAccount('bonjour', self.sessionController.account)
+            else:
+                contactWindow.transcriptViewer.filterByContactAccount(format_identity(self.sessionController.target_uri), self.sessionController.account)
+
         elif tag == SessionController.TOOLBAR_SHARE_DESKTOP:
             if self.status == STREAM_CONNECTED:
                 self.sessionController.addMyDesktopToSession()
@@ -597,7 +605,10 @@ class ChatController(BaseStream):
         elif tag == SessionController.TOOLBAR_HISTORY:
             contactWindow = sessionController.owner
             contactWindow.showChatTranscripts_(None)
-            contactWindow.transcriptViewer.filterByContactAccount(format_identity(sessionController.target_uri), sessionController.account)
+            if sessionController.account is BonjourAccount():
+            	contactWindow.transcriptViewer.filterByContactAccount('bonjour', sessionController.account)
+            else:
+            	contactWindow.transcriptViewer.filterByContactAccount(format_identity(sessionController.target_uri), sessionController.account)
 
     def remoteBecameIdle_(self, timer):
         window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
