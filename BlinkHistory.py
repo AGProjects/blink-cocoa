@@ -7,7 +7,7 @@ import re
 import time
 
 from application.python.util import Singleton
-from sipsimple.account import AccountManager
+from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 import SIPManager

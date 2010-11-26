@@ -137,7 +137,6 @@ class MessageHandler(NSObject):
                 BlinkLogger().log_error("Error sending message: %s" % e)
                 self.delegate.writeSysMessage("Error sending message")
             else:
-                icon = NSApp.delegate().windowController.iconPathForURI(entry["sender_uri"])
                 self.delegate.writeOldMessage(message.id, None, icon, text, message.timestamp, state, False)
         else:
             self.pending.append((text, now, msgid))
@@ -490,7 +489,10 @@ class ChatController(BaseStream):
                 sender = entry["sender"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
-                icon = NSApp.delegate().windowController.iconPathForURI(entry["sender_uri"])
+                if entry["direction"] == 'send':
+                    icon = NSApp.delegate().windowController.iconPathForSelf()
+                else:
+                    icon = NSApp.delegate().windowController.iconPathForURI(entry["sender_uri"])
                 chatView.writeOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
         else:
             failed_entries = []
