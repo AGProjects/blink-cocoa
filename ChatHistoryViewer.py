@@ -102,7 +102,7 @@ class ChatHistoryViewer(NSWindowController):
                     "to"     : account_name,
                     "sender" : sender,
                     "date"   : date,
-                    "type"   : 'IM' if ext=='.log' else 'SMS'
+                    "type"   : 'Chat' if ext=='.log' else 'SMS'
                 }
                 self.entries.addObject_(entry)
             
