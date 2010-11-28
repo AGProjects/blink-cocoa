@@ -1029,7 +1029,7 @@ class AnsweringMessageOption(Option):
 class AccountSoundFileOption(SoundFileOption):    
     def __init__(self, object, name, option):
         SoundFileOption.__init__(self, object, name, option)
-        
+
         self.popup.insertItemWithTitle_atIndex_("Default", 0)
         self.popup.itemAtIndex_(0).setRepresentedObject_("DEFAULT")
 
