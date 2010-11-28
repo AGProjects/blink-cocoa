@@ -1243,10 +1243,6 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         BlinkLogger().show_info(u"Incoming session from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in streams)))
 
-        # hold sessions by default, so that we avoid any races that could lead
-        # audio sessions to be active unexpectedly
-        #session.hold()
-
         stream_type_list = list(set(stream.type for stream in streams))
         if self.model.hasContactMatchingURI(session.remote_identity.uri):
             if settings.chat.auto_accept and stream_type_list == ['chat']:
