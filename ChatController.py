@@ -362,20 +362,17 @@ class ChatController(BaseStream):
             BlinkLogger().log_info("Cancelling Chat Proposal")
         elif newstate == STREAM_IDLE:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
-                BlinkLogger().log_info("Session ended (%s)"%fail_reason)
-                if fail_reason == "remote":
-                    close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-                    self.chatViewController.writeSysMessage(close_message, datetime.datetime.utcnow())
-                else:
-                    self.chatViewController.writeSysMessage("Session ended", datetime.datetime.utcnow())
+                BlinkLogger().log_info("Chat session ended (%s)"%fail_reason)
+                close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
+                self.chatViewController.writeSysMessage(close_message, datetime.datetime.utcnow())
                 ended = True
         elif newstate == STREAM_FAILED:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
                 if fail_reason:
-                    BlinkLogger().log_error("Session failed: %s" % fail_reason)
+                    BlinkLogger().log_error("Chat session failed: %s" % fail_reason)
                     self.chatViewController.writeSysMessage("Session failed: %s" % fail_reason, datetime.datetime.utcnow())
                 else:
-                    BlinkLogger().log_error("Session failed")
+                    BlinkLogger().log_error("Chat session failed")
                     self.chatViewController.writeSysMessage("Session failed", datetime.datetime.utcnow())
                 ended = True
         self.status = newstate
