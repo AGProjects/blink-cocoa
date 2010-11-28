@@ -17,7 +17,7 @@ class MyTableView(NSTableView):
             ch = event.charactersIgnoringModifiers().characterAtIndex_(0)
         else:
             ch = None
-        if ch and event.charactersIgnoringModifiers().characterAtIndex_(0) in (NSDeleteCharacter, NSBackspaceCharacter):
+        if ch and event.charactersIgnoringModifiers().characterAtIndex_(0) in (NSDeleteCharacter, NSBackspaceCharacter, NSDeleteFunctionKey):
             self.delegate().tableView_deleteRow_(self, self.selectedRow())
         else:
             NSTableView.keyDown_(self, event)
