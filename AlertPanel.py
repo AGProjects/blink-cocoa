@@ -419,7 +419,7 @@ class AlertPanel(NSObject, object):
                 else:
                     for session, view in self.sessions.iteritems():
                         if session.account is BonjourAccount():
-                            self.disableBonjourAutoAnswer(view, session)*+
+                            self.disableBonjourAutoAnswer(view, session)
 
 
     @objc.IBAction
