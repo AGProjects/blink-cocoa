@@ -1257,6 +1257,10 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
                 self.startIncomingSession(session, streams)
                 return
+        elif session.account is BonjourAccount() and stream_type_list == ['file-transfer']:
+                BlinkLogger().log_info(u"Automatically accepting Bonjour file-transfer from %s" % session.remote_identity)
+                self.startIncomingSession(session, streams)
+                return
         try:
             session.send_ring_indication()
         except IllegalStateError:
