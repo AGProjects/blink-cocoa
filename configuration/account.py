@@ -11,9 +11,15 @@ from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPS
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import MSRPConnectionModel, MSRPTransport
 from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
+from sipsimple.configuration.datatypes import NonNegativeInteger
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
     transport = Setting(type=MSRPTransport, default='tcp')
+
+
+class BonjourAudioSettingsExtension(SettingsGroup):
+    auto_accept = Setting(type=bool, default=False)
+    answer_delay = Setting(type=NonNegativeInteger, default=3)
 
 
 class MessageSummarySettingsExtension(MessageSummarySettings):
@@ -72,6 +78,7 @@ class AccountExtension(SettingsObjectExtension):
 class BonjourAccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
+    audio = BonjourAudioSettingsExtension
     msrp = BonjourMSRPSettingsExtension
     rtp = RTPSettingsExtension
     sounds = SoundsSettings

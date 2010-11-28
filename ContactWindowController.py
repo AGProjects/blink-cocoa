@@ -938,6 +938,10 @@ class ContactWindowController(NSWindowController):
         elif sender.tag() == 52: # Files
             settings.file_transfer.auto_accept = not settings.file_transfer.auto_accept
             settings.save()
+        elif sender.tag() == 53: # Bonjour Audio
+            bonjour_account = AccountManager().get_account("bonjour@local")
+            bonjour_account.audio.auto_accept = not bonjour_account.audio.auto_accept
+            bonjour_account.save()
 
     @objc.IBAction
     def callSearchTextContact_(self, sender):
@@ -1275,9 +1279,23 @@ class ContactWindowController(NSWindowController):
                 self.alertPanel.show()
 
     def handle_incoming_proposal(self, session, streams):
-        if self.model.hasContactMatchingURI(session.remote_identity.uri):
+        stream_type_list = list(set(stream.type for stream in streams))
+        if stream_type_list == ['chat']:
+            if session.account is BonjourAccount():
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
+                self.acceptIncomingProposal(session, streams)
+                return
+            elif 'audio' in [s.type for s in session.streams]:
+                BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
+                self.acceptIncomingProposal(session, streams)
+                return
+        elif session.account is BonjourAccount() and 'audio' in [s.type for s in streams] and session.account.audio.auto_accept:
+            accepted_streams = [s for s in streams if (s.type == "audio" or s.type == "chat")]
+            BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % session.remote_identity)
+            self.acceptIncomingProposal(session, accepted_streams)
+            return
+        elif self.model.hasContactMatchingURI(session.remote_identity.uri):
             settings = SIPSimpleSettings()
-            stream_type_list = list(set(stream.type for stream in streams))
             if settings.chat.auto_accept and stream_type_list == ['chat']:
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
@@ -1420,6 +1438,10 @@ class ContactWindowController(NSWindowController):
 
         item = self.accountsMenu.itemWithTag_(52) # file
         item.setState_(SIPSimpleSettings().file_transfer.auto_accept and NSOnState or NSOffState)
+
+        item = self.accountsMenu.itemWithTag_(53) # bonjour audio
+        bonjour_account = AccountManager().get_account("bonjour@local")
+        item.setState_(bonjour_account.audio.auto_accept and NSOnState or NSOffState)
 
     def updateToolsMenu(self):
         account = self.activeAccount()
