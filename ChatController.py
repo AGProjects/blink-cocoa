@@ -691,11 +691,11 @@ class ChatController(BaseStream):
             if window:
                 window.noteSession_isComposing_(self.sessionController, False)
         elif data.action == 'add' and self.handler:
-            streams = [stream for stream in data.streams if isinstance(stream, ChatStream)]
-            if self.stream == streams[0]:
-                log_info(self, "Chat stream started")
-                self.setStream(streams[0], connected=True)
-                self.changeStatus(STREAM_CONNECTED)
+            for stream in data.streams:
+                if isinstance(stream, ChatStream) and self.stream == stream:
+                    log_info(self, "Chat stream started")
+                    self.setStream(stream, connected=True)
+                    self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.fail_reason = data.reason
