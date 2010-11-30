@@ -548,8 +548,7 @@ class ChatController(BaseStream):
 
     @classmethod
     def validateToolbarButtonWhileDisconnected(cls, sessionController, item):
-        if sessionController.account is not BonjourAccount():
-            return item.tag() in (SessionController.TOOLBAR_RECONNECT, SessionController.TOOLBAR_HISTORY)
+        return sessionController.account is not BonjourAccount() and item.tag() in (SessionController.TOOLBAR_RECONNECT, SessionController.TOOLBAR_HISTORY)
 
     def userClickedToolbarButton(self, sender):
         """
