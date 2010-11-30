@@ -291,15 +291,15 @@ class ContactWindowController(NSWindowController):
         for account in accounts:
             if account.enabled:
                 address = format_identity_address(account)
-                if isinstance(account, BonjourAccount):
+                if account is BonjourAccount():
                     self.accountPopUp.addItemWithTitle_("Bonjour")
                 else:
                     self.accountPopUp.addItemWithTitle_(address)
                 item = self.accountPopUp.lastItem()
                 item.setRepresentedObject_(account)
-                #if isinstance(account, BonjourAccount):
+                #if account is BonjourAccount():
                 #    self.accountPopUp.lastItem().set
-                if not isinstance(account, BonjourAccount):
+                if account is not BonjourAccount():
                     if not account.registered and account.sip.register:
                         #if self.backend.is_account_registration_failed(account):
                         title = NSAttributedString.alloc().initWithString_attributes_(address, grayAttrs)
@@ -671,7 +671,7 @@ class ContactWindowController(NSWindowController):
         if account is not None:
             if tabItem == "contacts":
                 audioOk = len(contacts) > 0
-                if contacts and isinstance(account, BonjourAccount) and not is_full_sip_uri(contacts[0].uri):
+                if contacts and account is BonjourAccount() and not is_full_sip_uri(contacts[0].uri):
                     chatOk = False
                 else:
                     chatOk = audioOk
@@ -767,7 +767,7 @@ class ContactWindowController(NSWindowController):
             self.nameText.setStringValue_(name)
             AccountManager().default_account = account
 
-            if isinstance(account, BonjourAccount):
+            if account is BonjourAccount():
                 self.model.moveBonjourGroupFirst()
                 self.contactOutline.reloadData()
                 # select the Bonjour stuff group and expand it
@@ -939,9 +939,9 @@ class ContactWindowController(NSWindowController):
             settings.file_transfer.auto_accept = not settings.file_transfer.auto_accept
             settings.save()
         elif sender.tag() == 53: # Bonjour Audio
-            bonjour_account = AccountManager().get_account("bonjour@local")
-            bonjour_account.audio.auto_accept = not bonjour_account.audio.auto_accept
-            bonjour_account.save()
+            account = BonjourAccount()
+            account.audio.auto_accept = not account.audio.auto_accept
+            account.save()
 
     @objc.IBAction
     def callSearchTextContact_(self, sender):
@@ -1285,18 +1285,18 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
-            elif 'audio' in [s.type for s in session.streams]:
+            elif 'audio' in (s.type for s in session.streams):
                 BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
-        elif session.account is BonjourAccount() and 'audio' in [s.type for s in streams] and session.account.audio.auto_accept:
-            accepted_streams = [s for s in streams if (s.type == "audio" or s.type == "chat")]
+        elif session.account is BonjourAccount() and 'audio' in stream_type_list and session.account.audio.auto_accept:
+            accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
             BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % session.remote_identity)
             self.acceptIncomingProposal(session, accepted_streams)
             return
         elif self.model.hasContactMatchingURI(session.remote_identity.uri):
             settings = SIPSimpleSettings()
-            if settings.chat.auto_accept and stream_type_list == ['chat']:
+            if settings.chat.auto_accept and stream_type_list == ['chat']: # this if is never entered -Dan
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
@@ -1440,8 +1440,8 @@ class ContactWindowController(NSWindowController):
         item.setState_(SIPSimpleSettings().file_transfer.auto_accept and NSOnState or NSOffState)
 
         item = self.accountsMenu.itemWithTag_(53) # bonjour audio
-        bonjour_account = AccountManager().get_account("bonjour@local")
-        item.setState_(bonjour_account.audio.auto_accept and NSOnState or NSOffState)
+        account = BonjourAccount()
+        item.setState_(account.audio.auto_accept and NSOnState or NSOffState)
 
     def updateToolsMenu(self):
         account = self.activeAccount()
