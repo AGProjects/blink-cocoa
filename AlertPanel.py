@@ -8,6 +8,7 @@ import time
 from application.notification import NotificationCenter, IObserver
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.session import SessionManager
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
@@ -125,7 +126,18 @@ class AlertPanel(NSObject, object):
                 view.setFrame_(frame)
                 bonjour_account = BonjourAccount()
                 if session.account is bonjour_account and bonjour_account.audio.auto_accept:
-                    self.enableBonjourAutoAnswer(view, session)
+                    # do not auto-answer if we already have an audio session in progress
+                    audio_in_progress = False
+                    for key in SessionManager().sessions:
+                        if audio_in_progress:
+                            break
+                        if session != key:
+                            for s in key.streams:
+                                if s.type=="audio":
+                                       audio_in_progress = True
+                                       break
+                    if not audio_in_progress:
+                        self.enableBonjourAutoAnswer(view, session)
                 elif SIPSimpleSettings().answering_machine.enabled:
                     self.enableAnsweringMachine(view, session)
 
