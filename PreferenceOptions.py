@@ -1063,28 +1063,23 @@ class AccountSoundFileOption(SoundFileOption):
 
     def restore(self):
         value = self.get()
-        if str(value) == "DEFAULT":
+        if unicode(value) == "DEFAULT":
             self.popup.selectItemAtIndex_(0)
             self.slider.setEnabled_(False)
-            return
-        elif value is not None and value.sound_file is not None:
+        elif value is None or value.sound_file is None:
+            self.popup.selectItemAtIndex_(1)
+            self.slider.setEnabled_(False)
+        else:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
-            self.volumeText.setStringValue_("Volume: %i%%"%value.sound_file.volume)
-            value = unicode(value.sound_file.path.normalized)
-        else:
-            self.slider.setEnabled_(False)
-
-        found = False
-        for i in range(self.popup.numberOfItems()):
-            item = self.popup.itemAtIndex_(i)
-            if str(item.representedObject()) == value:
-                self.popup.selectItemAtIndex_(i)
-                found = True
-                break
-        if not found and value is not None and value.sound_file is not None:
-            self.oldIndex = self.addItemForPath(value)
-
+            self.volumeText.setStringValue_("Volume: %i%%" % value.sound_file.volume)
+            path = unicode(value.sound_file.path.normalized)
+            for i in range(self.popup.numberOfItems()):
+                if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
+                    self.popup.selectItemAtIndex_(i)
+                    break
+            else:
+                self.oldIndex = self.addItemForPath(path)
 
 
 class ObjectTupleOption(Option):
