@@ -955,7 +955,7 @@ class SIPManager(object):
         self.ringer.start()
         self.ringer.update_ringtones()
 
-        bonjour_account = AccountManager().get_account("bonjour@local")
+        bonjour_account = BonjourAccount()
         if bonjour_account and bonjour_account.enabled:
             for transport in SIPSimpleSettings().sip.transport_list:
                 contact = bonjour_account.contact[transport]
