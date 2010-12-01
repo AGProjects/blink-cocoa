@@ -60,8 +60,8 @@ class PreferencesController(NSWindowController, object):
                 pass
 
         for view in self.settingViews.values():
-             view.restore()
-                        
+            view.restore()
+
         NSWindowController.showWindow_(self, sender)
 
     def close_(self, sender):
