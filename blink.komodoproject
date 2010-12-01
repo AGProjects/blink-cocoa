@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
-<project id="6bada6b4-ccb6-9e45-923f-2f876c7042cc" kpf_version="4" name="blink.kpf">
+<project id="6bada6b4-ccb6-9e45-923f-2f876c7042cc" kpf_version="5" name="blink.komodoproject">
 <preference-set idref="6bada6b4-ccb6-9e45-923f-2f876c7042cc">
   <string id="import_exclude_matches">*.*~;*.bak;*.tmp;CVS;.#*;*.pyo;*.pyc;.svn;*%*;tmp*.html;.DS_Store;_darcs;build;dist</string>
   <string id="import_include_matches"></string>

@@ -49,5 +49,6 @@
 ^\.darcs-temp-mail$
 (^|/)build($|/)
 (^|/)dist($|/)
+(^|/)\.komodotools($|/)
 ^Blink.xcodeproj/.*\.(pbxuser|perspectivev3|mode1v3)$
 ^MANIFEST$
