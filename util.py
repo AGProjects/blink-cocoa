@@ -88,7 +88,7 @@ def format_identity_address(identity):
         return u"%s@%s" % (identity.uri.user, identity.uri.host)
 
 
-def format_identity_from_text(text_uri):
+def format_identity_from_text(text):
     """
     Takes a SIP URI in text format and returns formatted strings with various sub-parts
     It returns a fancy_uri that displays in a friendly way telephone numbers for the History entries
@@ -98,7 +98,10 @@ def format_identity_from_text(text_uri):
     full_uri = ""
     fancy_uri = ""
 
-    toks = shlex.split(text_uri)
+    # the shlex module doesn't support unicode
+    uri = text.encode('utf8') if isinstance(text, unicode) else text
+
+    toks = shlex.split(uri)
 
     if len(toks) == 2:
         display_name = toks[0]
@@ -113,7 +116,7 @@ def format_identity_from_text(text_uri):
         display_name = display_name.strip()
         address = toks[-1]
     else:
-        address = text_uri
+        address = uri
 
     if ';' in address:
         address = address[:address.find(';')]
@@ -139,7 +142,10 @@ def format_identity_from_text(text_uri):
     else:
         fancy_uri = address
 
-    return address, display_name, full_uri, fancy_uri
+    if isinstance(text, unicode):
+        return address.decode('utf8'), display_name.decode('utf8'), full_uri.decode('utf8'), fancy_uri.decode('utf8')
+    else:
+        return address, display_name, full_uri, fancy_uri
 
 
 def is_full_sip_uri(uri):
