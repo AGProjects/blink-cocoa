@@ -1,0 +1,16 @@
+
+Main tasks
+----------
+
++ XCAP storage
++ Presence
++ Video
+- Chat Conference
+
+
+Nice to have
+------------
+
+- Redesign Preferences
+- Redesign History
+- Call Transfer
