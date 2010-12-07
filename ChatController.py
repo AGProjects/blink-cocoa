@@ -273,7 +273,7 @@ class ChatController(BaseStream):
                     self.loggingEnabled = False
                     self.chatViewController.writeSysMessage("Unable to create Chat History file: %s"%exc)
 
-            if isinstance(self.sessionController.account, Account) and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
+            if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
                 self.enableAddContactPanel()
 
         return self
