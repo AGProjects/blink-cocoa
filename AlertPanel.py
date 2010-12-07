@@ -127,7 +127,7 @@ class AlertPanel(NSObject, object):
                 bonjour_account = BonjourAccount()
                 if session.account is bonjour_account and bonjour_account.audio.auto_accept:
                     session_manager = SessionManager()
-                    have_audio_call = any(s for s in session_manager.sessions if s is not session and 'audio' in (stream.type for stream in s.streams))
+                    have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
                         self.enableBonjourAutoAnswer(view, session)
                 elif SIPSimpleSettings().answering_machine.enabled:

@@ -1283,7 +1283,7 @@ class ContactWindowController(NSWindowController):
                 return
             elif 'audio' in stream_type_list and session.account.audio.auto_accept:
                 session_manager = SessionManager()
-                have_audio_call = any(s for s in session_manager.sessions if s is not session and 'audio' in (stream.type for stream in s.streams))
+                have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                 if not have_audio_call:
                     accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
                     BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % session.remote_identity)
