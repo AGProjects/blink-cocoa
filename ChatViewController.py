@@ -36,8 +36,8 @@ TYPING_IDLE_TIMEOUT = 5
 TYPING_NOTIFY_INTERVAL = 30
 
 
-_url_pattern = re.compile("((?:http://|https://|sip:|sips:)[^ )\r\n]+)")
-_url_pattern_exact = re.compile("^((?:http://|https://|sip:|sips:)[^ )\r\n]+)$")
+_url_pattern = re.compile("((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)")
+_url_pattern_exact = re.compile("^((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)$")
 
 
 def processHTMLText(text, usesmileys=True, is_html=False):
