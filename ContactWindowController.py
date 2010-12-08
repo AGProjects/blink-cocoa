@@ -1633,9 +1633,12 @@ class ContactWindowController(NSWindowController):
             session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
             self.sessionControllers.append(session)
             session.setOwner_(self)
-            if 'audio' in streams:
+
+            if 'audio' in streams and 'chat' in streams:
+                session.startCompositeSessionWithStreamsOfTypes(streams)
+            elif 'audio' in streams:
                 session.startAudioSession()
-            if 'chat' in streams:
+            elif 'chat' in streams:
                 session.startChatSession()
 
     @objc.IBAction
