@@ -16,7 +16,7 @@ from application.python.decorator import decorator, preserve_signature
 from AppKit import NSApp
 from Foundation import NSAutoreleasePool, NSThread
 
-from sipsimple.core import SIPURI
+from sipsimple.core import SIPURI, FrozenSIPURI
 
 
 def format_identity(identity, check_contact=False):
@@ -24,7 +24,7 @@ def format_identity(identity, check_contact=False):
     Takes a SIPURI, Account, FromHeader, ToHeader, CPIMIdentity object and
     returns a formatted string for it, either a telephone number, display name plus uri or uri
     """
-    if isinstance(identity, SIPURI):
+    if isinstance(identity, (SIPURI, FrozenSIPURI)):
         user = identity.user
         host = identity.host
         display_name = None
@@ -55,7 +55,7 @@ def format_identity_simple(identity, check_contact=False):
     Takes a SIPURI, FromHeader, ToHeader, CPIMIdentity object and
     returns a short summarized formatted string for it, either telephone number, display name or uri
     """
-    if isinstance(identity, SIPURI):
+    if isinstance(identity, (SIPURI, FrozenSIPURI)):
         user = identity.user
         host = identity.host
         display_name = None
@@ -82,7 +82,7 @@ def format_identity_simple(identity, check_contact=False):
 
 
 def format_identity_address(identity):
-    if isinstance(identity, SIPURI):
+    if isinstance(identity, (SIPURI, FrozenSIPURI)):
         return u"%s@%s" % (identity.user, identity.host)
     else:
         return u"%s@%s" % (identity.uri.user, identity.uri.host)
@@ -152,7 +152,7 @@ def is_full_sip_uri(uri):
     """
     Check if the given URI is a full SIP URI with username and host.
     """
-    if isinstance(uri, SIPURI):
+    if isinstance(uri, (SIPURI, FrozenSIPURI)):
         return uri.user is not None and uri.host is not None
     else:
         if not (uri.startswith('sip:') or uri.startswith('sips:')):
