@@ -1,4 +1,5 @@
 # Copyright (C) 2009 AG Projects. See LICENSE for details.
+
 #
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
@@ -24,18 +25,34 @@ def format_identity(identity, check_contact=False):
     Takes a SIPURI, Account, FromHeader, ToHeader, CPIMIdentity object and
     returns a formatted string for it, either a telephone number, display name plus uri or uri
     """
+    port = 5060
+    transport = 'udp'
     if isinstance(identity, (SIPURI, FrozenSIPURI)):
         user = identity.user
         host = identity.host
         display_name = None
         contact = NSApp.delegate().windowController.getContactMatchingURI(str(identity)) if check_contact else None
+        if identity.port is not None and identity.port != 5060:
+            port = identity.port
+        if identity.transport != 'udp':
+            transport = identity.transport
     else:
         user = identity.uri.user
         host = identity.uri.host
+        if identity.uri.port is not None and identity.uri.port != 5060:
+            port = identity.uri.port
+        if identity.uri.transport != 'udp':
+            transport = identity.uri.transport
         display_name = identity.display_name
         contact = NSApp.delegate().windowController.getContactMatchingURI(identity.uri) if check_contact else None
 
-    address = u"%s@%s" % (user, host)
+    if port == 5060 and transport == 'udp':
+        address = u"%s@%s" % (user, host)
+    elif transport == 'udp':
+        address = u"%s@%s:%d" % (user, host, port)
+    else:
+        address = u"%s@%s:%d;transport=%s" % (user, host, port, transport)
+
     match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
     if match is not None:
         return match.group('number')
@@ -118,8 +135,6 @@ def format_identity_from_text(text):
     else:
         address = uri
 
-    if ';' in address:
-        address = address[:address.find(';')]
     address = address.strip("<>")
 
     if display_name:
