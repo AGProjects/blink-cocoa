@@ -214,7 +214,11 @@ class ContactGroup(NSObject):
             contact.setURI(uri)
 
     def removeBonjourNeighbour(self, neighbour):
-        for contact in [c for c in self.contacts if c.bonjour_neighbour==neighbour]:
+        try:
+            contact = (contact for contact in self.contacts if contact.bonjour_neighbour==neighbour).next()
+        except StopIteration:
+            pass
+        else:
             self.contacts.remove(contact)
 
     def loadAddressBook(self):
