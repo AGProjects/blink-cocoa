@@ -36,7 +36,7 @@ class SMSSplitView(NSSplitView):
                             NSColor.darkGrayColor(), NSForegroundColorAttributeName)
 
     def setText_(self, text):
-        self.text = NSString.alloc().initWithString_(text)
+        self.text = NSString.stringWithString_(text)
         self.setNeedsDisplay_(True)
 
     def dividerThickness(self):
