@@ -236,39 +236,38 @@ class SMSManagerClass(NSObject):
             account = SIPManager.SIPManager().get_default_account()
 
         is_cpim = False
+        cpim_message = None
         replication_message = False
+
         if data.content_type == 'message/cpim':
             try:
-                message = CPIMMessage.parse(data.body)
+                cpim_message = CPIMMessage.parse(data.body)
             except CPIMParserError:
                 BlinkLogger().log_warning("SMS from %s has invalid CPIM content" % format_identity(data.from_header))
                 return
             else:
                 is_cpim = True
-                body = message.body
-                content_type = message.content_type
-                sender_identity = message.sender or data.from_header
-                recipient_identity = message.recipients[0] if message.recipients else data.to_header
-                if message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == message.sender.uri:
-                    window_tab_identity = recipient_identity
+                body = cpim_message.body
+                content_type = cpim_message.content_type
+                sender_identity = cpim_message.sender or data.from_header
+                if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
                     replication_message = True
+                    window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
                 else:
-                    window_tab_identity = sender_identity
+                    window_tab_identity = data.from_header
         else:
             body = data.body.decode('utf-8')
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = sender_identity
 
-        if content_type == 'text/plain':
+        is_html = content_type == 'text/html'
+
+        if content_type in ('text/plain', 'text/html'):
             BlinkLogger().log_info("Got SMS from %s" % format_identity(sender_identity))
-            is_html = False
-        elif content_type == 'text/html':
-            BlinkLogger().log_info("Got SMS from %s" % format_identity(sender_identity))
-            is_html = True
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
-            body = message.body if is_cpim else data.body
+            body = cpim_message.body if is_cpim else data.body
             msg = IsComposingMessage.parse(body)
             state = msg.state.value
             refresh = msg.refresh.value if msg.refresh is not None else None
@@ -287,23 +286,23 @@ class SMSManagerClass(NSObject):
         note_new_message = False if replication_message else True
         viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
-        replication_state=None
-        replication_timestamp=None
+        replication_state = None
+        replication_timestamp = None
+
         if replication_message:
             replicated_response_code = data.headers.get('X-Replication-Code', Null).body
-            if replicated_response_code is not Null:
-                if replicated_response_code == '202':
-                    replication_state = 'deferred'
-                elif replicated_response_code == '200':
-                    replication_state = 'delivered'
-                else:
-                    replication_state = 'failed'
+            if replicated_response_code == '202':
+                replication_state = 'deferred'
+            elif replicated_response_code == '200':
+                replication_state = 'delivered'
+            else:
+                replication_state = 'failed'
             replicated_timestamp = data.headers.get('X-Replication-Timestamp', Null).body
-            if replicated_timestamp is not Null:
-                try:
-                    replication_timestamp = datetime.datetime.strptime(replicated_timestamp, '%Y-%m-%d %H:%M:%S')
-                except (TypeError, ValueError):
-                    replication_timestamp = datetime.datetime.utcnow()
+            try:
+                replication_timestamp = datetime.datetime.strptime(replicated_timestamp, '%Y-%m-%d %H:%M:%S')
+            except (TypeError, ValueError):
+                replication_timestamp = datetime.datetime.utcnow()
+
         viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
@@ -319,4 +318,5 @@ class SMSManagerClass(NSObject):
                 growl_data.content = body
             growl_data.sender = format_identity_simple(sender_identity)
             self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
+
 
