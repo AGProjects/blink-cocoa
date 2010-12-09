@@ -48,8 +48,8 @@ class Contact(NSObject):
     def __init__(self, uri, icon=None, detail=None, name=None, display_name=None, bonjour_neighbour=None, preferred_media=None, editable=True, addressbook_id=None, aliases=None, stored_in_account=None, attributes=None):
         self.uri = uri
         self.display_name = display_name or name
-        self.name = NSString.alloc().initWithString_(name or uri)
-        self.detail = NSString.alloc().initWithString_(detail or uri)
+        self.name = NSString.stringWithString_(name or uri)
+        self.detail = NSString.stringWithString_(detail or uri)
         self.bonjour_neighbour = bonjour_neighbour
         self.icon = icon
         self._preferred_media = preferred_media
@@ -182,7 +182,7 @@ class ContactGroup(NSObject):
         return cls.alloc().init()
 
     def __init__(self, name= None, contacts=None, special=None, expanded=True, previous_position=0):
-        self.name = NSString.alloc().initWithString_(name)
+        self.name = NSString.stringWithString_(name)
         self.contacts = contacts if contacts is not None else []
         self.dynamic = False
         self.expanded = expanded
