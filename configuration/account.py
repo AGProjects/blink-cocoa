@@ -19,7 +19,7 @@ class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
 
 class BonjourAudioSettingsExtension(SettingsGroup):
     auto_accept = Setting(type=bool, default=False)
-    answer_delay = Setting(type=NonNegativeInteger, default=3)
+    answer_delay = Setting(type=NonNegativeInteger, default=6)
 
 
 class MessageSummarySettingsExtension(MessageSummarySettings):
