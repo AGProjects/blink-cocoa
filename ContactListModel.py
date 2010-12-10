@@ -418,7 +418,7 @@ class ContactListModel(NSObject):
                 Contact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
                 Contact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Call Test"),
                 Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
-                Contact("123@chatserver.ag-projects.com", None, name="Text Conference", preferred_media="chat"),
+                Contact("test@conference.sip2sip.info", None, name="Test Multimedia Conference", preferred_media="chat"),
                 Contact("conference@sip2sip.info", loadContactIcon("conference@sip2sip.info"), name="Audio Conference")
             ]
             contactGroups = [ContactGroup(u"Test", contactsT)]
