@@ -35,6 +35,7 @@ from LogListModel import LogListModel
 from SessionController import SessionController
 from SessionManager import SessionManager
 from SIPManager import MWIData
+from StartConferenceWindow import StartConferenceWindow
 from util import *
 
 
@@ -822,8 +823,14 @@ class ContactWindowController(NSWindowController):
         self.model.addNewGroup()
         self.refreshContactsList()
         self.performSearch()
-        
-    
+
+    @objc.IBAction
+    def startConference_(self, sender):
+        startConferenceWindow = StartConferenceWindow()
+        startConferenceWindow.run()
+        if  startConferenceWindow.conference is not None:
+            self.startConference(startConferenceWindow.conference[0], startConferenceWindow.conference[1], startConferenceWindow.conference[2])
+
     @objc.IBAction
     def addContact_(self, sender):
         if sender != self.addContactButton:
@@ -1041,6 +1048,30 @@ class ContactWindowController(NSWindowController):
         else:
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+
+    def startConference(self, target, media, participants=None):
+        # activate the app in case the app is not active
+        NSApp.activateIgnoringOtherApps_(True)
+        account = self.activeAccount()
+        if not account:
+            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
+            return
+
+        target = self.backend.parse_sip_uri(target, account)
+        if not target:
+            return
+
+        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(target))
+        session.setOwner_(self)
+        self.sessionControllers.append(session)
+
+        if type(media) is not tuple:
+            if not session.startSessionWithStreamOfType(media):
+                BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
+        else:
+            if not session.startCompositeSessionWithStreamsOfTypes(media):
+                BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+
 
     @objc.IBAction
     def startAudioToSelected_(self, sender):
