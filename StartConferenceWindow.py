@@ -64,7 +64,8 @@ class StartConferenceWindow(NSObject):
         account = AccountManager().default_account
         if account is not BonjourAccount():
             if account.server.conference_server:
-                if account.server.conference_server.port == '5060' and account.server.conference_server.transport == 'udp':
+            	print account.server.conference_server
+                if account.server.conference_server.port == 5060 and account.server.conference_server.transport == 'udp':
                     default_server = unicode(account.server.conference_server.host)
                 elif account.server.conference_server.transport == 'udp':
                     default_server = unicode(account.server.conference_server.host) + ':' + unicode(account.server.conference_server.port)
