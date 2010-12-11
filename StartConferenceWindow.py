@@ -6,14 +6,12 @@ from Foundation import *
 
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
-from sipsimple.configuration.datatypes import SIPProxyAddress
 import re
 
 
 class StartConferenceWindow(NSObject):
     window = objc.IBOutlet()
     room = objc.IBOutlet()
-    server = objc.IBOutlet()
     addRemove = objc.IBOutlet()
     participant= objc.IBOutlet()
     participantsTable = objc.IBOutlet()
@@ -61,22 +59,16 @@ class StartConferenceWindow(NSObject):
         return NSDragOperationGeneric
 
     def run(self):
-        account = AccountManager().default_account
-        if account.server.conference_server.port == 5060 and account.server.conference_server.transport == 'udp':
-            conference_server = unicode(account.server.conference_server.host)
-        elif account.server.conference_server.transport == 'udp':
-            conference_server = unicode(account.server.conference_server.host) + ':' + unicode(account.server.conference_server.port)
-        else:
-            conference_server = unicode(account.server.conference_server)
-
-        self.server.setStringValue_(conference_server)
-        self.server.setEnabled_(False)
         self.window.makeKeyAndOrderFront_(None)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
 
         if rc == NSOKButton:
-            if self.chat.state() == NSOnState and self.audio.state() == NSOnState:
+            if self.video.state() == NSOnState and self.audio.state() == NSOnState and self.chat.state() == NSOnState:
+                media = ("video", "audio", "chat")
+            elif self.video.state() == NSOnState and self.chat.state() == NSOnState:
+                media = ("video", "audio", "chat")
+            elif self.audio.state() == NSOnState and self.chat.state() == NSOnState:
                 media = ("audio", "chat")
             elif self.chat.state() == NSOnState:
                 media = "chat"
@@ -140,19 +132,16 @@ class StartConferenceWindow(NSObject):
                 "OK", None, None)
             return False
 
-        if not self.server.stringValue().strip():
-            NSRunAlertPanel("Start a new Conference", "No Conference Server provisioned for the account.",
-                "OK", None, None)
-            return False
-
-        if self.chat.state() == NSOffState and self.audio.state() == NSOffState:
+        if self.chat.state() == NSOffState and self.audio.state() == NSOffState and self.video.state() == NSOffState:
             NSRunAlertPanel("Start a new Conference", "Please select at least one media type.",
                 "OK", None, None)
             return False
 
-        self.target = '%s@%s' % (unicode(self.room.stringValue().strip()), unicode(self.server.stringValue().strip()))
+        account = AccountManager().default_account
+        self.target = '%s@%s' % (unicode(self.room.stringValue().strip()), unicode(account.server.conference_server))
+
         if not self.validateParticipant(self.target):
-            text = 'Unsupported SIP conference URI: %s' % self.target
+            text = 'Invalid conference SIP URI: %s' % self.target
             NSRunAlertPanel("Start a new Conference", text,"OK", None, None)
             return False
 

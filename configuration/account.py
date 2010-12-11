@@ -9,7 +9,7 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
 from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.configuration.datatypes import MSRPConnectionModel, MSRPTransport, SIPProxyAddress
+from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport
 from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
 from sipsimple.configuration.datatypes import NonNegativeInteger
 
@@ -51,7 +51,7 @@ class SIPSettingsExtension(SIPSettings):
 
 class ServerSettings(SettingsGroup):
     settings_url = Setting(type=HTTPURL, default=None, nillable=True)
-    conference_server = Setting(type=SIPProxyAddress, default=None, nillable=True)
+    conference_server = Setting(type=Hostname, default=None, nillable=True)
 
 class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=AccountSoundFile, default=AccountSoundFile(AccountSoundFile.DefaultSoundFile('sounds.audio_inbound')), nillable=True)
