@@ -175,10 +175,11 @@ class SessionController(NSObject):
             return None
 
     def end(self):
-        if self.session:
+        if self.state == STATE_DNS_FAILED:
+            return
+        if  self.session:
             log_info(self, "Ending Session (%s)"%str(self.session.streams))
             self.session.end()
-            #self.owner.finalizeSession(self)
 
     def endStream(self, streamHandler):
         if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
