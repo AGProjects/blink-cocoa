@@ -4,7 +4,7 @@
 from AppKit import *
 from Foundation import *
 
-from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
 from sipsimple.configuration.datatypes import SIPProxyAddress
 import re
@@ -62,18 +62,15 @@ class StartConferenceWindow(NSObject):
 
     def run(self):
         account = AccountManager().default_account
-        if account is not BonjourAccount():
-            if account.server.conference_server:
-                if account.server.conference_server.port == 5060 and account.server.conference_server.transport == 'udp':
-                    default_server = unicode(account.server.conference_server.host)
-                elif account.server.conference_server.transport == 'udp':
-                    default_server = unicode(account.server.conference_server.host) + ':' + unicode(account.server.conference_server.port)
-                else:
-                    default_server = unicode(account.server.conference_server)
-            else:
-                default_server = 'conference.%s' % AccountManager().default_account.id.domain
-            self.server.setStringValue_(default_server)
+        if account.server.conference_server.port == 5060 and account.server.conference_server.transport == 'udp':
+            conference_server = unicode(account.server.conference_server.host)
+        elif account.server.conference_server.transport == 'udp':
+            conference_server = unicode(account.server.conference_server.host) + ':' + unicode(account.server.conference_server.port)
+        else:
+            conference_server = unicode(account.server.conference_server)
 
+        self.server.setStringValue_(conference_server)
+        self.server.setEnabled_(False)
         self.window.makeKeyAndOrderFront_(None)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
@@ -86,12 +83,6 @@ class StartConferenceWindow(NSObject):
             else:
                 media = "audio"
 
-            if account is not BonjourAccount():
-                new_conference_server = SIPProxyAddress.from_description(str(self.server.stringValue().strip()))
-                if new_conference_server != account.server.conference_server:
-                    account.server.conference_server = new_conference_server
-                    account.save()
-
             self.conference = self.target, media, self.participants
 
     @objc.IBAction
@@ -100,8 +91,7 @@ class StartConferenceWindow(NSObject):
             participant = unicode(self.participant.stringValue().strip().lower())
             if participant and "@" not in participant:
                 account = AccountManager().default_account
-                if account is not BonjourAccount():
-                    participant = participant + '@' + AccountManager().default_account.id.domain
+                participant = participant + '@' + AccountManager().default_account.id.domain
 
             if not participant or not self.validateParticipant(participant):
                 NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
@@ -151,7 +141,7 @@ class StartConferenceWindow(NSObject):
             return False
 
         if not self.server.stringValue().strip():
-            NSRunAlertPanel("Start a new Conference", "Please enter the Server Address.",
+            NSRunAlertPanel("Start a new Conference", "No Conference Server provisioned for the account.",
                 "OK", None, None)
             return False
 

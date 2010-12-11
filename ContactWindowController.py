@@ -1491,6 +1491,9 @@ class ContactWindowController(NSWindowController):
         item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
 
+        item = self.toolsMenu.itemWithTag_(44) # Start Conference
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.conference_server))
+
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
