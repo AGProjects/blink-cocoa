@@ -97,6 +97,9 @@ class StartConferenceWindow(NSObject):
         elif sender.selectedSegment() == 1:
             participant = self.selectedParticipant()
 
+            if participant is None and len(self.participants):
+                participant = self.participants[-1]
+
             if participant is not None:
                 self.participants.remove(participant)
                 self.participantsTable.reloadData()
