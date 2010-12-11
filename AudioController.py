@@ -130,7 +130,10 @@ class AudioController(BaseStream):
             self.setStatusText(u"Connecting...")
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
-            self.changeStatus(STREAM_FAILED, detail)
+            if detail.startswith("DNS Lookup"):
+                self.changeStatus(STREAM_FAILED, 'DNS Lookup failure')
+            else:
+                self.changeStatus(STREAM_FAILED, detail)
         elif state == STATE_FINISHED:
             self.audioEndTime = time.time()
             self.changeStatus(STREAM_IDLE, detail)
