@@ -382,7 +382,7 @@ class SessionController(NSObject):
             self.routes = routes
 
         if len(routes) == 0:
-            self.changeSessionState(STATE_FAILED, u"No routes found to SIP proxy")
+            self.changeSessionState(STATE_DNS_FAILED, u"No routes found to SIP proxy")
             log_error(self, "Session failed: No route found to SIP proxy")
         elif not self.waitingForITunes:
             self.connectSession()
