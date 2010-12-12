@@ -5,12 +5,11 @@ __all__ = ['ITunesInterface']
 
 
 from application.notification import NotificationCenter
-from application.python.queue import EventQueue
 from application.python.util import Singleton
 
 from Foundation import NSAppleScript
 
-from sipsimple.threading.green import Command
+from sipsimple.threading import run_in_thread
 from sipsimple.util import TimestampedNotificationData
 
 from util import allocate_autorelease_pool
@@ -46,23 +45,12 @@ class ITunesInterface(object):
     """
 
     def __init__(self):
-        self.event_queue = EventQueue(self.handle_command, name='ITunes Interface Thread')
-        self.event_queue.start()
         self.paused = False
         self.was_playing = False
 
-    def pause(self):
-        self.event_queue.put(Command('pause'))
-
-    def resume(self):
-        self.event_queue.put(Command('resume'))
-
+    @run_in_thread('iTunes-interface')
     @allocate_autorelease_pool
-    def handle_command(self, command):
-        handler = getattr(self, '_CH_%s' % command.name)
-        handler(command)
-
-    def _CH_pause(self, command):
+    def pause(self):
         notification_center = NotificationCenter()
         if self.paused:
             notification_center.post_notification('ITunesPauseDidExecute', sender=self, data=TimestampedNotificationData())
@@ -80,7 +68,9 @@ class ITunesInterface(object):
                     self.paused = False
             notification_center.post_notification('ITunesPauseDidExecute', sender=self, data=TimestampedNotificationData())
 
-    def _CH_resume(self, command):
+    @run_in_thread('iTunes-interface')
+    @allocate_autorelease_pool
+    def resume(self):
         if self.paused:
             script = NSAppleScript.alloc().initWithSource_(self.resume_script)
             script.executeAndReturnError_(None)
