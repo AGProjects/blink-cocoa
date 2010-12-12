@@ -16,7 +16,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup
 from sipsimple.payloads.iscomposing import IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
-from sipsimple.util import run_in_green_thread
+from sipsimple.threading.green import run_in_green_thread
 
 from BlinkLogger import BlinkLogger
 from BlinkHistory import BlinkHistory

@@ -10,7 +10,8 @@ from application.python.util import Singleton
 
 from Foundation import NSAppleScript
 
-from sipsimple.util import Command, TimestampedNotificationData
+from sipsimple.threading.green import Command
+from sipsimple.util import TimestampedNotificationData
 
 from util import allocate_autorelease_pool
 

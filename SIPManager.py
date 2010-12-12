@@ -33,7 +33,9 @@ from sipsimple.core import SIPURI, PJSIPError, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import SessionManager
 from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, DesktopSharingStream
-from sipsimple.util import TimestampedNotificationData, run_in_green_thread, run_in_twisted_thread
+from sipsimple.threading import run_in_twisted_thread
+from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import TimestampedNotificationData
 
 from SessionRinger import Ringer
 from FileTransferSession import OutgoingFileTransfer
