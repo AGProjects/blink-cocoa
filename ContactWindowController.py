@@ -135,6 +135,7 @@ class ContactWindowController(NSWindowController):
     messagesDrawer = objc.IBOutlet()
     messagesText = objc.IBOutlet()
 
+    blinkMenu = objc.IBOutlet()
     historyMenu = objc.IBOutlet()
     recordingsMenu = objc.IBOutlet()
     contactsMenu = objc.IBOutlet()
@@ -1457,6 +1458,15 @@ class ContactWindowController(NSWindowController):
     def showHelp_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help.phtml"))
 
+    def updateBlinkMenu(self):
+        if NSApp.delegate().bundleName == 'BlinkPro':
+            item = self.blinkMenu.itemWithTag_(1)
+            item.setTitle_('About Blink Pro')
+            item = self.blinkMenu.itemWithTag_(2)
+            item.setHidden_(True)
+            item = self.blinkMenu.itemWithTag_(3)
+            item.setHidden_(True)
+
     def menuNeedsUpdate_(self, menu):
         item = menu.itemWithTag_(300) # mute
         if item:
@@ -1853,6 +1863,8 @@ class ContactWindowController(NSWindowController):
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices, "input_device", "selectInputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device", "selectAlertDevice:")
+        elif menu == self.blinkMenu:
+            self.updateBlinkMenu()
         elif menu == self.historyMenu:
             self.updateHistoryMenu()
         elif menu == self.recordingsMenu:

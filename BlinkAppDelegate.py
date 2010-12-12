@@ -40,6 +40,7 @@ class BlinkAppDelegate(NSObject):
     windowController = objc.IBOutlet()
     aboutPanel = objc.IBOutlet()
     aboutVersion = objc.IBOutlet()
+    blinkMenu = objc.IBOutlet()
     activeAudioStreams = set()
     incomingSessions = set()
     ready = False
@@ -63,6 +64,9 @@ class BlinkAppDelegate(NSObject):
             nc.add_observer(self, name="MediaStreamDidInitialize")
             nc.add_observer(self, name="MediaStreamDidEnd")
             nc.add_observer(self, name="MediaStreamDidFail")
+
+            self.bundleName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleName"))
+
         return self
 
     # Needed by run_in_gui_thread and call_in_gui_thread
@@ -105,6 +109,7 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationShouldHandleReopen_hasVisibleWindows_(self, sender, flag):
+
         if not flag:
             self.windowController.showWindow_(None)
         self.missedCalls = 0
@@ -127,7 +132,11 @@ class BlinkAppDelegate(NSObject):
 
         self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
 
+
     def applicationDidFinishLaunching_(self, sender):
+        if self.bundleName == 'BlinkPro':
+            self.blinkMenu.setTitle_('Blink Pro')
+
         self.vncServerPort = randint(5950, 5990)
         self.startVNCServerInPort_(self.vncServerPort)
 
@@ -171,6 +180,7 @@ You might need to Replace it and re-enter your account information. Your old fil
                         "Quit", None, None)
                 NSApp.terminate_(None)
                 return
+
 
         # window should be shown only after enrollment check
         # "pl do not show Main interface at the first start, just show the wizard"
@@ -311,8 +321,10 @@ You might need to Replace it and re-enter your account information. Your old fil
     @objc.IBAction
     def openMenuLink_(self, sender):
         if sender.tag() == 400: # Changelog
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
-        elif sender.tag() == 401: # Donate
+            if self.bundleName == 'BlinkPro':
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
+            else:
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
+        elif sender.tag() == 3: # Donate
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
-
 
