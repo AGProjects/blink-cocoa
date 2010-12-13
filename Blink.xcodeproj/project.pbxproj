@@ -1382,7 +1382,6 @@
 				1F22729412B554F50010A8B2 /* Resources */,
 				1F22732112B554F50010A8B2 /* Sources */,
 				1F22732312B554F50010A8B2 /* Frameworks */,
-				1F22732712B554F50010A8B2 /* ShellScript */,
 				1F22732812B554F50010A8B2 /* Copy Smiley Files (default) */,
 				1F22735412B554F50010A8B2 /* CopyFiles */,
 				1F22735612B554F50010A8B2 /* Copy Helper Binaries */,
@@ -1744,19 +1743,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1F22732712B554F50010A8B2 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "";
-		};
 		2B2DEE581055770000F267F9 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -2011,6 +1997,7 @@
 				INFOPLIST_FILE = "Info-pro.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					/usr/local/lib,
 				);
@@ -2034,6 +2021,7 @@
 				INFOPLIST_FILE = "Info-pro.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					/usr/local/lib,
 				);
