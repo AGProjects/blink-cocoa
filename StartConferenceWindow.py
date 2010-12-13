@@ -139,7 +139,7 @@ class StartConferenceWindow(NSObject):
             return False
 
         account = AccountManager().default_account
-        self.target = '%s@%s' % (unicode(self.room.stringValue().strip()), unicode(account.server.conference_server))
+        self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
 
         if not self.validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
