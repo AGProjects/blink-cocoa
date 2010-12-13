@@ -45,7 +45,7 @@ class RTPSettingsExtension(RTPSettings):
 
 
 class SIPSettingsExtension(SIPSettings):
-    always_use_my_proxy = Setting(type=bool, default=False)
+    always_use_my_proxy = Setting(type=bool, default=True)
     register = Setting(type=bool, default=True)
 
 
