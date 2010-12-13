@@ -126,7 +126,7 @@ class BlinkAppDelegate(NSObject):
         BlinkLogger().log_info("Starting VNC server at port %i..." % port)
 
         path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
-        args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost"]
+        args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
         args += ["-protocol", "3.3"]
         #args += ["-maxdepth", "8"]
 
