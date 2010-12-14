@@ -6,6 +6,34 @@
 
 <body>
 
+<h2>Version 0.21.0</h2>
+
+<p>December 14th, 2010
+
+<ul>
+<li>Fixed URL regex not to include '&lt;' or '&gt;' in Chat window
+<li>Fixed exception with not yet started sessions
+<li>Do not display Add Contact panel for outgoing chat sessions
+<li>Fixed redial using original media combination
+<li>Fixed saving port and transport in call history for outgoing sessions
+<li>Fixed CPIM usage in SIP MESSAGE and simplified code
+<li>Fixed memory leaks about NSString allocations
+<li>Added server conference functionality
+<li>Fixed comparison with port which is integer
+<li>Increased default answer delay for bonjour audio calls to 6 seconds
+<li>Do not attempt to end session that has not started yet because of DNS lookup failure
+<li>Fixed session state when DNS lookup fails
+<li>Display better status text when PJSIP fails with TLS connection error
+<li>Improved display of status in audio tile when DNS lookup fails
+<li>Fixed compiler warnings
+<li>Don't listen for VNC connections on IPv6
+<li>Refactored iTunes interface to use the new thread support from sipsimple
+<li>Made changes to Preferences thread safe (SIP Simple)
+<li>Fixed TLS transport initialization (SIP Simple)
+<li>Added DNS resolver autodetection capabilities (SIP Simple)
+<li>Fixed matching of media codecs on incoming calls (SIP Simple)
+</ul>
+
 <h2>Version 0.20.9</h2>
 
 <p>December 3rd, 2010
