@@ -1505,7 +1505,11 @@ class ContactWindowController(NSWindowController):
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
 
         item = self.toolsMenu.itemWithTag_(44) # Start Conference
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.conference_server))
+
+        if NSApp.delegate().bundleName == 'BlinkPro':
+            item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.conference_server))
+        else:
+            item.setEnabled_(False)
 
 
     def updateChatMenu(self):
