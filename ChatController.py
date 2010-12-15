@@ -535,11 +535,10 @@ class ChatController(BaseStream):
             if self.sessionController.inProposal:
                 return False
             return True
-        elif tag in (SessionController.TOOLBAR_SHARE_DESKTOP, SessionController.TOOLBAR_REQUEST_DESKTOP):
-            if self.sessionController.inProposal:
+        elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_SHARE_DESKTOP, SessionController.TOOLBAR_REQUEST_DESKTOP):
+            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing"):
                 return False
-            if self.status==STREAM_CONNECTED and not self.sessionController.hasStreamOfType("desktop-sharing"):
-                return True
+            return True
         elif tag in (SessionController.TOOLBAR_HANGUP, SessionController.TOOLBAR_SEND_FILE):
             return True
         elif tag in (SessionController.TOOLBAR_SMILEY, SessionController.TOOLBAR_HISTORY):
