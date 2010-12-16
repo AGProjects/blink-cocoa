@@ -1145,13 +1145,11 @@ class ContactWindowController(NSWindowController):
             return
 
         media = None
-        if sender == self.contactOutline:
+        if sender == self.contactOutline or sender == self.searchOutline:
             if contact.preferred_media == "chat":
                 media = "chat"
             else:
                 media = "audio"
-        elif sender == self.searchOutline:
-            media = "audio"
         elif sender.selectedSegment() == 1:
             # IM button
             point = sender.convertPointToBase_(NSZeroPoint)
