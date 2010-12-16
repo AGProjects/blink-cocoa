@@ -8,7 +8,7 @@ from zope.interface import implements
 from sipsimple.session import Session
 from sipsimple.core import SIPURI, ToHeader
 
-from AppKit import NSRunAlertPanel, NSAlertDefaultReturn
+from AppKit import NSImage, NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
 
 from AudioController import AudioController
@@ -552,6 +552,13 @@ class SessionController(NSObject):
         chatStream = self.streamHandlerOfType("chat")
         if chatStream:
             chatStream.updateToolbarButtons(toolbar)
+        else:
+            for item in toolbar.visibleItems():
+                tag = item.tag()
+                if tag == TOOLBAR_SMILEY:
+                    item.setImage_(NSImage.imageNamed_("smiley_on")) 
+                elif tag == TOOLBAR_DESKTOP_SHARING:
+                    item.setEnabled_(False)
 
     def validateToolbarButton(self, item):
         chatStream = self.streamHandlerOfType("chat")
