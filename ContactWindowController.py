@@ -438,7 +438,7 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_info("Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
         self.model.bonjourgroup.addBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
         call_in_gui_thread(self.contactOutline.reloadData)
-        call_in_gui_thread(self.performSearch)
+        call_in_gui_thread(self.searchContacts)
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -448,13 +448,13 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_info("Bonjour neighbour did change: %s %s" % (display_name, uri))
         self.model.bonjourgroup.updateBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
         call_in_gui_thread(self.refreshContactsList)
-        call_in_gui_thread(self.performSearch)
+        call_in_gui_thread(self.searchContacts)
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         BlinkLogger().log_info("Bonjour neighbour removed: %s" % notification.data.neighbour.name)
         self.model.bonjourgroup.removeBonjourNeighbour(notification.data.neighbour)
         call_in_gui_thread(self.contactOutline.reloadData)
-        call_in_gui_thread(self.performSearch)
+        call_in_gui_thread(self.searchContacts)
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
@@ -714,7 +714,7 @@ class ContactWindowController(NSWindowController):
             print "Error parsing URI %s"%text
             return None
 
-    def performSearch(self):
+    def searchContacts(self):
         text = self.searchBox.stringValue().strip()
         if text == u"":
             self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
@@ -817,13 +817,13 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def clearSearchField_(self, sender):
         self.searchBox.setStringValue_("")
-        self.performSearch()
+        self.searchContacts()
 
     @objc.IBAction
     def addGroup_(self, sender):
         self.model.addNewGroup()
         self.refreshContactsList()
-        self.performSearch()
+        self.searchContacts()
 
     @objc.IBAction
     def startConference_(self, sender):
@@ -840,7 +840,7 @@ class ContactWindowController(NSWindowController):
             if contact:
                 self.searchBox.setStringValue_("")
                 self.refreshContactsList()
-                self.performSearch()
+                self.searchContacts()
 
                 row = self.contactOutline.rowForItem_(contact)
                 if row != NSNotFound:
@@ -856,7 +856,7 @@ class ContactWindowController(NSWindowController):
             contact = self.model.addNewContact(group=group.name if group and not group.dynamic else None)
             if contact:
                 self.refreshContactsList()
-                self.performSearch()
+                self.searchContacts()
                 
                 row = self.contactOutline.rowForItem_(contact)
                 if row != NSNotFound:
@@ -873,14 +873,14 @@ class ContactWindowController(NSWindowController):
         else:
             self.model.editContact(contact)
             self.refreshContactsList()
-            self.performSearch()
+            self.searchContacts()
 
     @objc.IBAction
     def deleteContact_(self, sender):
         for contact in self.getSelectedContacts() or ():
             self.model.deleteContact(contact)
             self.refreshContactsList()
-            self.performSearch()
+            self.searchContacts()
 
     @objc.IBAction
     def renameGroup_(self, sender):
@@ -893,7 +893,7 @@ class ContactWindowController(NSWindowController):
                 group = item
             self.model.editGroup(group)
             self.refreshContactsList()
-            self.performSearch()
+            self.searchContacts()
 
         #row = self.contactOutline.selectedRow()
         #if row < 0:
@@ -977,7 +977,7 @@ class ContactWindowController(NSWindowController):
 
                     self.startCallWithURIText(text, session_type)
                     self.searchBox.setStringValue_(u"")
-            self.performSearch()
+            self.searchContacts()
     
     @objc.IBAction
     def addContactToConference_(self, sender):
@@ -1668,7 +1668,7 @@ class ContactWindowController(NSWindowController):
                 self.refreshAccountList()
 
             self.searchBox.setStringValue_(who)
-            self.performSearch()
+            self.searchContacts()
             self.window().makeFirstResponder_(self.searchBox)
             self.window().makeKeyWindow()
 
