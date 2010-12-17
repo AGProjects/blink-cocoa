@@ -1407,7 +1407,6 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				2B2DEE581055770000F267F9 /* ShellScript */,
 				2B2DF6A3105DC57700F267F9 /* Copy Smiley Files (default) */,
 				2B0C1E8B10781A62008266C7 /* CopyFiles */,
 				2B87567D10B6DD51002FD271 /* Copy Helper Binaries */,
@@ -1741,22 +1740,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		2B2DEE581055770000F267F9 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1F22732112B554F50010A8B2 /* Sources */ = {
