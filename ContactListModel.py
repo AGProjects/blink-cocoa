@@ -409,7 +409,7 @@ class ContactListModel(NSObject):
 
         if not contactGroups:
             # copy default icons for test contacts to photos folder
-            for uri in ["3333@sip2sip.info", "4444@sip2sip.info", "200901@login.zipdx.com"]:
+            for uri in ["3333@sip2sip.info", "4444@sip2sip.info", "200901@login.zipdx.com", "test@conference.sip2sip.info"]:
                 icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
                 path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + ("/Blink/photos/%s.tiff" % uri)
                 NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
@@ -417,7 +417,8 @@ class ContactListModel(NSObject):
             contactsT = [
                 Contact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
                 Contact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Call Test"),
-                Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test")
+                Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
+                Contact("test@conference.sip2sip.info", loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat")
             ]
             contactGroups = [ContactGroup(u"Test", contactsT)]
 
