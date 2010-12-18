@@ -1984,7 +1984,7 @@
 					"$(inherited)",
 					/usr/local/lib,
 				);
-				PRODUCT_NAME = Blink;
+				PRODUCT_NAME = "Blink Pro";
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
