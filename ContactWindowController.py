@@ -423,7 +423,7 @@ class ContactWindowController(NSWindowController):
         if diff:
             new_device = diff.pop()
             BlinkLogger().log_info("New device %s detected, checking if we should switch to it..." % new_device)
-            call_in_gui_thread(self.switchNewDevice, new_device)
+            call_in_gui_thread(self.switchAudioDevice, new_device)
         else:
             call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
 
@@ -467,7 +467,7 @@ class ContactWindowController(NSWindowController):
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
 
-    def switchNewDevice(self, device):
+    def switchAudioDevice(self, device):
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
         if hasAudio:
             BlinkLogger().log_info("We have active sessions, switching input/output devices to %s" % device)
