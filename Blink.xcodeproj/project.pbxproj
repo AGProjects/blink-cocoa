@@ -1097,7 +1097,7 @@
 			name = Icons;
 			sourceTree = "<group>";
 		};
-		2B2DF5DD105CBFA700F267F9 /* File Transfers */ = {
+		2B2DF5DD105CBFA700F267F9 /* FileTransfers */ = {
 			isa = PBXGroup;
 			children = (
 				2BC08CC2106679940069AB9A /* FileTransferSession.py */,
@@ -1106,7 +1106,7 @@
 				2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */,
 				2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */,
 			);
-			name = "File Transfers";
+			name = FileTransfers;
 			sourceTree = "<group>";
 		};
 		2B2DF645105DC51900F267F9 /* Smileys */ = {
@@ -1261,7 +1261,7 @@
 			name = Enrollment;
 			sourceTree = "<group>";
 		};
-		2BC09104106884CE0069AB9A /* Desktop Sharing */ = {
+		2BC09104106884CE0069AB9A /* DesktopSharing */ = {
 			isa = PBXGroup;
 			children = (
 				2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */,
@@ -1269,7 +1269,7 @@
 				2B8752A110B5C2F6002FD271 /* DesktopViewer.xib */,
 				2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */,
 			);
-			name = "Desktop Sharing";
+			name = DesktopSharing;
 			sourceTree = "<group>";
 		};
 		2BEFC19E0FD1C2B500447EFB /* Sessions */ = {
@@ -1282,8 +1282,8 @@
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
-				2BC09104106884CE0069AB9A /* Desktop Sharing */,
-				2B2DF5DD105CBFA700F267F9 /* File Transfers */,
+				2BC09104106884CE0069AB9A /* DesktopSharing */,
+				2B2DF5DD105CBFA700F267F9 /* FileTransfers */,
 			);
 			name = Sessions;
 			sourceTree = "<group>";
