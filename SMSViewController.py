@@ -92,7 +92,7 @@ class SMSViewController(NSObject):
                 self.loggingEnabled = False
                 self.chatViewController.writeSysMessage("Unable to create SMS history file: %s"%exc)
 
-            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("chat", "html"))
+            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setAccount_(self.account)
 
             self.chatViewController.inputText.unregisterDraggedTypes()

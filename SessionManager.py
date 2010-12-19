@@ -7,7 +7,7 @@ from AppKit import *
 from application.python.util import Singleton
 
 import SIPManager
-import SessionWindowController
+import ChatWindowController
 
 
 class SessionManager(object):
@@ -41,7 +41,7 @@ class SessionManager(object):
             window = self.sessionWindows[0]
             osession = window.replaceInactiveWithCompatibleSession_(sessionController)
         else:
-            window = SessionWindowController.SessionWindowController.alloc().init()
+            window = ChatWindowController.ChatWindowController.alloc().init()
             self.sessionWindows.append(window)
             osession = None
 

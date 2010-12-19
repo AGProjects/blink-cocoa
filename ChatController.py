@@ -253,9 +253,9 @@ class ChatController(BaseStream):
             notification_center.add_observer(self, sender=stream)
             notification_center.add_observer(self, sender=self.sessionController.session)
 
-            NSBundle.loadNibNamed_owner_("SessionChat", self)
+            NSBundle.loadNibNamed_owner_("ChatView", self)
 
-            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("chat", "html"))
+            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setAccount_(self.sessionController.account)
 
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
@@ -551,7 +551,7 @@ class ChatController(BaseStream):
 
     def userClickedToolbarButton(self, sender):
         """
-        Called by SessionWindowController when dispatching toolbar button clicks to the selected
+        Called by ChatWindowController when dispatching toolbar button clicks to the selected
         Session tab.
         """
         tag = sender.tag()
@@ -587,7 +587,7 @@ class ChatController(BaseStream):
     @classmethod
     def userClickedToolbarButtonWhileDisconnected(cls, sessionController, sender):
         """
-        Called by SessionWindowController when dispatching toolbar button clicks to the selected
+        Called by ChatWindowController when dispatching toolbar button clicks to the selected
         Session tab.
         """
         tag = sender.tag()

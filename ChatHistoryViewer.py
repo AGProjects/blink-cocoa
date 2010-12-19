@@ -47,7 +47,7 @@ class ChatHistoryViewer(NSWindowController):
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Search")
 
-            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("chat", "html"))
+            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
 
             for c in ('to', 'sender', 'date', 'type'):
                 col = self.indexTable.tableColumnWithIdentifier_(c)

@@ -15,7 +15,7 @@ import FancyTabSwitcher
 from util import allocate_autorelease_pool
 
 
-class SessionWindowController(NSWindowController):
+class ChatWindowController(NSWindowController):
     implements(IObserver)
 
     tabView = objc.IBOutlet()
@@ -29,7 +29,7 @@ class SessionWindowController(NSWindowController):
     unreadMessageCounts = {}
 
     def init(self):
-        self = super(SessionWindowController, self).init()
+        self = super(ChatWindowController, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("Session", self)
             self.sessions = {}
