@@ -83,6 +83,8 @@ class SessionController(NSObject):
     inProposal = False
     waitingForITunes = False
 
+    showMultiPartyParticipantList = True
+
     streamHandlers = None
 
     originallyRequestedStreamTypes = None

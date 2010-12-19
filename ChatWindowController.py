@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2010 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -9,6 +9,8 @@ from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, Any
 from sipsimple.account import BonjourAccount
 
+from BlinkLogger import BlinkLogger
+from ContactListModel import Contact
 import SessionController
 import SessionManager
 import FancyTabSwitcher
@@ -22,11 +24,15 @@ class ChatWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
+    drawer = objc.IBOutlet()
+    drawerTableView = objc.IBOutlet()
     #statusbar = objc.IBOutlet()
 
     sessions = {}
     toolbarItems = {}
     unreadMessageCounts = {}
+
+    participants = []
 
     def init(self):
         self = super(ChatWindowController, self).init()
@@ -35,9 +41,14 @@ class ChatWindowController(NSWindowController):
             self.sessions = {}
             self.toolbarItems = {}
             self.unreadMessageCounts = {}
+            self.participants = []
             NotificationCenter().add_observer(self, sender=Any, name="BlinkSessionChangedState")
             NotificationCenter().add_observer(self, sender=Any, name="BlinkStreamHandlerChangedState")
+            NotificationCenter().add_observer(self, sender=Any, name="ConferenceInfoGotUpdate")
         return self
+
+    def awakeFromNib(self):
+        self.drawerTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
 
     def _findInactiveSessionCompatibleWith_(self, session):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
@@ -60,7 +71,7 @@ class ChatWindowController(NSWindowController):
                 if item.identifier() == oldSession.identifier:
                     del self.sessions[oldSession.identifier]
                     self.sessions[newSession.identifier] = newSession
-                    
+
                     item.setView_(newSession.streamHandlerOfType("chat").getContentView())
                     item.setLabel_(newSession.getTitle())
                     self.tabView.selectTabViewItem_(item)
@@ -135,7 +146,6 @@ class ChatWindowController(NSWindowController):
             title = u"Chat"
         self.window().setTitle_(title)
 
-
     def noteSession_isComposing_(self, session, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
         if index == NSNotFound:
@@ -144,7 +154,7 @@ class ChatWindowController(NSWindowController):
         item = self.tabSwitcher.itemForTabViewItem_(tabItem)
         if item:
             item.setComposing_(flag)
-        
+
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -158,7 +168,6 @@ class ChatWindowController(NSWindowController):
         if item:
             count = self.unreadMessageCounts[session.identifier] = self.unreadMessageCounts.get(session.identifier, 0) + 1
             item.setBadgeLabel_(str(count))
-
 
     def windowDidBecomeKey_(self, notification):
         session = self.selectedSession()
@@ -196,6 +205,8 @@ class ChatWindowController(NSWindowController):
                     else:
                         print "tab for %s (%s) not found (state %s)"%(session.identifier, session.getTitle(), chatHandler.status)
             self.revalidateToolbar()
+        elif  name == "ConferenceInfoGotUpdate":
+            self.refreshParticipantList(data.participants)
 
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSession()
@@ -213,7 +224,7 @@ class ChatWindowController(NSWindowController):
         if selectedSession:
             if len(self.sessions) == 1:
                 self.window().close()
-        
+
             chat_handler = selectedSession.streamHandlerOfType("chat")
             if chat_handler:
                 chat_handler.end(True)
@@ -243,7 +254,7 @@ class ChatWindowController(NSWindowController):
         if sender.tag() == SessionController.TOOLBAR_DESKTOP_SHARING:
             for item in self.desktopShareMenu.itemArray():
                 item.setEnabled_(self.validateToolbarItem_(item))
-        
+
             point = sender.convertPointToBase_(NSZeroPoint)
             point.y -= NSHeight(sender.frame())
             event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -271,12 +282,20 @@ class ChatWindowController(NSWindowController):
         if self.sessions.has_key(item.identifier()):
             self.revalidateToolbar()
             self.updateTitle()
+            session = self.sessions[item.identifier()]
+
+            self.refreshParticipantList()
+            if session.showMultiPartyParticipantList:
+                self.drawer.open()
+            else:
+                self.drawer.close()
 
         self.unreadMessageCounts[item.identifier()] = 0
         sitem = self.tabSwitcher.itemForTabViewItem_(item)
         if sitem:
             sitem.setBadgeLabel_("")
         #self.updateStatusText()
+
 
 
     def tabView_shouldCloseTabViewItem_(self, tabView, item):
@@ -291,8 +310,82 @@ class ChatWindowController(NSWindowController):
     def tabView_didDettachTabViewItem_atPosition_(self, tabView, item, pos):
         if len(self.sessions) > 1:
             session = self.sessions[item.identifier()]
-        
+
             window = SessionManager.SessionManager().dettachChatSession(session)
             if window:
                 window.window().setFrameOrigin_(pos)
+
+    def refreshParticipantList(self, participants=None):
+        getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+
+        session = self.selectedSession()
+        if session:
+            contact = getContactMatchingURI(session.remoteSIPAddress)
+            if contact:
+                self.participants.append(contact)
+            else:
+                name = session.remoteParty
+                if ":" in name:
+                    name = name.partition(":")[2]
+                contact = Contact(uri=name, name=name)
+                self.participants.append(contact)
+
+            if participants is not None:
+                for participant in participants:
+                    if participant not in self.participants:
+                        self.participants.append(participant)
+
+            self.drawerTableView.reloadData()
+
+    # drag/drop
+    def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
+        pboard = info.draggingPasteboard()
+        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            uri = str(pboard.stringForType_("x-blink-sip-uri"))
+
+        table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
+        return NSDragOperationAll
+
+    def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
+        pboard = info.draggingPasteboard()
+        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            uri = str(pboard.stringForType_("x-blink-sip-uri"))
+            getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+            self.participants.append(getContactMatchingURI(uri) or uri)
+            self.drawerTableView.reloadData()
+            BlinkLogger().show_info(u"Invite %s to conference" % uri)
+            # TODO: add uri to the conference
+
+        return True
+
+    def drawerDidOpen_(self, notification):
+        session = self.selectedSession()
+        if session:
+            session.showMultiPartyParticipantList = True
+
+    def drawerDidClose_(self, notification):
+        session = self.selectedSession()
+        if session:
+            session.showMultiPartyParticipantList = False
+
+    # TableView dataSource
+    def numberOfRowsInTableView_(self, tableView):
+        if tableView == self.drawerTableView:
+            return len(self.participants)
+        return 0
+
+    def tableView_objectValueForTableColumn_row_(self, tableView, tableColumn, row):
+        if tableView == self.drawerTableView:
+            if type(self.participants[row]) in (str, unicode):
+                return self.participants[row]
+            else:
+                return self.participants[row].name
+        return 0
+
+    def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
+        if tableView == self.drawerTableView:
+            if type(self.participants[row]) in (str, unicode):
+                cell.setContact_(None)
+            else:
+                cell.setContact_(self.participants[row])
 
