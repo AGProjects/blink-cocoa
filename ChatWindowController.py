@@ -31,7 +31,7 @@ class ChatWindowController(NSWindowController):
     def init(self):
         self = super(ChatWindowController, self).init()
         if self:
-            NSBundle.loadNibNamed_owner_("Session", self)
+            NSBundle.loadNibNamed_owner_("ChatSession", self)
             self.sessions = {}
             self.toolbarItems = {}
             self.unreadMessageCounts = {}
