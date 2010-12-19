@@ -411,6 +411,15 @@ class ContactWindowController(NSWindowController):
             session.reject_proposal()
             log_error("Cannot find session controller for session: %s" % session)
 
+
+    def windowShouldClose_(self, sender):
+        ev = NSApp.currentEvent()
+        if ev.type() == NSKeyDown:
+            if ev.keyCode() == 53: # don't close on Escape key
+                return False
+        return True
+
+
     @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

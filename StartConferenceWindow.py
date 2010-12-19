@@ -59,9 +59,13 @@ class StartConferenceWindow(NSObject):
         return NSDragOperationGeneric
 
     def run(self):
+        contactsWindow = NSApp.delegate().windowController.window()
+        worksWhenModal = contactsWindow.worksWhenModal()
+        contactsWindow.setWorksWhenModal_(True)
         self.window.makeKeyAndOrderFront_(None)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
+        contactsWindow.setWorksWhenModal_(worksWhenModal)
 
         if rc == NSOKButton:
             if self.video.state() == NSOnState and self.audio.state() == NSOnState and self.chat.state() == NSOnState:
