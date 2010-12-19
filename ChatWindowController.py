@@ -32,8 +32,6 @@ class ChatWindowController(NSWindowController):
     toolbarItems = {}
     unreadMessageCounts = {}
 
-    participants = []
-
     def init(self):
         self = super(ChatWindowController, self).init()
         if self:
@@ -317,18 +315,21 @@ class ChatWindowController(NSWindowController):
 
     def refreshParticipantList(self, participants=None):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+        self.participants = []
 
         session = self.selectedSession()
         if session:
             contact = getContactMatchingURI(session.remoteSIPAddress)
-            if contact:
+            if contact and contact not in self.participants:
                 self.participants.append(contact)
             else:
                 name = session.remoteParty
                 if ":" in name:
                     name = name.partition(":")[2]
                 contact = Contact(uri=name, name=name)
-                self.participants.append(contact)
+
+                if contact not in self.participants:
+                    self.participants.append(contact)
 
             if participants is not None:
                 for participant in participants:
