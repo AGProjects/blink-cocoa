@@ -10,13 +10,13 @@ from sipsimple.core import SIPURI, ToHeader
 
 from AppKit import NSImage, NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
-
 from AudioController import AudioController
 from BaseStream import *
 from BlinkLogger import BlinkLogger
 from ChatController import ChatController
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
-from FileTransferSession import OutgoingFileTransfer, IncomingFileTransfer
+from FileTransferController import FileTransferController
+
 from SIPManager import SIPManager
 from interfaces.itunes import ITunesInterface
 from util import *
@@ -37,25 +37,6 @@ TOOLBAR_HISTORY = 110
 TOOLBAR_SMILEY = 200
 
 TOOLBAR_RECONNECT_CONNECTING = 1100
-
-
-
-class FileTransferController(BaseStream):
-    """
-    Dummy controller/handler for file transfers.
-    The entire session is handled by the code in FileTransferSession, except when
-    a file stream comes as part of a multi-stream session (incoming only).
-    """
-    def initWithOwner_stream_(self, scontroller, stream):
-        return super(FileTransferController, self).initWithOwner_stream_(scontroller, stream)
-    
-    def startIncoming(self, is_update):
-        self.transfer = IncomingFileTransfer(self.session, self.stream)
-        self.transfer.start()
-
-    def startOutgoing(self, is_update, file_path=None, content_type=None):
-        self.transfer = OutgoingFileTransfer(self.sessionController.account, self.sessionController.target_uri, file_path, content_type)
-        self.transfer.start()
 
 
 StreamHandlerForType = {

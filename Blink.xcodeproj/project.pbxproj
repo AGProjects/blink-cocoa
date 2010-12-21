@@ -227,6 +227,8 @@
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
+		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
+		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F9A8DA612BE11670097FD10 /* StartConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* StartConferenceWindow.xib */; };
 		1F9A8DA712BE11670097FD10 /* StartConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* StartConferenceWindow.xib */; };
 		1FB9B1191095BFF500284E18 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
@@ -670,6 +672,7 @@
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
+		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
 		1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_0_tone.wav; path = sounds/dtmf_0_tone.wav; sourceTree = "<group>"; };
 		1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_1_tone.wav; path = sounds/dtmf_1_tone.wav; sourceTree = "<group>"; };
@@ -1104,11 +1107,12 @@
 		2B2DF5DD105CBFA700F267F9 /* FileTransfers */ = {
 			isa = PBXGroup;
 			children = (
+				1F8760B412C026840090846C /* FileTransferController.py */,
+				2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */,
 				2BC08CC2106679940069AB9A /* FileTransferSession.py */,
 				2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */,
 				2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */,
 				2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */,
-				2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */,
 			);
 			name = FileTransfers;
 			sourceTree = "<group>";
@@ -1596,6 +1600,7 @@
 				1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */,
 				1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */,
 				1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */,
+				1F8760B512C026840090846C /* FileTransferController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1742,6 +1747,7 @@
 				1F5615C312BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */,
 				1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */,
 				1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */,
+				1F8760B612C026840090846C /* FileTransferController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
