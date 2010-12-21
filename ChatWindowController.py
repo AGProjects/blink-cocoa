@@ -9,9 +9,9 @@ from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, Any
 from sipsimple.account import BonjourAccount
 
-from ServerConferenceController import AddParticipantsWindow
 from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
+from ServerConferenceWindowController import AddParticipantsWindow
 import SessionController
 import SessionManager
 import FancyTabSwitcher

@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1F092DB412B2785E000CEE7F /* ServerConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceController.py */; };
+		1F092DB412B2785E000CEE7F /* ServerConferenceWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */; };
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F22729512B554F50010A8B2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
@@ -143,7 +143,7 @@
 		1F22731912B554F50010A8B2 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
 		1F22731A12B554F50010A8B2 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1F22731B12B554F50010A8B2 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
-		1F22731D12B554F50010A8B2 /* ServerConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceController.py */; };
+		1F22731D12B554F50010A8B2 /* ServerConferenceWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */; };
 		1F22732212B554F50010A8B2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1F22732512B554F50010A8B2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
@@ -653,7 +653,7 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
-		1F092DB312B2785E000CEE7F /* ServerConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ServerConferenceController.py; sourceTree = "<group>"; };
+		1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ServerConferenceWindowController.py; sourceTree = "<group>"; };
 		1F092DB512B27864000CEE7F /* English */ = {isa = PBXFileReference; explicitFileType = file.xib; name = English; path = English.lproj/StartConferenceWindow.xib; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = growl.py; sourceTree = "<group>"; };
 		1F226DE412B54FBE0010A8B2 /* Vine Server.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Vine Server.app"; path = "/Applications/Vine Server.app"; sourceTree = "<absolute>"; };
@@ -984,7 +984,7 @@
 		1F2615A712BD8FFA00B402E1 /* ServerConference */ = {
 			isa = PBXGroup;
 			children = (
-				1F092DB312B2785E000CEE7F /* ServerConferenceController.py */,
+				1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */,
 				1F9A8DA512BE11670097FD10 /* StartConferenceWindow.xib */,
 				1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */,
 			);
@@ -1595,7 +1595,7 @@
 				1F22731912B554F50010A8B2 /* 4444@sip2sip.info.tiff in Resources */,
 				1F22731A12B554F50010A8B2 /* 200901@login.zipdx.com.tiff in Resources */,
 				1F22731B12B554F50010A8B2 /* blink-full-72dpi.tif in Resources */,
-				1F22731D12B554F50010A8B2 /* ServerConferenceController.py in Resources */,
+				1F22731D12B554F50010A8B2 /* ServerConferenceWindowController.py in Resources */,
 				1F9A8DA712BE11670097FD10 /* StartConferenceWindow.xib in Resources */,
 				1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */,
 				1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */,
@@ -1742,7 +1742,7 @@
 				1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */,
 				1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */,
 				1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */,
-				1F092DB412B2785E000CEE7F /* ServerConferenceController.py in Resources */,
+				1F092DB412B2785E000CEE7F /* ServerConferenceWindowController.py in Resources */,
 				1F9A8DA612BE11670097FD10 /* StartConferenceWindow.xib in Resources */,
 				1F5615C312BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */,
 				1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */,

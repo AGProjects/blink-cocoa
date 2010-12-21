@@ -32,10 +32,10 @@ from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController
 from LogListModel import LogListModel
+from ServerConferenceWindowController import StartConferenceWindow
 from SessionController import SessionController
 from SessionManager import SessionManager
 from SIPManager import MWIData
-from ServerConferenceController import StartConferenceWindow
 from util import *
 
 
