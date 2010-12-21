@@ -1223,6 +1223,7 @@
 		2B6328740FE421BD00446655 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
+				2BF430E81082F32500F04A6C /* SessionManager.py */,
 				2B6328840FE422AE00446655 /* ChatController.py */,
 				1F71724712BE201200CBA476 /* ChatWindowController.py */,
 				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
@@ -1277,7 +1278,6 @@
 			isa = PBXGroup;
 			children = (
 				2BF432B51084187100F04A6C /* BaseStream.py */,
-				2BF430E81082F32500F04A6C /* SessionManager.py */,
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				2B6328740FE421BD00446655 /* Chat */,
