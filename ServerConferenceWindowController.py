@@ -40,7 +40,6 @@ class StartConferenceWindow(NSObject):
         return self._participants[row]
 
     def awakeFromNib(self):
-        self.participantsTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
@@ -188,7 +187,6 @@ class AddParticipantsWindow(NSObject):
         return self._participants[row]
 
     def awakeFromNib(self):
-        self.participantsTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
