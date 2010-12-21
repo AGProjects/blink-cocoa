@@ -1483,7 +1483,7 @@ class ContactWindowController(NSWindowController):
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
     
-        self.blinkMenu.itemWithTag_(1).setTitle_(NSApp.delegate().applicationName)
+        self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationName)
 
         if NSApp.delegate().applicationName == 'Blink Pro':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
