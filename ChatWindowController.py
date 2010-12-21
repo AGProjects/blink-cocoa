@@ -9,6 +9,7 @@ from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, Any
 from sipsimple.account import BonjourAccount
 
+from ServerConferenceController import AddParticipantsWindow
 from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
 import SessionController
@@ -26,23 +27,24 @@ class ChatWindowController(NSWindowController):
     desktopShareMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
     drawerTableView = objc.IBOutlet()
+    addParticipants = objc.IBOutlet()
+    
     #statusbar = objc.IBOutlet()
-
-    sessions = {}
-    toolbarItems = {}
-    unreadMessageCounts = {}
 
     def init(self):
         self = super(ChatWindowController, self).init()
         if self:
-            NSBundle.loadNibNamed_owner_("ChatSession", self)
+            self.participants = []
             self.sessions = {}
             self.toolbarItems = {}
             self.unreadMessageCounts = {}
-            self.participants = []
+            NSBundle.loadNibNamed_owner_("ChatSession", self)
             NotificationCenter().add_observer(self, sender=Any, name="BlinkSessionChangedState")
             NotificationCenter().add_observer(self, sender=Any, name="BlinkStreamHandlerChangedState")
-            NotificationCenter().add_observer(self, sender=Any, name="ConferenceInfoGotUpdate")
+
+            if NSApp.delegate().bundleName == 'Blink Pro':
+                self.addParticipants.setEnabled_(True)
+
         return self
 
     def awakeFromNib(self):
@@ -203,8 +205,6 @@ class ChatWindowController(NSWindowController):
                     else:
                         print "tab for %s (%s) not found (state %s)"%(session.identifier, session.getTitle(), chatHandler.status)
             self.revalidateToolbar()
-        elif  name == "ConferenceInfoGotUpdate":
-            self.refreshParticipantList(data.participants)
 
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSession()
@@ -246,6 +246,16 @@ class ChatWindowController(NSWindowController):
                 handler.end()
             self.removeSession_(s)
         return True
+
+    @objc.IBAction
+    def addParticipants_(self, sender):
+        addParticipantsWindow = AddParticipantsWindow()
+        participants = addParticipantsWindow.run()
+        if participants is not None:
+            msg = 'Invite participants to conference: ' + ','.join(participants)
+            BlinkLogger().show_info(msg)
+            self.refreshParticipantList(participants)
+            # TODO: send REFER to invite each participant -adi
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
@@ -313,7 +323,8 @@ class ChatWindowController(NSWindowController):
             if window:
                 window.window().setFrameOrigin_(pos)
 
-    def refreshParticipantList(self, participants=None):
+    def refreshParticipantList(self):
+        # TODO: we must store the participant list per session in Session Controller -adi
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
         self.participants = []
 
@@ -331,11 +342,6 @@ class ChatWindowController(NSWindowController):
                 if contact not in self.participants:
                     self.participants.append(contact)
 
-            if participants is not None:
-                for participant in participants:
-                    if participant not in self.participants:
-                        self.participants.append(participant)
-
             self.drawerTableView.reloadData()
 
     # drag/drop
@@ -343,6 +349,8 @@ class ChatWindowController(NSWindowController):
         pboard = info.draggingPasteboard()
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
+            # TODO: skip SIP URIs already in participants list -adi
+            #    return NSDragOperationNone            
 
         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
         return NSDragOperationAll
@@ -355,8 +363,7 @@ class ChatWindowController(NSWindowController):
             self.participants.append(getContactMatchingURI(uri) or uri)
             self.drawerTableView.reloadData()
             BlinkLogger().show_info(u"Invite %s to conference" % uri)
-            # TODO: add uri to the conference
-
+            # TODO: send REFER to invite participant to the conference -adi
         return True
 
     def drawerDidOpen_(self, notification):

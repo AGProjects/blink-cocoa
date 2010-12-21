@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2010 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -9,9 +9,9 @@ import os
 
 from application.notification import NotificationCenter, IObserver, Any
 from application.python.util import Null
+from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.session import IllegalStateError
 from zope.interface import implements
 
@@ -35,7 +35,7 @@ from LogListModel import LogListModel
 from SessionController import SessionController
 from SessionManager import SessionManager
 from SIPManager import MWIData
-from StartConferenceWindow import StartConferenceWindow
+from ServerConferenceController import StartConferenceWindow
 from util import *
 
 
@@ -157,7 +157,6 @@ class ContactWindowController(NSWindowController):
                     NSColor.grayColor(), NSForegroundColorAttributeName)
 
     conference = None
-
 
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
@@ -837,9 +836,9 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def startConference_(self, sender):
         startConferenceWindow = StartConferenceWindow()
-        startConferenceWindow.run()
-        if  startConferenceWindow.conference is not None:
-            self.startConference(startConferenceWindow.conference[0], startConferenceWindow.conference[1], startConferenceWindow.conference[2])
+        conference = startConferenceWindow.run()
+        if conference is not None:
+            self.startConference(conference.target, conference.media_types, conference.participants)
 
     @objc.IBAction
     def addContact_(self, sender):
@@ -1082,7 +1081,7 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
 
-        # TODO: When session is established, request the other participants to join using REFER method, RFC4579
+        # TODO: When session is established, request the other participants to join using REFER method, RFC4579 -adi
         #    5.5.  REFER: Requesting a Focus to Add a New Resource to a Conference
         #    5.6.  REFER: Requesting a User to Dial in to a Conference Using a Conference URI
 
