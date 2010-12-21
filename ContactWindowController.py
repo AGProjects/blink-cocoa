@@ -201,6 +201,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
         nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
+        nc.add_observer(self, name="SIPApplicationDidStart")
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -214,6 +215,8 @@ class ContactWindowController(NSWindowController):
 
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
+
+        self.window().setTitle_(NSApp.delegate().applicationName)
 
         white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
         self.statusPopUp.removeAllItems()
@@ -472,6 +475,12 @@ class ContactWindowController(NSWindowController):
         if notification.sender.type == "audio":
             call_in_gui_thread(self.updateAudioButtons)
 
+    def _NH_SIPApplicationDidStart(self, notification):
+        settings = SIPSimpleSettings()
+        if settings.service_provider.name:
+            window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
+            self.window().setTitle_(window_title)
+
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
 
@@ -520,13 +529,20 @@ class ContactWindowController(NSWindowController):
         self.updatePresenceStatus()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-        if notification.data.modified.has_key("audio.silent"):
+       settings = SIPSimpleSettings()
+       if notification.data.modified.has_key("audio.silent"):
             if self.backend.is_silent():
                 self.silentButton.setImage_(NSImage.imageNamed_("belloff"))
                 self.silentButton.setState_(NSOnState)
             else:
                 self.silentButton.setImage_(NSImage.imageNamed_("bellon"))
                 self.silentButton.setState_(NSOffState)
+       if notification.data.modified.has_key("service_provider.name"):
+            if settings.service_provider.name:
+                window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
+                self.window().setTitle_(window_title)
+            else:
+                self.window().setTitle_(NSApp.delegate().applicationName)
 
     # move to SessionManager
     def showAudioSession(self, streamController):
@@ -1465,13 +1481,30 @@ class ContactWindowController(NSWindowController):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help.phtml"))
 
     def updateBlinkMenu(self):
-        if NSApp.delegate().bundleName == 'BlinkPro':
-            item = self.blinkMenu.itemWithTag_(1)
-            item.setTitle_('About Blink Pro')
-            item = self.blinkMenu.itemWithTag_(2)
-            item.setHidden_(True)
-            item = self.blinkMenu.itemWithTag_(3)
-            item.setHidden_(True)
+        settings = SIPSimpleSettings()
+    
+        self.blinkMenu.itemWithTag_(1).setTitle_(NSApp.delegate().applicationName)
+
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            self.blinkMenu.itemWithTag_(2).setHidden_(True)
+            self.blinkMenu.itemWithTag_(3).setHidden_(True)
+
+        if settings.service_provider.name:
+            if settings.service_provider.about_url or settings.service_provider.help_url:
+                self.blinkMenu.itemWithTag_(4).setHidden_(False)
+            if settings.service_provider.about_url:
+                title = 'About %s...' % settings.service_provider.name
+                self.blinkMenu.itemWithTag_(5).setTitle_(title)
+                self.blinkMenu.itemWithTag_(5).setHidden_(False)
+            if settings.service_provider.help_url:
+                title = '%s Support Page...' % settings.service_provider.name
+                self.blinkMenu.itemWithTag_(6).setTitle_(title)
+                self.blinkMenu.itemWithTag_(6).setHidden_(False)
+        else:
+            self.blinkMenu.itemWithTag_(4).setHidden_(True)
+            self.blinkMenu.itemWithTag_(5).setHidden_(True)
+            self.blinkMenu.itemWithTag_(6).setHidden_(True)
+
 
     def menuNeedsUpdate_(self, menu):
         item = menu.itemWithTag_(300) # mute
@@ -1483,20 +1516,22 @@ class ContactWindowController(NSWindowController):
 
     def updateAccountsMenu(self):
         item = self.accountsMenu.itemWithTag_(51) # chat
-        item.setState_(SIPSimpleSettings().chat.auto_accept and NSOnState or NSOffState)
+        item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
 
         item = self.accountsMenu.itemWithTag_(52) # file
-        item.setState_(SIPSimpleSettings().file_transfer.auto_accept and NSOnState or NSOffState)
+        item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
 
         item = self.accountsMenu.itemWithTag_(53) # bonjour audio
         account = BonjourAccount()
         item.setState_(account.audio.auto_accept and NSOnState or NSOffState)
 
     def updateToolsMenu(self):
+        settings = SIPSimpleSettings()
+    
         account = self.activeAccount()
 
         item = self.toolsMenu.itemWithTag_(50) # Answering machine
-        item.setState_(SIPSimpleSettings().answering_machine.enabled and NSOnState or NSOffState)
+        item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
 
         item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
@@ -1512,7 +1547,7 @@ class ContactWindowController(NSWindowController):
 
         item = self.toolsMenu.itemWithTag_(44) # Start Conference
 
-        if NSApp.delegate().bundleName == 'BlinkPro':
+        if NSApp.delegate().applicationName == 'Blink Pro':
             item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.conference_server))
         else:
             item.setEnabled_(False)

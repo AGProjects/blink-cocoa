@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2010 AG Projects. See LICENSE for details.
 #
 
 from AppKit import *
@@ -93,6 +93,8 @@ class PreferencesController(NSWindowController, object):
         NotificationCenter().add_observer(self, name="SIPAccountRegistrationDidFail")
         NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
         NotificationCenter().add_observer(self, name="AudioDevicesDidChange")
+
+        self.window().setTitle_("%s Preferences" % NSApp.delegate().applicationName)
 
     def createGeneralOptionsUI(self):
         self.generalPop.removeAllItems()

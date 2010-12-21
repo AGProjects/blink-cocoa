@@ -42,7 +42,7 @@ class ChatWindowController(NSWindowController):
             NotificationCenter().add_observer(self, sender=Any, name="BlinkSessionChangedState")
             NotificationCenter().add_observer(self, sender=Any, name="BlinkStreamHandlerChangedState")
 
-            if NSApp.delegate().bundleName == 'Blink Pro':
+            if NSApp.delegate().applicationName == 'Blink Pro':
                 self.addParticipants.setEnabled_(True)
 
         return self

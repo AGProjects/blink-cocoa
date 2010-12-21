@@ -56,6 +56,12 @@ class ServerSettings(SettingsGroup):
     enrollment_url = Setting(type=HTTPURL, default="https://blink.sipthor.net/enrollment.phtml")
 
 
+class ServiceProviderSettings(SettingsGroup):
+    name = Setting(type=str, default=None, nillable=True)
+    about_url = Setting(type=HTTPURL, default=None, nillable=True)
+    help_url = Setting(type=HTTPURL, default=None, nillable=True)
+
+
 class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=SoundFile, default=SoundFile("ring_inbound.wav"), nillable=True)
     audio_outbound = Setting(type=SoundFile, default=SoundFile("ring_outbound.wav"), nillable=True)
@@ -75,6 +81,7 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     file_transfer = FileTransferSettingsExtension
     logs = LogsSettingsExtension
     server = ServerSettings
+    service_provider = ServiceProviderSettings
     sounds = SoundsSettings
 
 

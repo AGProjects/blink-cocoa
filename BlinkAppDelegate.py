@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2010 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -16,6 +16,7 @@ from application.python.util import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
@@ -65,7 +66,7 @@ class BlinkAppDelegate(NSObject):
             nc.add_observer(self, name="MediaStreamDidEnd")
             nc.add_observer(self, name="MediaStreamDidFail")
 
-            self.bundleName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleName"))
+            self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
 
         return self
 
@@ -134,8 +135,7 @@ class BlinkAppDelegate(NSObject):
 
 
     def applicationDidFinishLaunching_(self, sender):
-        if self.bundleName == 'BlinkPro':
-            self.blinkMenu.setTitle_('Blink Pro')
+        self.blinkMenu.setTitle_(self.applicationName)
 
         self.vncServerPort = randint(5950, 5990)
         self.startVNCServerInPort_(self.vncServerPort)
@@ -285,6 +285,8 @@ You might need to Replace it and re-enter your account information. Your old fil
             version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
             self.aboutVersion.setStringValue_("Version "+version+"\n"+vdate)
+            self.aboutPanel.setTitle_('About %s' % self.applicationName)
+
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
     def getURL_withReplyEvent_(self, event, replyEvent):
@@ -320,11 +322,17 @@ You might need to Replace it and re-enter your account information. Your old fil
 
     @objc.IBAction
     def openMenuLink_(self, sender):
+        settings = SIPSimpleSettings()
+    
         if sender.tag() == 400: # Changelog
-            if self.bundleName == 'BlinkPro':
+            if self.applicationName == 'Blink Pro':
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
             else:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
         elif sender.tag() == 3: # Donate
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
+        elif sender.tag() == 5: # About Service Provider
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.about_url)))
+        elif sender.tag() == 6: # Service Provider Help Page
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.help_url)))
 
