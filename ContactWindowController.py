@@ -1515,6 +1515,8 @@ class ContactWindowController(NSWindowController):
             item.setState_(self.backend.is_silent() and NSOnState or NSOffState)
 
     def updateAccountsMenu(self):
+        settings = SIPSimpleSettings()
+        
         item = self.accountsMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
 
