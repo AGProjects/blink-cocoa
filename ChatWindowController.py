@@ -254,7 +254,6 @@ class ChatWindowController(NSWindowController):
         if participants is not None:
             msg = 'Invite participants to conference: ' + ','.join(participants)
             BlinkLogger().show_info(msg)
-            self.refreshParticipantList(participants)
             # TODO: send REFER to invite each participant -adi
 
     @objc.IBAction
