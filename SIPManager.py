@@ -966,7 +966,7 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             for transport in settings.sip.transport_list:
                 try:
-                    BlinkLogger().log_info('Bonjour Account listens on %s' % bonjour_account.contact[transport]
+                    BlinkLogger().log_info('Bonjour Account listens on %s' % bonjour_account.contact[transport])
                 except KeyError:
                     pass
 
