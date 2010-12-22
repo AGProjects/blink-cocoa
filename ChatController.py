@@ -44,17 +44,20 @@ class MessageInfo(object):
 
 class MessageHandler(NSObject):
     """
-    Track what messages typed by local user were sent.
+    Until the stream is connected, all messages typed will be queued and
+    marked internally as queued.  Once the stream is connected, queued
+    messages will be sent.
 
-    Until the stream is connected, all messages typed will be queued and marked
-    as queued. Once stream is connected, queued messages will be sent.
+    Sent messages are internally marked as  unconfirmed. In the UI they are
+    marked with Sending...  When a delivery confirmation arrives, they will
+    be internally marked as delivered and in the UI the Sending...  will be
+    replaced by the delivery timestamp and the messages will be removed from
+    the internal queue.  If a failed delivery confirmation is received or no
+    confirmation is received before timeout, all unconfirmed messages will
+    be marked as undelivered with red in the UI.
 
-    Sent messages are marked as unconfirmed. In the UI they will not received
-    any marking. As long as confirmation arrives, there will be no marking and
-    the message will be removed from the internal queue.
-    If no confirmation arrives until a timeout or a failed notification happens, 
-    all unconfirmed and subsequent messages will be marked as undelivered in the UI
-    until things are detected as normalized.
+    The last undelivered messages will be resent the next time the stream is
+    connected.
     """
 
     implements(IObserver)
