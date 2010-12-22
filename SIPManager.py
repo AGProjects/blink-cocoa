@@ -965,7 +965,10 @@ class SIPManager(object):
         if bonjour_account.enabled:
             settings = SIPSimpleSettings()
             for transport in settings.sip.transport_list:
-                BlinkLogger().log_info('Bonjour Account listens on %s' % bonjour_account.contact[transport]
+                try:
+                    BlinkLogger().log_info('Bonjour Account listens on %s' % bonjour_account.contact[transport]
+                except KeyError:
+                    pass
 
         self.request_dns_lookup_for_account(self._selected_account)
 
