@@ -217,9 +217,9 @@ class AlertPanel(NSObject, object):
             if indev == "system_default":
                 indev = "System Default"
             if outdev != indev:
-                self.deviceLabel.setStringValue_("Selected Output Device is %s, Input is %s"%(outdev, indev))
+                self.deviceLabel.setStringValue_("Selected Output Device is %s, Input is %s"%(outdev.strip(), indev.strip()))
             else:
-                self.deviceLabel.setStringValue_("Selected Audio Device is %s"%outdev)
+                self.deviceLabel.setStringValue_("Selected Audio Device is %s"%outdev.strip())
             self.deviceLabel.sizeToFit()
             self.deviceLabel.setHidden_(False)
         else:
