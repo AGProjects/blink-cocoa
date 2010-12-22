@@ -962,10 +962,10 @@ class SIPManager(object):
         self.ringer.update_ringtones()
 
         bonjour_account = BonjourAccount()
-        if bonjour_account and bonjour_account.enabled:
-            for transport in SIPSimpleSettings().sip.transport_list:
-                contact = bonjour_account.contact[transport]
-                BlinkLogger().log_info('Bonjour Account listens on sip:%s@%s:%d;transport=%s' % (contact.user, contact.host, contact.port, contact.parameters['transport'] if 'transport' in contact.parameters else 'udp'))
+        if bonjour_account.enabled:
+            settings = SIPSimpleSettings()
+            for transport in settings.sip.transport_list:
+                BlinkLogger().log_info('Bonjour Account listens on %s' % bonjour_account.contact[transport]
 
         self.request_dns_lookup_for_account(self._selected_account)
 
