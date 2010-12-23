@@ -42,7 +42,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 177}, {504, 333}}</string>
 				<int key="NSWTFlags">544735232</int>
-				<string key="NSWindowTitle">Invite Participants</string>
+				<string key="NSWindowTitle">Invite Participants to Conference</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{504, 333}</string>

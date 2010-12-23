@@ -42,7 +42,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 155}, {511, 355}}</string>
 				<int key="NSWTFlags">544735232</int>
-				<string key="NSWindowTitle">Start Conference on SIP server</string>
+				<string key="NSWindowTitle">Start Conference on Server</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{511, 355}</string>
