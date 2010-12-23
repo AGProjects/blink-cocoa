@@ -901,16 +901,16 @@
 			isa = PBXGroup;
 			children = (
 				2BEFC1BD0FD1C93F00447EFB /* Common */,
+				2B4CA92C10AA5F0500D5F19E /* Contacts */,
 				2BAF387A0FE0962B0040117A /* Enrollment */,
-				2BEFC19F0FD1C2C800447EFB /* MainWindow */,
 				2BEFC19E0FD1C2B500447EFB /* Sessions */,
 				2BFB34B110178A43002D79FB /* AlertPanel */,
 				1F2615A712BD8FFA00B402E1 /* ServerConference */,
 				2B01283F109391FF009B2112 /* ServerSettings */,
-				2B11B0B10FF55C3A007FC176 /* LogsWindow */,
+				2B11B0B10FF55C3A007FC176 /* Logs */,
 				2B96EC6E10F6DDBC004E6875 /* ChatHistory */,
 				2B5DE51D0FFC5C5D00701821 /* Preferences */,
-				2B7FC8221132D3EF008C07BF /* PresencePolicy */,
+				2B7FC8221132D3EF008C07BF /* Presence */,
 				2B240B751023AF8200079580 /* PhotoPicker */,
 				2BEFC1A00FD1C2DE00447EFB /* CustomWidgets */,
 			);
@@ -1047,14 +1047,14 @@
 			name = SMS;
 			sourceTree = "<group>";
 		};
-		2B11B0B10FF55C3A007FC176 /* LogsWindow */ = {
+		2B11B0B10FF55C3A007FC176 /* Logs */ = {
 			isa = PBXGroup;
 			children = (
 				2B11B0DA0FF564F6007FC176 /* LogListModel.py */,
 				2B2409831022A04700079580 /* DebugWindow.py */,
 				2B2409851022A05A00079580 /* DebugWindow.xib */,
 			);
-			name = LogsWindow;
+			name = Logs;
 			sourceTree = "<group>";
 		};
 		2B240B751023AF8200079580 /* PhotoPicker */ = {
@@ -1170,6 +1170,7 @@
 		2B4CA92C10AA5F0500D5F19E /* Contacts */ = {
 			isa = PBXGroup;
 			children = (
+				2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */,
 				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */,
 				2B5DE4B40FFC501E00701821 /* AddContactController.py */,
@@ -1242,7 +1243,7 @@
 			name = Chat;
 			sourceTree = "<group>";
 		};
-		2B7FC8221132D3EF008C07BF /* PresencePolicy */ = {
+		2B7FC8221132D3EF008C07BF /* Presence */ = {
 			isa = PBXGroup;
 			children = (
 				2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */,
@@ -1250,7 +1251,7 @@
 				2B7FC8231132D409008C07BF /* PresenceWindow.xib */,
 				2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */,
 			);
-			name = PresencePolicy;
+			name = Presence;
 			sourceTree = "<group>";
 		};
 		2B96EC6E10F6DDBC004E6875 /* ChatHistory */ = {
@@ -1285,8 +1286,8 @@
 		2BEFC19E0FD1C2B500447EFB /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
-				2BF432B51084187100F04A6C /* BaseStream.py */,
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
+				2BF432B51084187100F04A6C /* BaseStream.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
@@ -1294,15 +1295,6 @@
 				2B2DF5DD105CBFA700F267F9 /* FileTransfers */,
 			);
 			name = Sessions;
-			sourceTree = "<group>";
-		};
-		2BEFC19F0FD1C2C800447EFB /* MainWindow */ = {
-			isa = PBXGroup;
-			children = (
-				2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */,
-				2B4CA92C10AA5F0500D5F19E /* Contacts */,
-			);
-			name = MainWindow;
 			sourceTree = "<group>";
 		};
 		2BEFC1A00FD1C2DE00447EFB /* CustomWidgets */ = {
@@ -1325,6 +1317,7 @@
 				85E8550210F643350083D346 /* configuration */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
+				2BAF380C0FE088C70040117A /* MainMenu.xib */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
 				2B11B0B20FF55C52007FC176 /* BlinkLogger.py */,
@@ -1333,7 +1326,6 @@
 				2B240839102117F200079580 /* SessionRinger.py */,
 				2B2400FE1018AB9400079580 /* util.py */,
 				1F0FD67A10E627310032B310 /* growl.py */,
-				2BAF380C0FE088C70040117A /* MainMenu.xib */,
 				2BE7632910732DC000A1DF24 /* About.xib */,
 			);
 			name = Common;
