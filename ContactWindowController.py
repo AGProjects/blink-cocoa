@@ -13,6 +13,7 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
+from sipsimple.session import SessionManager as MiddlewareSessionManager
 from zope.interface import implements
 
 import ContactOutlineView
@@ -548,7 +549,6 @@ class ContactWindowController(NSWindowController):
     def showAudioSession(self, streamController):
         self.sessionListView.addItemView_(streamController.view)
         self.updateAudioButtons()
-
         streamController.view.setSelected_(True)
         
         self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
@@ -1339,7 +1339,7 @@ class ContactWindowController(NSWindowController):
                 self.acceptIncomingProposal(session, streams)
                 return
             elif 'audio' in stream_type_list and session.account.audio.auto_accept:
-                session_manager = SessionManager()
+                session_manager = MiddlewareSessionManager()
                 have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                 if not have_audio_call:
                     accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
