@@ -550,14 +550,14 @@ class ContactWindowController(NSWindowController):
         self.sessionListView.addItemView_(streamController.view)
         self.updateAudioButtons()
         streamController.view.setSelected_(True)
-        
-        self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
 
-        self.showWindow_(None)
-        count = self.sessionListView.numberOfItems()
-        if not self.drawer.isOpen() and count > 0:
-            #self.drawer.setContentSize_(self.window().frame().size)
-            self.drawer.open()
+        if not streamController.sessionController.hasStreamOfType("chat"):
+            self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
+            self.showWindow_(None)
+            count = self.sessionListView.numberOfItems()
+            if not self.drawer.isOpen() and count > 0:
+                #self.drawer.setContentSize_(self.window().frame().size)
+                self.drawer.open()
 
     def shuffleUpAudioSession(self, audioSessionView):
         # move up the given view in the audio session list so that it is after 
