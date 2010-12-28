@@ -1287,7 +1287,7 @@ class ContactWindowController(NSWindowController):
 
     def sip_account_registration_ended(self, account):
         self.refreshAccountList()
-        BlinkLogger().show_info(u"Accout %s was unregistered"%account.id)
+        BlinkLogger().show_info(u"Account %s was unregistered"%account.id)
 
     def sip_account_registration_failed(self, account, error):
         BlinkLogger().show_error(u"The account %s failed to register(%s)"%(account.id, error))
