@@ -1102,6 +1102,7 @@ class SIPManager(object):
                 self._delegate.sip_session_missed(session)
         else:
             if data.code == 487:
+                # TODO: this fails if the session has been cancelled in DNS Lookup phase -adi
                 self.log_outgoing_session_cancelled(session, data.timestamp)
             else:
                 self.log_outgoing_session_failed(session, data.timestamp)
