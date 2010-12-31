@@ -287,14 +287,7 @@ class SIPManager(object):
         stun_dns = DNSLookup()
         self.notification_center.add_observer(self, sender=stun_dns)
         settings = SIPSimpleSettings()
-        if isinstance(account, BonjourAccount):
-            # print listening addresses
-            for transport in settings.sip.transport_list:
-                local_uri = SIPURI(user=account.contact.username, host=account.contact.domain, 
-                                   port=getattr(self._app.engine, "%s_port" % transport, None),
-                                   parameters={"transport": transport} if transport != "udp" else None)
-                print 'Listening on "%s"' % local_uri
-        else:
+        if not isinstance(account, BonjourAccount):
             # lookup STUN servers, as we don't support doing this asynchronously yet
             if account.nat_traversal.stun_server_list:
                 account.nat_traversal.stun_server_list = [STUNServerAddress(gethostbyname(address.host), address.port) for address in account.nat_traversal.stun_server_list]
