@@ -553,7 +553,9 @@ class AudioController(BaseStream):
             if stats is not None:
                 rtt = stats['rtt']['avg'] / 1000
                 pktloss = 100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
-                
+                # pjsip reports wrong values sometime, which leads to more than 100% loss
+                if pktloss > 100.0:
+                    pktloss = 100.0
                 text = []
                 if rtt > 100:
                     text.append('Latency %d ms' % rtt)
