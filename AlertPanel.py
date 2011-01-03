@@ -332,11 +332,13 @@ class AlertPanel(NSObject, object):
             timer.invalidate()
             del self.answeringMachineTimers[session]
 
-    def enableAnsweringMachine(self, view, session):
+    @run_in_gui_thread
+    def enableAnsweringMachine(self, view, session, run_now=False):
         if session not in self.answeringMachineTimers:
             settings = SIPSimpleSettings()
             amLabel = view.viewWithTag_(15)
-            info = dict(delay = settings.answering_machine.answer_delay, session = session, label = amLabel, time = time.time())
+            delay = 0 if run_now else settings.answering_machine.answer_delay
+            info = dict(delay = delay, session = session, label = amLabel, time = time.time())
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTick:", info, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
@@ -398,7 +400,7 @@ class AlertPanel(NSObject, object):
                 if SIPSimpleSettings().answering_machine.enabled:
                     for session, view in self.sessions.iteritems():
                         if session.account is not BonjourAccount():
-                            self.enableAnsweringMachine(view, session)
+                            self.enableAnsweringMachine(view, session, True)
                 else:
                     for session, view in self.sessions.iteritems():
                         if session.account is not BonjourAccount():
