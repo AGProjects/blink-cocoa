@@ -7,7 +7,7 @@ from Foundation import *
 from VerticalBoxView import VerticalBoxView
 
 
-class SessionBox(NSView):
+class AudioSession(NSView):
     selected = False
     delegate = None
     sessionInfo = None
@@ -117,7 +117,7 @@ class SessionBox(NSView):
         if self.selected and self.superview():
             # unselect the other views in the superview
             for view in self.superview().subviews():
-                if view != self and isinstance(view, SessionBox):
+                if view != self and isinstance(view, AudioSession):
                     if view.selected and not (self.conferencing and view.conferencing):
                         view.setSelected_(False)
 
@@ -132,7 +132,7 @@ class SessionBox(NSView):
             if flag:
                 if self.superview():
                     for view in self.superview().subviews():
-                        if view != self and isinstance(view, SessionBox):
+                        if view != self and isinstance(view, AudioSession):
                             if self.conferencing and view.conferencing:
                                 if not view.selected:
                                     view.selected = True

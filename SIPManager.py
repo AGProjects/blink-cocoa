@@ -211,8 +211,6 @@ class SIPManager(object):
     implements(IObserver)
 
     def __init__(self):
-        # for debugging
-        #NotificationCenter().add_observer(NotificationPrinter(), name=Any, sender=Any)
 
         self._app = SIPApplication()
         self._delegate = None
@@ -227,18 +225,19 @@ class SIPManager(object):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
         self.notification_center.add_observer(self, sender=self._app.engine)
+        self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
+        self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
+        self.notification_center.add_observer(self, name='BlinkSessionDidFail')
+        self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='SIPAccountDidActivate')
         self.notification_center.add_observer(self, name='SIPAccountDidDeactivate')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidEnd')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidFail')
         self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
-        self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
-        self.notification_center.add_observer(self, name='SIPSessionDidEnd')
         self.notification_center.add_observer(self, name='SIPSessionDidFail')
-        self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
 
     def set_delegate(self, delegate):
         # doesnt work for PyCocoa objects 
@@ -531,79 +530,85 @@ class SIPManager(object):
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_incoming_session_missed(self, session, timestamp):
+    def log_incoming_session_missed(self, session, data):
         account = session.account
         if account is BonjourAccount():
             return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "missed\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp)
+            line = "missed\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_incoming_session_ended(self, session):
+    def log_incoming_session_ended(self, session, data):
         account = session.account
         if account is BonjourAccount():
             return
         f = self._open_call_history_file()
         if f:
-            streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
+            streams = ",".join(data.streams)
             line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_incoming_session_answered_elsewhere(self, session, timestamp):
+    def log_incoming_session_answered_elsewhere(self, session, data):
         account = session.account
         if account is BonjourAccount():
             return
         f = self._open_call_history_file()
         if f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp, timestamp)
+            line = "in\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_outgoing_session_failed(self, session, timestamp):
+    def log_outgoing_session_failed(self, session, data):
         account = session.account
         if account is BonjourAccount():
             return
         f = self._open_call_history_file()
         if f:
-            streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "failed\t%s\t%s\t%s\t%s\t"%(streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp)
+            streams = ",".join(data.streams)
+            participants = ",".join(data.participants)
+            focus = 1 if data.focus else 0
+            line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_outgoing_session_cancelled(self, session, timestamp):
+    def log_outgoing_session_cancelled(self, session, data):
         account = session.account
         if account is BonjourAccount():
             return
         f = self._open_call_history_file()
         if f:
-            streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "cancelled\t%s\t%s\t%s\t%s\t"%(streams, account.id, format_identity(session.remote_identity, check_contact=True), timestamp)
+            streams = ",".join(data.streams)
+            participants = ",".join(data.participants)
+            focus = 1 if data.focus else 0
+            line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def log_outgoing_session_ended(self, session):
+    def log_outgoing_session_ended(self, session, data):
         account = session.account
         if account is BonjourAccount():
             return
         f = self._open_call_history_file()
         if f:
-            streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "out\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
+            streams = ",".join(data.streams)
+            participants = ",".join(data.participants)
+            focus = 1 if data.focus else 0
+            line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
@@ -681,7 +686,7 @@ class SIPManager(object):
 
         return None
 
-    def get_last_call_history_entries(self, count):
+    def get_last_call_history_entries(self, count, isfocus=False):
         path = "%s/calls.txt"%(self.get_call_history_directory())
 
         if not os.path.exists(path):
@@ -712,7 +717,15 @@ class SIPManager(object):
         missed_entries = []
 
         for line in in_lines:
-            t, streams,account,party,start,end = line.split("\t")
+            toks = line.split("\t")
+            i = len(toks) 
+            if i < 8:
+               while i < 8:
+                   toks.append("")
+                   i = i + 1
+            t, streams,account,party,start,end,focus,participants = toks
+            if isfocus and focus != '1':
+                continue
             address, display_name, full_uri, fancy_uri = format_identity_from_text(party)
             item = {
             "streams":streams.split(","),
@@ -722,6 +735,8 @@ class SIPManager(object):
             "start":parse_datetime(start),
             "end":parse_datetime(end),
             "when":format_date(parse_datetime(start)),
+            "focus":focus,
+            "participants":participants.split(",") if participants else []
             }
             if item["start"] and item["end"]:
                 item["duration"] = item["end"] - item["start"]
@@ -731,9 +746,14 @@ class SIPManager(object):
 
         for line in out_lines:
             toks = line.split("\t")
-            if len(toks) == 5:
-               toks.append("")
-            t, streams,account,party,start,end = toks
+            i = len(toks) 
+            if i < 8:
+               while i < 8:
+                   toks.append("")
+                   i = i + 1
+            t, streams,account,party,start,end,focus,participants = toks
+            if isfocus and focus != '1':
+                continue
             address, display_name, full_uri, fancy_uri = format_identity_from_text(party)
 
             item = {"streams": streams.split(","),
@@ -743,6 +763,8 @@ class SIPManager(object):
                     "start":   parse_datetime(start),
                     "end":     parse_datetime(end),
                     "when":    format_date(parse_datetime(start)),
+                    "focus":   focus,
+                    "participants":participants.split(",") if participants else [], 
                     "result":  t}
 
             if item["start"] and item["end"]:
@@ -753,7 +775,8 @@ class SIPManager(object):
             out_entries.append(item)
 
         for line in missed_lines:
-            t, streams,account,party,start = line.split("\t")
+            toks = line.split("\t")
+            t, streams,account,party,start = toks
             address, display_name, full_uri, fancy_uri = format_identity_from_text(party)
             item = {"streams":  streams.split(","),
                     "account":  account,
@@ -1068,20 +1091,20 @@ class SIPManager(object):
         if data.succeeded:
             call_in_gui_thread(self._delegate.sip_nat_detected, data.nat_type)
 
-    def _NH_SIPSessionDidEnd(self, session, data):
+    def _NH_BlinkSessionDidEnd(self, session, data):
         if session.direction == "incoming":
-            self.log_incoming_session_ended(session)
+            self.log_incoming_session_ended(session, data)
         else:
-            self.log_outgoing_session_ended(session)
+            self.log_outgoing_session_ended(session, data)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def _NH_SIPSessionDidFail(self, session, data):
         if session.direction == "incoming":
             if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
-                self.log_incoming_session_answered_elsewhere(session, data.timestamp)
+                self.log_incoming_session_answered_elsewhere(session, data)
             else:
-                self.log_incoming_session_missed(session, data.timestamp)
+                self.log_incoming_session_missed(session, data)
 
             if data.code == 487 and data.failure_reason != 'Call completed elsewhere':
                 growl_data = TimestampedNotificationData()
@@ -1093,12 +1116,15 @@ class SIPManager(object):
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                 self._delegate.sip_session_missed(session)
-        else:
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def _NH_BlinkSessionDidFail(self, session, data):
+        if session.direction == "outgoing":
             if data.code == 487:
-                # TODO: this fails if the session has been cancelled in DNS Lookup phase -adi
-                self.log_outgoing_session_cancelled(session, data.timestamp)
+                self.log_outgoing_session_cancelled(session, data)
             else:
-                self.log_outgoing_session_failed(session, data.timestamp)
+                self.log_outgoing_session_failed(session, data)
 
     def _NH_AudioStreamGotDTMF(self, sender, data):
         key = data.digit

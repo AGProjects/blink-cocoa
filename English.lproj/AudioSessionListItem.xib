@@ -2,13 +2,13 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10F569</string>
-		<string key="IBDocument.InterfaceBuilderVersion">788</string>
-		<string key="IBDocument.AppKitVersion">1038.29</string>
+		<string key="IBDocument.SystemVersion">10H574</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
+		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">788</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -198,9 +198,9 @@
 								</object>
 								<object class="NSSegmentItem">
 									<double key="NSSegmentItemWidth">20</double>
-									<object class="NSCustomResource" key="NSSegmentItemImage" id="521360667">
+									<object class="NSCustomResource" key="NSSegmentItemImage">
 										<string key="NSClassName">NSImage</string>
-										<string key="NSResourceName">hangup</string>
+										<string key="NSResourceName">hangup_small</string>
 									</object>
 									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Hangup</string>
@@ -256,7 +256,10 @@
 								</object>
 								<object class="NSSegmentItem">
 									<double key="NSSegmentItemWidth">20</double>
-									<reference key="NSSegmentItemImage" ref="521360667"/>
+									<object class="NSCustomResource" key="NSSegmentItemImage">
+										<string key="NSClassName">NSImage</string>
+										<string key="NSResourceName">hangup</string>
+									</object>
 									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Hangup</string>
 									<int key="NSSegmentItemTag">2</int>
@@ -326,7 +329,7 @@
 				<string key="NSFrameSize">{212, 59}</string>
 				<reference key="NSSuperview"/>
 				<reference key="NSWindow"/>
-				<string key="NSClassName">SessionBox</string>
+				<string key="NSClassName">AudioSession</string>
 			</object>
 			<object class="NSMenu" id="590086273">
 				<string key="NSTitle"/>
@@ -797,6 +800,7 @@
 					<string>33.IBPluginDependency</string>
 					<string>34.IBPluginDependency</string>
 					<string>35.IBPluginDependency</string>
+					<string>35.IBSegmentedControlInspectorSelectedSegmentMetadataKey</string>
 					<string>53.IBEditorWindowLastContentRect</string>
 					<string>53.IBPluginDependency</string>
 					<string>54.IBPluginDependency</string>
@@ -814,7 +818,7 @@
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{399, 573}, {212, 59}}</string>
+					<string>{{252, 447}, {212, 59}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{628, 654}</string>
 					<string>{{217, 442}, {480, 272}}</string>
@@ -870,6 +874,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<integer value="2"/>
 					<string>{{718, 322}, {281, 93}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1050,11 +1055,11 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">SessionBox</string>
+					<string key="className">AudioSession</string>
 					<string key="superclassName">NSView</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">SessionBox.py</string>
+						<string key="minorKey">AudioSession.py</string>
 					</object>
 				</object>
 			</object>
@@ -1412,6 +1417,20 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
+					<string key="className">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBFrameworkSource</string>
+						<string key="minorKey">Sparkle.framework/Headers/SUAppcast.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBFrameworkSource</string>
+						<string key="minorKey">Sparkle.framework/Headers/SUUpdater.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
 					<string key="className">NSResponder</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBFrameworkSource</string>
@@ -1508,6 +1527,7 @@
 				<string>NSMenuMixedState</string>
 				<string>bluelock</string>
 				<string>hangup</string>
+				<string>hangup_small</string>
 				<string>mute</string>
 				<string>pause</string>
 				<string>record</string>
@@ -1518,10 +1538,11 @@
 				<string>{9, 8}</string>
 				<string>{7, 2}</string>
 				<string>{15.359, 14.879}</string>
-				<string>{69.0775, 63.7638}</string>
+				<string>{239.114, 239.114}</string>
+				<string>{42.5092, 42.5092}</string>
 				<string>{24, 24}</string>
-				<string>{24, 24}</string>
-				<string>{24, 24}</string>
+				<string>{48, 48}</string>
+				<string>{48, 48}</string>
 				<string>{15.359, 15.359}</string>
 			</object>
 		</object>

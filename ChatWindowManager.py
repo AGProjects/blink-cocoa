@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -10,9 +10,9 @@ import SIPManager
 import ChatWindowController
 
 
-class SessionManager(object):
+class ChatWindowManager(object):
     __metaclass__ = Singleton
-    
+
     sessionWindows = []
 
     def pickFileAndSendTo(self, account, dest_uri):
@@ -21,7 +21,7 @@ class SessionManager(object):
         panel.setAllowsMultipleSelection_(True)
         if panel.runModal() != NSOKButton:
             return
-            
+
         try:
             names_and_types = []
             for file in panel.filenames():

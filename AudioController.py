@@ -20,7 +20,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import AudioStream
 from sipsimple.util import TimestampedNotificationData
 
-import SessionBox
+import AudioSession
 
 from BaseStream import *
 from SIPManager import SIPManager
@@ -74,8 +74,8 @@ class AudioController(BaseStream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
-            NotificationCenter().add_observer(self, sender=stream)                
-            NotificationCenter().add_observer(self, name="BlinkAudioStreamUnholdRequested")
+            self.notification_center = NotificationCenter()
+            self.notification_center.add_observer(self, sender=stream)
 
             NSBundle.loadNibNamed_owner_("AudioSessionListItem", self)
 
@@ -195,15 +195,16 @@ class AudioController(BaseStream):
                 self.session.hold()
             self.holdByLocal = True
             self.changeStatus(self.status)
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
 
     def unhold(self):
         if self.session and self.holdByLocal and self.status not in (STREAM_IDLE, STREAM_FAILED):
-            NotificationCenter().post_notification("BlinkAudioStreamUnholdRequested", sender=self)
             self.stream.device.output_muted = False
             if not self.answeringMachine:
                 self.session.unhold()
             self.holdByLocal = False
             self.changeStatus(self.status)
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
 
     def sessionBoxKeyPressEvent(self, sender, event):
         s = event.characters()
@@ -226,8 +227,7 @@ class AudioController(BaseStream):
                 else:
                     filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
                     wave_player = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath(filename).normalized)
-                    notification_center = NotificationCenter()
-                    notification_center.add_observer(self, sender=wave_player)
+                    self.notification_center.add_observer(self, sender=wave_player)
                     if self.session.account.rtp.inband_dtmf:
                         self.stream.bridge.add(wave_player)
                     SIPApplication.voice_audio_bridge.add(wave_player)
@@ -433,7 +433,7 @@ class AudioController(BaseStream):
             else:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
                 if self.answeringMachine:
-                    self.audioStatus.setStringValue_(u"Answering Machine")
+                    self.audioStatus.setStringValue_(u"Answering machine, take over:")
                 elif self.stream.sample_rate and self.stream.codec:
                     if self.stream.sample_rate > 8000:
                         hd_label = 'HD Audio'
@@ -665,7 +665,7 @@ class AudioController(BaseStream):
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject)
         growl_data.timestamp = datetime.datetime.utcnow()
-        NotificationCenter().post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
+        self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
     @run_in_gui_thread
     def _NH_AudioStreamDidChangeHoldState(self, sender, data):
@@ -673,6 +673,7 @@ class AudioController(BaseStream):
         if data.originator != "local":
             self.holdByRemote = data.on_hold
             self.changeStatus(self.status)
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
         else:
             if data.on_hold:
                 tip = "Activate"
@@ -705,9 +706,7 @@ class AudioController(BaseStream):
                 # stream was negotiated away
                 self.audioEndTime = time.time()
                 self.changeStatus(STREAM_IDLE, "Audio removed")
-        notification_center = NotificationCenter()
-        notification_center.remove_observer(self, sender=self.stream)
-        notification_center.remove_observer(self, name="BlinkAudioStreamUnholdRequested")
+        self.notification_center.remove_observer(self, sender=self.stream)
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
@@ -720,11 +719,9 @@ class AudioController(BaseStream):
         self.audioStatus.sizeToFit()
 
     def _NH_WavePlayerDidFail(self, sender, data):
-        notification_center = NotificationCenter()
-        notification_center.remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_WavePlayerDidEnd(self, sender, data):
-        notification_center = NotificationCenter()
-        notification_center.remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, sender=sender)
 
 

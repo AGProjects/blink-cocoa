@@ -85,6 +85,7 @@ def format_identity_simple(identity, check_contact=False):
 
     address = u"%s@%s" % (user, host)
     match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
+
     if match is not None:
         return match.group('number')
     elif contact:

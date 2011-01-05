@@ -73,6 +73,7 @@ class AddContactController(NSObject):
         self.window.orderOut_(self)
         if rc == NSOKButton:
             self.contact.setURI(str(self.addressText.stringValue()))
+            self.contact.setDetail(str(self.addressText.stringValue()))
             self.contact.setName(unicode(self.nameText.stringValue()))
             group = unicode(self.groupCombo.stringValue())
             text_items = (item.strip() for item in str(self.aliasText.stringValue()).split(";"))

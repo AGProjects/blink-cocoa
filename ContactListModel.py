@@ -9,6 +9,7 @@ import cPickle
 from Foundation import *
 from AppKit import *
 
+from application.notification import NotificationCenter
 from sipsimple.core import FrozenSIPURI, SIPURI
 from sipsimple.account import AccountManager, BonjourAccount
 
@@ -45,19 +46,24 @@ class Contact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, icon=None, detail=None, name=None, display_name=None, bonjour_neighbour=None, preferred_media=None, editable=True, addressbook_id=None, aliases=None, stored_in_account=None, attributes=None):
+    def __init__(self, uri, icon=None, detail=None, name=None, display_name=None, bonjour_neighbour=None, preferred_media=None, supported_media=None, active_media=None, editable=True, addressbook_id=None, aliases=None, stored_in_account=None, attributes=None):
         self.uri = uri
-        self.display_name = display_name or name
         self.name = NSString.stringWithString_(name or uri)
+        self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or uri)
         self.bonjour_neighbour = bonjour_neighbour
         self.icon = icon
-        self._preferred_media = preferred_media
         self.editable = editable
         self.addressbook_id = addressbook_id
         self.aliases = aliases or []
         self.stored_in_account = stored_in_account
         self.attributes = attributes or {}
+        # preferred_media is a local setting used to start a default session type to a contact
+        self._preferred_media = preferred_media
+        # supported_media is real-time information published by the remote party using presence, not saved locally
+        self.supported_media = supported_media or []
+        # active_media is real-time information published by the remote party using conference-info, not saved locally
+        self.active_media = active_media or []
 
     def __str__(self):
         return "<Contact: %s>" % self.uri
@@ -154,13 +160,21 @@ class Contact(NSObject):
             return True
         return any(match(split_uri(u), candidate, my_domain) for u in self.aliases)
 
+    def setURI(self, uri):
+        self.uri = uri
+
     def setName(self, name):
         self.name = NSString.alloc().initWithString_(name)
         self.display_name = unicode(self.name)
 
-    def setURI(self, uri):
-        self.uri = uri
-        self.detail = NSString.alloc().initWithString_(uri)
+    def setDetail(self, detail):
+        self.detail = NSString.alloc().initWithString_(detail)
+
+    def setSupportedMedia(self, media):
+        self.supported_media = media
+
+    def setActiveMedia(self, media):
+        self.active_media = media
 
     def setPreferredMedia(self, media):
         self._preferred_media = media
@@ -212,6 +226,7 @@ class ContactGroup(NSObject):
         else:
             contact.setName(display_name)
             contact.setURI(uri)
+            contact.setDetail(uri)
 
     def removeBonjourNeighbour(self, neighbour):
         try:
@@ -365,6 +380,8 @@ class ContactListModel(NSObject):
         f = open(path, "w+")
         cPickle.dump(dump, f)
         f.close()
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
 
     def loadContacts(self):
         path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0]

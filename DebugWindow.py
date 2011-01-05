@@ -6,7 +6,7 @@ from AppKit import *
 
 from datetime import datetime
 
-from application.notification import NotificationCenter, IObserver, Any
+from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
@@ -283,7 +283,7 @@ class DebugWindow(NSObject):
         rtpTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(10.0,
                 self, "rtpTimeout:", None, True)
         
-        NotificationCenter().add_observer(self, sender=Any)
+        NotificationCenter().add_observer(self)
         
         self.grayText = NSDictionary.dictionaryWithObject_forKey_(NSColor.grayColor(), NSForegroundColorAttributeName)
         

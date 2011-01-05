@@ -14,7 +14,17 @@ class ServerConferenceRoom(object):
         self.media_types = media_types
         self.participants = participants
 
-   
+def validateParticipant(uri):
+    if not (uri.startswith('sip:') or uri.startswith('sips:')):
+        uri = "sip:%s" % uri
+    try:
+        sip_uri = SIPURI.parse(str(uri))
+    except SIPCoreError:
+        return False
+    else:
+        return sip_uri.user is not None and sip_uri.host is not None
+
+
 class StartConferenceWindow(NSObject):
     window = objc.IBOutlet()
     room = objc.IBOutlet()
@@ -23,46 +33,65 @@ class StartConferenceWindow(NSObject):
     participantsTable = objc.IBOutlet()
     chat = objc.IBOutlet()
     audio = objc.IBOutlet()
-    view = objc.IBOutlet() 
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def init(self):
-        self._participants = []
+    def __init__(self, target=None, participants=[], media=["chat"]):
         NSBundle.loadNibNamed_owner_("StartConferenceWindow", self)
-        return self
 
+        if target is not None and validateParticipant(target):
+            self.room.setStringValue_(target)
+
+        if participants:
+            self._participants = participants
+            self.participantsTable.reloadData()
+        else:
+            self._participants = []
+        
+        if media:
+            self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
+            self.chat.setState_(NSOnState if "chat" in media else NSOffState) 
+             
     def numberOfRowsInTableView_(self, table):
-        return len(self._participants)
+        try:
+            return len(self._participants)
+        except:
+            return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        return self._participants[row]
+        try:
+            return self._participants[row]
+        except IndexError:
+            return None
 
     def awakeFromNib(self):
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
-        participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+        if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
+            participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
 
-        if participant not in self._participants:
-            self._participants.append(participant)
-            self.participantsTable.reloadData()
-            self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
-            return True
-
+            try:
+                if participant not in self._participants:
+                    self._participants.append(participant)
+                    self.participantsTable.reloadData()
+                    self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
+                    return True
+            except:
+                pass
         return False
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
-        participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
-
-        if participant is None or not self.validateParticipant(participant):
+        if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
+            participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+            if participant is None or not validateParticipant(participant):
+                return NSDragOperationNone
+            return NSDragOperationGeneric
+        else:
             return NSDragOperationNone
 
-        return NSDragOperationGeneric
-
     def run(self):
-        self._participants = []
         contactsWindow = NSApp.delegate().windowController.window()
         worksWhenModal = contactsWindow.worksWhenModal()
         contactsWindow.setWorksWhenModal_(True)
@@ -73,15 +102,25 @@ class StartConferenceWindow(NSObject):
 
         if rc == NSOKButton:
             if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
-                media_types = ("audio", "chat")
+                media_types = ("chat", "audio")
             elif self.chat.state() == NSOnState:
                 media_types = "chat"
             else:
                 media_types = "audio"
-            
-            return ServerConferenceRoom(self.target, media_types, self._participants)
+
+            # make a copy of the participants and reset the table data source,
+            participants = self._participants
+
+            # Cocoa crashes if something is selected in the table view when clicking OK or Cancel button
+            # reseting the data source works around this
+            self._participants = []
+            self.participantsTable.reloadData()
+            # prevent loops
+            if self.target in participants:
+                participants.remove(self.target)
+            return ServerConferenceRoom(self.target, media_types, participants)
         else:
-            return None   
+            return None
 
     @objc.IBAction
     def addRemoveParticipant_(self, sender):
@@ -91,7 +130,7 @@ class StartConferenceWindow(NSObject):
                 account = AccountManager().default_account
                 participant = participant + '@' + AccountManager().default_account.id.domain
 
-            if not participant or not self.validateParticipant(participant):
+            if not participant or not validateParticipant(participant):
                 NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
                 return
 
@@ -123,12 +162,12 @@ class StartConferenceWindow(NSObject):
         NSApp.stopModalWithCode_(NSCancelButton)
 
     def selectedParticipant(self):
-        row = self.participantsTable.selectedRow()
         try:
+            row = self.participantsTable.selectedRow()
             return self._participants[row]
         except IndexError:
             return None
-      
+
     def validateConference(self):
         if not self.room.stringValue().strip():
             NSRunAlertPanel("Start a new Conference", "Please enter the Conference Room.",
@@ -140,30 +179,113 @@ class StartConferenceWindow(NSObject):
                 "OK", None, None)
             return False
 
-        if self.chat.state() == NSOffState and self.audio.state() == NSOffState and self.video.state() == NSOffState:
+        if self.chat.state() == NSOffState and self.audio.state() == NSOffState:
             NSRunAlertPanel("Start a new Conference", "Please select at least one media type.",
                 "OK", None, None)
             return False
 
-        account = AccountManager().default_account
-        self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+        if "@" in self.room.stringValue().strip():
+            self.target = u'%s' % self.room.stringValue().strip()
+        else:
+            account = AccountManager().default_account
+            self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
 
-        if not self.validateParticipant(self.target):
+        if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
             NSRunAlertPanel("Start a new Conference", text,"OK", None, None)
             return False
 
         return True
 
-    def validateParticipant(self, uri):
-        if not (uri.startswith('sip:') or uri.startswith('sips:')):
-            uri = "sip:%s" % uri
-        try:
-            sip_uri = SIPURI.parse(str(uri))
-        except SIPCoreError:
-            return False
+
+class JoinConferenceWindow(NSObject):
+    window = objc.IBOutlet()
+    room = objc.IBOutlet()
+    chat = objc.IBOutlet()
+    audio = objc.IBOutlet()
+    message = objc.IBOutlet()
+    title = objc.IBOutlet()
+     
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self, target=None, media=[], message=None, title=None):
+        NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
+
+        if target is not None and validateParticipant(target):
+            self.room.setStringValue_(target)
+
+        if media:
+            self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
+
+        if title is not None:
+            self.title.setTitle_(message)
         else:
-            return sip_uri.user is not None and sip_uri.host is not None
+            self.message.setHidden_(True)
+
+        if message is not None:
+            self.message.setHidden_(False)
+            self.message.setTitle_(message)
+        else:
+            self.message.setHidden_(True)
+        
+    def run(self):
+        self.window.makeKeyAndOrderFront_(None)
+        rc = NSApp.runModalForWindow_(self.window)
+        self.window.orderOut_(self)
+
+        if rc == NSOKButton:
+            if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
+                media_types = ("chat", "audio")
+            elif self.chat.state() == NSOnState:
+                media_types = "chat"
+            else:
+                media_types = "audio"
+
+            return ServerConferenceRoom(self.target, media_types, [])
+        else:
+            return None
+
+    @objc.IBAction
+    def okClicked_(self, sender):
+        if self.validateConference():
+            NSApp.stopModalWithCode_(NSOKButton)
+
+    @objc.IBAction
+    def cancelClicked_(self, sender):
+        NSApp.stopModalWithCode_(NSCancelButton)
+
+    def windowShouldClose_(self, sender):
+        NSApp.stopModalWithCode_(NSCancelButton)
+
+    def validateConference(self):
+        if not self.room.stringValue().strip():
+            NSRunAlertPanel("Start a new Conference", "Please enter the Conference Room.",
+                "OK", None, None)
+            return False
+
+        if not re.match("^[1-9a-z][0-9a-z_.-]{1,65}[0-9a-z]", self.room.stringValue().strip()):
+            NSRunAlertPanel("Join Conference", "Please enter a valid conference room of at least 3 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
+                "OK", None, None)
+            return False
+
+        if self.chat.state() == NSOffState and self.audio.state() == NSOffState:
+            NSRunAlertPanel("Join Conference", "Please select at least one media type.",
+                "OK", None, None)
+            return False
+
+        if "@" in self.room.stringValue().strip():
+            self.target = u'%s' % self.room.stringValue().strip()
+        else:
+            account = AccountManager().default_account
+            self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+
+        if not validateParticipant(self.target):
+            text = 'Invalid conference SIP URI: %s' % self.target
+            NSRunAlertPanel("Join Conference", text,"OK", None, None)
+            return False
+
+        return True
 
 
 class AddParticipantsWindow(NSObject):
@@ -181,31 +303,40 @@ class AddParticipantsWindow(NSObject):
         return self
 
     def numberOfRowsInTableView_(self, table):
-        return len(self._participants)
+        try:
+            return len(self._participants)
+        except:
+            return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        return self._participants[row]
+        try:
+           return self._participants[row]
+        except:
+           return None
 
     def awakeFromNib(self):
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
-
-        if participant not in self._participants:
-            self._participants.append(participant)
-            self.participantsTable.reloadData()
-            self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
-            return True
+        try:
+            if participant not in self._participants:
+                self._participants.append(participant)
+                self.participantsTable.reloadData()
+                self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
+                return True
+        except:
+            pass
 
         return False
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
-
-        if participant is None or not self.validateParticipant(participant):
+        try:
+            if participant is None or not validateParticipant(participant):
+                return NSDragOperationNone
+        except:
             return NSDragOperationNone
-
         return NSDragOperationGeneric
 
     def run(self):
@@ -219,7 +350,14 @@ class AddParticipantsWindow(NSObject):
         contactsWindow.setWorksWhenModal_(worksWhenModal)
 
         if rc == NSOKButton:
-            return self._participants
+            # make a copy of the participants and reset the table data source,
+            participants = self._participants
+
+            # Cocoa crashes if something is selected in the table view when clicking OK or Cancel button
+            # reseting the data source works around this
+            self._participants = []
+            self.participantsTable.reloadData()
+            return participants
         else:
             return None
 
@@ -228,7 +366,7 @@ class AddParticipantsWindow(NSObject):
         if sender.selectedSegment() == 0:
             participant = self.participant.stringValue().strip().lower()
 
-            if not participant or not self.validateParticipant(participant):
+            if not participant or not validateParticipant(participant):
                 NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
                 return
 
@@ -268,15 +406,4 @@ class AddParticipantsWindow(NSObject):
             return self._participants[row]
         except IndexError:
             return None
-
-    def validateParticipant(self, uri):
-        if not (uri.startswith('sip:') or uri.startswith('sips:')):
-            uri = "sip:%s" % uri
-        try:
-            sip_uri = SIPURI.parse(str(uri))
-        except SIPCoreError:
-            return False
-        else:
-            return sip_uri.user is not None and sip_uri.host is not None
-
 

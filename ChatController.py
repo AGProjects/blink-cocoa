@@ -1,10 +1,11 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
 from AppKit import *
 
 import datetime
+import os
 import time
 
 from itertools import dropwhile, takewhile
@@ -15,11 +16,12 @@ from application.python.util import Null
 from zope.interface import implements
 
 from sipsimple.account import Account, BonjourAccount
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream
 from sipsimple.util import TimestampedNotificationData
 
 import SessionController
-import SessionManager
+import ChatWindowManager
 
 from BaseStream import *
 from BlinkHistory import BlinkHistory
@@ -32,8 +34,54 @@ from util import *
 
 DELIVERY_TIMEOUT = 5.0
 MAX_RESEND_LINES = 10
-
 MAX_MESSAGE_LENGTH = 16*1024
+
+def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
+    """
+    Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab.
+    """
+    tag = sender.tag()
+    if tag == SessionController.TOOLBAR_RECONNECT:
+        BlinkLogger().log_info("Re-establishing session to %s" % sessionController.remoteParty)
+        sessionController.startChatSession()
+    elif tag == SessionController.TOOLBAR_HISTORY:
+        contactWindow = sessionController.owner
+        contactWindow.showChatTranscripts_(None)
+        if sessionController.account is BonjourAccount():
+            contactWindow.transcriptViewer.filterByContactAccount('bonjour', sessionController.account)
+        else:
+            contactWindow.transcriptViewer.filterByContactAccount(format_identity(sessionController.target_uri), sessionController.account)
+
+
+def validateToolbarButtonWhileDisconnected(sessionController, item):
+    return item.tag() in (SessionController.TOOLBAR_RECONNECT, SessionController.TOOLBAR_HISTORY)
+
+def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
+    for item in toolbar.visibleItems():
+        tag = item.tag()
+        if tag == SessionController.TOOLBAR_RECONNECT:
+            item.setEnabled_(True)
+        elif tag == SessionController.TOOLBAR_AUDIO:
+            item.setToolTip_('Click to add audio to this session')
+            item.setImage_(NSImage.imageNamed_("audio"))
+            item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_RECORD:
+            item.setToolTip_('Click to record the audio session')
+            item.setImage_(NSImage.imageNamed_("record"))
+            item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_HOLD:
+            item.setImage_(NSImage.imageNamed_("pause"))
+            item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_VIDEO:
+            item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_SEND_FILE:
+            item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
+            item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_SMILEY:
+            item.setImage_(NSImage.imageNamed_("smiley_on"))
+            item.setEnabled_(False)
+
 
 class MessageInfo(object):
     def __init__(self, id, timestamp, state):
@@ -80,6 +128,7 @@ class MessageHandler(NSObject):
             self.connected = None
             self.messages = {}
             self.pending = []
+
         return self
 
     def setDelegate(self, delegate):
@@ -187,7 +236,7 @@ class MessageHandler(NSObject):
         # display message
         name = format_identity(message.sender)
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
-        self.delegate.showMessage(None, name, icon, message.body, datetime.datetime.utcnow())
+        self.delegate.showMessage(None, name, icon, message.body, message.timestamp.utcnow())
 
         window = self.delegate.outputView.window()
         window_is_key = window.isKeyWindow() if window else False
@@ -252,9 +301,9 @@ class ChatController(BaseStream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
-            notification_center = NotificationCenter()
-            notification_center.add_observer(self, sender=stream)
-            notification_center.add_observer(self, sender=self.sessionController.session)
+            self.notification_center = NotificationCenter()
+            self.notification_center.add_observer(self, sender=stream)
+            self.notification_center.add_observer(self, sender=self.sessionController.session)
 
             NSBundle.loadNibNamed_owner_("ChatView", self)
 
@@ -276,8 +325,9 @@ class ChatController(BaseStream):
                     self.loggingEnabled = False
                     self.chatViewController.writeSysMessage("Unable to create Chat History file: %s"%exc)
 
-            if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
-                self.enableAddContactPanel()
+            # Chat drawer has now contextual menu for adding contacts
+            #if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
+            #    self.enableAddContactPanel()
 
         return self
 
@@ -339,7 +389,7 @@ class ChatController(BaseStream):
             self.closeChatWindow()
         elif status != STREAM_DISCONNECTING:
             self.changeStatus(STREAM_DISCONNECTING)
-            if status == STREAM_PROPOSING:
+            if status == STREAM_PROPOSING or status == STREAM_RINGING:
                 self.sessionController.cancelProposal(self.stream)
                 self.changeStatus(STREAM_CANCELLING)
             elif self.stream and self.session.streams and len(self.session.streams) > 0:
@@ -386,16 +436,18 @@ class ChatController(BaseStream):
             # don't close history here as it would not allow us to log queued messages anymore
             self.removeFromSession()
 
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+
     def startOutgoing(self, is_update):
-        SessionManager.SessionManager().showChatSession(self.sessionController)
+        ChatWindowManager.ChatWindowManager().showChatSession(self.sessionController)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
-        SessionManager.SessionManager().showChatSession(self.sessionController)
+        ChatWindowManager.ChatWindowManager().showChatSession(self.sessionController)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def closeChatWindow(self):
-        SessionManager.SessionManager().removeFromSessionWindow(self.sessionController)
+        ChatWindowManager.ChatWindowManager().removeFromSessionWindow(self.sessionController)
 
     def sendFiles(self, fnames):
         ws = NSWorkspace.sharedWorkspace()
@@ -512,59 +564,197 @@ class ChatController(BaseStream):
 
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
-        window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteNewMessageForSession_(self.sessionController)
 
-    def updateToolbarButtons(self, toolbar):
+    def updateToolbarButtons(self, toolbar, got_proposal=False):
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+
         for item in toolbar.visibleItems():
-            if item.tag() == SessionController.TOOLBAR_SMILEY:
-                item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off")) 
-                break
-            if item.tag() == SessionController.TOOLBAR_DESKTOP_SHARING:
-                item.setEnabled_(self.status==STREAM_CONNECTED and not self.sessionController.inProposal)
+            tag = item.tag()
+            if tag == SessionController.TOOLBAR_RECONNECT:
+                if self.status in (STREAM_IDLE, STREAM_FAILED):
+                    item.setEnabled_(True)
+                else:
+                    item.setEnabled_(False)
+            elif tag == SessionController.TOOLBAR_AUDIO:
+                if self.sessionController.hasStreamOfType("audio"):
+                    if audio_stream.status == STREAM_PROPOSING or audio_stream.status == STREAM_RINGING:
+                        item.setToolTip_('Click to cancel the audio call')
+                        item.setImage_(NSImage.imageNamed_("hangup"))
+                    elif audio_stream.status == STREAM_CONNECTED:
+                        item.setToolTip_('Click to hangup the audio call')
+                        item.setImage_(NSImage.imageNamed_("hangup"))
+                else:
+                    item.setToolTip_('Click to add audio to this session')
+                    item.setImage_(NSImage.imageNamed_("audio"))
+
+                if self.status == STREAM_INCOMING:
+                    item.setEnabled_(False)
+                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
+                    item.setEnabled_(True)
+                else:
+                    item.setEnabled_(False)
+                    item.setEnabled_(False)
+            elif tag == SessionController.TOOLBAR_RECORD:
+                if self.sessionController.hasStreamOfType("audio"):
+                    if audio_stream.status == STREAM_CONNECTED:
+                        if audio_stream.stream.recording_active:
+                            item.setImage_(NSImage.imageNamed_("recording1"))
+                        else:
+                            item.setImage_(NSImage.imageNamed_("record"))
+                        item.setEnabled_(True)
+                    else:
+                        item.setImage_(NSImage.imageNamed_("record"))
+            elif tag == SessionController.TOOLBAR_HOLD:
+                if self.sessionController.hasStreamOfType("audio"):
+                    if audio_stream.status == STREAM_CONNECTED:
+                        if audio_stream.holdByRemote:
+                            item.setImage_(NSImage.imageNamed_("paused"))
+                        elif audio_stream.holdByLocal:
+                            item.setImage_(NSImage.imageNamed_("paused"))
+                        else:
+                            item.setImage_(NSImage.imageNamed_("pause"))
+                        item.setEnabled_(True)
+                    else:
+                        item.setImage_(NSImage.imageNamed_("pause"))
+                        item.setEnabled_(False)
+                else:
+                    item.setImage_(NSImage.imageNamed_("pause"))
+                    item.setEnabled_(False)
+            elif tag == SessionController.TOOLBAR_VIDEO:
+                item.setEnabled_(False)
+            elif tag == SessionController.TOOLBAR_SEND_FILE:
+                if self.status == STREAM_CONNECTED:
+                    item.setEnabled_(True)
+                else:
+                    item.setEnabled_(False)
+            elif tag == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
+                if self.status == STREAM_CONNECTED and not got_proposal and not self.sessionController.remote_focus:
+                    item.setEnabled_(True)
+                else:
+                    item.setEnabled_(False)
                 title = self.sessionController.getTitleShort()
                 menu = toolbar.delegate().desktopShareMenu
-                menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP).setTitle_("Request Desktop from %s" % title)
-                menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP).setTitle_("Share My Desktop with %s" % title)
+                menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Desktop from %s" % title)
+                menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP_MENU).setTitle_("Share My Desktop with %s" % title)
+            elif tag == SessionController.TOOLBAR_SMILEY:
+                if self.status == STREAM_CONNECTED:
+                    item.setEnabled_(True)
+                else:
+                    item.setEnabled_(False)
+                item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
 
     def validateToolbarButton(self, item):
+        """Called automatically by Cocoa in ChatWindowController"""
+
         tag = item.tag()
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+
         if tag==SessionController.TOOLBAR_RECONNECT and self.status in (STREAM_IDLE, STREAM_FAILED):
+            return True
+        elif tag == SessionController.TOOLBAR_AUDIO and self.status == STREAM_CONNECTED:
+            if self.sessionController.hasStreamOfType("audio"):
+                if audio_stream.status == STREAM_CONNECTED:
+                    item.setToolTip_('Click to hangup the audio call')
+                    item.setImage_(NSImage.imageNamed_("hangup"))
+                    return True
+                elif audio_stream.status == STREAM_PROPOSING or audio_stream.status == STREAM_RINGING:
+                    item.setToolTip_('Click to cancel the audio call')
+                    item.setImage_(NSImage.imageNamed_("hangup"))
+                    return True
+                else:
+                    return False
             if self.sessionController.inProposal:
                 return False
             return True
-        elif tag==SessionController.TOOLBAR_CALL and self.status==STREAM_CONNECTED and not self.sessionController.hasStreamOfType("audio"):
+        elif tag == SessionController.TOOLBAR_RECORD:
+            if self.sessionController.hasStreamOfType("audio"):
+                if audio_stream.status == STREAM_CONNECTED:
+                    if audio_stream.stream.recording_active:
+                        item.setImage_(NSImage.imageNamed_("recording1"))
+                    else:
+                        item.setImage_(NSImage.imageNamed_("record"))
+                    return True
+                else:
+                    item.setImage_(NSImage.imageNamed_("record"))
+        elif tag == SessionController.TOOLBAR_HOLD and self.status == STREAM_CONNECTED:
             if self.sessionController.inProposal:
                 return False
+            if self.sessionController.hasStreamOfType("audio"):
+                if audio_stream.status == STREAM_CONNECTED:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED:
             return True
-        elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_SHARE_DESKTOP, SessionController.TOOLBAR_REQUEST_DESKTOP):
-            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing"):
+        elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON, SessionController.TOOLBAR_SHARE_DESKTOP_MENU, SessionController.TOOLBAR_REQUEST_DESKTOP_MENU):
+            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
                 return False
             return True
-        elif tag in (SessionController.TOOLBAR_HANGUP, SessionController.TOOLBAR_SEND_FILE):
+        elif tag == SessionController.TOOLBAR_SMILEY and self.status == STREAM_CONNECTED:
             return True
-        elif tag in (SessionController.TOOLBAR_SMILEY, SessionController.TOOLBAR_HISTORY):
+        elif tag == SessionController.TOOLBAR_HISTORY:
             return True
         return False
 
-    @classmethod
-    def validateToolbarButtonWhileDisconnected(cls, sessionController, item):
-        return sessionController.account is not BonjourAccount() and item.tag() in (SessionController.TOOLBAR_RECONNECT, SessionController.TOOLBAR_HISTORY)
-
     def userClickedToolbarButton(self, sender):
         """
-        Called by ChatWindowController when dispatching toolbar button clicks to the selected
-        Session tab.
+        Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab
         """
         tag = sender.tag()
-        if tag == SessionController.TOOLBAR_HANGUP:
-            self.end(False)
-        elif tag == SessionController.TOOLBAR_CALL:
+
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+
+        if tag == SessionController.TOOLBAR_AUDIO:
             if self.status == STREAM_CONNECTED:
-                self.sessionController.addAudioToSession()
+                if self.sessionController.hasStreamOfType("audio"):
+                    if audio_stream.status == STREAM_PROPOSING or audio_stream.status == STREAM_RINGING:
+                        self.sessionController.cancelProposal(audio_stream)
+                    else:
+                        self.sessionController.removeAudioFromSession()
+
+                    sender.setToolTip_('Click to add audio to this session')
+                    sender.setImage_(NSImage.imageNamed_("audio"))
+
+                    # The button will be enabled again after operation is finished
+                    sender.setEnabled_(False)
+                else:
+                    self.sessionController.addAudioToSession()
+                    sender.setToolTip_('Click to cancel the audio call')
+                    sender.setImage_(NSImage.imageNamed_("hangup"))
+
+                    # TODO: remove next line when sipsimple session is fixed to send notification for 180 ringing -adi
+                    NotificationCenter().post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session, data=TimestampedNotificationData())
+        elif tag == SessionController.TOOLBAR_RECORD:
+            if audio_stream.stream.recording_active:
+                audio_stream.stream.stop_recording()
+                sender.setImage_(NSImage.imageNamed_("record"))
+            else:
+                settings = SIPSimpleSettings()
+                session = self.sessionController.session
+                direction = session.direction
+                remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
+                filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
+                path = os.path.join(settings.audio.directory.normalized, session.account.id)
+                audio_stream.stream.start_recording(os.path.join(path, filename))
+                sender.setImage_(NSImage.imageNamed_("recording1"))
+        elif tag == SessionController.TOOLBAR_HOLD:
+            if self.status == STREAM_CONNECTED and self.sessionController.hasStreamOfType("audio") and not self.sessionController.inProposal:
+                if audio_stream.holdByLocal:
+                    audio_stream.unhold()
+                    sender.setImage_(NSImage.imageNamed_("pause"))
+                else:
+                    sender.setImage_(NSImage.imageNamed_("paused"))
+                    audio_stream.hold()
         elif tag == SessionController.TOOLBAR_SEND_FILE:
-            SessionManager.SessionManager().pickFileAndSendTo(self.sessionController.account, self.sessionController.session.remote_identity.uri)
+            ChatWindowManager.ChatWindowManager().pickFileAndSendTo(self.sessionController.account, self.sessionController.session.remote_identity.uri)
         elif tag == SessionController.TOOLBAR_RECONNECT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
                 log_info(self, "Re-establishing session to %s" % self.remoteParty)
@@ -580,37 +770,18 @@ class ChatController(BaseStream):
             else:
                 contactWindow.transcriptViewer.filterByContactAccount(format_identity(self.sessionController.target_uri), self.sessionController.account)
 
-        elif tag == SessionController.TOOLBAR_SHARE_DESKTOP:
+        elif tag == SessionController.TOOLBAR_SHARE_DESKTOP_MENU:
             if self.status == STREAM_CONNECTED:
                 self.sessionController.addMyDesktopToSession()
-        elif tag == SessionController.TOOLBAR_REQUEST_DESKTOP:
+                sender.setEnabled_(False)
+
+        elif tag == SessionController.TOOLBAR_REQUEST_DESKTOP_MENU:
             if self.status == STREAM_CONNECTED:
                 self.sessionController.addRemoteDesktopToSession()
-
-    @classmethod
-    def userClickedToolbarButtonWhileDisconnected(cls, sessionController, sender):
-        """
-        Called by ChatWindowController when dispatching toolbar button clicks to the selected
-        Session tab.
-        """
-        tag = sender.tag()
-        if tag == SessionController.TOOLBAR_HANGUP:
-            pass
-        elif tag == SessionController.TOOLBAR_CALL:
-            sessionController.startAudioSession()
-        elif tag == SessionController.TOOLBAR_RECONNECT:
-            BlinkLogger().log_info("Re-establishing session to %s" % sessionController.remoteParty)
-            sessionController.startChatSession()
-        elif tag == SessionController.TOOLBAR_HISTORY:
-            contactWindow = sessionController.owner
-            contactWindow.showChatTranscripts_(None)
-            if sessionController.account is BonjourAccount():
-            	contactWindow.transcriptViewer.filterByContactAccount('bonjour', sessionController.account)
-            else:
-            	contactWindow.transcriptViewer.filterByContactAccount(format_identity(sessionController.target_uri), sessionController.account)
+                sender.setEnabled_(False)
 
     def remoteBecameIdle_(self, timer):
-        window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         self.remoteTypingTimer = None
@@ -624,7 +795,7 @@ class ChatController(BaseStream):
         handler(notification.sender, notification.data)
 
     def _NH_ChatStreamGotComposingIndication(self, sender, data):
-        window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             flag = data.state == "active"
             if flag:
@@ -653,6 +824,14 @@ class ChatController(BaseStream):
             self.setStream(streams[0], connected=True)
             self.changeStatus(STREAM_CONNECTED)
 
+        # Required to set the Audio button state after session has started
+        NotificationCenter().post_notification("BlinkStreamHandlersChanged", sender=self)
+
+    def _NH_SIPSessionGotProposal(self, sender, data):
+        if data.originator != "local":
+            # Required to temporarily disable the Chat Window toolbar buttons
+            NotificationCenter().post_notification("BlinkGotProposal", sender=self)
+
     def _NH_SIPSessionDidEnd(self, sender, data):
         log_info(self, "Chat stream ended: %s" % self.stream)
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
@@ -660,7 +839,7 @@ class ChatController(BaseStream):
             if self.history:
                 self.history.close()
                 self.history = None
-        window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
@@ -672,7 +851,7 @@ class ChatController(BaseStream):
             if self.history:
                 self.history.close()
                 self.history = None
-        window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
@@ -688,7 +867,7 @@ class ChatController(BaseStream):
                 if self.history:
                     self.history.close()
                     self.history = None
-            window = SessionManager.SessionManager().windowForChatSession(self.sessionController)
+            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
             if window:
                 window.noteSession_isComposing_(self.sessionController, False)
         elif data.action == 'add' and self.handler:

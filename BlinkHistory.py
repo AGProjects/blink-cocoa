@@ -15,8 +15,6 @@ from util import *
 
 
 FILE_TRANSFER_LOG = "transfers.log"
-CALL_LOG = "calls.log"
-
 
 class ChatLog:
     fields = ["id", "direction", "sender", "send_time", "delivered_time", "state", "text", "type"]

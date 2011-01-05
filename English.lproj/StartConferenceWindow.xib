@@ -341,6 +341,7 @@
 											<object class="NSMutableArray" key="NSTableColumns">
 												<bool key="EncodedWithXMLCoder">YES</bool>
 												<object class="NSTableColumn" id="587719801">
+													<string key="NSIdentifier">sip-address</string>
 													<double key="NSWidth">350</double>
 													<double key="NSMinWidth">40</double>
 													<double key="NSMaxWidth">1000</double>
@@ -597,6 +598,14 @@
 						<reference key="destination" ref="1006"/>
 					</object>
 					<int key="connectionID">101</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="147772528"/>
+						<reference key="destination" ref="1001"/>
+					</object>
+					<int key="connectionID">102</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -943,9 +952,9 @@
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>{{352, 137}, {511, 355}}</string>
+					<string>{{600, 649}, {511, 355}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{352, 137}, {511, 355}}</string>
+					<string>{{600, 649}, {511, 355}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -1102,7 +1111,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">101</int>
+			<int key="maxID">102</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">

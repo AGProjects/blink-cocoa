@@ -98,7 +98,7 @@ class Ringer(object):
 
         if self.ringing_sessions:
             # proposal for adding new streams to an ongoing session
-            proposed_stream_types = [stream.type for stream in chain(*(session.proposed_streams for session in self.ringing_sessions))]
+            proposed_stream_types = [stream.type for stream in chain(*(session.proposed_streams or [] for session in self.ringing_sessions))]
             has_chat_proposed = 'chat' in proposed_stream_types
             has_ds_proposed = 'desktop-sharing' in proposed_stream_types
             has_file_proposed = 'file-transfer' in proposed_stream_types
