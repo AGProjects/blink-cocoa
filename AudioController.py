@@ -663,7 +663,7 @@ class AudioController(BaseStream):
         log_info(self, 'Stopped recording audio to %s\n' % data.filename)
         
         growl_data = TimestampedNotificationData()
-        growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject)
+        growl_data.remote_party = format_identity(self.sessionController.remotePartyObject, check_contact=True)
         growl_data.timestamp = datetime.datetime.utcnow()
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 

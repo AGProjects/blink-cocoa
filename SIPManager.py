@@ -1108,7 +1108,7 @@ class SIPManager(object):
 
             if data.code == 487 and data.failure_reason != 'Call completed elsewhere':
                 growl_data = TimestampedNotificationData()
-                growl_data.caller = format_identity_simple(session.remote_identity, check_contact=True)
+                growl_data.caller = format_identity(session.remote_identity, check_contact=True)
                 growl_data.timestamp = data.timestamp
                 if (len(session.proposed_streams) == 1 and session.proposed_streams[0].type == 'file-transfer'):
                     return
