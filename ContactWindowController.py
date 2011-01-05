@@ -1556,6 +1556,11 @@ class ContactWindowController(NSWindowController):
         if NSApp.delegate().applicationName == 'Blink Pro':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
+            self.blinkMenu.itemWithTag_(8).setHidden_(True)
+            self.blinkMenu.itemWithTag_(7).setHidden_(True)
+        else:
+            self.blinkMenu.itemWithTag_(7).setHidden_(False)
+            self.blinkMenu.itemWithTag_(8).setHidden_(False)
 
         if settings.service_provider.name:
             if settings.service_provider.about_url or settings.service_provider.help_url:

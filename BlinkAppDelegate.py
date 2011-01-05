@@ -333,6 +333,6 @@ You might need to Replace it and re-enter your account information. Your old fil
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
         elif sender.tag() == 5: # About Service Provider
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.about_url)))
-        elif sender.tag() == 6: # Service Provider Help Page
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.help_url)))
+        elif sender.tag() == 7: # Purchase Blink Pro
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("itms://itunes.apple.com/us/app/blink-pro/id404360415?mt=12"))
 
