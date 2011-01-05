@@ -110,7 +110,6 @@ class DesktopSharingController(BaseStream):
             # open viewer
             log_info(self, "Preparing to view remote desktop")
             self.stream.handler = ExternalVNCViewerHandler()
-            self.viewer = None
         else:
             log_info(self, "Preparing to offer desktop for viewing")
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
@@ -126,7 +125,6 @@ class DesktopSharingController(BaseStream):
         if self.direction == "active": # viewer
             # open viewer
             log_info(self, "Requesting to view remote desktop")
-            self.viewer = None
         else:
             log_info(self, "Offering desktop for viewing")
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
@@ -139,9 +137,6 @@ class DesktopSharingController(BaseStream):
 
     def end(self):
         if self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_IDLE, STREAM_FAILED):
-            if self.viewer:
-                self.viewer.close()
-                self.viewer = None
             if self.statusWindow:
                 self.statusWindow.close()
                 self.statusWindow = None
@@ -163,18 +158,14 @@ class DesktopSharingController(BaseStream):
     
     def sessionStateChanged(self, newstate, detail):
         if newstate == STATE_DNS_FAILED:
-            if self.viewer:
-                self.viewer.setErrorText_("Error Establishing Session\nCould not find route to destination.")
-            elif self.statusWindow:
+            if self.statusWindow:
                 self.statusLabel.setStringValue_("Error Establishing Session\nCould not find route to destination.")
                 self.statusProgress.stopAnimation_(None)
             else:
                 NSRunAlertPanel("Desktop Sharing", "Desktop sharing session could not be started:\n%s"%detail, "OK", None, None)
             self.changeStatus(STREAM_FAILED, detail)
         elif newstate == STATE_FAILED:
-            if self.viewer:
-                self.viewer.setErrorText_("Could not initiate desktop sharing session:\n%s" % detail)
-            elif self.statusWindow:
+            if self.statusWindow:
                 self.statusProgress.stopAnimation_(None)
             else:
                 if detail and detail.lower() != "session cancelled" and not self.sessionController.hasStreamOfType("audio"):
@@ -193,8 +184,6 @@ class DesktopSharingController(BaseStream):
         if newstate == STREAM_CONNECTED:
             log_info(self, "Desktop stream started")
             if self.direction == "active":
-                if self.viewer:
-                    self.viewer.setStatusText_(None)
                 ip, port = self.stream.handler.address
                 log_info(self, "Desktop sharing stream started, initiating external viewer on port %s" % port)
                 url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
@@ -228,19 +217,6 @@ class DesktopSharingController(BaseStream):
                         self.statusProgress.stopAnimation_(None)
                 if label:
                     self.statusLabel.setStringValue_(label)
-        else:
-            if newstate == STREAM_FAILED:
-                if self.viewer:
-                    if self.sessionController.failureReason or fail_reason:
-                        self.viewer.setErrorText_("Could not establish desktop sharing stream:\n%s" % (self.sessionController.failureReason or fail_reason))
-                    else:
-                        self.viewer.setErrorText_("Could not establish desktop sharing stream")
-            elif newstate == STREAM_IDLE:
-                if self.viewer:
-                    if self.status == STREAM_CONNECTED:
-                        self.viewer.setErrorText_("Desktop sharing ended")
-                    else:
-                        self.viewer.setErrorText_("Desktop sharing could not be established")
 
         if newstate == STREAM_IDLE:
             if self.direction == "passive":
@@ -253,9 +229,6 @@ class DesktopSharingController(BaseStream):
         self.status = newstate
 
     def closeWindows_(self, timer):
-        if self.viewer:
-            self.viewer.close()
-            self.viewer = None
         if self.statusWindow:
             self.statusWindow.close()
             self.statusWindow = None

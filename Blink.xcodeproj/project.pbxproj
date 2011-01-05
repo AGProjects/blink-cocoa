@@ -85,7 +85,6 @@
 		1F2272D912B554F50010A8B2 /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
 		1F2272DA12B554F50010A8B2 /* AnsweringMachine.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08A781063B3570069AB9A /* AnsweringMachine.py */; };
 		1F2272DB12B554F50010A8B2 /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
-		1F2272DC12B554F50010A8B2 /* DesktopViewerController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF052D5106E573000166618 /* DesktopViewerController.py */; };
 		1F2272DD12B554F50010A8B2 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BE7632910732DC000A1DF24 /* About.xib */; };
 		1F2272DE12B554F50010A8B2 /* downfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* downfile.png */; };
 		1F2272DF12B554F50010A8B2 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
@@ -124,7 +123,6 @@
 		1F22730012B554F50010A8B2 /* AddGroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */; };
 		1F22730112B554F50010A8B2 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
 		1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
-		1F22730312B554F50010A8B2 /* DesktopViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A110B5C2F6002FD271 /* DesktopViewer.xib */; };
 		1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
 		1F22730512B554F50010A8B2 /* SMS.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMS.xib */; };
 		1F22730612B554F50010A8B2 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
@@ -373,7 +371,6 @@
 		2B7FC8271132D415008C07BF /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		2B7FCC971134DA9E008C07BF /* NewWatcherDialog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */; };
 		2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
-		2B8752A310B5C2F6002FD271 /* DesktopViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A110B5C2F6002FD271 /* DesktopViewer.xib */; };
 		2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
 		2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
 		2B96EC7410F6DFF6004E6875 /* ChatHistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */; };
@@ -403,7 +400,6 @@
 		2BE7632B10732DC000A1DF24 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BE7632910732DC000A1DF24 /* About.xib */; };
 		2BEFC12E0FD0BE4700447EFB /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
 		2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
-		2BF052D6106E573000166618 /* DesktopViewerController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF052D5106E573000166618 /* DesktopViewerController.py */; };
 		2BF42B54107D7DFF00F04A6C /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
 		2BF42BA4107D8B4D00F04A6C /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
 		2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
@@ -825,7 +821,6 @@
 		2B7FC8261132D415008C07BF /* PresencePolicy.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePolicy.py; sourceTree = "<group>"; };
 		2B7FCC961134DA9E008C07BF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NewWatcherDialog.xib; sourceTree = "<group>"; };
 		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DesktopServerWindow.xib; sourceTree = "<group>"; };
-		2B8752A210B5C2F6002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DesktopViewer.xib; sourceTree = "<group>"; };
 		2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
 		2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatHistoryViewer.py; sourceTree = "<group>"; };
@@ -855,7 +850,6 @@
 		2BE7632A10732DC000A1DF24 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
 		2BEFC12D0FD0BE4700447EFB /* SessionController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionController.py; sourceTree = "<group>"; };
 		2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HorizontalBoxView.py; sourceTree = "<group>"; };
-		2BF052D5106E573000166618 /* DesktopViewerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopViewerController.py; sourceTree = "<group>"; };
 		2BF42B53107D7DFF00F04A6C /* hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup.png; path = icons/hangup.png; sourceTree = "<group>"; };
 		2BF42BA2107D8B4D00F04A6C /* belloff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = belloff.png; path = icons/belloff.png; sourceTree = "<group>"; };
 		2BF42BA3107D8B4D00F04A6C /* bellon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bellon.png; path = icons/bellon.png; sourceTree = "<group>"; };
@@ -1295,8 +1289,6 @@
 			isa = PBXGroup;
 			children = (
 				2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */,
-				2BF052D5106E573000166618 /* DesktopViewerController.py */,
-				2B8752A110B5C2F6002FD271 /* DesktopViewer.xib */,
 				2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */,
 			);
 			name = DesktopSharing;
@@ -1543,7 +1535,6 @@
 				1F2272D912B554F50010A8B2 /* SmileyManager.py in Resources */,
 				1F2272DA12B554F50010A8B2 /* AnsweringMachine.py in Resources */,
 				1F2272DB12B554F50010A8B2 /* FileTransferSession.py in Resources */,
-				1F2272DC12B554F50010A8B2 /* DesktopViewerController.py in Resources */,
 				1F2272DD12B554F50010A8B2 /* About.xib in Resources */,
 				1F2272DE12B554F50010A8B2 /* downfile.png in Resources */,
 				1F2272DF12B554F50010A8B2 /* upfile.png in Resources */,
@@ -1582,7 +1573,6 @@
 				1F22730012B554F50010A8B2 /* AddGroupController.py in Resources */,
 				1F22730112B554F50010A8B2 /* pencil.png in Resources */,
 				1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */,
-				1F22730312B554F50010A8B2 /* DesktopViewer.xib in Resources */,
 				1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */,
 				1F22730512B554F50010A8B2 /* SMS.xib in Resources */,
 				1F22730612B554F50010A8B2 /* SMSView.xib in Resources */,
@@ -1695,7 +1685,6 @@
 				2B2DF6AA105DC69900F267F9 /* SmileyManager.py in Resources */,
 				2BC08A791063B3570069AB9A /* AnsweringMachine.py in Resources */,
 				2BC08CC3106679940069AB9A /* FileTransferSession.py in Resources */,
-				2BF052D6106E573000166618 /* DesktopViewerController.py in Resources */,
 				2BE7632B10732DC000A1DF24 /* About.xib in Resources */,
 				2B0C236B107BB2FA008266C7 /* downfile.png in Resources */,
 				2B0C236C107BB2FB008266C7 /* upfile.png in Resources */,
@@ -1734,7 +1723,6 @@
 				2B4CA93210AA5FAE00D5F19E /* AddGroupController.py in Resources */,
 				2B1FC09D10B104F8004C7355 /* pencil.png in Resources */,
 				2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */,
-				2B8752A310B5C2F6002FD271 /* DesktopViewer.xib in Resources */,
 				2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */,
 				2B0CE72B10CD824400325F30 /* SMS.xib in Resources */,
 				2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */,
@@ -1921,14 +1909,6 @@
 				2B87529F10B5C29B002FD271 /* English */,
 			);
 			name = DesktopServerWindow.xib;
-			sourceTree = "<group>";
-		};
-		2B8752A110B5C2F6002FD271 /* DesktopViewer.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				2B8752A210B5C2F6002FD271 /* English */,
-			);
-			name = DesktopViewer.xib;
 			sourceTree = "<group>";
 		};
 		2BA28D671028FD2800B99A0E /* AudioSessionListItem.xib */ = {
