@@ -201,8 +201,8 @@ class SMSManagerClass(NSObject):
             window = self.windowForViewer(viewer)
 
         if window:
-            window.window().makeKeyAndOrderFront_(None)
             if note_new_message:
+                window.window().makeKeyAndOrderFront_(None)
                 NSApp.delegate().noteNewMessage(window)
 
         return viewer
