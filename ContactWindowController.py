@@ -1660,7 +1660,10 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
 
             for item in out_items:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
+                if NSApp.delegate().applicationName == 'Blink Pro':
+                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
+                else:
+                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
                 lastItem.setAttributedTitle_(format_conference_item(item, mini_blue))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)
@@ -1672,7 +1675,10 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
 
             for item in in_items:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
+                if NSApp.delegate().applicationName == 'Blink Pro':
+                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
+                else:
+                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
                 lastItem.setAttributedTitle_(format_conference_item(item, mini_blue))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)
