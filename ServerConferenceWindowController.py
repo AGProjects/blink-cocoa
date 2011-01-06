@@ -4,7 +4,7 @@
 from AppKit import *
 from Foundation import *
 
-from sipsimple.account import AccountManager
+from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.core import SIPCoreError, SIPURI
 import re
 
@@ -188,7 +188,10 @@ class StartConferenceWindow(NSObject):
             self.target = u'%s' % self.room.stringValue().strip()
         else:
             account = AccountManager().default_account
-            self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+            if account.server.conference_server:
+                self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+            else:
+                self.target = u'%s@%s' % (self.room.stringValue().strip(), account.id.domain)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
@@ -278,7 +281,15 @@ class JoinConferenceWindow(NSObject):
             self.target = u'%s' % self.room.stringValue().strip()
         else:
             account = AccountManager().default_account
-            self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+            if account is BonjourAccount():
+                NSRunAlertPanel("Join Conference", "Please enter the address in user@domain format.",
+                    "OK", None, None)
+                return False
+            else:
+                if account.server.conference_server:
+                    self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+                else:
+                    self.target = u'%s@%s' % (self.room.stringValue().strip(), account.id.domain)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
