@@ -578,7 +578,7 @@ class SIPManager(object):
             streams = ",".join(data.streams)
             participants = ",".join(data.participants)
             focus = 1 if data.focus else 0
-            line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
+            line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
