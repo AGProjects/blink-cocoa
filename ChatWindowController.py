@@ -442,6 +442,7 @@ class ChatWindowController(NSWindowController):
                 audio_stream = session.streamHandlerOfType("audio")
                 if audio_stream.holdByLocal:
                     audio_stream.unhold()
+                    audio_stream.view.setSelected_(True)
 
         self.unreadMessageCounts[item.identifier()] = 0
         sitem = self.tabSwitcher.itemForTabViewItem_(item)
