@@ -77,7 +77,7 @@ class AudioController(BaseStream):
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
 
-            NSBundle.loadNibNamed_owner_("AudioSessionListItem", self)
+            NSBundle.loadNibNamed_owner_("AudioSession", self)
 
             item = self.view.menu().itemWithTag_(20) # add to contacts
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
