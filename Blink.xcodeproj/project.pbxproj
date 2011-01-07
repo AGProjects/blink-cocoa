@@ -124,14 +124,14 @@
 		1F22730112B554F50010A8B2 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
 		1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
 		1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
-		1F22730512B554F50010A8B2 /* SMS.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMS.xib */; };
+		1F22730512B554F50010A8B2 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		1F22730612B554F50010A8B2 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
 		1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
 		1F22730812B554F50010A8B2 /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
 		1F22730912B554F50010A8B2 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
 		1F22730B12B554F50010A8B2 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
-		1F22730C12B554F50010A8B2 /* SMSManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSManager.py */; };
+		1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1F22730D12B554F50010A8B2 /* ChatHistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */; };
 		1F22730E12B554F50010A8B2 /* ChatHistory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* ChatHistory.xib */; };
 		1F22730F12B554F50010A8B2 /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
@@ -261,7 +261,7 @@
 		1FCF1FA012B57D2A00F71BE5 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FD6E05C12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */; };
 		1FD6E05D12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */; };
-		1FDDE5FB10E9851800B03A52 /* SMSManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSManager.py */; };
+		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
@@ -272,7 +272,7 @@
 		2B0C2464107C4200008266C7 /* BlinkHistory.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2463107C4200008266C7 /* BlinkHistory.py */; };
 		2B0CD87510BD6F0500325F30 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0CD87410BD6F0500325F30 /* Sparkle.framework */; };
 		2B0CDA6010BDCD0900325F30 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2B0CD87410BD6F0500325F30 /* Sparkle.framework */; };
-		2B0CE72B10CD824400325F30 /* SMS.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMS.xib */; };
+		2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
 		2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
 		2B103E371015721E00002158 /* AudioSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B103E361015721E00002158 /* AudioSession.py */; };
@@ -708,7 +708,7 @@
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FD6E03E12D32CA200168F95 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
-		1FDDE5FA10E9851800B03A52 /* SMSManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSManager.py; sourceTree = "<group>"; };
+		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -722,7 +722,7 @@
 		2B0C2463107C4200008266C7 /* BlinkHistory.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlinkHistory.py; sourceTree = "<group>"; };
 		2B0CD87410BD6F0500325F30 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = /Library/Frameworks/Sparkle.framework; sourceTree = "<absolute>"; };
 		2B0CE28E10C2F2BC00325F30 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
-		2B0CE72A10CD824400325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMS.xib; sourceTree = "<group>"; };
+		2B0CE72A10CD824400325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMSSession.xib; sourceTree = "<group>"; };
 		2B0CE73410CDE8CE00325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMSView.xib; sourceTree = "<group>"; };
 		2B0CE73610CDEF1700325F30 /* ChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatViewController.py; sourceTree = "<group>"; };
 		2B103E361015721E00002158 /* AudioSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioSession.py; sourceTree = "<group>"; };
@@ -1049,10 +1049,10 @@
 		2B0CE72710CD822100325F30 /* SMS */ = {
 			isa = PBXGroup;
 			children = (
-				2B0CE73310CDE8CE00325F30 /* SMSView.xib */,
-				2B0CE72910CD824400325F30 /* SMS.xib */,
+				1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */,
 				2B06A429111CFE74001D41E5 /* SMSViewController.py */,
-				1FDDE5FA10E9851800B03A52 /* SMSManager.py */,
+				2B0CE72910CD824400325F30 /* SMSSession.xib */,
+				2B0CE73310CDE8CE00325F30 /* SMSView.xib */,
 			);
 			name = SMS;
 			sourceTree = "<group>";
@@ -1574,14 +1574,14 @@
 				1F22730112B554F50010A8B2 /* pencil.png in Resources */,
 				1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */,
 				1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */,
-				1F22730512B554F50010A8B2 /* SMS.xib in Resources */,
+				1F22730512B554F50010A8B2 /* SMSSession.xib in Resources */,
 				1F22730612B554F50010A8B2 /* SMSView.xib in Resources */,
 				1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */,
 				1F22730812B554F50010A8B2 /* ChatView.html in Resources */,
 				1F22730912B554F50010A8B2 /* smiley_off.png in Resources */,
 				1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */,
 				1F22730B12B554F50010A8B2 /* growl.py in Resources */,
-				1F22730C12B554F50010A8B2 /* SMSManager.py in Resources */,
+				1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */,
 				1F22730D12B554F50010A8B2 /* ChatHistoryViewer.py in Resources */,
 				1F22730E12B554F50010A8B2 /* ChatHistory.xib in Resources */,
 				1F22730F12B554F50010A8B2 /* SoundRecorder.xib in Resources */,
@@ -1724,14 +1724,14 @@
 				2B1FC09D10B104F8004C7355 /* pencil.png in Resources */,
 				2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */,
 				2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */,
-				2B0CE72B10CD824400325F30 /* SMS.xib in Resources */,
+				2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */,
 				2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */,
 				2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */,
 				2BD011E210D8198400D27A92 /* ChatView.html in Resources */,
 				2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */,
 				2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */,
 				1F0FD67B10E627310032B310 /* growl.py in Resources */,
-				1FDDE5FB10E9851800B03A52 /* SMSManager.py in Resources */,
+				1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */,
 				2B96EC7410F6DFF6004E6875 /* ChatHistoryViewer.py in Resources */,
 				2BB36D3710FE504600DA4577 /* ChatHistory.xib in Resources */,
 				2BB376431103C98400DA4577 /* SoundRecorder.xib in Resources */,
@@ -1823,12 +1823,12 @@
 			name = AccountSettings.xib;
 			sourceTree = "<group>";
 		};
-		2B0CE72910CD824400325F30 /* SMS.xib */ = {
+		2B0CE72910CD824400325F30 /* SMSSession.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2B0CE72A10CD824400325F30 /* English */,
 			);
-			name = SMS.xib;
+			name = SMSSession.xib;
 			sourceTree = "<group>";
 		};
 		2B0CE73310CDE8CE00325F30 /* SMSView.xib */ = {

@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -32,7 +32,7 @@ class SMSWindowController(NSWindowController):
         self= super(SMSWindowController, self).init()
         if self:
             self._owner = owner
-            NSBundle.loadNibNamed_owner_("SMS", self)
+            NSBundle.loadNibNamed_owner_("SMSSession", self)
             self.unreadMessageCounts = {}
         return self
 
@@ -125,15 +125,15 @@ class SMSWindowController(NSWindowController):
     def tabView_didDettachTabViewItem_atPosition_(self, tabView, item, pos):
         if tabView.numberOfTabViewItems() > 1:
             session = item.identifier()
-            window = SMSManager().dettachSMSViewer(session)
+            window = SMSWindowManager().dettachSMSViewer(session)
             if window:
                 window.window().setFrameOrigin_(pos)
 
     def windowShouldClose_(self, sender):
         for item in self.tabView.tabViewItems().copy():
             self.tabSwitcher.removeTabViewItem_(item)
-        if self in SMSManager().windows:
-            SMSManager().windows.remove(self)
+        if self in SMSWindowManager().windows:
+            SMSWindowManager().windows.remove(self)
         return True
 
     @objc.IBAction
@@ -152,16 +152,16 @@ class SMSWindowController(NSWindowController):
             contactWindow.transcriptViewer.filterByContactAccount(format_identity(session.target_uri), session.account)
 
 
-SMSManagerInstance = None
+SMSWindowManagerInstance = None
 
-def SMSManager():
-    global SMSManagerInstance
-    if SMSManagerInstance is None:
-        SMSManagerInstance = SMSManagerClass.alloc().init()
-    return SMSManagerInstance
+def SMSWindowManager():
+    global SMSWindowManagerInstance
+    if SMSWindowManagerInstance is None:
+        SMSWindowManagerInstance = SMSWindowManagerClass.alloc().init()
+    return SMSWindowManagerInstance
 
 
-class SMSManagerClass(NSObject):
+class SMSWindowManagerClass(NSObject):
     implements(IObserver)
 
     #__metaclass__ = Singleton
@@ -169,7 +169,7 @@ class SMSManagerClass(NSObject):
     windows = []
 
     def init(self):
-        self = super(SMSManagerClass, self).init()
+        self = super(SMSWindowManagerClass, self).init()
         if self:
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")

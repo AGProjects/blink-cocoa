@@ -19,7 +19,7 @@ from zope.interface import implements
 import ContactOutlineView
 import ListView
 import SIPManager
-import SMSManager
+import SMSWindowManager
 
 import PresencePolicy
 from PresencePolicy import fillPresenceMenu
@@ -276,7 +276,7 @@ class ContactWindowController(NSWindowController):
         self.debugWindow = DebugWindow.alloc().init()
 
         # instantiate the SMS handler
-        SMSManager.SMSManager().setOwner_(self)
+        SMSWindowManager.SMSWindowManager().setOwner_(self)
 
         self.contactOutline.reloadData()
 
@@ -1204,7 +1204,7 @@ class ContactWindowController(NSWindowController):
 
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSManager.SMSManager().openMessageWindow(target, display_name, account)
+            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
         except:
             import traceback
             traceback.print_exc()
