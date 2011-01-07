@@ -883,6 +883,7 @@ class ChatController(BaseStream):
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.fail_reason = data.reason
+        self.chatViewController.writeSysMessage(data.reason, datetime.datetime.utcnow())
 
     def didRemove(self):
         self.chatViewController.close()
