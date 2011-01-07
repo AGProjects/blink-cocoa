@@ -749,6 +749,7 @@ class ChatController(BaseStream):
             if self.status == STREAM_CONNECTED and self.sessionController.hasStreamOfType("audio") and not self.sessionController.inProposal:
                 if audio_stream.holdByLocal:
                     audio_stream.unhold()
+                    audio_stream.view.setSelected_(True)
                     sender.setImage_(NSImage.imageNamed_("pause"))
                 else:
                     sender.setImage_(NSImage.imageNamed_("paused"))
