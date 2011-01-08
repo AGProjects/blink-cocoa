@@ -1287,7 +1287,7 @@ class SIPProxyAddressOption(StringOption):
 PreferenceOptionTypes = {
 "str" : StringOption,
 "NonNegativeInteger" : NonNegativeIntegerOption,
-"Hostname" : StringOption,
+"Hostname" : NullableStringOption,
 "AudioInputDevice" : AudioInputDeviceOption,
 "AudioOutputDevice" : AudioOutputDeviceOption,
 "bool" : BoolOption,
