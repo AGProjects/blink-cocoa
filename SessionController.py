@@ -270,7 +270,6 @@ class SessionController(NSObject):
         self.invited_participants = []
         self.participants_log = []
         self.streams_log = []
-        self.mustShowDrawer = False
 
     def startBaseSession(self, account):
         if self.session is None:
@@ -510,7 +509,6 @@ class SessionController(NSObject):
         self.invited_participants = []
         self.participants_log = []
         self.streams_log = []
-        self.mustShowDrawer = False
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 

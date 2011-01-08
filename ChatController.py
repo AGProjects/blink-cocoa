@@ -759,6 +759,7 @@ class ChatController(BaseStream):
         elif tag == SessionController.TOOLBAR_RECONNECT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
                 log_info(self, "Re-establishing session to %s" % self.remoteParty)
+                self.sessionController.mustShowDrawer = True
                 self.sessionController.startChatSession()
         elif tag == SessionController.TOOLBAR_SMILEY:
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
