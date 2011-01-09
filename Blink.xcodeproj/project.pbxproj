@@ -916,7 +916,7 @@
 				2BFB34B110178A43002D79FB /* AlertPanel */,
 				1F2615A712BD8FFA00B402E1 /* ServerConference */,
 				2B01283F109391FF009B2112 /* ServerSettings */,
-				2B11B0B10FF55C3A007FC176 /* Logs */,
+				2B11B0B10FF55C3A007FC176 /* Logging */,
 				2B96EC6E10F6DDBC004E6875 /* ChatHistory */,
 				2B5DE51D0FFC5C5D00701821 /* Preferences */,
 				2B7FC8221132D3EF008C07BF /* Presence */,
@@ -1057,14 +1057,15 @@
 			name = SMS;
 			sourceTree = "<group>";
 		};
-		2B11B0B10FF55C3A007FC176 /* Logs */ = {
+		2B11B0B10FF55C3A007FC176 /* Logging */ = {
 			isa = PBXGroup;
 			children = (
+				2B11B0B20FF55C52007FC176 /* BlinkLogger.py */,
 				2B11B0DA0FF564F6007FC176 /* LogListModel.py */,
 				2B2409831022A04700079580 /* DebugWindow.py */,
 				2B2409851022A05A00079580 /* DebugWindow.xib */,
 			);
-			name = Logs;
+			name = Logging;
 			sourceTree = "<group>";
 		};
 		2B240B751023AF8200079580 /* PhotoPicker */ = {
@@ -1333,7 +1334,6 @@
 				2BAF380C0FE088C70040117A /* MainMenu.xib */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
-				2B11B0B20FF55C52007FC176 /* BlinkLogger.py */,
 				2B2400FE1018AB9400079580 /* util.py */,
 				1F0FD67A10E627310032B310 /* growl.py */,
 				2BE7632910732DC000A1DF24 /* About.xib */,
