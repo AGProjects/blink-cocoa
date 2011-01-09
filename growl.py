@@ -1,4 +1,4 @@
-# Copyright 2009 AG Projects. See LICENSE for details.
+# Copyright 2009-2011 AG Projects. See LICENSE for details.
 #
 
 import os

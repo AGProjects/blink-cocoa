@@ -1,4 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
 __all__ = ['MediaStream', 'log_debug', 'log_error', 'log_info', 'STATE_IDLE', 'STATE_DNS_LOOKUP', 'STATE_DNS_FAILED', 'STATE_CONNECTING',

@@ -1,3 +1,5 @@
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+#
 
 from Foundation import *
 from AppKit import *

@@ -1,5 +1,4 @@
-# Copyright (C) 2009 AG Projects. See LICENSE for details.
-
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
