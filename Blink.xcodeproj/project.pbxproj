@@ -1252,6 +1252,7 @@
 				2BAF38120FE088C70040117A /* ChatSession.xib */,
 				2BAF38160FE088C70040117A /* ChatView.xib */,
 				2BD011E110D8198400D27A92 /* ChatView.html */,
+				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
@@ -1301,7 +1302,6 @@
 				2B240839102117F200079580 /* SessionRinger.py */,
 				2B0C2463107C4200008266C7 /* SessionHistory.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
-				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
