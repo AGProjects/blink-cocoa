@@ -11,7 +11,7 @@ from application.notification import NotificationCenter, IObserver
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 
-from BaseStream import *
+from MediaStream import *
 from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
 import ParticipantsTableView

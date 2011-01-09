@@ -922,16 +922,16 @@
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
 				<bool key="EncodedWithXMLCoder">YES</bool>
 				<object class="IBPartialClassDescription">
-					<string key="className">BaseStream</string>
+					<string key="className">MediaStream</string>
 					<string key="superclassName">NSObject</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">BaseStream.py</string>
+						<string key="minorKey">MediaStream.py</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">ChatController</string>
-					<string key="superclassName">BaseStream</string>
+					<string key="superclassName">MediaStream</string>
 					<object class="NSMutableDictionary" key="actions">
 						<string key="NS.key.0">addContactPanelClicked:</string>
 						<string key="NS.object.0">id</string>

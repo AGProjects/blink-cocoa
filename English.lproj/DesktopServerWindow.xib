@@ -252,11 +252,11 @@
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
 				<bool key="EncodedWithXMLCoder">YES</bool>
 				<object class="IBPartialClassDescription">
-					<string key="className">BaseStream</string>
+					<string key="className">MediaStream</string>
 					<string key="superclassName">NotificationObserverBase</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">BaseStream.py</string>
+						<string key="minorKey">MediaStream.py</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
@@ -269,7 +269,7 @@
 				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">DesktopSharingController</string>
-					<string key="superclassName">BaseStream</string>
+					<string key="superclassName">MediaStream</string>
 					<object class="NSMutableDictionary" key="outlets">
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSMutableArray" key="dict.sortedKeys">

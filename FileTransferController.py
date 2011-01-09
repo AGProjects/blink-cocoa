@@ -1,10 +1,10 @@
 # Copyright (C) 2009-2010 AG Projects. See LICENSE for details.
 #
 
-from BaseStream import *
+from MediaStream import *
 from FileTransferSession import OutgoingFileTransfer, IncomingFileTransfer
 
-class FileTransferController(BaseStream):
+class FileTransferController(MediaStream):
     """
     Dummy controller/handler for file transfers.
     The entire session is handled by the code in FileTransferSession, except when

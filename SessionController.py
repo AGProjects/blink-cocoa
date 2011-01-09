@@ -16,7 +16,7 @@ from zope.interface import implements
 from AppKit import NSImage, NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
 from AudioController import AudioController
-from BaseStream import *
+from MediaStream import *
 from BlinkLogger import BlinkLogger
 from ChatController import ChatController, userClickedToolbarButtonWhileDisconnected, updateToolbarButtonsWhileDisconnected, validateToolbarButtonWhileDisconnected
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController

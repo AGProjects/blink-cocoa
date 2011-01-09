@@ -23,7 +23,7 @@ from sipsimple.util import TimestampedNotificationData
 import SessionController
 import ChatWindowManager
 
-from BaseStream import *
+from MediaStream import *
 from SessionHistory import SessionHistory
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
@@ -262,7 +262,7 @@ class MessageHandler(NSObject):
         self.markMessage(message, MSG_STATE_FAILED)
 
 
-class ChatController(BaseStream):
+class ChatController(MediaStream):
     implements(IObserver)
 
     chatViewController = objc.IBOutlet()
@@ -429,7 +429,7 @@ class ChatController(BaseStream):
                     self.chatViewController.writeSysMessage("Session failed", datetime.datetime.utcnow())
                 ended = True
         self.status = newstate
-        BaseStream.changeStatus(self, newstate, fail_reason)
+        MediaStream.changeStatus(self, newstate, fail_reason)
         if ended and self.stream:
             if self.handler:
                 self.handler.setDisconnected()

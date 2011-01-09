@@ -1,7 +1,7 @@
 # Copyright (C) 2009 AG Projects. See LICENSE for details.     
 #
 
-__all__ = ['BaseStream', 'log_debug', 'log_error', 'log_info', 'STATE_IDLE', 'STATE_DNS_LOOKUP', 'STATE_DNS_FAILED', 'STATE_CONNECTING',
+__all__ = ['MediaStream', 'log_debug', 'log_error', 'log_info', 'STATE_IDLE', 'STATE_DNS_LOOKUP', 'STATE_DNS_FAILED', 'STATE_CONNECTING',
            'STATE_CONNECTED', 'STATE_FAILED', 'STATE_FINISHED', 'STREAM_IDLE', 'STREAM_WAITING_DNS_LOOKUP', 'STREAM_RINGING', 'STREAM_ADDING',
            'STREAM_CONNECTING', 'STREAM_PROPOSING', 'STREAM_CONNECTED', 'STREAM_DISCONNECTING', 'STREAM_CANCELLING', 'STREAM_FAILED', 'STREAM_INCOMING']
 
@@ -46,7 +46,7 @@ def log_error(session, text):
     BlinkLogger().log_error(u"[session to %s] %s" % (session.remoteParty, text))
 
 
-class BaseStream(NSObject):
+class MediaStream(NSObject):
     sessionController = None
     stream = None
     status = None
@@ -55,7 +55,7 @@ class BaseStream(NSObject):
         return cls.alloc().initWithOwner_stream_(*args)
 
     def initWithOwner_stream_(self, owner, stream):
-        self = super(BaseStream, self).init()
+        self = super(MediaStream, self).init()
         if self:
             self.sessionController = owner
             self.stream = stream

@@ -94,7 +94,7 @@
 		1F2272E312B554F50010A8B2 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
 		1F2272E412B554F50010A8B2 /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
 		1F2272E512B554F50010A8B2 /* ChatWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430E81082F32500F04A6C /* ChatWindowManager.py */; };
-		1F2272E612B554F50010A8B2 /* BaseStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* BaseStream.py */; };
+		1F2272E612B554F50010A8B2 /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
 		1F2272E712B554F50010A8B2 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		1F2272E812B554F50010A8B2 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		1F2272E912B554F50010A8B2 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
@@ -405,7 +405,7 @@
 		2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
 		2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
 		2BF430E91082F32500F04A6C /* ChatWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430E81082F32500F04A6C /* ChatWindowManager.py */; };
-		2BF432B61084187100F04A6C /* BaseStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* BaseStream.py */; };
+		2BF432B61084187100F04A6C /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
 		2BFB33E4101674BD002D79FB /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
 		2BFB33E5101674BD002D79FB /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
 		2BFB34B310178A99002D79FB /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
@@ -855,7 +855,7 @@
 		2BF42BA3107D8B4D00F04A6C /* bellon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bellon.png; path = icons/bellon.png; sourceTree = "<group>"; };
 		2BF430B01082EEFE00F04A6C /* AudioController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioController.py; sourceTree = "<group>"; };
 		2BF430E81082F32500F04A6C /* ChatWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowManager.py; sourceTree = "<group>"; };
-		2BF432B51084187100F04A6C /* BaseStream.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BaseStream.py; sourceTree = "<group>"; };
+		2BF432B51084187100F04A6C /* MediaStream.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MediaStream.py; sourceTree = "<group>"; };
 		2BFB33E2101674BD002D79FB /* muted.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = muted.png; path = icons/muted.png; sourceTree = "<group>"; };
 		2BFB33E3101674BD002D79FB /* srtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = srtp.png; path = icons/srtp.png; sourceTree = "<group>"; };
 		2BFB34B210178A99002D79FB /* AlertPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AlertPanel.py; sourceTree = "<group>"; };
@@ -1299,8 +1299,8 @@
 			children = (
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2B240839102117F200079580 /* SessionRinger.py */,
-				2BF432B51084187100F04A6C /* BaseStream.py */,
 				2B0C2463107C4200008266C7 /* SessionHistory.py */,
+				2BF432B51084187100F04A6C /* MediaStream.py */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				2B6328740FE421BD00446655 /* Chat */,
@@ -1544,7 +1544,7 @@
 				1F2272E312B554F50010A8B2 /* bellon.png in Resources */,
 				1F2272E412B554F50010A8B2 /* AudioController.py in Resources */,
 				1F2272E512B554F50010A8B2 /* ChatWindowManager.py in Resources */,
-				1F2272E612B554F50010A8B2 /* BaseStream.py in Resources */,
+				1F2272E612B554F50010A8B2 /* MediaStream.py in Resources */,
 				1F2272E712B554F50010A8B2 /* AccountSettings.py in Resources */,
 				1F2272E812B554F50010A8B2 /* AccountSettings.xib in Resources */,
 				1F2272E912B554F50010A8B2 /* answering_machine_tone.wav in Resources */,
@@ -1694,7 +1694,7 @@
 				2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */,
 				2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */,
 				2BF430E91082F32500F04A6C /* ChatWindowManager.py in Resources */,
-				2BF432B61084187100F04A6C /* BaseStream.py in Resources */,
+				2BF432B61084187100F04A6C /* MediaStream.py in Resources */,
 				2B01284A1093922A009B2112 /* AccountSettings.py in Resources */,
 				2B01284E10939236009B2112 /* AccountSettings.xib in Resources */,
 				1FB9B1191095BFF500284E18 /* answering_machine_tone.wav in Resources */,

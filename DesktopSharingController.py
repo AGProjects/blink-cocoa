@@ -10,7 +10,7 @@ from zope.interface import implements
 
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
-from BaseStream import *
+from MediaStream import *
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 
@@ -71,7 +71,7 @@ class StatusItem(NSObject):
                     mitem.setEnabled_(False)
 
 
-class DesktopSharingController(BaseStream):
+class DesktopSharingController(MediaStream):
     implements(IObserver)
 
     viewer = None

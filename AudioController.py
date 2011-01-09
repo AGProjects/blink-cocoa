@@ -22,7 +22,7 @@ from sipsimple.util import TimestampedNotificationData
 
 import AudioSession
 
-from BaseStream import *
+from MediaStream import *
 from SIPManager import SIPManager
 from AnsweringMachine import AnsweringMachine
 from configuration.datatypes import ResourcePath
@@ -39,7 +39,7 @@ def loadImages():
 AUDIO_CLEANUP_DELAY = 4.0
 
 
-class AudioController(BaseStream):
+class AudioController(MediaStream):
     implements(IObserver)
 
     view = objc.IBOutlet()
@@ -529,7 +529,7 @@ class AudioController(BaseStream):
         if status in (STREAM_IDLE, STREAM_FAILED):
             self.view.setDelegate_(None)
 
-        BaseStream.changeStatus(self, newstate, fail_reason)
+        MediaStream.changeStatus(self, newstate, fail_reason)
 
     def updateTimeElapsed(self):
         if not self.session:
