@@ -694,7 +694,6 @@ class ContactWindowController(NSWindowController):
 
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
-
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
 
         status = self.statusPopUp.selectedItem().representedObject()
@@ -708,6 +707,7 @@ class ContactWindowController(NSWindowController):
                 i = self.statusPopUp.indexOfItemWithRepresentedObject_("phone")
                 self.statusPopUp.selectItemAtIndex_(i)
                 self.originalPresenceStatus = status
+        # TODO Status -> Presence activity menu must be updated too -adi
 
     def updateActionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
