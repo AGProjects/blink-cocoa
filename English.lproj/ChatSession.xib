@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10H574</string>
+		<string key="IBDocument.SystemVersion">10J567</string>
 		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.HIToolboxVersion">462.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">823</string>
@@ -258,11 +258,9 @@
 								<string key="NSToolbarItemPaletteLabel">Desktop</string>
 								<string key="NSToolbarItemToolTip">Start Desktop Sharing </string>
 								<object class="NSButton" key="NSToolbarItemView" id="452326362">
-									<reference key="NSNextResponder"/>
+									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {96, 32}}</string>
-									<reference key="NSSuperview"/>
-									<reference key="NSWindow"/>
 									<int key="NSTag">200</int>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="126467494">
@@ -419,7 +417,7 @@
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSWindowContentMinSize">{621, 433}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -428,7 +426,6 @@
 							<int key="NSvFlags">290</int>
 							<string key="NSFrame">{{0, -1}, {621, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSWindow"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -436,7 +433,6 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 21}, {621, 412}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSWindow"/>
 							<object class="NSMutableArray" key="NSTabViewItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
 							</object>
@@ -447,8 +443,6 @@
 						</object>
 					</object>
 					<string key="NSFrameSize">{621, 433}</string>
-					<reference key="NSSuperview"/>
-					<reference key="NSWindow"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{621, 509}</string>
@@ -752,12 +746,23 @@
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<object class="NSMenuItem" id="125017646">
 						<reference key="NSMenu" ref="898627079"/>
+						<bool key="NSIsDisabled">YES</bool>
 						<string key="NSTitle">Add to Contacts...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
 						<reference key="NSMixedImage" ref="730172549"/>
 						<int key="NSTag">309</int>
+					</object>
+					<object class="NSMenuItem" id="571805460">
+						<reference key="NSMenu" ref="898627079"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<string key="NSTitle">Remove from Conference...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">310</int>
 					</object>
 				</object>
 				<bool key="NSNoAutoenable">YES</bool>
@@ -1070,6 +1075,14 @@
 					</object>
 					<int key="connectionID">258</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedParticipantMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="571805460"/>
+					</object>
+					<int key="connectionID">260</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -1313,6 +1326,7 @@
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<reference ref="125017646"/>
+							<reference ref="571805460"/>
 						</object>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -1372,6 +1386,11 @@
 						<int key="objectID">257</int>
 						<reference key="object" ref="126467494"/>
 						<reference key="parent" ref="452326362"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">259</int>
+						<reference key="object" ref="571805460"/>
+						<reference key="parent" ref="898627079"/>
 					</object>
 				</object>
 			</object>
@@ -1434,6 +1453,7 @@
 					<string>253.IBPluginDependency</string>
 					<string>256.IBPluginDependency</string>
 					<string>257.IBPluginDependency</string>
+					<string>259.IBPluginDependency</string>
 					<string>43.IBPluginDependency</string>
 					<string>72.IBEditorWindowLastContentRect</string>
 					<string>72.IBPluginDependency</string>
@@ -1560,6 +1580,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{189, 474}, {617, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1584,7 +1605,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">258</int>
+			<int key="maxID">260</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">

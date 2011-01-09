@@ -77,6 +77,8 @@ class ChatWindowController(NSWindowController):
 
     def awakeFromNib(self):
         self.drawerTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
+        ns_nc = NSNotificationCenter.defaultCenter()
+        ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.drawerTableView)
 
     def _findInactiveSessionCompatibleWith_(self, session):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
@@ -123,6 +125,7 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
         if session.mustShowDrawer:
             self.drawer.open()
+            self.drawerTableView.deselectAll_(self)
 
     def selectSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -335,6 +338,40 @@ class ChatWindowController(NSWindowController):
         if conference is not None:
             NSApp.delegate().windowController.startConference(conference.target, conference.media_types, conference.participants)
 
+    def getSelectedParticipant(self):
+        row = self.drawerTableView.selectedRow()
+        try:
+            return self.participants[row]
+        except IndexError:
+            return None
+
+    def isConferenceParticipant(self, uri):
+        session = self.selectedSession()
+        if session and hasattr(session.conference_info, "users"):
+            for user in session.conference_info.users:
+                participant = user.entity.replace("sip:", "", 1)
+                participant = uri.replace("sips:", "", 1)
+                if participant == uri:
+                    return True
+
+        return False
+
+    def participantSelectionChanged_(self, notification):
+        contact = self.getSelectedParticipant()
+        if contact is None:
+            return
+
+        hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
+
+        self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if hasContactMatchingURI(contact.uri) else True)
+        self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.isConferenceParticipant(contact.uri) else False)
+
+    def removeParticipant(self, uri):
+        session = self.selectedSession()
+        if session and session.remote_focus:
+            BlinkLogger().show_info(u"Remove  %s from to conference" % uri)
+            # TODO: send REFER with BYE to remove participant -adi
+
     @objc.IBAction
     def addParticipants_(self, sender):
         session = self.selectedSession()
@@ -399,6 +436,8 @@ class ChatWindowController(NSWindowController):
 
         if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
             NSApp.delegate().windowController.addContact(uri, display_name)
+        elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
+            self.removeParticipant(uri)
 
     @objc.IBAction
     def muteClicked_(self, sender):
@@ -435,6 +474,7 @@ class ChatWindowController(NSWindowController):
             if session.mustShowDrawer:
                 self.refreshDrawer()
                 self.drawer.open()
+                self.drawerTableView.deselectAll_(self)
             else:
                 self.drawer.close()
 

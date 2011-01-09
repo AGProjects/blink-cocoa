@@ -358,6 +358,7 @@ class ChatController(MediaStream):
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
 
+
     def dealloc(self):
         if self.history:
             self.history.close()
