@@ -570,7 +570,7 @@ class ContactWindowController(NSWindowController):
         self.updateAudioButtons()
         streamController.view.setSelected_(True)
 
-        if not streamController.sessionController.hasStreamOfType("chat"):
+        if not streamController.sessionController.hasStreamOfType("chat") and not streamController.sessionController.hasStreamOfType("video"):
             self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
             self.showWindow_(None)
             self.showAudioDrawer()
@@ -1098,6 +1098,9 @@ class ContactWindowController(NSWindowController):
         if media == "desktop-sharing":
             media = ("desktop-sharing", "audio")
 
+        if media == "video":
+            media = ("video", "audio")
+
         if type(media) is not tuple:
             if not session.startSessionWithStreamOfType(media):
                 BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
@@ -1172,6 +1175,10 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def startAudioToSelected_(self, sender):
         self.startSessionToSelectedContact("audio")
+
+    @objc.IBAction
+    def startVideoToSelected_(self, sender):
+        self.startSessionToSelectedContact("video")
 
     @objc.IBAction
     def startChatToSelected_(self, sender):
@@ -1976,6 +1983,8 @@ class ContactWindowController(NSWindowController):
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
             chat_item.setEnabled_(has_full_sip_uri)
+            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
+            video_item.setEnabled_(False)
             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
             sms_item.setEnabled_(item not in self.model.bonjourgroup.contacts and not isinstance(self.activeAccount(), BonjourAccount))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

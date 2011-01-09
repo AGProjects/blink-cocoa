@@ -2,16 +2,17 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10H574</string>
+		<string key="IBDocument.SystemVersion">10J567</string>
 		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.HIToolboxVersion">462.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
+			<integer value="53"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -38,7 +39,7 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSCustomView" id="1005">
-				<reference key="NSNextResponder"/>
+				<nil key="NSNextResponder"/>
 				<int key="NSvFlags">268</int>
 				<object class="NSMutableArray" key="NSSubviews">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -47,7 +48,6 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 39}, {203, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="481585753">
 							<int key="NSCellFlags">68288064</int>
@@ -84,7 +84,6 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{4, 21}, {66, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="420729772">
 							<int key="NSCellFlags">68288064</int>
@@ -117,7 +116,6 @@
 						</object>
 						<string key="NSFrame">{{7, 39}, {14, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="1067246760">
 							<int key="NSCellFlags">67239424</int>
@@ -143,7 +141,6 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{72, 23}, {135, 12}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="451413128">
 							<int key="NSCellFlags">68288064</int>
@@ -164,7 +161,6 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{143, 4}, {64, 19}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080244224</int>
@@ -219,7 +215,6 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{122, 4}, {85, 19}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="710252372">
 							<int key="NSCellFlags">67239424</int>
@@ -275,7 +270,6 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 6}, {144, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="1026873649">
 							<int key="NSCellFlags">68288064</int>
@@ -308,7 +302,6 @@
 						</object>
 						<string key="NSFrame">{{126, 6}, {17, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="71900893">
 							<int key="NSCellFlags">67239424</int>
@@ -327,8 +320,6 @@
 					</object>
 				</object>
 				<string key="NSFrameSize">{212, 59}</string>
-				<reference key="NSSuperview"/>
-				<reference key="NSWindow"/>
 				<string key="NSClassName">AudioSession</string>
 			</object>
 			<object class="NSMenu" id="590086273">
@@ -349,6 +340,15 @@
 							<string key="NSResourceName">NSMenuMixedState</string>
 						</object>
 						<int key="NSTag">10</int>
+					</object>
+					<object class="NSMenuItem" id="797801247">
+						<reference key="NSMenu" ref="590086273"/>
+						<string key="NSTitle">Add Video</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">13</int>
 					</object>
 					<object class="NSMenuItem" id="995242862">
 						<reference key="NSMenu" ref="590086273"/>
@@ -578,6 +578,14 @@
 					</object>
 					<int key="connectionID">74</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedMenuItem:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="797801247"/>
+					</object>
+					<int key="connectionID">88</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -730,6 +738,7 @@
 							<reference ref="142269297"/>
 							<reference ref="560268638"/>
 							<reference ref="746841605"/>
+							<reference ref="797801247"/>
 						</object>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -771,6 +780,11 @@
 						<int key="objectID">72</int>
 						<reference key="object" ref="710252372"/>
 						<reference key="parent" ref="88869251"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">87</int>
+						<reference key="object" ref="797801247"/>
+						<reference key="parent" ref="590086273"/>
 					</object>
 				</object>
 			</object>
@@ -814,6 +828,7 @@
 					<string>71.IBAttributePlaceholdersKey</string>
 					<string>71.IBPluginDependency</string>
 					<string>72.IBPluginDependency</string>
+					<string>87.IBPluginDependency</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -875,7 +890,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="2"/>
-					<string>{{718, 322}, {281, 93}}</string>
+					<string>{{718, 322}, {278, 113}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -902,6 +917,7 @@
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="unlocalizedProperties">
@@ -920,7 +936,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">86</int>
+			<int key="maxID">88</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1047,19 +1063,19 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">MediaStream</string>
-					<string key="superclassName">NSObject</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">MediaStream.py</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">AudioSession</string>
 					<string key="superclassName">NSView</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">AudioSession.py</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">MediaStream</string>
+					<string key="superclassName">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">MediaStream.py</string>
 					</object>
 				</object>
 			</object>
@@ -1539,7 +1555,7 @@
 				<string>{7, 2}</string>
 				<string>{15.359, 14.879}</string>
 				<string>{239.114, 239.114}</string>
-				<string>{42.5092, 42.5092}</string>
+				<string>{53.1365, 53.1365}</string>
 				<string>{24, 24}</string>
 				<string>{48, 48}</string>
 				<string>{48, 48}</string>

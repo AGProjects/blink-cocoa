@@ -237,6 +237,10 @@
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F9A8DA612BE11670097FD10 /* StartConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* StartConferenceWindow.xib */; };
 		1F9A8DA712BE11670097FD10 /* StartConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* StartConferenceWindow.xib */; };
+		1FAF8C5D12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
+		1FAF8C5E12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
+		1FAF8D5312DA31100029857C /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
+		1FAF8D5412DA31100029857C /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
 		1FB9B1191095BFF500284E18 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
 		1FB9B11A1095BFF500284E18 /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
 		1FB9B11B1095BFF500284E18 /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
@@ -683,6 +687,8 @@
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
+		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
+		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
 		1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_0_tone.wav; path = sounds/dtmf_0_tone.wav; sourceTree = "<group>"; };
 		1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_1_tone.wav; path = sounds/dtmf_1_tone.wav; sourceTree = "<group>"; };
@@ -1001,6 +1007,14 @@
 			name = ServerConference;
 			sourceTree = "<group>";
 		};
+		1FAF8D2E12DA1F5F0029857C /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				1FAF8C5C12DA18960029857C /* VideoController.py */,
+			);
+			name = Video;
+			sourceTree = "<group>";
+		};
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
@@ -1080,6 +1094,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FAF8D5212DA31100029857C /* video-hangup.png */,
 				1F1FC04712D0FC77007A31A3 /* video.png */,
 				1F06174112D09C18007A68F4 /* audio_16.png */,
 				1F1E6DCC12D07FF1003C63FB /* hangup_small.png */,
@@ -1304,6 +1319,7 @@
 				2B0C2463107C4200008266C7 /* SessionHistory.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
+				1FAF8D2E12DA1F5F0029857C /* Video */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
 				2BC09104106884CE0069AB9A /* DesktopSharing */,
@@ -1608,6 +1624,8 @@
 				1F06174212D09C18007A68F4 /* audio_16.png in Resources */,
 				1F1FC04812D0FC77007A31A3 /* video.png in Resources */,
 				1FD6E05D12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */,
+				1FAF8C5E12DA18960029857C /* VideoController.py in Resources */,
+				1FAF8D5412DA31100029857C /* video-hangup.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1758,6 +1776,8 @@
 				1F06174312D09C18007A68F4 /* audio_16.png in Resources */,
 				1F1FC04912D0FC77007A31A3 /* video.png in Resources */,
 				1FD6E05C12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */,
+				1FAF8C5D12DA18960029857C /* VideoController.py in Resources */,
+				1FAF8D5312DA31100029857C /* video-hangup.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

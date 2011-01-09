@@ -16,6 +16,7 @@ from zope.interface import implements
 from AppKit import NSImage, NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
 from AudioController import AudioController
+from VideoController import VideoController
 from MediaStream import *
 from BlinkLogger import BlinkLogger
 from ChatController import ChatController, userClickedToolbarButtonWhileDisconnected, updateToolbarButtonsWhileDisconnected, validateToolbarButtonWhileDisconnected
@@ -48,6 +49,7 @@ PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
 StreamHandlerForType = {
     "chat" : ChatController,
     "audio" : AudioController,
+    "video" : VideoController,
     "file-transfer" : FileTransferController,
     "desktop-sharing" : DesktopSharingController,
     "desktop-server" : DesktopSharingServerController,
@@ -386,6 +388,15 @@ class SessionController(NSObject):
         if self.hasStreamOfType("chat"):
             chatStream = self.streamHandlerOfType("chat")
             self.endStream(chatStream)
+
+    def addVideoToSession(self):
+        if not self.hasStreamOfType("video"):
+            self.startSessionWithStreamOfType("video")
+
+    def removeVideoFromSession(self):
+        if self.hasStreamOfType("video"):
+            videoStream = self.streamHandlerOfType("video")
+            self.endStream(videoStream)
 
     def addMyDesktopToSession(self):
         if not self.hasStreamOfType("desktop"):

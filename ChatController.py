@@ -66,13 +66,13 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
             item.setImage_(NSImage.imageNamed_("audio"))
             item.setEnabled_(False)
         elif tag == SessionController.TOOLBAR_RECORD:
-            item.setToolTip_('Click to record the audio session')
             item.setImage_(NSImage.imageNamed_("record"))
             item.setEnabled_(False)
         elif tag == SessionController.TOOLBAR_HOLD:
             item.setImage_(NSImage.imageNamed_("pause"))
             item.setEnabled_(False)
         elif tag == SessionController.TOOLBAR_VIDEO:
+            item.setImage_(NSImage.imageNamed_("video"))
             item.setEnabled_(False)
         elif tag == SessionController.TOOLBAR_SEND_FILE:
             item.setEnabled_(False)
@@ -573,6 +573,9 @@ class ChatController(MediaStream):
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
 
+        if self.sessionController.hasStreamOfType("video"):
+            video_stream = self.sessionController.streamHandlerOfType("video")
+
         for item in toolbar.visibleItems():
             tag = item.tag()
             if tag == SessionController.TOOLBAR_RECONNECT:
@@ -597,7 +600,6 @@ class ChatController(MediaStream):
                 elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
                     item.setEnabled_(True)
                 else:
-                    item.setEnabled_(False)
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_RECORD:
                 if self.sessionController.hasStreamOfType("audio"):
@@ -627,6 +629,25 @@ class ChatController(MediaStream):
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_VIDEO:
                 item.setEnabled_(False)
+                continue
+                # TODO: enable video -adi
+                if self.sessionController.hasStreamOfType("video"):
+                    if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
+                        item.setToolTip_('Click to cancel the video call')
+                        item.setImage_(NSImage.imageNamed_("hangup"))
+                    elif video_stream.status == STREAM_CONNECTED:
+                        item.setToolTip_('Click to hangup the video call')
+                        item.setImage_(NSImage.imageNamed_("hangup"))
+                else:
+                    item.setToolTip_('Click to add video to this session')
+                    item.setImage_(NSImage.imageNamed_("video"))
+
+                if self.status == STREAM_INCOMING:
+                    item.setEnabled_(False)
+                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
+                    item.setEnabled_(True)
+                else:
+                    item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_SEND_FILE:
                 if self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
@@ -652,8 +673,12 @@ class ChatController(MediaStream):
         """Called automatically by Cocoa in ChatWindowController"""
 
         tag = item.tag()
+
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
+
+        if self.sessionController.hasStreamOfType("video"):
+            video_stream = self.sessionController.streamHandlerOfType("video")
 
         if tag==SessionController.TOOLBAR_RECONNECT and self.status in (STREAM_IDLE, STREAM_FAILED):
             return True
@@ -692,8 +717,25 @@ class ChatController(MediaStream):
                     return False
             else:
                 return False
-        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED:
+        elif tag == SessionController.TOOLBAR_VIDEO and self.status == STREAM_CONNECTED:
+            return False
+            # TODO: enable video -adi
+            if self.sessionController.hasStreamOfType("video"):
+                if video_stream.status == STREAM_CONNECTED:
+                    item.setToolTip_('Click to hangup the video call')
+                    item.setImage_(NSImage.imageNamed_("video-hangup"))
+                    return True
+                elif video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
+                    item.setToolTip_('Click to cancel the video call')
+                    item.setImage_(NSImage.imageNamed_("video-hangup"))
+                    return True
+                else:
+                    return False
+            if self.sessionController.inProposal:
+                return False
             return True
+        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED:
+            return False
         elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON, SessionController.TOOLBAR_SHARE_DESKTOP_MENU, SessionController.TOOLBAR_REQUEST_DESKTOP_MENU):
             if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
                 return False
@@ -712,6 +754,9 @@ class ChatController(MediaStream):
 
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
+
+        if self.sessionController.hasStreamOfType("video"):
+            video_stream = self.sessionController.streamHandlerOfType("video")
 
         if tag == SessionController.TOOLBAR_AUDIO:
             if self.status == STREAM_CONNECTED:
@@ -755,6 +800,23 @@ class ChatController(MediaStream):
                 else:
                     sender.setImage_(NSImage.imageNamed_("paused"))
                     audio_stream.hold()
+        elif tag == SessionController.TOOLBAR_VIDEO:
+            if self.status == STREAM_CONNECTED:
+                if self.sessionController.hasStreamOfType("video"):
+                    if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
+                        self.sessionController.cancelProposal(video_stream)
+                    else:
+                        self.sessionController.removeVideoFromSession()
+
+                    sender.setToolTip_('Click to add video to this session')
+                    sender.setImage_(NSImage.imageNamed_("video"))
+
+                    # The button will be enabled again after operation is finished
+                    sender.setEnabled_(False)
+                else:
+                    self.sessionController.addVideoToSession()
+                    sender.setToolTip_('Click to cancel the video call')
+                    sender.setImage_(NSImage.imageNamed_("video-hangup"))
         elif tag == SessionController.TOOLBAR_SEND_FILE:
             ChatWindowManager.ChatWindowManager().pickFileAndSendTo(self.sessionController.account, self.sessionController.session.remote_identity.uri)
         elif tag == SessionController.TOOLBAR_RECONNECT:

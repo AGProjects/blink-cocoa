@@ -572,6 +572,10 @@ class AudioController(MediaStream):
         item = menu.itemWithTag_(10) # Add Chat
         item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat"))
 
+        item = menu.itemWithTag_(13) # Add Video
+        # TODO: enable video -adi
+        item.setEnabled_(False)
+
         title = self.sessionController.getTitleShort()
         have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
         item = menu.itemWithTag_(11)
@@ -586,6 +590,8 @@ class AudioController(MediaStream):
         tag = sender.tag()
         if tag == 10: # add chat
             self.sessionController.addChatToSession()
+        elif tag == 13: # add video
+            self.sessionController.addVideoToSession()
         elif tag == 11: # request remote desktop
             self.sessionController.addRemoteDesktopToSession()
         elif tag == 12: # share local desktop
@@ -723,5 +729,4 @@ class AudioController(MediaStream):
 
     def _NH_WavePlayerDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
-
 
