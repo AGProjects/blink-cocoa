@@ -40,7 +40,7 @@ from sipsimple.util import TimestampedNotificationData
 from SessionRinger import Ringer
 from FileTransferSession import OutgoingFileTransfer
 from BlinkLogger import BlinkLogger, FileLogger
-from BlinkHistory import BlinkHistory
+from SessionHistory import SessionHistory
 
 from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.datatypes import ResourcePath
@@ -277,7 +277,7 @@ class SIPManager(object):
         settings.save()
 
         # 
-        BlinkHistory().init()
+        SessionHistory().init()
 
         # start session mgr
         sm = SessionManager()

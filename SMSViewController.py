@@ -19,7 +19,7 @@ from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
 
 from BlinkLogger import BlinkLogger
-from BlinkHistory import BlinkHistory
+from SessionHistory import SessionHistory
 from ChatViewController import *
 from SmileyManager import SmileyManager
 from SIPManager import SIPManager
@@ -84,7 +84,7 @@ class SMSViewController(NSObject):
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
             try:
-                self.history = BlinkHistory().open_sms_history(self.account, format_identity_address(self.target_uri))
+                self.history = SessionHistory().open_sms_history(self.account, format_identity_address(self.target_uri))
                 self.chatViewController.setHistory_(self.history)
             except Exception, exc:
                 import traceback
@@ -335,7 +335,7 @@ class SMSViewController(NSObject):
 
     def chatViewDidLoad_(self, chatView):
         if self.showHistoryEntries > 0:
-            lines = BlinkHistory().get_sms_history(self.account, self.target_uri, self.showHistoryEntries)
+            lines = SessionHistory().get_sms_history(self.account, self.target_uri, self.showHistoryEntries)
 
             for entry in lines:
                 timestamp = entry["send_time"] or entry["delivered_time"]

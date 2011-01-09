@@ -17,7 +17,7 @@ from zope.interface import implements
 
 import SIPManager
 from BlinkLogger import BlinkLogger
-from BlinkHistory import BlinkHistory
+from SessionHistory import SessionHistory
 
 from util import *
 
@@ -124,7 +124,7 @@ class FileTransfer(object):
             self.rate_history = []
 
     def log(self, direction, status):
-        self.transfer_log_id = BlinkHistory().log_file_transfer(id=self.transfer_log_id,
+        self.transfer_log_id = SessionHistory().log_file_transfer(id=self.transfer_log_id,
                 direction=direction, account=self.session.account, peer=self.remote_identity,
                 path=self.file_path, bytes_transfered=self.file_pos, bytes_total=self.file_size,
                 status=status)

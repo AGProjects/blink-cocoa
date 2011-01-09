@@ -7,7 +7,7 @@ import re
 import datetime
 from collections import defaultdict
 
-from BlinkHistory import BlinkHistory, ChatLog
+from SessionHistory import SessionHistory, ChatLog
 from util import format_identity_from_text
 
 
@@ -81,7 +81,7 @@ class ChatHistoryViewer(NSWindowController):
             def __getitem__(self, key):
                 return self.dict[key]
 
-        historyDir = BlinkHistory().log_directory
+        historyDir = SessionHistory().log_directory
         self.entries = NSMutableArray.array()
         self.contacts = []
 

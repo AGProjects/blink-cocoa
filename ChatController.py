@@ -24,7 +24,7 @@ import SessionController
 import ChatWindowManager
 
 from BaseStream import *
-from BlinkHistory import BlinkHistory
+from SessionHistory import SessionHistory
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
 from SIPManager import SIPManager
@@ -319,7 +319,7 @@ class ChatController(BaseStream):
                     contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
                     if contact:
                         uri = str(contact.uri)
-                    self.history = BlinkHistory().open_chat_history(self.sessionController.account, uri)
+                    self.history = SessionHistory().open_chat_history(self.sessionController.account, uri)
                     self.chatViewController.setHistory_(self.history)
                 except Exception, exc:
                     self.loggingEnabled = False
@@ -522,9 +522,9 @@ class ChatController(BaseStream):
             if contact:
                 uri = str(contact.uri)
             if self.sessionController.account is BonjourAccount():
-                entries = BlinkHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
+                entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
             else:
-                entries = BlinkHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+                entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
 
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))

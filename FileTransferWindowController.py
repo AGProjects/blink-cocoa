@@ -9,7 +9,7 @@ from application.python.util import Null
 from zope.interface import implements
 
 import ListView
-from BlinkHistory import BlinkHistory
+from SessionHistory import SessionHistory
 from FileTransferItem import FileTransferItem
 from util import allocate_autorelease_pool
 
@@ -44,7 +44,7 @@ class FileTransferWindowController(NSObject, object):
 
         last = self.listView.subviews().lastObject()
 
-        entries = BlinkHistory().file_transfer_log
+        entries = SessionHistory().file_transfer_log
         for entry in entries:
             if entry["id"] in active_items:
                 continue
@@ -81,7 +81,7 @@ class FileTransferWindowController(NSObject, object):
 
     @objc.IBAction
     def clearList_(self, sender):
-        BlinkHistory().clear_transfer_history()
+        SessionHistory().clear_transfer_history()
         self.refresh()
 
     def _NH_SIPApplicationDidStart(self, sender, data):

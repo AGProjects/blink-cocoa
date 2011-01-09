@@ -215,7 +215,7 @@ class ChatLog:
         self.update_state(id, "failed")
 
 
-class BlinkHistory(object):
+class SessionHistory(object):
     """Class for managing session history"""
 
     __metaclass__ = Singleton
