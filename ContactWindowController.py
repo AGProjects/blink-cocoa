@@ -141,9 +141,10 @@ class ContactWindowController(NSWindowController):
     recordingsMenu = objc.IBOutlet()
     contactsMenu = objc.IBOutlet()
     audioMenu = objc.IBOutlet()
-    accountsMenu = objc.IBOutlet()
+    statusMenu = objc.IBOutlet()
     toolsMenu = objc.IBOutlet()
     conferenceMenu = objc.IBOutlet()
+    presenceMenu = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
@@ -227,10 +228,9 @@ class ContactWindowController(NSWindowController):
         white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
         self.statusPopUp.removeAllItems()
 
-        presenceMenu = self.accountsMenu.itemWithTag_(1).submenu()
-        while presenceMenu.numberOfItems() > 0:
-            presenceMenu.removeItemAtIndex_(0)
-        fillPresenceMenu(presenceMenu, self, "presentStatusChanged:")
+        while self.presenceMenu.numberOfItems() > 0:
+            self.presenceMenu.removeItemAtIndex_(0)
+        fillPresenceMenu(self.presenceMenu, self, "presentStatusChanged:")
         fillPresenceMenu(self.statusPopUp.menu(), self, "presentStatusChanged:", white)
 
         note = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceNote")
@@ -1534,10 +1534,9 @@ class ContactWindowController(NSWindowController):
         value = sender.title()
         NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceStatus")
 
-        menu = self.accountsMenu.itemWithTag_(1).submenu()
-        for item in menu.itemArray():
+        for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
-        item = menu.itemWithTitle_(value)
+        item = self.presenceMenu.itemWithTitle_(value)
         item.setState_(NSOnState)
 
         menu = self.statusPopUp.menu()
@@ -1587,25 +1586,25 @@ class ContactWindowController(NSWindowController):
         if item:
             item.setState_(self.backend.is_silent() and NSOnState or NSOffState)
 
-    def updateAccountsMenu(self):
+    def updateStatusMenu(self):
         settings = SIPSimpleSettings()
 
-        item = self.accountsMenu.itemWithTag_(51) # chat
+        item = self.statusMenu.itemWithTag_(50) # Answering machine
+        item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
+
+        item = self.statusMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
 
-        item = self.accountsMenu.itemWithTag_(52) # file
+        item = self.statusMenu.itemWithTag_(52) # file
         item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
 
-        item = self.accountsMenu.itemWithTag_(53) # bonjour audio
+        item = self.statusMenu.itemWithTag_(53) # bonjour audio
         account = BonjourAccount()
         item.setState_(account.audio.auto_accept and NSOnState or NSOffState)
 
     def updateToolsMenu(self):
         settings = SIPSimpleSettings()
         account = self.activeAccount()
-
-        item = self.toolsMenu.itemWithTag_(50) # Answering machine
-        item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
 
         item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
@@ -1716,8 +1715,8 @@ class ContactWindowController(NSWindowController):
 
     def updateHistoryMenu(self):
         menu = self.historyMenu
-        while menu.numberOfItems() > 2:
-            menu.removeItemAtIndex_(2)
+        while menu.numberOfItems() > 4:
+            menu.removeItemAtIndex_(4)
 
         try:
           res = self.backend.get_last_call_history_entries(12)
@@ -2058,8 +2057,8 @@ class ContactWindowController(NSWindowController):
             self.updateRecordingsMenu()
         elif menu == self.contactContextMenu:
             self.updateContactContextMenu()
-        elif menu == self.accountsMenu:
-            self.updateAccountsMenu()
+        elif menu == self.statusMenu:
+            self.updateStatusMenu()
         elif menu == self.conferenceMenu:
             self.updateConferenceMenu()
         elif menu == self.toolsMenu:

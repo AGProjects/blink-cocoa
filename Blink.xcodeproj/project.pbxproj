@@ -1297,10 +1297,10 @@
 		2BEFC19E0FD1C2B500447EFB /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
+				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
+				2B240839102117F200079580 /* SessionRinger.py */,
 				2BF432B51084187100F04A6C /* BaseStream.py */,
 				2B0C2463107C4200008266C7 /* BlinkHistory.py */,
-				2B240839102117F200079580 /* SessionRinger.py */,
-				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				2B6328740FE421BD00446655 /* Chat */,
