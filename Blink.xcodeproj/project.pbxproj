@@ -19,7 +19,7 @@
 		1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F22729712B554F50010A8B2 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
-		1F22729A12B554F50010A8B2 /* 32px-Crystal_Clear_app_messenger.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* 32px-Crystal_Clear_app_messenger.png */; };
+		1F22729A12B554F50010A8B2 /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
 		1F22729B12B554F50010A8B2 /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
 		1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
 		1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
@@ -295,7 +295,7 @@
 		2B2409861022A05A00079580 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
 		2B240B731023AB1200079580 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		2B240B771023CFAF00079580 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
-		2B24517A0FCF8A9F0023DBFB /* 32px-Crystal_Clear_app_messenger.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* 32px-Crystal_Clear_app_messenger.png */; };
+		2B24517A0FCF8A9F0023DBFB /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
 		2B24D071110FD522003A18DE /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
 		2B29EF3811382F65009DA9B0 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
 		2B2DE97D1053431600F267F9 /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
@@ -747,7 +747,7 @@
 		2B2409851022A05A00079580 /* DebugWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = DebugWindow.xib; path = English.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		2B240B721023AB1200079580 /* PhotoPicker.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = PhotoPicker.xib; path = English.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		2B240B761023CFAF00079580 /* PhotoPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PhotoPicker.py; sourceTree = "<group>"; };
-		2B2451730FCF8A9F0023DBFB /* 32px-Crystal_Clear_app_messenger.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "32px-Crystal_Clear_app_messenger.png"; path = "icons/32px-Crystal_Clear_app_messenger.png"; sourceTree = "<group>"; };
+		2B2451730FCF8A9F0023DBFB /* reconnect.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = reconnect.png; path = icons/reconnect.png; sourceTree = "<group>"; };
 		2B24D070110FD522003A18DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
 		2B29EF3711382F65009DA9B0 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
 		2B2DE97B1053431600F267F9 /* bluelock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bluelock.png; path = icons/bluelock.png; sourceTree = "<group>"; };
@@ -1128,7 +1128,7 @@
 				2B11B1CE0FF735FB007FC176 /* paused.png */,
 				2B11B1210FF6B0B3007FC176 /* mute.png */,
 				2B11AA570FF323A1007FC176 /* pause.png */,
-				2B2451730FCF8A9F0023DBFB /* 32px-Crystal_Clear_app_messenger.png */,
+				2B2451730FCF8A9F0023DBFB /* reconnect.png */,
 			);
 			name = Icons;
 			sourceTree = "<group>";
@@ -1485,7 +1485,7 @@
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
 				1F22729712B554F50010A8B2 /* ContactCell.py in Resources */,
 				1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */,
-				1F22729A12B554F50010A8B2 /* 32px-Crystal_Clear_app_messenger.png in Resources */,
+				1F22729A12B554F50010A8B2 /* reconnect.png in Resources */,
 				1F22729B12B554F50010A8B2 /* SessionController.py in Resources */,
 				1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */,
 				1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */,
@@ -1637,7 +1637,7 @@
 				2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */,
 				2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */,
 				2BC596600FCE1EA90017CB1B /* ContactListModel.py in Resources */,
-				2B24517A0FCF8A9F0023DBFB /* 32px-Crystal_Clear_app_messenger.png in Resources */,
+				2B24517A0FCF8A9F0023DBFB /* reconnect.png in Resources */,
 				2BEFC12E0FD0BE4700447EFB /* SessionController.py in Resources */,
 				2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */,
 				2BAF381A0FE088C70040117A /* AddContact.xib in Resources */,
