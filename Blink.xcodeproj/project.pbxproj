@@ -662,7 +662,7 @@
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ServerConferenceWindowController.py; sourceTree = "<group>"; };
 		1F092DB512B27864000CEE7F /* English */ = {isa = PBXFileReference; explicitFileType = file.xib; name = English; path = English.lproj/StartConferenceWindow.xib; sourceTree = "<group>"; };
-		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = growl.py; sourceTree = "<group>"; };
+		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
 		1F226DE412B54FBE0010A8B2 /* Vine Server.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Vine Server.app"; path = "/Applications/Vine Server.app"; sourceTree = "<absolute>"; };
@@ -1331,11 +1331,10 @@
 			children = (
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
-				2BAF380C0FE088C70040117A /* MainMenu.xib */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
 				2B2400FE1018AB9400079580 /* util.py */,
-				1F0FD67A10E627310032B310 /* growl.py */,
+				2BAF380C0FE088C70040117A /* MainMenu.xib */,
 				2BE7632910732DC000A1DF24 /* About.xib */,
 				8547A6C5114EB6E200AD84BF /* interfaces */,
 				85E8550210F643350083D346 /* configuration */,
@@ -1369,6 +1368,7 @@
 			children = (
 				8547A6C6114EB6E200AD84BF /* __init__.py */,
 				8547A6C7114EB6E200AD84BF /* itunes.py */,
+				1F0FD67A10E627310032B310 /* growl.py */,
 			);
 			path = interfaces;
 			sourceTree = "<group>";
