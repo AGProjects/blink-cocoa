@@ -626,30 +626,34 @@ class SIPManager(object):
 
             files = [dirname+"/"+f for f in os.listdir(dirname) if f.endswith(".wav")]
 
-            for f in files:
+            for file in files:
                 try:
-                    toks = f.split("/")[-1].split("-", 2)
+                    toks = file.split("/")[-1].split("-", 2)
                     if len(toks) == 3:
                         date, time, rest = toks
+                        timestamp = date[:4]+"/"+date[4:6]+"/"+date[6:8]+" "+time[:2]+":"+time[2:4]
+
                         pos = rest.rfind("-")
                         if pos >= 0:
-                            remote, type = rest[:pos], rest[pos+1:]
+                            remote = rest[:pos]
                         else:
                             remote = rest
-                            type = None
+                        try:
+                            identity = SIPURI.parse('sip:'+str(remote))
+                            remote_party = format_identity(identity, check_contact=True)
+                        except SIPCoreError:
+                            remote_party = "%s" % (remote)
 
-                        date = date[:4]+"/"+date[4:6]+"/"+date[6:8]
-                        time = time[:2]+":"+time[2:4]
-
-                        n = "%s" % (remote)
-
-                        stat = os.stat(f)
-                        result.append((date+" "+time, n, f))
                     else:
-                        n = f[:-4]
-                        stat = os.stat(f)
-                        dt = datetime.datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
-                        result.append((dt, n, f))
+                        try:
+                            identity = SIPURI.parse('sip:'+str(file[:-4]))
+                            remote_party = format_identity(identity, check_contact=True)
+                        except SIPCoreError:
+                            remote_party = file[:-4]
+                        timestamp = datetime.datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
+
+                    stat = os.stat(file)
+                    result.append((timestamp, remote_party, file))
                 except:
                     import traceback
                     traceback.print_exc()
