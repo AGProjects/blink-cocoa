@@ -16,7 +16,6 @@ from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 def append_line(textView, line):
-    max_lines = SIPSimpleSettings().logs.max_log_window_lines
     if isinstance(line, NSAttributedString):
         textView.textStorage().appendAttributedString_(line)
     else:

@@ -44,7 +44,6 @@ class FileTransferSettingsExtension(FileTransferSettings):
 
 class LogsSettingsExtension(LogsSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('logs'))
-    max_log_window_lines = Setting(type=NonNegativeInteger, default=3000)
     trace_sip = Setting(type=bool, default=False)
     trace_pjsip = Setting(type=bool, default=False)
     trace_msrp = Setting(type=bool, default=False)
