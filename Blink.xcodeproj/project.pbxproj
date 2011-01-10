@@ -25,7 +25,6 @@
 		1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		1F22729E12B554F50010A8B2 /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
 		1F22729F12B554F50010A8B2 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainMenu.xib */; };
-		1F2272A012B554F50010A8B2 /* NumPadView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380E0FE088C70040117A /* NumPadView.xib */; };
 		1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
 		1F2272A212B554F50010A8B2 /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
 		1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
@@ -380,7 +379,6 @@
 		2BAF381A0FE088C70040117A /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
 		2BAF381C0FE088C70040117A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainMenu.xib */; };
-		2BAF381D0FE088C70040117A /* NumPadView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380E0FE088C70040117A /* NumPadView.xib */; };
 		2BAF381E0FE088C70040117A /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
 		2BAF381F0FE088C70040117A /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
 		2BAF38210FE088C70040117A /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
@@ -831,7 +829,6 @@
 		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddContact.xib; sourceTree = "<group>"; };
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Enrollment.xib; sourceTree = "<group>"; };
 		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		2BAF380F0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NumPadView.xib; sourceTree = "<group>"; };
 		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Preferences.xib; sourceTree = "<group>"; };
 		2BAF38130FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatSession.xib; sourceTree = "<group>"; };
 		2BAF38170FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatView.xib; sourceTree = "<group>"; };
@@ -1027,7 +1024,6 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				2BAF380E0FE088C70040117A /* NumPadView.xib */,
 				2B2DF645105DC51900F267F9 /* Smileys */,
 				2B5DE6760FFDADE300701821 /* Sounds */,
 				2B24517D0FCF8AA30023DBFB /* Icons */,
@@ -1487,7 +1483,6 @@
 				1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */,
 				1F22729E12B554F50010A8B2 /* Enrollment.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainMenu.xib in Resources */,
-				1F2272A012B554F50010A8B2 /* NumPadView.xib in Resources */,
 				1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */,
 				1F2272A212B554F50010A8B2 /* ChatSession.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
@@ -1638,7 +1633,6 @@
 				2BAF381A0FE088C70040117A /* AddContact.xib in Resources */,
 				2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */,
 				2BAF381C0FE088C70040117A /* MainMenu.xib in Resources */,
-				2BAF381D0FE088C70040117A /* NumPadView.xib in Resources */,
 				2BAF381E0FE088C70040117A /* Preferences.xib in Resources */,
 				2BAF381F0FE088C70040117A /* ChatSession.xib in Resources */,
 				2BAF38210FE088C70040117A /* ChatView.xib in Resources */,
@@ -1955,14 +1949,6 @@
 				2BAF380D0FE088C70040117A /* English */,
 			);
 			name = MainMenu.xib;
-			sourceTree = "<group>";
-		};
-		2BAF380E0FE088C70040117A /* NumPadView.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				2BAF380F0FE088C70040117A /* English */,
-			);
-			name = NumPadView.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38100FE088C70040117A /* Preferences.xib */ = {
