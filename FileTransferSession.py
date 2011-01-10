@@ -9,10 +9,11 @@ import time
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import ToHeader
 from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
-from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading import run_in_thread
 from zope.interface import implements
 
 import SIPManager
@@ -317,7 +318,7 @@ class OutgoingFileTransfer(FileTransfer):
         else:
             self.file_path = file_path
         self.content_type = content_type
-        self.file_selector = FileSelector.for_file(file_path, content_type=content_type) # this will block until the hash is computed -Dan
+        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), content_type=content_type, compute_hash=False)
         self.file_pos = 0
         self.routes = None
 
@@ -328,28 +329,38 @@ class OutgoingFileTransfer(FileTransfer):
         log_info(self, "Retrying File Transfer...")
         self.fail_reason = None
         NotificationCenter().discard_observer(self, sender=self.session)
-        self.file_selector = FileSelector.for_file(self.file_path.encode("utf8"), content_type=self.content_type) # this will block until the hash is computed -Dan
+        NotificationCenter().discard_observer(self, sender=self.stream)
+        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), content_type=self.content_type, compute_hash=False)
         self.file_pos = 0
         self.transfer_rate = None
         self.last_rate_pos = 0
         self.last_rate_time = 0
         self.start(restart=True)
 
+    @run_in_thread('file-transfer')
     def start(self, restart=False):
         self.started = False
         self.finished_transfer = False
 
+        if restart:
+            NotificationCenter().post_notification("BlinkFileTransferRestarting", self)
+        else:
+            NotificationCenter().post_notification("BlinkFileTransferInitializing", self)
+
+        self.status = "Computing checksum..."
+
+        self.file_selector.compute_hash()
+    
         self.stream = FileTransferStream(self.account, self.file_selector)
         self.session = Session(self.account)
 
         NotificationCenter().add_observer(self, sender=self.session)
         NotificationCenter().add_observer(self, sender=self.stream)
-        
+
         self.log("preparing")
         self.status = "Offering File..."
 
-        if not restart:
-            NotificationCenter().post_notification("BlinkFileTransferInitiated", self)
+        NotificationCenter().post_notification("BlinkFileTransferInitiated", self)
 
         log_debug(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
         SIPManager.SIPManager().request_routes_lookup(self.account, self.target_uri, self)

@@ -12,7 +12,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from FileTransferSession import OutgoingFileTransfer
-from util import allocate_autorelease_pool, format_size
+from util import allocate_autorelease_pool, format_size, run_in_gui_thread
 
 
 class FileTransferItem(NSView):
@@ -84,11 +84,11 @@ class FileTransferItem(NSView):
             filename = self.transfer.file_path
 
             if type(self.transfer) == OutgoingFileTransfer:
-                self.fromText.setStringValue_(u"To:  %s" % self.transfer.session.remote_identity)
+                self.fromText.setStringValue_(u"To:  %s" % self.transfer.account.id)
             else:
                 if filename.endswith(".download"):
                     filename = filename[:-len(".download")]
-                self.fromText.setStringValue_(u"From:  %s" % self.transfer.session.remote_identity)
+                self.fromText.setStringValue_(u"From:  %s" % self.transfer.account.id)
             self.nameText.setStringValue_(os.path.basename(filename))
 
             if os.path.exists(filename):
@@ -140,6 +140,7 @@ class FileTransferItem(NSView):
         self.setFrame_(frame)
 
     @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
@@ -204,6 +205,12 @@ class FileTransferItem(NSView):
 
         dirname = os.path.dirname(path)
         NSWorkspace.sharedWorkspace().selectFile_inFileViewerRootedAtPath_(path, dirname)
+
+    def _NH_BlinkFileTransferInitiated(self, notification):
+        self.sizeText.setStringValue_(self.transfer.status)
+
+    def _NH_BlinkFileTransferRestarting(self, notification):
+        self.sizeText.setStringValue_(self.transfer.status)
 
     def _NH_BlinkFileTransferDidStart(self, notification):
         self.progressBar.setIndeterminate_(False)

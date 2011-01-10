@@ -11,7 +11,7 @@ from zope.interface import implements
 import ListView
 from SessionHistory import SessionHistory
 from FileTransferItem import FileTransferItem
-from util import allocate_autorelease_pool
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 class FileTransferWindowController(NSObject, object):
@@ -23,7 +23,7 @@ class FileTransferWindowController(NSObject, object):
     history = []
 
     def init(self):
-        NotificationCenter().add_observer(self, name="BlinkFileTransferInitiated")
+        NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
 
@@ -66,6 +66,7 @@ class FileTransferWindowController(NSObject, object):
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
     @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -85,9 +86,9 @@ class FileTransferWindowController(NSObject, object):
         self.refresh()
 
     def _NH_SIPApplicationDidStart(self, sender, data):
-        self.performSelectorOnMainThread_withObject_waitUntilDone_("refresh", None, False)
+        self.refresh()
 
-    def _NH_BlinkFileTransferInitiated(self, sender, data):
+    def _NH_BlinkFileTransferInitializing(self, sender, data):
         item = FileTransferItem.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
 
         self.listView.addItemView_(item)
