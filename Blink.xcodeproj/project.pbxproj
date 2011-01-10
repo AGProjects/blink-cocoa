@@ -1027,7 +1027,6 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				2BFB35531017E363002D79FB /* blink.icns */,
 				2BAF380E0FE088C70040117A /* NumPadView.xib */,
 				2B2DF645105DC51900F267F9 /* Smileys */,
 				2B5DE6760FFDADE300701821 /* Sounds */,
@@ -1090,6 +1089,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				2BFB35531017E363002D79FB /* blink.icns */,
 				1FAF8D5212DA31100029857C /* video-hangup.png */,
 				1F1FC04712D0FC77007A31A3 /* video.png */,
 				1F06174112D09C18007A68F4 /* audio_16.png */,
