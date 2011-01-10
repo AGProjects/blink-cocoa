@@ -170,7 +170,7 @@ class MessageHandler(NSObject):
                 except Exception, e:
                     log.err()
                     BlinkLogger().log_error("Error sending message: %s" % e)
-                    self.delegate.writeSysMessage("Error sending message")
+                    self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
                 else:
                     self.delegate.showMessage(message.id, None, icon, text, now)
             else:
@@ -187,7 +187,7 @@ class MessageHandler(NSObject):
             except Exception, e:
                 log.err()
                 BlinkLogger().log_error("Error sending message: %s" % e)
-                self.delegate.writeSysMessage("Error sending message")
+                self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
             else:
                 self.delegate.writeOldMessage(message.id, None, icon, text, message.timestamp, state, False)
         else:
@@ -323,7 +323,7 @@ class ChatController(MediaStream):
                     self.chatViewController.setHistory_(self.history)
                 except Exception, exc:
                     self.loggingEnabled = False
-                    self.chatViewController.writeSysMessage("Unable to create Chat History file: %s"%exc)
+                    self.chatViewController.writeSysMessage("Unable to create Chat History file: %s"%exc, datetime.datetime.utcnow(), True)
 
             # Chat drawer has now contextual menu for adding contacts
             #if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
@@ -424,10 +424,10 @@ class ChatController(MediaStream):
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
                 if fail_reason:
                     BlinkLogger().log_error("Chat session failed: %s" % fail_reason)
-                    self.chatViewController.writeSysMessage("Session failed: %s" % fail_reason, datetime.datetime.utcnow())
+                    self.chatViewController.writeSysMessage("Session failed: %s" % fail_reason, datetime.datetime.utcnow(), True)
                 else:
                     BlinkLogger().log_error("Chat session failed")
-                    self.chatViewController.writeSysMessage("Session failed", datetime.datetime.utcnow())
+                    self.chatViewController.writeSysMessage("Session failed", datetime.datetime.utcnow(), True)
                 ended = True
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
@@ -946,8 +946,9 @@ class ChatController(MediaStream):
                 self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        self.fail_reason = data.reason
-        self.chatViewController.writeSysMessage(data.reason, datetime.datetime.utcnow())
+        reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
+        self.fail_reason = reason
+        self.chatViewController.writeSysMessage(reason, datetime.datetime.utcnow(), True)
 
     def didRemove(self):
         self.chatViewController.close()

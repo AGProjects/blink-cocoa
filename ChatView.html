@@ -9,7 +9,7 @@ body
 }
 
 .sys {
-  background-color: #ACA892;
+  background-color: #86BAEC;
   border-style: solid;
   border-width: 1px;
   border-color: #ACA892;
@@ -18,6 +18,18 @@ body
   -webkit-border-radius: 5px;
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
   color: white
+}
+
+.sys_error {
+  background-color: #eeaaaa;
+  color: #404040;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #ACA892;
+  padding: 2px 2px 2px 2px;
+  margin-bottom: 10px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
 }
 
 .sysmsg {
@@ -383,7 +395,7 @@ function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state
 }
 
 
-function addSysMessage(text, timestamp)
+function addSysMessage(text, timestamp, is_error)
 {
   var placeholder;
   var content;
@@ -397,7 +409,35 @@ function addSysMessage(text, timestamp)
       content.id = "";
 
   placeholder.innerHTML += 
-    "<div class='sys'>"+
+    "<div class=sys>"+
+            "<div class='systimestamp'>"+timestamp+"</div>"+
+            "<div class='sysmsg'>"+
+                text+
+            "</div>"+
+    "</div>";
+
+  lastSender = "";
+  
+  scrollToBottom();
+  
+  return 0;
+}
+
+function addSysErrorMessage(text, timestamp)
+{
+  var placeholder;
+  var content;
+  
+  timestamp = formatTimestamp(timestamp);
+  
+  placeholder = document.getElementById("placeholder");
+  content = document.getElementById("content");
+  
+  if (content != null)
+      content.id = "";
+
+  placeholder.innerHTML += 
+    "<div class='sys_error'>"+
             "<div class='systimestamp'>"+timestamp+"</div>"+
             "<div class='sysmsg'>"+
                 text+

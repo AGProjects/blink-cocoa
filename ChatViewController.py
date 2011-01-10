@@ -298,7 +298,7 @@ class ChatViewController(NSObject):
             self.delegate.chatViewDidGetNewMessage_(self)
         NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(message=text, direction='outgoing' if sender is None else 'incoming', history_entry=history_entry))
 
-    def writeSysMessage(self, text, timestamp=None):
+    def writeSysMessage(self, text, timestamp=None, is_error=False):
         if timestamp is None:
             timestamp = datetime.datetime.utcnow()
         if type(timestamp) is datetime.datetime:
@@ -306,7 +306,10 @@ class ChatViewController(NSObject):
                 timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
             else:
                 timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-        script = """addSysMessage("%s", "%s")""" % (processHTMLText(text), timestamp)
+        if is_error:
+            script = """addSysErrorMessage("%s", "%s")""" % (processHTMLText(text), timestamp)
+        else:
+            script = """addSysMessage("%s", "%s")""" % (processHTMLText(text), timestamp)
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         else:
