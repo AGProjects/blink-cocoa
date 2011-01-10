@@ -902,7 +902,7 @@ class SIPManager(object):
         return []
     
     def reject_incoming_session(self, session, code=603, reason=None):
-        BlinkLogger().show_info(u"Rejecting Session from %s (code %s)"%(session.remote_identity, code))
+        BlinkLogger().log_info(u"Rejecting Session from %s (code %s)"%(session.remote_identity, code))
         session.reject(code, reason)
 
     def request_routes_lookup(self, account, target_uri, requestor_session_controller):

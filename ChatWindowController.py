@@ -369,7 +369,7 @@ class ChatWindowController(NSWindowController):
     def removeParticipant(self, uri):
         session = self.selectedSession()
         if session and session.remote_focus:
-            BlinkLogger().show_info(u"Remove  %s from to conference" % uri)
+            BlinkLogger().log_info(u"Remove  %s from to conference" % uri)
             # TODO: send REFER with BYE to remove participant -adi
 
     @objc.IBAction
@@ -395,7 +395,7 @@ class ChatWindowController(NSWindowController):
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
                             session.participants_log.append(uri)
-                            BlinkLogger().show_info(u"Invite %s to conference" % uri)
+                            BlinkLogger().log_info(u"Invite %s to conference" % uri)
                             # TODO: send REFER to invite each participant -adi
 
                 self.refreshDrawer()
@@ -673,7 +673,7 @@ class ChatWindowController(NSWindowController):
                         session.invited_participants.append(contact)
                         session.participants_log.append(uri)
                         self.refreshDrawer()
-                        BlinkLogger().show_info(u"Invite %s to conference" % uri)
+                        BlinkLogger().log_info(u"Invite %s to conference" % uri)
                         # TODO: send REFER to invite participant to the conference -adi
                 except:
                     return False

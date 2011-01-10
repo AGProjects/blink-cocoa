@@ -32,7 +32,6 @@ from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveC
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController
-from LogListModel import LogListModel
 from ServerConferenceWindowController import StartConferenceWindow, JoinConferenceWindow
 from SessionController import SessionController
 from ChatWindowManager import ChatWindowManager
@@ -133,9 +132,6 @@ class ContactWindowController(NSWindowController):
 
     addContactToConference = objc.IBOutlet()
 
-    messagesDrawer = objc.IBOutlet()
-    messagesText = objc.IBOutlet()
-
     blinkMenu = objc.IBOutlet()
     historyMenu = objc.IBOutlet()
     recordingsMenu = objc.IBOutlet()
@@ -152,8 +148,6 @@ class ContactWindowController(NSWindowController):
     transcriptViewer = None
 
     picker = None
-
-    logDrawerTimer = None
 
     searchInfoAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
                     NSFont.systemFontOfSize_(NSFont.labelFontSize()), NSFontAttributeName,
@@ -192,9 +186,6 @@ class ContactWindowController(NSWindowController):
 
         self.sessionListView.setSpacing_(0)
 
-        self.loggerModel = LogListModel.alloc().init()
-        self.messagesText.setString_("")
-
         nc = NotificationCenter()
         nc.add_observer(self, name="AudioDevicesDidChange")
         nc.add_observer(self, name="BlinkChatWindowClosed")
@@ -213,8 +204,6 @@ class ContactWindowController(NSWindowController):
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
-
-        BlinkLogger().set_status_messages_refresh_callback(self.refreshStatusMessages)
 
         self.model.loadContacts()
         self.refreshContactsList()
@@ -349,28 +338,6 @@ class ContactWindowController(NSWindowController):
         for group in self.model.contactGroupsList:
             if group.expanded:
                 self.contactOutline.expandItem_expandChildren_(group, False)
-
-    def refreshStatusMessages(self, urgent=False):
-        changed = self.loggerModel.refresh()
-        text = self.loggerModel.asText()
-        self.messagesText.textStorage().setAttributedString_(text)
-        self.messagesText.scrollRangeToVisible_(NSMakeRange(text.length(), 0))
-        """
-        if not text or text.length() == 0:
-            self.messagesDrawer.close()
-            self.logDrawerTimer.invalidate()
-            self.logDrawerTimer = None
-        else:
-            if changed and not self.messagesDrawer.isOpen() and urgent:
-                self.messagesDrawer.open()
-                if self.logDrawerTimer:
-                    self.logDrawerTimer.invalidate()
-                self.logDrawerTimer =  NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "closeLogDrawer:", None, False)
-        """
-
-    def closeLogDrawer_(self, timer):
-        self.logDrawerTimer = None
-        self.messagesDrawer.close()
 
     def getSelectedContacts(self, includeGroups=False):
         contacts= []
@@ -1358,14 +1325,14 @@ class ContactWindowController(NSWindowController):
 
     def sip_account_registration_succeeded(self, account):
         self.refreshAccountList()
-        BlinkLogger().show_info(u"%s was registered"%account.id)
+        BlinkLogger().log_info(u"%s was registered"%account.id)
 
     def sip_account_registration_ended(self, account):
         self.refreshAccountList()
-        BlinkLogger().show_info(u"Account %s was unregistered"%account.id)
+        BlinkLogger().log_info(u"Account %s was unregistered"%account.id)
 
     def sip_account_registration_failed(self, account, error):
-        BlinkLogger().show_error(u"The account %s failed to register(%s)"%(account.id, error))
+        BlinkLogger().log_error(u"The account %s failed to register(%s)"%(account.id, error))
         self.refreshAccountList()
         if error == 'Authentication failed':
             if not self.authFailPopupShown:
@@ -1377,7 +1344,7 @@ class ContactWindowController(NSWindowController):
 
     def handle_incoming_session(self, session, streams):
         settings = SIPSimpleSettings()
-        BlinkLogger().show_info(u"Incoming session from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in streams)))
+        BlinkLogger().log_info(u"Incoming session from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in streams)))
 
         stream_type_list = list(set(stream.type for stream in streams))
         if self.model.hasContactMatchingURI(session.remote_identity.uri):
@@ -1446,7 +1413,7 @@ class ContactWindowController(NSWindowController):
             self.alertPanel.show()
 
     def sip_session_missed(self, session):
-        BlinkLogger().show_info(u"Missed incoming session from %s" % session.remote_identity)
+        BlinkLogger().log_info(u"Missed incoming session from %s" % session.remote_identity)
         if 'audio' in (stream.type for stream in session.proposed_streams):
             NSApp.delegate().noteMissedCall()
 

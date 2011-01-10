@@ -21,12 +21,7 @@ from util import allocate_autorelease_pool, makedirs
 class BlinkLogger(object):
     __metaclass__ = Singleton
 
-    refresh_status_messages = None
-
     def __init__(self):
-        self.messages = []
-        self.log = []
-
         self.gui_backlog = []
         self.gui_logger = self.backlog_keeper
 
@@ -41,49 +36,20 @@ class BlinkLogger(object):
 
         self.gui_backlog = []
 
-    def set_status_messages_refresh_callback(self, cb):
-        self.refresh_status_messages = cb
-
-    def clear_status_messages(self):
-        self.messages = []
-        self.refresh_status_messages(False)
-
-    def show_info(self, message):
-        print message
-        #self.messages.append(message)
-        #self.refresh_status_messages(False)
-        self.gui_logger(message)
-
-    def show_warning(self, message):
-        print message
-        #self.messages.append(u"WARNING: "+message)
-        #self.refresh_status_messages(True)
-        self.gui_logger(u"WARNING: "+message)
-
-    def show_error(self, message):
-        print message
-        self.messages.append(u"Error: "+message)
-        self.refresh_status_messages(True)
-        self.gui_logger(u"Error: "+message)
-
     def log_error(self, message):
         print message
-        self.log.append(message)
         self.gui_logger(u"Error: "+message)
 
     def log_warning(self, message):
         print message
-        #self.log.append(message)
         self.gui_logger(u"Warning: "+message)
 
     def log_info(self, message):
         print message
-        #self.log.append(message)
         self.gui_logger(message)
 
     def log_debug(self, message):
         print message
-        self.log.append(message)
         self.gui_logger(message)
 
     def get_status_messages(self):

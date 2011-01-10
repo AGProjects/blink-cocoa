@@ -36,7 +36,6 @@
 		1F2272A812B554F50010A8B2 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
 		1F2272A912B554F50010A8B2 /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11AA570FF323A1007FC176 /* pause.png */; };
 		1F2272AA12B554F50010A8B2 /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
-		1F2272AB12B554F50010A8B2 /* LogListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0DA0FF564F6007FC176 /* LogListModel.py */; };
 		1F2272AC12B554F50010A8B2 /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
 		1F2272AD12B554F50010A8B2 /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
 		1F2272AE12B554F50010A8B2 /* AddContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE4B40FFC501E00701821 /* AddContactController.py */; };
@@ -282,7 +281,6 @@
 		2B103E371015721E00002158 /* AudioSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B103E361015721E00002158 /* AudioSession.py */; };
 		2B11AA580FF323A1007FC176 /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11AA570FF323A1007FC176 /* pause.png */; };
 		2B11B0B30FF55C52007FC176 /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
-		2B11B0DB0FF564F6007FC176 /* LogListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0DA0FF564F6007FC176 /* LogListModel.py */; };
 		2B11B1220FF6B0B3007FC176 /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
 		2B11B1CF0FF735FB007FC176 /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
 		2B1FC09D10B104F8004C7355 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
@@ -734,7 +732,6 @@
 		2B103E361015721E00002158 /* AudioSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioSession.py; sourceTree = "<group>"; };
 		2B11AA570FF323A1007FC176 /* pause.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pause.png; path = icons/pause.png; sourceTree = "<group>"; };
 		2B11B0B20FF55C52007FC176 /* BlinkLogger.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlinkLogger.py; sourceTree = "<group>"; };
-		2B11B0DA0FF564F6007FC176 /* LogListModel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = LogListModel.py; sourceTree = "<group>"; };
 		2B11B1210FF6B0B3007FC176 /* mute.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mute.png; path = icons/mute.png; sourceTree = "<group>"; };
 		2B11B1CE0FF735FB007FC176 /* paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused.png; path = icons/paused.png; sourceTree = "<group>"; };
 		2B1FC09C10B104F8004C7355 /* pencil.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pencil.png; path = icons/pencil.png; sourceTree = "<group>"; };
@@ -1075,7 +1072,6 @@
 			isa = PBXGroup;
 			children = (
 				2B11B0B20FF55C52007FC176 /* BlinkLogger.py */,
-				2B11B0DA0FF564F6007FC176 /* LogListModel.py */,
 				2B2409831022A04700079580 /* DebugWindow.py */,
 				2B2409851022A05A00079580 /* DebugWindow.xib */,
 			);
@@ -1502,7 +1498,6 @@
 				1F2272A812B554F50010A8B2 /* ChatController.py in Resources */,
 				1F2272A912B554F50010A8B2 /* pause.png in Resources */,
 				1F2272AA12B554F50010A8B2 /* BlinkLogger.py in Resources */,
-				1F2272AB12B554F50010A8B2 /* LogListModel.py in Resources */,
 				1F2272AC12B554F50010A8B2 /* mute.png in Resources */,
 				1F2272AD12B554F50010A8B2 /* paused.png in Resources */,
 				1F2272AE12B554F50010A8B2 /* AddContactController.py in Resources */,
@@ -1654,7 +1649,6 @@
 				2B6328850FE422AE00446655 /* ChatController.py in Resources */,
 				2B11AA580FF323A1007FC176 /* pause.png in Resources */,
 				2B11B0B30FF55C52007FC176 /* BlinkLogger.py in Resources */,
-				2B11B0DB0FF564F6007FC176 /* LogListModel.py in Resources */,
 				2B11B1220FF6B0B3007FC176 /* mute.png in Resources */,
 				2B11B1CF0FF735FB007FC176 /* paused.png in Resources */,
 				2B5DE4B50FFC501E00701821 /* AddContactController.py in Resources */,
