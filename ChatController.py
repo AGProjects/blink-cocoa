@@ -768,9 +768,7 @@ class ChatController(MediaStream):
                     self.sessionController.addAudioToSession()
                     sender.setToolTip_('Click to cancel the audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))
-
-                    # TODO: remove next line when sipsimple session is fixed to send notification for 180 ringing -adi
-                    NotificationCenter().post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session, data=TimestampedNotificationData())
+                    self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session, data=TimestampedNotificationData())
         elif tag == SessionController.TOOLBAR_RECORD:
             if audio_stream.stream.recording_active:
                 audio_stream.stream.stop_recording()
