@@ -43,8 +43,15 @@ TOOLBAR_DESKTOP_SHARING_BUTTON = 200
 TOOLBAR_REQUEST_DESKTOP_MENU = 201
 TOOLBAR_SHARE_DESKTOP_MENU = 202
 
-PARTICIPANTS_MENU_ADD_CONTACT = 309
+PARTICIPANTS_MENU_END_SESSION = 300
+PARTICIPANTS_MENU_ADD_CONTACT = 301
 PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
+PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE = 311
+PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
+PARTICIPANTS_MENU_START_CHAT_SESSION = 321
+PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
+PARTICIPANTS_MENU_SEND_FILES = 323
+
 
 StreamHandlerForType = {
     "chat" : ChatController,
@@ -636,12 +643,15 @@ class SessionController(NSObject):
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
+        log_info(self, "Received conference-info update for %s" % self.getTitle())
+
+        self.pending_removal_participants = set()
         self.conference_info = data.conference_info
         for user in data.conference_info.users:
             uri = user.entity.replace("sips:", "", 1)
             uri = uri.replace("sip:", "", 1)
  
-           # save uri for accounting pusposes
+            # save uri for accounting pusposes
             if uri not in self.participants_log:
                 self.participants_log.append(uri)    
 

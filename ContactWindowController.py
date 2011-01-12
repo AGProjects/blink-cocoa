@@ -1067,6 +1067,29 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
 
+    def startSessionWithAccount(self, account, target, media, private_recipient=None):
+        # activate the app in case the app is not active
+        NSApp.activateIgnoringOtherApps_(True)
+        if not account:
+            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
+            return
+
+        target = self.backend.parse_sip_uri(target, account)
+        if not target:
+            return
+
+        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(target))
+        session.setOwner_(self)
+        session.setPrivateRecipient(private_recipient)
+        self.sessionControllers.append(session)
+
+        if type(media) is not tuple:
+            if not session.startSessionWithStreamOfType(media):
+                BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
+        else:
+            if not session.startCompositeSessionWithStreamsOfTypes(media):
+                BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+
     def startConference(self, target, media, participants=[]):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)

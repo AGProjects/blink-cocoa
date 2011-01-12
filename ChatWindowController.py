@@ -357,6 +357,13 @@ class ChatWindowController(NSWindowController):
 
         return False
 
+    def isInvitedParticipant(self, uri):
+        session = self.selectedSession()
+        try:
+           return uri in (contact.uri for contact in session.invited_participants)
+        except AttributeError:
+           return False
+
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()
         if contact is None:
@@ -364,14 +371,31 @@ class ChatWindowController(NSWindowController):
 
         hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
 
+        hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
         self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if hasContactMatchingURI(contact.uri) else True)
         self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.isConferenceParticipant(contact.uri) else False)
 
     def removeParticipant(self, uri):
         session = self.selectedSession()
-        if session and session.remote_focus:
-            BlinkLogger().log_info(u"Remove  %s from to conference" % uri)
-            # TODO: send REFER with BYE to remove participant -adi
+        if session:
+            # remove uri from invited participants
+            try:
+               contact = (contact for contact in session.invited_participants if contact.uri == uri).next()
+            except StopIteration:
+               pass
+            else:
+               try:
+                   session.invited_participants.remove(contact)
+               except ValueError:
+                   pass
+
+            if session.remote_focus and self.isConferenceParticipant(uri):
+                BlinkLogger().log_info(u"Request server for removal of %s from conference" % uri)
+                session.pending_removal_participants.add(uri)
+                # TODO: send REFER with BYE to remove participant -adi
+
+            self.drawerTableView.deselectAll_(self)
+            self.refreshDrawer()
 
     @objc.IBAction
     def addParticipants_(self, sender):
@@ -424,21 +448,39 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
-        tag = sender.tag()
+        session = self.selectedSession()
+        if session:
+            tag = sender.tag()
 
-        row = self.drawerTableView.selectedRow()
-        try:
-            object = self.participants[row]
-        except IndexError:
-            return
+            row = self.drawerTableView.selectedRow()
+            try:
+                object = self.participants[row]
+            except IndexError:
+                return
 
-        uri = object.uri
-        display_name = object.display_name
+            uri = object.uri
+            display_name = object.display_name
 
-        if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
-            NSApp.delegate().windowController.addContact(uri, display_name)
-        elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
-            self.removeParticipant(uri)
+            if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
+                NSApp.delegate().windowController.addContact(uri, display_name)
+            elif tag == SessionController.PARTICIPANTS_MENU_END_SESSION:
+                if session.private_recipient:
+                    session.end()
+                else:
+                    session.removeChatFromSession()
+            elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
+                self.removeParticipant(uri)
+            elif tag == SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
+                remote_uri = format_identity_address(session.remotePartyObject)
+                NSApp.delegate().windowController.startSessionWithAccount(session.account, remote_uri, "chat", ChatIdentity(uri, display_name))
+            elif tag == SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION:
+                NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "audio")
+            elif tag == SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION:
+                NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "video")
+            elif tag == SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION:
+                NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "chat")
+            elif tag == SessionController.PARTICIPANTS_MENU_SEND_FILES:
+                openFileTransferSelectionDialog(session.account, uri)
 
     @objc.IBAction
     def muteClicked_(self, sender):
@@ -514,12 +556,12 @@ class ChatWindowController(NSWindowController):
 
         session = self.selectedSession()
         if session:
+
             if session.hasStreamOfType("audio"):
                 audio_stream = session.streamHandlerOfType("audio")
 
             if session.conference_info is None or (session.conference_info is not None and not session.conference_info.users):
                 active_media = []
-
 
                 # Add remote party
                 if session.hasStreamOfType("chat"):
@@ -551,6 +593,7 @@ class ChatWindowController(NSWindowController):
 
             # Add conference participants if any
             if session.conference_info is not None:
+
                 if not isinstance(session.account, BonjourAccount):
                     own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
@@ -577,6 +620,10 @@ class ChatWindowController(NSWindowController):
                         contact = Contact(uri, name=display_name)
 
                     contact.setActiveMedia(active_media)
+
+                    # detail will be reset on receival of next conference-info update
+                    if uri in session.pending_removal_participants:
+                        contact.setDetail('Pending removal...')
 
                     if own_uri and self.own_icon and contact.uri == own_uri:
                         contact.setIcon(self.own_icon)
