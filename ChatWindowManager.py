@@ -39,7 +39,7 @@ class ChatWindowManager(object):
         else:
             return None
 
-    def removeFromSessionWindow(self, sessionController):
+    def removeChatSession(self, sessionController):
         for window in self.sessionWindows:
             if window.hasSession_(sessionController):
                 window.detachSession_(sessionController)

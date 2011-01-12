@@ -433,15 +433,15 @@ class ChatController(MediaStream):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def startOutgoing(self, is_update):
-        ChatWindowManager.ChatWindowManager().showChatSession(self.sessionController)
+        ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
-        ChatWindowManager.ChatWindowManager().showChatSession(self.sessionController)
-        self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
+        ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
+        self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def closeChatWindow(self):
-        ChatWindowManager.ChatWindowManager().removeFromSessionWindow(self.sessionController)
+        ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
 
     def sendFiles(self, fnames):
         ws = NSWorkspace.sharedWorkspace()
