@@ -274,7 +274,7 @@ class SessionController(NSObject):
         self.participants_log = []
         self.streams_log = []
 
-    def startBaseSession(self, account):
+    def initializeSessionWithAccount(self, account):
         if self.session is None:
             self.session = Session(account)
             self.notification_center.add_observer(self, sender=self.session)
@@ -289,7 +289,7 @@ class SessionController(NSObject):
         add_streams = []
         if self.session is None:
             # no session yet, initiate it
-            self.startBaseSession(self.account)
+            self.initializeSessionWithAccount(self.account)
             new_session = True
 
         self.originallyRequestedStreamTypes = []
