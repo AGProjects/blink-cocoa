@@ -18,6 +18,7 @@ from zope.interface import implements
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream
+from sipsimple.streams.applications.chat import ChatIdentity
 from sipsimple.util import TimestampedNotificationData
 
 import SessionController
@@ -127,6 +128,7 @@ class MessageHandler(NSObject):
             self.session = session
             self.stream = None
             self.connected = None
+            self.private_recipient = None
             self.messages = {}
             self.pending = []
 
@@ -135,8 +137,14 @@ class MessageHandler(NSObject):
     def setDelegate(self, delegate):
         self.delegate = delegate
 
+    def setPrivateRecipient(self, private_recipient):
+        self.private_recipient = private_recipient
+
     def _send(self, text, timestamp):
-        msgid = self.stream.send_message(text, timestamp=timestamp)
+        if self.private_recipient is not None:
+            msgid = self.stream.send_message(text, timestamp=timestamp, recipients=[self.private_recipient])
+        else:
+            msgid = self.stream.send_message(text, timestamp=timestamp)
         message = MessageInfo(msgid, timestamp, MSG_STATE_SENDING)
         self.messages[msgid] = message
         return message
@@ -226,8 +234,13 @@ class MessageHandler(NSObject):
 
     def _NH_ChatStreamGotMessage(self, sender, data):
         message = data.message
+
+        if self.private_recipient is not None and format_identity_address(message.sender) != self.private_recipient.uri:
+            return
+
         # display message
         name = format_identity(message.sender)
+
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
         self.delegate.showMessage(None, name, icon, message.body, message.timestamp.utcnow())
 
@@ -305,13 +318,20 @@ class ChatController(MediaStream):
 
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
+            if self.sessionController.private_recipient is not None:
+                self.handler.private_recipient=self.sessionController.private_recipient
 
             if self.loggingEnabled:
                 try:
-                    uri = format_identity_address(self.sessionController.remotePartyObject)
+                    if self.sessionController.private_recipient is not None:
+                        uri = self.sessionController.private_recipient.uri
+                    else:
+                        uri = format_identity_address(self.sessionController.remotePartyObject)
+
                     contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
                     if contact:
                         uri = str(contact.uri)
+
                     self.history = SessionHistory().open_chat_history(self.sessionController.account, uri)
                     self.chatViewController.setHistory_(self.history)
                 except Exception, exc:
@@ -351,7 +371,6 @@ class ChatController(MediaStream):
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
 
-
     def dealloc(self):
         if self.history:
             self.history.close()
@@ -374,7 +393,7 @@ class ChatController(MediaStream):
         self.handler.setStream(stream)
         if connected:
             self.handler.setConnected()
-        NotificationCenter().add_observer(self, sender=stream)
+        self.notification_center.add_observer(self, sender=stream)
 
     def end(self, autoclose=False):
         log_info(self, "Ending session in %s"%self.status)
@@ -518,7 +537,10 @@ class ChatController(MediaStream):
             if self.sessionController.account is BonjourAccount():
                 entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
             else:
-                entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+                if self.sessionController.private_recipient:
+                    entries = SessionHistory().get_chat_history(self.sessionController.account, self.sessionController.private_recipient.uri, self.showHistoryEntries)
+                else:
+                    entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
 
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
@@ -543,7 +565,9 @@ class ChatController(MediaStream):
                     icon = NSApp.delegate().windowController.iconPathForSelf()
                 else:
                     icon = NSApp.delegate().windowController.iconPathForURI(entry["sender_uri"])
+
                 chatView.writeOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
+
         else:
             failed_entries = []
         if self.sessionController.account is not BonjourAccount():
@@ -590,7 +614,7 @@ class ChatController(MediaStream):
 
                 if self.status == STREAM_INCOMING:
                     item.setEnabled_(False)
-                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
+                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal and not self.sessionController.private_recipient:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
@@ -637,17 +661,17 @@ class ChatController(MediaStream):
 
                 if self.status == STREAM_INCOMING:
                     item.setEnabled_(False)
-                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
+                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal and not self.sessionController.private_recipient:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_SEND_FILE:
-                if self.status == STREAM_CONNECTED:
+                if self.status == STREAM_CONNECTED and not self.sessionController.private_recipient:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
-                if self.status == STREAM_CONNECTED and not got_proposal and not self.sessionController.remote_focus:
+                if self.status == STREAM_CONNECTED and not got_proposal and not self.sessionController.remote_focus and not self.sessionController.private_recipient:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
@@ -676,6 +700,8 @@ class ChatController(MediaStream):
         if tag==SessionController.TOOLBAR_RECONNECT and self.status in (STREAM_IDLE, STREAM_FAILED):
             return True
         elif tag == SessionController.TOOLBAR_AUDIO and self.status == STREAM_CONNECTED:
+            if self.sessionController.private_recipient:
+                return False
             if self.sessionController.hasStreamOfType("audio"):
                 if audio_stream.status == STREAM_CONNECTED:
                     item.setToolTip_('Click to hangup the audio call')
@@ -711,6 +737,8 @@ class ChatController(MediaStream):
             else:
                 return False
         elif tag == SessionController.TOOLBAR_VIDEO and self.status == STREAM_CONNECTED:
+            if self.sessionController.private_recipient:
+                return False
             return False
             # TODO: enable video -adi
             if self.sessionController.hasStreamOfType("video"):
@@ -728,8 +756,12 @@ class ChatController(MediaStream):
                 return False
             return True
         elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED:
-            return False
+            if self.sessionController.private_recipient:
+                return False
+            return True
         elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON, SessionController.TOOLBAR_SHARE_DESKTOP_MENU, SessionController.TOOLBAR_REQUEST_DESKTOP_MENU):
+            if self.sessionController.private_recipient:
+                return False
             if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
                 return False
             return True
@@ -850,7 +882,37 @@ class ChatController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @run_in_gui_thread
+    def _NH_ChatStreamGotMessage(self, sender, data):
+        """
+        Spawn a new session for the sender who sent us a private chat when
+        we receive a message in a conference room that supports private messaging
+        """
+
+        if not self.stream.private_messages_allowed:
+            return
+
+        # this is already a private chat, do not spawn a new session
+        if self.sessionController.private_recipient:
+            return
+
+        own_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain)
+        remote_uri = format_identity_address(self.sessionController.remotePartyObject)
+        sender_uri = '%s@%s' % (data.message.sender.uri.user, data.message.sender.uri.host)
+
+        for recipient in data.message.recipients:
+            recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
+            if sender_uri != remote_uri and recipient_uri == own_uri and sender_uri != own_uri and sender_uri not in self.sessionController.private_chat_recipients:
+                    log_info(self, "Spawn new session for private chat to %s" % sender_uri)
+                    NSApp.delegate().windowController.startSessionWithAccount(self.sessionController.account, remote_uri, "chat", ChatIdentity(sender_uri, data.message.sender.display_name))
+                    self.sessionController.private_chat_recipients.add(sender_uri)
+
     def _NH_ChatStreamGotComposingIndication(self, sender, data):
+        if self.sessionController.private_recipient is not None:
+           iscomposing_sender = '%s@%s' % (data.sender.uri.user, data.sender.uri.host)
+           if iscomposing_sender != self.sessionController.private_recipient.uri:
+               return
+
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             flag = data.state == "active"
@@ -881,12 +943,12 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_CONNECTED)
 
         # Required to set the Audio button state after session has started
-        NotificationCenter().post_notification("BlinkStreamHandlersChanged", sender=self)
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionGotProposal(self, sender, data):
         if data.originator != "local":
             # Required to temporarily disable the Chat Window toolbar buttons
-            NotificationCenter().post_notification("BlinkGotProposal", sender=self)
+            self.notification_center.post_notification("BlinkGotProposal", sender=self)
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         log_info(self, "Chat stream ended: %s" % self.stream)
@@ -944,7 +1006,8 @@ class ChatController(MediaStream):
     def didRemove(self):
         self.chatViewController.close()
         self.removeFromSession()
-        NotificationCenter().remove_observer(self, sender=self.stream)
+        self.notification_center.remove_observer(self, sender=self.stream)
+
         self.stream = None
         self.handler = None
         self.wasRemoved = True
