@@ -1591,11 +1591,7 @@ class ContactWindowController(NSWindowController):
         account = self.activeAccount()
 
         item = menu.itemWithTag_(44) # Start Conference
-
-        if NSApp.delegate().applicationName == 'Blink Pro':
-            item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.conference_server))
-        else:
-            item.setEnabled_(False)
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount)))
 
         while menu.numberOfItems() > 2:
             menu.removeItemAtIndex_(2)
@@ -1625,10 +1621,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
 
             for item in out_items:
-                if NSApp.delegate().applicationName == 'Blink Pro':
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
-                else:
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
                 lastItem.setAttributedTitle_(format_conference_item(item, mini_blue))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)

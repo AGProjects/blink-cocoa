@@ -34,6 +34,8 @@ class StartConferenceWindow(NSObject):
     chat = objc.IBOutlet()
     audio = objc.IBOutlet()
 
+    default_conference_server = 'conference.sip2sip.info'
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -191,7 +193,7 @@ class StartConferenceWindow(NSObject):
             if account.server.conference_server:
                 self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
             else:
-                self.target = u'%s@%s' % (self.room.stringValue().strip(), account.id.domain)
+                self.target = u'%s@%s' % (self.room.stringValue().strip(), self.default_conference_server)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
@@ -209,6 +211,8 @@ class JoinConferenceWindow(NSObject):
     message = objc.IBOutlet()
     title = objc.IBOutlet()
      
+    default_conference_server = 'conference.sip2sip.info'
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -289,7 +293,7 @@ class JoinConferenceWindow(NSObject):
                 if account.server.conference_server:
                     self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
                 else:
-                    self.target = u'%s@%s' % (self.room.stringValue().strip(), account.id.domain)
+                    self.target = u'%s@%s' % (self.room.stringValue().strip(), self.default_conference_server)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target

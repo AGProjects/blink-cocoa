@@ -650,7 +650,7 @@ class ChatWindowController(NSWindowController):
                         return NSDragOperationNone
 
                     return NSDragOperationAll
-            elif NSApp.delegate().applicationName == 'Blink Pro' and not isinstance(session.account, BonjourAccount) and session.account.server.conference_server:
+            elif not isinstance(session.account, BonjourAccount):
                 return NSDragOperationAll
 
         return NSDragOperationNone
@@ -678,7 +678,7 @@ class ChatWindowController(NSWindowController):
                         # TODO: send REFER to invite participant to the conference -adi
                 except:
                     return False
-            elif NSApp.delegate().applicationName == 'Blink Pro' and not isinstance(session.account, BonjourAccount) and session.account.server.conference_server:
+            elif not isinstance(session.account, BonjourAccount):
                 self.startConferenceWindow(session, [uri])
 
         return True
