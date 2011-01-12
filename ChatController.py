@@ -23,6 +23,7 @@ from sipsimple.util import TimestampedNotificationData
 import SessionController
 import ChatWindowManager
 
+from FileTransferWindowController import openFileTransferSelectionDialog
 from MediaStream import *
 from SessionHistory import SessionHistory
 from BlinkLogger import BlinkLogger
@@ -810,7 +811,7 @@ class ChatController(MediaStream):
                     sender.setToolTip_('Click to cancel the video call')
                     sender.setImage_(NSImage.imageNamed_("video-hangup"))
         elif tag == SessionController.TOOLBAR_SEND_FILE:
-            ChatWindowManager.ChatWindowManager().pickFileAndSendTo(self.sessionController.account, self.sessionController.session.remote_identity.uri)
+            openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.session.remote_identity.uri)
         elif tag == SessionController.TOOLBAR_RECONNECT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
                 log_info(self, "Re-establishing session to %s" % self.remoteParty)

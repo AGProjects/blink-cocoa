@@ -31,7 +31,7 @@ from ContactCell import ContactCell
 from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveContactIcon
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
-from FileTransferWindowController import FileTransferWindowController
+from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
 from ServerConferenceWindowController import StartConferenceWindow, JoinConferenceWindow
 from SessionController import SessionController
 from ChatWindowManager import ChatWindowManager
@@ -531,7 +531,6 @@ class ContactWindowController(NSWindowController):
             else:
                 self.window().setTitle_(NSApp.delegate().applicationName)
 
-    # move to ChatWindowManager
     def showAudioSession(self, streamController):
         self.sessionListView.addItemView_(streamController.view)
         self.updateAudioButtons()
@@ -651,13 +650,6 @@ class ContactWindowController(NSWindowController):
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         conference.setEnabled_(c > 1)
         self.addContactToConference.setEnabled_(c > 0)
-
-    # move to ChatWindowManager
-    def showChatSession(self, streamController, newWindow=False):
-        ChatWindowManager().showChatSession(streamController, newWindow)
-
-    def removeFromSessionWindow(self, streamController):
-        ChatWindowManager().removeFromSessionWindow(streamController)
 
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
@@ -1861,7 +1853,7 @@ class ContactWindowController(NSWindowController):
         else:
             if contact in self.model.bonjourgroup.contacts:
                 account = BonjourAccount()
-            ChatWindowManager().pickFileAndSendTo(account, contact.uri)
+            openFileTransferSelectionDialog(account, contact.uri)
 
     def updateRecordingsMenu(self):
         def format_item(name, when):

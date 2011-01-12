@@ -13,6 +13,29 @@ from SessionHistory import SessionHistory
 from FileTransferItem import FileTransferItem
 from util import allocate_autorelease_pool, run_in_gui_thread
 
+import SIPManager
+
+def openFileTransferSelectionDialog(account, dest_uri):
+    panel = NSOpenPanel.openPanel()
+    panel.setTitle_(u"Send File")
+    panel.setAllowsMultipleSelection_(True)
+    if panel.runModal() != NSOKButton:
+        return
+
+    try:
+        names_and_types = []
+        for file in panel.filenames():
+            ctype, error = NSWorkspace.sharedWorkspace().typeOfFile_error_(file, None)
+            if ctype:
+                names_and_types.append((str(file), str(ctype)))
+            else:
+                print "%f : %s"%(file,error)
+        if names_and_types:
+            SIPManager.SIPManager().send_files_to_contact(account, dest_uri, names_and_types)
+    except:
+        import traceback
+        traceback.print_exc()
+
 
 class FileTransferWindowController(NSObject, object):
     implements(IObserver)

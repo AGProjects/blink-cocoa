@@ -14,6 +14,7 @@ from sipsimple.account import BonjourAccount
 from MediaStream import *
 from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
+from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
 from ServerConferenceWindowController import AddParticipantsWindow, StartConferenceWindow
 import SessionController
