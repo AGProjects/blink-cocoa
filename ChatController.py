@@ -143,14 +143,6 @@ class MessageHandler(NSObject):
     def send(self, text):
         now = datetime.datetime.utcnow()
         icon = NSApp.delegate().windowController.iconPathForSelf()
-        #if len(text) > MAX_MESSAGE_LENGTH:
-        #    ret = NSRunAlertPanel("Message Too Long", 
-        #          "The message you're attempting to send is too long to be sent at once.\n"
-        #          "Do you want to send it in 16KB chunks?",
-        #          "OK", "Cancel", None)
-        #    if ret == NSAlertAlternateReturn:
-        #        return False
-
         leftover = text
         while leftover:
             # if the text is too big, break it in a smaller size.. without corrupting
