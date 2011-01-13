@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10H574</string>
+		<string key="IBDocument.SystemVersion">10J567</string>
 		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.HIToolboxVersion">462.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">823</string>
@@ -42,7 +42,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 155}, {511, 355}}</string>
 				<int key="NSWTFlags">544735232</int>
-				<string key="NSWindowTitle">Start Conference on Server</string>
+				<string key="NSWindowTitle">Create Conference</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{511, 355}</string>
@@ -62,7 +62,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="878674446">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">Create a conference room and invite other participants:</string>
+								<string key="NSContents">Create a new conference and invite participants:</string>
 								<object class="NSFont" key="NSSupport" id="658349089">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
@@ -126,7 +126,7 @@
 						<object class="NSTextField" id="165025418">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">266</int>
-							<string key="NSFrame">{{10, 254}, {121, 17}}</string>
+							<string key="NSFrame">{{10, 253}, {121, 17}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
@@ -952,9 +952,9 @@
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>{{600, 649}, {511, 355}}</string>
+					<string>{{600, 369}, {511, 355}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{600, 649}, {511, 355}}</string>
+					<string>{{600, 369}, {511, 355}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -1168,12 +1168,10 @@
 							<string>participant</string>
 							<string>participantsTable</string>
 							<string>room</string>
-							<string>view</string>
 							<string>window</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -1193,7 +1191,6 @@
 							<string>participant</string>
 							<string>participantsTable</string>
 							<string>room</string>
-							<string>view</string>
 							<string>window</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -1220,10 +1217,6 @@
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">room</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">view</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
