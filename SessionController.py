@@ -43,7 +43,6 @@ TOOLBAR_DESKTOP_SHARING_BUTTON = 200
 TOOLBAR_REQUEST_DESKTOP_MENU = 201
 TOOLBAR_SHARE_DESKTOP_MENU = 202
 
-PARTICIPANTS_MENU_END_SESSION = 300
 PARTICIPANTS_MENU_ADD_CONTACT = 301
 PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
 PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE = 311
@@ -101,10 +100,6 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.pending_removal_participants = set()
-        # used for sending private messages to chat rooms that support this feature
-        self.private_recipient = None
-        self.private_chat_recipients = set()
-
         self.mustShowDrawer = True
 
         # used for accounting
@@ -136,9 +131,6 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.pending_removal_participants = set()
-        # used for sending private messages to chat rooms that support this feature
-        self.private_recipient = None
-        self.private_chat_recipients = set()
         self.mustShowDrawer = True
 
         # used for accounting
@@ -292,7 +284,6 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.pending_removal_participants = set()
-        self.private_chat_recipients = set()
         self.participants_log = []
         self.streams_log = []
 
@@ -366,9 +357,6 @@ class SessionController(NSObject):
                     return False
         return True
 
-    def setPrivateRecipient(self, private_recipient=None):
-        self.private_recipient = private_recipient
-
     def startSessionWithStreamOfType(self, stype, kwargs={}): # pyobjc doesn't like **kwargs
         return self.startCompositeSessionWithStreamsOfTypes(((stype, kwargs), ))
 
@@ -433,13 +421,7 @@ class SessionController(NSObject):
             self.startSessionWithStreamOfType("desktop-viewer")
 
     def getTitle(self):
-        if self.private_recipient:
-            if self.private_recipient.display_name:
-                return "%s <%s>" % (self.private_recipient.display_name, self.private_recipient.uri)
-            else:
-                return "%s" % self.private_recipient.uri
-        else:
-            return format_identity(self.remotePartyObject)
+        return format_identity(self.remotePartyObject)
 
     def getTitleFull(self):
         if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
@@ -448,16 +430,10 @@ class SessionController(NSObject):
             return self.getTitle()
 
     def getTitleShort(self):
-        if self.private_recipient:
-            if self.private_recipient.display_name:
-                return "%s" % self.private_recipient.display_name
-            else:
-                return "%s" % self.private_recipient.uri
+        if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
+            return self.contactDisplayName
         else:
-            if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
-                return self.contactDisplayName
-            else:
-                return format_identity_simple(self.remotePartyObject)
+            return format_identity_simple(self.remotePartyObject)
 
     def setRoutesFailed(self, msg):
         log_error(self, "DNS Lookup for SIP routes failed: '%s'"%msg)
@@ -557,7 +533,6 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
-        self.private_recipient = None
         self.participants_log = []
         self.streams_log = []
 
@@ -589,9 +564,6 @@ class SessionController(NSObject):
         log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=sender, data=log_data)
 
-        if self.private_recipient:
-            self.notification_center.post_notification("BlinkPrivateChatSessionDidEnd", sender=self, data=TimestampedNotificationData(private_recipient=self.private_recipient.uri))
-
         self.notification_center.remove_observer(self, sender=self.session)
         self.session = None
         self.cancelledStream = None
@@ -599,19 +571,11 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
-        self.private_recipient = None
         self.participants_log = []
         self.streams_log = []
         self.mustShowDrawer = False
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
-
-    def _NH_BlinkPrivateChatSessionDidEnd(self, sender, data):
-        try:
-            self.private_chat_recipients.remove(data.private_recipient)
-            log_info(self, "Removed %s from list of associated sessions for private chat" % data.private_recipient)
-        except KeyError:
-            pass
 
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True

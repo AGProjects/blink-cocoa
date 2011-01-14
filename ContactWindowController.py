@@ -1067,7 +1067,7 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
 
-    def startSessionWithAccount(self, account, target, media, private_recipient=None):
+    def startSessionWithAccount(self, account, target, media):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
         if not account:
@@ -1080,7 +1080,6 @@ class ContactWindowController(NSWindowController):
 
         session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(target))
         session.setOwner_(self)
-        session.setPrivateRecipient(private_recipient)
         self.sessionControllers.append(session)
 
         if type(media) is not tuple:

@@ -17,7 +17,7 @@ from util import *
 FILE_TRANSFER_LOG = "transfers.log"
 
 class ChatLog:
-    fields = ["id", "direction", "sender", "send_time", "delivered_time", "state", "text", "type"]
+    fields = ["id", "direction", "sender", "send_time", "delivered_time", "state", "text", "type", "recipient"]
 
     @classmethod
     def flush_pending(cls, tmp_file_name, file_extension=".log"):
@@ -58,7 +58,7 @@ class ChatLog:
             row["delivered_time"] = parse_datetime(row["delivered_time"])
             if not row["type"]:
                 row["type"] = "text"
-            
+
             if "<" in row["sender"]:
                 sender = row["sender"]
                 uri = re.match(".*<([^>]*)>", sender)

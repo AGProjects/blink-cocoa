@@ -10,6 +10,7 @@ from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
+from sipsimple.core import SIPURI
 from sipsimple.streams.applications.chat import ChatIdentity
 
 from MediaStream import *
@@ -35,6 +36,7 @@ class ChatWindowController(NSWindowController):
     participantMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
     drawerTableView = objc.IBOutlet()
+    drawerScrollView = objc.IBOutlet()
     addParticipants = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
@@ -174,23 +176,14 @@ class ChatWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                if session.private_recipient:
-                    if conf_desc.display_text:
-                        title = u"%s" % conf_desc.display_text
-                    elif conf_desc.free_text:
-                        title = u"%s" % conf_desc.free_text
-                    else:
-                        title = u'Multi Party Conference'
-                    title = title + u' - Private Chat to %s' % session.getTitleShort()
+                if conf_desc.display_text and conf_desc.free_text:
+                    title = u"%s %s" % (conf_desc.display_text, conf_desc.free_text)
+                elif conf_desc.display_text:
+                    title = u"%s" % conf_desc.display_text
+                elif conf_desc.free_text:
+                    title = u"%s" % conf_desc.free_text
                 else:
-                    if conf_desc.display_text and conf_desc.free_text:
-                        title = u"%s %s" % (conf_desc.display_text, conf_desc.free_text)
-                    elif conf_desc.display_text:
-                        title = u"%s" % conf_desc.display_text
-                    elif conf_desc.free_text:
-                        title = u"%s" % conf_desc.free_text
-                    else:
-                        title = u'Multi Party Conference'
+                    title = u'Multi Party Conference'
 
             if title is None:
                 if isinstance(session.account, BonjourAccount):
@@ -353,6 +346,9 @@ class ChatWindowController(NSWindowController):
 
     def getSelectedParticipant(self):
         row = self.drawerTableView.selectedRow()
+        if not self.drawerTableView.isRowSelected_(row):
+            return None
+
         try:
             return self.participants[row]
         except IndexError:
@@ -378,44 +374,37 @@ class ChatWindowController(NSWindowController):
 
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()
-        if contact is None:
-            return
-
         session = self.selectedSession()
-        if session:
-            if session.private_recipient and session.private_recipient.uri == contact.uri:
-                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_END_SESSION).setHidden_(False)
-                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_END_SESSION).setEnabled_(True)
-            else:
-                remote_uri = format_identity_address(session.remotePartyObject)
-                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_END_SESSION).setHidden_(False if remote_uri == contact.uri else True)
-                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_END_SESSION).setEnabled_(True if remote_uri == contact.uri else False)
-        else:
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_END_SESSION).setHidden_(True)
-
-        hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
-        self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if hasContactMatchingURI(contact.uri) else True)
-
-        if session.private_recipient:
+        if not session or contact is None:
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
         else:
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
-
-        self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
-
-        if session:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
             remote_uri = format_identity_address(session.remotePartyObject)
+
+            hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri) else True)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
+
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat"):
-                if session.private_recipient is not None and session.private_recipient.uri == contact.uri:
-                    self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
-                else:
-                    chat_stream = session.streamHandlerOfType("chat")
-                    self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed else False)
+                chat_stream = session.streamHandlerOfType("chat")
+                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed else False)
+            else:
+                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)          
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri else False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri else False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri else False)
 
     def canBeRemovedFromConference(self, uri):
         session = self.selectedSession()
-        return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri))
+        own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
+        return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
     def removeParticipant(self, uri):
         session = self.selectedSession()
@@ -489,6 +478,45 @@ class ChatWindowController(NSWindowController):
             selectedSession.userClickedToolbarButton(sender)
 
     @objc.IBAction
+    def useClickedSendPrivateMessage_(self, sender):
+        self.sendPrivateMessage()
+
+    @objc.IBAction
+    def useClickedRemoveFromConference_(self, sender):
+        session = self.selectedSession()
+        if session:
+            row = self.drawerTableView.selectedRow()
+            try:
+                object = self.participants[row]
+            except IndexError:
+                return
+            uri = object.uri
+            self.removeParticipant(uri)
+
+    def sendPrivateMessage(self):
+        session = self.selectedSession()
+        if session:
+            row = self.drawerTableView.selectedRow()
+            try:
+                object = self.participants[row]
+            except IndexError:
+                return
+
+            try:
+                sip_uri = SIPURI.parse('sip:%s'%object.uri)
+            except SIPCoreError:
+                return
+
+            recipient = '%s <%s>' % (object.display_name, object.uri)
+
+            controller = ChatPrivateMessage(recipient)
+            message = controller.runModal()
+
+            if message:
+                chat_stream = session.streamHandlerOfType("chat")
+                chat_stream.handler.send(message, ChatIdentity(sip_uri, object.display_name))
+
+    @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
         session = self.selectedSession()
         if session:
@@ -505,16 +533,10 @@ class ChatWindowController(NSWindowController):
 
             if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
                 NSApp.delegate().windowController.addContact(uri, display_name)
-            elif tag == SessionController.PARTICIPANTS_MENU_END_SESSION:
-                if session.private_recipient:
-                    session.end()
-                else:
-                    session.removeChatFromSession()
             elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
                 self.removeParticipant(uri)
             elif tag == SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
-                remote_uri = format_identity_address(session.remotePartyObject)
-                NSApp.delegate().windowController.startSessionWithAccount(session.account, remote_uri, "chat", ChatIdentity(uri, display_name))
+                self.sendPrivateMessage()
             elif tag == SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION:
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "audio")
             elif tag == SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION:
@@ -598,7 +620,7 @@ class ChatWindowController(NSWindowController):
 
         session = self.selectedSession()
         if session:
-
+                
             if session.hasStreamOfType("audio"):
                 audio_stream = session.streamHandlerOfType("audio")
 
@@ -643,10 +665,6 @@ class ChatWindowController(NSWindowController):
                     uri = user.entity.replace("sip:", "", 1)
                     uri = uri.replace("sips:", "", 1)
 
-                    if session.private_recipient:
-                        if session.private_recipient.uri != uri:
-                            continue
-
                     active_media = []
 
                     chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
@@ -680,11 +698,10 @@ class ChatWindowController(NSWindowController):
 
             self.participants.sort(key=attrgetter('name'))
 
-            # Add invited participants if any and if is not a private conversation
-            if session.private_recipient is None:
-                if session.invited_participants:
-                    for contact in session.invited_participants:
-                        self.participants.append(contact)
+            # Add invited participants if any
+            if session.invited_participants:
+                for contact in session.invited_participants:
+                    self.participants.append(contact)
 
             self.drawerTableView.reloadData()
 
@@ -704,7 +721,7 @@ class ChatWindowController(NSWindowController):
             else:
                 self.audioStatus.setHidden_(True)
 
-            if not isinstance(session.account, BonjourAccount) and not session.private_recipient:
+            if not isinstance(session.account, BonjourAccount):
                 self.addParticipants.setEnabled_(True)
             else:
                 self.addParticipants.setEnabled_(False)
@@ -725,10 +742,6 @@ class ChatWindowController(NSWindowController):
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
                         
-                        # do not invite people in a private chat
-                        if session.private_recipient is not None:
-                            return NSDragOperationNone
-
                         # do not invite remote party itself
                         remote_uri = format_identity_address(session.remotePartyObject)
                         if uri == remote_uri:
@@ -762,10 +775,6 @@ class ChatWindowController(NSWindowController):
                 try:
                     session = self.selectedSession()
                     if session:
-
-                        # do not invite people in a private chat
-                        if session.private_recipient is not None:
-                            return False
 
                         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
                         contact = getContactMatchingURI(uri)
@@ -828,3 +837,36 @@ class ChatWindowController(NSWindowController):
                         cell.setContact_(self.participants[row])
             except:
                 pass
+
+
+class ChatPrivateMessage(NSObject):
+    window = objc.IBOutlet()
+    title = objc.IBOutlet() 
+    message = objc.IBOutlet()
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self, recipient):
+        NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
+        self.title.setStringValue_(u'Send private message to %s' % recipient)
+
+    def runModal(self):
+        self.window.makeKeyAndOrderFront_(None)
+        rc = NSApp.runModalForWindow_(self.window)
+        self.window.orderOut_(self)
+        if rc == NSOKButton:
+            return unicode(self.message.stringValue())
+        return None
+
+    @objc.IBAction
+    def okClicked_(self, sender):
+        NSApp.stopModalWithCode_(NSOKButton)
+
+    @objc.IBAction
+    def cancelClicked_(self, sender):
+        NSApp.stopModalWithCode_(NSCancelButton)
+
+    def windowShouldClose_(self, sender):
+        NSApp.stopModalWithCode_(NSCancelButton)
+        return True

@@ -264,6 +264,8 @@
 		1FD6E05C12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */; };
 		1FD6E05D12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */; };
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
+		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
@@ -711,6 +713,7 @@
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FD6E03E12D32CA200168F95 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
+		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -1260,6 +1263,7 @@
 				2BAF38120FE088C70040117A /* ChatSession.xib */,
 				2BAF38160FE088C70040117A /* ChatView.xib */,
 				2BD011E110D8198400D27A92 /* ChatView.html */,
+				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 			);
 			name = Chat;
@@ -1616,6 +1620,7 @@
 				1FD6E05D12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */,
 				1FAF8C5E12DA18960029857C /* VideoController.py in Resources */,
 				1FAF8D5412DA31100029857C /* video-hangup.png in Resources */,
+				1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1766,6 +1771,7 @@
 				1FD6E05C12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */,
 				1FAF8C5D12DA18960029857C /* VideoController.py in Resources */,
 				1FAF8D5312DA31100029857C /* video-hangup.png in Resources */,
+				1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1821,6 +1827,14 @@
 				1FD6E03E12D32CA200168F95 /* English */,
 			);
 			name = JoinConferenceWindow.xib;
+			sourceTree = "<group>";
+		};
+		1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FDFA9B412DF4689005BA20F /* English */,
+			);
+			name = ChatPrivateMessage.xib;
 			sourceTree = "<group>";
 		};
 		2B01284C10939236009B2112 /* AccountSettings.xib */ = {

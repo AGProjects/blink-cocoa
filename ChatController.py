@@ -86,10 +86,11 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
 
 
 class MessageInfo(object):
-    def __init__(self, id, timestamp, state):
+    def __init__(self, id, timestamp, state, private):
         self.id = id
         self.timestamp = timestamp
         self.state = state
+        self.private = private
 
 
 class MessageHandler(NSObject):
@@ -128,7 +129,6 @@ class MessageHandler(NSObject):
             self.session = session
             self.stream = None
             self.connected = None
-            self.private_recipient = None
             self.messages = {}
             self.pending = []
 
@@ -137,19 +137,18 @@ class MessageHandler(NSObject):
     def setDelegate(self, delegate):
         self.delegate = delegate
 
-    def setPrivateRecipient(self, private_recipient):
-        self.private_recipient = private_recipient
-
-    def _send(self, text, timestamp):
-        if self.private_recipient is not None:
-            msgid = self.stream.send_message(text, timestamp=timestamp, recipients=[self.private_recipient])
+    def _send(self, text, timestamp, recipient=None):
+        if recipient is not None:
+            msgid = self.stream.send_message(text, timestamp=timestamp, recipients=[recipient])
+            private = True
         else:
             msgid = self.stream.send_message(text, timestamp=timestamp)
-        message = MessageInfo(msgid, timestamp, MSG_STATE_SENDING)
+            private = False
+        message = MessageInfo(msgid, timestamp, MSG_STATE_SENDING, private)
         self.messages[msgid] = message
         return message
 
-    def send(self, text):
+    def send(self, text, recipient=None):
         now = datetime.datetime.utcnow()
         icon = NSApp.delegate().windowController.iconPathForSelf()
         leftover = text
@@ -167,13 +166,16 @@ class MessageHandler(NSObject):
 
             if self.connected:
                 try:
-                    message = self._send(text, now)
+                    message = self._send(text, now, recipient)
                 except Exception, e:
                     log.err()
                     BlinkLogger().log_error("Error sending message: %s" % e)
                     self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
                 else:
-                    self.delegate.showMessage(message.id, None, icon, text, now)
+                    if recipient is not None and self.session.remote_focus and self.stream.private_messages_allowed:
+                        self.delegate.showPrivateMessage(message.id, None, icon, text, now, recipient)
+                    else: 
+                        self.delegate.showMessage(message.id, None, icon, text, now)
             else:
                 self.pending.append((text, now, "-" + str(now)))
                 self.delegate.showMessage("-" + str(now), None, icon, text, now)
@@ -190,7 +192,7 @@ class MessageHandler(NSObject):
                 BlinkLogger().log_error("Error sending message: %s" % e)
                 self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
             else:
-                self.delegate.writeOldMessage(message.id, None, icon, text, message.timestamp, state, False)
+                self.delegate.showOldMessage(message.id, None, icon, text, message.timestamp, state, False)
         else:
             self.pending.append((text, now, msgid))
             self.delegate.showMessage(msgid, None, icon, text, now, state=state)
@@ -224,7 +226,7 @@ class MessageHandler(NSObject):
 
     def markMessage(self, message, state):
         message.state = state
-        self.delegate.markMessage(message.id, state)
+        self.delegate.markMessage(message.id, state, message.private)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -235,14 +237,19 @@ class MessageHandler(NSObject):
     def _NH_ChatStreamGotMessage(self, sender, data):
         message = data.message
 
-        if self.private_recipient is not None and format_identity_address(message.sender) != self.private_recipient.uri:
-            return
-
         # display message
         name = format_identity(message.sender)
 
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
-        self.delegate.showMessage(None, name, icon, message.body, message.timestamp.utcnow())
+
+        own_uri = '%s@%s' % (self.session.account.id.username, self.session.account.id.domain)
+        recipient = message.recipients[0]
+        recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
+
+        if self.session.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri:
+            self.delegate.showPrivateMessage(None, name, icon, message.body, message.timestamp.utcnow(), recipient)
+        else:
+            self.delegate.showMessage(None, name, icon, message.body, message.timestamp.utcnow())
 
         window = self.delegate.outputView.window()
         window_is_key = window.isKeyWindow() if window else False
@@ -318,15 +325,10 @@ class ChatController(MediaStream):
 
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
-            if self.sessionController.private_recipient is not None:
-                self.handler.private_recipient=self.sessionController.private_recipient
 
             if self.loggingEnabled:
                 try:
-                    if self.sessionController.private_recipient is not None:
-                        uri = self.sessionController.private_recipient.uri
-                    else:
-                        uri = format_identity_address(self.sessionController.remotePartyObject)
+                    uri = format_identity_address(self.sessionController.remotePartyObject)
 
                     contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
                     if contact:
@@ -523,7 +525,6 @@ class ChatController(MediaStream):
     def chatView_becameIdle_(self, chatView, time):
         if self.stream:
             self.stream.send_composing_indication("idle", 60, last_active=time)
-
     def chatView_becameActive_(self, chatView, time):
         if self.stream:
             self.stream.send_composing_indication("active", 60, last_active=time)
@@ -537,10 +538,7 @@ class ChatController(MediaStream):
             if self.sessionController.account is BonjourAccount():
                 entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
             else:
-                if self.sessionController.private_recipient:
-                    entries = SessionHistory().get_chat_history(self.sessionController.account, self.sessionController.private_recipient.uri, self.showHistoryEntries)
-                else:
-                    entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+                entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
 
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
@@ -561,12 +559,16 @@ class ChatController(MediaStream):
                 sender = entry["sender"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
+                recipient = entry["recipient"]
                 if entry["direction"] == 'send':
                     icon = NSApp.delegate().windowController.iconPathForSelf()
                 else:
                     icon = NSApp.delegate().windowController.iconPathForURI(entry["sender_uri"])
 
-                chatView.writeOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
+                if recipient:
+                    chatView.showOldPrivateMessage(None, sender, icon, text, timestamp, entry["state"], is_html, recipient)
+                else:
+                    chatView.showOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
 
         else:
             failed_entries = []
@@ -614,7 +616,7 @@ class ChatController(MediaStream):
 
                 if self.status == STREAM_INCOMING:
                     item.setEnabled_(False)
-                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal and not self.sessionController.private_recipient:
+                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
@@ -661,17 +663,17 @@ class ChatController(MediaStream):
 
                 if self.status == STREAM_INCOMING:
                     item.setEnabled_(False)
-                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal and not self.sessionController.private_recipient:
+                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_SEND_FILE:
-                if self.status == STREAM_CONNECTED and not self.sessionController.private_recipient:
+                if self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
-                if self.status == STREAM_CONNECTED and not got_proposal and not self.sessionController.remote_focus and not self.sessionController.private_recipient:
+                if self.status == STREAM_CONNECTED and not got_proposal and not self.sessionController.remote_focus:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
@@ -700,8 +702,6 @@ class ChatController(MediaStream):
         if tag==SessionController.TOOLBAR_RECONNECT and self.status in (STREAM_IDLE, STREAM_FAILED):
             return True
         elif tag == SessionController.TOOLBAR_AUDIO and self.status == STREAM_CONNECTED:
-            if self.sessionController.private_recipient:
-                return False
             if self.sessionController.hasStreamOfType("audio"):
                 if audio_stream.status == STREAM_CONNECTED:
                     item.setToolTip_('Click to hangup the audio call')
@@ -737,8 +737,6 @@ class ChatController(MediaStream):
             else:
                 return False
         elif tag == SessionController.TOOLBAR_VIDEO and self.status == STREAM_CONNECTED:
-            if self.sessionController.private_recipient:
-                return False
             return False
             # TODO: enable video -adi
             if self.sessionController.hasStreamOfType("video"):
@@ -756,12 +754,8 @@ class ChatController(MediaStream):
                 return False
             return True
         elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED:
-            if self.sessionController.private_recipient:
-                return False
             return True
         elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON, SessionController.TOOLBAR_SHARE_DESKTOP_MENU, SessionController.TOOLBAR_REQUEST_DESKTOP_MENU):
-            if self.sessionController.private_recipient:
-                return False
             if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
                 return False
             return True
@@ -882,37 +876,7 @@ class ChatController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
-    @run_in_gui_thread
-    def _NH_ChatStreamGotMessage(self, sender, data):
-        """
-        Spawn a new session for the sender who sent us a private chat when
-        we receive a message in a conference room that supports private messaging
-        """
-
-        if not self.stream.private_messages_allowed:
-            return
-
-        # this is already a private chat, do not spawn a new session
-        if self.sessionController.private_recipient:
-            return
-
-        own_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain)
-        remote_uri = format_identity_address(self.sessionController.remotePartyObject)
-        sender_uri = '%s@%s' % (data.message.sender.uri.user, data.message.sender.uri.host)
-
-        for recipient in data.message.recipients:
-            recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
-            if sender_uri != remote_uri and recipient_uri == own_uri and sender_uri != own_uri and sender_uri not in self.sessionController.private_chat_recipients:
-                    log_info(self, "Spawn new session for private chat to %s" % sender_uri)
-                    NSApp.delegate().windowController.startSessionWithAccount(self.sessionController.account, remote_uri, "chat", ChatIdentity(sender_uri, data.message.sender.display_name))
-                    self.sessionController.private_chat_recipients.add(sender_uri)
-
     def _NH_ChatStreamGotComposingIndication(self, sender, data):
-        if self.sessionController.private_recipient is not None:
-           iscomposing_sender = '%s@%s' % (data.sender.uri.user, data.sender.uri.host)
-           if iscomposing_sender != self.sessionController.private_recipient.uri:
-               return
-
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             flag = data.state == "active"
