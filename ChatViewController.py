@@ -265,10 +265,9 @@ class ChatViewController(NSObject):
                 timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
             else:
                 timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-        if is_error:
-            script = """addSysErrorMessage("%s", "%s")""" % (processHTMLText(text), timestamp)
-        else:
-            script = """addSysMessage("%s", "%s")""" % (processHTMLText(text), timestamp)
+
+        is_error = 1 if is_error else "null"
+        script = """renderSystemMessage("%s", "%s", %s)""" % (processHTMLText(text), timestamp, is_error)
 
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)

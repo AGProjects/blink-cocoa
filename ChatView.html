@@ -293,6 +293,40 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
 }
 
 
+function renderSystemMessage(text, timestamp, is_error)
+{
+  var placeholder;
+  var content;
+  
+  timestamp = formatTimestamp(timestamp);
+  
+  placeholder = document.getElementById("placeholder");
+  content = document.getElementById("content");
+  
+  if (is_error == null) {
+      sys_class = "sys"
+  } else {
+      sys_class = "sys_error"
+  }
+  
+  if (content != null)
+      content.id = "";
+
+  placeholder.innerHTML += 
+    "<div class="+sys_class+">"+
+            "<div class='systimestamp'>"+timestamp+"</div>"+
+            "<div class='sysmsg'>"+
+                text+
+            "</div>"+
+    "</div>";
+
+  lastSender = "";
+  
+  scrollToBottom();
+  
+  return 0;
+}
+
 function fixupMessageId(oldid, msgid)
 {
   var msg = document.getElementById(oldid);
@@ -361,63 +395,6 @@ function markFailed(msgid)
     msg.style.display = "block";
     msg.innerHTML = "Failed ";
   }
-}
-
-
-function addSysMessage(text, timestamp, is_error)
-{
-  var placeholder;
-  var content;
-  
-  timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
-  content = document.getElementById("content");
-  
-  if (content != null)
-      content.id = "";
-
-  placeholder.innerHTML += 
-    "<div class=sys>"+
-            "<div class='systimestamp'>"+timestamp+"</div>"+
-            "<div class='sysmsg'>"+
-                text+
-            "</div>"+
-    "</div>";
-
-  lastSender = "";
-  
-  scrollToBottom();
-  
-  return 0;
-}
-
-function addSysErrorMessage(text, timestamp)
-{
-  var placeholder;
-  var content;
-  
-  timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
-  content = document.getElementById("content");
-  
-  if (content != null)
-      content.id = "";
-
-  placeholder.innerHTML += 
-    "<div class='sys_error'>"+
-            "<div class='systimestamp'>"+timestamp+"</div>"+
-            "<div class='sysmsg'>"+
-                text+
-            "</div>"+
-    "</div>";
-
-  lastSender = "";
-  
-  scrollToBottom();
-  
-  return 0;
 }
 
 
