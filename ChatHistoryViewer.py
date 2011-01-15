@@ -138,19 +138,18 @@ class ChatHistoryViewer(NSWindowController):
         if file:
             entries = ChatLog._load_entries(open(file))
             for entry in entries:
-                id = entry["id"]
+                msgid = entry["id"]
                 stamp = entry["send_time"] or entry["delivered_time"]
                 sender = entry["sender"]
                 text = entry["text"]
+                direction = entry["direction"]
                 is_html = entry["type"] == "html"
                 recipient = entry["recipient"]
                 state = entry["state"]
                 sender_uri = format_identity_from_text(sender)[0]
-                if entry["direction"] == 'send':
+                if direction == 'outgoing':
                     icon = NSApp.delegate().windowController.iconPathForSelf()
-                    direction = 'outgoing'
                 else:
-                    direction = 'incoming'
                     icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
 
                 try:
@@ -158,10 +157,7 @@ class ChatHistoryViewer(NSWindowController):
                 except (TypeError, ValueError):
                     continue
 
-                if recipient:
-                    self.chatViewController.showPrivateMessage(id, direction, sender, icon, text, timestamp, recipient, is_html, True, state)
-                else:
-                    self.chatViewController.showMessage(id, direction, sender, icon, text, timestamp, is_html, True, state)
+                self.chatViewController.showMessage(msgid, direction, sender, icon, text, timestamp, recipient=recipient, state=state, is_html=is_html, history_entry=True)
 
     def tableView_deleteRow_(self, table, row):
         entries = self.entries if self.filtered is None else self.filtered

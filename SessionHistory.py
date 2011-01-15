@@ -60,15 +60,10 @@ class ChatLog:
             if not row["type"]:
                 row["type"] = "text"
 
-            if "<" in row["sender"]:
-                sender = row["sender"]
-                uri = re.match(".*<([^>]*)>", sender)
-                if uri:
-                    row["sender_uri"] = uri.groups()[0]
-                else:
-                    row["sender_uri"] = row["sender"]
-            else:
-                row["sender_uri"] = row["sender"]
+            try:
+                Timestamp.parse(row["send_time"])
+            except (TypeError, ValueError):
+                continue
 
             entries.append(row)
         
@@ -176,7 +171,7 @@ class ChatLog:
 
     def log(self, **kwargs):
         assert set(kwargs.keys()) == set(self.fields)
-        assert kwargs["direction"] in ("send", "receive")
+        assert kwargs["direction"] in ("send", "receive", "incoming", "outgoing")
         assert kwargs["state"] in ("", "queued", "sent", "delivered", "failed", "deferred")
         if kwargs["state"] in ("", "delivered", "failed", "deferred"):
             ChatLog._save_entries(open(self.log_file_path, "a+"), [kwargs])

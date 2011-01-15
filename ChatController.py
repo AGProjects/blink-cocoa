@@ -152,6 +152,8 @@ class MessageHandler(NSObject):
         now = datetime.datetime.utcnow()
         icon = NSApp.delegate().windowController.iconPathForSelf()
         leftover = text
+        recipient_html = format_identity(recipient) if recipient is not None and self.session.remote_focus and self.stream.private_messages_allowed else ''
+
         while leftover:
             # if the text is too big, break it in a smaller size.. without corrupting
             # utf-8 character sequences
@@ -170,15 +172,13 @@ class MessageHandler(NSObject):
                 except Exception, e:
                     log.err()
                     BlinkLogger().log_error("Error sending message: %s" % e)
-                    self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
+                    self.delegate.showSystemMessage("Error sending message",now, True)
                 else:
-                    if recipient is not None and self.session.remote_focus and self.stream.private_messages_allowed:
-                        self.delegate.showPrivateMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), recipient)
-                    else: 
-                        self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now))
+                    self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), recipient=recipient_html)
             else:
                 self.pending.append((text, now, "-" + str(now)))
-                self.delegate.showMessage("-" + str(now), 'outgoing', None, icon, text, Timestamp(now))
+                self.delegate.showMessage("-" + str(now), 'outgoing', None, icon, text, Timestamp(now), recipient=recipient_html)
+
         return True
 
     def resend(self, text, msgid, state):
@@ -190,9 +190,9 @@ class MessageHandler(NSObject):
             except Exception, e:
                 log.err()
                 BlinkLogger().log_error("Error sending message: %s" % e)
-                self.delegate.writeSysMessage("Error sending message",now, True)
+                self.delegate.showSystemMessage("Error sending message",now, True)
             else:
-                self.delegate.showOldMessage(message.id, None, icon, text, message.timestamp, state, False)
+                self.delegate.showMessage(message.id, 'outgoing', None, icon, text, message.timestamp, state)
         else:
             self.pending.append((text, now, msgid))
             self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state=state)
@@ -246,10 +246,8 @@ class MessageHandler(NSObject):
         recipient = message.recipients[0]
         recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
 
-        if self.session.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri:
-            self.delegate.showPrivateMessage(None, 'incoming', name, icon, message.body, message.timestamp, recipient)
-        else:
-            self.delegate.showMessage(None, 'incoming', name, icon, message.body, message.timestamp)
+        recipient_html = format_identity(recipient) if self.session.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
+        self.delegate.showMessage(None, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
 
         window = self.delegate.outputView.window()
         window_is_key = window.isKeyWindow() if window else False
@@ -338,7 +336,7 @@ class ChatController(MediaStream):
                     self.chatViewController.setHistory_(self.history)
                 except Exception, exc:
                     self.loggingEnabled = False
-                    self.chatViewController.writeSysMessage("Unable to create Chat History file: %s"%exc, datetime.datetime.utcnow(), True)
+                    self.chatViewController.showSystemMessage("Unable to create Chat History file: %s"%exc, datetime.datetime.utcnow(), True)
 
             # Chat drawer has now contextual menu for adding contacts
             #if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
@@ -423,7 +421,7 @@ class ChatController(MediaStream):
         if newstate == STREAM_CONNECTED:
             endpoint = str(self.stream.msrp.full_remote_path[0])
             BlinkLogger().log_info("Session established to %s (%s)"%(endpoint, self.remoteParty))
-            self.chatViewController.writeSysMessage("Session established", datetime.datetime.utcnow())
+            self.chatViewController.showSystemMessage("Session established", datetime.datetime.utcnow())
         elif newstate == STREAM_DISCONNECTING:
             BlinkLogger().log_info("Ending session")
         elif newstate == STREAM_CANCELLING:
@@ -432,16 +430,16 @@ class ChatController(MediaStream):
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
                 BlinkLogger().log_info("Chat session ended (%s)"%fail_reason)
                 close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-                self.chatViewController.writeSysMessage(close_message, datetime.datetime.utcnow())
+                self.chatViewController.showSystemMessage(close_message, datetime.datetime.utcnow())
                 ended = True
         elif newstate == STREAM_FAILED:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
                 if fail_reason:
                     BlinkLogger().log_error("Chat session failed: %s" % fail_reason)
-                    self.chatViewController.writeSysMessage("Session failed: %s" % fail_reason, datetime.datetime.utcnow(), True)
+                    self.chatViewController.showSystemMessage("Session failed: %s" % fail_reason, datetime.datetime.utcnow(), True)
                 else:
                     BlinkLogger().log_error("Chat session failed")
-                    self.chatViewController.writeSysMessage("Session failed", datetime.datetime.utcnow(), True)
+                    self.chatViewController.showSystemMessage("Session failed", datetime.datetime.utcnow(), True)
                 ended = True
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
@@ -555,15 +553,17 @@ class ChatController(MediaStream):
             old_entries.reverse()
             
             for entry in old_entries:
-                stamp = entry["send_time"] or entry["delivered_time"]
+                msgid = entry["id"]
+                stamp = entry["send_time"]
                 sender = entry["sender"]
+                direction = entry["direction"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
                 recipient = entry["recipient"]
                 state = entry["state"]
                 sender_uri = format_identity_from_text(sender)[0]
                 
-                if entry["direction"] == 'send':
+                if direction == 'outgoing':
                     icon = NSApp.delegate().windowController.iconPathForSelf()
                 else:
                     icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
@@ -573,10 +573,7 @@ class ChatController(MediaStream):
                 except (TypeError, ValueError):
                     continue
 
-                if recipient:
-                    chatView.showOldPrivateMessage(None, sender, icon, text, timestamp, state, is_html, recipient)
-                else:
-                    chatView.showOldMessage(None, sender, icon, text, timestamp, state, is_html)
+                chatView.showMessage(msgid, direction, sender, icon, text, timestamp, recipient=recipient, state=state, is_html=is_html, history_entry=True)
 
         else:
             failed_entries = []
@@ -974,7 +971,7 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
         self.fail_reason = reason
-        self.chatViewController.writeSysMessage(reason, datetime.datetime.utcnow(), True)
+        self.chatViewController.showSystemMessage(reason, datetime.datetime.utcnow(), True)
 
     def didRemove(self):
         self.chatViewController.close()

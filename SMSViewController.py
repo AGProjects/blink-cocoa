@@ -91,7 +91,7 @@ class SMSViewController(NSObject):
                 import traceback
                 traceback.print_exc()
                 self.loggingEnabled = False
-                self.chatViewController.writeSysMessage("Unable to create SMS history file: %s"%exc)
+                self.chatViewController.showSystemMessage("Unable to create SMS history file: %s"%exc)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setAccount_(self.account)
@@ -176,7 +176,7 @@ class SMSViewController(NSObject):
 
     def setRoutesFailed(self, msg):
         BlinkLogger().log_error("DNS Lookup failed: %s" % msg)
-        self.chatViewController.writeSysMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
+        self.chatViewController.showSystemMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
 
     def matchesTargetAccount(self, target, account):
         that_contact = NSApp.delegate().windowController.getContactMatchingURI(target)
@@ -190,7 +190,7 @@ class SMSViewController(NSObject):
         if self.incoming_queue is not None:
             self.incoming_queue.append(('', 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state))
         else:
-            self.chatViewController.showMessage('', 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state)
+            self.chatViewController.showMessage('', 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state=state)
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -341,6 +341,7 @@ class SMSViewController(NSObject):
             for entry in lines:
                 stamp = entry["send_time"] or entry["delivered_time"]
                 sender = entry["sender"]
+                direction = entry["direction"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
                 state = entry["state"]
@@ -352,7 +353,7 @@ class SMSViewController(NSObject):
                     continue
 
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
-                chatView.showOldMessage(None, sender, icon, text, timestamp, state, is_html)
+                chatView.showMessage(None, direction, sender, icon, text, timestamp, state=state, is_html=is_html, history_entry=True)
 
         if self.incoming_queue is not None:
             for args in self.incoming_queue:

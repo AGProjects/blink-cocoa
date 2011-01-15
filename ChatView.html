@@ -215,7 +215,7 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function addChatMessage(msgid, direction, sender, iconpath, text, timestamp, state)
+function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private)
 {
   var placeholder;
   var content;
@@ -229,6 +229,12 @@ function addChatMessage(msgid, direction, sender, iconpath, text, timestamp, sta
   status = ''
   show_sending_state = ''
 
+  if (private == null) {
+    default_box_class = "msgbox"
+  } else {
+    default_box_class = "msgbox_private"
+  }
+
   if (state == "deferred") {
       box_class = "msgbox_deferred";
       status = "Deferred for later ";
@@ -236,13 +242,13 @@ function addChatMessage(msgid, direction, sender, iconpath, text, timestamp, sta
       box_class = "msgbox_failed"
       status = "Failed ";
   } else if (state == "delivered") {
-      box_class = "msgbox";
+      box_class = default_box_class;
       status = timestamp;
   } else if (direction == "outgoing") {
       box_class = "msgbox_sending";
       show_sending_state = 'yes'
   } else {
-      box_class = "msgbox";
+      box_class = default_box_class;
       status = timestamp;
   }
   
@@ -286,80 +292,6 @@ function addChatMessage(msgid, direction, sender, iconpath, text, timestamp, sta
   scrollToBottom();
 }
 
-function addPrivateChatMessage(msgid, direction, sender, iconpath, text, timestamp, state)
-{
-  var placeholder;
-  var content;
-  var idstr;
-  var message_class;
-  
-  timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
-
-  status = ''
-  show_sending_state = ''
-
-  if (state == "deferred") {
-      box_class = "msgbox_deferred";
-      status = "Deferred for later ";
-  } else if (state == "failed") {
-      box_class = "msgbox_failed"
-      status = "Failed ";
-  } else if (state == "delivered") {
-      box_class = "msgbox";
-      status = timestamp;
-  } else if (direction == "outgoing") {
-      box_class = "msgbox_sending";
-      show_sending_state = 'yes'
-  } else {
-      box_class = "msgbox";
-      status = timestamp;
-  }
-  
-  if (content != null)
-      content.id = "";
-
-  if (show_sending_state == 'yes')
-  {
-    placeholder.innerHTML += 
-    "<div>"+
-    "<div id='private_message'>"+
-    "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='"+box_class+"' id='"+msgid+"'>"+
-         "<div class='header'>"+
-             "<div class='recipient_self'>"+sender+"</div>"+
-             "<div class='timestamp_hidden' id='t"+msgid+"'>" +timestamp+"</div>"+
-             "<div class='state' id='s"+msgid+"'>Sending...</div>"+
-         "</div>"+
-         "<div class='message'>"+
-            "<span class='body'>"+text+"</span>"+
-        "</div>"+
-    "</div>"+
-    "</div>";
-  } else {
-    placeholder.innerHTML += 
-    "<div>"+
-    "<div id='private_message'>"+
-    "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='"+box_class+"'>"+
-         "<div class='header'>"+
-             "<div class='recipient'>"+sender+"</div>"+
-             "<div class='timestamp'>"+status+"</div>"+
-         "</div>"+
-         "<div class='message'>"+
-            "<span class='body'>"+text+"</span>"+
-        "</div>"+
-    "</div>"+
-    "</div>";  
-  }
-
-  lastSender = sender;
-  lastTimestamp = timestamp;
-  
-  scrollToBottom();
-}
-
 
 function fixupMessageId(oldid, msgid)
 {
@@ -377,12 +309,18 @@ function fixupMessageId(oldid, msgid)
 }
 
 
-function markDelivered(msgid, cls)
+function markDelivered(msgid, private)
 {
   var msg = document.getElementById(msgid);
 
+  if (private == null) {
+    default_box_class = "msgbox"
+  } else {
+    default_box_class = "msgbox_private"
+  }
+
   if (msg != null)
-     msg.className = cls;
+     msg.className = default_box_class;
 
   msg = document.getElementById('t'+msgid)
   if (msg != null)
@@ -423,95 +361,6 @@ function markFailed(msgid)
     msg.style.display = "block";
     msg.innerHTML = "Failed ";
   }
-}
-
-
-function addOldChatMessage(isme, msgid, sender, iconpath, text, timestamp, state)
-{
-  var placeholder;
-  var content;
-
-  timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
-  
-  if (content != null)
-      content.id = "";
-
-  status = '';
-
-  if (state == "deferred") {
-      _class = "msgbox_deferred";
-      status = "Deferred for later ";
-  } else if (state == "failed") {
-      _class = "msgbox_failed"
-      status = "Failed ";
-  } else {
-      _class = "msgbox"
-  }
-    
-  placeholder.innerHTML += 
-    "<div>"+
-    "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='"+ _class + "'>"+
-         "<div class='header'>"+
-             "<div class='"+(isme ? "recipient_self" : "recipient")+"'>"+sender+"</div>"+
-             "<div class='timestamp'>" + timestamp +"</div>"+
-         "</div>"+
-         "<div class='message'>"+
-            "<span class='body'>"+text+"</span>"+
-        "</div>"+
-    "</div>"+
-    "</div>";
-
-  lastSender = ">"+sender;
-  lastTimestamp = timestamp;
-  
-  scrollToBottom();
-}
-
-function addOldPrivateChatMessage(isme, msgid, sender, iconpath, text, timestamp, state)
-{
-  var placeholder;
-  var content;
-
-  timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
-  
-  if (content != null)
-      content.id = "";
-
-  status = '';
-
-  if (state == "deferred") {
-      _class = "msgbox_deferred";
-      status = "Deferred for later ";
-  } else if (state == "failed") {
-      _class = "msgbox_failed"
-      status = "Failed ";
-  } else {
-      _class = "msgbox_private"
-  }
-    
-  placeholder.innerHTML += 
-    "<div>"+
-    "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='"+ _class + "'>"+
-         "<div class='header'>"+
-             "<div class='"+(isme ? "recipient_self" : "recipient")+"'>"+sender+"</div>"+
-             "<div class='timestamp'>" + timestamp +"</div>"+
-         "</div>"+
-         "<div class='message'>"+
-            "<span class='body'>"+text+"</span>"+
-        "</div>"+
-    "</div>"+
-    "</div>";
-
-  lastSender = ">"+sender;
-  lastTimestamp = timestamp;
-  
-  scrollToBottom();
 }
 
 
