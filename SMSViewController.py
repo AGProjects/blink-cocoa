@@ -194,9 +194,9 @@ class SMSViewController(NSObject):
         msgid = hash.hexdigest()
 
         if self.incoming_queue is not None:
-            self.incoming_queue.append((msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state))
+            self.incoming_queue.append((msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, "delivered"))
         else:
-            self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state=state)
+            self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -316,7 +316,7 @@ class SMSViewController(NSObject):
             if text:
                 msgid = self.sendMessage(text)
                 icon = NSApp.delegate().windowController.iconPathForSelf()
-                self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(datetime.datetime.utcnow()))
+                self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(datetime.datetime.utcnow()), state="sent")
             
             self.chatViewController.resetTyping()
 

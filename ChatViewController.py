@@ -275,25 +275,17 @@ class ChatViewController(NSObject):
             self.messageQueue.append(script)
 
     def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state='', recipient=''):
-        if self.history:
-            if direction == "incoming":
-                state = "delivered"
-            else:
-                if msgid and msgid.startswith("-"):
-                    state = "queued"
-                else:
-                    state = "sent"
-            if not history_entry:
-                self.history.log(
-                        id=msgid,
-                        direction=direction,
-                        sender=sender or format_identity(self.account),
-                        text=text,
-                        send_time=str(timestamp),
-                        delivered_time=str(timestamp),
-                        state=state,
-                        type=is_html and "html" or "text",
-                        recipient=recipient)
+        if self.history and not history_entry:
+            self.history.log(
+                    id=msgid,
+                    direction=direction,
+                    sender=sender or format_identity(self.account),
+                    text=text,
+                    send_time=str(timestamp),
+                    delivered_time=str(timestamp),
+                    state=state,
+                    type=is_html and "html" or "text",
+                    recipient=recipient)
 
         if timestamp.date() != datetime.date.today():
             displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))

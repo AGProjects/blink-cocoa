@@ -175,10 +175,14 @@ class MessageHandler(NSObject):
                     BlinkLogger().log_error("Error sending message: %s" % e)
                     self.delegate.showSystemMessage("Error sending message",now, True)
                 else:
-                    self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), recipient=recipient_html)
+                    self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), state="sent", recipient=recipient_html)
             else:
-                self.pending.append((text, now, "-" + str(now)))
-                self.delegate.showMessage("-" + str(now), 'outgoing', None, icon, text, Timestamp(now), recipient=recipient_html)
+                hash = hashlib.sha1()
+                hash.update(str(text)+str(now))
+                msgid = hash.hexdigest()
+
+                self.pending.append((text, now, msgid))
+                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state="queued", recipient=recipient_html)
 
         return True
 
@@ -544,6 +548,7 @@ class ChatController(MediaStream):
                 entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
 
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
+
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
             if len(failed_entries) > MAX_RESEND_LINES:
                 r = NSRunAlertPanel("Chat", "There are %i entries that could not be delivered in previous sessions.\nWould you like to resend them?" % len(failed_entries),
