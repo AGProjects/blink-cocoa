@@ -4,10 +4,15 @@
 from Foundation import *
 from AppKit import *
 
+import datetime
+import calendar
 import os
 import re
-import datetime
+import time
+
 from collections import defaultdict
+
+from sipsimple.util import Timestamp
 
 from SessionHistory import SessionHistory, ChatLog
 from util import format_identity_from_text
@@ -133,17 +138,30 @@ class ChatHistoryViewer(NSWindowController):
         if file:
             entries = ChatLog._load_entries(open(file))
             for entry in entries:
-                timestamp = entry["send_time"] or entry["delivered_time"]
+                id = entry["id"]
+                stamp = entry["send_time"] or entry["delivered_time"]
                 sender = entry["sender"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
+                recipient = entry["recipient"]
                 state = entry["state"]
                 sender_uri = format_identity_from_text(sender)[0]
                 if entry["direction"] == 'send':
                     icon = NSApp.delegate().windowController.iconPathForSelf()
+                    direction = 'outgoing'
                 else:
+                    direction = 'incoming'
                     icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
-                self.chatViewController.showMessage(timestamp, sender, icon, text, timestamp, is_html, True, state)
+
+                try:
+                    timestamp=Timestamp.parse(stamp)
+                except (TypeError, ValueError):
+                    continue
+
+                if recipient:
+                    self.chatViewController.showPrivateMessage(id, direction, sender, icon, text, timestamp, recipient, is_html, True, state)
+                else:
+                    self.chatViewController.showMessage(id, direction, sender, icon, text, timestamp, is_html, True, state)
 
     def tableView_deleteRow_(self, table, row):
         entries = self.entries if self.filtered is None else self.filtered

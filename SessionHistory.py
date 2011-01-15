@@ -2,13 +2,15 @@
 #
 
 import csv
-import os
+import datetime
 import re
+import os
 import time
 
 from application.python.util import Singleton
 from sipsimple.account import AccountManager
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.util import Timestamp
 
 import SIPManager
 from util import *
@@ -31,6 +33,7 @@ class ChatLog:
                     entries.append(item)
                 else:
                     queued.append(item)
+
             if entries:
                 f = open(tmp_file_name[:-4]+file_extension, "a+")
                 ChatLog._save_entries(f, entries)
@@ -54,8 +57,6 @@ class ChatLog:
                 if type(v) == str:
                     row[k] = row[k].decode("utf8")
 
-            row["send_time"] = parse_datetime(row["send_time"])
-            row["delivered_time"] = parse_datetime(row["delivered_time"])
             if not row["type"]:
                 row["type"] = "text"
 
@@ -201,6 +202,7 @@ class ChatLog:
         for entry in self.pending:
             if entry["id"] == id:
                 entry["state"] = state
+                entry["delivered_time"] = str(Timestamp(datetime.datetime.utcnow()))
                 self.pending.remove(entry)
                 ChatLog._update_entries(self.log_file_path, [entry])
                 break

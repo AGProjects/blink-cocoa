@@ -18,7 +18,7 @@ import os
 import re
 
 from application.notification import NotificationCenter
-from sipsimple.util import TimestampedNotificationData
+from sipsimple.util import TimestampedNotificationData, Timestamp
 
 from SmileyManager import SmileyManager
 from util import call_in_gui_thread, escape_html, format_identity
@@ -275,8 +275,8 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue.append(script)
 
-    def showMessage(self, msgid, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state=None): # delegate
-        astate = state = state or ''
+    def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state=None): # delegate
+        html_state = state = state or ''
         if self.history:
             incoming = sender is not None
             if sender is not None:
@@ -286,19 +286,18 @@ class ChatViewController(NSObject):
                     state = "queued"
                 else:
                     state = "sent"
-            log_timestamp = timestamp.strftime("%F %T")
             self.history.log(
                     id=msgid,
                     direction=incoming and "receive" or "send",
                     sender=sender or format_identity(self.account),
                     text=text,
-                    send_time=incoming and None or log_timestamp,
-                    delivered_time=incoming and log_timestamp or None,
+                    send_time=incoming and None or str(timestamp),
+                    delivered_time=incoming and str(timestamp) or None,
                     state=state,
                     type=is_html and "html" or "text",
                     recipient='')
 
-        if timestamp.date() != datetime.date.today():
+        if timestamp.utcnow().date() != datetime.date.today():
             displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
         else:
             displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
@@ -307,7 +306,7 @@ class ChatViewController(NSObject):
         msgid = "'%s'"%msgid if msgid else "null"
         label = cgi.escape(format_identity(self.account)) if sender is None else cgi.escape(sender)
 
-        script = """addChatMessage(%s, '%s', '%s', "%s", '%s', '%s')""" % (msgid, label, icon_path, text, displayed_timestamp, astate)
+        script = """addChatMessage(%s, '%s', '%s', '%s', "%s", '%s', '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, html_state)
 
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
@@ -320,25 +319,24 @@ class ChatViewController(NSObject):
         NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(message=text, direction='outgoing' if sender is None else 'incoming', history_entry=history_entry))
 
     def showOldMessage(self, msgid, sender, icon_path, text, timestamp, state, is_html):
-        if type(timestamp) is datetime.datetime:
-            # logs are in localtime
-            if timestamp.date() != datetime.date.today():
-                timestamp = time.strftime("%F %T", timestamp.utctimetuple())
-            else:
-                timestamp = time.strftime("%T", timestamp.utctimetuple())
+
+        if timestamp.utcnow().date() != datetime.date.today():
+            displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+        else:
+            displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         text = processHTMLText(text, self.expandSmileys, is_html=is_html)
         msgid = "'%s'"%msgid if msgid else "null"
         label = cgi.escape(sender)
 
-        script = """addOldChatMessage(%i, %s, '%s', '%s', '%s', '%s', '%s')""" % (int(label==format_identity(self.account)), msgid, label, icon_path, text, timestamp, state)
+        script = """addOldChatMessage(%i, %s, '%s', '%s', '%s', '%s', '%s')""" % (int(label==format_identity(self.account)), msgid, label, icon_path, text, displayed_timestamp, state)
 
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         else:
             self.messageQueue.append(script)
 
-    def showPrivateMessage(self, msgid, sender, icon_path, text, timestamp, recipient, is_html=False, history_entry=False, state=None): # delegate
+    def showPrivateMessage(self, msgid, direction, sender, icon_path, text, timestamp, recipient, is_html=False, history_entry=False, state=None): # delegate
         astate = state = state or ''
         if self.history:
             incoming = sender is not None
@@ -349,19 +347,18 @@ class ChatViewController(NSObject):
                     state = "queued"
                 else:
                     state = "sent"
-            log_timestamp = timestamp.strftime("%F %T")
             self.history.log(
                     id=msgid,
                     direction=incoming and "receive" or "send",
                     sender=sender or format_identity(self.account),
                     text=text,
-                    send_time=incoming and None or log_timestamp,
-                    delivered_time=incoming and log_timestamp or None,
+                    send_time=incoming and None or timestamp,
+                    delivered_time=incoming and timestamp or None,
                     state=state,
                     type=is_html and "html" or "text",
                     recipient=format_identity(recipient))
 
-        if timestamp.date() != datetime.date.today():
+        if timestamp.utcnow().date() != datetime.date.today():
             displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
         else:
             displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
@@ -370,7 +367,7 @@ class ChatViewController(NSObject):
         msgid = "'%s'"%msgid if msgid else "null"
         label = 'Private message to %s' % cgi.escape(format_identity(recipient)) if sender is None else 'Private message from %s' % cgi.escape(sender)
 
-        script = """addPrivateChatMessage(%s, '%s', '%s', '%s', '%s', '%s')""" % (msgid, label, icon_path, text, displayed_timestamp, astate)
+        script = """addPrivateChatMessage(%s, '%s', '%s', '%s', '%s', '%s', '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, astate)
 
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
@@ -382,12 +379,11 @@ class ChatViewController(NSObject):
 
 
     def showOldPrivateMessage(self, msgid, sender, icon_path, text, timestamp, state, is_html, recipient):
-        if type(timestamp) is datetime.datetime:
-            # logs are in localtime
-            if timestamp.date() != datetime.date.today():
-                timestamp = time.strftime("%F %T", timestamp.utctimetuple())
-            else:
-                timestamp = time.strftime("%T", timestamp.utctimetuple())
+
+        if timestamp.utcnow().date() != datetime.date.today():
+            displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+        else:
+            displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         text = processHTMLText(text, self.expandSmileys, is_html=is_html)
         sender_name = cgi.escape(sender)
@@ -395,13 +391,12 @@ class ChatViewController(NSObject):
         msgid = "'%s'"%msgid if msgid else "null"
         label = 'Private message to %s' % cgi.escape(recipient) if sender_name == myself else 'Private message from %s' % sender_name
 
-        script = """addOldPrivateChatMessage(%i, %s, '%s', '%s', '%s', '%s', '%s')""" % (int(sender_name==myself), msgid, label, icon_path, text, timestamp, state)
+        script = """addOldPrivateChatMessage(%i, %s, '%s', '%s', '%s', '%s', '%s')""" % (int(sender_name==myself), msgid, label, icon_path, text, displayed_timestamp, state)
 
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         else:
             self.messageQueue.append(script)
-
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument() 

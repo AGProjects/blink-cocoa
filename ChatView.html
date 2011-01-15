@@ -215,7 +215,7 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
+function addChatMessage(msgid, direction, sender, iconpath, text, timestamp, state)
 {
   var placeholder;
   var content;
@@ -227,14 +227,7 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
   placeholder = document.getElementById("placeholder");
 
   status = ''
-
-  if (msgid  != null)
-  {
-    box_class = "msgbox_sending";
-  } else {
-    box_class = "msgbox";
-    status = timestamp;
-  }
+  show_sending_state = ''
 
   if (state == "deferred") {
       box_class = "msgbox_deferred";
@@ -242,13 +235,21 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
   } else if (state == "failed") {
       box_class = "msgbox_failed"
       status = "Failed ";
+  } else if (state == "delivered") {
+      box_class = "msgbox";
+      status = timestamp;
+  } else if (direction == "outgoing") {
+      box_class = "msgbox_sending";
+      show_sending_state = 'yes'
+  } else {
+      box_class = "msgbox";
+      status = timestamp;
   }
   
   if (content != null)
       content.id = "";
 
-  if (msgid  != null)
-  {
+  if (show_sending_state == 'yes') {
     placeholder.innerHTML += 
     "<div>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
@@ -285,7 +286,7 @@ function addChatMessage(msgid, sender, iconpath, text, timestamp, state)
   scrollToBottom();
 }
 
-function addPrivateChatMessage(msgid, sender, iconpath, text, timestamp, state)
+function addPrivateChatMessage(msgid, direction, sender, iconpath, text, timestamp, state)
 {
   var placeholder;
   var content;
@@ -297,14 +298,7 @@ function addPrivateChatMessage(msgid, sender, iconpath, text, timestamp, state)
   placeholder = document.getElementById("placeholder");
 
   status = ''
-
-  if (msgid  != null)
-  {
-    box_class = "msgbox_sending";
-  } else {
-    box_class = "msgbox_private";
-    status = timestamp;
-  }
+  show_sending_state = ''
 
   if (state == "deferred") {
       box_class = "msgbox_deferred";
@@ -312,12 +306,21 @@ function addPrivateChatMessage(msgid, sender, iconpath, text, timestamp, state)
   } else if (state == "failed") {
       box_class = "msgbox_failed"
       status = "Failed ";
+  } else if (state == "delivered") {
+      box_class = "msgbox";
+      status = timestamp;
+  } else if (direction == "outgoing") {
+      box_class = "msgbox_sending";
+      show_sending_state = 'yes'
+  } else {
+      box_class = "msgbox";
+      status = timestamp;
   }
   
   if (content != null)
       content.id = "";
 
-  if (msgid  != null)
+  if (show_sending_state == 'yes')
   {
     placeholder.innerHTML += 
     "<div>"+

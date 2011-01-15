@@ -19,7 +19,7 @@ from sipsimple.account import Account, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream
 from sipsimple.streams.applications.chat import ChatIdentity
-from sipsimple.util import TimestampedNotificationData
+from sipsimple.util import TimestampedNotificationData, Timestamp
 
 import SessionController
 import ChatWindowManager
@@ -173,12 +173,12 @@ class MessageHandler(NSObject):
                     self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
                 else:
                     if recipient is not None and self.session.remote_focus and self.stream.private_messages_allowed:
-                        self.delegate.showPrivateMessage(message.id, None, icon, text, now, recipient)
+                        self.delegate.showPrivateMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), recipient)
                     else: 
-                        self.delegate.showMessage(message.id, None, icon, text, now)
+                        self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now))
             else:
                 self.pending.append((text, now, "-" + str(now)))
-                self.delegate.showMessage("-" + str(now), None, icon, text, now)
+                self.delegate.showMessage("-" + str(now), 'outgoing', None, icon, text, Timestamp(now))
         return True
 
     def resend(self, text, msgid, state):
@@ -190,12 +190,12 @@ class MessageHandler(NSObject):
             except Exception, e:
                 log.err()
                 BlinkLogger().log_error("Error sending message: %s" % e)
-                self.delegate.writeSysMessage("Error sending message",datetime.datetime.utcnow(), True)
+                self.delegate.writeSysMessage("Error sending message",now, True)
             else:
                 self.delegate.showOldMessage(message.id, None, icon, text, message.timestamp, state, False)
         else:
             self.pending.append((text, now, msgid))
-            self.delegate.showMessage(msgid, None, icon, text, now, state=state)
+            self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state=state)
 
     def setStream(self, stream):
         self.stream = stream
@@ -247,9 +247,9 @@ class MessageHandler(NSObject):
         recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
 
         if self.session.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri:
-            self.delegate.showPrivateMessage(None, name, icon, message.body, message.timestamp.utcnow(), recipient)
+            self.delegate.showPrivateMessage(None, 'incoming', name, icon, message.body, message.timestamp, recipient)
         else:
-            self.delegate.showMessage(None, name, icon, message.body, message.timestamp.utcnow())
+            self.delegate.showMessage(None, 'incoming', name, icon, message.body, message.timestamp)
 
         window = self.delegate.outputView.window()
         window_is_key = window.isKeyWindow() if window else False
@@ -555,23 +555,32 @@ class ChatController(MediaStream):
             old_entries.reverse()
             
             for entry in old_entries:
-                timestamp = entry["send_time"] or entry["delivered_time"]
+                stamp = entry["send_time"] or entry["delivered_time"]
                 sender = entry["sender"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
                 recipient = entry["recipient"]
+                state = entry["state"]
+                sender_uri = format_identity_from_text(sender)[0]
+                
                 if entry["direction"] == 'send':
                     icon = NSApp.delegate().windowController.iconPathForSelf()
                 else:
-                    icon = NSApp.delegate().windowController.iconPathForURI(entry["sender_uri"])
+                    icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+
+                try:
+                    timestamp=Timestamp.parse(stamp)
+                except (TypeError, ValueError):
+                    continue
 
                 if recipient:
-                    chatView.showOldPrivateMessage(None, sender, icon, text, timestamp, entry["state"], is_html, recipient)
+                    chatView.showOldPrivateMessage(None, sender, icon, text, timestamp, state, is_html, recipient)
                 else:
-                    chatView.showOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
+                    chatView.showOldMessage(None, sender, icon, text, timestamp, state, is_html)
 
         else:
             failed_entries = []
+
         if self.sessionController.account is not BonjourAccount():
             # do not resend bonjour messages as they might arive at the wrong recipient who broadcasted the same address
             pending = failed_entries

@@ -17,6 +17,7 @@ from sipsimple.lookup import DNSLookup
 from sipsimple.payloads.iscomposing import IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import Timestamp
 
 from BlinkLogger import BlinkLogger
 from SessionHistory import SessionHistory
@@ -185,11 +186,11 @@ class SMSViewController(NSObject):
     def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
-        timestamp = timestamp or datetime.datetime.utcnow()
+        timestamp = timestamp or Timestamp(datetime.datetime.utcnow())
         if self.incoming_queue is not None:
-            self.incoming_queue.append(('', format_identity(sender), icon, message, timestamp, is_html, False, state))
+            self.incoming_queue.append(('', 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state))
         else:
-            self.chatViewController.showMessage('', format_identity(sender), icon, message, timestamp, is_html, False, state)
+            self.chatViewController.showMessage('', 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state)
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -288,7 +289,7 @@ class SMSViewController(NSObject):
         else:
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             BlinkLogger().log_info("Sending replication SMS message to %s" % self.account.uri)
-            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", timestamp.strftime('%Y-%m-%d %H:%M:%S'))]
+            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(Timestamp(datetime.datetime.now())))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
@@ -309,7 +310,7 @@ class SMSViewController(NSObject):
             if text:
                 msgid = self.sendMessage(text)
                 icon = NSApp.delegate().windowController.iconPathForSelf()
-                self.chatViewController.showMessage(msgid, None, icon, text, datetime.datetime.utcnow())
+                self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(datetime.datetime.utcnow()))
             
             self.chatViewController.resetTyping()
 
@@ -338,13 +339,20 @@ class SMSViewController(NSObject):
             lines = SessionHistory().get_sms_history(self.account, self.target_uri, self.showHistoryEntries)
 
             for entry in lines:
-                timestamp = entry["send_time"] or entry["delivered_time"]
+                stamp = entry["send_time"] or entry["delivered_time"]
                 sender = entry["sender"]
                 text = entry["text"]
                 is_html = entry["type"] == "html"
-                address, display_name, full_uri, fancy_uri = format_identity_from_text(sender)
-                icon = NSApp.delegate().windowController.iconPathForURI(address)
-                chatView.writeOldMessage(None, sender, icon, text, timestamp, entry["state"], is_html)
+                state = entry["state"]
+                sender_uri = format_identity_from_text(sender)[0]
+
+                try:
+                    timestamp=Timestamp.parse(stamp)
+                except (TypeError, ValueError):
+                    continue
+
+                icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+                chatView.showOldMessage(None, sender, icon, text, timestamp, state, is_html)
 
         if self.incoming_queue is not None:
             for args in self.incoming_queue:

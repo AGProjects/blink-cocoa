@@ -15,6 +15,7 @@ from sipsimple.core import SIPURI
 from sipsimple.util import TimestampedNotificationData
 from sipsimple.payloads.iscomposing import IsComposingMessage
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
+from sipsimple.util import Timestamp
 
 import SIPManager
 
@@ -299,9 +300,9 @@ class SMSWindowManagerClass(NSObject):
                 replication_state = 'failed'
             replicated_timestamp = data.headers.get('X-Replication-Timestamp', Null).body
             try:
-                replication_timestamp = datetime.datetime.strptime(replicated_timestamp, '%Y-%m-%d %H:%M:%S')
+                replication_timestamp = Timestamp.parse(replicated_timestamp)
             except (TypeError, ValueError):
-                replication_timestamp = datetime.datetime.utcnow()
+                replication_timestamp = Timestamp(datetime.datetime.utcnow())
 
         viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
