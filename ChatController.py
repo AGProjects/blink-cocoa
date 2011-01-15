@@ -5,6 +5,7 @@ from Foundation import *
 from AppKit import *
 
 import datetime
+import hashlib
 import os
 import time
 
@@ -246,8 +247,12 @@ class MessageHandler(NSObject):
         recipient = message.recipients[0]
         recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
 
+        hash = hashlib.sha1()
+        hash.update(str(message))
+        msgid = hash.hexdigest()
+
         recipient_html = format_identity(recipient) if self.session.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
-        self.delegate.showMessage(None, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
+        self.delegate.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
 
         window = self.delegate.outputView.window()
         window_is_key = window.isKeyWindow() if window else False

@@ -5,6 +5,7 @@ from Foundation import *
 from AppKit import *
 
 import datetime
+import hashlib
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -187,10 +188,15 @@ class SMSViewController(NSObject):
         self.enableIsComposing = True
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
         timestamp = timestamp or Timestamp(datetime.datetime.utcnow())
+
+        hash = hashlib.sha1()
+        hash.update(str(message)+str(timestamp)+str(sender))
+        msgid = hash.hexdigest()
+
         if self.incoming_queue is not None:
-            self.incoming_queue.append(('', 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state))
+            self.incoming_queue.append((msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, state))
         else:
-            self.chatViewController.showMessage('', 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state=state)
+            self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state=state)
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -339,7 +345,8 @@ class SMSViewController(NSObject):
             lines = SessionHistory().get_sms_history(self.account, self.target_uri, self.showHistoryEntries)
 
             for entry in lines:
-                stamp = entry["send_time"] or entry["delivered_time"]
+                id = entry["id"]
+                stamp = entry["send_time"]
                 sender = entry["sender"]
                 direction = entry["direction"]
                 text = entry["text"]
@@ -353,7 +360,7 @@ class SMSViewController(NSObject):
                     continue
 
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
-                chatView.showMessage(None, direction, sender, icon, text, timestamp, state=state, is_html=is_html, history_entry=True)
+                chatView.showMessage(id, direction, sender, icon, text, timestamp, state=state, is_html=is_html, history_entry=True)
 
         if self.incoming_queue is not None:
             for args in self.incoming_queue:
