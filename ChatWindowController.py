@@ -335,7 +335,8 @@ class ChatWindowController(NSWindowController):
         if session.hasStreamOfType("audio"):
             media.append("audio")
 
-        participants.append(format_identity_address(session.remotePartyObject))
+        if format_identity_address(session.remotePartyObject) not in participants:
+            participants.append(format_identity_address(session.remotePartyObject))
 
         startConferenceWindow = StartConferenceWindow(participants=participants, media=media)
         conference = startConferenceWindow.run()

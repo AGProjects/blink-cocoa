@@ -47,9 +47,10 @@ class StartConferenceWindow(NSObject):
 
         if participants:
             self._participants = participants
-            self.participantsTable.reloadData()
         else:
             self._participants = []
+
+        self.participantsTable.reloadData()
         
         if media:
             self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
