@@ -862,23 +862,24 @@ class ChatController(MediaStream):
         hash = hashlib.sha1()
         hash.update(str(message.body)+str(message.timestamp))
         msgid = hash.hexdigest()
+        
+        if msgid not in self.history_msgid_list:
+            recipient_html = format_identity(recipient) if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
+            self.chatViewController.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
 
-        recipient_html = format_identity(recipient) if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
-        self.chatViewController.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
+            window = self.chatViewController.outputView.window()
+            window_is_key = window.isKeyWindow() if window else False
 
-        window = self.chatViewController.outputView.window()
-        window_is_key = window.isKeyWindow() if window else False
-
-        # FancyTabViewSwitcher will set unfocused tab item views as Hidden
-        if not window_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
-            # notify growl
-            growl_data = TimestampedNotificationData()
-            growl_data.sender = format_identity_address(message.sender)
-            if message.content_type == 'text/html':
-                growl_data.content = html2txt(message.body[0:400])
-            else:
-                growl_data.content = message.body[0:400]
-            NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
+            # FancyTabViewSwitcher will set unfocused tab item views as Hidden
+            if not window_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
+                # notify growl
+                growl_data = TimestampedNotificationData()
+                growl_data.sender = format_identity_address(message.sender)
+                if message.content_type == 'text/html':
+                    growl_data.content = html2txt(message.body[0:400])
+                else:
+                    growl_data.content = message.body[0:400]
+                NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
     def _NH_ChatStreamGotComposingIndication(self, sender, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
