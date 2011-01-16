@@ -265,7 +265,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
              "<div class='timestamp_hidden' id='t"+msgid+"'>" +timestamp+"</div>"+
              "<div class='state' id='s"+msgid+"'>Sending...</div>"+
          "</div>"+
-         "<div class='message'>"+
+         "<div class='message' id='b"+msgid+"'>"+
             "<span class='body'>"+text+"</span>"+
         "</div>"+
     "</div>"+
@@ -279,7 +279,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
              "<div class='recipient'>"+sender+"</div>"+
              "<div class='timestamp'>"+status+"</div>"+
          "</div>"+
-         "<div class='message'>"+
+         "<div class='message' id='b"+msgid+"'>"+
             "<span class='body'>"+text+"</span>"+
         "</div>"+
     "</div>"+
@@ -292,6 +292,12 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
   scrollToBottom();
 }
 
+function updateMessageBodyContent(msgid, text)
+{
+  body = document.getElementById('b'+msgid)
+  if (body != null)
+    body.innerHTML = "<span class='body'>"+text+"</span>";
+}
 
 function renderSystemMessage(text, timestamp, is_error)
 {
@@ -347,6 +353,7 @@ function markDelivered(msgid, private)
   if (msg != null)
     msg.style.display = "none";
 }
+
 
 function markDeferred(msgid)
 {

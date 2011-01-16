@@ -40,6 +40,12 @@ _url_pattern = re.compile("((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)")
 _url_pattern_exact = re.compile("^((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)$")
 
 
+class ChatMessageObject(object):
+    def __init__(self, msgid, text, is_html):
+        self.msgid = msgid
+        self.text = text
+        self.is_html = is_html
+
 def processHTMLText(text, usesmileys=True, is_html=False):
     def suball(pat, repl, html):
         ohtml = ""
@@ -155,6 +161,7 @@ class ChatViewController(NSObject):
     delegate = objc.IBOutlet()
     history = None
     account = None
+    rendered_messages = None
     finishedLoading = False
 
     expandSmileys = True
@@ -163,6 +170,9 @@ class ChatViewController(NSObject):
     lastTypeNotifyTime = None
     # timer is triggered every TYPING_IDLE_TIMEOUT, and a new is-composing msg is sent
     typingTimer = None
+
+    def resetRenderedMessages(self):
+        self.rendered_messages=set()
 
     def setAccount_(self, account):
         self.account = account
@@ -272,6 +282,10 @@ class ChatViewController(NSObject):
             self.messageQueue.append(script)
 
     def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state='', recipient=''):
+        # keep track of rendered messages to toggle the smileys
+        rendered_message = ChatMessageObject(msgid, text, is_html)
+        self.rendered_messages.add(rendered_message)
+
         if self.history and not history_entry:
             self.history.log(
                     id=msgid,
@@ -290,7 +304,6 @@ class ChatViewController(NSObject):
             displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         text = processHTMLText(text, self.expandSmileys, is_html)
-        msgid = "'%s'"%msgid if msgid else "null"
         private = 1 if recipient else "null"        
 
         if recipient:
@@ -298,7 +311,7 @@ class ChatViewController(NSObject):
         else: 
             label = cgi.escape(format_identity(self.account)) if sender is None else cgi.escape(sender)
 
-        script = """renderMessage(%s, '%s', '%s', '%s', "%s", '%s', '%s', %s)""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private)
+        script = """renderMessage('%s', '%s', '%s', '%s', "%s", '%s', '%s', %s)""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private)
 
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
@@ -309,6 +322,16 @@ class ChatViewController(NSObject):
             self.delegate.chatViewDidGetNewMessage_(self)
 
         NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(message=text, direction='outgoing' if sender is None else 'incoming', history_entry=history_entry))
+
+    def toggleSmileys(self, expandSmileys):
+        for entry in self.rendered_messages:
+            self.updateMessage(entry.msgid, entry.text, entry.is_html, expandSmileys)
+
+    def updateMessage(self, msgid, text, is_html, expandSmileys):
+        text = processHTMLText(text, expandSmileys, is_html)
+        script = """updateMessageBodyContent('%s', "%s")""" % (msgid, text)
+        call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
+        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument() 

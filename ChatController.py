@@ -300,6 +300,7 @@ class ChatController(MediaStream):
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setAccount_(self.sessionController.account)
+            self.chatViewController.resetRenderedMessages()
 
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
@@ -819,7 +820,8 @@ class ChatController(MediaStream):
                 self.sessionController.startChatSession()
         elif tag == SessionController.TOOLBAR_SMILEY:
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
-            sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off")) 
+            sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
+            self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
         elif tag == SessionController.TOOLBAR_HISTORY:
             contactWindow = self.sessionController.owner
             contactWindow.showChatTranscripts_(None)
