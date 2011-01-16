@@ -591,7 +591,10 @@ class ChatWindowController(NSWindowController):
         # update the toolbar buttons depending on session and stream state
         if self.tabView.selectedTabViewItem():
             identifier = self.tabView.selectedTabViewItem().identifier()
-            self.sessions[identifier].updateToolbarButtons(self.toolbar, got_proposal)
+            try:
+                self.sessions[identifier].updateToolbarButtons(self.toolbar, got_proposal)
+            except KeyError:
+                pass
             self.toolbar.validateVisibleItems()
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
