@@ -327,22 +327,6 @@ function renderSystemMessage(text, timestamp, is_error)
   return 0;
 }
 
-function fixupMessageId(oldid, msgid)
-{
-  var msg = document.getElementById(oldid);
-  if (msg != null)
-    msg.id = msgid;
-    
-  msg = document.getElementById('t'+oldid);
-  if (msg != null)
-    msg.id = 't'+msgid;
-    
-  msg = document.getElementById('s'+oldid);
-  if (msg != null)
-    msg.id = 's'+msgid;
-}
-
-
 function markDelivered(msgid, private)
 {
   var msg = document.getElementById(msgid);

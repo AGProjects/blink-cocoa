@@ -86,8 +86,9 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
 
 
 class MessageInfo(object):
-    def __init__(self, id, timestamp, state, private):
+    def __init__(self, id, msgid, timestamp, state, private):
         self.id = id
+        self.msgid = msgid
         self.timestamp = timestamp
         self.state = state
         self.private = private
@@ -137,19 +138,20 @@ class MessageHandler(NSObject):
     def setDelegate(self, delegate):
         self.delegate = delegate
 
-    def _send(self, text, timestamp, recipient=None):
+    def _send(self, msgid, text, timestamp, recipient=None):
         if recipient is not None:
-            msgid = self.stream.send_message(text, timestamp=timestamp, recipients=[recipient])
+            id = self.stream.send_message(text, timestamp=timestamp, recipients=[recipient])
             private = True
         else:
-            msgid = self.stream.send_message(text, timestamp=timestamp)
+            id = self.stream.send_message(text, timestamp=timestamp)
             private = False
-        message = MessageInfo(msgid, timestamp, MSG_STATE_SENDING, private)
-        self.messages[msgid] = message
+        message = MessageInfo(id, msgid, timestamp, MSG_STATE_SENDING, private)
+        self.messages[id] = message
         return message
 
     def send(self, text, recipient=None):
         now = datetime.datetime.utcnow()
+        timestamp = Timestamp(now)
         icon = NSApp.delegate().windowController.iconPathForSelf()
         leftover = text
         recipient_html = format_identity(recipient) if recipient is not None and self.session.remote_focus and self.stream.private_messages_allowed else ''
@@ -166,22 +168,23 @@ class MessageHandler(NSObject):
                 text = leftover
                 leftover = ""
 
+
+            hash = hashlib.sha1()
+            hash.update(str(text)+str(timestamp))
+            msgid = hash.hexdigest()
+
             if self.connected:
                 try:
-                    message = self._send(text, now, recipient)
+                    self._send(msgid, text, now, recipient)
                 except Exception, e:
                     log.err()
                     BlinkLogger().log_error("Error sending message: %s" % e)
                     self.delegate.showSystemMessage("Error sending message",now, True)
                 else:
-                    self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), state="sent", recipient=recipient_html)
+                    self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="sent", recipient=recipient_html)
             else:
-                hash = hashlib.sha1()
-                hash.update(str(text)+str(now))
-                msgid = hash.hexdigest()
-
                 self.pending.append((text, now, msgid))
-                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state="queued", recipient=recipient_html)
+                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="queued", recipient=recipient_html)
 
         return True
 
@@ -190,12 +193,12 @@ class MessageHandler(NSObject):
         icon = NSApp.delegate().windowController.iconPathForSelf()
         if self.connected:
             try:
-                message = self._send(text, now)
+                self._send(msgid, text, now)
             except Exception, e:
                 BlinkLogger().log_error("Error sending message: %s" % e)
                 self.delegate.showSystemMessage("Error sending message",now, True)
             else:
-                self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), state="sent", history_entry=True)
+                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state="sent", history_entry=True)
         else:
             self.pending.append((text, now, msgid))
             self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state="queued", history_entry=True)
@@ -207,12 +210,14 @@ class MessageHandler(NSObject):
         self.connected = True
         for text, timestamp, msgid in self.pending:
             try:
-                message = self._send(text, timestamp)
+                message = self._send(msgid, text, timestamp)
             except Exception, e:
                 log.err()
                 BlinkLogger().log_error("Error sending queued message: %s" % e)
             else:
-                self.delegate.updateMessageId(msgid, message.id)
+                if self.history:
+                    self.history.set_sent(msgid)
+
         self.pending = []
 
     def setDisconnected(self):
@@ -228,7 +233,7 @@ class MessageHandler(NSObject):
 
     def markMessage(self, message, state):
         message.state = state
-        self.delegate.markMessage(message.id, state, message.private)
+        self.delegate.markMessage(message.msgid, state, message.private)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -285,6 +290,7 @@ class ChatController(MediaStream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
+            self.history_msgid_list=set()
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, sender=self.sessionController.session)
@@ -505,6 +511,9 @@ class ChatController(MediaStream):
             else:
                 entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
 
+            for entry in entries:
+                self.history_msgid_list.add(entry["id"])
+    
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
             
@@ -851,7 +860,7 @@ class ChatController(MediaStream):
         recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
 
         hash = hashlib.sha1()
-        hash.update(str(message))
+        hash.update(str(message.body)+str(message.timestamp))
         msgid = hash.hexdigest()
 
         recipient_html = format_identity(recipient) if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''

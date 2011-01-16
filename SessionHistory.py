@@ -185,11 +185,9 @@ class ChatLog:
             if not duplicate:
                 self.pending.append(kwargs)
 
-    def set_sent(self, id, msgid):
+    def set_sent(self, id):
         for entry in self.pending:
             if entry["id"] == id:
-                entry["id"] = msgid
-                entry["old_id"] = id
                 entry["state"] = "sent"
                 break
     
