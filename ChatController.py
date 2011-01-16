@@ -215,8 +215,7 @@ class MessageHandler(NSObject):
                 log.err()
                 BlinkLogger().log_error("Error sending queued message: %s" % e)
             else:
-                if self.history:
-                    self.history.set_sent(msgid)
+                self.delegate.markMessage(msgid, MSG_STATE_SENDING)
 
         self.pending = []
 

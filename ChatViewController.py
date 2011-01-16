@@ -244,6 +244,9 @@ class ChatViewController(NSObject):
             call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
             if self.history:
                 self.history.set_failed(msgid)
+        elif state == MSG_STATE_SENDING:                
+            if self.history:
+                self.history.set_sent(msgid)
 
     def clear(self):
         if self.finishedLoading:
