@@ -37,7 +37,7 @@ class ChatWindowController(NSWindowController):
     drawer = objc.IBOutlet()
     drawerTableView = objc.IBOutlet()
     drawerScrollView = objc.IBOutlet()
-    addParticipants = objc.IBOutlet()
+    actionsButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
@@ -375,6 +375,12 @@ class ChatWindowController(NSWindowController):
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()
         session = self.selectedSession()
+
+        if not isinstance(session.account, BonjourAccount):
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(True)
+        else:
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False)
+
         if not session or contact is None:
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(False)
@@ -428,8 +434,7 @@ class ChatWindowController(NSWindowController):
             self.drawerTableView.deselectAll_(self)
             self.refreshDrawer()
 
-    @objc.IBAction
-    def addParticipants_(self, sender):
+    def addParticipants(self):
         session = self.selectedSession()
         if session:
             if session.remote_focus:
@@ -457,6 +462,17 @@ class ChatWindowController(NSWindowController):
                 self.refreshDrawer()
             else:
                 self.startConferenceWindow(session)
+
+ 
+    @objc.IBAction
+    def userClickedActionsButton_(self, sender):
+        point = sender.convertPointToBase_(NSZeroPoint)
+        point.x += 30
+        point.y -= 10
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                    NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                    sender.window().graphicsContext(), 0, 1, 0)
+        NSMenu.popUpContextMenu_withEvent_forView_(self.participantMenu, event, sender)
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
@@ -535,6 +551,8 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().windowController.addContact(uri, display_name)
             elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
                 self.removeParticipant(uri)
+            elif tag == SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
+                self.addParticipants()
             elif tag == SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
                 self.sendPrivateMessage()
             elif tag == SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION:
@@ -720,11 +738,6 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setHidden_(False)
             else:
                 self.audioStatus.setHidden_(True)
-
-            if not isinstance(session.account, BonjourAccount):
-                self.addParticipants.setEnabled_(True)
-            else:
-                self.addParticipants.setEnabled_(False)
 
             if not self.participants:
                 # hide the drawer if everyone left
