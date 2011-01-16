@@ -100,6 +100,7 @@ class SessionController(NSObject):
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
+        self.last_history_entry = None
         self.invited_participants = []
         self.pending_removal_participants = set()
         self.mustShowDrawer = True
@@ -131,6 +132,7 @@ class SessionController(NSObject):
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
+        self.last_history_entry = None
         self.invited_participants = []
         self.pending_removal_participants = set()
         self.mustShowDrawer = True
@@ -284,6 +286,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.remote_focus_log = False
         self.conference_info = None
+        self.last_history_entry = None
         self.invited_participants = []
         self.pending_removal_participants = set()
         self.participants_log = []
@@ -342,6 +345,11 @@ class SessionController(NSObject):
             log_debug(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
             self.changeSessionState(STATE_DNS_LOOKUP)
             SIPManager().request_routes_lookup(self.account, self.target_uri, self)
+
+            if self.hasStreamOfType("chat") and self.streamHandlerOfType("chat").last_history_entry:
+                self.last_history_entry = self.streamHandlerOfType("chat").last_history_entry
+                log_info(self, 'Last chat history entry %s:' % self.last_history_entry)
+                
             if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                 self.waitingForITunes = True
                 itunes_interface = ITunesInterface()
@@ -465,6 +473,10 @@ class SessionController(NSObject):
 
     def connectSession(self):
         if self.session:
+            # TODO - append an extra header for chat to retrive the last messages from the server -adi
+            #if self.last_history_entry
+            #    extra_headers = [Header("X-Last-History-Entry", str(self.last_history_entry))]
+
             streams = [s.stream for s in self.streamHandlers]
             self.session.connect(ToHeader(self.target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)
@@ -534,6 +546,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.remote_focus_log = False
         self.conference_info = None
+        self.last_history_entry = None
         self.invited_participants = []
         self.participants_log = []
         self.streams_log = []
@@ -572,6 +585,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.remote_focus_log = False
         self.conference_info = None
+        self.last_history_entry = None
         self.invited_participants = []
         self.participants_log = []
         self.streams_log = []

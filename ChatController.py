@@ -289,7 +289,9 @@ class ChatController(MediaStream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
+            self.last_history_entry = None
             self.history_msgid_list=set()
+
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, sender=self.sessionController.session)
@@ -305,16 +307,30 @@ class ChatController(MediaStream):
             if self.loggingEnabled:
                 try:
                     uri = format_identity_address(self.sessionController.remotePartyObject)
-
                     contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
                     if contact:
                         uri = str(contact.uri)
 
                     self.history = SessionHistory().open_chat_history(self.sessionController.account, uri)
                     self.chatViewController.setHistory_(self.history)
+                    
                 except Exception, exc:
                     self.loggingEnabled = False
                     self.chatViewController.showSystemMessage("Unable to create Chat History file: %s"%exc, datetime.datetime.utcnow(), True)
+
+                if self.showHistoryEntries > 0:
+                    if self.sessionController.account is BonjourAccount():
+                        self.history_entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
+                    else:
+                        self.history_entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+
+                    for entry in self.history_entries:
+                        self.history_msgid_list.add(entry["id"])
+
+                    try:
+                        self.last_history_entry = self.history_entries[-1]['send_time']
+                    except (KeyError, IndexError):
+                        pass
 
             # Chat drawer has now contextual menu for adding contacts
             #if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
@@ -501,20 +517,9 @@ class ChatController(MediaStream):
 
     def chatViewDidLoad_(self, chatView):
         if self.showHistoryEntries > 0:
-            uri = format_identity_address(self.sessionController.remotePartyObject)
-            contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
-            if contact:
-                uri = str(contact.uri)
-            if self.sessionController.account is BonjourAccount():
-                entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
-            else:
-                entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
-
-            for entry in entries:
-                self.history_msgid_list.add(entry["id"])
     
-            failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
-            old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
+            failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(self.history_entries)))
+            old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(self.history_entries)))
             
             failed_entries.reverse()
             old_entries.reverse()
