@@ -27,7 +27,7 @@ from util import call_in_gui_thread, escape_html, format_identity
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent
 MSG_STATE_FAILED = "failed" # msg delivery failed
 MSG_STATE_DELIVERED = "delivered" # msg successfully delivered
-MSG_STATE_DEFERRED = "deferred" # msg deferred for later delivery
+MSG_STATE_DEFERRED = "deferred" # msg delivered to a server but deferred for later delivery
 
 # if user doesnt type for this time, we consider it idling
 TYPING_IDLE_TIMEOUT = 5
@@ -250,7 +250,6 @@ class ChatViewController(NSObject):
             call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
             if self.history:
                 self.history.set_failed(msgid)
-
     def clear(self):
         if self.finishedLoading:
             self.outputView.stringByEvaluatingJavaScriptFromString_("clear()")

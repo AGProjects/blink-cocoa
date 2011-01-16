@@ -197,7 +197,8 @@ class ChatLog:
         for entry in self.pending:
             if entry["id"] == id:
                 entry["state"] = state
-                entry["delivered_time"] = str(Timestamp(datetime.datetime.utcnow()))
+                if state in ("delivered", "deferred"):
+                    entry["delivered_time"] = str(Timestamp(datetime.datetime.utcnow()))
                 self.pending.remove(entry)
                 ChatLog._update_entries(self.log_file_path, [entry])
                 break

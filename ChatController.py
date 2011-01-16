@@ -36,7 +36,6 @@ from util import *
 
 
 DELIVERY_TIMEOUT = 5.0
-MAX_RESEND_LINES = 10
 MAX_MESSAGE_LENGTH = 16*1024
 
 def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
@@ -186,27 +185,25 @@ class MessageHandler(NSObject):
 
         return True
 
-    def resend(self, text, msgid, state):
+    def resend(self, text, msgid):
         now = datetime.datetime.utcnow()
         icon = NSApp.delegate().windowController.iconPathForSelf()
         if self.connected:
             try:
                 message = self._send(text, now)
             except Exception, e:
-                log.err()
                 BlinkLogger().log_error("Error sending message: %s" % e)
                 self.delegate.showSystemMessage("Error sending message",now, True)
             else:
-                self.delegate.showMessage(message.id, 'outgoing', None, icon, text, message.timestamp, state)
+                self.delegate.showMessage(message.id, 'outgoing', None, icon, text, Timestamp(now), state="sent", history_entry=True)
         else:
             self.pending.append((text, now, msgid))
-            self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state=state)
+            self.delegate.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(now), state="queued", history_entry=True)
 
-    def setStream(self, stream):
+    def setConnected(self, stream):
         self.stream = stream
         NotificationCenter().add_observer(self, sender=stream)
-
-    def setConnected(self):
+        icon = NSApp.delegate().windowController.iconPathForSelf()
         self.connected = True
         for text, timestamp, msgid in self.pending:
             try:
@@ -238,39 +235,6 @@ class MessageHandler(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
-
-    def _NH_ChatStreamGotMessage(self, sender, data):
-        message = data.message
-
-        # display message
-        name = format_identity(message.sender)
-
-        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
-
-        own_uri = '%s@%s' % (self.session.account.id.username, self.session.account.id.domain)
-        recipient = message.recipients[0]
-        recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
-
-        hash = hashlib.sha1()
-        hash.update(str(message))
-        msgid = hash.hexdigest()
-
-        recipient_html = format_identity(recipient) if self.session.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
-        self.delegate.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
-
-        window = self.delegate.outputView.window()
-        window_is_key = window.isKeyWindow() if window else False
-
-        # FancyTabViewSwitcher will set unfocused tab item views as Hidden
-        if not window_is_key or self.delegate.view.isHiddenOrHasHiddenAncestor():
-            # notify growl
-            growl_data = TimestampedNotificationData()
-            growl_data.sender = format_identity_address(message.sender)
-            if message.content_type == 'text/html':
-                growl_data.content = html2txt(message.body[0:400])
-            else:
-                growl_data.content = message.body[0:400]
-            NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
     def _NH_ChatStreamDidDeliverMessage(self, sender, data):
         message = self.messages.pop(data.message_id)
@@ -397,13 +361,6 @@ class ChatController(MediaStream):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
-    def setStream(self, stream, connected=False):
-        self.stream = stream
-        self.handler.setStream(stream)
-        if connected:
-            self.handler.setConnected()
-        self.notification_center.add_observer(self, sender=stream)
-
     def end(self, autoclose=False):
         log_info(self, "Ending session in %s"%self.status)
         status = self.status
@@ -438,8 +395,9 @@ class ChatController(MediaStream):
         elif newstate == STREAM_IDLE:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
                 BlinkLogger().log_info("Chat session ended (%s)"%fail_reason)
-                close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-                self.chatViewController.showSystemMessage(close_message, datetime.datetime.utcnow())
+                if self.status == STREAM_CONNECTED:
+                    close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
+                    self.chatViewController.showSystemMessage(close_message, datetime.datetime.utcnow())
                 ended = True
         elif newstate == STREAM_FAILED:
             if self.status not in (STREAM_FAILED, STREAM_IDLE):
@@ -548,16 +506,7 @@ class ChatController(MediaStream):
                 entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
 
             failed_entries = list(takewhile(lambda entry: entry['state']=='failed', reversed(entries)))
-
             old_entries = list(dropwhile(lambda entry: entry['state']=='failed', reversed(entries)))
-            if len(failed_entries) > MAX_RESEND_LINES:
-                r = NSRunAlertPanel("Chat", "There are %i entries that could not be delivered in previous sessions.\nWould you like to resend them?" % len(failed_entries),
-                                    "Resend", "Cancel", None)
-                if r != NSAlertDefaultReturn:
-                    for entry in failed_entries:
-                        entry['state'] = 'dropped'
-                    old_entries = failed_entries + old_entries
-                    failed_entries = []
             
             failed_entries.reverse()
             old_entries.reverse()
@@ -590,13 +539,11 @@ class ChatController(MediaStream):
 
         if self.sessionController.account is not BonjourAccount():
             # do not resend bonjour messages as they might arive at the wrong recipient who broadcasted the same address
-            pending = failed_entries
             if self.history:
-                pending += self.history.pending
-                self.history.pending = []
+                self.history.pending += failed_entries
 
-            for entry in pending:
-                self.handler.resend(entry["text"], entry["id"], entry["state"])
+            for entry in self.history.pending:
+                self.handler.resend(entry["text"], entry["id"])
 
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
@@ -892,6 +839,38 @@ class ChatController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    def _NH_ChatStreamGotMessage(self, sender, data):
+        message = data.message
+        # display message
+        name = format_identity(message.sender)
+
+        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
+
+        own_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain)
+        recipient = message.recipients[0]
+        recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
+
+        hash = hashlib.sha1()
+        hash.update(str(message))
+        msgid = hash.hexdigest()
+
+        recipient_html = format_identity(recipient) if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
+        self.chatViewController.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
+
+        window = self.chatViewController.outputView.window()
+        window_is_key = window.isKeyWindow() if window else False
+
+        # FancyTabViewSwitcher will set unfocused tab item views as Hidden
+        if not window_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
+            # notify growl
+            growl_data = TimestampedNotificationData()
+            growl_data.sender = format_identity_address(message.sender)
+            if message.content_type == 'text/html':
+                growl_data.content = html2txt(message.body[0:400])
+            else:
+                growl_data.content = message.body[0:400]
+            NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
+
     def _NH_ChatStreamGotComposingIndication(self, sender, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
@@ -915,12 +894,12 @@ class ChatController(MediaStream):
 
             window.noteSession_isComposing_(self.sessionController, flag)
 
-    def _NH_SIPSessionDidStart(self, sender, data):
+    def _NH_MediaStreamDidStart(self, sender, data):
+        log_info(self, "Chat stream started")
+        self.changeStatus(STREAM_CONNECTED)
+        self.notification_center.add_observer(self, sender=self.stream)
         if self.handler:
-            log_info(self, "Chat stream started")
-            streams = [stream for stream in data.streams if isinstance(stream, ChatStream)]
-            self.setStream(streams[0], connected=True)
-            self.changeStatus(STREAM_CONNECTED)
+            self.handler.setConnected(self.stream)
 
         # Required to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
@@ -930,7 +909,7 @@ class ChatController(MediaStream):
             # Required to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self)
 
-    def _NH_SIPSessionDidEnd(self, sender, data):
+    def _NH_MediaStreamDidEnd(self, sender, data):
         log_info(self, "Chat stream ended: %s" % self.stream)
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         if self.wasRemoved:
@@ -942,16 +921,8 @@ class ChatController(MediaStream):
             window.noteSession_isComposing_(self.sessionController, False)
 
     def _NH_SIPSessionDidFail(self, sender, data):
-        log_info(self, "Chat stream failed: %s" % self.stream)
-        self.changeStatus(STREAM_FAILED, self.fail_reason or data.reason)
-        self.fail_reason = None
-        if self.wasRemoved:
-            if self.history:
-                self.history.close()
-                self.history = None
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        if window:
-            window.noteSession_isComposing_(self.sessionController, False)
+        message = "Session failed: %s" % data.reason
+        self.chatViewController.showSystemMessage(message, datetime.datetime.utcnow(), True)
 
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
         if data.action == 'remove' and self.stream in data.streams:
@@ -982,6 +953,18 @@ class ChatController(MediaStream):
         reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
         self.fail_reason = reason
         self.chatViewController.showSystemMessage(reason, datetime.datetime.utcnow(), True)
+        log_info(self, "Chat stream failed: %s" % self.stream)
+
+        self.changeStatus(STREAM_FAILED, self.fail_reason or data.reason)
+        self.fail_reason = None
+        if self.wasRemoved:
+            if self.history:
+                self.history.close()
+                self.history = None
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if window:
+            window.noteSession_isComposing_(self.sessionController, False)
+
 
     def didRemove(self):
         self.chatViewController.close()
