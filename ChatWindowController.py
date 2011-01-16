@@ -176,14 +176,12 @@ class ChatWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                if conf_desc.display_text and conf_desc.free_text:
-                    title = u"%s %s" % (conf_desc.display_text, conf_desc.free_text)
-                elif conf_desc.display_text:
-                    title = u"%s" % conf_desc.display_text
-                elif conf_desc.free_text:
-                    title = u"%s" % conf_desc.free_text
+                if conf_desc.display_text:
+                    title = u"%s " % conf_desc.display_text
                 else:
-                    title = u'Multi Party Conference'
+                    title = u'Conference '
+
+                title = title + session.getTitleFull()
 
             if title is None:
                 if isinstance(session.account, BonjourAccount):
