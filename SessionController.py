@@ -339,7 +339,7 @@ class SessionController(NSObject):
                     add_streams.append(controller.stream)
 
             else:
-                print "Stream already exists: %s"%self.streamHandlers
+                log_debug(self, "Stream already exists: %s"%self.streamHandlers)
 
         if new_session:
             log_debug(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
