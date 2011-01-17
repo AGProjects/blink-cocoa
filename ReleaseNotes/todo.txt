@@ -14,3 +14,9 @@ Nice to have
 - Redesign Preferences
 - Redesign History
 - Call Transfer
+
+Bugs
+----
+
+- Chat stream - adding/removing observers
+- Tab is not found after adding/removing chat with audio present
