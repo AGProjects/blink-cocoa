@@ -170,7 +170,7 @@ class MessageHandler(NSObject):
 
 
             hash = hashlib.sha1()
-            hash.update(str(text)+str(timestamp))
+            hash.update(text.encode("utf-8")+str(timestamp))
             msgid = hash.hexdigest()
 
             if self.connected:
@@ -866,9 +866,9 @@ class ChatController(MediaStream):
         recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
 
         hash = hashlib.sha1()
-        hash.update(str(message.body)+str(message.timestamp))
+        hash.update(message.body.encode("utf-8")+str(message.timestamp))
         msgid = hash.hexdigest()
-        
+
         if msgid not in self.history_msgid_list:
             recipient_html = format_identity(recipient) if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri == own_uri else ''
             self.chatViewController.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, recipient=recipient_html, state="delivered")
