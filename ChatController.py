@@ -919,11 +919,6 @@ class ChatController(MediaStream):
         # Required to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-    def _NH_SIPSessionGotProposal(self, sender, data):
-        if data.originator != "local":
-            # Required to temporarily disable the Chat Window toolbar buttons
-            self.notification_center.post_notification("BlinkGotProposal", sender=self)
-
     def _NH_MediaStreamDidEnd(self, sender, data):
         log_info(self, "Chat stream ended: %s" % self.stream)
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)

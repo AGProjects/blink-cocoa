@@ -601,6 +601,9 @@ class SessionController(NSObject):
             log_info(self, "Got a Stream proposal from %s with streams %s" % (sender.remote_identity, stream_names))
             self.owner.handle_incoming_proposal(sender, data.streams)
 
+            # needed to temporarily disable the Chat Window toolbar buttons
+            self.notification_center.post_notification("BlinkGotProposal", sender=self)
+
     def _NH_SIPSessionGotRejectProposal(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
