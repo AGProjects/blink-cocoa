@@ -940,31 +940,6 @@ class ChatController(MediaStream):
         message = "Session failed: %s" % data.reason
         self.chatViewController.showSystemMessage(message, datetime.datetime.utcnow(), True)
 
-    def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
-        if data.action == 'remove' and self.stream in data.streams:
-            if self.fail_reason is not None:
-                log_info(self, "Chat stream failed: %s" % self.fail_reason)
-                self.fail_reason = None
-            else:
-                log_info(self, "Chat stream ended: %s" % self.stream)
-            self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-            if self.wasRemoved:
-                if self.history:
-                    self.history.close()
-                    self.history = None
-            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-            if window:
-                window.noteSession_isComposing_(self.sessionController, False)
-        elif data.action == 'add' and self.handler:
-            try:
-                stream = (stream for stream in data.streams if self.stream == stream).next()
-            except StopIteration:
-                pass
-            else:
-                log_info(self, "Chat stream started")
-                self.setStream(stream, connected=True)
-                self.changeStatus(STREAM_CONNECTED)
-
     def _NH_MediaStreamDidFail(self, sender, data):
         reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
         self.fail_reason = reason
