@@ -297,6 +297,7 @@ function updateMessageBodyContent(msgid, text)
   body = document.getElementById('b'+msgid)
   if (body != null)
     body.innerHTML = "<span class='body'>"+text+"</span>";
+    scrollToBottom();
 }
 
 function renderSystemMessage(text, timestamp, is_error)
