@@ -400,27 +400,16 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri else False)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri else False)
- 
-    def canGoToConferenceWebsite(self):
-        session = self.selectedSession()
-        if session.conference_info is not None:
-            conf_desc = session.conference_info.conference_description
-            if hasattr(conf_desc.service_uris, "web-site") and conf_desc.service_uris.web-site:
-               return True
-        return False
-
 
     def menuWillOpen_(self, menu):
         if menu == self.participantMenu:
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
- 
+
     def canGoToConferenceWebsite(self):
         session = self.selectedSession()
-        if session.conference_info is not None:
-            conf_desc = session.conference_info.conference_description
-            if hasattr(conf_desc.service_uris, "web-site") and conf_desc.service_uris.web-site:
-               return True
+        if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
+            return True
         return False
 
     def canBeRemovedFromConference(self, uri):
@@ -572,10 +561,7 @@ class ChatWindowController(NSWindowController):
             elif tag == SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
                 self.sendPrivateMessage()
             elif tag == SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
-                if session.conference_info is not None:
-                    conf_desc = session.conference_info.conference_description
-                    if hasattr(conf_desc.service_uris, "web-site") and conf_desc.service_uris.web-site:
-                        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(conf_desc.service_uris.web-site)))
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
             elif tag == SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION:
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "audio")
             elif tag == SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION:
