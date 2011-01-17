@@ -46,8 +46,6 @@ class ChatLog:
         except:
             import traceback
             traceback.print_exc()
-            pass
-
 
     @classmethod
     def _load_entries(cls, f):
@@ -68,9 +66,8 @@ class ChatLog:
                 continue
 
             entries.append(row)
-        
-        return entries
 
+        return entries
 
     @classmethod
     def _update_entries(cls, path, entries):
@@ -92,7 +89,6 @@ class ChatLog:
                 del entry["old_id"]
         cur_entries += entries
         cls._save_entries(open(path, "w+"), cur_entries)
-
 
     @classmethod
     def _save_entries(cls, f, entries):
@@ -135,7 +131,6 @@ class ChatLog:
             except:
                 import traceback
                 traceback.print_exc()
-                print "error"
 
     def __del__(self):
         self.close()
@@ -169,7 +164,6 @@ class ChatLog:
             f = open(self.tmp_file_name, "w")
             ChatLog._save_entries(f, self.pending)
             f.close()
-
 
     def log(self, **kwargs):
         assert set(kwargs.keys()) == set(self.fields)
@@ -255,10 +249,9 @@ class SessionHistory(object):
                 row["status"] = "failed"
             
             entries.append(row)
+
         f.close()
-
         return entries
-
 
     def _save_file_transfers(self, transfers):
         try:
@@ -276,12 +269,10 @@ class SessionHistory(object):
 
         file.writerows(encoded)
         f.close()
-        
 
     @property
     def file_transfer_log(self):
         return self._file_transfers
-
 
     def clear_transfer_history(self):
         entries = []
@@ -290,9 +281,7 @@ class SessionHistory(object):
                 entries.append(entry)
         
         self._file_transfers = entries
-
         self._save_file_transfers(entries)
-    
 
     def log_file_transfer(self, **kwargs):        
         assert set(kwargs.keys()) == set(["id", "direction", "account", "peer", "path", "bytes_transfered", "bytes_total", "status"])
@@ -312,14 +301,11 @@ class SessionHistory(object):
             self._file_transfers.append(kwargs)
 
         self._save_file_transfers(self._file_transfers)
-
         return kwargs["id"]
 
     # chat
-
     def open_chat_history(self, account, remote_identity):
         return ChatLog(account, remote_identity)
-
 
     def flush_chat_logs(self):
         for account in AccountManager().get_accounts():
@@ -354,13 +340,11 @@ class SessionHistory(object):
                 pass
 
         entries.reverse()
-
         return entries
 
     # sms
     def open_sms_history(self, account, remote_identity):
         return ChatLog(account, remote_identity, file_extension=".smslog")
-
 
     def get_sms_history(self, account, remote_identity, count):
         path = "%s/%s"%(SIPManager.SIPManager().get_chat_history_directory(), account.id)
@@ -383,5 +367,4 @@ class SessionHistory(object):
                 traceback.print_exc()
 
         entries.reverse()
-
         return entries
