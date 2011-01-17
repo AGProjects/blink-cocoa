@@ -237,8 +237,6 @@ class ChatWindowController(NSWindowController):
                     if index != NSNotFound:
                         tabItem = self.tabView.tabViewItemAtIndex_(index)
                         self.tabSwitcher.setTabViewItem_busy_(tabItem, chatHandler.isConnecting)
-                    else:
-                        print "tab for %s (%s) not found [state %s]"%(session.identifier, session.getTitle(), session.state)
             self.revalidateToolbar()
         elif name == "BlinkSessionChangedState":
             session = sender
@@ -249,8 +247,6 @@ class ChatWindowController(NSWindowController):
                     if index != NSNotFound:
                         tabItem = self.tabView.tabViewItemAtIndex_(index)
                         self.tabSwitcher.setTabViewItem_busy_(tabItem, chatHandler.isConnecting)
-                    else:
-                        print "tab for %s (%s) not found (state %s)"%(session.identifier, session.getTitle(), chatHandler.status)
             self.revalidateToolbar()
             self.refreshDrawer()
         elif name == "BlinkAudioStreamChangedHoldState":
