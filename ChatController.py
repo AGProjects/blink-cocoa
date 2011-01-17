@@ -942,12 +942,10 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidFail(self, sender, data):
         reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
-        self.fail_reason = reason
         self.chatViewController.showSystemMessage(reason, datetime.datetime.utcnow(), True)
         log_info(self, "Chat stream failed: %s" % self.stream)
 
-        self.changeStatus(STREAM_FAILED, self.fail_reason or data.reason)
-        self.fail_reason = None
+        self.changeStatus(STREAM_FAILED, reason)
         if self.wasRemoved:
             if self.history:
                 self.history.close()
