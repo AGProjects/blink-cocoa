@@ -12,6 +12,8 @@ from sipsimple.account import AccountManager
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import Timestamp
 
+from BlinkLogger import BlinkLogger
+
 import SIPManager
 from util import *
 
@@ -115,10 +117,9 @@ class ChatLog:
         timestamp = time.strftime("%Y%m%d")
         dirname = os.path.join(chat_dir, account.id)
         makedirs(dirname, 0700)
-        fname = os.path.join(dirname, "%s-%s%s" % (remote_identity, timestamp, file_extension))
+        self.log_file_path = os.path.join(dirname, "%s-%s%s" % (remote_identity, timestamp, file_extension))
         self.tmp_file_name = os.path.join(dirname, "%s.tmp" % remote_identity)
 
-        self.log_file_path = fname
         if os.path.exists(self.tmp_file_name):
             try:
                 pending = ChatLog._load_entries(open(self.tmp_file_name, "r"))
@@ -159,6 +160,7 @@ class ChatLog:
             except:
                 pass
 
+        BlinkLogger().log_info("History file %s is closed" % self.log_file_path)
 
     def _resave_pending(self):
         if self.loading:
