@@ -910,64 +910,55 @@ class ChatController(MediaStream):
 
             window.noteSession_isComposing_(self.sessionController, flag)
 
+    def _NH_SIPSessionDidFail(self, sender, data):
+        message = "Session failed: %s" % data.reason
+        self.chatViewController.showSystemMessage(message, datetime.datetime.utcnow(), True)
+
     def _NH_MediaStreamDidStart(self, sender, data):
         log_info(self, "Chat stream started")
         self.changeStatus(STREAM_CONNECTED)
         if self.handler:
             self.handler.setConnected(self.stream)
 
-        # Required to set the Audio button state after session has started
+        # needed to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        log_info(self, "Chat stream ended: %s" % self.stream)
+        log_info(self, "Chat stream ended")
+
+        self.notification_center.remove_observer(self, sender=self.stream)
+        self.stream = None
+        self.handler = None
+
+        if self.history:
+            self.history.close()
+            self.history = None
+
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        if self.wasRemoved:
-            if self.history:
-                self.history.close()
-                self.history = None
-        else:
-            self.notification_center.remove_observer(self, sender=self.stream)
 
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
-
-
-    def _NH_SIPSessionDidFail(self, sender, data):
-        message = "Session failed: %s" % data.reason
-        self.chatViewController.showSystemMessage(message, datetime.datetime.utcnow(), True)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
+        log_info(self, "Chat stream failed: %s" % reason)
         self.chatViewController.showSystemMessage(reason, datetime.datetime.utcnow(), True)
-        log_info(self, "Chat stream failed: %s" % self.stream)
 
         self.changeStatus(STREAM_FAILED, reason)
-        if self.wasRemoved:
-            if self.history:
-                self.history.close()
-                self.history = None
-        else:
-            self.notification_center.remove_observer(self, sender=self.stream)
-        
+        self.notification_center.remove_observer(self, sender=self.stream)
+        self.stream = None
+        self.handler = None
+
+        if self.history:
+            self.history.close()
+            self.history = None
+
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
-    def didRemove(self):
+    def closeTabView(self):
         self.chatViewController.close()
         self.removeFromSession()
-        self.notification_center.remove_observer(self, sender=self.stream)
-
-        self.stream = None
-        self.handler = None
-        self.wasRemoved = True
-        # if we were closed but the stream didn't end yet, defer the history closure
-        # to until the stream ends. That is to avoid missing messages received after the chat tab was closed
-        if self.status in (STREAM_FAILED, STREAM_IDLE):
-            if self.history:
-                self.history.close()
-                self.history = None
-
 

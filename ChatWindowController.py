@@ -158,7 +158,7 @@ class ChatWindowController(NSWindowController):
 
         chatHandler = session.streamHandlerOfType("chat")
         if chatHandler:
-            chatHandler.didRemove()
+            chatHandler.closeTabView()
 
         return True
 
