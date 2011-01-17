@@ -370,7 +370,7 @@ class AlertPanel(NSObject, object):
     def timerTick_(self, timer):
         info = timer.userInfo()
         if time.time() - info["time"] >= info["delay"]:
-            self.acceptSessionAnsweringMachine(info["session"])
+            self.acceptAudioStreamAnsweringMachine(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
         text = "Answering Machine will auto-answer in %i seconds..." % remaining
@@ -379,7 +379,7 @@ class AlertPanel(NSObject, object):
     def timerTickBonjour_(self, timer):
         info = timer.userInfo()
         if time.time() - info["time"] >= info["delay"]:
-            self.acceptSessionBonjourAudio(info["session"])
+            self.acceptAudioStreamBonjour(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
         text = "Automatically answering Bonjour call in %i seconds..." % remaining
@@ -442,7 +442,7 @@ class AlertPanel(NSObject, object):
         if resp == 0: # Accept All
             try:
                 BlinkLogger().log_info("Accepting all proposed streams for session to %s" % session.remote_identity)
-                self.acceptProposalFull(session)
+                self.acceptProposedStreams(session)
             except Exception, exc:
                 # possibly the session was cancelled in the meantime
                 self.removeSession(session)
@@ -458,29 +458,29 @@ class AlertPanel(NSObject, object):
                 return
             self.removeSession(session)
 
-    def acceptSessionFull(self, session):        
+    def acceptStreams(self, session):
         view = self.sessions[session]
         self.owner.startIncomingSession(session, session.proposed_streams)
         self.removeSession(session)
 
-    def acceptProposalFull(self, session):
+    def acceptProposedStreams(self, session):
         self.owner.acceptIncomingProposal(session, session.proposed_streams)
         self.removeSession(session)
 
-    def acceptSessionPartial(self, session):
+    def acceptChatStream(self, session):
         view = self.sessions[session]
-        streams = SIPManager().streams_for_incoming_session_alt(session)
+        streams = [s for s in session.proposed_streams if s.type== "chat"]
         self.owner.startIncomingSession(session, streams)
         self.removeSession(session)
 
-    def acceptSessionAnsweringMachine(self, session):
+    def acceptAudioStreamAnsweringMachine(self, session):
         view = self.sessions[session]
         # accept audio only
         streams = [s for s in session.proposed_streams if s.type == "audio"]
         self.owner.startIncomingSession(session, streams, answeringMachine=True)
         self.removeSession(session)
 
-    def acceptSessionBonjourAudio(self, session):
+    def acceptAudioStreamBonjour(self, session):
         view = self.sessions[session]
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
@@ -491,11 +491,11 @@ class AlertPanel(NSObject, object):
         self.removeSession(session)
 
     def respondSession(self, resp, session):
-        if resp == 0: # Accept All
+        if resp == 0: # Accept All streams
             # activate app
             NSApp.activateIgnoringOtherApps_(True)
             try:
-                self.acceptSessionFull(session)
+                self.acceptStreams(session)
             except Exception, exc:
                 import traceback
                 traceback.print_exc()
@@ -503,10 +503,10 @@ class AlertPanel(NSObject, object):
                 self.removeSession(session)
                 BlinkLogger().log_warning("Error accepting session: %s"%exc)
                 return
-        elif resp == 1: # Accept alt
+        elif resp == 1: # Accept only chat
             NSApp.activateIgnoringOtherApps_(True)
             try:
-                self.acceptSessionPartial(session)
+                self.acceptChatStream(session)
             except Exception, exc:
                 import traceback
                 traceback.print_exc()
@@ -575,17 +575,17 @@ class AlertPanel(NSObject, object):
 
         resp = sender.cell().representedObject().integerValue()
 
-        if resp == 0: # Accept All
+        if resp == 0: # Accept All proposed streams
             NSApp.activateIgnoringOtherApps_(True)
             for s in self.sessions.keys():
                 is_proposal = self.proposals.has_key(s)
                 try:
                     if is_proposal:
-                        BlinkLogger().log_info("Accepting all proposed streams for session to %s" % s.remote_identity)
-                        self.acceptProposalFull(s)
+                        BlinkLogger().log_info("Accepting all proposed streams from %s" % s.remote_identity)
+                        self.acceptProposedStreams(s)
                     else:
                         BlinkLogger().log_info("Accepting session to %s" % (s.remote_identity))
-                        self.acceptSessionFull(s)
+                        self.acceptStreams(s)
                 except Exception, exc:
                     import traceback
                     traceback.print_exc()
@@ -593,12 +593,12 @@ class AlertPanel(NSObject, object):
                     self.removeSession(s)
                     BlinkLogger().log_warning("Error accepting session: %s"%exc)
                     continue
-        elif resp == 1: # Accept alt
+        elif resp == 1: # Accept only chat stream
             NSApp.activateIgnoringOtherApps_(True)
             for s in self.sessions.keys():
                 try:
-                    BlinkLogger().log_info("Accepting selected streams from session to %s" % s.remote_identity)
-                    self.acceptSessionPartial(s)
+                    BlinkLogger().log_info("Accepting only chat streams from %s" % s.remote_identity)
+                    self.acceptChatStream(s)
                 except Exception, exc:
                     import traceback
                     traceback.print_exc()
@@ -611,7 +611,7 @@ class AlertPanel(NSObject, object):
         elif resp == 3: # Reject (busy)
             for s in self.sessions.keys():
                 try:
-                    BlinkLogger().log_info("Rejecting (busy) session to %s"%(s.remote_identity))
+                    BlinkLogger().log_info("Rejecting session (busy) to %s"%(s.remote_identity))
                     SIPManager().reject_incoming_session(s, 486)
                 except Exception, exc:
                     import traceback

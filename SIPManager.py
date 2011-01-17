@@ -892,15 +892,6 @@ class SIPManager(object):
             BlinkLogger().log_warning("Unknown Session content %s"%streams)
         return (message, party), default_action, alt_action
 
-    def streams_for_incoming_session_alt(self, session):
-        # accept chat only if there's chat, audio if there's audio
-        for s in session.proposed_streams:
-            if type(s) is ChatStream:
-                return [s]
-            elif type(s) is AudioStream:
-                return [s]
-        return []
-    
     def reject_incoming_session(self, session, code=603, reason=None):
         BlinkLogger().log_info(u"Rejecting Session from %s (code %s)"%(session.remote_identity, code))
         session.reject(code, reason)
