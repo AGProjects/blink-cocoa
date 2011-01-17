@@ -913,7 +913,6 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidStart(self, sender, data):
         log_info(self, "Chat stream started")
         self.changeStatus(STREAM_CONNECTED)
-        self.notification_center.add_observer(self, sender=self.stream)
         if self.handler:
             self.handler.setConnected(self.stream)
 
@@ -932,9 +931,13 @@ class ChatController(MediaStream):
             if self.history:
                 self.history.close()
                 self.history = None
+        else:
+            self.notification_center.remove_observer(self, sender=self.stream)
+
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
+
 
     def _NH_SIPSessionDidFail(self, sender, data):
         message = "Session failed: %s" % data.reason
@@ -950,10 +953,12 @@ class ChatController(MediaStream):
             if self.history:
                 self.history.close()
                 self.history = None
+        else:
+            self.notification_center.remove_observer(self, sender=self.stream)
+        
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
-
 
     def didRemove(self):
         self.chatViewController.close()
