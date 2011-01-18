@@ -764,28 +764,6 @@
 						<reference key="NSMixedImage" ref="730172549"/>
 						<int key="NSTag">312</int>
 					</object>
-					<object class="NSMenuItem" id="809825268">
-						<reference key="NSMenu" ref="898627079"/>
-						<bool key="NSIsDisabled">YES</bool>
-						<int key="NSIndent">1</int>
-						<string key="NSTitle">Send Private Message...</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="677793703"/>
-						<reference key="NSMixedImage" ref="730172549"/>
-						<int key="NSTag">311</int>
-					</object>
-					<object class="NSMenuItem" id="571805460">
-						<reference key="NSMenu" ref="898627079"/>
-						<bool key="NSIsDisabled">YES</bool>
-						<int key="NSIndent">1</int>
-						<string key="NSTitle">Remove from Conference...</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="677793703"/>
-						<reference key="NSMixedImage" ref="730172549"/>
-						<int key="NSTag">310</int>
-					</object>
 					<object class="NSMenuItem" id="608396212">
 						<reference key="NSMenu" ref="898627079"/>
 						<bool key="NSIsDisabled">YES</bool>
@@ -815,6 +793,28 @@
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
 						<reference key="NSMixedImage" ref="730172549"/>
+					</object>
+					<object class="NSMenuItem" id="809825268">
+						<reference key="NSMenu" ref="898627079"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Send Private Message...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">311</int>
+					</object>
+					<object class="NSMenuItem" id="571805460">
+						<reference key="NSMenu" ref="898627079"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Remove from Conference...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">310</int>
 					</object>
 					<object class="NSMenuItem" id="367550772">
 						<reference key="NSMenu" ref="898627079"/>
@@ -1208,22 +1208,6 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedParticipantMenu:</string>
-						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="809825268"/>
-					</object>
-					<int key="connectionID">295</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedParticipantMenu:</string>
-						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="571805460"/>
-					</object>
-					<int key="connectionID">307</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
 						<string key="label">userClickedActionsButton:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="1053431110"/>
@@ -1258,17 +1242,33 @@
 					<object class="IBActionConnection" key="connection">
 						<string key="label">userClickedParticipantMenu:</string>
 						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="367550772"/>
+						<reference key="destination" ref="608396212"/>
 					</object>
-					<int key="connectionID">321</int>
+					<int key="connectionID">324</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
 						<string key="label">userClickedParticipantMenu:</string>
 						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="608396212"/>
+						<reference key="destination" ref="809825268"/>
 					</object>
-					<int key="connectionID">324</int>
+					<int key="connectionID">326</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedParticipantMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="571805460"/>
+					</object>
+					<int key="connectionID">328</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedParticipantMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="367550772"/>
+					</object>
+					<int key="connectionID">333</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -1517,13 +1517,13 @@
 							<reference ref="257260512"/>
 							<reference ref="670744445"/>
 							<reference ref="533954387"/>
-							<reference ref="809825268"/>
-							<reference ref="571805460"/>
 							<reference ref="286931707"/>
 							<reference ref="927743876"/>
 							<reference ref="520968429"/>
-							<reference ref="367550772"/>
 							<reference ref="608396212"/>
+							<reference ref="809825268"/>
+							<reference ref="571805460"/>
+							<reference ref="367550772"/>
 						</object>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -1606,16 +1606,6 @@
 						<string key="objectName">Menu Item (Conference)</string>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">294</int>
-						<reference key="object" ref="809825268"/>
-						<reference key="parent" ref="898627079"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">306</int>
-						<reference key="object" ref="571805460"/>
-						<reference key="parent" ref="898627079"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">308</int>
 						<reference key="object" ref="286931707"/>
 						<reference key="parent" ref="898627079"/>
@@ -1633,13 +1623,23 @@
 						<string key="objectName">Menu Item (Participant)</string>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">320</int>
-						<reference key="object" ref="367550772"/>
+						<int key="objectID">323</int>
+						<reference key="object" ref="608396212"/>
 						<reference key="parent" ref="898627079"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">323</int>
-						<reference key="object" ref="608396212"/>
+						<int key="objectID">325</int>
+						<reference key="object" ref="809825268"/>
+						<reference key="parent" ref="898627079"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">327</int>
+						<reference key="object" ref="571805460"/>
+						<reference key="parent" ref="898627079"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">332</int>
+						<reference key="object" ref="367550772"/>
 						<reference key="parent" ref="898627079"/>
 					</object>
 				</object>
@@ -1712,13 +1712,13 @@
 					<string>266.IBPluginDependency</string>
 					<string>275.IBPluginDependency</string>
 					<string>277.IBPluginDependency</string>
-					<string>294.IBPluginDependency</string>
-					<string>306.IBPluginDependency</string>
 					<string>308.IBPluginDependency</string>
 					<string>316.IBPluginDependency</string>
 					<string>318.IBPluginDependency</string>
-					<string>320.IBPluginDependency</string>
 					<string>323.IBPluginDependency</string>
+					<string>325.IBPluginDependency</string>
+					<string>327.IBPluginDependency</string>
+					<string>332.IBPluginDependency</string>
 					<string>43.IBPluginDependency</string>
 					<string>72.IBEditorWindowLastContentRect</string>
 					<string>72.IBPluginDependency</string>
@@ -1890,7 +1890,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">324</int>
+			<int key="maxID">333</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">

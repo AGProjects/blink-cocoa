@@ -152,7 +152,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="262711498">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272761856</int>
-								<string key="NSContents">Other conference participants are not able to see this message</string>
+								<string key="NSContents">Other conference participants will not able to see this message</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">11</double>

@@ -866,7 +866,7 @@ class ChatPrivateMessage(NSObject):
 
     def __init__(self, recipient):
         NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
-        self.title.setStringValue_(u'%s' % recipient)
+        self.title.setStringValue_(u'To %s' % recipient)
 
     def runModal(self):
         self.window.makeKeyAndOrderFront_(None)
