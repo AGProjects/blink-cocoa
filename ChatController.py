@@ -340,15 +340,13 @@ class ChatController(MediaStream):
         return self
 
     def awakeFromNib(self):
+        #self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
+
         # setup smiley popup 
         smileys = SmileyManager().get_smiley_list()
-
         menu = self.smileyButton.menu()
         while menu.numberOfItems() > 0:
             menu.removeItemAtIndex_(0)
-
-        #self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
-
         bigText = NSAttributedString.alloc().initWithString_attributes_(" ", NSDictionary.dictionaryWithObject_forKey_(NSFont.systemFontOfSize_(16), NSFontAttributeName))
         for text, file in smileys:
             image = NSImage.alloc().initWithContentsOfFile_(file)

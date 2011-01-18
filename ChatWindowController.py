@@ -21,10 +21,11 @@ import ParticipantsTableView
 from ServerConferenceWindowController import AddParticipantsWindow, StartConferenceWindow
 import SessionController
 import ChatWindowManager
+from ChatPrivateMessage import ChatPrivateMessage
 from SIPManager import SIPManager
+
 import FancyTabSwitcher
 from util import allocate_autorelease_pool, format_identity_address
-
 
 class ChatWindowController(NSWindowController):
     implements(IObserver)
@@ -855,35 +856,3 @@ class ChatWindowController(NSWindowController):
             except:
                 pass
 
-
-class ChatPrivateMessage(NSObject):
-    window = objc.IBOutlet()
-    title = objc.IBOutlet() 
-    message = objc.IBOutlet()
-
-    def __new__(cls, *args, **kwargs):
-        return cls.alloc().init()
-
-    def __init__(self, recipient):
-        NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
-        self.title.setStringValue_(u'To %s' % recipient)
-
-    def runModal(self):
-        self.window.makeKeyAndOrderFront_(None)
-        rc = NSApp.runModalForWindow_(self.window)
-        self.window.orderOut_(self)
-        if rc == NSOKButton:
-            return unicode(self.message.stringValue())
-        return None
-
-    @objc.IBAction
-    def okClicked_(self, sender):
-        NSApp.stopModalWithCode_(NSOKButton)
-
-    @objc.IBAction
-    def cancelClicked_(self, sender):
-        NSApp.stopModalWithCode_(NSCancelButton)
-
-    def windowShouldClose_(self, sender):
-        NSApp.stopModalWithCode_(NSCancelButton)
-        return True
