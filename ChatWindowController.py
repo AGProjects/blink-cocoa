@@ -544,6 +544,13 @@ class ChatWindowController(NSWindowController):
 
             if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
                 NSApp.delegate().windowController.addContact(uri, display_name)
+            elif tag == SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
+                remote_uri = format_identity_address(session.remotePartyObject)
+                display_name = None
+                if session.conference_info is not None:
+                    conf_desc = session.conference_info.conference_description
+                    display_name = unicode(conf_desc.display_text)
+                NSApp.delegate().windowController.addContact(remote_uri, display_name)
             elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
                 ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?"%display_name, u"Remove", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:
@@ -743,6 +750,10 @@ class ChatWindowController(NSWindowController):
 
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
+
+            hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
+            remote_uri = format_identity_address(session.remotePartyObject)
+            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
             if not self.participants:
                 # hide the drawer if everyone left
