@@ -171,27 +171,20 @@ class ChatWindowController(NSWindowController):
         return None
 
     def updateTitle(self):
-        session = self.selectedSession()
+        title = self.getConferenceTitle()
+        if title:
+            self.window().setTitle_(title)
+
+    def getConferenceTitle(self):
         title = None
+        session = self.selectedSession()
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                if conf_desc.display_text:
-                    title = u"%s " % conf_desc.display_text
-                else:
-                    title = u'Conference '
-
-                title = title + session.getTitleFull()
-
-            if title is None:
-                if isinstance(session.account, BonjourAccount):
-                    title = u"%s" % session.getTitleShort()
-                else:
-                    title = u"%s" % session.getTitleFull()
-        else:
-            title = u"Chat"
-
-        self.window().setTitle_(title)
+                title = u"%s <%s>" % (conf_desc.display_text, format_identity_address(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+            else:
+                title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
+        return title
 
     def noteSession_isComposing_(self, session, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -439,7 +432,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSession()
         if session:
             if session.remote_focus:
-                addParticipantsWindow = AddParticipantsWindow()
+                addParticipantsWindow = AddParticipantsWindow(self.getConferenceTitle())
                 participants = addParticipantsWindow.run()
                 if participants is not None:
                     getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI

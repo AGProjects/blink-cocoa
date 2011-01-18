@@ -309,15 +309,19 @@ class AddParticipantsWindow(NSObject):
     addRemove = objc.IBOutlet()
     participant = objc.IBOutlet()
     participantsTable = objc.IBOutlet()
-
+    target = objc.IBOutlet()
+    
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def init(self):
+    def __init__(self, target=None):
         self._participants = []
         NSBundle.loadNibNamed_owner_("AddParticipantsWindow", self)
-        return self
 
+        if target is not None:
+            self.target.setStringValue_(target)
+            self.target.setHidden_(False)
+            
     def numberOfRowsInTableView_(self, table):
         try:
             return len(self._participants)
