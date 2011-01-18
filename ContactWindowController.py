@@ -1850,9 +1850,7 @@ class ContactWindowController(NSWindowController):
 
             if 'audio' in streams and 'chat' in streams:
                 # give priority to chat stream so that we do not open audio drawer for composite streams
-                chat_streams = [s for s in streams if s == "chat"]
-                other_streams = [s for s in streams if s != "chat" and s not in chat_streams]
-                sorted_streams = chat_streams + other_streams
+                sorted_streams = sorted(streams, key=lambda stream: 0 if stream=='chat' else 1)
                 session.startCompositeSessionWithStreamsOfTypes(sorted_streams)
             elif 'audio' in streams:
                 session.startAudioSession()
