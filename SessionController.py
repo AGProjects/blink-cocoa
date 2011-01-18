@@ -151,7 +151,11 @@ class SessionController(NSObject):
 
     def handleIncomingStreams(self, streams, is_update=False):
         try:
-            for s in streams:
+            # give priority to chat stream so that we do not open audio drawer for composite streams
+            chat_streams = [s for s in streams if s.type == "chat"]
+            other_streams = [s for s in streams if s.type != "chat" and s not in chat_streams]
+            sorted_streams = chat_streams + other_streams
+            for s in sorted_streams:
                 log_info(self, "Handling incoming %s Stream" % s.type)
                 handler = StreamHandlerForType.get(s.type, None)
                 if not handler:
