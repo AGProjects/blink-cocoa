@@ -544,7 +544,9 @@ class ChatWindowController(NSWindowController):
             if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
                 NSApp.delegate().windowController.addContact(uri, display_name)
             elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
-                self.removeParticipant(uri)
+                ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?"%display_name, u"Remove", u"Cancel", None)
+                if ret == NSAlertDefaultReturn:
+                    self.removeParticipant(uri)
             elif tag == SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
                 self.addParticipants()
             elif tag == SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:

@@ -779,7 +779,7 @@
 						<reference key="NSMenu" ref="898627079"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Remove from Conference</string>
+						<string key="NSTitle">Remove from Conference...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
