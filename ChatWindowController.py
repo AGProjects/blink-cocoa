@@ -381,7 +381,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri) else True)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
 
-            if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat"):
+            if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
                 self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed else False)
             else:
