@@ -459,7 +459,6 @@ class AlertPanel(NSObject, object):
             self.removeSession(session)
 
     def acceptStreams(self, session):
-        view = self.sessions[session]
         self.owner.startIncomingSession(session, session.proposed_streams)
         self.removeSession(session)
 
@@ -468,20 +467,17 @@ class AlertPanel(NSObject, object):
         self.removeSession(session)
 
     def acceptChatStream(self, session):
-        view = self.sessions[session]
         streams = [s for s in session.proposed_streams if s.type== "chat"]
         self.owner.startIncomingSession(session, streams)
         self.removeSession(session)
 
     def acceptAudioStreamAnsweringMachine(self, session):
-        view = self.sessions[session]
         # accept audio only
         streams = [s for s in session.proposed_streams if s.type == "audio"]
         self.owner.startIncomingSession(session, streams, answeringMachine=True)
         self.removeSession(session)
 
     def acceptAudioStreamBonjour(self, session):
-        view = self.sessions[session]
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
         if self.proposals.has_key(session):
