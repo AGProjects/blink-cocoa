@@ -30,6 +30,12 @@ from util import *
 
 MAX_MESSAGE_LENGTH = 1300
 
+class SMSMessageInfo(object):
+    def __init__(self, id, msgid, state, content_type):
+        self.id = id
+        self.msgid = msgid
+        self.state = state
+        self.content_type = content_type
 
 class SMSSplitView(NSSplitView):
     text = None
@@ -72,8 +78,6 @@ class SMSViewController(NSObject):
     queued_serial = 0
     history = None
 
-    incoming_queue = None
-
     def initWithAccount_target_name_(self, account, target, display_name):
         self = super(SMSViewController, self).init()
         if self:
@@ -81,7 +85,7 @@ class SMSViewController(NSObject):
             self.target_uri = target
             self.display_name = display_name
             self.queue = []
-            self.incoming_queue = []
+            self.messages = {}
 
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
@@ -96,6 +100,7 @@ class SMSViewController(NSObject):
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setAccount_(self.account)
+            self.chatViewController.resetRenderedMessages()
 
             self.chatViewController.inputText.unregisterDraggedTypes()
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
@@ -170,9 +175,8 @@ class SMSViewController(NSObject):
         self.routes = routes
         if self.queue:
             BlinkLogger().log_info("Sending queued SMS messages...")
-        for msgid, msg, content_type in self.queue:
-            nmsgid = self.doSendMessage(msg, content_type)
-            self.chatViewController.updateMessageId("-%s" % msgid, nmsgid)
+        for msgid, text, content_type in self.queue:
+            self._sendMessage(msgid, text, content_type)
         self.queue = []
 
     def setRoutesFailed(self, msg):
@@ -193,10 +197,7 @@ class SMSViewController(NSObject):
         hash.update(str(message)+str(timestamp)+str(sender))
         msgid = hash.hexdigest()
 
-        if self.incoming_queue is not None:
-            self.incoming_queue.append((msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html, False, "delivered"))
-        else:
-            self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
+        self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -241,32 +242,24 @@ class SMSViewController(NSObject):
         BlinkLogger().log_warning("SMS message delivery suceeded: %s" % data.reason)
 
         self.composeReplicationMessage(sender, data.code)
+        message = self.messages.pop(str(sender))
 
-        if data.code == 202:
-            self.chatViewController.markMessage(str(sender), MSG_STATE_DEFERRED)
-        else:
-            self.chatViewController.markMessage(str(sender), MSG_STATE_DELIVERED)
+        if message.content_type != "application/im-iscomposing+xml":
+            if data.code == 202:
+                self.chatViewController.markMessage(message.msgid, MSG_STATE_DEFERRED)
+            else:
+                self.chatViewController.markMessage(message.msgid, MSG_STATE_DELIVERED)
         NotificationCenter().remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
         BlinkLogger().log_warning("SMS message delivery failed: %s" % data.reason)
 
         self.composeReplicationMessage(sender, data.code)
+        message = self.messages.pop(str(sender))
+        if message.content_type != "application/im-iscomposing+xml":
+            self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
 
-        self.chatViewController.markMessage(str(sender), MSG_STATE_FAILED)
         NotificationCenter().remove_observer(self, sender=sender)
-
-    def doSendMessage(self, text, content_type="text/plain"):
-        if content_type != "application/im-iscomposing+xml":
-            BlinkLogger().log_info("Sent %s SMS message to %s" % (content_type, self.target_uri))
-            self.enableIsComposing = True
-
-        utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
-        message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                  RouteHeader(self.routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
-        NotificationCenter().add_observer(self, sender=message_request)
-        message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
-        return str(message_request)
 
     def composeReplicationMessage(self, sent_message, response_code):
         if isinstance(self.account, Account):
@@ -300,12 +293,34 @@ class SMSViewController(NSObject):
                                       RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
+    def _sendMessage(self, msgid, text, content_type="text/plain"):
+        if content_type != "application/im-iscomposing+xml":
+            BlinkLogger().log_info("Sent %s SMS message to %s" % (content_type, self.target_uri))
+            self.enableIsComposing = True
+
+        utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
+        message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
+                                  RouteHeader(self.routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
+        NotificationCenter().add_observer(self, sender=message_request)
+        message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
+
+        id=str(message_request)
+        message = SMSMessageInfo(id, msgid, MSG_STATE_SENDING, content_type)
+        self.messages[id] = message
+        return message
+
     def sendMessage(self, text, content_type="text/plain"):
         SIPManager().request_routes_lookup(self.account, self.target_uri, self)
-        self.queued_serial += 1
-        self.queue.append((self.queued_serial, text, content_type))
 
-        return "-%s" % self.queued_serial
+        timestamp = Timestamp(datetime.datetime.utcnow())
+        hash = hashlib.sha1()
+        hash.update(text.encode("utf-8")+str(timestamp))
+        msgid = hash.hexdigest()
+        if content_type != "application/im-iscomposing+xml":
+            icon = NSApp.delegate().windowController.iconPathForSelf()
+            self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="sent")
+
+        self.queue.append((msgid, text, content_type))
 
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
@@ -314,10 +329,7 @@ class SMSViewController(NSObject):
             textView.didChangeText()
 
             if text:
-                msgid = self.sendMessage(text)
-                icon = NSApp.delegate().windowController.iconPathForSelf()
-                self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, Timestamp(datetime.datetime.utcnow()), state="sent")
-            
+                self.sendMessage(text)
             self.chatViewController.resetTyping()
 
             return True
@@ -361,12 +373,6 @@ class SMSViewController(NSObject):
 
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
                 chatView.showMessage(id, direction, sender, icon, text, timestamp, state=state, is_html=is_html, history_entry=True)
-
-        if self.incoming_queue is not None:
-            for args in self.incoming_queue:
-                self.chatViewController.showMessage(*args)
-
-        self.incoming_queue = None
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument()

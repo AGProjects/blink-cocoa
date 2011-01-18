@@ -142,10 +142,8 @@ class SMSWindowController(NSWindowController):
         if sender.tag() == 100: # smileys
             chatViewController = self.selectedSession().chatViewController
             chatViewController.expandSmileys = not chatViewController.expandSmileys
-            if chatViewController.expandSmileys:
-                sender.setImage_(NSImage.imageNamed_("smiley_on"))
-            else:
-                sender.setImage_(NSImage.imageNamed_("smiley_off"))
+            sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
+            chatViewController.toggleSmileys(chatViewController.expandSmileys)
         elif sender.tag() == 101: # history
             contactWindow = self._owner._owner
             contactWindow.showChatTranscripts_(None)
