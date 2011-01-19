@@ -396,6 +396,27 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
+    def sendPrivateMessage(self):
+        session = self.selectedSession()
+        if session:
+            row = self.drawerTableView.selectedRow()
+            try:
+                contact = self.participants[row]
+            except IndexError:
+                return
+
+            try:
+                sip_uri = SIPURI.parse('sip:%s'%contact.uri)
+            except SIPCoreError:
+                return
+
+            controller = ChatPrivateMessage(contact)
+            message = controller.runModal()
+
+            if message:
+                chat_stream = session.streamHandlerOfType("chat")
+                chat_stream.handler.send(message, ChatIdentity(sip_uri, contact.display_name))
+
     def canGoToConferenceWebsite(self):
         session = self.selectedSession()
         if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
@@ -489,10 +510,6 @@ class ChatWindowController(NSWindowController):
             selectedSession.userClickedToolbarButton(sender)
 
     @objc.IBAction
-    def useClickedSendPrivateMessage_(self, sender):
-        self.sendPrivateMessage()
-
-    @objc.IBAction
     def useClickedRemoveFromConference_(self, sender):
         session = self.selectedSession()
         if session:
@@ -503,29 +520,6 @@ class ChatWindowController(NSWindowController):
                 return
             uri = object.uri
             self.removeParticipant(uri)
-
-    def sendPrivateMessage(self):
-        session = self.selectedSession()
-        if session:
-            row = self.drawerTableView.selectedRow()
-            try:
-                object = self.participants[row]
-            except IndexError:
-                return
-
-            try:
-                sip_uri = SIPURI.parse('sip:%s'%object.uri)
-            except SIPCoreError:
-                return
-
-            recipient = '%s <%s>' % (object.display_name, object.uri)
-
-            controller = ChatPrivateMessage(recipient)
-            message = controller.runModal()
-
-            if message:
-                chat_stream = session.streamHandlerOfType("chat")
-                chat_stream.handler.send(message, ChatIdentity(sip_uri, object.display_name))
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):

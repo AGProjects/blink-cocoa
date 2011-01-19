@@ -163,6 +163,7 @@ class StartConferenceWindow(NSObject):
 
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
+        return True
 
     def selectedParticipant(self):
         try:
@@ -265,7 +266,8 @@ class JoinConferenceWindow(NSObject):
 
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
-
+        return True
+        
     def validateConference(self):
         if not self.room.stringValue().strip():
             NSRunAlertPanel("Start a new Conference", "Please enter the Conference Room.",
@@ -419,7 +421,8 @@ class AddParticipantsWindow(NSObject):
 
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
-
+        return True
+        
     def selectedParticipant(self):
         row = self.participantsTable.selectedRow()
         try:

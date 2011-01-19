@@ -12,13 +12,16 @@ class ChatPrivateMessage(NSObject):
     title = objc.IBOutlet()
     inputText = objc.IBOutlet()
     smileyButton = objc.IBOutlet()
+    icon = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, recipient):
+    def __init__(self, contact):
         NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
+        recipient = '%s <%s>' % (contact.display_name, contact.uri)
         self.title.setStringValue_(u'To %s' % recipient)
+        self.icon.setImage_(contact.icon or NSImage.imageNamed_("NSUser"))
 
     def runModal(self):
         self.window.makeKeyAndOrderFront_(None)
