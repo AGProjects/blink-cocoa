@@ -135,6 +135,8 @@ class ChatHistoryViewer(NSWindowController):
 
     def showFile(self, file):
         self.chatViewController.clear()
+        self.chatViewController.resetRenderedMessages()
+
         if file:
             entries = ChatLog._load_entries(open(file))
             for entry in entries:
@@ -235,11 +237,8 @@ class ChatHistoryViewer(NSWindowController):
     def clickedToolbarItem_(self, sender):
         if sender.tag() == 100: # smileys
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
-            if self.chatViewController.expandSmileys:
-                sender.setImage_(NSImage.imageNamed_("smiley_on"))
-            else:
-                sender.setImage_(NSImage.imageNamed_("smiley_off"))
-            self.tableViewSelectionDidChange_(None)        
+            sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
+            self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
 
     @objc.IBAction
     def search_(self, sender):

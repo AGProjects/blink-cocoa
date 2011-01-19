@@ -166,6 +166,8 @@ class ChatViewController(NSObject):
 
     expandSmileys = True
 
+    rendered_messages = set()
+
     lastTypedTime = None
     lastTypeNotifyTime = None
     # timer is triggered every TYPING_IDLE_TIMEOUT, and a new is-composing msg is sent
@@ -283,9 +285,8 @@ class ChatViewController(NSObject):
 
     def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state='', recipient=''):
         # keep track of rendered messages to toggle the smileys
-        if not history_entry:
-            rendered_message = ChatMessageObject(msgid, text, is_html)
-            self.rendered_messages.add(rendered_message)
+        rendered_message = ChatMessageObject(msgid, text, is_html)
+        self.rendered_messages.add(rendered_message)
 
         if self.history and not history_entry:
             self.history.log(
