@@ -20,7 +20,7 @@ class AlertPanel(NSObject, object):
     implements(IObserver)
 
     panel = objc.IBOutlet()
-    vbox = objc.IBOutlet()
+    sessionsListView = objc.IBOutlet()
     deviceLabel = objc.IBOutlet()
     extraHeight = 0
     sessions = {}
@@ -36,8 +36,8 @@ class AlertPanel(NSObject, object):
             NSBundle.loadNibNamed_owner_("AlertPanel", self)
             self.panel.setLevel_(NSStatusWindowLevel)
             self.panel.setWorksWhenModal_(True)
-            self.extraHeight = self.panel.contentRectForFrameRect_(self.panel.frame()).size.height - self.vbox.frame().size.height
-            self.vbox.setSpacing_(2)
+            self.extraHeight = self.panel.contentRectForFrameRect_(self.panel.frame()).size.height - self.sessionsListView.frame().size.height
+            self.sessionsListView.setSpacing_(2)
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
         return self
 
@@ -159,11 +159,11 @@ class AlertPanel(NSObject, object):
             fileIcon.setFrame_(frame)
             fileIcon.setHidden_(False)
 
-        self.vbox.addSubview_(view)
-        frame = self.vbox.frame()
+        self.sessionsListView.addSubview_(view)
+        frame = self.sessionsListView.frame()
         frame.origin.y = self.extraHeight - 14
-        frame.size.height = self.vbox.minimumHeight()
-        self.vbox.setFrame_(frame)
+        frame.size.height = self.sessionsListView.minimumHeight()
+        self.sessionsListView.setFrame_(frame)
         height = frame.size.height + self.extraHeight
         size = NSMakeSize(NSWidth(self.panel.frame()), height)
 
@@ -175,7 +175,7 @@ class AlertPanel(NSObject, object):
         frame.size.height = size.height
         frame.size.height = NSHeight(self.panel.frameRectForContentRect_(frame))
         self.panel.setFrame_display_animate_(frame, True, True)
-        self.vbox.relayout()
+        self.sessionsListView.relayout()
 
         acceptB.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
         otherB.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
@@ -302,11 +302,11 @@ class AlertPanel(NSObject, object):
 
         view = self.sessions[session]
         view.removeFromSuperview()
-        self.vbox.relayout()
-        frame = self.vbox.frame()
+        self.sessionsListView.relayout()
+        frame = self.sessionsListView.frame()
         frame.origin.y = self.extraHeight - 14
-        frame.size.height = self.vbox.minimumHeight()
-        self.vbox.setFrame_(frame)
+        frame.size.height = self.sessionsListView.minimumHeight()
+        self.sessionsListView.setFrame_(frame)
         height = frame.size.height + self.extraHeight
         size = NSMakeSize(NSWidth(self.panel.frame()), height)
 

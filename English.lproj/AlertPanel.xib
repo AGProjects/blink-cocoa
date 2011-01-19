@@ -277,7 +277,7 @@ ARcABAAAAAEAAAACARwAAwAAAAEAAQAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">vbox</string>
+						<string key="label">sessionsListView</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="7693810"/>
 					</object>
@@ -580,7 +580,7 @@ ARcABAAAAAEAAAACARwAAwAAAAEAAQAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>deviceLabel</string>
 							<string>panel</string>
-							<string>vbox</string>
+							<string>sessionsListView</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
