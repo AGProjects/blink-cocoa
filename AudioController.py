@@ -118,7 +118,7 @@ class AudioController(MediaStream):
             self.answeringMachine.start()
 
     def startOutgoing(self, is_update):
-        self.label.setStringValue_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
+        self.label.setStringValue_(self.sessionController.contactDisplayName if self.sessionController.contactDisplayName else format_identity_simple(self.sessionController.remotePartyObject))
         self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
         self.updateTLSIcon()
