@@ -60,11 +60,6 @@ class ChatLog:
             if not row["type"]:
                 row["type"] = "text"
 
-            try:
-                Timestamp.parse(row["send_time"])
-            except (TypeError, ValueError):
-                continue
-
             entries.append(row)
 
         return entries
