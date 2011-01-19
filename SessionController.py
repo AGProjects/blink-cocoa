@@ -346,7 +346,7 @@ class SessionController(NSObject):
         if new_session:
             log_debug(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
             self.changeSessionState(STATE_DNS_LOOKUP)
-            SIPManager().request_routes_lookup(self.account, self.target_uri, self)
+            SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
             if self.hasStreamOfType("chat") and self.streamHandlerOfType("chat").last_history_entry:
                 self.last_history_entry = self.streamHandlerOfType("chat").last_history_entry

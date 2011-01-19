@@ -310,7 +310,7 @@ class SMSViewController(NSObject):
         return message
 
     def sendMessage(self, text, content_type="text/plain"):
-        SIPManager().request_routes_lookup(self.account, self.target_uri, self)
+        SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
         timestamp = Timestamp(datetime.datetime.utcnow())
         hash = hashlib.sha1()

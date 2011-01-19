@@ -280,21 +280,6 @@ class SIPManager(object):
         # start session mgr
         sm = SessionManager()
 
-    def request_dns_lookup_for_account(self, account):
-        lookup = DNSLookup()
-        lookup.type = 'stun_servers'
-        lookup.owner = account
-        self.notification_center.add_observer(self, sender=lookup)
-        settings = SIPSimpleSettings()
-        if not isinstance(account, BonjourAccount):
-            # lookup STUN servers, as we don't support doing this asynchronously yet
-            if account.nat_traversal.stun_server_list:
-                account.nat_traversal.stun_server_list = [STUNServerAddress(gethostbyname(address.host), address.port) for address in account.nat_traversal.stun_server_list]
-                address = account.nat_traversal.stun_server_list[0]
-            else:
-                lookup.lookup_service(SIPURI(host=account.id.domain), "stun")
-                BlinkLogger().log_info("Initiating DNS Lookup for STUN servers of domain %s"%account.id.domain)
-
     def init_configurations(self, first_time=False):
         account_manager = AccountManager()
         settings = SIPSimpleSettings()
@@ -464,6 +449,42 @@ class SIPManager(object):
     def has_accounts(self):
         am = AccountManager()
         return any(a for a in am.get_accounts() if not isinstance(a, BonjourAccount))
+
+    def lookup_sip_proxies(self, account, target_uri, session_controller):
+        assert isinstance(target_uri, SIPURI)
+
+        lookup = DNSLookup()
+        lookup.type = 'sip_proxies'
+        lookup.owner = session_controller
+        self.notification_center.add_observer(self, sender=lookup)
+        settings = SIPSimpleSettings()
+
+        if isinstance(account, Account) and account.sip.outbound_proxy is not None:
+            uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
+                parameters={'transport': account.sip.outbound_proxy.transport})
+            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through proxy %s)"%(target_uri, uri))
+        elif isinstance(account, Account) and account.sip.always_use_my_proxy:
+            uri = SIPURI(host=account.id.domain)
+            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through account %s proxy)"%(target_uri, account.id))
+        else:
+            uri = target_uri
+            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s"%target_uri)
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+
+    def lookup_stun_servers(self, account):
+        lookup = DNSLookup()
+        lookup.type = 'stun_servers'
+        lookup.owner = account
+        self.notification_center.add_observer(self, sender=lookup)
+        settings = SIPSimpleSettings()
+        if not isinstance(account, BonjourAccount):
+            # lookup STUN servers, as we don't support doing this asynchronously yet
+            if account.nat_traversal.stun_server_list:
+                account.nat_traversal.stun_server_list = [STUNServerAddress(gethostbyname(address.host), address.port) for address in account.nat_traversal.stun_server_list]
+                address = account.nat_traversal.stun_server_list[0]
+            else:
+                lookup.lookup_service(SIPURI(host=account.id.domain), "stun")
+                BlinkLogger().log_info("Initiating DNS Lookup for STUN servers of domain %s"%account.id.domain)
 
     def parse_sip_uri(self, target_uri, account):
         try:
@@ -894,27 +915,6 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Rejecting Session from %s (code %s)"%(session.remote_identity, code))
         session.reject(code, reason)
 
-    def request_routes_lookup(self, account, target_uri, session_controller):
-        assert isinstance(target_uri, SIPURI)
-
-        lookup = DNSLookup()
-        lookup.type = 'sip_proxies'
-        lookup.owner = session_controller
-        self.notification_center.add_observer(self, sender=lookup)
-        settings = SIPSimpleSettings()
-
-        if isinstance(account, Account) and account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
-                parameters={'transport': account.sip.outbound_proxy.transport})
-            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through proxy %s)"%(target_uri, uri))
-        elif isinstance(account, Account) and account.sip.always_use_my_proxy:
-            uri = SIPURI(host=account.id.domain)
-            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through account %s proxy)"%(target_uri, account.id))
-        else:
-            uri = target_uri
-            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s"%target_uri)
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
-
     def is_muted(self):
         return self._app.voice_audio_mixer and self._app.voice_audio_mixer.muted
 
@@ -980,7 +980,7 @@ class SIPManager(object):
                 except KeyError:
                     pass
 
-        self.request_dns_lookup_for_account(self._selected_account)
+        self.lookup_stun_servers(self._selected_account)
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()

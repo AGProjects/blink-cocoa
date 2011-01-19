@@ -380,7 +380,7 @@ class OutgoingFileTransfer(FileTransfer):
             NotificationCenter().post_notification("BlinkFileTransferInitiated", self)
 
             log_info(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
-            SIPManager.SIPManager().request_routes_lookup(self.account, self.target_uri, self)
+            SIPManager.SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
     def end(self):
         if self.calculated_checksum:
