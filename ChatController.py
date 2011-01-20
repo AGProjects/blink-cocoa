@@ -35,7 +35,6 @@ from SmileyManager import SmileyManager
 from util import *
 
 
-DELIVERY_TIMEOUT = 5.0
 MAX_MESSAGE_LENGTH = 16*1024
 
 def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
@@ -114,15 +113,12 @@ class MessageHandler(NSObject):
 
     implements(IObserver)
 
-    messages = None
-    pending = None
     session = None
     stream = None
     connected = False
-
-    lastDeliveredTime = None
-
     delegate = None
+    messages = None
+    pending = None
 
     def initWithSession_(self, session):
         self = super(MessageHandler, self).init()
@@ -156,7 +152,6 @@ class MessageHandler(NSObject):
 
         message = MessageInfo(id, msgid, timestamp, MSG_STATE_SENDING, private)
         self.messages[id] = message
-        return message
 
         return True
 
@@ -186,7 +181,6 @@ class MessageHandler(NSObject):
                 try:
                     self._send(msgid, text, now, recipient, private)
                 except Exception, e:
-                    log.err()
                     BlinkLogger().log_error("Error sending message: %s" % e)
                     self.delegate.showSystemMessage("Error sending message",now, True)
                 else:
@@ -223,7 +217,6 @@ class MessageHandler(NSObject):
             try:
                 message = self._send(msgid, text, timestamp, recipient, private)
             except Exception, e:
-                log.err()
                 BlinkLogger().log_error("Error sending queued message: %s" % e)
             else:
                 self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
@@ -237,9 +230,6 @@ class MessageHandler(NSObject):
         if self.stream:
             NotificationCenter().remove_observer(self, sender=self.stream)
             self.stream = None
-
-    def shakyConnectionMode(self):
-        return self.messages and time.time() - self.lastDeliveredTime >= DELIVERY_TIMEOUT or any(m for m in self.messages.itervalues() if m.state==MSG_STATE_FAILED)
 
     def markMessage(self, message, state):
         message.state = state
@@ -275,15 +265,10 @@ class ChatController(MediaStream):
     sessionController = None
     stream = None
     finishedLoading = False
-    sysMessageQueue = []
-    sentMessagesPendingConfirmation = []
     showHistoryEntries = 50
-
-    loggingEnabled = True
 
     history = None
     handler = None
-    wasRemoved = False
 
     lastDeliveredTime = None
     undeliveredMessages = {} # id -> message
@@ -316,33 +301,31 @@ class ChatController(MediaStream):
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
 
-            if self.loggingEnabled:
+            try:
+                uri = format_identity_address(self.sessionController.remotePartyObject)
+                contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
+                if contact:
+                    uri = str(contact.uri)
+
+                self.history = SessionHistory().open_chat_history(self.sessionController.account, uri)
+                self.chatViewController.setHistory_(self.history)
+                
+            except Exception, exc:
+                self.chatViewController.showSystemMessage("Unable to create Chat History file: %s"%exc, datetime.datetime.utcnow(), True)
+
+            if self.showHistoryEntries > 0:
+                if self.sessionController.account is BonjourAccount():
+                    self.history_entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
+                else:
+                    self.history_entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
+
+                for entry in self.history_entries:
+                    self.history_msgid_list.add(entry["id"])
+
                 try:
-                    uri = format_identity_address(self.sessionController.remotePartyObject)
-                    contact = NSApp.delegate().windowController.getContactMatchingURI(uri)
-                    if contact:
-                        uri = str(contact.uri)
-
-                    self.history = SessionHistory().open_chat_history(self.sessionController.account, uri)
-                    self.chatViewController.setHistory_(self.history)
-                    
-                except Exception, exc:
-                    self.loggingEnabled = False
-                    self.chatViewController.showSystemMessage("Unable to create Chat History file: %s"%exc, datetime.datetime.utcnow(), True)
-
-                if self.showHistoryEntries > 0:
-                    if self.sessionController.account is BonjourAccount():
-                        self.history_entries = SessionHistory().get_chat_history(self.sessionController.account, 'bonjour', self.showHistoryEntries)
-                    else:
-                        self.history_entries = SessionHistory().get_chat_history(self.sessionController.account, uri, self.showHistoryEntries)
-
-                    for entry in self.history_entries:
-                        self.history_msgid_list.add(entry["id"])
-
-                    try:
-                        self.last_history_entry = self.history_entries[-1]['send_time']
-                    except (KeyError, IndexError):
-                        pass
+                    self.last_history_entry = self.history_entries[-1]['send_time']
+                except (KeyError, IndexError):
+                    pass
 
             # Chat drawer has now contextual menu for adding contacts
             #if isinstance(self.sessionController.account, Account) and self.sessionController.session.direction == 'incoming' and not NSApp.delegate().windowController.hasContactMatchingURI(scontroller.target_uri):
@@ -413,7 +396,6 @@ class ChatController(MediaStream):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
-        ended = False
         log_debug(self, "Changing chat state to "+newstate)
 
         if newstate == STREAM_DISCONNECTING:

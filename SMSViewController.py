@@ -95,7 +95,6 @@ class SMSViewController(NSObject):
             except Exception, exc:
                 import traceback
                 traceback.print_exc()
-                self.loggingEnabled = False
                 self.chatViewController.showSystemMessage("Unable to create SMS history file: %s"%exc)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
