@@ -10,8 +10,7 @@ from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
-from sipsimple.core import SIPURI
-from sipsimple.streams.applications.chat import ChatIdentity
+from sipsimple.streams.applications.chat import CPIMIdentity
 
 from MediaStream import *
 from BlinkLogger import BlinkLogger
@@ -406,8 +405,8 @@ class ChatWindowController(NSWindowController):
                 return
 
             try:
-                sip_uri = SIPURI.parse('sip:%s'%contact.uri)
-            except SIPCoreError:
+                recipient = CPIMIdentity.parse('%s <sip:%s>' % (contact.display_name, contact.uri))
+            except ValueError:
                 return
 
             controller = ChatPrivateMessage(contact)
@@ -415,7 +414,7 @@ class ChatWindowController(NSWindowController):
 
             if message:
                 chat_stream = session.streamHandlerOfType("chat")
-                chat_stream.handler.send(message, ChatIdentity(sip_uri, contact.display_name))
+                chat_stream.handler.send(message, recipient, True)
 
     def canGoToConferenceWebsite(self):
         session = self.selectedSession()

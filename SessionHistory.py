@@ -21,7 +21,7 @@ from util import *
 FILE_TRANSFER_LOG = "transfers.log"
 
 class ChatLog:
-    fields = ["id", "direction", "sender", "send_time", "delivered_time", "state", "text", "type", "recipient"]
+    fields = ["id", "direction", "sender", "send_time", "delivered_time", "state", "text", "type", "recipient", "private"]
 
     @classmethod
     def flush_pending(cls, tmp_file_name, file_extension=".log"):

@@ -21,7 +21,7 @@ from application.notification import NotificationCenter
 from sipsimple.util import TimestampedNotificationData
 
 from SmileyManager import SmileyManager
-from util import call_in_gui_thread, escape_html, format_identity
+from util import call_in_gui_thread, escape_html, format_identity, format_identity_address, format_identity_from_text
 
 
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent
@@ -283,7 +283,7 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue.append(script)
 
-    def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state='', recipient=''):
+    def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state='', recipient='', is_private=False):
         # keep track of rendered messages to toggle the smileys
         rendered_message = ChatMessageObject(msgid, text, is_html)
         self.rendered_messages.add(rendered_message)
@@ -297,6 +297,7 @@ class ChatViewController(NSObject):
                     send_time=str(timestamp),
                     delivered_time=str(timestamp),
                     state=state,
+                    private= "1" if is_private else "0",
                     type=is_html and "html" or "text",
                     recipient=recipient)
 
@@ -306,10 +307,11 @@ class ChatViewController(NSObject):
             displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         text = processHTMLText(text, self.expandSmileys, is_html)
-        private = 1 if recipient else "null"        
+        private = 1 if is_private else "null"
 
-        if recipient:
-            label = 'Private message to %s' % cgi.escape(recipient) if direction == 'outgoing' else 'Private message from %s' % cgi.escape(sender)
+        if is_private and sender and recipient:
+            sender_uri = format_identity_from_text(sender)[0]
+            label = 'Private message to %s' % cgi.escape(recipient) if (direction == 'outgoing' or (direction == "incoming" and format_identity_address(self.account) == sender_uri)) else 'Private message from %s' % cgi.escape(sender)
         else: 
             label = cgi.escape(format_identity(self.account)) if sender is None else cgi.escape(sender)
 
