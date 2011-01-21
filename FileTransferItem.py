@@ -107,7 +107,7 @@ class FileTransferItem(NSView):
             self.progressBar.setHidden_(True)
 
             self.updateChecksumProgressInfo()
-            self.checksumProgressBar.setIndeterminate_(False)
+            self.checksumProgressBar.setIndeterminate_(True)
             self.checksumProgressBar.startAnimation_(None)
             self.checksumProgressBar.setHidden_(False)
 
@@ -147,7 +147,7 @@ class FileTransferItem(NSView):
         self.checksumProgressBar.setHidden_(False)
         self.stopButton.setHidden_(False)
         self.retryButton.setHidden_(True)
-        self.checksumProgressBar.setIndeterminate_(False)
+        self.checksumProgressBar.setIndeterminate_(True)
         self.checksumProgressBar.setDoubleValue_(0)
         frame = self.frame()
         frame.size.height = self.originalHeight

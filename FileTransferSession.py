@@ -362,9 +362,7 @@ class OutgoingFileTransfer(FileTransfer):
         log_info(self, "Computing checksum for file %s" % self.file_selector.name)
 
         self.status = "Computing checksum..."
-        NotificationCenter().add_observer(self, sender=self.file_selector, name='FileSelectorComputedHashGotUpdate')
-        self.file_selector.compute_hash(True)
-        NotificationCenter().remove_observer(self, sender=self.file_selector, name='FileSelectorComputedHashGotUpdate')
+        self.file_selector.compute_hash()
 
         if self.file_selector.hash is not None:
             self.calculated_checksum = True
@@ -487,6 +485,7 @@ class OutgoingFileTransfer(FileTransfer):
         self.log("transfering")
         NotificationCenter().post_notification("BlinkFileTransferUpdate", self)
 
+    # TODO: get progress information from file selector hash calculation when available -adi
     @run_in_gui_thread
     def _NH_FileSelectorComputedHashGotUpdate(self, sender, data):
         self.checksummed_bytes = data.checksummed_bytes
