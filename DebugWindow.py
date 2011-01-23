@@ -8,7 +8,6 @@ from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
-from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
