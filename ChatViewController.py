@@ -134,6 +134,12 @@ class ChatInputTextView(NSTextView):
                 return self.owner.delegate.sendFiles(fnames)
         return False
 
+    def keyDown_(self, event):
+        if event.keyCode() == 36 and (event.modifierFlags() & NSShiftKeyMask):
+            self.insertText_('\r\n')
+        else:
+            super(ChatInputTextView, self).keyDown_(event)
+
 
 class ChatWebView(WebView):
     def draggingEntered_(self, sender):
