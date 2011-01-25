@@ -748,10 +748,6 @@ class ChatWindowController(NSWindowController):
             remote_uri = format_identity_address(session.remotePartyObject)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
-            if not self.participants:
-                # hide the drawer if everyone left
-                self.drawer.close()
-
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         session = self.selectedSession()
