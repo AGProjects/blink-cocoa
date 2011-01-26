@@ -456,7 +456,8 @@ class AudioController(MediaStream):
 
             self.sessionManager.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
-            self.setStatusText(u"Audio removed")
+            if self.sessionController.hasStreamOfType("chat"):
+                self.setStatusText(u"Audio removed")
         elif status == STREAM_CANCELLING:
             self.setStatusText(u"Cancelling Request...")
         elif status == STREAM_INCOMING:
@@ -712,7 +713,8 @@ class AudioController(MediaStream):
             if self.status != STREAM_DISCONNECTING and self.status != STREAM_CANCELLING:
                 # stream was negotiated away
                 self.audioEndTime = time.time()
-                self.changeStatus(STREAM_IDLE, "Audio removed")
+                if self.sessionController.hasStreamOfType("chat"):
+                    self.changeStatus(STREAM_IDLE, "Audio removed")
         self.notification_center.remove_observer(self, sender=self.stream)
 
     @run_in_gui_thread
