@@ -1,0 +1,13 @@
+
+Dependencies
+------------
+
+ * MacOSX 10.5 (Leopard) or MacOSX 10.6 (Snow Leopard)
+ * Intel Processor (PPC architecture is not supported)
+ * Apple Developer Tools (XCode)
+ * On Snow Leopard, install 10.5 SDK from XCode package
+ * python-cjson
+ * sqlobject
+ * Sparkle Framework http://sparkle.andymatuschak.org
+ * Vine VNC server http://sourceforge.net/projects/osxvnc
+ * Growl and its Python SDK http://growl.info
