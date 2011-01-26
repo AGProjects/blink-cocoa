@@ -52,9 +52,9 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
         contactWindow = sessionController.owner
         contactWindow.chatHistoryViewer(None)
         if sessionController.account is BonjourAccount():
-            contactWindow.chatHistoryViewer.filterByContact('bonjour')
+            contactWindow.chatHistoryViewer.filterByContact('bonjour', media_type='chat')
         else:
-            contactWindow.chatHistoryViewer.filterByContact(format_identity(sessionController.target_uri))
+            contactWindow.chatHistoryViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
@@ -828,9 +828,9 @@ class ChatController(MediaStream):
             contactWindow = self.sessionController.owner
             contactWindow.showChatTranscripts_(None)
             if self.sessionController.account is BonjourAccount():
-                contactWindow.chatHistoryViewer.filterByContact('bonjour')
+                contactWindow.chatHistoryViewer.filterByContact('bonjour', media_type='chat')
             else:
-                contactWindow.chatHistoryViewer.filterByContact(format_identity(self.sessionController.target_uri))
+                contactWindow.chatHistoryViewer.filterByContact(format_identity(self.sessionController.target_uri), media_type='chat')
 
         elif tag == SessionController.TOOLBAR_SHARE_DESKTOP_MENU:
             if self.status == STREAM_CONNECTED:

@@ -62,6 +62,7 @@ class ChatHistoryViewer(NSWindowController):
     search_text = None
     search_contact = None
     search_local = None
+    search_media = None
     daily_order_fields={'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
 
     def __new__(cls, *args, **kwargs):
@@ -97,6 +98,7 @@ class ChatHistoryViewer(NSWindowController):
         self.search_text = None
         self.search_contact = None
         self.search_local = None
+        self.search_media = None
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
@@ -168,8 +170,9 @@ class ChatHistoryViewer(NSWindowController):
             search_text = self.search_text if self.search_text else None
             remote_uri = self.search_contact if self.search_contact else None
             local_uri = self.search_local if self.search_local else None
+            media_type = self.search_media if self.search_media else None
             try:
-                results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, search_text=search_text, order_text=order_text)
+                results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text)
             except Exception, e:
                 BlinkLogger().log_error("Failed to refresh daily entries: %s" % e)
                 return
@@ -200,6 +203,8 @@ class ChatHistoryViewer(NSWindowController):
                 remote_uri = self.search_contact if self.search_contact else None
             if not local_uri: 
                 local_uri = self.search_local if self.search_local else None
+            if not media_type:
+                media_type = self.search_media if self.search_media else None
 
             try:
                 results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text)
@@ -290,11 +295,14 @@ class ChatHistoryViewer(NSWindowController):
                 if row == 0:
                     self.search_local = None 
                     self.search_contact = None
+                    self.search_media = None
                 elif row == 1:
                     self.search_local = 'bonjour' 
                     self.search_contact = None
+                    self.search_media = None
                 elif row > 1:
                     self.search_local = None
+                    self.search_media = None
                     self.search_contact = self.contacts[row].uri
 
                 self.refreshDailyEntries()
@@ -344,9 +352,10 @@ class ChatHistoryViewer(NSWindowController):
         self.window().makeKeyAndOrderFront_(None)
 
     @run_in_gui_thread
-    def filterByContact(self, contact_uri):
+    def filterByContact(self, contact_uri, media_type=None):
         self.search_text = None
         self.search_local = None
+        self.search_media = media_type
         self.search_contact = contact_uri
         self.refreshContacts()
         self.refreshDailyEntries()

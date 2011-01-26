@@ -113,19 +113,27 @@ class ChatHistory(object):
         query = "select distinct(remote_uri) from chat_messages where remote_uri <> 'bonjour' order by remote_uri asc"
         return block_on(deferToThread(self.db.queryAll, query))
 
-    def get_daily_entries(self, local_uri=None, remote_uri=None, search_text=None, order_text=None):
+    def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None):
         if self.db is Null:
             return None
 
         if remote_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri = %s" % ChatMessage.sqlrepr(remote_uri)
+            if media_type:
+                query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+
             query += "group by date, media_type order by date desc, local_uri asc"
 
         elif local_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages"
             query += " where local_uri = %s" % ChatMessage.sqlrepr(local_uri)
+            if media_type:
+                query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+            if search_text:
+                query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+
             query += " group by date, remote_uri, media_type"
 
             if order_text:
@@ -134,9 +142,12 @@ class ChatHistory(object):
                 query += " order by date DESC"
 
         else:
-            query = "select date, local_uri, remote_uri, media_type from chat_messages"
+            query = "select date, local_uri, remote_uri, media_type from chat_messages where 1=1"
+            if media_type:
+                query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+
             if search_text:
-                query += " where body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+                query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
 
             query += " group by date, remote_uri, media_type"
 
