@@ -10,13 +10,20 @@ import os
 import re
 import time
 
+from application.notification import IObserver, NotificationCenter
 from collections import defaultdict
-
+from sipsimple.core import SIPURI
+from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp
+from util import *
+from zope.interface import implements
 
-from SessionHistory import SessionHistory, ChatLog
-from util import format_identity_from_text
+from BlinkLogger import BlinkLogger
+from ContactListModel import Contact
+from HistoryManager import ChatHistory
 
+SQL_LIMIT=5000
+MAX_MESSAGES_PER_PAGE=15
 
 class MyTableView(NSTableView):
     def keyDown_(self, event):
@@ -29,209 +36,321 @@ class MyTableView(NSTableView):
         else:
             NSTableView.keyDown_(self, event)
 
-
 class ChatHistoryViewer(NSWindowController):
+    implements(IObserver)
+    
     chatViewController = objc.IBOutlet()
     indexTable = objc.IBOutlet()
     contactTable = objc.IBOutlet()
     toolbar = objc.IBOutlet()
     searchText = objc.IBOutlet()
-    
-    filtered = None
-    filterByContact = None
-    entries = NSMutableArray.array()
-    keywords = defaultdict(lambda: NSMutableSet.alloc().init()) # keyword -> NSSet of entries
-    contacts = []
+    paginationButton = objc.IBOutlet()
+    foundMessagesLabel = objc.IBOutlet()
+    foundContactsLabel = objc.IBOutlet()
+    busyIndicator = objc.IBOutlet()
 
-    def init(self):
-        self = super(NSWindowController, self).init()
+    # viewer sections
+    contacts = []
+    dayly_entries = []
+    messages = []
+
+    # database handler
+    history = None
+
+    # search filters
+    start = 0
+    search_text = None
+    search_contact = None
+    search_local = None
+    daily_order_fields={'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self):
         if self:
             NSBundle.loadNibNamed_owner_("ChatHistory", self)
-            self.refreshEntries()
-            
+
+            NotificationCenter().add_observer(self, name='ChatViewControllerDidDisplayMessage')
+
             self.contactTable.selectRow_byExtendingSelection_(0, False)
-            
+
             self.searchText.cell().setSendsSearchStringImmediately_(True)
-            self.searchText.cell().setPlaceholderString_("Search")
+            self.searchText.cell().setPlaceholderString_("Type text and press Enter")
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
 
-            for c in ('to', 'sender', 'date', 'type'):
+            for c in ('remote_uri', 'local_uri', 'date', 'type'):
                 col = self.indexTable.tableColumnWithIdentifier_(c)
                 descriptor = NSSortDescriptor.alloc().initWithKey_ascending_(c, True)
                 col.setSortDescriptorPrototype_(descriptor)
-            
-        return self
 
+            self.history = ChatHistory()
+            self.refreshViewer()
+ 
     def close_(self, sender):
         self.window().close()
 
-    def refreshEntries(self):
-        class Item(NSObject):
-            dict = None
-            
-            def description(self):
-                return self.dict["file"]
-            
-            def date(self):
-                return self.dict["date"]
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def refreshViewer(self):
+        self.search_text = None
+        self.search_contact = None
+        self.search_local = None
+        self.refreshContacts()
+        self.refreshDailyEntries()
+        self.refreshMessages()
+        self.contactTable.selectRow_byExtendingSelection_(0, False)
+        self.contactTable.scrollRowToVisible_(0)
 
-            def to(self):
-                return self.dict["to"]
+    @run_in_green_thread
+    def delete_messages(self, local_uri=None, remote_uri=None):
+        try:
+            self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri)
+        except Exception, e:
+            BlinkLogger().log_error("Failed to delete messages: %s" %e)
+            return
+        self.refreshViewer()
 
-            def sender(self):
-                return self.dict["sender"]
+    @run_in_green_thread
+    def refreshContacts(self):
+        if self.history:
+            self.updateBusyIndicator(True)
+            try:
+                results = self.history.get_contacts()
+            except Exception, e:
+                BlinkLogger().log_error("Failed to refresh contacts: %s" %e)
+                return
+            self.renderContacts(results)
+            self.updateBusyIndicator(False)
 
-            def type(self):
-                return self.dict["type"]
-            
-            def __getitem__(self, key):
-                return self.dict[key]
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def renderContacts(self, results):
+        getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+        all_contact = Contact('Any Address', name=u'All Contacts')
+        bonjour_contact = Contact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
-        historyDir = SessionHistory().log_directory
-        self.entries = NSMutableArray.array()
-        self.contacts = []
+        self.contacts = [all_contact, bonjour_contact]
+        for row in results:
+            contact = getContactMatchingURI(row[0])
+            if contact:
+                contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
+            else:
+                contact = Contact(unicode(row[0]), name=unicode(row[0]))
 
-        for path, dirs, files in os.walk(historyDir):
-            if path == historyDir:
-                continue # top level history directory. nothing to do here.
-            del dirs[:]  # do not descend more than the account directory
-            account_name = os.path.basename(path)
-            for file, name, ext in ((os.path.join(path, file), name, ext) for file in files for name, ext in [os.path.splitext(file)] if ext in ('.log', '.smslog')):
-                try:
-                    sender, sep, date = name.rpartition('-')
-                    date = datetime.datetime.strptime(date, '%Y%m%d').date()
-                except ValueError:
-                    continue
-                entry = Item.alloc().init()
-                entry.dict = {
-                    "file"   : file,
-                    "to"     : account_name,
-                    "sender" : sender,
-                    "date"   : date,
-                    "type"   : 'Chat' if ext=='.log' else 'SMS'
-                }
-                self.entries.addObject_(entry)
-            
-                # get contents and build index
-                try:
-                    lines = ChatLog._load_entries(open(file))
-                except:
-                    continue
-                transcript = '\n'.join(line['text'] for line in lines)
-                word_set = set(re.split('\W+', transcript.lower()))
-                word_set.discard('')
-                # add some special keywords
-                word_set.add("to:" + account_name.lower())
-                word_set.add("sender:" + sender.lower())
-                word_set.add("date:" + str(date))
-                if sender not in self.contacts:
-                    self.contacts.append(sender)
-                for word in word_set:
-                    self.keywords[word].addObject_(entry)
+            contact.setDetail(contact.uri)
+            self.contacts.append(contact)
 
-        self.indexTable.reloadData()
+        real_contacts = len(self.contacts)-2
+
         self.contactTable.reloadData()
 
-    def showFile(self, file):
+        if self.search_contact:
+            try:
+                contact = (contact for contact in self.contacts if contact.uri == self.search_contact).next()
+            except StopIteration:
+                pass
+            else:
+                try:
+                    row = self.contacts.index(contact)
+                    self.contactTable.selectRow_byExtendingSelection_(row, False)
+                    self.contactTable.scrollRowToVisible_(row)
+                except:
+                    pass
+
+        self.foundContactsLabel.setStringValue_(u'%d contact(s) found'%real_contacts if real_contacts else u'No contact found')
+
+    @run_in_green_thread
+    def refreshDailyEntries(self, order_text=None):
+        if self.history:
+            self.updateBusyIndicator(True)
+            search_text = self.search_text if self.search_text else None
+            remote_uri = self.search_contact if self.search_contact else None
+            local_uri = self.search_local if self.search_local else None
+            try:
+                results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, search_text=search_text, order_text=order_text)
+            except Exception, e:
+                BlinkLogger().log_error("Failed to refresh daily entries: %s" % e)
+                return
+            self.renderDailyEntries(results)
+            self.updateBusyIndicator(False)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def renderDailyEntries(self, results):
+        self.dayly_entries = []
+        for result in results:
+            entry = {
+                'local_uri'  : result[1],
+                'remote_uri' : format_identity(SIPURI.parse(str('sip:'+result[2])), check_contact=True),
+                'date'       : result[0],
+                'type'       : result[3]
+            }
+            self.dayly_entries.append(entry)
+        self.indexTable.reloadData()
+
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None):
+        self.updateBusyIndicator(True)
+        if self.history:
+            search_text = self.search_text if self.search_text else None
+            if not remote_uri: 
+                remote_uri = self.search_contact if self.search_contact else None
+            if not local_uri: 
+                local_uri = self.search_local if self.search_local else None
+
+            try:
+                results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text)
+            except Exception, e:
+                BlinkLogger().log_error("Failed to refresh messages: %s" % e)
+                return
+
+            # cache message for pagination
+            self.messages=[]
+            for e in reversed(list(results)):
+                self.messages.append(e)
+
+            # reset pagination
+            self.start=0
+            self.renderMessages()
+        self.updateBusyIndicator(False)
+ 
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def renderMessages(self):
         self.chatViewController.clear()
         self.chatViewController.resetRenderedMessages()
 
-        if file:
-            entries = ChatLog._load_entries(open(file))
-            for entry in entries:
-                msgid = entry["id"]
-                stamp = entry["send_time"] or entry["delivered_time"]
-                sender = entry["sender"]
-                text = entry["text"]
-                direction = entry["direction"]
-                is_html = entry["type"] == "html"
-                recipient = entry["recipient"]
-                state = entry["state"]
-                sender_uri = format_identity_from_text(sender)[0]
-                if direction == 'outgoing':
-                    icon = NSApp.delegate().windowController.iconPathForSelf()
-                else:
-                    icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+        end = self.start + MAX_MESSAGES_PER_PAGE if self.start + MAX_MESSAGES_PER_PAGE < len(self.messages) else len(self.messages)
+        for row in self.messages[self.start:end]:
+            self.renderMessage(row)
 
-                try:
-                    timestamp=Timestamp.parse(stamp)
-                except (TypeError, ValueError):
-                    continue
+        self.paginationButton.setEnabled_forSegment_(True if self.start else False, 0)
+        self.paginationButton.setEnabled_forSegment_(True if self.start+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 1)
+        self.foundMessagesLabel.setStringValue_(u'Displaying %d to %d out of %d messages'%(self.start+1, end, len(self.messages)) if len(self.messages) else u'No message found')
 
-                self.chatViewController.showMessage(msgid, direction, sender, icon, text, timestamp, recipient=recipient, state=state, is_html=is_html, history_entry=True)
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def renderMessage(self, message):
+        if message.direction == 'outgoing':
+            icon = NSApp.delegate().windowController.iconPathForSelf()
+        else:
+            sender_uri = format_identity_from_text(message.cpim_from)[0]
+            icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+
+        timestamp=Timestamp.parse(message.cpim_timestamp)
+        is_html = False if message.content_type == 'text' else True
+        private = True if message.private == "1" else False
+        self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+
+    @objc.IBAction
+    def paginateResults_(self, sender):
+        if sender.selectedSegment() == 0:
+           next_start = self.start - MAX_MESSAGES_PER_PAGE
+           self.start = next_start if next_start >= 0 else self.start
+           self.renderMessages()
+        elif sender.selectedSegment() == 1:
+           next_start = self.start + MAX_MESSAGES_PER_PAGE
+           self.start = next_start if next_start < len(self.messages)-1 else self.start
+           self.renderMessages()
 
     def tableView_deleteRow_(self, table, row):
-        entries = self.entries if self.filtered is None else self.filtered
-        if row >= 0:
-            entry = entries[row]
-            
-            r = NSRunAlertPanel("Delete Transcript", 
-                                "Delete transcript of conversation with %s in %s?" % (entry.sender(), entry.date()),
-                                "Delete", "Cancel", None)
-            if r == NSAlertDefaultReturn:
-                from application.system import unlink
-                unlink(entry["file"])
-                entries.removeObjectAtIndex_(row) 
-                self.entries.removeObject_(entry)
-                for key, value in self.keywords.items():
-                    if value.containsObject_(entry):
-                        value.removeObject_(entry)
-                    if len(value) == 0:
-                        del self.keywords[key]
-                        if key.startswith("sender:"):
-                            self.contacts.remove(key[7:])
-                table.reloadData()
-                self.contactTable.reloadData()
-                self.tableViewSelectionDidChange_(None)
+        pass
 
     def tableView_sortDescriptorsDidChange_(self, table, odescr):
-        entries = self.entries if self.filtered is None else self.filtered
-        entries.sortUsingDescriptors_(table.sortDescriptors())
-        self.indexTable.reloadData()
+        for item in (item for item in odescr if item.key() in self.daily_order_fields.keys()):
+            self.daily_order_fields[item.key()] = 'DESC' if item.ascending() else 'ASC'
+
+        order_text = ', '.join([('%s %s' % (k,v)) for k,v in self.daily_order_fields.iteritems()])
+        self.refreshDailyEntries(order_text=order_text)
+
+    @objc.IBAction
+    def search_(self, sender):
+        if self.history:
+            self.search_text = unicode(sender.stringValue()).lower()
+            row = self.indexTable.selectedRow()
+            if row > 0:
+                self.refreshDailyEntries()
+                self.refreshMessages(local_uri=self.dayly_entries[row]['local_uri'], date=self.dayly_entries[row]['date'], media_type=self.dayly_entries[row]['type'])
+            else: 
+                row = self.contactTable.selectedRow()
+                if row > 0:
+                    self.refreshMessages()
+                    self.refreshDailyEntries()
+                else:    
+                    self.refreshDailyEntries()
+                    self.refreshMessages()
 
     def tableViewSelectionDidChange_(self, notification):
-        if not self.indexTable:
-            return
-        if not notification or notification.object() == self.indexTable:
-            entries = self.entries if self.filtered is None else self.filtered
-            selected = self.indexTable.selectedRow()
-            file = entries[selected]["file"] if selected >= 0 else None
-            self.showFile(file)
-        else:
-            row = self.contactTable.selectedRow()
-            self.filterByContact = self.contacts[row-1] if row > 0 else None
-            self.search_(self.searchText)
-            self.tableViewSelectionDidChange_(None)
+        if self.history:
+            if not notification or notification.object() == self.contactTable:
+                row = self.contactTable.selectedRow()
+                if row == 0:
+                    self.search_local = None 
+                    self.search_contact = None
+                elif row == 1:
+                    self.search_local = 'bonjour' 
+                    self.search_contact = None
+                elif row > 1:
+                    self.search_local = None
+                    self.search_contact = self.contacts[row].uri
+
+                self.refreshDailyEntries()
+                self.refreshMessages()
+            else:
+                row = self.indexTable.selectedRow()
+                if row >= 0:
+                    remote_uri = format_identity_from_text(self.dayly_entries[row]['remote_uri'])[0]
+                    self.refreshMessages(remote_uri=remote_uri, local_uri=self.dayly_entries[row]['local_uri'], date=self.dayly_entries[row]['date'], media_type=self.dayly_entries[row]['type'])
 
     def numberOfRowsInTableView_(self, table):
         if table == self.indexTable:
-            entries = self.entries if self.filtered is None else self.filtered
-            return entries.count()
-        return len(self.contacts)+1
+            return len(self.dayly_entries)
+        elif table == self.contactTable:    
+            return len(self.contacts)
+        return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if table == self.indexTable:
             ident = column.identifier()
-            entries = self.entries if self.filtered is None else self.filtered
-            return str(entries[row][ident])
-        else:
-            return self.contacts[row-1] if row > 0 else 'All'
+            try:
+                return unicode(self.dayly_entries[row][ident])
+            except IndexError:
+                return None    
+        elif table == self.contactTable:
+            try:
+                if type(self.contacts[row]) in (str, unicode):
+                    return self.contacts[row]
+                else:
+                    return self.contacts[row].name
+            except IndexError:
+                return None    
+        return None 
     
+    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, tableColumn, row):
+        if table == self.contactTable:
+            try:
+                if row < len(self.contacts):
+                    if type(self.contacts[row]) in (str, unicode):
+                        cell.setContact_(None)
+                    else:
+                        cell.setContact_(self.contacts[row])
+            except:
+                pass
+                
     def showWindow_(self, sender):
         self.window().makeKeyAndOrderFront_(None)
 
-    def filterByContactAccount(self, contact, account):
-        if contact in self.contacts:
-            row = self.contacts.index(contact)+1
-        else:
-            row = -1
-        self.contactTable.selectRow_byExtendingSelection_(row, False)
-        
-        self.filterByContact = contact
-        #self.searchText.setStringValue_("to:%s" % (account.id))
-        self.contactTable.scrollRowToVisible_(row)
-        self.search_(self.searchText)
+    @run_in_gui_thread
+    def filterByContact(self, contact_uri):
+        self.search_text = None
+        self.search_local = None
+        self.search_contact = contact_uri
+        self.refreshContacts()
+        self.refreshDailyEntries()
+        self.refreshMessages()
 
     @objc.IBAction
     def clickedToolbarItem_(self, sender):
@@ -239,39 +358,42 @@ class ChatHistoryViewer(NSWindowController):
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
-
-    @objc.IBAction
-    def search_(self, sender):
-        text = unicode(sender.stringValue()).lower()
-        if not text and not self.filterByContact:
-            self.filtered = None
-            if self.indexTable:
-                self.indexTable.reloadData()
+        elif sender.tag() == 101: # purge messages
+            row = self.contactTable.selectedRow()
+            deleted = False
+            if row == 0:
+                ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of All history messages. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+                if ret == NSAlertDefaultReturn:
+                    self.delete_messages()
+            elif row == 1:
+                remote_uri=self.contacts[row].uri
+                ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of Bonjour chat messages. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+                if ret == NSAlertDefaultReturn:
+                    self.delete_messages(local_uri='bonjour')
+            else: 
+                remote_uri=self.contacts[row].uri
+                ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of chat messages from %s. This operation cannot be undone."%remote_uri, u"Confirm", u"Cancel", None)
+                if ret == NSAlertDefaultReturn:
+                    self.delete_messages(remote_uri=remote_uri)
+                
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def updateBusyIndicator(self, busy=False):
+        if busy:
+            self.foundContactsLabel.setHidden_(True)
+            self.busyIndicator.setHidden_(False)
+            self.busyIndicator.setIndeterminate_(True)
+            self.busyIndicator.setStyle_(NSProgressIndicatorSpinningStyle)
+            self.busyIndicator.startAnimation_(None)
         else:
-            search_tokens = set(text.split())
-            
-            if self.filterByContact:
-                search_tokens.add("sender:"+self.filterByContact)
+            self.busyIndicator.stopAnimation_(None)
+            self.busyIndicator.setHidden_(True)
+            self.foundContactsLabel.setHidden_(False)
 
-            # add any keywords that partially match the typed text
-            token_group_iterator = (set(k for k in self.keywords if token in k) for token in search_tokens)
-            token_groups = [group for group in token_group_iterator if group]
-
-            # search all entries that contain all partial matched tokens
-            empty = NSSet.alloc().init()
-            all_matches = None
-
-            for group in token_groups:
-                partial_match = NSMutableSet.alloc().init()
-                for tok in group:
-                    matches = self.keywords.get(tok, empty)
-                    partial_match.unionSet_(matches)
-                if not all_matches:
-                    all_matches = partial_match
-                else:
-                    all_matches.intersectSet_(partial_match)
-            if all_matches:
-                self.filtered = all_matches.allObjects().mutableCopy()
-            else:
-                self.filtered = NSMutableArray.array()
-            self.indexTable.reloadData()
+    @allocate_autorelease_pool
+    def handle_notification(self, notification):
+        if notification.name == "ChatViewControllerDidDisplayMessage":
+            if notification.data.remote_party != 'bonjour':
+                exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
+                if not exists:
+                    self.refreshContacts()      

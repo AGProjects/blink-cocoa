@@ -68,6 +68,9 @@ class Contact(NSObject):
     def __str__(self):
         return "<Contact: %s>" % self.uri
 
+    def copyWithZone_(self, zone):
+        return self
+
     def __repr__(self):
         return "<Contact: %s>" % self.uri
 

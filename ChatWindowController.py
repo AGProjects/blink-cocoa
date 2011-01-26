@@ -722,7 +722,7 @@ class ChatWindowController(NSWindowController):
             if session.invited_participants:
                 for contact in session.invited_participants:
                     self.participants.append(contact)
-
+ 
             self.drawerTableView.reloadData()
 
             if session.hasStreamOfType("audio"):
@@ -842,7 +842,7 @@ class ChatWindowController(NSWindowController):
                         return self.participants[row].name
             except:
                 pass
-        return 0
+        return None
 
         
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):

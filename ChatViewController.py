@@ -159,7 +159,6 @@ class ChatViewController(NSObject):
     inputText = objc.IBOutlet()
 
     delegate = objc.IBOutlet()
-    history = None
     account = None
     rendered_messages = None
     finishedLoading = False
@@ -178,9 +177,6 @@ class ChatViewController(NSObject):
 
     def setAccount_(self, account):
         self.account = account
-
-    def setHistory_(self, history):
-        self.history = history
 
     def dealloc(self):
         if self.typingTimer:
@@ -244,21 +240,12 @@ class ChatViewController(NSObject):
             is_private = 1 if private else "null"
             script = "markDelivered('%s',%s)"%(msgid, is_private)
             call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
-            if self.history:
-                self.history.set_delivered(msgid)
         elif state == MSG_STATE_DEFERRED:
             script = "markDeferred('%s')"%msgid
             call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
-            if self.history:
-                self.history.set_deferred(msgid)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
             call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
-            if self.history:
-                self.history.set_failed(msgid)
-        elif state == MSG_STATE_SENDING:                
-            if self.history:
-                self.history.set_sent(msgid)
 
     def clear(self):
         if self.finishedLoading:
@@ -283,23 +270,10 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue.append(script)
 
-    def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, history_entry=False, state='', recipient='', is_private=False):
+    def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False):
         # keep track of rendered messages to toggle the smileys
         rendered_message = ChatMessageObject(msgid, text, is_html)
         self.rendered_messages.add(rendered_message)
-
-        if self.history and not history_entry:
-            self.history.log(
-                    id=msgid,
-                    direction=direction,
-                    sender=sender or format_identity(self.account),
-                    text=text,
-                    send_time=str(timestamp),
-                    delivered_time=str(timestamp),
-                    state=state,
-                    private= "1" if is_private else "0",
-                    type=is_html and "html" or "text",
-                    recipient=recipient)
 
         if timestamp.date() != datetime.date.today():
             displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
@@ -311,7 +285,7 @@ class ChatViewController(NSObject):
 
         if is_private and sender and recipient:
             sender_uri = format_identity_from_text(sender)[0]
-            label = 'Private message to %s' % cgi.escape(recipient) if (direction == 'outgoing' or (direction == "incoming" and format_identity_address(self.account) == sender_uri)) else 'Private message from %s' % cgi.escape(sender)
+            label = 'Private message to %s' % cgi.escape(recipient) if direction == 'outgoing' else 'Private message from %s' % cgi.escape(sender)
         else: 
             label = cgi.escape(format_identity(self.account)) if sender is None else cgi.escape(sender)
 
@@ -324,8 +298,6 @@ class ChatViewController(NSObject):
 
         if hasattr(self.delegate, "chatViewDidGetNewMessage_"):
             self.delegate.chatViewDidGetNewMessage_(self)
-
-        NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(message=text, direction='outgoing' if sender is None else 'incoming', history_entry=history_entry))
 
     def toggleSmileys(self, expandSmileys):
         for entry in self.rendered_messages:

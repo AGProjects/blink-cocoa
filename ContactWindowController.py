@@ -145,7 +145,7 @@ class ContactWindowController(NSWindowController):
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
 
-    transcriptViewer = None
+    chatHistoryViewer = None
 
     picker = None
 
@@ -1309,10 +1309,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatTranscripts_(self, sender):
-        if not self.transcriptViewer:
-            self.transcriptViewer = ChatHistoryViewer.alloc().init()
-
-        self.transcriptViewer.showWindow_(None)
+        if not self.chatHistoryViewer:
+            self.chatHistoryViewer = ChatHistoryViewer()
+        self.chatHistoryViewer.showWindow_(None)
 
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
@@ -1872,6 +1871,16 @@ class ContactWindowController(NSWindowController):
                 account = BonjourAccount()
             openFileTransferSelectionDialog(account, contact.uri)
 
+    @objc.IBAction
+    def viewChatHistory_(self, sender):
+        try:
+            contact = self.getSelectedContacts()[0]
+        except IndexError:
+            pass
+        else:
+            self.showChatTranscripts_(None)
+            self.chatHistoryViewer.filterByContact(contact.uri)
+
     def updateRecordingsMenu(self):
         def format_item(name, when):
             a = NSMutableAttributedString.alloc().init()
@@ -1965,6 +1974,9 @@ class ContactWindowController(NSWindowController):
             sms_item.setEnabled_(item not in self.model.bonjourgroup.contacts and not isinstance(self.activeAccount(), BonjourAccount))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
+            sf_item.setEnabled_(has_full_sip_uri)
+            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View Chat History...", "viewChatHistory:", "")
             sf_item.setEnabled_(has_full_sip_uri)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name

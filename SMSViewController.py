@@ -18,25 +18,30 @@ from sipsimple.lookup import DNSLookup
 from sipsimple.payloads.iscomposing import IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import Timestamp, TimestampedNotificationData
+
 
 from BlinkLogger import BlinkLogger
-from SessionHistory import SessionHistory
 from ChatViewController import *
+from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
 from SIPManager import SIPManager
 from util import *
 
-
 MAX_MESSAGE_LENGTH = 1300
 
-class SMSMessageInfo(object):
-    def __init__(self, id, msgid, state, content_type):
-        self.id = id
-        self.msgid = msgid
-        self.state = state
-        self.content_type = content_type
 
+class MessageInfo(object):
+    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, content_type=None, status=None):
+        self.msgid = msgid 
+        self.direction = direction
+        self.sender = sender
+        self.recipient = recipient
+        self.timestamp = timestamp
+        self.text = text
+        self.content_type = content_type
+        self.status = status
+        
 class SMSSplitView(NSSplitView):
     text = None
     attributes = NSDictionary.dictionaryWithObjectsAndKeys_(
@@ -76,7 +81,6 @@ class SMSViewController(NSObject):
     routes = None
     queue = None
     queued_serial = 0
-    history = None
 
     def initWithAccount_target_name_(self, account, target, display_name):
         self = super(SMSViewController, self).init()
@@ -87,15 +91,12 @@ class SMSViewController(NSObject):
             self.queue = []
             self.messages = {}
 
-            NSBundle.loadNibNamed_owner_("SMSView", self)
+            self.history=ChatHistory()
 
-            try:
-                self.history = SessionHistory().open_sms_history(self.account, format_identity_address(self.target_uri))
-                self.chatViewController.setHistory_(self.history)
-            except Exception, exc:
-                import traceback
-                traceback.print_exc()
-                self.chatViewController.showSystemMessage("Unable to create SMS history file: %s"%exc)
+            self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
+            self.remote_uri = '%s@%s' % (self.target_uri.user, self.target_uri.host)
+
+            NSBundle.loadNibNamed_owner_("SMSView", self)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setAccount_(self.account)
@@ -105,14 +106,11 @@ class SMSViewController(NSObject):
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_("%i chars left" % MAX_MESSAGE_LENGTH)
 
-            if isinstance(self.account, Account) and not NSApp.delegate().windowController.hasContactMatchingURI(self.target_uri):
-                self.enableAddContactPanel()
+            #if isinstance(self.account, Account) and not NSApp.delegate().windowController.hasContactMatchingURI(self.target_uri):
+            #    self.enableAddContactPanel()
         return self
 
     def dealloc(self):
-        if self.history:
-            self.history.close()
-            self.history = None
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         super(SMSViewController, self).dealloc()
@@ -170,18 +168,6 @@ class SMSViewController(NSObject):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
-    def setRoutesResolved(self, routes):
-        self.routes = routes
-        if self.queue:
-            BlinkLogger().log_info("Sending queued SMS messages...")
-        for msgid, text, content_type in self.queue:
-            self._sendMessage(msgid, text, content_type)
-        self.queue = []
-
-    def setRoutesFailed(self, msg):
-        BlinkLogger().log_error("DNS Lookup failed: %s" % msg)
-        self.chatViewController.showSystemMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
-
     def matchesTargetAccount(self, target, account):
         that_contact = NSApp.delegate().windowController.getContactMatchingURI(target)
         this_contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
@@ -198,6 +184,12 @@ class SMSViewController(NSObject):
 
         self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
+        NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(sender), check_contact=True))
+
+        # save to history
+        message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
+        self.add_to_history(message)
+ 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
         if window:
@@ -246,8 +238,12 @@ class SMSViewController(NSObject):
         if message.content_type != "application/im-iscomposing+xml":
             if data.code == 202:
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_DEFERRED)
+                message.status='deferred'
             else:
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_DELIVERED)
+                message.status='delivered'
+            self.add_to_history(message)
+
         NotificationCenter().remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
@@ -255,10 +251,26 @@ class SMSViewController(NSObject):
 
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
+        
         if message.content_type != "application/im-iscomposing+xml":
             self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
+            message.status='failed'
+            self.add_to_history(message)
 
         NotificationCenter().remove_observer(self, sender=sender)
+
+    @run_in_green_thread
+    def add_to_history(self, message):
+        # writes the record to the sql database
+        cpim_to = format_identity(message.recipient) if message.recipient else ''
+        cpim_from = format_identity(message.sender) if message.sender else ''
+        cpim_timestamp = str(message.timestamp)
+        content_type="html" if "html" in message.content_type else "text"
+
+        try:
+            self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status)
+        except Exception, e:
+            BlinkLogger().log_error("Failed to add message to history: %s" % e)
 
     def composeReplicationMessage(self, sent_message, response_code):
         if isinstance(self.account, Account):
@@ -286,16 +298,28 @@ class SMSViewController(NSObject):
             pass
         else:
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
-            BlinkLogger().log_info("Sending replication SMS message to %s" % self.account.uri)
             extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(Timestamp(datetime.datetime.now())))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
+    def setRoutesResolved(self, routes):
+        self.routes = routes
+        for msgid, text, content_type in self.queue:
+            self._sendMessage(msgid, text, content_type)
+        self.queue = []
+
+    def setRoutesFailed(self, msg):
+        BlinkLogger().log_error("DNS Lookup failed: %s" % msg)
+        self.chatViewController.showSystemMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
+        for msgid, text, content_type in self.queue:
+            message = self.messages.pop(msgid)
+            if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
+                message.status='failed'
+                self.add_to_history(message)
+        self.queue = []
+
     def _sendMessage(self, msgid, text, content_type="text/plain"):
-        if content_type != "application/im-iscomposing+xml":
-            BlinkLogger().log_info("Sent %s SMS message to %s" % (content_type, self.target_uri))
-            self.enableIsComposing = True
 
         utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
         message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
@@ -304,7 +328,14 @@ class SMSViewController(NSObject):
         message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
 
         id=str(message_request)
-        message = SMSMessageInfo(id, msgid, MSG_STATE_SENDING, content_type)
+        if content_type != "application/im-iscomposing+xml":
+            BlinkLogger().log_info("Sent %s SMS message to %s" % (content_type, self.target_uri))
+            self.enableIsComposing = True
+            message = self.messages.pop(msgid)
+            message.status='sent'
+        else:
+            message = MessageInfo(id, content_type=content_type)
+
         self.messages[id] = message
         return message
 
@@ -315,9 +346,13 @@ class SMSViewController(NSObject):
         hash = hashlib.sha1()
         hash.update(text.encode("utf-8")+str(timestamp))
         msgid = hash.hexdigest()
+ 
         if content_type != "application/im-iscomposing+xml":
             icon = NSApp.delegate().windowController.iconPathForSelf()
             self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="sent")
+        
+            recipient=CPIMIdentity(self.target_uri, self.display_name)
+            self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
 
         self.queue.append((msgid, text, content_type))
 
@@ -330,6 +365,9 @@ class SMSViewController(NSObject):
             if text:
                 self.sendMessage(text)
             self.chatViewController.resetTyping()
+
+            recipient=CPIMIdentity(self.target_uri, self.display_name)
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(recipient), check_contact=True))
 
             return True
         return False
@@ -352,26 +390,32 @@ class SMSViewController(NSObject):
             self.sendMessage(content, IsComposingMessage.content_type)
 
     def chatViewDidLoad_(self, chatView):
-        if self.showHistoryEntries > 0:
-            lines = SessionHistory().get_sms_history(self.account, self.target_uri, self.showHistoryEntries)
+         self.replay_history()
 
-            for entry in lines:
-                id = entry["id"]
-                stamp = entry["send_time"]
-                sender = entry["sender"]
-                direction = entry["direction"]
-                text = entry["text"]
-                is_html = entry["type"] == "html"
-                state = entry["state"]
-                sender_uri = format_identity_from_text(sender)[0]
+    @run_in_green_thread
+    def replay_history(self):
+        try:
+            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries)
+        except Exception, e:
+            BlinkLogger().log_error("Failed to retrive chat history for %s: %s" % (self.remote_uri, e))
+            return
+        messages = [row for row in reversed(list(results))]
+        self.render_history_messages(messages)
 
-                try:
-                    timestamp=Timestamp.parse(stamp)
-                except (TypeError, ValueError):
-                    continue
-
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def render_history_messages(self, messages):
+        for message in messages:
+            if message.direction == 'outgoing':
+                icon = NSApp.delegate().windowController.iconPathForSelf()
+            else:
+                sender_uri = format_identity_from_text(message.cpim_from)[0]
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
-                chatView.showMessage(id, direction, sender, icon, text, timestamp, state=state, is_html=is_html, history_entry=True)
+
+            timestamp=Timestamp.parse(message.cpim_timestamp)
+            is_html = False if message.content_type == 'text' else True
+
+            self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument()

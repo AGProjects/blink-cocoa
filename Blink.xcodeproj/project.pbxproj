@@ -259,6 +259,10 @@
 		1FB9B12B1095BFF500284E18 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
 		1FB9B12C1095BFF500284E18 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1FB9B12D1095BFF500284E18 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
+		1FBBF2E712E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
+		1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
+		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
+		1FBD0E0212EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FD6E05C12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */; };
 		1FD6E05D12D32F2C00168F95 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */; };
@@ -708,6 +712,8 @@
 		1FB9B1161095BFF500284E18 /* hold_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = hold_tone.wav; path = sounds/hold_tone.wav; sourceTree = "<group>"; };
 		1FB9B1171095BFF500284E18 /* ring_outbound2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_outbound2.wav; path = sounds/ring_outbound2.wav; sourceTree = "<group>"; };
 		1FB9B1181095BFF500284E18 /* ring_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_tone.wav; path = sounds/ring_tone.wav; sourceTree = "<group>"; };
+		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
+		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FCF160812B5639F00F71BE5 /* Info-pro.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-pro.plist"; sourceTree = "<group>"; };
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -921,7 +927,6 @@
 				1F2615A712BD8FFA00B402E1 /* ServerConference */,
 				2B01283F109391FF009B2112 /* ServerSettings */,
 				2B11B0B10FF55C3A007FC176 /* Logging */,
-				2B96EC6E10F6DDBC004E6875 /* ChatHistory */,
 				2B5DE51D0FFC5C5D00701821 /* Preferences */,
 				2B7FC8221132D3EF008C07BF /* Presence */,
 				2B240B751023AF8200079580 /* PhotoPicker */,
@@ -1089,6 +1094,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FBD0E0012EB705E00087347 /* trash.png */,
 				2BFB35531017E363002D79FB /* blink.icns */,
 				1FAF8D5212DA31100029857C /* video-hangup.png */,
 				1F1FC04712D0FC77007A31A3 /* video.png */,
@@ -1266,6 +1272,8 @@
 				2BD011E110D8198400D27A92 /* ChatView.html */,
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
+				2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */,
+				2BB36D3510FE504600DA4577 /* ChatHistory.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 			);
 			name = Chat;
@@ -1280,15 +1288,6 @@
 				2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */,
 			);
 			name = Presence;
-			sourceTree = "<group>";
-		};
-		2B96EC6E10F6DDBC004E6875 /* ChatHistory */ = {
-			isa = PBXGroup;
-			children = (
-				2BB36D3510FE504600DA4577 /* ChatHistory.xib */,
-				2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */,
-			);
-			name = ChatHistory;
 			sourceTree = "<group>";
 		};
 		2BAF387A0FE0962B0040117A /* Enrollment */ = {
@@ -1315,6 +1314,7 @@
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2B240839102117F200079580 /* SessionRinger.py */,
 				2B0C2463107C4200008266C7 /* SessionHistory.py */,
+				1FBBF2E612E9B3500077E766 /* HistoryManager.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				1FAF8D2E12DA1F5F0029857C /* Video */,
@@ -1624,6 +1624,8 @@
 				1FAF8D5412DA31100029857C /* video-hangup.png in Resources */,
 				1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */,
 				1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessage.py in Resources */,
+				1FBBF2E712E9B3500077E766 /* HistoryManager.py in Resources */,
+				1FBD0E0212EB705E00087347 /* trash.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1776,6 +1778,8 @@
 				1FAF8D5312DA31100029857C /* video-hangup.png in Resources */,
 				1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */,
 				1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessage.py in Resources */,
+				1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */,
+				1FBD0E0112EB705E00087347 /* trash.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
