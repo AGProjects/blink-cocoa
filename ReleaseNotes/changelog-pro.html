@@ -8,20 +8,26 @@
 
 <h2>Version 1.0.1</h2>
 
-<p>January 9th, 2011
+<p>January 26th, 2011
 
 <ul>
+<li>Refactored Chat SMS and history for using SQLite database backend
+<li>Modified ChatInputTextView to insert newline on shift+enter
+<li>Fixed Chat datetime handling to be offset aware
+<li>Allow toggle of smileys in real time
+<li>Fixed a DNS lookup race condition
+<li>Fixed crash when receiving broken Request URI containing unquote @  
+<li>Implemented MSRP Chat keepalive mechanism
 <li>Do not move focus to SMS window when receiving is-composing
 <li>Show full name in Missed Call and Audio Recorded Growl notifications
 <li>Added Chat window drawer with participants and session information
 <li>Added support for conference servers
 <li>Added Audio, Hold, Record and Video buttons in Chat toolbar
 <li>Audio button toggles between Connect, Cancel, Hangup
-<li>Use Chat message sent timestamp displayed in local timezone
 <li>Automatically switch audio when switching Chat session with audio
 <li>Fixed updating buttons state when switching or detaching tabs
 <li>Fixed updating buttons state after stream has been disconnected
-<li>Make toolbar customizable by end-user
+<li>Make Chat toolbar customizable by end-user
 <li>Fixed various exceptions when adding and removing streams
 <li>Fixed accounting of failed sessions
 <li>Added accounting for multi-party conferencing
