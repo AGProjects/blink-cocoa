@@ -9,6 +9,7 @@ import hashlib
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
+from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.account import Account
@@ -176,7 +177,7 @@ class SMSViewController(NSObject):
     def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
-        timestamp = timestamp or Timestamp(datetime.datetime.utcnow())
+        timestamp = timestamp or Timestamp(datetime.datetime.now(tzlocal()))
 
         hash = hashlib.sha1()
         hash.update(str(message)+str(timestamp)+str(sender))
@@ -207,7 +208,7 @@ class SMSViewController(NSObject):
             if refresh is None:
                 refresh = 120
 
-            if last_active is not None and (last_active - datetime.datetime.now() > datetime.timedelta(seconds=refresh)):
+            if last_active is not None and (last_active - datetime.datetime.now(tzlocal()) > datetime.timedelta(seconds=refresh)):
                 # message is old, discard it
                 return
 
@@ -282,7 +283,7 @@ class SMSViewController(NSObject):
 
     @run_in_green_thread
     def sendReplicationMessage(self, response_code, text, content_type="message/cpim", timestamp=None):
-        timestamp = timestamp or datetime.datetime.utcnow()
+        timestamp = timestamp or datetime.datetime.now(tzlocal())
         # Lookup routes
         if self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host,
@@ -342,7 +343,7 @@ class SMSViewController(NSObject):
     def sendMessage(self, text, content_type="text/plain"):
         SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
-        timestamp = Timestamp(datetime.datetime.utcnow())
+        timestamp = Timestamp(datetime.datetime.now(tzlocal()))
         hash = hashlib.sha1()
         hash.update(text.encode("utf-8")+str(timestamp))
         msgid = hash.hexdigest()

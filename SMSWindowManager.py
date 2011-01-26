@@ -9,6 +9,7 @@ import re
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
+from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.core import SIPURI
@@ -300,7 +301,7 @@ class SMSWindowManagerClass(NSObject):
             try:
                 replication_timestamp = Timestamp.parse(replicated_timestamp)
             except (TypeError, ValueError):
-                replication_timestamp = Timestamp(datetime.datetime.utcnow())
+                replication_timestamp = Timestamp(datetime.datetime.now(tzlocal()))
 
         viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)

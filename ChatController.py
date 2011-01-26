@@ -14,6 +14,7 @@ from itertools import dropwhile, takewhile
 from application import log
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
+from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.account import Account, BonjourAccount
@@ -168,7 +169,7 @@ class MessageHandler(NSObject):
         return True
 
     def send(self, text, recipient=None, private=False):
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(tzlocal())
         timestamp = Timestamp(now)
         icon = NSApp.delegate().windowController.iconPathForSelf()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
@@ -207,7 +208,7 @@ class MessageHandler(NSObject):
         return True
 
     def resend(self, msgid, text, recipient=None, private=False):
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(tzlocal())
         timestamp = Timestamp(now)
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
         icon = NSApp.delegate().windowController.iconPathForSelf()
@@ -898,7 +899,7 @@ class ChatController(MediaStream):
             if flag:
                 refresh = data.refresh if data.refresh is not None else 120
 
-                if data.last_active is not None and (data.last_active - datetime.datetime.now() > datetime.timedelta(seconds=refresh)):
+                if data.last_active is not None and (data.last_active - datetime.datetime.now(tzlocal()) > datetime.timedelta(seconds=refresh)):
                     # message is old, discard it
                     return
 
@@ -916,12 +917,12 @@ class ChatController(MediaStream):
 
     def _NH_SIPSessionDidFail(self, sender, data):
         message = "Session failed: %s" % data.reason
-        self.chatViewController.showSystemMessage(message, datetime.datetime.utcnow(), True)
+        self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         endpoint = str(self.stream.msrp.full_remote_path[0])
         BlinkLogger().log_info("Chat stream established to %s (%s)"%(endpoint, self.remoteParty))
-        self.chatViewController.showSystemMessage("Session established", datetime.datetime.utcnow())
+        self.chatViewController.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
 
         self.handler.setConnected(self.stream)
 
@@ -942,7 +943,7 @@ class ChatController(MediaStream):
 
         if self.status == STREAM_CONNECTED:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-            self.chatViewController.showSystemMessage(close_message, datetime.datetime.utcnow())
+            self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
             self.removeFromSession()
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
@@ -950,7 +951,7 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
         BlinkLogger().log_info("Chat stream failed: %s" % reason)
-        self.chatViewController.showSystemMessage(reason, datetime.datetime.utcnow(), True)
+        self.chatViewController.showSystemMessage(reason, datetime.datetime.now(tzlocal()), True)
 
         self.notification_center.remove_observer(self, sender=self.stream)
         self.handler.setDisconnected()

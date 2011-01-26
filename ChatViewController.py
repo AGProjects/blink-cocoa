@@ -261,7 +261,7 @@ class ChatViewController(NSObject):
 
     def showSystemMessage(self, text, timestamp=None, is_error=False):
         if timestamp is None:
-            timestamp = datetime.datetime.utcnow()
+            timestamp = datetime.datetime.now(tzlocal())
         if type(timestamp) is datetime.datetime:
             if timestamp.date() != datetime.date.today():
                 timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))

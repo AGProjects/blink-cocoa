@@ -12,6 +12,7 @@ from itertools import izip, chain, repeat
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
+from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.application import SIPApplication
@@ -670,7 +671,7 @@ class AudioController(MediaStream):
         
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
-        growl_data.timestamp = datetime.datetime.utcnow()
+        growl_data.timestamp = datetime.datetime.now(tzlocal())
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
     @run_in_gui_thread
