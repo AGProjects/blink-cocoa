@@ -1,6 +1,9 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from Foundation import *
+from AppKit import *
+
 from zope.interface import implements, Interface
 
 from application.python.util import Singleton
@@ -955,7 +958,7 @@ class SIPManager(object):
 
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
-        settings.user_agent = "Blink %s (MacOSX)" % self._version
+        settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
         settings.save()
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
