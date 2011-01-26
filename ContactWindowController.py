@@ -1975,9 +1975,10 @@ class ContactWindowController(NSWindowController):
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
             sf_item.setEnabled_(has_full_sip_uri)
-            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-            sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View Chat History...", "viewChatHistory:", "")
-            sf_item.setEnabled_(has_full_sip_uri)
+            if item not in self.model.bonjourgroup.contacts:
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View Chat History...", "viewChatHistory:", "")
+                sf_item.setEnabled_(has_full_sip_uri)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")
