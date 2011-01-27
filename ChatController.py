@@ -967,7 +967,6 @@ class ChatController(MediaStream):
         
         if self.stream:
             self.handler.setDisconnected()
-            NotificationCenter().remove_observer(self, sender=self.stream)
             self.stream = None
             self.handler = None
 
