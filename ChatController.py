@@ -393,11 +393,11 @@ class ChatController(MediaStream):
             if status == STREAM_PROPOSING or status == STREAM_RINGING:
                 self.sessionController.cancelProposal(self.stream)
                 self.changeStatus(STREAM_CANCELLING)
-            elif self.stream and self.session.streams and len(self.session.streams) > 0:
+            elif self.stream and self.session.streams == [self.stream]:
+                self.sessionController.end()
+            else:
                 log_info(self, "Removing Chat Stream from session")                    
                 self.sessionController.endStream(self)
-            else:
-                self.sessionController.end()
         if autoclose or status == STREAM_DISCONNECTING:
             self.closeChatWindow()
 
