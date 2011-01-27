@@ -167,11 +167,11 @@ class Contact(NSObject):
         self.uri = uri
 
     def setName(self, name):
-        self.name = NSString.alloc().initWithString_(name)
+        self.name = NSString.stringWithString_(name)
         self.display_name = unicode(self.name)
 
     def setDetail(self, detail):
-        self.detail = NSString.alloc().initWithString_(detail)
+        self.detail = NSString.stringWithString_(detail)
 
     def setSupportedMedia(self, media):
         self.supported_media = media
