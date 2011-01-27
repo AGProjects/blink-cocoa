@@ -129,6 +129,7 @@ class BlinkAppDelegate(NSObject):
         path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
         args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
         args += ["-protocol", "3.3"]
+        args += ["-rendezvous", "N"]
         #args += ["-maxdepth", "8"]
 
         self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
