@@ -104,12 +104,13 @@ class FileTransferItem(NSView):
             self.updateProgressInfo()
             self.progressBar.setIndeterminate_(True)
             self.progressBar.startAnimation_(None)
-            self.progressBar.setHidden_(True)
+            self.progressBar.setHidden_(False)
 
-            self.updateChecksumProgressInfo()
-            self.checksumProgressBar.setIndeterminate_(True)
-            self.checksumProgressBar.startAnimation_(None)
-            self.checksumProgressBar.setHidden_(False)
+            # TODO update checksum calculation for outgoing transfers -adi
+            #self.updateChecksumProgressInfo()
+            #self.checksumProgressBar.setIndeterminate_(True)
+            #self.checksumProgressBar.startAnimation_(None)
+            #self.checksumProgressBar.setHidden_(False)
 
             frame.size = self.view.frame().size
             self.setFrame_(frame)

@@ -186,6 +186,7 @@ def _filename_generator(name):
 class IncomingFileTransfer(FileTransfer):
     def __init__(self, session, stream):
         self.session = session
+        self.account = session.account
         self.file_selector = stream.file_selector
         self.hash = hashlib.sha1()
         self.target_uri = session.remote_identity
