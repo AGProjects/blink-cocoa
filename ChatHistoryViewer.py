@@ -404,7 +404,7 @@ class ChatHistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     def handle_notification(self, notification):
         if notification.name == "ChatViewControllerDidDisplayMessage":
-            if notification.data.remote_party != 'bonjour':
+            if notification.data.local_party != 'bonjour':
                 exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
                 if not exists:
                     self.refreshContacts()      

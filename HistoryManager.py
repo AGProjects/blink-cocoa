@@ -110,7 +110,7 @@ class ChatHistory(object):
     def get_contacts(self):
         if self.db is Null:
             return None
-        query = "select distinct(remote_uri) from chat_messages where remote_uri <> 'bonjour' order by remote_uri asc"
+        query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour' order by remote_uri asc"
         return block_on(deferToThread(self.db.queryAll, query))
 
     def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None):

@@ -477,7 +477,7 @@ class ChatController(MediaStream):
                     identity = None
                 if not self.handler.send(text, recipient=identity):
                     textView.setString_(original)
-                NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 BlinkLogger().log_info("Session not established, starting it")
@@ -883,7 +883,7 @@ class ChatController(MediaStream):
                     growl_data.content = message.body[0:400]
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # save to history
             message = MessageInfo(msgid, direction='incoming', sender=message.sender, recipient=recipient, timestamp=message.timestamp, text=message.body, private=private, status="delivered")

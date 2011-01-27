@@ -12,7 +12,7 @@ from application.python.util import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
-from sipsimple.account import Account
+from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup
@@ -185,7 +185,7 @@ class SMSViewController(NSObject):
 
         self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
-        NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(sender), check_contact=True))
+        NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(sender), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
         # save to history
         message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
@@ -368,7 +368,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient=CPIMIdentity(self.target_uri, self.display_name)
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(recipient), check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(recipient), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             return True
         return False
