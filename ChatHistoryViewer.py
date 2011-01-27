@@ -74,8 +74,6 @@ class ChatHistoryViewer(NSWindowController):
 
             NotificationCenter().add_observer(self, name='ChatViewControllerDidDisplayMessage')
 
-            self.contactTable.selectRow_byExtendingSelection_(0, False)
-
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
 
@@ -102,8 +100,6 @@ class ChatHistoryViewer(NSWindowController):
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
-        self.contactTable.selectRow_byExtendingSelection_(0, False)
-        self.contactTable.scrollRowToVisible_(0)
 
     @run_in_green_thread
     def delete_messages(self, local_uri=None, remote_uri=None):
@@ -156,10 +152,13 @@ class ChatHistoryViewer(NSWindowController):
             else:
                 try:
                     row = self.contacts.index(contact)
-                    self.contactTable.selectRow_byExtendingSelection_(row, False)
+                    self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
                     self.contactTable.scrollRowToVisible_(row)
                 except:
                     pass
+        else:
+            self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
+            self.contactTable.scrollRowToVisible_(0)
 
         self.foundContactsLabel.setStringValue_(u'%d contact(s) found'%real_contacts if real_contacts else u'No contact found')
 
@@ -192,6 +191,9 @@ class ChatHistoryViewer(NSWindowController):
             }
             self.dayly_entries.append(entry)
         self.indexTable.reloadData()
+
+        if self.search_contact and not self.dayly_entries:
+            self.contactTable.deselectAll_(True)
 
     @run_in_green_thread
     @allocate_autorelease_pool
