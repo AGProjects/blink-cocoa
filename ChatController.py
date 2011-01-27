@@ -232,14 +232,12 @@ class MessageHandler(NSObject):
         NotificationCenter().add_observer(self, sender=stream)
         icon = NSApp.delegate().windowController.iconPathForSelf()
         for msgid in self.pending:
-            try:
-                private = self.messages[msgid].private
-                message = self._send(msgid)
-            except Exception, e:
-                BlinkLogger().log_error("Error sending queued message: %s" % e)
+            private = self.messages[msgid].private
+            sent = self._send(msgid)
+            if not sent:
+                BlinkLogger().log_error("Error sending queued message: %s" % msgid)
             else:
                 self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
-
         self.pending = []
 
     def setDisconnected(self):
