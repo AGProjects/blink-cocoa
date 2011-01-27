@@ -968,10 +968,10 @@ class SIPManager(object):
                 account.save()
         logger = FileLogger()
         logger.start()
-
-    def _NH_SIPApplicationDidStart(self, sender, data):
         self.ip_address_monitor.start()
         self.ringer.start()
+
+    def _NH_SIPApplicationDidStart(self, sender, data):
         self.ringer.update_ringtones()
 
         bonjour_account = BonjourAccount()
