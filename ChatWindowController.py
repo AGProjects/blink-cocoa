@@ -289,9 +289,9 @@ class ChatWindowController(NSWindowController):
                 self.notification_center.remove_observer(self, name="BlinkSessionChangedState")
                 self.notification_center.remove_observer(self, name="BlinkStreamHandlerChangedState")
                 self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
-            chat_handler = selectedSession.streamHandlerOfType("chat")
-            if chat_handler:
-                chat_handler.end(True)
+            chat_stream = selectedSession.streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.end(True)
             else:
                 self.detachSession_(selectedSession)
 
@@ -308,9 +308,9 @@ class ChatWindowController(NSWindowController):
         self.drawer.close()
         self.window().close()
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
-            handler = s.streamHandlerOfType("chat")
-            if handler:
-                handler.end()
+            chat_stream = s.streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.end()
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self)
