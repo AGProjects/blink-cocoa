@@ -933,9 +933,10 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidEnd(self, sender, data):
         BlinkLogger().log_info("Chat stream ended")
 
-        if self.stream:
-            self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.remove_observer(self, sender=sender)
+        if self.handler:
             self.handler.setDisconnected()
+            self.handler = None
 
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
@@ -953,9 +954,11 @@ class ChatController(MediaStream):
         BlinkLogger().log_info("Chat stream failed: %s" % reason)
         self.chatViewController.showSystemMessage(reason, datetime.datetime.now(tzlocal()), True)
 
-        if self.stream:
-            self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.remove_observer(self, sender=sender)
+
+        if self.handler:
             self.handler.setDisconnected()
+            self.handler = None
 
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
@@ -968,8 +971,9 @@ class ChatController(MediaStream):
         self.chatViewController.close()
         self.removeFromSession()
         
-        if self.stream:
+        if self.handler:
             self.handler.setDisconnected()
-            self.stream = None
-            self.handler = None
+
+        self.stream = None
+        self.handler = None
 
