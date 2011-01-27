@@ -711,6 +711,24 @@
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
 								</object>
+								<object class="NSMenuItem" id="1048520813">
+									<reference key="NSMenu" ref="447821357"/>
+									<string key="NSTitle">Chat Conversations</string>
+									<string key="NSKeyEquiv">3</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+								</object>
+								<object class="NSMenuItem" id="206777781">
+									<reference key="NSMenu" ref="447821357"/>
+									<string key="NSTitle">File Transfers</string>
+									<string key="NSKeyEquiv">4</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+								</object>
 								<object class="NSMenuItem" id="974258292">
 									<reference key="NSMenu" ref="447821357"/>
 									<string key="NSTitle">Audio Recordings</string>
@@ -883,34 +901,32 @@
 								</object>
 								<object class="NSMenuItem" id="688909935">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Contacts</string>
+									<string key="NSTitle">Main Window</string>
 									<string key="NSKeyEquiv">1</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
 								</object>
-								<object class="NSMenuItem" id="356848536">
+								<object class="NSMenuItem" id="1026207943">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Audio Sessions</string>
+									<string key="NSTitle">Active Calls</string>
 									<string key="NSKeyEquiv">2</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">301</int>
 								</object>
-								<object class="NSMenuItem" id="614131452">
+								<object class="NSMenuItem" id="257090110">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Chat History</string>
+									<string key="NSTitle">Chat Conversations</string>
 									<string key="NSKeyEquiv">3</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">301</int>
 								</object>
-								<object class="NSMenuItem" id="470251771">
+								<object class="NSMenuItem" id="796498937">
 									<reference key="NSMenu" ref="835318025"/>
 									<string key="NSTitle">File Transfers</string>
 									<string key="NSKeyEquiv">4</string>
@@ -918,16 +934,6 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-								</object>
-								<object class="NSMenuItem" id="1048800025">
-									<reference key="NSMenu" ref="835318025"/>
-									<bool key="NSIsHidden">YES</bool>
-									<string key="NSTitle">Open Messages Drawer</string>
-									<string key="NSKeyEquiv"/>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<reference key="NSOnImage" ref="660791971"/>
-									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">302</int>
 								</object>
 								<object class="NSMenuItem" id="299356726">
 									<reference key="NSMenu" ref="835318025"/>
@@ -2826,14 +2832,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">849</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">showWindow:</string>
-						<reference key="source" ref="753939949"/>
-						<reference key="destination" ref="470251771"/>
-					</object>
-					<int key="connectionID">851</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">audioMenu</string>
 						<reference key="source" ref="900429702"/>
@@ -3035,14 +3033,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">showChatTranscripts:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="614131452"/>
-					</object>
-					<int key="connectionID">962</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
 						<string key="label">deleteContact:</string>
 						<reference key="source" ref="1014"/>
 						<reference key="destination" ref="212412478"/>
@@ -3168,14 +3158,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="321039356"/>
 					</object>
 					<int key="connectionID">1002</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">toggleAudioSessionsDrawer:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="356848536"/>
-					</object>
-					<int key="connectionID">1003</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -3360,6 +3342,46 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="633631115"/>
 					</object>
 					<int key="connectionID">1103</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showChatTranscripts:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="1048520813"/>
+					</object>
+					<int key="connectionID">1105</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showWindow:</string>
+						<reference key="source" ref="753939949"/>
+						<reference key="destination" ref="206777781"/>
+					</object>
+					<int key="connectionID">1107</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">toggleAudioSessionsDrawer:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="1026207943"/>
+					</object>
+					<int key="connectionID">1111</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showChatTranscripts:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="257090110"/>
+					</object>
+					<int key="connectionID">1113</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showWindow:</string>
+						<reference key="source" ref="753939949"/>
+						<reference key="destination" ref="796498937"/>
+					</object>
+					<int key="connectionID">1115</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -3599,13 +3621,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="1011231497"/>
 							<reference ref="610791460"/>
 							<reference ref="688909935"/>
-							<reference ref="470251771"/>
-							<reference ref="356848536"/>
-							<reference ref="1048800025"/>
-							<reference ref="614131452"/>
 							<reference ref="684397367"/>
 							<reference ref="758161328"/>
 							<reference ref="386904539"/>
+							<reference ref="1026207943"/>
+							<reference ref="257090110"/>
+							<reference ref="796498937"/>
 						</object>
 						<reference key="parent" ref="713487014"/>
 					</object>
@@ -4219,6 +4240,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="858258454"/>
 							<reference ref="974258292"/>
 							<reference ref="633328888"/>
+							<reference ref="1048520813"/>
+							<reference ref="206777781"/>
 						</object>
 						<reference key="parent" ref="800862302"/>
 					</object>
@@ -4250,24 +4273,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="objectName">Model</string>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">843</int>
-						<reference key="object" ref="356848536"/>
-						<reference key="parent" ref="835318025"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">844</int>
-						<reference key="object" ref="1048800025"/>
-						<reference key="parent" ref="835318025"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">848</int>
 						<reference key="object" ref="753939949"/>
 						<reference key="parent" ref="88742313"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">850</int>
-						<reference key="object" ref="470251771"/>
-						<reference key="parent" ref="835318025"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">859</int>
@@ -4469,11 +4477,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<int key="objectID">953</int>
 						<reference key="object" ref="768233508"/>
 						<reference key="parent" ref="348634638"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">961</int>
-						<reference key="object" ref="614131452"/>
-						<reference key="parent" ref="835318025"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">968</int>
@@ -4722,6 +4725,35 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="197272145"/>
 						<reference key="parent" ref="633631115"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1104</int>
+						<reference key="object" ref="1048520813"/>
+						<reference key="parent" ref="447821357"/>
+						<string key="objectName">Menu Item (Chat Conversations...)</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1106</int>
+						<reference key="object" ref="206777781"/>
+						<reference key="parent" ref="447821357"/>
+						<string key="objectName">Menu Item (File Transfers..)</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1110</int>
+						<reference key="object" ref="1026207943"/>
+						<reference key="parent" ref="835318025"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1112</int>
+						<reference key="object" ref="257090110"/>
+						<reference key="parent" ref="835318025"/>
+						<string key="objectName">Menu Item (Chat Conversations...)</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1114</int>
+						<reference key="object" ref="796498937"/>
+						<reference key="parent" ref="835318025"/>
+						<string key="objectName">Menu Item (File Transfers..)</string>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -4772,8 +4804,13 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>1096.IBPluginDependency</string>
 					<string>1098.IBPluginDependency</string>
 					<string>1100.IBPluginDependency</string>
+					<string>1104.IBPluginDependency</string>
+					<string>1106.IBPluginDependency</string>
 					<string>111.IBPluginDependency</string>
 					<string>111.ImportedFromIB2</string>
+					<string>1110.IBPluginDependency</string>
+					<string>1112.IBPluginDependency</string>
+					<string>1114.IBPluginDependency</string>
 					<string>129.IBPluginDependency</string>
 					<string>129.ImportedFromIB2</string>
 					<string>130.IBEditorWindowLastContentRect</string>
@@ -4951,9 +4988,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>817.IBPluginDependency</string>
 					<string>818.IBPluginDependency</string>
 					<string>819.IBPluginDependency</string>
-					<string>843.IBPluginDependency</string>
-					<string>844.IBPluginDependency</string>
-					<string>850.IBPluginDependency</string>
 					<string>859.IBPluginDependency</string>
 					<string>860.IBPluginDependency</string>
 					<string>862.IBPluginDependency</string>
@@ -4992,7 +5026,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>951.IBPluginDependency</string>
 					<string>952.IBPluginDependency</string>
 					<string>953.IBPluginDependency</string>
-					<string>961.IBPluginDependency</string>
 					<string>968.IBPluginDependency</string>
 					<string>968.ImportedFromIB2</string>
 					<string>970.IBPluginDependency</string>
@@ -5015,7 +5048,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{700, 547}, {211, 83}}</string>
+					<string>{{866, 621}, {211, 83}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -5033,7 +5066,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{430, 417}, {247, 43}}</string>
+					<string>{{703, 661}, {191, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -5057,7 +5090,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{530, 726}, {64, 6}}</string>
@@ -5102,7 +5140,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{649, 227}, {237, 233}}</string>
+					<string>{{922, 491}, {210, 213}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
@@ -5435,7 +5473,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{372, 326}, {207, 134}}</string>
+					<string>{{645, 570}, {207, 134}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{868, 743}, {192, 163}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -5443,13 +5481,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{633, 567}, {194, 63}}</string>
+					<string>{{799, 601}, {206, 103}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{801, 873}, {119, 33}}</string>
 					<string>{{598, 442}, {99, 43}}</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -5512,7 +5547,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -5546,7 +5580,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1103</int>
+			<int key="maxID">1115</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -5878,9 +5912,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>toggleAnsweringMachine:</string>
 							<string>toggleAudioSessionsDrawer:</string>
 							<string>toggleAutoAccept:</string>
+							<string>viewChatHistory:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -5967,6 +6003,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>toggleAnsweringMachine:</string>
 							<string>toggleAudioSessionsDrawer:</string>
 							<string>toggleAutoAccept:</string>
+							<string>viewChatHistory:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -6128,6 +6165,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">toggleAutoAccept:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">viewChatHistory:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 						</object>

@@ -1695,8 +1695,8 @@ class ContactWindowController(NSWindowController):
 
     def updateHistoryMenu(self):
         menu = self.historyMenu
-        while menu.numberOfItems() > 4:
-            menu.removeItemAtIndex_(4)
+        while menu.numberOfItems() > 6:
+            menu.removeItemAtIndex_(6)
 
         try:
           res = self.backend.get_last_call_history_entries(12)
