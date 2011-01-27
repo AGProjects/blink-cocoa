@@ -778,7 +778,7 @@ class ContactWindowController(NSWindowController):
                 self.model.moveBonjourGroupFirst()
                 self.contactOutline.reloadData()
                 # select the Bonjour stuff group and expand it
-                self.contactOutline.selectRow_byExtendingSelection_(0, False)
+                self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
                 if not self.model.bonjourgroup.expanded:
                     self.contactOutline.expandItem_(self.model.bonjourgroup)
                     self.model.bonjourgroup.expanded = False
@@ -856,7 +856,7 @@ class ContactWindowController(NSWindowController):
 
                 row = self.contactOutline.rowForItem_(contact)
                 if row != NSNotFound:
-                    self.contactOutline.selectRow_byExtendingSelection_(row, False)
+                    self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
                     self.contactOutline.scrollRowToVisible_(row)
                     self.window().makeFirstResponder_(self.contactOutline)
         else:
@@ -872,7 +872,7 @@ class ContactWindowController(NSWindowController):
 
                 row = self.contactOutline.rowForItem_(contact)
                 if row != NSNotFound:
-                    self.contactOutline.selectRow_byExtendingSelection_(row, False)
+                    self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
                     self.contactOutline.scrollRowToVisible_(row)
                     self.window().makeFirstResponder_(self.contactOutline)
 

@@ -788,7 +788,7 @@ class ContactListModel(NSObject):
                     g.previous_position = index-1
                 table.reloadData()
                 if table.selectedRow() >= 0:
-                    table.selectRow_byExtendingSelection_(table.rowForItem_(g), False)
+                    table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(g)), False)
                 return True
             else:
                 sourceGroup = self.contactGroupsList[group]
@@ -806,7 +806,7 @@ class ContactListModel(NSObject):
                     targetGroup.contacts.insert(index, contactObject)
                 table.reloadData()
                 if table.selectedRow() >= 0:
-                    table.selectRow_byExtendingSelection_(table.rowForItem_(contactObject), False)
+                    table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(contactObject)), False)
                 return True
 
     def outlineView_writeItems_toPasteboard_(self, table, items, pboard):

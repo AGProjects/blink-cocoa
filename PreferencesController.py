@@ -55,7 +55,7 @@ class PreferencesController(NSWindowController, object):
         if default_account:
             try:
                 row = self.getAccounts().index(default_account)
-                self.accountTable.selectRow_byExtendingSelection_(row, False)
+                self.accountTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
             except:
                 pass
 
@@ -227,10 +227,10 @@ class PreferencesController(NSWindowController, object):
                 account_index = active_accounts.index(account)
                 if account_index < len(active_accounts)-1:
                     account_manager.default_account = active_accounts[account_index+1]
-                    self.accountTable.selectRow_byExtendingSelection_(account_index+1, False)
+                    self.accountTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(account_index+1), False)
                 elif account_index > 0:
                     account_manager.default_account = active_accounts[account_index-1]
-                    self.accountTable.selectRow_byExtendingSelection_(account_index-1, False)
+                    self.accountTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(account_index-1), False)
                 else:
                     account_manager.default_account = None
                 del active_accounts

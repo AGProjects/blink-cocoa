@@ -11,7 +11,7 @@ class ParticipantsTableView(NSTableView):
         point = self.convertPoint_fromView_(event.locationInWindow(), None)
         row = self.rowAtPoint_(point)
 
-        self.selectRow_byExtendingSelection_(row, False)
+        self.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
 
         return self.menu()
 

@@ -434,10 +434,10 @@ class AudioCodecListOption(MultipleSelectionOption):
     #    del self.options[row]
     #    if sender == self.moveUp:
     #        self.options.insert(row-1, item)
-    #        self.table.selectRow_byExtendingSelection_(row-1, False)
+    #        self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row-1), False)
     #    else:
     #        self.options.insert(row+1, item)
-    #        self.table.selectRow_byExtendingSelection_(row+1, False)
+    #        self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row+1), False)
     #    self.table.reloadData()
     #    self.store()
 
