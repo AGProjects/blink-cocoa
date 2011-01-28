@@ -915,7 +915,7 @@ class SIPManager(object):
         return (message, party), default_action, alt_action
 
     def reject_incoming_session(self, session, code=603, reason=None):
-        BlinkLogger().log_info(u"Rejecting Session from %s (code %s)"%(session.remote_identity, code))
+        BlinkLogger().log_info("Rejecting Session from %s (code %s)"%(session.remote_identity, code))
         session.reject(code, reason)
 
     def is_muted(self):

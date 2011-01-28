@@ -42,7 +42,7 @@ def format_identity(identity, check_contact=False):
             port = identity.uri.port
         if identity.uri.transport != 'udp':
             transport = identity.uri.transport
-        display_name = identity.display_name
+        display_name = identity.display_name.decode("utf-8") if identity.display_name else None
         contact = NSApp.delegate().windowController.getContactMatchingURI(identity.uri) if check_contact else None
 
     if port == 5060 and transport == 'udp':
@@ -79,7 +79,7 @@ def format_identity_simple(identity, check_contact=False):
     else:
         user = identity.uri.user
         host = identity.uri.host
-        display_name = identity.display_name
+        display_name = identity.display_name.decode("utf-8") if identity.display_name else None
         contact = NSApp.delegate().windowController.getContactMatchingURI(identity.uri) if check_contact else None
 
     address = u"%s@%s" % (user, host)

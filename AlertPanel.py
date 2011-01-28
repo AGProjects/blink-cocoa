@@ -205,7 +205,7 @@ class AlertPanel(NSObject, object):
         if caller_contact:
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)
-        fromT.setStringValue_(u"%s" % format_identity(session.remote_identity, check_contact=True))
+        fromT.setStringValue_("%s" % format_identity(session.remote_identity, check_contact=True))
         fromT.sizeToFit()
 
         has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
