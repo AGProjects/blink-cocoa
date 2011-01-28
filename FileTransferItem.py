@@ -106,11 +106,10 @@ class FileTransferItem(NSView):
             self.progressBar.startAnimation_(None)
             self.progressBar.setHidden_(False)
 
-            # TODO update checksum calculation for outgoing transfers -adi
-            #self.updateChecksumProgressInfo()
-            #self.checksumProgressBar.setIndeterminate_(True)
-            #self.checksumProgressBar.startAnimation_(None)
-            #self.checksumProgressBar.setHidden_(False)
+            self.updateChecksumProgressInfo(0)
+            self.checksumProgressBar.setIndeterminate_(True)
+            self.checksumProgressBar.startAnimation_(None)
+            self.checksumProgressBar.setHidden_(False)
 
             frame.size = self.view.frame().size
             self.setFrame_(frame)
@@ -261,16 +260,19 @@ class FileTransferItem(NSView):
     def _NH_BlinkFileTransferUpdate(self, notification):
         self.updateProgressInfo()
 
-    def _NH_BlinkFileTransferComputedHashGotUpdate(self, notification):
-        self.updateChecksumProgressInfo()
+    def _NH_BlinkFileTransferHashUpdate(self, notification):
+        self.updateChecksumProgressInfo(notification.data.progress)
+
+    def _NH_BlinkFileTransferDidComputeHash(self, notification):
+        pass
 
     def updateProgressInfo(self):
         self.fromText.setStringValue_(self.transfer.target_text)
         self.sizeText.setStringValue_(self.transfer.progress_text)
         self.progressBar.setDoubleValue_(self.transfer.progress*100)
 
-    def updateChecksumProgressInfo(self):
-        self.checksumProgressBar.setDoubleValue_(self.transfer.checksum_progress*100)
+    def updateChecksumProgressInfo(self, progress):
+        self.checksumProgressBar.setDoubleValue_(progress)
 
     def setFileInfo(self, info):
         assert type(info) == dict

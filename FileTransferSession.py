@@ -14,6 +14,8 @@ from sipsimple.core import ToHeader
 from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
 from sipsimple.threading import run_in_thread
+from sipsimple.util import TimestampedNotificationData, limit
+from threading import Event
 from zope.interface import implements
 
 import SIPManager
@@ -53,7 +55,6 @@ class FileTransfer(object):
     stream = None
     file_selector = None
     file_pos = 0
-    checksummed_bytes = 0
     status = ""
     fail_reason = None
     end_session_when_done = False
@@ -89,12 +90,6 @@ class FileTransfer(object):
         if not self.file_pos or not self.file_size:
             return 0.0
         return float(self.file_pos) / self.file_size
-
-    @property
-    def checksum_progress(self):
-        if not self.checksummed_bytes or not self.file_size:
-            return 0.0
-        return float(self.checksummed_bytes) / self.file_size
 
     def format_progress(self):
         if not self.file_size:
@@ -225,7 +220,9 @@ class IncomingFileTransfer(FileTransfer):
 
     def start(self):
         log_info(self, "Initiating incoming File Transfer, waiting for data...")
-        NotificationCenter().post_notification("BlinkFileTransferInitiated", self)
+        notification_center = NotificationCenter()
+        notification_center.post_notification("BlinkFileTransferInitializing", self)
+        notification_center.post_notification("BlinkFileTransferInitiated", self)
         self.started = False
         self.finished_transfer = False
 
@@ -328,9 +325,9 @@ class OutgoingFileTransfer(FileTransfer):
         else:
             self.file_path = file_path
         self.content_type = content_type
-        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), content_type=content_type, compute_hash=False)
+        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), type=content_type, hash=None)
+        self.stop_event = Event()
         self.file_pos = 0
-        self.checksummed_bytes = 0
         self.routes = None
 
     def log(self, status):
@@ -341,64 +338,78 @@ class OutgoingFileTransfer(FileTransfer):
         self.fail_reason = None
         NotificationCenter().discard_observer(self, sender=self.session)
         NotificationCenter().discard_observer(self, sender=self.stream)
-        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), content_type=self.content_type, compute_hash=False)
+        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), type=self.content_type, hash=None)
         self.file_pos = 0
-        self.checksummed_bytes = 0
         self.transfer_rate = None
         self.last_rate_pos = 0
         self.last_rate_time = 0
         self.start(restart=True)
 
-    @run_in_thread('file-transfer')
     def start(self, restart=False):
         self.started = False
-        self.calculated_checksum = False
         self.finished_transfer = False
 
+        self.status = "Pending"
+
+        notification_center = NotificationCenter()
         if restart:
-            NotificationCenter().post_notification("BlinkFileTransferRestarting", self)
+            notification_center.post_notification("BlinkFileTransferRestarting", self)
         else:
-            NotificationCenter().post_notification("BlinkFileTransferInitializing", self)
+            notification_center.post_notification("BlinkFileTransferInitializing", self)
 
         log_info(self, "Computing checksum for file %s" % self.file_selector.name)
 
+        self.stop_event.clear()
+        self.initiate_file_transfer()
+
+    @run_in_thread('file-transfer')
+    def initiate_file_transfer(self):
+        notification_center = NotificationCenter()
+
+        # compute the file hash first
         self.status = "Computing checksum..."
-        self.file_selector.compute_hash()
+        hash = hashlib.sha1()
+        pos = progress = 0
+        chunk_size = limit(self.file_selector.size/100, min=65536, max=1048576)
+        notification_center.post_notification('BlinkFileTransferHashUpdate', sender=self, data=TimestampedNotificationData(progress=0))
+        while not self.stop_event.isSet():
+            content = self.file_selector.fd.read(chunk_size)
+            if not content:
+                break
+            hash.update(content)
+            pos += len(content)
+            old_progress, progress = progress, int(float(pos)/self.file_selector.size*100)
+            if old_progress != progress:
+                notification_center.post_notification('BlinkFileTransferHashUpdate', sender=self, data=TimestampedNotificationData(progress=progress))
+        self.file_selector.fd.seek(0)
+        self.file_selector.hash = hash
+        notification_center.post_notification('BlinkFileTransferDidComputeHash', sender=self)
+        self.stream = FileTransferStream(self.account, self.file_selector)
+        self.session = Session(self.account)
 
-        if self.file_selector.hash is not None:
-            self.calculated_checksum = True
-            self.stream = FileTransferStream(self.account, self.file_selector)
-            self.session = Session(self.account)
+        notification_center.add_observer(self, sender=self.session)
+        notification_center.add_observer(self, sender=self.stream)
 
-            NotificationCenter().add_observer(self, sender=self.session)
-            NotificationCenter().add_observer(self, sender=self.stream)
+        self.log("preparing")
+        self.status = "Offering File..."
 
-            self.log("preparing")
-            self.status = "Offering File..."
+        notification_center.post_notification("BlinkFileTransferInitiated", self)
 
-            NotificationCenter().post_notification("BlinkFileTransferInitiated", self)
-
-            log_info(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
-            SIPManager.SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
+        log_info(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
+        SIPManager.SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
     def end(self):
-        if self.calculated_checksum:
-            self.file_selector.hash=None
-            self.checksummed_bytes = 0
-
+        self.stop_event.set()
         if self.routes:
             FileTransfer.end(self)
         else:
             log_info(self, "File transfer aborted")
-            if self.calculated_checksum:
-                NotificationCenter().remove_observer(self, sender=self.session)
-                NotificationCenter().remove_observer(self, sender=self.stream)
-            else:
-                self.file_selector.stop_computing_hash = True
+            notification_center = NotificationCenter()
+            notification_center.discard_observer(self, sender=self.session)
+            notification_center.discard_observer(self, sender=self.stream)
 
         # reset the routes in case we retry the transfer later
         self.routes = None
-
         SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
 
     def setRoutesFailed(self, msg):
@@ -485,12 +496,6 @@ class OutgoingFileTransfer(FileTransfer):
 
         self.log("transfering")
         NotificationCenter().post_notification("BlinkFileTransferUpdate", self)
-
-    # TODO: get progress information from file selector hash calculation when available -adi
-    @run_in_gui_thread
-    def _NH_FileSelectorComputedHashGotUpdate(self, sender, data):
-        self.checksummed_bytes = data.checksummed_bytes
-        NotificationCenter().post_notification("BlinkFileTransferComputedHashGotUpdate", self)
 
     def _NH_FileTransferStreamDidFinish(self, sender, data):
         self.finished_transfer = True
