@@ -104,10 +104,10 @@ class FileTransferItem(NSView):
             self.updateProgressInfo()
             self.progressBar.setIndeterminate_(True)
             self.progressBar.startAnimation_(None)
-            self.progressBar.setHidden_(False)
+            self.progressBar.setHidden_(True)
 
             self.updateChecksumProgressInfo(0)
-            self.checksumProgressBar.setIndeterminate_(True)
+            self.checksumProgressBar.setIndeterminate_(False)
             self.checksumProgressBar.startAnimation_(None)
             self.checksumProgressBar.setHidden_(False)
 
@@ -143,12 +143,16 @@ class FileTransferItem(NSView):
         self.setFrame_(frame)
 
     def relayoutForRetry(self):
-        self.progressBar.setHidden_(True)
-        self.checksumProgressBar.setHidden_(False)
+
         self.stopButton.setHidden_(False)
         self.retryButton.setHidden_(True)
-        self.checksumProgressBar.setIndeterminate_(True)
+
+        self.progressBar.setHidden_(True)
+
+        self.checksumProgressBar.setHidden_(False)
+        self.checksumProgressBar.setIndeterminate_(False)
         self.checksumProgressBar.setDoubleValue_(0)
+
         frame = self.frame()
         frame.size.height = self.originalHeight
         self.setFrame_(frame)
@@ -194,11 +198,13 @@ class FileTransferItem(NSView):
         self.failed = False
         self.done = False
 
+        self.updateProgressInfo()
         self.progressBar.setIndeterminate_(True)
         self.progressBar.startAnimation_(None)
         self.progressBar.setHidden_(True)
 
-        self.checksumProgressBar.setIndeterminate_(True)
+        self.updateChecksumProgressInfo(0)
+        self.checksumProgressBar.setIndeterminate_(False)
         self.checksumProgressBar.startAnimation_(None)
         self.checksumProgressBar.setHidden_(False)
 
@@ -213,7 +219,6 @@ class FileTransferItem(NSView):
             self._NH_BlinkFileTransferDidFail(None, None)
             self.sizeText.setStringValue_("Error: %s" % exc)
             return
-        self.updateProgressInfo()
 
     @objc.IBAction
     def revealFile_(self, sender):
@@ -228,9 +233,12 @@ class FileTransferItem(NSView):
         NSWorkspace.sharedWorkspace().selectFile_inFileViewerRootedAtPath_(path, dirname)
 
     def _NH_BlinkFileTransferInitiated(self, notification):
-        self.sizeText.setStringValue_(self.transfer.status)
-        self.progressBar.setHidden_(False)
-        self.checksumProgressBar.setHidden_(True)
+        if not self.failed:
+            self.sizeText.setStringValue_(self.transfer.status)
+            self.progressBar.setHidden_(False)
+            self.checksumProgressBar.setHidden_(True)
+        else:
+            self.sizeText.setStringValue_('File Transfer aborted')
 
     def _NH_BlinkFileTransferRestarting(self, notification):
         self.sizeText.setStringValue_(self.transfer.status)
@@ -247,9 +255,13 @@ class FileTransferItem(NSView):
 
     def _NH_BlinkFileTransferDidFail(self, notification):
         self.sizeText.setTextColor_(NSColor.redColor())
+
+        self.checksumProgressBar.setHidden_(True)
+        self.checksumProgressBar.stopAnimation_(None)
         self.progressBar.setHidden_(True)
         self.progressBar.stopAnimation_(None)
         self.updateProgressInfo()
+
         self.stopButton.setHidden_(True)
         if type(self.transfer) == OutgoingFileTransfer:
             self.retryButton.setHidden_(False)
@@ -273,6 +285,7 @@ class FileTransferItem(NSView):
 
     def updateChecksumProgressInfo(self, progress):
         self.checksumProgressBar.setDoubleValue_(progress)
+        self.sizeText.setStringValue_('Calculating checksum: %s%s' % (progress,'%'))
 
     def setFileInfo(self, info):
         assert type(info) == dict
