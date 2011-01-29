@@ -247,6 +247,7 @@ class FileTransferItem(NSView):
         self.progressBar.setIndeterminate_(False)
 
     def _NH_BlinkFileTransferDidEnd(self, notification):
+        self.sizeText.setTextColor_(NSColor.blueColor())
         self.progressBar.stopAnimation_(None)
         self.updateProgressInfo()
         self.relayoutForDone()
