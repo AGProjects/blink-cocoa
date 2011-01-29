@@ -102,7 +102,6 @@ class FileTransferWindowController(NSObject, object):
     @objc.IBAction
     def showWindow_(self, sender):
         self.window.makeKeyAndOrderFront_(None)
-        print self.window.firstResponder()
 
     @objc.IBAction
     def clearList_(self, sender):
