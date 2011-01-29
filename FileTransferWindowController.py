@@ -47,6 +47,7 @@ class FileTransferWindowController(NSObject, object):
 
     def init(self):
         NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
+        NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
 
@@ -111,6 +112,9 @@ class FileTransferWindowController(NSObject, object):
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.refresh()
 
+    def _NH_BlinkFileTransferRestarting(self, sender, data):
+        self.listView.relayout()
+
     def _NH_BlinkFileTransferInitializing(self, sender, data):
         item = FileTransferItem.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
 
@@ -127,8 +131,7 @@ class FileTransferWindowController(NSObject, object):
             self.bottomLabel.setStringValue_(u"%i items"%count)
 
     def _NH_BlinkFileTransferDidFail(self, sender, data):
-        #self.listView.relayout()
-        pass
+        self.listView.relayout()
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
