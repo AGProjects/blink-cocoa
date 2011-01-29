@@ -357,7 +357,7 @@ class OutgoingFileTransfer(FileTransfer):
         else:
             notification_center.post_notification("BlinkFileTransferInitializing", self)
 
-        log_info(self, "Computing checksum for file %s" % self.file_selector.name)
+        log_info(self, "Computing checksum for file %s" % self.file_selector.name.decode("utf-8"))
 
         self.stop_event.clear()
         self.initiate_file_transfer()
