@@ -285,7 +285,7 @@ class FileTransferItem(NSView):
 
     def updateChecksumProgressInfo(self, progress):
         self.checksumProgressBar.setDoubleValue_(progress)
-        self.sizeText.setStringValue_('Calculating checksum: %s%s' % (progress,'%'))
+        self.sizeText.setStringValue_('Calculating checksum: %s%%' % progress)
 
     def setFileInfo(self, info):
         assert type(info) == dict
