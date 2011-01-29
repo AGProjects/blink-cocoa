@@ -866,7 +866,7 @@ class ChatController(MediaStream):
             recipient = message.recipients[0]
             recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
             private = True if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri != self.remote_uri else False
-            recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host)                            
+            recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             self.chatViewController.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, is_private=private, recipient=recipient_html, state="delivered")
 
             window = self.chatViewController.outputView.window()

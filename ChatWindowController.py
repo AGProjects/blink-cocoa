@@ -405,7 +405,7 @@ class ChatWindowController(NSWindowController):
                 return
 
             try:
-                recipient = CPIMIdentity.parse('%s <sip:%s>' % (contact.display_name, contact.uri))
+                recipient = CPIMIdentity.parse('%s <sip:%s>' % (contact.display_name.encode("utf-8"), contact.uri))
             except ValueError:
                 return
 
@@ -545,7 +545,7 @@ class ChatWindowController(NSWindowController):
                     display_name = unicode(conf_desc.display_text)
                 NSApp.delegate().windowController.addContact(remote_uri, display_name)
             elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
-                ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?"%display_name, u"Remove", u"Cancel", None)
+                ret = NSRunAlertPanel("Remove from conference", "You will request the conference server to remove %s from the room. Are your sure?"%display_name, "Remove", "Cancel", None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
             elif tag == SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
