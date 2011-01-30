@@ -526,10 +526,8 @@ class OutgoingFileTransfer(FileTransfer):
         self.file_pos = data.transferred_bytes
 
         self.update_transfer_rate()
-
         self.status = self.format_progress()
 
-        self.log("transfering")
         NotificationCenter().post_notification("BlinkFileTransferUpdate", self)
 
     def _NH_FileTransferStreamDidFinish(self, sender, data):
