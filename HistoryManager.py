@@ -4,7 +4,7 @@
 import datetime
 import os
 
-from application.python.util import Null, Singleton
+from application.python.util import Singleton
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, UnicodeCol, DatabaseIndex
 from sqlobject import connectionForURI
@@ -48,10 +48,6 @@ class ChatHistory(object):
     def __init__(self):
         db_uri="sqlite://" + os.path.join(SIPSimpleSettings().chat.directory.normalized,"history.sqlite")
         self.db = connectionForURI(db_uri)
-
-        if self.db is Null:
-            BlinkLogger().log_error("Error connecting to the database %s" % db_uri)
-            return
 
         ChatMessage._connection = self.db
         try:
@@ -108,15 +104,10 @@ class ChatHistory(object):
             return False
 
     def get_contacts(self):
-        if self.db is Null:
-            return None
         query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour' order by remote_uri asc"
         return block_on(deferToThread(self.db.queryAll, query))
 
     def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None):
-        if self.db is Null:
-            return None
-
         if remote_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri = %s" % ChatMessage.sqlrepr(remote_uri)
             if media_type:
@@ -159,9 +150,6 @@ class ChatHistory(object):
         return block_on(deferToThread(self.db.queryAll, query))
 
     def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, search_text=None, orderBy='id', orderType='desc', count=50):
-        if self.db is Null:
-            return None
-
         query='1=1'
         if msgid:
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
@@ -180,9 +168,6 @@ class ChatHistory(object):
         return block_on(deferToThread(ChatMessage.select, query))
 
     def delete_messages(self, local_uri=None, remote_uri=None, date=None):
-        if self.db is Null:
-            return None
-
         query = "delete from chat_messages where 1=1"
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
