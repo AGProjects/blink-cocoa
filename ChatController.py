@@ -948,9 +948,8 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        reason = 'Connection has been closed due to an encryption error' if data.reason == 'A TLS packet with unexpected length was received.' else data.reason
-        BlinkLogger().log_info("Chat stream failed: %s" % reason)
-        self.chatViewController.showSystemMessage(reason, datetime.datetime.now(tzlocal()), True)
+        BlinkLogger().log_info("Chat stream failed: %s" % data.reason)
+        self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
 
         self.notification_center.remove_observer(self, sender=sender)
 
