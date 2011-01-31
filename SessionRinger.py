@@ -129,9 +129,6 @@ class Ringer(object):
             elif not should_play_chat_tone and self.tone_chat_ringtone.is_active:
                 self.tone_chat_ringtone.stop()
 
-    def update_settings(self, changes):
-        self.update_ringtones()
-
     def update_ringtones(self):
         account = AccountManager().default_account
         settings = SIPSimpleSettings()
@@ -347,7 +344,9 @@ class Ringer(object):
                     if self.file_in_sound:
                         self.file_in_sound.start()
         elif name == "CFGSettingsObjectDidChange":
-            self.update_settings(data.modified)
+            sound_attributes = ['audio.silent', 'audio.alert_device', 'audio.output_device', 'sounds.audio_inbound', 'sounds.message_sent', 'sounds.message_received', 'sounds.file_sent', 'sounds.file_received']
+            if set(sound_attributes).intersection(data.modified):
+                self.update_ringtones()
             if 'audio.silent' in data.modified:
                 self.update_playing_ringtones()
         elif name == "WavePlayerDidEnd":
