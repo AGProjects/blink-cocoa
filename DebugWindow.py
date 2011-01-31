@@ -389,7 +389,6 @@ class DebugWindow(NSObject):
             self.rtpLog.textStorage().appendAttributedString_(astring)
             self.rtpLog.scrollRangeToVisible_(NSMakeRange(self.rtpLog.textStorage().length()-1, 1))
         elif name == "AudioStreamICENegotiationDidFail":
-            audio_stream = sender
             text = '\nICE negotiation failed: %s\n' % data.reason
             astring = NSAttributedString.alloc().initWithString_(text)
             self.rtpLog.textStorage().appendAttributedString_(astring)

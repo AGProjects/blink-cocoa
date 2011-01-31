@@ -364,7 +364,6 @@ class ChatHistoryViewer(NSWindowController):
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
         elif sender.tag() == 101: # purge messages
             row = self.contactTable.selectedRow()
-            deleted = False
             if row == 0:
                 ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of All history messages. This operation cannot be undone.", u"Confirm", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:

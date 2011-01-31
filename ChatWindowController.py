@@ -218,7 +218,6 @@ class ChatWindowController(NSWindowController):
     def handle_notification(self, notification):
         name = notification.name
         sender = notification.sender
-        data = notification.data
 
         if name == "BlinkStreamHandlerChangedState":
             session = sender.sessionController

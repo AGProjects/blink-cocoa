@@ -228,7 +228,6 @@ class MessageHandler(NSObject):
         self.connected = True
         self.stream = stream
         NotificationCenter().add_observer(self, sender=stream)
-        icon = NSApp.delegate().windowController.iconPathForSelf()
         for msgid in self.pending:
             private = self.messages[msgid].private
             sent = self._send(msgid)

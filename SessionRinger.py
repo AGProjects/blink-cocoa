@@ -276,13 +276,9 @@ class Ringer(object):
             if not streams:
                 # not connected
                 has_audio = session in self.incoming_audio_sessions
-                has_chat = session in self.chat_sessions
-                has_ft = session in self.filerecv_sessions
             else:
                 stream_types = [s.type for s in streams]
                 has_audio = 'audio' in stream_types
-                has_chat = 'chat' in stream_types
-                has_ft = 'file-transfer' in stream_types
             # play hangup tone
             if has_audio:
                 self.play_hangup()

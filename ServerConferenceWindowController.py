@@ -130,7 +130,6 @@ class StartConferenceWindow(NSObject):
         if sender.selectedSegment() == 0:
             participant = self.participant.stringValue().strip().lower()
             if participant and "@" not in participant:
-                account = AccountManager().default_account
                 participant = participant + '@' + AccountManager().default_account.id.domain
 
             if not participant or not validateParticipant(participant):

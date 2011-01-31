@@ -1590,7 +1590,6 @@ class ContactWindowController(NSWindowController):
         item.setState_(account.audio.auto_accept and NSOnState or NSOffState)
 
     def updateToolsMenu(self):
-        settings = SIPSimpleSettings()
         account = self.activeAccount()
 
         item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
@@ -1608,7 +1607,6 @@ class ContactWindowController(NSWindowController):
     def updateConferenceMenu(self):
         menu = self.conferenceMenu
 
-        settings = SIPSimpleSettings()
         account = self.activeAccount()
 
         item = menu.itemWithTag_(44) # Start Conference

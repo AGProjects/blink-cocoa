@@ -475,7 +475,6 @@ class SIPManager(object):
         lookup.type = 'stun_servers'
         lookup.owner = account
         self.notification_center.add_observer(self, sender=lookup)
-        settings = SIPSimpleSettings()
         if not isinstance(account, BonjourAccount):
             # lookup STUN servers, as we don't support doing this asynchronously yet
             if account.nat_traversal.stun_server_list:
@@ -731,8 +730,6 @@ class SIPManager(object):
         in_lines = in_lines[-count:]
         out_lines = out_lines[-count:]
         missed_lines = missed_lines[-count:]
-
-        active_account = self.get_default_account()
 
         in_entries = []
         out_entries = []

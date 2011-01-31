@@ -285,7 +285,6 @@ class ChatViewController(NSObject):
         private = 1 if is_private else "null"
 
         if is_private and sender and recipient:
-            sender_uri = format_identity_from_text(sender)[0]
             label = 'Private message to %s' % cgi.escape(recipient) if direction == 'outgoing' else 'Private message from %s' % cgi.escape(sender)
         else: 
             label = cgi.escape(format_identity(self.account)) if sender is None else cgi.escape(sender)
