@@ -951,8 +951,6 @@ class ChatController(MediaStream):
         BlinkLogger().log_info("Chat stream failed: %s" % data.reason)
         self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
 
-        self.notification_center.remove_observer(self, sender=sender)
-
         self.handler.setDisconnected()
 
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
