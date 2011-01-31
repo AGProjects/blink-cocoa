@@ -57,7 +57,7 @@ class ChatHistory(object):
             else:
                 try:
                     ChatMessage.createTable()
-                    BlinkLogger().log_info("Created history table %s" % db_uri)
+                    BlinkLogger().log_info("Created history table %s" % ChatMessage.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error("Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
