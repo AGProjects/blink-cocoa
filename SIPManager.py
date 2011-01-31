@@ -10,11 +10,13 @@ from application.python.util import Singleton
 
 import cjson
 import datetime
+from dateutil.tz import tzlocal
 import os
 import re
 import sys
 import urllib
 import urllib2
+import uuid
 
 from socket import gethostbyname
 
@@ -39,8 +41,9 @@ from sipsimple.session import SessionManager
 from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, DesktopSharingStream
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData
+from sipsimple.util import TimestampedNotificationData, Timestamp
 
+from HistoryManager import ChatHistory
 from SessionRinger import Ringer
 from FileTransferSession import OutgoingFileTransfer
 from BlinkLogger import BlinkLogger, FileLogger
@@ -538,6 +541,19 @@ class SIPManager(object):
         fname = os.path.join(self.get_call_history_directory(), 'calls.txt')
         return open(fname, "a+")
 
+    def get_printed_duration(self, start_time, end_time):
+        duration = end_time - start_time
+        if (duration.days > 0 or duration.seconds > 0):
+            duration_print = " ("
+            if duration.days > 0 or duration.seconds > 60*60:
+                text += "%i hours, "%(duration.days*60*60*24 + int(duration.seconds/(60*60)))
+            s = duration.seconds%(60*60)
+            duration_print += "%02i:%02i"%(int(s/60), s%60)
+            duration_print += ")"
+        else:
+            duration_print = ""
+
+        return duration_print
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -552,6 +568,20 @@ class SIPManager(object):
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
+        if 'audio' in [s.type for s in session.streams or session.proposed_streams]:
+            message= 'Missed incoming audio call'
+            media_type = 'audio'
+            local_uri = format_identity_address(session.account)
+            remote_uri = format_identity_address(session.remote_identity)
+            direction = 'incoming'
+            status = 'failed'
+            cpim_from = format_identity(session.remote_identity, check_contact=True)
+            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def log_incoming_session_ended(self, session, data):
@@ -565,6 +595,20 @@ class SIPManager(object):
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
+        if 'audio' in data.streams:
+            duration = self.get_printed_duration(session.start_time, session.end_time)
+            message= 'Incoming audio call %s' % duration
+            media_type = 'audio'
+            local_uri = format_identity_address(session.account)
+            remote_uri = format_identity_address(session.remote_identity)
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = format_identity(session.remote_identity, check_contact=True)
+            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def log_incoming_session_answered_elsewhere(self, session, data):
@@ -577,6 +621,19 @@ class SIPManager(object):
             line = "in\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
+
+        if 'audio' in [s.type for s in session.streams or session.proposed_streams]:
+            message= 'Incoming audio call answered elsewhere'
+            media_type = 'audio'
+            local_uri = format_identity_address(session.account)
+            remote_uri = format_identity_address(session.remote_identity)
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = format_identity(session.remote_identity, check_contact=True)
+            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -593,6 +650,19 @@ class SIPManager(object):
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
+        if 'audio' in data.streams:
+            message= 'Failed outgoing audio call'
+            media_type = 'audio'
+            local_uri = format_identity_address(session.account)
+            remote_uri = format_identity_address(session.remote_identity)
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = format_identity(session.remote_identity, check_contact=True)
+            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def log_outgoing_session_cancelled(self, session, data):
@@ -608,6 +678,19 @@ class SIPManager(object):
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
+        if 'audio' in data.streams:
+            message= 'Cancelled outgoing audio call'
+            media_type = 'audio'
+            local_uri = format_identity_address(session.account)
+            remote_uri = format_identity_from_text(data.target_uri)[0]
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = data.target_uri
+            cpim_to = data.target_uri
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def log_outgoing_session_ended(self, session, data):
@@ -622,6 +705,25 @@ class SIPManager(object):
             line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
+
+        if 'audio' in data.streams:
+            duration = self.get_printed_duration(session.start_time, session.end_time)
+            message= 'Outgoing audio call %s' % duration
+            media_type = 'audio'
+            local_uri = format_identity_address(session.account)
+            remote_uri = format_identity_address(session.remote_identity)
+            direction = 'incoming'
+            status = 'delivered'                  
+            cpim_from = format_identity(session.remote_identity, check_contact=True)
+            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))                       
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
+        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "text", "0", status)
 
     def get_audio_recordings_directory(self):
         return self.get_chat_history_directory()
