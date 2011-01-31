@@ -524,7 +524,7 @@ class SessionController(NSObject):
             status = u"Session Failed"
             self.failureReason = "failed"
 
-        log_data = TimestampedNotificationData(direction=session.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, failure_reason=data.failure_reason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
+        log_data = TimestampedNotificationData(direction=sender.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, failure_reason=data.failure_reason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         log_error(self, "Session failed: "+status)
