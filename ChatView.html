@@ -240,7 +240,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       status = "Deferred for later ";
   } else if (state == "failed") {
       box_class = "msgbox_failed"
-      status = "Failed ";
+      status = timestamp;
   } else if (state == "delivered") {
       box_class = default_box_class;
       status = timestamp;
@@ -385,7 +385,6 @@ function markFailed(msgid)
   if (msg != null)
   {
     msg.style.display = "block";
-    msg.innerHTML = "Failed ";
   }
 }
 
