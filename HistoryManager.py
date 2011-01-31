@@ -6,7 +6,7 @@ import os
 
 from application.python.util import Singleton
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, UnicodeCol, DatabaseIndex
+from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex
 from sqlobject import connectionForURI
 from sqlobject import dberrors
 
@@ -178,3 +178,97 @@ class ChatHistory(object):
 
         return block_on(deferToThread(self.db.queryAll, query))
 
+class FileTransfer(SQLObject):
+    class sqlmeta:
+        table = 'file_transfers'
+        defaultOrder = "-id"
+    transfer_id       = StringCol()
+    direction         = StringCol()
+    time              = DateTimeCol()
+    date              = DateCol()
+    sip_callid        = StringCol(default='')
+    sip_fromtag       = StringCol(default='')
+    sip_totag         = StringCol(default='')
+    local_uri         = UnicodeCol(length=128, dbEncoding="latin1")
+    remote_uri        = UnicodeCol(length=128, dbEncoding="latin1")
+    file_path         = UnicodeCol()
+    file_size         = IntCol()
+    bytes_transfered  = IntCol()
+    status            = StringCol()
+    local_idx         = DatabaseIndex('local_uri')
+    remote_idx        = DatabaseIndex('remote_uri')
+    ft_idx            = DatabaseIndex('transfer_id', unique=True)
+
+
+class FileTransferHistory(object):
+    __metaclass__ = Singleton
+
+    def __init__(self):
+        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().chat.directory.normalized,"history.sqlite")
+        self.db = connectionForURI(db_uri)
+
+        FileTransfer._connection = self.db
+        try:
+            if FileTransfer.tableExists():
+                # change here schema in the future as necessary
+                pass
+            else:
+                try:
+                    FileTransfer.createTable()
+                    BlinkLogger().log_info("Created file history table %s" % FileTransfer.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error("Error creating history table %s: %s" % (FileTransfer.sqlmeta.table,e))
+
+        except Exception, e:
+            BlinkLogger().log_error("Error checking history table %s: %s" % (FileTransfer.sqlmeta.table,e))
+
+    def _add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
+        try:
+            FileTransfer(
+                        transfer_id       = transfer_id,
+                        direction         = direction,
+                        time              = datetime.datetime.utcnow(),
+                        date              = datetime.datetime.utcnow().date(),
+                        local_uri         = local_uri,
+                        remote_uri        = remote_uri,
+                        file_path         = file_path,
+                        file_size         = file_size,
+                        bytes_transfered  = bytes_transfered,
+                        status            = status
+                        )
+        except dberrors.DuplicateEntryError:
+            try:
+                results = FileTransfer.selectBy(transfer_id=transfer_id)
+                ft = results.getOne()
+
+                if ft.status != status:
+                    ft.status = status
+
+                if ft.bytes_transfered != bytes_transfered:
+                    ft.bytes_transfered = bytes_transfered
+
+                if ft.bytes_transfered != bytes_transfered or ft.status != status:
+                    ft.time             = datetime.datetime.utcnow()
+                    ft.date             = datetime.datetime.utcnow().date()
+
+                return True
+            except Exception, e:
+                BlinkLogger().log_error("Error updating record %s: %s" % (transfer_id, e))
+                return False
+        except Exception, e:
+            BlinkLogger().log_error("Error adding record %s to history table: %s" % (transfer_id, e))
+            return False
+
+    def add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
+        try:
+            return block_on(deferToThread(self._add_transfer, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status))
+        except Exception, e:
+            BlinkLogger().log_error("Error adding record to history table: %s" % e)
+            return False
+
+    def get_transfers(self):
+        return block_on(deferToThread(FileTransfer.selectBy))
+
+    def delete_transfers(self):
+        query = "delete from file_transfers"
+        return block_on(deferToThread(self.db.queryAll, query))

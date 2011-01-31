@@ -6,36 +6,39 @@ import datetime
 import os
 import re
 import time
+import uuid
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
+from sipsimple.account import BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import ToHeader
 from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
 from sipsimple.threading import run_in_thread
+from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import TimestampedNotificationData, limit
 from threading import Event
 from zope.interface import implements
 
 import SIPManager
 from BlinkLogger import BlinkLogger
-from SessionHistory import SessionHistory
+from HistoryManager import FileTransferHistory
 
 from util import *
 
 
 
 def log_info(session, text):
-    BlinkLogger().log_info(u"[session to %s] %s"%(session.target_uri, text))
+    BlinkLogger().log_info("[session to %s] %s"%(session.target_uri, text))
 
 
 def log_debug(session, text):
-    BlinkLogger().log_debug(u"[session to %s] %s"%(session.target_uri, text))
+    BlinkLogger().log_debug("[session to %s] %s"%(session.target_uri, text))
 
 
 def log_error(session, text):
-    BlinkLogger().log_error(u"[session to %s] %s"%(session.target_uri, text))
+    BlinkLogger().log_error("[session to %s] %s"%(session.target_uri, text))
 
 
 def format_duration(t):
@@ -46,7 +49,16 @@ def format_duration(t):
     return s
 
 
-# file_type, file_pos, file_size
+class FileTransferInfo(object):
+    def __init__(self, transfer_id=None, direction=None, local_uri=None, remote_uri=None, file_path=None, bytes_transfered=0, file_size=0, status=None):
+        self.transfer_id       = transfer_id
+        self.direction         = direction
+        self.local_uri         = local_uri
+        self.remote_uri        = remote_uri
+        self.file_path         = file_path
+        self.bytes_transfered  = bytes_transfered
+        self.file_size         = file_size
+        self.status            = status
 
 class FileTransfer(object):
     implements(IObserver)
@@ -58,7 +70,7 @@ class FileTransfer(object):
     status = ""
     fail_reason = None
     end_session_when_done = False
-    transfer_log_id = None
+    transfer_id = None
     remote_identity = None
     target_uri = None
     started = False
@@ -69,6 +81,7 @@ class FileTransfer(object):
     last_rate_pos = 0
     last_rate_time = 0
     rate_history = None
+    ft_info = None
 
     @property
     def file_name(self):
@@ -129,11 +142,10 @@ class FileTransfer(object):
             self.last_rate_pos = self.file_pos
             self.rate_history = []
 
-    def log(self, direction, status):
-        self.transfer_log_id = SessionHistory().log_file_transfer(id=self.transfer_log_id,
-                direction=direction, account=self.session.account, peer=self.remote_identity,
-                path=self.file_path, bytes_transfered=self.file_pos, bytes_total=self.file_size,
-                status=status)
+    @run_in_green_thread
+    def add_to_history(self):
+        FileTransferHistory().add_transfer(transfer_id=self.ft_info.transfer_id, direction=self.ft_info.direction, local_uri=self.ft_info.local_uri, remote_uri=self.ft_info.remote_uri, file_path=self.ft_info.file_path, bytes_transfered=self.ft_info.bytes_transfered, file_size=self.ft_info.file_size, status=self.ft_info.status)
+        log_info(self, "File transfer added to history")
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -142,10 +154,9 @@ class FileTransfer(object):
 
     def cancel(self):
         if not self.finished_transfer:
-            if self.started:
-                self.fail_reason = "Stopped"
-            else:
-                self.fail_reason = "Cancelled"
+            self.fail_reason = "Interrupted" if self.started else "Cancelled"
+            self.ft_info.status = "interrupted" if self.started else "cancelled"
+        SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
         self.end()
     
     def end(self):
@@ -162,13 +173,22 @@ class FileTransfer(object):
         log_info(self, "File Transfer Session ended by %s"%data.originator)
         NotificationCenter().remove_observer(self, sender=sender)
         if not self.finished_transfer and data.originator == "remote":
-            self.fail_reason = "File Transfer stopped by remote party"
+            self.fail_reason = "File Transfer interrupted by remote party"
+            self.ft_info.status=self.fail_reason
+        else:
+            self.ft_info.status="completed"
 
     def _NH_SIPSessionDidFail(self, sender, data):
         log_error(self, "File Transfer Session failed: %s"%(data.reason or data.failure_reason))
         NotificationCenter().remove_observer(self, sender=sender)
         self.fail_reason = "%s (%s)" % (data.reason or data.failure_reason, data.originator)
+        self.ft_info.status=self.fail_reason if self.fail_reason else self.data.reason if data.reason else data.failure_reason
 
+    def _NH_BlinkFileTransferDidFail(self, sender, data):
+        self.add_to_history()
+
+    def _NH_BlinkFileTransferDidEnd(self, sender, data):
+        self.add_to_history()
 
 def _filename_generator(name):
     yield name
@@ -188,6 +208,7 @@ class IncomingFileTransfer(FileTransfer):
         self.remote_identity = format_identity_address(self.target_uri)
         self.stream = stream
         self.end_session_when_done = False
+        self.transfer_id = str(uuid.uuid1())
 
         settings = SIPSimpleSettings()
 
@@ -206,14 +227,18 @@ class IncomingFileTransfer(FileTransfer):
             log_info(self, "Downloads folder doesn't exist, creating %s..." % dirname)
             makedirs(dirname)
 
+        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
+
         log_info(self, "Will write file to %s" % self.file_path)
         self.file_selector.fd = open(self.file_path, "w+")
 
-        self.log("preparing")
+        self.ft_info.status="preparing"
         self.status = "Accepting File Transfer..."
 
         NotificationCenter().add_observer(self, sender=self.session)
         NotificationCenter().add_observer(self, sender=self.stream)
+        NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidFail")
+        NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidEnd")
 
     def log(self, status):
         FileTransfer.log(self, "receive", status)
@@ -228,7 +253,7 @@ class IncomingFileTransfer(FileTransfer):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         log_info(self, "Receiving File...")
-        self.log("transfering")
+        self.ft_info.status="transfering"
         self.started = True
         self.start_time = datetime.datetime.now()
         self.status = format_size(self.file_pos, 1024)
@@ -255,18 +280,21 @@ class IncomingFileTransfer(FileTransfer):
 
         log_info(self, "Incoming File Transfer ended (%i of %i bytes transferred)" % (self.file_pos, self.file_size))
         if not self.fail_reason and not self.finished_transfer:
-            self.fail_reason = "Stopped"
+            self.fail_reason = "Interrupted"
 
         self.end_time = datetime.datetime.now()
 
         if self.fail_reason:
-            self.log("failed:%s"%self.fail_reason)
             self.status = self.fail_reason
+            self.ft_info.status="interrupted"
+            self.ft_info.bytes_transfered=self.file_pos
             SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
         else:
-            self.log("done")
+            self.ft_info.status="completed"
+            self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
             SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, "receive")
+
         NotificationCenter().remove_observer(self, sender=sender)
 
     def _NH_MediaStreamDidFail(self, sender, data):
@@ -274,14 +302,14 @@ class IncomingFileTransfer(FileTransfer):
             self.file_selector.fd.close()
         log_info(self, "Incoming File Transfer failed")
         if self.fail_reason:
-            self.log("failed:%s" % self.fail_reason)
+            self.ft_info.status=self.fail_reason
             self.status = self.fail_reason
         elif hasattr(data, "reason"):
-            self.log("failed:%s" % data.reason)
+            self.ft_info.status=data.reason
             self.status = data.reason
         else:
-            self.log("failed")
             self.status = "Failed"
+            self.ft_info.status="failed"
 
         SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
         NotificationCenter().remove_observer(self, sender=sender)
@@ -296,7 +324,7 @@ class IncomingFileTransfer(FileTransfer):
         self.update_transfer_rate()
         self.status = self.format_progress()
 
-        self.log("transfering")
+        self.ft_info.status="transfering"
         SIPManager.SIPManager().post_in_main("BlinkFileTransferUpdate", self)      
 
     def _NH_FileTransferStreamDidFinish(self, sender, data):
@@ -313,9 +341,10 @@ class IncomingFileTransfer(FileTransfer):
         else:
             return self.status
 
-
 class OutgoingFileTransfer(FileTransfer):
+    # outgoing transfer status: pending -> preparing (calculating checksum) -> proposing -> transfering|failed|cancelled -> completed|interrupted
     def __init__(self, account, target_uri, file_path, content_type):
+
         self.account = account
         self.end_session_when_done = True
         self.target_uri = target_uri
@@ -329,6 +358,12 @@ class OutgoingFileTransfer(FileTransfer):
         self.stop_event = Event()
         self.file_pos = 0
         self.routes = None
+        self.transfer_id = str(uuid.uuid1())
+
+        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='outgoing', file_size=self.file_size, local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', remote_uri=self.remote_identity, file_path=self.file_path)
+
+        NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidFail")
+        NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidEnd")
 
     def log(self, status):
         FileTransfer.log(self, "send", status)
@@ -349,6 +384,7 @@ class OutgoingFileTransfer(FileTransfer):
         self.started = False
         self.finished_transfer = False
 
+        self.ft_info.status="pending"
         self.status = "Pending"
 
         notification_center = NotificationCenter()
@@ -367,6 +403,7 @@ class OutgoingFileTransfer(FileTransfer):
         notification_center = NotificationCenter()
 
         # compute the file hash first
+        self.ft_info.status="preparing"
         self.status = "Computing checksum..."
         hash = hashlib.sha1()
         pos = progress = 0
@@ -390,8 +427,8 @@ class OutgoingFileTransfer(FileTransfer):
         notification_center.add_observer(self, sender=self.session)
         notification_center.add_observer(self, sender=self.stream)
 
-        self.log("preparing")
         self.status = "Offering File..."
+        self.ft_info.status="proposing"
 
         notification_center.post_notification("BlinkFileTransferInitiated", self)
 
@@ -410,7 +447,6 @@ class OutgoingFileTransfer(FileTransfer):
 
         # reset the routes in case we retry the transfer later
         self.routes = None
-        SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
 
     def setRoutesFailed(self, msg):
         log_info(self, "DNS Lookup for SIP routes failed: '%s'"%msg)
@@ -441,17 +477,14 @@ class OutgoingFileTransfer(FileTransfer):
         self.status = "%s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
         self.started = True
         self.start_time = datetime.datetime.now()
-        self.log("transfering")
+        self.ft_info.status="transfering"
         NotificationCenter().post_notification("BlinkFileTransferDidStart", self)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         log_info(self, "File Transfer failed")
 
         self.status = str(format_size(self.file_pos, 1024))
-        if self.fail_reason:
-            self.log("failed:%s" % self.fail_reason)
-        else:
-            self.log("failed")
+        self.ft_info.status="failed"
 
         SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
 
@@ -471,11 +504,13 @@ class OutgoingFileTransfer(FileTransfer):
             self.fail_reason = "Interrupted"
 
         if self.fail_reason:
-            self.log("failed:%s" % self.fail_reason)
+            self.ft_info.status="interrupted"
+            self.ft_info.bytes_transfered=self.file_pos
             self.status = "%s %s %s" % (str(format_size(self.file_pos, 1024)), unichr(0x2014), self.fail_reason)
             SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self)
         else:
-            self.log("done")
+            self.ft_info.status="completed"
+            self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
             SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, "send")
 

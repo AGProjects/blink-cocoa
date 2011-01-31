@@ -6,14 +6,16 @@ from Foundation import *
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
+from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
 
 import ListView
-from SessionHistory import SessionHistory
+from HistoryManager import FileTransferHistory
 from FileTransferItem import FileTransferItem
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 import SIPManager
+
 
 def openFileTransferSelectionDialog(account, dest_uri):
     panel = NSOpenPanel.openPanel()
@@ -57,24 +59,25 @@ class FileTransferWindowController(NSObject, object):
 
         return self
 
-    def refresh(self):
-        active_items = []
-        for item in self.listView.subviews().copy():
-            if item.done:
-                item.removeFromSuperview()
-            else:
-                if item.transfer:
-                    active_items.append(item.transfer.transfer_log_id)
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def get_previous_transfers(self, active_items=[]):
+        try:
+            results = FileTransferHistory().get_transfers()
+            transfers = [transfer for transfer in reversed(list(results)) if transfer.transfer_id not in active_items]
+            self.render_previous_transfers(transfers)
+        except:
+            pass
 
-        last = self.listView.subviews().lastObject()
+    @run_in_gui_thread
+    def render_previous_transfers(self, transfers):
+        last_displayed_item = self.listView.subviews().lastObject()
 
-        entries = SessionHistory().file_transfer_log
-        for entry in entries:
-            if entry["id"] in active_items:
-                continue
-            item = FileTransferItem.alloc().initWithFrame_oldTransfer_(NSMakeRect(0, 0, 100, 100), entry)
-            if last:
-                self.listView.insertItemView_before_(item, last)
+        for transfer in transfers:
+            item = FileTransferItem.alloc().initWithFrame_oldTransfer_(NSMakeRect(0, 0, 100, 100), transfer)
+
+            if last_displayed_item:
+                self.listView.insertItemView_before_(item, last_displayed_item)
             else:
                 self.listView.addItemView_(item)
 
@@ -86,8 +89,23 @@ class FileTransferWindowController(NSObject, object):
             self.bottomLabel.setStringValue_(u"1 item")
         else:
             self.bottomLabel.setStringValue_(u"%i items"%count)
+
         h = self.listView.minimumHeight()
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
+
+    def refresh(self):
+        active_items = []
+        for item in self.listView.subviews().copy():
+            if item.done:
+                item.removeFromSuperview()
+            else:
+                if item.transfer:
+                    active_items.append(item.transfer.transfer_id)
+
+        self.listView.relayout()
+        self.listView.display()
+
+        self.get_previous_transfers(active_items)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -103,9 +121,13 @@ class FileTransferWindowController(NSObject, object):
     def showWindow_(self, sender):
         self.window.makeKeyAndOrderFront_(None)
 
+    @run_in_green_thread
+    def delete_history_transfers(self):
+        FileTransferHistory().delete_transfers()
+
     @objc.IBAction
     def clearList_(self, sender):
-        SessionHistory().clear_transfer_history()
+        self.delete_history_transfers()
         self.refresh()
 
     def _NH_SIPApplicationDidStart(self, sender, data):

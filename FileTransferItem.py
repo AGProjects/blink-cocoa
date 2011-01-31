@@ -45,27 +45,24 @@ class FileTransferItem(NSView):
 
             NSBundle.loadNibNamed_owner_("FileTransferItem", self)
 
-            filename = transferInfo["path"]
+            filename = transferInfo.file_path
             if filename.endswith(".download"):
                 filename = filename[:-len(".download")]
 
             self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(filename))
 
             self.nameText.setStringValue_(os.path.basename(filename))
-            self.fromText.setStringValue_(transferInfo["peer"])
+            self.fromText.setStringValue_('To %s' % transferInfo.remote_uri if transferInfo.direction=='outgoing' else 'From %s' % transferInfo.remote_uri)
 
-            if transferInfo["status"] == "done":
-                status = "%s %s Done"%(format_size(transferInfo["bytes_total"], 1024), unichr(0x2014))
+            if transferInfo.status == "completed":
+                status = "%s %s Completed"%(format_size(transferInfo.file_size, 1024), unichr(0x2014))
             else:
-                if transferInfo["status"].startswith("failed:"):
-                    error = transferInfo["status"][len("failed:"):]
-                else:
-                    error = "failed"
+                error = transferInfo.status
 
-                if transferInfo["direction"] == "send":
+                if transferInfo.direction == "outgoing":
                     status = error
                 else:
-                    status = "%s of %s"%(format_size(transferInfo["bytes_transfered"], 1024), format_size(transferInfo["bytes_total"], 1024))
+                    status = "%s of %s"%(format_size(transferInfo.bytes_transfered, 1024), format_size(transferInfo.file_size, 1024))
                     status = "%s %s %s"%(status, unichr(0x2014), error)
             self.sizeText.setStringValue_(status)
             frame.size = self.view.frame().size
@@ -106,7 +103,6 @@ class FileTransferItem(NSView):
             self.progressBar.startAnimation_(None)
             self.progressBar.setHidden_(True)
 
-            self.updateChecksumProgressInfo(0)
             self.checksumProgressBar.setIndeterminate_(False)
             self.checksumProgressBar.startAnimation_(None)
             self.checksumProgressBar.setHidden_(False)
@@ -124,12 +120,12 @@ class FileTransferItem(NSView):
         icon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint((48-size.width)/2, (48-size.height)/2), 
                 NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1)
 
-        if type(self.transfer) == OutgoingFileTransfer or (self.oldTransferInfo and self.oldTransferInfo["direction"] == "send"):
-            icon = NSImage.imageNamed_("upfile")
+        # overlay file transfer direction icon 
+        if type(self.transfer) == OutgoingFileTransfer or (self.oldTransferInfo and self.oldTransferInfo.direction == "outgoing"):
+            icon = NSImage.imageNamed_("outgoing_file")
         else:
-            icon = NSImage.imageNamed_("downfile")
-        icon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(8, 4),
-            NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1)
+            icon = NSImage.imageNamed_("incoming_file")
+        icon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(2, 4), NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1)
         image.unlockFocus()
 
         self.icon.setImage_(image)
@@ -187,7 +183,7 @@ class FileTransferItem(NSView):
         if self.transfer:
             NSWorkspace.sharedWorkspace().openFile_(self.transfer.file_path)
         elif self.oldTransferInfo:
-            NSWorkspace.sharedWorkspace().openFile_(self.oldTransferInfo["path"])
+            NSWorkspace.sharedWorkspace().openFile_(self.oldTransferInfo.file_path)
 
     @objc.IBAction
     def stopTransfer_(self, sender):
@@ -225,7 +221,7 @@ class FileTransferItem(NSView):
         if self.transfer and self.transfer.file_path:
             path = self.transfer.file_path
         elif self.oldTransferInfo:
-            path = self.oldTransferInfo["path"]
+            path = self.oldTransferInfo.file_path
         else:
             return
 
