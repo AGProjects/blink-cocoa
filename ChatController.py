@@ -959,7 +959,7 @@ class ChatController(MediaStream):
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
-        self.changeStatus(STREAM_FAILED, reason)
+        self.changeStatus(STREAM_FAILED, data.reason)
         self.removeFromSession()
 
     def closeTabView(self):
