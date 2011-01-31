@@ -5,7 +5,6 @@ from Foundation import *
 from AppKit import *
 from WebKit import *
 
-from itertools import chain
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
 from operator import attrgetter

@@ -6,7 +6,6 @@ from AppKit import *
 
 from application.python.util import Singleton
 
-import SIPManager
 import ChatWindowController
 
 

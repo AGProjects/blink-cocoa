@@ -5,7 +5,6 @@ from Foundation import *
 from AppKit import *
 
 import datetime
-import re
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null

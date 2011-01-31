@@ -4,14 +4,7 @@
 from Foundation import *
 from AppKit import *
 
-import datetime
-import calendar
-import os
-import re
-import time
-
 from application.notification import IObserver, NotificationCenter
-from collections import defaultdict
 from sipsimple.core import SIPURI
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp

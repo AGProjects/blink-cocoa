@@ -13,7 +13,6 @@ from sipsimple.account import AccountManager
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 
-from BlinkLogger import BlinkLogger
 from configuration.datatypes import ResourcePath
 from util import allocate_autorelease_pool
 

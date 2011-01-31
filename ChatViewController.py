@@ -7,21 +7,16 @@ __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
 from Foundation import *
 from AppKit import *
 from WebKit import WebViewProgressFinishedNotification, WebActionOriginalURLKey
-from WebKit import WebDragDestinationActionDHTML, WebDragDestinationActionNone
 
 import time
 import cgi
 import datetime
 import calendar
 import urllib
-import os
 import re
 
-from application.notification import NotificationCenter
-from sipsimple.util import TimestampedNotificationData
-
 from SmileyManager import SmileyManager
-from util import call_in_gui_thread, escape_html, format_identity, format_identity_address, format_identity_from_text
+from util import call_in_gui_thread, escape_html, format_identity
 
 
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent

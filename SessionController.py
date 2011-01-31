@@ -13,7 +13,7 @@ from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 
-from AppKit import NSImage, NSRunAlertPanel, NSAlertDefaultReturn
+from AppKit import NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
 from AudioController import AudioController
 from VideoController import VideoController

@@ -9,15 +9,13 @@ import hashlib
 import os
 import time
 
-from itertools import dropwhile, takewhile
 
-from application import log
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
-from sipsimple.account import Account, BonjourAccount
+from sipsimple.account import BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
 from sipsimple.streams.applications.chat import CPIMIdentity
