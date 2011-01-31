@@ -1109,7 +1109,7 @@ class SIPManager(object):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def _NH_BlinkSessionDidFail(self, session, data):
-        if session.direction == "outgoing":
+        if data.direction == "outgoing":
             if data.code == 487:
                 self.log_outgoing_session_cancelled(session, data)
             else:
