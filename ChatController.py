@@ -328,7 +328,7 @@ class ChatController(MediaStream):
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
-            self.notification_center.add_observer(self, sender=self.sessionController.session)
+            self.notification_center.add_observer(self, sender=self.sessionController)
 
             NSBundle.loadNibNamed_owner_("ChatView", self)
 
@@ -912,9 +912,14 @@ class ChatController(MediaStream):
 
             window.noteSession_isComposing_(self.sessionController, flag)
 
-    def _NH_SIPSessionDidFail(self, sender, data):
-        message = "Session failed: %s" % data.reason
+    def _NH_BlinkSessionDidFail(self, sender, data):
+        message = "Session failed: %s" % data.failure_reason
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+        self.changeStatus(STREAM_FAILED)
+        self.notification_center.remove_observer(self, sender=sender)
+
+    def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         endpoint = str(self.stream.msrp.full_remote_path[0])
