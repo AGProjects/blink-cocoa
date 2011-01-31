@@ -145,7 +145,6 @@ class FileTransfer(object):
     @run_in_green_thread
     def add_to_history(self):
         FileTransferHistory().add_transfer(transfer_id=self.ft_info.transfer_id, direction=self.ft_info.direction, local_uri=self.ft_info.local_uri, remote_uri=self.ft_info.remote_uri, file_path=self.ft_info.file_path, bytes_transfered=self.ft_info.bytes_transfered, file_size=self.ft_info.file_size, status=self.ft_info.status)
-        log_info(self, "File transfer added to history")
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
