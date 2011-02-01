@@ -9,6 +9,7 @@ from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
+from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.streams.applications.chat import CPIMIdentity
 
 from MediaStream import *
@@ -403,8 +404,8 @@ class ChatWindowController(NSWindowController):
                 return
 
             try:
-                recipient = CPIMIdentity.parse('%s <sip:%s>' % (contact.display_name.encode("utf-8"), contact.uri))
-            except ValueError:
+                recipient = CPIMIdentity(SIPURI.parse('sip:%s' % contact.uri), display_name=contact.display_name)
+            except SIPCoreError:
                 return
 
             controller = ChatPrivateMessage(contact)
