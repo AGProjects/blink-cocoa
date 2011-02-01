@@ -293,7 +293,7 @@ class IncomingFileTransfer(FileTransfer):
             self.ft_info.status="completed"
             self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
-            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, "receive")
+            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, None)
 
         NotificationCenter().remove_observer(self, sender=sender)
 
@@ -512,7 +512,7 @@ class OutgoingFileTransfer(FileTransfer):
             self.ft_info.status="completed"
             self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
-            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, "send")
+            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, None)
 
         if self.calculated_checksum:
             NotificationCenter().remove_observer(self, sender=self.stream)
