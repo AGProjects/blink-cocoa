@@ -452,8 +452,10 @@ class OutgoingFileTransfer(FileTransfer):
         log_info(self, "DNS Lookup for SIP routes failed: '%s'"%msg)
         if self.fail_reason:
             return
+        self.status = "DNS Lookup failed"
+        self.ft_info.status="failed"
         self.end()
-        data = {"reason": "DNS Lookup for SIP routes failed: '%s'"%msg}
+        data = {"reason": "DNS Lookup failed: '%s'"%msg}
         SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self, data=data)
 
     def setRoutesResolved(self, routes):
@@ -461,11 +463,13 @@ class OutgoingFileTransfer(FileTransfer):
         if self.fail_reason:
             return
         if len(routes) == 0:
-            log_info(self, "No routes found to SIP proxy, session failed")
-            self.status = "Failed"
+            log="No routes found"
+            self.ft_info.status="failed"
+            log_info(self, log)
+            self.status = log
             self.end()
             data = {}
-            data["reason"] = "No routes found to SIP proxy, session failed"
+            data["reason"] = log
             SIPManager.SIPManager().post_in_main("BlinkFileTransferDidFail", self, data=data)
         else:
             self.routes = routes
