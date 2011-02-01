@@ -392,15 +392,17 @@ class SIPManager(object):
         account.nat_traversal.msrp_relay = data['msrp_relay']
         account.server.conference_server = data['conference_server']
         account.server.settings_url = data['settings_url']
-        account.service_provider.name = data['service_provider_name']
-        account.service_provider.help_url = data['service_provider_help_url']
-        account.service_provider.about_url = data['service_provider_about_url']
         if data['passport'] is not None:
             cert_path = self.save_certificates(data)
             account.tls.certificate = cert_path
         account.enabled = True
         account.save()
         account_manager.default_account = default_account
+        settings = SIPSimpleSettings()
+        settings.service_provider.name = data['service_provider_name']
+        settings.service_provider.help_url = data['service_provider_help_url']
+        settings.service_provider.about_url = data['service_provider_about_url']
+        settings.save()
 
     def enroll(self, display_name, username, password, email):
         url = SIPSimpleSettings().server.enrollment_url
