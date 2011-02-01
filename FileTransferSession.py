@@ -5,6 +5,7 @@ import hashlib
 import datetime
 import os
 import re
+import sys
 import time
 import uuid
 
@@ -87,7 +88,7 @@ class FileTransfer(object):
     def file_name(self):
         name = self.file_selector and os.path.basename(self.file_selector.name or u'Unknown')
         if type(name) != unicode:
-            return name.decode("utf8")
+            return name.decode(sys.getfilesystemencoding())
         return name
 
     @property
@@ -349,11 +350,11 @@ class OutgoingFileTransfer(FileTransfer):
         self.target_uri = target_uri
         self.remote_identity = format_identity_address(self.target_uri)
         if type(file_path) == str:
-            self.file_path = file_path.decode("utf8")
+            self.file_path = file_path.decode(sys.getfilesystemencoding())
         else:
             self.file_path = file_path
         self.content_type = content_type
-        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), type=content_type, hash=None)
+        self.file_selector = FileSelector.for_file(self.file_path.encode(sys.getfilesystemencoding()), type=content_type, hash=None)
         self.stop_event = Event()
         self.file_pos = 0
         self.routes = None
@@ -372,7 +373,7 @@ class OutgoingFileTransfer(FileTransfer):
         self.fail_reason = None
         NotificationCenter().discard_observer(self, sender=self.session)
         NotificationCenter().discard_observer(self, sender=self.stream)
-        self.file_selector = FileSelector.for_file(self.file_path.encode('utf8'), type=self.content_type, hash=None)
+        self.file_selector = FileSelector.for_file(self.file_path.encode(sys.getfilesystemencoding()), type=self.content_type, hash=None)
         self.file_pos = 0
         self.transfer_rate = None
         self.last_rate_pos = 0
@@ -392,7 +393,7 @@ class OutgoingFileTransfer(FileTransfer):
         else:
             notification_center.post_notification("BlinkFileTransferInitializing", self)
 
-        log_info(self, "Computing checksum for file %s" % self.file_selector.name.decode("utf-8"))
+        log_info(self, "Computing checksum for file %s" % self.file_selector.name.decode(sys.getfilesystemencoding()))
 
         self.stop_event.clear()
         self.initiate_file_transfer()
