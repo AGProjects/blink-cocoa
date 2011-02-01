@@ -22,6 +22,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
 from application.system import host, unlink
 from collections import defaultdict
+from dateutil.tz import tzlocal
 from eventlet import api
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
@@ -407,15 +408,7 @@ class SIPManager(object):
     def enroll(self, display_name, username, password, email):
         url = SIPSimpleSettings().server.enrollment_url
 
-        tzname = ""
-        if sys.platform == "darwin":
-            # this is for macosx
-            # the try..except is only for safety, /etc/localtime should always be a link on OSX. -Luci
-            try:
-                tzname = '/'.join(os.readlink('/etc/localtime').split('/')[-2:])
-            except:
-                pass
-
+        tzname = datetime.datetime.now(tzlocal()).tzname() or ""
         if not tzname:
             BlinkLogger().log_warning(u"Unable to determine timezone")
 
