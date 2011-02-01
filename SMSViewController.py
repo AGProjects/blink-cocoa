@@ -231,7 +231,7 @@ class SMSViewController(NSObject):
         handler(notification.sender, notification.data)
 
     def _NH_SIPMessageDidSucceed(self, sender, data):
-        BlinkLogger().log_warning("SMS message delivery suceeded: %s" % data.reason)
+        BlinkLogger().log_warning(u"SMS message delivery suceeded: %s" % data.reason)
 
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
@@ -248,7 +248,7 @@ class SMSViewController(NSObject):
         NotificationCenter().remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
-        BlinkLogger().log_warning("SMS message delivery failed: %s" % data.reason)
+        BlinkLogger().log_warning(u"SMS message delivery failed: %s" % data.reason)
 
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
@@ -271,7 +271,7 @@ class SMSViewController(NSObject):
         try:
             self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status)
         except Exception, e:
-            BlinkLogger().log_error("Failed to add message to history: %s" % e)
+            BlinkLogger().log_error(u"Failed to add message to history: %s" % e)
 
     def composeReplicationMessage(self, sent_message, response_code):
         if isinstance(self.account, Account):
@@ -311,7 +311,7 @@ class SMSViewController(NSObject):
         self.queue = []
 
     def setRoutesFailed(self, msg):
-        BlinkLogger().log_error("DNS Lookup failed: %s" % msg)
+        BlinkLogger().log_error(u"DNS Lookup failed: %s" % msg)
         self.chatViewController.showSystemMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
         for msgid, text, content_type in self.queue:
             message = self.messages.pop(msgid)
@@ -330,7 +330,7 @@ class SMSViewController(NSObject):
 
         id=str(message_request)
         if content_type != "application/im-iscomposing+xml":
-            BlinkLogger().log_info("Sent %s SMS message to %s" % (content_type, self.target_uri))
+            BlinkLogger().log_info(u"Sent %s SMS message to %s" % (content_type, self.target_uri))
             self.enableIsComposing = True
             message = self.messages.pop(msgid)
             message.status='sent'
@@ -398,7 +398,7 @@ class SMSViewController(NSObject):
         try:
             results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries)
         except Exception, e:
-            BlinkLogger().log_error("Failed to retrive chat history for %s: %s" % (self.remote_uri, e))
+            BlinkLogger().log_error(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))
             return
         messages = [row for row in reversed(list(results))]
         self.render_history_messages(messages)

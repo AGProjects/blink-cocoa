@@ -156,7 +156,7 @@ class SessionController(NSObject):
                 log_info(self, "Handling incoming %s Stream" % s.type)
                 handler = StreamHandlerForType.get(s.type, None)
                 if not handler:
-                    BlinkLogger().log_warning("Unknown incoming Stream type: %s (%s)" % (s, s.type))
+                    BlinkLogger().log_warning(u"Unknown incoming Stream type: %s (%s)" % (s, s.type))
                     raise TypeError("Unsupported stream type %s" % s.type)
                 else:
                     controller = handler(self, s)
@@ -175,9 +175,9 @@ class SessionController(NSObject):
             traceback.print_exc()
             # if there was some exception, reject the session
             if is_update:
-                BlinkLogger().log_error("Error initializing additional streams: %s" % exc)
+                BlinkLogger().log_error(u"Error initializing additional streams: %s" % exc)
             else:
-                BlinkLogger().log_error("Error initializing incoming session, rejecting it: %s" % exc)
+                BlinkLogger().log_error(u"Error initializing incoming session, rejecting it: %s" % exc)
                 self.session.reject(500)
             NSRunAlertPanel("Error Accepting Session", "An error occurred while initiating the session:\n %s" % exc, "OK", None, None)
 

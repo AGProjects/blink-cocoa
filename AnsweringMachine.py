@@ -118,9 +118,9 @@ class AnsweringMachine(object):
         notification_center.remove_observer(self, sender=self.stream)
 
     def _NH_AudioStreamDidStartRecordingAudio(self, notification):
-        BlinkLogger().log_info("Recording message from %s" % self.session.remote_identity)
+        BlinkLogger().log_info(u"Recording message from %s" % self.session.remote_identity)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, notification):
-        BlinkLogger().log_info("Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
+        BlinkLogger().log_info(u"Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
 
 

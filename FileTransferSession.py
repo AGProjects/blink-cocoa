@@ -30,15 +30,15 @@ from util import *
 
 
 def log_info(session, text):
-    BlinkLogger().log_info("[session to %s] %s"%(session.target_uri, text))
+    BlinkLogger().log_info(u"[session to %s] %s"%(session.target_uri, text))
 
 
 def log_debug(session, text):
-    BlinkLogger().log_debug("[session to %s] %s"%(session.target_uri, text))
+    BlinkLogger().log_debug(u"[session to %s] %s"%(session.target_uri, text))
 
 
 def log_error(session, text):
-    BlinkLogger().log_error("[session to %s] %s"%(session.target_uri, text))
+    BlinkLogger().log_error(u"[session to %s] %s"%(session.target_uri, text))
 
 
 def format_duration(t):
@@ -85,7 +85,7 @@ class FileTransfer(object):
 
     @property
     def file_name(self):
-        name = self.file_selector and os.path.basename(self.file_selector.name or 'Unknown')
+        name = self.file_selector and os.path.basename(self.file_selector.name or u'Unknown')
         if type(name) != unicode:
             return name.decode("utf8")
         return name

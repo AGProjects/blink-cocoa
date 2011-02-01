@@ -544,7 +544,7 @@ class ChatWindowController(NSWindowController):
                     display_name = unicode(conf_desc.display_text)
                 NSApp.delegate().windowController.addContact(remote_uri, display_name)
             elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
-                ret = NSRunAlertPanel("Remove from conference", "You will request the conference server to remove %s from the room. Are your sure?"%display_name, "Remove", "Cancel", None)
+                ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?" % display_name, u"Remove", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
             elif tag == SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:

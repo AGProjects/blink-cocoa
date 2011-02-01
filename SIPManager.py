@@ -261,7 +261,7 @@ class SIPManager(object):
             self._app.start(config_backend=config_be)
         except PJSIPError, exc:
             if str(exc).find("(PJSIP_TLS_ECACERT)") >= 0:
-                BlinkLogger().log_error("Invalid TLS settings detected. Resetting and restarting...")
+                BlinkLogger().log_error(u"Invalid TLS settings detected. Resetting and restarting...")
                 SIPSimpleSettings().tls.certificate = None
                 SIPSimpleSettings().save()
                 self._app.start(config_backend=config_be)
@@ -313,7 +313,7 @@ class SIPManager(object):
             X509Certificate(ca)
             X509PrivateKey(key)
         except GNUTLSError, e:
-            BlinkLogger().log_error("Invalid certificate data: %s" % e)
+            BlinkLogger().log_error(u"Invalid certificate data: %s" % e)
             return None
 
         home_directory = os.path.expanduser('~/')
@@ -327,7 +327,7 @@ class SIPManager(object):
         f.write(crt)
         f.write(key)
         f.close()
-        BlinkLogger().log_info("Saved new TLS Certificate and Private Key to %s" % crt_path)
+        BlinkLogger().log_info(u"Saved new TLS Certificate and Private Key to %s" % crt_path)
         if crt_path.startswith(home_directory):
             crt_path = crt_path.replace(home_directory, '~/')
 
@@ -346,13 +346,13 @@ class SIPManager(object):
             os.chmod(ca_path, 0600)
             f.write(ca_list)
             f.close()
-            BlinkLogger().log_info("Added new CA to %s" % ca_path)
+            BlinkLogger().log_info(u"Added new CA to %s" % ca_path)
             if ca_path.startswith(home_directory):
                 ca_path = ca_path.replace(home_directory, '~/')
             SIPSimpleSettings().tls.ca_list = ca_path
             SIPSimpleSettings().save()
         else:
-            BlinkLogger().log_info("CA already present in %s" % ca_path)
+            BlinkLogger().log_info(u"CA already present in %s" % ca_path)
 
         return crt_path
 
@@ -365,10 +365,10 @@ class SIPManager(object):
             data = open(filename).read()
             data = cjson.decode(data.replace('\\/', '/'))
         except (OSError, IOError), e:
-            BlinkLogger().log_error("Failed to read json data from ~/.blink_account: %s" % e)
+            BlinkLogger().log_error(u"Failed to read json data from ~/.blink_account: %s" % e)
             return
         except cjson.DecodeError, e:
-            BlinkLogger().log_error("Failed to decode json data from ~/.blink_account: %s" % e)
+            BlinkLogger().log_error(u"Failed to decode json data from ~/.blink_account: %s" % e)
             return
         finally:
             unlink(filename)
@@ -415,7 +415,7 @@ class SIPManager(object):
                 pass
 
         if not tzname:
-            BlinkLogger().log_warning("Unable to determine timezone")
+            BlinkLogger().log_warning(u"Unable to determine timezone")
 
         values = {'password' : password.encode("utf8"),
                   'username' : username.encode("utf8"),
@@ -423,7 +423,7 @@ class SIPManager(object):
                   'display_name' : display_name.encode("utf8"),
                   'tzinfo' : tzname }
 
-        BlinkLogger().log_info("Requesting creation of a new SIP account at %s"%url)
+        BlinkLogger().log_info(u"Requesting creation of a new SIP account at %s" % url)
 
         data = urllib.urlencode(values)
         req = urllib2.Request(url, data)
@@ -433,15 +433,15 @@ class SIPManager(object):
         response = cjson.decode(json_data.replace('\\/', '/'))
         if response:
             if not response["success"]:
-                BlinkLogger().log_info("Enrollment Server failed to create SIP account: %(error_message)s" % response)
+                BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)
                 raise Exception(response["error_message"])
             else:
-                BlinkLogger().log_info("Enrollment Server successfully created SIP account %(sip_address)s" % response)
+                BlinkLogger().log_info(u"Enrollment Server successfully created SIP account %(sip_address)s" % response)
                 data = defaultdict(lambda: None, response)
                 certificate_path = None if data['passport'] is None else self.save_certificates(data)
                 return data['sip_address'], certificate_path, data['outbound_proxy'], data['xcap_root'], data['msrp_relay'], data['settings_url']
         else:
-            BlinkLogger().log_info("Enrollment Server returned no response")
+            BlinkLogger().log_info(u"Enrollment Server returned no response")
 
         raise Exception("No response received from %s"%url)
 
@@ -461,13 +461,13 @@ class SIPManager(object):
         if isinstance(account, Account) and account.sip.outbound_proxy is not None:
             uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
                 parameters={'transport': account.sip.outbound_proxy.transport})
-            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through proxy %s)"%(target_uri, uri))
+            BlinkLogger().log_info(u"Initiating DNS Lookup for SIP routes of %s (through proxy %s)" % (target_uri, uri))
         elif isinstance(account, Account) and account.sip.always_use_my_proxy:
             uri = SIPURI(host=account.id.domain)
-            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s (through account %s proxy)"%(target_uri, account.id))
+            BlinkLogger().log_info(u"Initiating DNS Lookup for SIP routes of %s (through account %s proxy)" % (target_uri, account.id))
         else:
             uri = target_uri
-            BlinkLogger().log_info("Initiating DNS Lookup for SIP routes of %s"%target_uri)
+            BlinkLogger().log_info(u"Initiating DNS Lookup for SIP routes of %s" % target_uri)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def lookup_stun_servers(self, account):
@@ -482,7 +482,7 @@ class SIPManager(object):
                 address = account.nat_traversal.stun_server_list[0]
             else:
                 lookup.lookup_service(SIPURI(host=account.id.domain), "stun")
-                BlinkLogger().log_info("Initiating DNS Lookup for STUN servers of domain %s"%account.id.domain)
+                BlinkLogger().log_info(u"Initiating DNS Lookup for STUN servers of domain %s" % account.id.domain)
 
     def parse_sip_uri(self, target_uri, account):
         try:
@@ -517,7 +517,7 @@ class SIPManager(object):
             except Exception, exc:
                 import traceback
                 traceback.print_exc()
-                BlinkLogger().log_error("Error while attempting to transfer file %s: %s"%(file, exc))
+                BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
 
     def get_chat_history_directory(self):
         dirname = unicode(SIPSimpleSettings().chat.directory).strip()
@@ -904,11 +904,11 @@ class SIPManager(object):
             message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
         else:
             message = u"Incoming Session request from"
-            BlinkLogger().log_warning("Unknown Session content %s"%streams)
+            BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
         return (message, party), default_action, alt_action
 
     def reject_incoming_session(self, session, code=603, reason=None):
-        BlinkLogger().log_info("Rejecting Session from %s (code %s)"%(session.remote_identity, code))
+        BlinkLogger().log_info(u"Rejecting Session from %s (code %s)" % (session.remote_identity, code))
         session.reject(code, reason)
 
     def is_muted(self):
@@ -947,7 +947,7 @@ class SIPManager(object):
         handler(notification.sender, notification.data)
 
     def _NH_SIPApplicationFailedToStartTLS(self, sender, data):
-        BlinkLogger().log_info('Failed to start TLS transport: %s' % data.error)
+        BlinkLogger().log_info(u'Failed to start TLS transport: %s' % data.error)
 
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
@@ -972,7 +972,7 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             for transport in settings.sip.transport_list:
                 try:
-                    BlinkLogger().log_info('Bonjour Account listens on %s' % bonjour_account.contact[transport])
+                    BlinkLogger().log_info(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
                 except KeyError:
                     pass
 
@@ -1003,10 +1003,10 @@ class SIPManager(object):
 
         if lookup.type == 'stun_servers':
             account = lookup.owner
-            BlinkLogger().log_info("DNS Lookup for STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
+            BlinkLogger().log_info(u"DNS Lookup for STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
         elif lookup.type == 'sip_proxies':
             session_controller = lookup.owner
-            BlinkLogger().log_info("DNS Lookup for SIP routes of %s succeeded: %s" % (session_controller.target_uri, data.result))
+            BlinkLogger().log_info(u"DNS Lookup for SIP routes of %s succeeded: %s" % (session_controller.target_uri, data.result))
             routes = data.result
             if not routes:
                 call_in_gui_thread(session_controller.setRoutesFailed, "No routes found to SIP Proxy")
@@ -1020,33 +1020,33 @@ class SIPManager(object):
         print "SIP Engine Exception", data
 
     def _NH_SIPAccountDidActivate(self, account, data):
-        BlinkLogger().log_debug("%s activated" % account)
+        BlinkLogger().log_debug(u"%s activated" % account)
         call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
-        BlinkLogger().log_debug("%s deactivated" % account)
+        BlinkLogger().log_debug(u"%s deactivated" % account)
         MWIData.remove(account)
         call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = '%s Registered Contact Address "%s" for sip:%s at %s:%d;transport=%s (expires in %d seconds).\n' % (datetime.datetime.now().replace(microsecond=0), data.contact_header.uri, account.id, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+        message = u'%s Registered Contact Address "%s" for sip:%s at %s:%d;transport=%s (expires in %d seconds).\n' % (datetime.datetime.now().replace(microsecond=0), data.contact_header.uri, account.id, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
         contact_header_list = data.contact_header_list
         if len(contact_header_list) > 1:
-            message += 'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
+            message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         BlinkLogger().log_info(message)
         call_in_gui_thread(self._delegate.sip_account_registration_succeeded, account)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
-        BlinkLogger().log_info("%s was unregistered" % account)
+        BlinkLogger().log_info(u"%s was unregistered" % account)
         call_in_gui_thread(self._delegate.sip_account_registration_ended, account)
 
     def _NH_SIPAccountRegistrationDidFail(self, account, data):
-        BlinkLogger().log_info("%s failed to register: %s (retrying in %.2f seconds)" % (account, data.error, data.timeout))
+        BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, data.error, data.timeout))
         call_in_gui_thread(self._delegate.sip_account_registration_failed, account, data.error)
 
     @run_in_gui_thread
     def _NH_SIPAccountMWIDidGetSummary(self, account, data):
-        BlinkLogger().log_info("Got NOTIFY for MWI of account %s" % account.id)
+        BlinkLogger().log_info(u"Got NOTIFY for MWI of account %s" % account.id)
         summary = data.message_summary
         if summary.summaries.get('voice-message') is None:
             return
@@ -1070,7 +1070,7 @@ class SIPManager(object):
         call_in_gui_thread(self._delegate.handle_incoming_session, session, data.streams)
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
-        BlinkLogger().log_info("Outgoing Session request to %s (%s)" % (session.remote_identity, [s.type for s in data.streams]))
+        BlinkLogger().log_info(u"Outgoing Session request to %s (%s)" % (session.remote_identity, [s.type for s in data.streams]))
         self.ringer.add_outgoing(session, data.streams)
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):

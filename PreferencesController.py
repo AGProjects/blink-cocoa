@@ -181,9 +181,9 @@ class PreferencesController(NSWindowController, object):
     def showOptionsForAccount(self, account):
         self.updating = True
         if account.display_name:
-            self.displayNameText.setStringValue_(account.display_name.decode("utf8"))
+            self.displayNameText.setStringValue_(account.display_name)
         else:
-            self.displayNameText.setStringValue_("")
+            self.displayNameText.setStringValue_(u"")
 
         if not isinstance(account, BonjourAccount):
             self.addressText.setStringValue_(str(account.id))
@@ -256,7 +256,7 @@ class PreferencesController(NSWindowController, object):
         account = self.selectedAccount()
         if account:
             if notification.object() == self.displayNameText:
-                account.display_name = unicode(self.displayNameText.stringValue()).encode("utf8")
+                account.display_name = unicode(self.displayNameText.stringValue())
                 account.save()
             elif notification.object() == self.passwordText and self.passwordText.stringValue().length() > 0:
                 account.auth.password = unicode(self.passwordText.stringValue()).encode("utf8")
@@ -314,9 +314,9 @@ class PreferencesController(NSWindowController, object):
                 self.settingViews[option].restore() 
             if 'display_name' in notification.data.modified:
                 if sender.display_name:
-                    self.displayNameText.setStringValue_(sender.display_name.decode("utf8"))
+                    self.displayNameText.setStringValue_(sender.display_name)
                 else:
-                    self.displayNameText.setStringValue_("")
+                    self.displayNameText.setStringValue_(u"")
         if 'sip.register' in notification.data.modified:
             self.accountTable.reloadData()
         if 'audio.silent' in notification.data.modified:

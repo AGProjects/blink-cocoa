@@ -124,7 +124,7 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def startVNCServerInPort_(self, port):
-        BlinkLogger().log_info("Starting VNC server at port %i..." % port)
+        BlinkLogger().log_info(u"Starting VNC server at port %i..." % port)
 
         path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
         args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
@@ -165,7 +165,7 @@ class BlinkAppDelegate(NSObject):
                     self.enroll()
                 break
             except FileParserError, exc:
-                BlinkLogger().log_warning("Error parsing configuration file: %s" % exc)
+                BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
                 if NSRunAlertPanel("Error Reading Configurations", 
                     """The configuration file could not be read. The file could be corrupted or written by an older version of Blink.
 You might need to Replace it and re-enter your account information. Your old file will be backed up.""", 
@@ -173,7 +173,7 @@ You might need to Replace it and re-enter your account information. Your old fil
                     NSApp.terminate_(None)
                     return
                 os.rename(options["config_file"], options["config_file"]+".oldfmt")
-                BlinkLogger().log_info("Renamed configuration file to %s" % options["config_file"]+".oldfmt") 
+                BlinkLogger().log_info(u"Renamed configuration file to %s" % options["config_file"]+".oldfmt") 
             except BaseException, exc:
                 import traceback
                 print traceback.print_exc()
@@ -293,7 +293,7 @@ You might need to Replace it and re-enter your account information. Your old fil
     def getURL_withReplyEvent_(self, event, replyEvent):
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
 
-        BlinkLogger().log_info("Got request to open URL %s" % url)
+        BlinkLogger().log_info(u"Got request to open URL %s" % url)
 
         _split = url.split(';')
         _url = []

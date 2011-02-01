@@ -144,13 +144,13 @@ class AccountSettings(NSObject):
 
     def webView_didStartProvisionalLoadForFrame_(self, sender, frame):
         self._authRequestCount = 0
-        BlinkLogger().log_info("Loading Blink Server Tools for %s..." % self._account.id)
+        BlinkLogger().log_info(u"Loading Blink Server Tools for %s..." % self._account.id)
         self.errorText.setHidden_(True)
         if self.spinWheel.isHidden():
             self.spinWheel2.startAnimation_(None)
 
     def webView_didFinishLoadForFrame_(self, sender, frame):
-        BlinkLogger().log_info("Loaded Blink Server Tools page")
+        BlinkLogger().log_info(u"Loaded Blink Server Tools page")
         self.spinWheel.stopAnimation_(None)
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
@@ -164,7 +164,7 @@ class AccountSettings(NSObject):
         self.spinWheel.setHidden_(True)
         self.errorText.setStringValue_("Could not load Blink Server Tools page: %s" % error.localizedDescription())
         self.errorText.setHidden_(False)
-        BlinkLogger().log_error("Could not load Blink Server Tools page: %s" % error)
+        BlinkLogger().log_error(u"Could not load Blink Server Tools page: %s" % error)
 
     def webView_didFailLoadWithError_forFrame_(self, sender, error, frame):
         self.spinWheel.stopAnimation_(None)
@@ -173,7 +173,7 @@ class AccountSettings(NSObject):
         self.spinWheel.setHidden_(True)
         self.errorText.setHidden_(False)
         self.errorText.setStringValue_("Could not load Blink Server Tools page: %s" % error.localizedDescription())
-        BlinkLogger().log_error("Could not load Blink Server Tools page: %s" % error)
+        BlinkLogger().log_error(u"Could not load Blink Server Tools page: %s" % error)
 
     def webView_createWebViewWithRequest_(self, sender, request):
         window = AccountSettings.createWithOwner_(self.owner)
@@ -183,18 +183,18 @@ class AccountSettings(NSObject):
     def webView_resource_didReceiveAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         self._authRequestCount += 1
         if self._authRequestCount > 2:
-            BlinkLogger().log_info("Received duplicated authentication request, probably authentication failure")
+            BlinkLogger().log_info(u"Received duplicated authentication request, probably authentication failure")
             self.errorText.setHidden_(False)
             self.errorText.setStringValue_("Could not load Blink Server Tools page: authentication failure")
             self.spinWheel.stopAnimation_(None)
             self.loadingText.setHidden_(True)
         else:
-            BlinkLogger().log_info("Sending credentials for authentication request (account = %s)" % self._account.id)
+            BlinkLogger().log_info(u"Sending credentials for authentication request (account = %s)" % self._account.id)
             credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id, self._account.auth.password, NSURLCredentialPersistenceNone)
             challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
     def webView_resource_didCancelAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
-        BlinkLogger().log_info("Cancelled authentication request")
+        BlinkLogger().log_info(u"Cancelled authentication request")
     
     # download delegate
     def download_decideDestinationWithSuggestedFilename_(self, download, filename):
@@ -202,29 +202,29 @@ class AccountSettings(NSObject):
         panel.setTitle_("Download File")
         if panel.runModalForDirectory_file_("", filename) == NSFileHandlingPanelOKButton:
             download.setDestination_allowOverwrite_(panel.filename(), True)
-            BlinkLogger().log_info("Downloading file to %s" % panel.filename())
+            BlinkLogger().log_info(u"Downloading file to %s" % panel.filename())
         else:
             download.cancel()
-            BlinkLogger().log_info("Download cancelled")
+            BlinkLogger().log_info(u"Download cancelled")
     
     def downloadDidBegin_(self, download):
-        BlinkLogger().log_info("Download started...")
+        BlinkLogger().log_info(u"Download started...")
     
     def downloadDidFinish_(self, download):
-        BlinkLogger().log_info("Download finished")
+        BlinkLogger().log_info(u"Download finished")
     
     def download_didReceiveDataOfLength_(self, download, length):
         pass
     
     def download_didFailWithError_(self, download, error):
         download.cancel()
-        BlinkLogger().log_info("Download error: %s" % error.localizedDescription())
+        BlinkLogger().log_info(u"Download error: %s" % error.localizedDescription())
         NSRunAlertPanel("Download Error", "Error downloading file: %s" % error.localizedDescription(), "OK", "", "")
     
     # API exported to webpage. Be careful with what you export.
 
     def addContact_withDisplayName_(self, uri, display_name):
-        BlinkLogger().log_info("Adding contact %s <%s>" % (display_name, uri))
+        BlinkLogger().log_info(u"Adding contact %s <%s>" % (display_name, uri))
         
         contact = self.owner.model.addNewContact(address=uri, display_name=display_name)
         self.owner.contactOutline.reloadData()

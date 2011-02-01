@@ -57,12 +57,12 @@ class ChatHistory(object):
             else:
                 try:
                     ChatMessage.createTable()
-                    BlinkLogger().log_info("Created history table %s" % ChatMessage.sqlmeta.table)
+                    BlinkLogger().log_info(u"Created history table %s" % ChatMessage.sqlmeta.table)
                 except Exception, e:
-                    BlinkLogger().log_error("Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
+                    BlinkLogger().log_error(u"Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
         except Exception, e:
-            BlinkLogger().log_error("Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
+            BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
     def _add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status):
         try:
@@ -90,17 +90,17 @@ class ChatHistory(object):
                     message.status = status
                 return True
             except Exception, e:
-                BlinkLogger().log_error("Error updating record %s: %s" % (msgid, e))
+                BlinkLogger().log_error(u"Error updating record %s: %s" % (msgid, e))
                 return False
         except Exception, e:
-            BlinkLogger().log_error("Error adding record %s to history table: %s" % (msgid, e))
+            BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (msgid, e))
             return False
 
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status):
         try:
             return block_on(deferToThread(self._add_message, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status))
         except Exception, e:
-            BlinkLogger().log_error("Error adding record to history table: %s" % e)
+            BlinkLogger().log_error(u"Error adding record to history table: %s" % e)
             return False
 
     def get_contacts(self):
@@ -215,12 +215,12 @@ class FileTransferHistory(object):
             else:
                 try:
                     FileTransfer.createTable()
-                    BlinkLogger().log_info("Created file history table %s" % FileTransfer.sqlmeta.table)
+                    BlinkLogger().log_info(u"Created file history table %s" % FileTransfer.sqlmeta.table)
                 except Exception, e:
-                    BlinkLogger().log_error("Error creating history table %s: %s" % (FileTransfer.sqlmeta.table,e))
+                    BlinkLogger().log_error(u"Error creating history table %s: %s" % (FileTransfer.sqlmeta.table, e))
 
         except Exception, e:
-            BlinkLogger().log_error("Error checking history table %s: %s" % (FileTransfer.sqlmeta.table,e))
+            BlinkLogger().log_error(u"Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
 
     def _add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
         try:
@@ -253,17 +253,17 @@ class FileTransferHistory(object):
 
                 return True
             except Exception, e:
-                BlinkLogger().log_error("Error updating record %s: %s" % (transfer_id, e))
+                BlinkLogger().log_error(u"Error updating record %s: %s" % (transfer_id, e))
                 return False
         except Exception, e:
-            BlinkLogger().log_error("Error adding record %s to history table: %s" % (transfer_id, e))
+            BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (transfer_id, e))
             return False
 
     def add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
         try:
             return block_on(deferToThread(self._add_transfer, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status))
         except Exception, e:
-            BlinkLogger().log_error("Error adding record to history table: %s" % e)
+            BlinkLogger().log_error(u"Error adding record to history table: %s" % e)
             return False
 
     def get_transfers(self):
@@ -272,3 +272,4 @@ class FileTransferHistory(object):
     def delete_transfers(self):
         query = "delete from file_transfers"
         return block_on(deferToThread(self.db.queryAll, query))
+

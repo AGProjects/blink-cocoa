@@ -99,7 +99,7 @@ class ChatHistoryViewer(NSWindowController):
         try:
             self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri)
         except Exception, e:
-            BlinkLogger().log_error("Failed to delete messages: %s" %e)
+            BlinkLogger().log_error(u"Failed to delete messages: %s" % e)
             return
         self.refreshViewer()
 
@@ -110,7 +110,7 @@ class ChatHistoryViewer(NSWindowController):
             try:
                 results = self.history.get_contacts()
             except Exception, e:
-                BlinkLogger().log_error("Failed to refresh contacts: %s" %e)
+                BlinkLogger().log_error(u"Failed to refresh contacts: %s" % e)
                 return
             self.renderContacts(results)
             self.updateBusyIndicator(False)
@@ -166,7 +166,7 @@ class ChatHistoryViewer(NSWindowController):
             try:
                 results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text)
             except Exception, e:
-                BlinkLogger().log_error("Failed to refresh daily entries: %s" % e)
+                BlinkLogger().log_error(u"Failed to refresh daily entries: %s" % e)
                 return
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
@@ -204,7 +204,7 @@ class ChatHistoryViewer(NSWindowController):
             try:
                 results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text)
             except Exception, e:
-                BlinkLogger().log_error("Failed to refresh messages: %s" % e)
+                BlinkLogger().log_error(u"Failed to refresh messages: %s" % e)
                 return
 
             # cache message for pagination

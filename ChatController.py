@@ -44,7 +44,7 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
     """
     tag = sender.tag()
     if tag == SessionController.TOOLBAR_RECONNECT:
-        BlinkLogger().log_info("Re-establishing session to %s" % sessionController.remoteParty)
+        BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
         sessionController.startChatSession()
     elif tag == SessionController.TOOLBAR_HISTORY:
         contactWindow = sessionController.owner
@@ -145,7 +145,7 @@ class MessageHandler(NSObject):
             try:
                 id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
             except ChatStreamError, e:
-                BlinkLogger().log_error("Error sending message: %s" % e)
+                BlinkLogger().log_error(u"Error sending message: %s" % e)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
                 message.status='failed'
                 self.add_to_history(message)
@@ -154,7 +154,7 @@ class MessageHandler(NSObject):
             try:
                 id = self.stream.send_message(message.text, timestamp=message.timestamp)
             except ChatStreamError, e:
-                BlinkLogger().log_error("Error sending message: %s" % e)
+                BlinkLogger().log_error(u"Error sending message: %s" % e)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
                 message.status='failed'
                 self.add_to_history(message)
@@ -194,7 +194,7 @@ class MessageHandler(NSObject):
                 try:
                     self._send(msgid)
                 except Exception, e:
-                    BlinkLogger().log_error("Error sending message: %s" % e)
+                    BlinkLogger().log_error(u"Error sending message: %s" % e)
                     self.delegate.showSystemMessage("Error sending message",now, True)
                 else:
                     self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
@@ -216,7 +216,7 @@ class MessageHandler(NSObject):
             try:
                 self._send(msgid)
             except Exception, e:
-                BlinkLogger().log_error("Error sending message: %s" % e)
+                BlinkLogger().log_error(u"Error sending message: %s" % e)
                 self.delegate.showSystemMessage("Error sending message",now, True)
             else:
                 self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
@@ -232,7 +232,7 @@ class MessageHandler(NSObject):
             private = self.messages[msgid].private
             sent = self._send(msgid)
             if not sent:
-                BlinkLogger().log_error("Error sending queued message: %s" % msgid)
+                BlinkLogger().log_error(u"Error sending queued message: %s" % msgid)
             else:
                 self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
         self.pending = []
@@ -283,7 +283,7 @@ class MessageHandler(NSObject):
         try:
             self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, "text", private, message.status)
         except Exception, e:
-            BlinkLogger().log_error("Failed to add message to history: %s" % e)
+            BlinkLogger().log_error(u"Failed to add message to history: %s" % e)
 
 class ChatController(MediaStream):
     implements(IObserver)
@@ -402,9 +402,9 @@ class ChatController(MediaStream):
         log_debug(self, "Changing chat state to "+newstate)
 
         if newstate == STREAM_DISCONNECTING:
-            BlinkLogger().log_info("Ending session")
+            BlinkLogger().log_info(u"Ending session")
         elif newstate == STREAM_CANCELLING:
-            BlinkLogger().log_info("Cancelling Chat Proposal")
+            BlinkLogger().log_info(u"Cancelling Chat Proposal")
 
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
@@ -477,7 +477,7 @@ class ChatController(MediaStream):
                 NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
-                BlinkLogger().log_info("Session not established, starting it")
+                BlinkLogger().log_info(u"Session not established, starting it")
                 self.sessionController.startChatSession()
 
             self.chatViewController.resetTyping()
@@ -501,7 +501,7 @@ class ChatController(MediaStream):
         try:
             results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
         except Exception, e:
-            BlinkLogger().log_error("Failed to retrive chat history for %s: %s" % (self.remote_uri, e))            
+            BlinkLogger().log_error(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))            
             return
 
         # build a list of previously failed messages
@@ -811,7 +811,7 @@ class ChatController(MediaStream):
             openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.session.remote_identity.uri)
         elif tag == SessionController.TOOLBAR_RECONNECT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
-                BlinkLogger().log_info("Re-establishing session to %s" % self.remoteParty)
+                BlinkLogger().log_info(u"Re-establishing session to %s" % self.remoteParty)
                 self.sessionController.mustShowDrawer = True
                 self.sessionController.startChatSession()
         elif tag == SessionController.TOOLBAR_SMILEY:
@@ -920,7 +920,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         endpoint = str(self.stream.msrp.full_remote_path[0])
-        BlinkLogger().log_info("Chat stream established to %s (%s)"%(endpoint, self.remoteParty))
+        BlinkLogger().log_info(u"Chat stream established to %s (%s)" % (endpoint, self.remoteParty))
         self.chatViewController.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
 
         self.handler.setConnected(self.stream)
@@ -931,7 +931,7 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        BlinkLogger().log_info("Chat stream ended")
+        BlinkLogger().log_info(u"Chat stream ended")
 
         self.notification_center.remove_observer(self, sender=sender)
 
@@ -950,7 +950,7 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        BlinkLogger().log_info("Chat stream failed: %s" % data.reason)
+        BlinkLogger().log_info(u"Chat stream failed: %s" % data.reason)
         self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
 
         self.handler.setDisconnected()

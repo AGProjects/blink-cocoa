@@ -211,7 +211,7 @@ class FileTransferItem(NSView):
         except Exception, exc:
             import traceback
             traceback.print_exc()
-            BlinkLogger().log_error("Error while attempting to resume file transfer: %s"%exc)
+            BlinkLogger().log_error(u"Error while attempting to resume file transfer: %s" % exc)
             self._NH_BlinkFileTransferDidFail(None, None)
             self.sizeText.setStringValue_("Error: %s" % exc)
             return

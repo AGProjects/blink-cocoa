@@ -213,7 +213,7 @@ class EnrollmentController(NSObject):
         account.xcap.xcap_root = xcap_root
         account.tls.certificate = tls_path
         account.server.settings_url = settings_url
-        account.display_name = display_name.encode("utf8")
+        account.display_name = display_name
         account.auth.password = password
         account.nat_traversal.use_ice = False
         account.save()

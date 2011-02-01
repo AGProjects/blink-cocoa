@@ -259,7 +259,7 @@ class ContactWindowController(NSWindowController):
             self.silentButton.setState_(NSOffState)
         active = self.activeAccount()
         if active and active.display_name != self.nameText.stringValue():
-            self.nameText.setStringValue_(active.display_name and active.display_name.decode("utf8") or "")
+            self.nameText.setStringValue_(active.display_name or u"")
 
         # initialize debug window
         self.debugWindow = DebugWindow.alloc().init()
@@ -406,7 +406,7 @@ class ContactWindowController(NSWindowController):
         diff = set(new_devices).difference(set(old_devices))
         if diff:
             new_device = diff.pop()
-            BlinkLogger().log_info("New device %s detected, checking if we should switch to it..." % new_device)
+            BlinkLogger().log_info(u"New device %s detected, checking if we should switch to it..." % new_device)
             call_in_gui_thread(self.switchAudioDevice, new_device)
         else:
             call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
@@ -419,7 +419,7 @@ class ContactWindowController(NSWindowController):
         display_name = notification.data.display_name
         host = notification.data.host
         uri = notification.data.uri
-        BlinkLogger().log_info("Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
+        BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
         self.model.bonjourgroup.addBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
         call_in_gui_thread(self.contactOutline.reloadData)
         call_in_gui_thread(self.searchContacts)
@@ -429,13 +429,13 @@ class ContactWindowController(NSWindowController):
         display_name = notification.data.display_name
         host = notification.data.host
         uri = notification.data.uri
-        BlinkLogger().log_info("Bonjour neighbour did change: %s %s" % (display_name, uri))
+        BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
         self.model.bonjourgroup.updateBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
         call_in_gui_thread(self.refreshContactsList)
         call_in_gui_thread(self.searchContacts)
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
-        BlinkLogger().log_info("Bonjour neighbour removed: %s" % notification.data.neighbour.name)
+        BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
         self.model.bonjourgroup.removeBonjourNeighbour(notification.data.neighbour)
         call_in_gui_thread(self.contactOutline.reloadData)
         call_in_gui_thread(self.searchContacts)
@@ -471,7 +471,7 @@ class ContactWindowController(NSWindowController):
     def switchAudioDevice(self, device):
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
         if hasAudio:
-            BlinkLogger().log_info("We have active sessions, switching input/output devices to %s" % device)
+            BlinkLogger().log_info(u"We have active sessions, switching input/output devices to %s" % device)
             settings = SIPSimpleSettings()
             settings.audio.input_device = str(device)
             settings.audio.output_device = str(device)
@@ -493,7 +493,7 @@ class ContactWindowController(NSWindowController):
             NSReleaseAlertPanel(panel)
 
             if ret == NSAlertDefaultReturn:
-                BlinkLogger().log_info("Switching input/output devices to %s" % device)
+                BlinkLogger().log_info(u"Switching input/output devices to %s" % device)
                 settings = SIPSimpleSettings()
                 settings.audio.input_device = str(device)
                 settings.audio.output_device = str(device)
@@ -504,11 +504,11 @@ class ContactWindowController(NSWindowController):
     def _NH_BlinkSessionChangedState(self, notification):
         sender = notification.sender
         if sender.ended:
-            BlinkLogger().log_info("Session %s ended, disposing..." % sender.session)
+            BlinkLogger().log_info(u"Session %s ended, disposing..." % sender.session)
             self.sessionControllers.remove(sender)
         else:
             if sender not in self.sessionControllers:
-                BlinkLogger().log_info("Session %s re-started" % sender.session)
+                BlinkLogger().log_info(u"Session %s re-started" % sender.session)
                 self.sessionControllers.append(sender)
         self.updatePresenceStatus()
 
@@ -577,7 +577,7 @@ class ContactWindowController(NSWindowController):
     def addAudioSessionToConference(self, stream):
         if self.conference is None:
             self.conference = AudioConference()
-            BlinkLogger().log_info("Audio conference started")
+            BlinkLogger().log_info(u"Audio conference started")
 
         self.conference.add(stream.stream)
 
@@ -627,7 +627,7 @@ class ContactWindowController(NSWindowController):
         self.conference = None
         self.disbandingConference = False
         self.conferenceButton.setState_(NSOffState)
-        BlinkLogger().log_info("Audio conference ended")
+        BlinkLogger().log_info(u"Audio conference ended")
 
     def finalizeSession(self, streamController):
         if streamController.isConferencing and self.conference is not None:
@@ -1062,10 +1062,10 @@ class ContactWindowController(NSWindowController):
 
         if type(media) is not tuple:
             if not session.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
             if not session.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
     def startSessionWithAccount(self, account, target, media):
         # activate the app in case the app is not active
@@ -1084,10 +1084,10 @@ class ContactWindowController(NSWindowController):
 
         if type(media) is not tuple:
             if not session.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
             if not session.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
     def startConference(self, target, media, participants=[]):
         # activate the app in case the app is not active
@@ -1120,10 +1120,10 @@ class ContactWindowController(NSWindowController):
 
         if type(media) is not tuple:
             if not session.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
             if not session.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
         # TODO: When session is established, request the other participants to join using REFER method, RFC4579 -adi
         #    5.5.  REFER: Requesting a Focus to Add a New Resource to a Conference
@@ -1147,10 +1147,10 @@ class ContactWindowController(NSWindowController):
 
         if type(media) is not tuple:
             if not session.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error("Failed to start session with stream of type %s" % media)
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
             if not session.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media))
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
 
     @objc.IBAction
@@ -1338,14 +1338,14 @@ class ContactWindowController(NSWindowController):
 
     def sip_account_registration_succeeded(self, account):
         self.refreshAccountList()
-        BlinkLogger().log_info(u"%s was registered"%account.id)
+        BlinkLogger().log_info(u"%s was registered" % account.id)
 
     def sip_account_registration_ended(self, account):
         self.refreshAccountList()
-        BlinkLogger().log_info(u"Account %s was unregistered"%account.id)
+        BlinkLogger().log_info(u"Account %s was unregistered" % account.id)
 
     def sip_account_registration_failed(self, account, error):
-        BlinkLogger().log_error(u"The account %s failed to register(%s)"%(account.id, error))
+        BlinkLogger().log_error(u"The account %s failed to register(%s)" % (account.id, error))
         self.refreshAccountList()
         if error == 'Authentication failed':
             if not self.authFailPopupShown:
@@ -1357,26 +1357,26 @@ class ContactWindowController(NSWindowController):
 
     def handle_incoming_session(self, session, streams):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info("Incoming session from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in streams)))
+        BlinkLogger().log_info(u"Incoming session from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in streams)))
 
         stream_type_list = list(set(stream.type for stream in streams))
         if self.model.hasContactMatchingURI(session.remote_identity.uri):
             if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info("Automatically accepting chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
                 self.startIncomingSession(session, streams)
                 return
             elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info("Automatically accepting file transfer from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % session.remote_identity)
                 self.startIncomingSession(session, streams)
                 return
         elif session.account is BonjourAccount() and stream_type_list == ['chat']:
-                BlinkLogger().log_info("Automatically accepting Bonjour chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
                 self.startIncomingSession(session, streams)
                 return
         try:
             session.send_ring_indication()
         except IllegalStateError, e:
-            BlinkLogger().log_error(self, "IllegalStateError: %s" % e)
+            BlinkLogger().log_error(u"IllegalStateError: %s" % e)
         else:
             if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
                 self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
@@ -1389,12 +1389,12 @@ class ContactWindowController(NSWindowController):
     def handle_incoming_proposal(self, session, streams):
         stream_type_list = list(set(stream.type for stream in streams))
         if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
-                BlinkLogger().log_info("Automatically accepting chat for established audio session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
         elif session.account is BonjourAccount():
             if stream_type_list == ['chat']:
-                BlinkLogger().log_info("Automatically accepting Bonjour chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
             elif 'audio' in stream_type_list and session.account.audio.auto_accept:
@@ -1402,23 +1402,23 @@ class ContactWindowController(NSWindowController):
                 have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                 if not have_audio_call:
                     accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
-                    BlinkLogger().log_info("Automatically accepting Bonjour audio and chat session from %s" % session.remote_identity)
+                    BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % session.remote_identity)
                     self.acceptIncomingProposal(session, accepted_streams)
                     return
         elif self.model.hasContactMatchingURI(session.remote_identity.uri):
             settings = SIPSimpleSettings()
             if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info("Automatically accepting chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
             elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info("Automatically accepting file transfer from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % session.remote_identity)
                 self.acceptIncomingProposal(session, streams)
                 return
         try:
             session.send_ring_indication()
         except IllegalStateError:
-            BlinkLogger().log_error(self, "IllegalStateError: %s" % e)
+            BlinkLogger().log_error(u"IllegalStateError: %s" % e)
         else:
             if not self.alertPanel:
                 self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
@@ -1426,12 +1426,12 @@ class ContactWindowController(NSWindowController):
             self.alertPanel.show()
 
     def sip_session_missed(self, session):
-        BlinkLogger().log_info("Missed incoming session from %s" % session.remote_identity)
+        BlinkLogger().log_info(u"Missed incoming session from %s" % session.remote_identity)
         if 'audio' in (stream.type for stream in session.proposed_streams):
             NSApp.delegate().noteMissedCall()
 
     def sip_nat_detected(self, nat_type):
-        BlinkLogger().log_info("Detected NAT Type: %s" % nat_type)
+        BlinkLogger().log_info(u"Detected NAT Type: %s" % nat_type)
 
     def setCollapsed(self, flag):
         if self.loaded:
@@ -1503,7 +1503,6 @@ class ContactWindowController(NSWindowController):
     def presenceTextAction_(self, sender):
         if sender == self.nameText:
             name = unicode(self.nameText.stringValue())
-            name = name.encode("utf8") # middleware doesnt like unicode for now
             if self.activeAccount():
                 self.activeAccount().display_name = name
                 self.activeAccount().save()
@@ -1806,7 +1805,7 @@ class ContactWindowController(NSWindowController):
         elif sender.tag() == 555:
             # Voicemail
             account = sender.representedObject()
-            BlinkLogger().log_info("Voicemail option pressed for account %s" % account.id)
+            BlinkLogger().log_info(u"Voicemail option pressed for account %s" % account.id)
             if account.voicemail_uri is None:
                 return
             target_uri = self.backend.parse_sip_uri(account.voicemail_uri, account)
@@ -1837,7 +1836,7 @@ class ContactWindowController(NSWindowController):
         info = self.backend.get_last_outgoing_call_info()
         if info:
             account, who, streams = info
-            BlinkLogger().log_info("Redial session from %s to %s, with %s" % (account,who,streams))
+            BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account,who,streams))
             if not account:
                 account = self.activeAccount()
             target_uri = self.backend.parse_sip_uri(who, account)
