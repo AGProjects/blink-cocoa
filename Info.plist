@@ -46,7 +46,7 @@
 	<key>CFBundleVersion</key>
 	<string>0.23.1</string>
 	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
+	<string>MainWindow</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

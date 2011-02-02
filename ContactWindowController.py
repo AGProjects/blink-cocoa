@@ -38,7 +38,6 @@ from ChatWindowManager import ChatWindowManager
 from SIPManager import MWIData
 from util import *
 
-
 SearchContactToolbarIdentifier= u"SearchContact"
 
 
@@ -78,7 +77,6 @@ class PhotoView(NSImageView):
 
 def account_display_name(account):
     return str(account.id)
-
 
 class ContactWindowController(NSWindowController):
     implements(IObserver)

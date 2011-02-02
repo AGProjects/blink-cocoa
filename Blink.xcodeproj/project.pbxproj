@@ -24,7 +24,7 @@
 		1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
 		1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		1F22729E12B554F50010A8B2 /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
-		1F22729F12B554F50010A8B2 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainMenu.xib */; };
+		1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
 		1F2272A212B554F50010A8B2 /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
 		1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
@@ -384,7 +384,7 @@
 		2BA28D691028FD2800B99A0E /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BA28D671028FD2800B99A0E /* AudioSession.xib */; };
 		2BAF381A0FE088C70040117A /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
-		2BAF381C0FE088C70040117A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainMenu.xib */; };
+		2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		2BAF381E0FE088C70040117A /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
 		2BAF381F0FE088C70040117A /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
 		2BAF38210FE088C70040117A /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
@@ -837,7 +837,7 @@
 		2BA28D681028FD2800B99A0E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddContact.xib; sourceTree = "<group>"; };
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Enrollment.xib; sourceTree = "<group>"; };
-		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainWindow.xib; sourceTree = "<group>"; };
 		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Preferences.xib; sourceTree = "<group>"; };
 		2BAF38130FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatSession.xib; sourceTree = "<group>"; };
 		2BAF38170FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatView.xib; sourceTree = "<group>"; };
@@ -1346,7 +1346,7 @@
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
 				2B2400FE1018AB9400079580 /* util.py */,
-				2BAF380C0FE088C70040117A /* MainMenu.xib */,
+				2BAF380C0FE088C70040117A /* MainWindow.xib */,
 				2BE7632910732DC000A1DF24 /* About.xib */,
 				8547A6C5114EB6E200AD84BF /* interfaces */,
 				85E8550210F643350083D346 /* configuration */,
@@ -1486,7 +1486,7 @@
 				1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */,
 				1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */,
 				1F22729E12B554F50010A8B2 /* Enrollment.xib in Resources */,
-				1F22729F12B554F50010A8B2 /* MainMenu.xib in Resources */,
+				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
 				1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */,
 				1F2272A212B554F50010A8B2 /* ChatSession.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
@@ -1640,7 +1640,7 @@
 				2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */,
 				2BAF381A0FE088C70040117A /* AddContact.xib in Resources */,
 				2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */,
-				2BAF381C0FE088C70040117A /* MainMenu.xib in Resources */,
+				2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */,
 				2BAF381E0FE088C70040117A /* Preferences.xib in Resources */,
 				2BAF381F0FE088C70040117A /* ChatSession.xib in Resources */,
 				2BAF38210FE088C70040117A /* ChatView.xib in Resources */,
@@ -1963,12 +1963,12 @@
 			name = Enrollment.xib;
 			sourceTree = "<group>";
 		};
-		2BAF380C0FE088C70040117A /* MainMenu.xib */ = {
+		2BAF380C0FE088C70040117A /* MainWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2BAF380D0FE088C70040117A /* English */,
 			);
-			name = MainMenu.xib;
+			name = MainWindow.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38100FE088C70040117A /* Preferences.xib */ = {
