@@ -29,7 +29,7 @@ def openFileTransferSelectionDialog(account, dest_uri):
         for file in panel.filenames():
             ctype, error = NSWorkspace.sharedWorkspace().typeOfFile_error_(file, None)
             if ctype:
-                names_and_types.append((str(file), str(ctype)))
+                names_and_types.append((unicode(file), str(ctype)))
             else:
                 print "%f : %s"%(file,error)
         if names_and_types:

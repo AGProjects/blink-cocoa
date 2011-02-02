@@ -504,8 +504,7 @@ class SIPManager(object):
 
         for file, ftype in files_and_types:
             try:
-                if type(file) == unicode:
-                    file = file.encode("utf8")
+                file = file.encode("utf-8")
                 xfer = OutgoingFileTransfer(account, target_uri, file, ftype)
                 self._active_transfers.append(xfer)
                 xfer.start()
