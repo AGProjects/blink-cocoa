@@ -18,6 +18,6 @@ class FileTransferController(MediaStream):
         self.transfer.start()
 
     def startOutgoing(self, is_update, file_path=None, content_type=None):
-        print aaa 
         self.transfer = OutgoingFileTransfer(self.sessionController.account, self.sessionController.target_uri, file_path, content_type)
         self.transfer.start()
+
