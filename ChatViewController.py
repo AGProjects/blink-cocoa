@@ -6,6 +6,7 @@ __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
 
 from Foundation import *
 from AppKit import *
+from WebKit import WebView
 from WebKit import WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
 import time
