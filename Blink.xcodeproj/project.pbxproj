@@ -148,7 +148,6 @@
 		1F22732212B554F50010A8B2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1F22732512B554F50010A8B2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
-		1F22732612B554F50010A8B2 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0CD87410BD6F0500325F30 /* Sparkle.framework */; };
 		1F22732912B554F50010A8B2 /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
 		1F22732A12B554F50010A8B2 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
 		1F22732B12B554F50010A8B2 /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
@@ -899,7 +898,6 @@
 				1F22738212B5559C0010A8B2 /* libz.1.dylib in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F22732512B554F50010A8B2 /* Python.framework in Frameworks */,
-				1F22732612B554F50010A8B2 /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
