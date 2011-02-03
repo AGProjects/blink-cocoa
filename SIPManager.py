@@ -545,10 +545,10 @@ class SIPManager(object):
         duration = end_time - start_time
         if (duration.days > 0 or duration.seconds > 0):
             duration_print = " ("
-            if duration.days > 0 or duration.seconds > 60*60:
-                text += "%i hours, "%(duration.days*60*60*24 + int(duration.seconds/(60*60)))
-            s = duration.seconds%(60*60)
-            duration_print += "%02i:%02i"%(int(s/60), s%60)
+            if duration.days > 0 or duration.seconds > 3600:
+                duration_print  += "%i hours, " % (duration.days*24 + duration.seconds/3600)
+            seconds = duration.seconds % 3600
+            duration_print += "%02i:%02i" % (seconds/60, seconds%60)
             duration_print += ")"
         else:
             duration_print = ""
