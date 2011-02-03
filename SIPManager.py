@@ -10,7 +10,6 @@ from application.python.util import Singleton
 
 import cjson
 import datetime
-from dateutil.tz import tzlocal
 import os
 import re
 import sys
