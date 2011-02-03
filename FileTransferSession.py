@@ -239,9 +239,6 @@ class IncomingFileTransfer(FileTransfer):
         NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidEnd")
 
-    def log(self, status):
-        FileTransfer.log(self, "receive", status)
-
     def start(self):
         log_info(self, "Initiating incoming File Transfer, waiting for data...")
         notification_center = NotificationCenter()
@@ -359,9 +356,6 @@ class OutgoingFileTransfer(FileTransfer):
 
         NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, sender=self, name="BlinkFileTransferDidEnd")
-
-    def log(self, status):
-        FileTransfer.log(self, "send", status)
 
     def retry(self):
         log_info(self, "Retrying File Transfer...")
