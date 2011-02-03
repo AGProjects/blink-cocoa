@@ -1,15 +1,16 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from __future__ import with_statement
+
 from Foundation import *
 from AppKit import *
 
-
 import cjson
+import codecs
 import datetime
 import os
 import re
-import sys
 import urllib
 import urllib2
 import uuid
@@ -529,12 +530,11 @@ class SIPManager(object):
         else:
             return os.path.join(self.log_directory, dirname)
 
-    
     def _open_call_history_file(self):
         dirname = self.get_call_history_directory()
         makedirs(dirname, 0700)
         fname = os.path.join(self.get_call_history_directory(), 'calls.txt')
-        return open(fname, "a+")
+        return codecs.open(fname, "a+", "utf-8")
 
     def get_printed_duration(self, start_time, end_time):
         duration = end_time - start_time
@@ -556,12 +556,11 @@ class SIPManager(object):
         account = session.account
         if account is BonjourAccount():
             return
-        f = self._open_call_history_file()
-        if f:
+
+        with self._open_call_history_file() as f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "missed\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
-            f.write(line.encode(sys.getfilesystemencoding())+"\n")
-            f.close()
+            line = "missed\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
+            f.write(line)
 
         if 'audio' in (s.type for s in session.streams or session.proposed_streams or []):
             message= 'Missed incoming audio call'
@@ -583,12 +582,11 @@ class SIPManager(object):
         account = session.account
         if account is BonjourAccount():
             return
-        f = self._open_call_history_file()
-        if f:
+
+        with self._open_call_history_file() as f:
             streams = ",".join(data.streams)
-            line = "in\t%s\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
-            f.write(line.encode(sys.getfilesystemencoding())+"\n")
-            f.close()
+            line = "in\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
+            f.write(line)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -610,12 +608,11 @@ class SIPManager(object):
         account = session.account
         if account is BonjourAccount():
             return
-        f = self._open_call_history_file()
-        if f:
+
+        with self._open_call_history_file() as f:
             streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "in\t%s\t%s\t%s\t%s" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
-            f.write(line.encode(sys.getfilesystemencoding())+"\n")
-            f.close()
+            line = "in\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
+            f.write(line)
 
         if 'audio' in [s.type for s in session.streams or session.proposed_streams]:
             message= 'Incoming audio call answered elsewhere'
@@ -636,14 +633,13 @@ class SIPManager(object):
         account = session.account
         if account is BonjourAccount():
             return
-        f = self._open_call_history_file()
-        if f:
+
+        with self._open_call_history_file() as f:
             streams = ",".join(data.streams)
             participants = ",".join(data.participants)
             focus = 1 if data.focus else 0
-            line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
-            f.write(line.encode(sys.getfilesystemencoding())+"\n")
-            f.close()
+            line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
+            f.write(line)
 
         if 'audio' in data.streams:
             message= 'Failed outgoing audio call'
@@ -664,14 +660,13 @@ class SIPManager(object):
         account = session.account
         if account is BonjourAccount():
             return
-        f = self._open_call_history_file()
-        if f:
+
+        with self._open_call_history_file() as f:
             streams = ",".join(data.streams)
             participants = ",".join(data.participants)
             focus = 1 if data.focus else 0
-            line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
-            f.write(line.encode(sys.getfilesystemencoding())+"\n")
-            f.close()
+            line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
+            f.write(line)
 
         if 'audio' in data.streams:
             message= 'Cancelled outgoing audio call'
@@ -692,14 +687,13 @@ class SIPManager(object):
         account = session.account
         if account is BonjourAccount():
             return
-        f = self._open_call_history_file()
-        if f:
+
+        with self._open_call_history_file() as f:
             streams = ",".join(data.streams)
             participants = ",".join(data.participants)
             focus = 1 if data.focus else 0
-            line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s"%(streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
-            f.write(line.encode(sys.getfilesystemencoding())+"\n")
-            f.close()
+            line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
+            f.write(line)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -776,12 +770,11 @@ class SIPManager(object):
         if not os.path.exists(path):
             return None
 
-        f = open(path, "r")
         last_call = None
-        for line in f:
-            if line.startswith("out") or line.startswith("failed") or line.startswith("cancelled"):
-                last_call = line
-        f.close()
+        with codecs.open(path, "r", "utf-8") as f:
+            for line in f:
+                if line.startswith("out") or line.startswith("failed") or line.startswith("cancelled"):
+                    last_call = line
 
         if last_call:
             toks = last_call.split("\t")
@@ -808,15 +801,14 @@ class SIPManager(object):
         out_lines = []
         missed_lines = []
 
-        f = open(path, "r")
-        for line in f:
-            if line.startswith("in"):
-                in_lines.append(line.rstrip("\n"))
-            elif line.startswith("out") or line.startswith("failed") or line.startswith("cancelled"):
-                out_lines.append(line.rstrip("\n"))
-            elif line.startswith("missed"):
-                missed_lines.append(line.rstrip("\n"))
-        f.close()
+        with codecs.open(path, "r", "utf-8") as f:
+            for line in f:
+                if line.startswith("in"):
+                    in_lines.append(line.rstrip("\n"))
+                elif line.startswith("out") or line.startswith("failed") or line.startswith("cancelled"):
+                    out_lines.append(line.rstrip("\n"))
+                elif line.startswith("missed"):
+                    missed_lines.append(line.rstrip("\n"))
 
         in_lines = in_lines[-count:]
         out_lines = out_lines[-count:]
