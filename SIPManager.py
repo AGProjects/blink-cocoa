@@ -4,9 +4,6 @@
 from Foundation import *
 from AppKit import *
 
-from zope.interface import implements, Interface
-
-from application.python.util import Singleton
 
 import cjson
 import datetime
@@ -17,16 +14,16 @@ import urllib
 import urllib2
 import uuid
 
-from socket import gethostbyname
-
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null
+from application.python.util import Null, Singleton
 from application.system import host, unlink
 from collections import defaultdict
 from dateutil.tz import tzlocal
 from eventlet import api
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
+from socket import gethostbyname
+from zope.interface import implements, Interface
 
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
