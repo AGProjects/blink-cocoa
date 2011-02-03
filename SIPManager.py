@@ -568,7 +568,7 @@ class SIPManager(object):
             f.write(line.encode(sys.getfilesystemencoding())+"\n")
             f.close()
 
-        if 'audio' in [s.type for s in session.streams or session.proposed_streams]:
+        if 'audio' in (s.type for s in session.streams or session.proposed_streams or []):
             message= 'Missed incoming audio call'
             media_type = 'audio'
             local_uri = format_identity_address(session.account)
