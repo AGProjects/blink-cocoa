@@ -7,7 +7,7 @@ Blink account settings extensions.
 
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
-from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
+from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport
 from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
