@@ -37,6 +37,7 @@ class ChatHistoryViewer(NSWindowController):
     contactTable = objc.IBOutlet()
     toolbar = objc.IBOutlet()
     searchText = objc.IBOutlet()
+    searchMedia = objc.IBOutlet()
     paginationButton = objc.IBOutlet()
     foundMessagesLabel = objc.IBOutlet()
     foundContactsLabel = objc.IBOutlet()
@@ -56,7 +57,8 @@ class ChatHistoryViewer(NSWindowController):
     search_contact = None
     search_local = None
     search_media = None
-    daily_order_fields={'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
+    daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
+    media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file'}
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -290,14 +292,11 @@ class ChatHistoryViewer(NSWindowController):
                 if row == 0:
                     self.search_local = None 
                     self.search_contact = None
-                    self.search_media = None
                 elif row == 1:
                     self.search_local = 'bonjour' 
                     self.search_contact = None
-                    self.search_media = None
                 elif row > 1:
                     self.search_local = None
-                    self.search_media = None
                     self.search_contact = self.contacts[row].uri
 
                 self.refreshDailyEntries()
@@ -350,8 +349,21 @@ class ChatHistoryViewer(NSWindowController):
     def filterByContact(self, contact_uri, media_type=None):
         self.search_text = None
         self.search_local = None
+        if media_type != self.search_media:
+            for tag in self.media_type_array.keys():
+                if self.media_type_array[tag] == media_type:
+                    self.searchMedia.selectItemAtIndex_(tag)
+
         self.search_media = media_type
         self.search_contact = contact_uri
+        self.refreshContacts()
+        self.refreshDailyEntries()
+        self.refreshMessages()
+
+    @objc.IBAction
+    def filterByMediaChanged_(self, sender):
+        tag = sender.selectedItem().tag()
+        self.search_media = self.media_type_array[tag]
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
