@@ -47,7 +47,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, -19}, {692, 529}}</string>
 				<int key="NSWTFlags">1610612736</int>
-				<string key="NSWindowTitle">Chat History</string>
+				<string key="NSWindowTitle">Blink History</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<object class="NSToolbar" key="NSViewClass" id="556287379">
 					<object class="NSMutableString" key="NSToolbarIdentifier">
@@ -459,14 +459,14 @@
 														<object class="NSTableView" id="669687316">
 															<reference key="NSNextResponder" ref="295510613"/>
 															<int key="NSvFlags">4352</int>
-															<string key="NSFrameSize">{517, 149}</string>
+															<string key="NSFrameSize">{539, 149}</string>
 															<reference key="NSSuperview" ref="295510613"/>
 															<reference key="NSWindow"/>
 															<bool key="NSEnabled">YES</bool>
 															<object class="NSTableHeaderView" key="NSHeaderView" id="715529912">
 																<reference key="NSNextResponder" ref="542898515"/>
 																<int key="NSvFlags">256</int>
-																<string key="NSFrameSize">{517, 17}</string>
+																<string key="NSFrameSize">{539, 17}</string>
 																<reference key="NSSuperview" ref="542898515"/>
 																<reference key="NSWindow"/>
 																<reference key="NSTableView" ref="669687316"/>
@@ -482,13 +482,13 @@
 																<bool key="EncodedWithXMLCoder">YES</bool>
 																<object class="NSTableColumn" id="931727794">
 																	<string key="NSIdentifier">type</string>
-																	<double key="NSWidth">40</double>
+																	<double key="NSWidth">62</double>
 																	<double key="NSMinWidth">40</double>
-																	<double key="NSMaxWidth">40</double>
+																	<double key="NSMaxWidth">200</double>
 																	<object class="NSTableHeaderCell" key="NSHeaderCell">
 																		<int key="NSCellFlags">75628096</int>
 																		<int key="NSCellFlags2">2048</int>
-																		<string key="NSContents"/>
+																		<string key="NSContents">Media</string>
 																		<reference key="NSSupport" ref="26"/>
 																		<object class="NSColor" key="NSBackgroundColor" id="87844601">
 																			<int key="NSColorSpace">6</int>
@@ -634,6 +634,7 @@
 													<string key="NSFrame">{{-100, -100}, {575, 15}}</string>
 													<reference key="NSSuperview" ref="514122388"/>
 													<reference key="NSWindow"/>
+													<bool key="NSEnabled">YES</bool>
 													<int key="NSsFlags">1</int>
 													<reference key="NSTarget" ref="514122388"/>
 													<string key="NSAction">_doScroller:</string>
@@ -660,7 +661,7 @@
 											<reference key="NSSuperview" ref="837884604"/>
 											<reference key="NSWindow"/>
 											<reference key="NSNextKeyView" ref="295510613"/>
-											<int key="NSsFlags">530</int>
+											<int key="NSsFlags">658</int>
 											<reference key="NSVScroller" ref="333580344"/>
 											<reference key="NSHScroller" ref="1034774608"/>
 											<reference key="NSContentView" ref="295510613"/>
@@ -1441,9 +1442,9 @@
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{598, 78}, {692, 529}}</string>
+					<string>{{362, 78}, {692, 529}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{598, 78}, {692, 529}}</string>
+					<string>{{362, 78}, {692, 529}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
