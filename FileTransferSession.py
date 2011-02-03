@@ -3,6 +3,7 @@
 
 import hashlib
 import datetime
+from dateutil.tz import tzlocal
 import os
 import re
 import time
@@ -17,13 +18,13 @@ from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData, limit
+from sipsimple.util import TimestampedNotificationData, Timestamp, limit
 from threading import Event
 from zope.interface import implements
 
 import SIPManager
 from BlinkLogger import BlinkLogger
-from HistoryManager import FileTransferHistory
+from HistoryManager import FileTransferHistory, ChatHistory
 
 from util import *
 
@@ -145,6 +146,18 @@ class FileTransfer(object):
     @run_in_green_thread
     def add_to_history(self):
         FileTransferHistory().add_transfer(transfer_id=self.ft_info.transfer_id, direction=self.ft_info.direction, local_uri=self.ft_info.local_uri, remote_uri=self.ft_info.remote_uri, file_path=self.ft_info.file_path, bytes_transfered=self.ft_info.bytes_transfered, file_size=self.ft_info.file_size, status=self.ft_info.status)
+
+        message= '%s file transfer: %s (%s)' % (self.ft_info.direction.capitalize(), self.ft_info.file_path, format_size(self.ft_info.file_size))
+        media_type = 'file'
+        local_uri = self.ft_info.local_uri
+        remote_uri = self.ft_info.remote_uri
+        direction = self.ft_info.direction
+        status = 'delivered' if self.ft_info.status == 'completed' else 'failed'
+        cpim_from = self.ft_info.remote_uri
+        cpim_to = self.ft_info.remote_uri
+        timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+        ChatHistory().add_message(self.ft_info.transfer_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "text", "0", status)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
