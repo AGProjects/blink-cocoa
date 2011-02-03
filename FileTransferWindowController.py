@@ -4,6 +4,8 @@
 from AppKit import *
 from Foundation import *
 
+import unicodedata
+
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
 from sipsimple.threading.green import run_in_green_thread
@@ -23,20 +25,8 @@ def openFileTransferSelectionDialog(account, dest_uri):
     panel.setAllowsMultipleSelection_(True)
     if panel.runModal() != NSOKButton:
         return
-
-    try:
-        names_and_types = []
-        for file in panel.filenames():
-            ctype, error = NSWorkspace.sharedWorkspace().typeOfFile_error_(file, None)
-            if ctype:
-                names_and_types.append((unicode(file), str(ctype)))
-            else:
-                print "%f : %s"%(file,error)
-        if names_and_types:
-            SIPManager.SIPManager().send_files_to_contact(account, dest_uri, names_and_types)
-    except:
-        import traceback
-        traceback.print_exc()
+    filenames = [unicodedata.normalize('NFC', file) for file in panel.filenames()]
+    SIPManager.SIPManager().send_files_to_contact(account, dest_uri, filenames)
 
 
 class FileTransferWindowController(NSObject, object):

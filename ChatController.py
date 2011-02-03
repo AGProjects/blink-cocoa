@@ -8,7 +8,7 @@ import datetime
 import hashlib
 import os
 import time
-
+import unicodedata
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -423,20 +423,10 @@ class ChatController(MediaStream):
 
     def sendFiles(self, fnames):
         ws = NSWorkspace.sharedWorkspace()
-        names_and_types = []
-        for f in fnames:
-            ctype, error = ws.typeOfFile_error_(f, None)
-            if ctype:
-                names_and_types.append((unicode(f), str(ctype)))
-            else:
-                print "%f : %s"%(f,error)
-        if names_and_types:
-            try:
-                SIPManager().send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, names_and_types)
-                return True
-            except:
-                import traceback
-                traceback.print_exc()
+        filenames = [unicodedata.normalize('NFC', file) for file in fnames]
+        if filenames:
+            SIPManager().send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
+            return True
         return False
 
     @objc.IBAction

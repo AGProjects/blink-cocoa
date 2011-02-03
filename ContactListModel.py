@@ -5,6 +5,7 @@ __all__ = ['Contact', 'ContactGroup', 'ContactListModel', 'contactIconPathForURI
 
 import os
 import cPickle
+import unicodedata
 
 from Foundation import *
 from AppKit import *
@@ -754,22 +755,10 @@ class ContactListModel(NSObject):
                 return False
 
             ws = NSWorkspace.sharedWorkspace()
-            fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
-            names_and_types = []
-            for f in fnames:            
-                ctype, error = ws.typeOfFile_error_(f, None)
-                if ctype:
-                    names_and_types.append((unicode(f), str(ctype)))
-                else:
-                    print "%f : %s"%(f,error)
-
+            filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if item.bonjour_neighbour is not None else AccountManager().default_account
-            if names_and_types and account:
-                try:
-                    SIPManager().send_files_to_contact(account, item.uri, names_and_types)
-                except:
-                    import traceback
-                    traceback.print_exc()
+            if filenames and account:
+                SIPManager().send_files_to_contact(account, item.uri, filenames)
                 return True
             return False
         else:

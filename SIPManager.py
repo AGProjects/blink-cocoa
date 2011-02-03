@@ -502,13 +502,12 @@ class SIPManager(object):
             return None
         return target_uri
 
-    def send_files_to_contact(self, account, contact_uri, files_and_types):
+    def send_files_to_contact(self, account, contact_uri, filenames):
         target_uri = self.parse_sip_uri(contact_uri, self.get_default_account())
 
-        for file, ftype in files_and_types:
+        for file in filenames:
             try:
-                file = file.encode("utf-8")
-                xfer = OutgoingFileTransfer(account, target_uri, file, ftype)
+                xfer = OutgoingFileTransfer(account, target_uri, file)
                 self._active_transfers.append(xfer)
                 xfer.start()
             except Exception, exc:

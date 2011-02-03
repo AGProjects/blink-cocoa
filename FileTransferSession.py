@@ -5,7 +5,6 @@ import hashlib
 import datetime
 import os
 import re
-import sys
 import time
 import uuid
 
@@ -86,9 +85,9 @@ class FileTransfer(object):
 
     @property
     def file_name(self):
-        name = self.file_selector and os.path.basename(self.file_selector.name or u'Unknown')
-        if type(name) != unicode:
-            return name.decode(sys.getfilesystemencoding())
+        name = self.file_selector and os.path.basename(self.file_selector.name or 'Unknown')
+        if isinstance(name, str):
+            return name.decode('utf-8')
         return name
 
     @property
@@ -343,18 +342,14 @@ class IncomingFileTransfer(FileTransfer):
 
 class OutgoingFileTransfer(FileTransfer):
     # outgoing transfer status: pending -> preparing (calculating checksum) -> proposing -> transfering|failed|cancelled -> completed|interrupted
-    def __init__(self, account, target_uri, file_path, content_type):
+    def __init__(self, account, target_uri, file_path):
 
         self.account = account
         self.end_session_when_done = True
         self.target_uri = target_uri
         self.remote_identity = format_identity_address(self.target_uri)
-        if type(file_path) == str:
-            self.file_path = file_path.decode(sys.getfilesystemencoding())
-        else:
-            self.file_path = file_path
-        self.content_type = content_type
-        self.file_selector = FileSelector.for_file(self.file_path.encode(sys.getfilesystemencoding()), type=content_type, hash=None)
+        self.file_path = file_path
+        self.file_selector = FileSelector.for_file(self.file_path.encode('utf-8'))
         self.stop_event = Event()
         self.file_pos = 0
         self.routes = None
@@ -373,7 +368,7 @@ class OutgoingFileTransfer(FileTransfer):
         self.fail_reason = None
         NotificationCenter().discard_observer(self, sender=self.session)
         NotificationCenter().discard_observer(self, sender=self.stream)
-        self.file_selector = FileSelector.for_file(self.file_path.encode(sys.getfilesystemencoding()), type=self.content_type, hash=None)
+        self.file_selector = FileSelector.for_file(self.file_path.encode('utf-8'))
         self.file_pos = 0
         self.transfer_rate = None
         self.last_rate_pos = 0
@@ -393,7 +388,7 @@ class OutgoingFileTransfer(FileTransfer):
         else:
             notification_center.post_notification("BlinkFileTransferInitializing", self)
 
-        log_info(self, "Computing checksum for file %s" % self.file_selector.name.decode(sys.getfilesystemencoding()))
+        log_info(self, "Computing checksum for file %s" % os.path.basename(self.file_path))
 
         self.stop_event.clear()
         self.initiate_file_transfer()
