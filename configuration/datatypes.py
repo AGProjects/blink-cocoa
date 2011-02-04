@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL', 'AudioInputDevice', 'AudioOutputDevice']
+__all__ = ['Digits', 'AccountSoundFile', 'Path','ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL', 'AudioInputDevice', 'AudioOutputDevice']
 
 import os
 import sys
@@ -25,9 +25,18 @@ class Digits(str):
 
 ## Path datatypes
 
+class Path(unicode):
+    def __new__(cls, path):
+        return unicode.__new__(cls, os.path.normpath(path))
+
+    @property
+    def normalized(self):
+        return os.path.expanduser(self)
+
+
 class ResourcePath(object):
     def __init__(self, path):
-        self.path = os.path.normpath(str(path))
+        self.path = os.path.normpath(path)
 
     def __getstate__(self):
         return unicode(self.path)
@@ -73,7 +82,7 @@ class ResourcePath(object):
 
 class UserDataPath(object):
     def __init__(self, path):
-        self.path = os.path.normpath(str(path))
+        self.path = os.path.normpath(path)
 
     def __getstate__(self):
         return unicode(self.path)

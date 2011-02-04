@@ -6,6 +6,8 @@ from Foundation import *
 
 import os
 import re
+import sys
+import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from gnutls.crypto import X509Certificate, X509PrivateKey
@@ -153,7 +155,6 @@ class StringOption(Option):
 
         self.text.setDelegate_(self)
 
-    
     def controlTextDidEndEditing_(self, notification):
         self.store()
 
@@ -166,13 +167,55 @@ class StringOption(Option):
             self.set(nvalue)
 
     def restore(self):
-        value = self.get("")
-        self.text.setStringValue_(value and unicode(value) or "")
+        value = self.get()
+        self.text.setStringValue_(value and str(value) or "")
 
 
 class NullableStringOption(StringOption):
     def __init__(self, object, name, option):
         StringOption.__init__(self, object, name, option)
+        self.emptyIsNone = True
+
+
+class UnicodeOption(Option):
+
+    def __init__(self, object, name, option):  
+        Option.__init__(self, object, name, option)
+
+        self.emptyIsNone = False
+        self.caption = makeLabel(formatName(name))
+
+        self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+        self.text.sizeToFit()
+        self.setViewExpands(self.text)
+        self.text.cell().setScrollable_(True)
+
+        self.setFrame_(NSMakeRect(0, 0, 300, NSHeight(self.text.frame())))
+
+        self.addSubview_(self.caption)
+        self.addSubview_(self.text)
+
+        self.text.setDelegate_(self)
+
+    def controlTextDidEndEditing_(self, notification):
+        self.store()
+
+    def _store(self):
+        current = self.get()
+        nvalue = unicode(self.text.stringValue())
+        if self.emptyIsNone and not nvalue:
+            nvalue = None
+        if current != nvalue:
+            self.set(nvalue)
+
+    def restore(self):
+        value = self.get()
+        self.text.setStringValue_(value and unicode(value) or u'')
+
+
+class NullableUnicodeOption(UnicodeOption):
+    def __init__(self, object, name, option):
+        UnicodeOption.__init__(self, object, name, option)
         self.emptyIsNone = True
 
 
@@ -673,9 +716,9 @@ class AudioOutputDeviceOption(PopUpMenuOption):
             self.popup.lastItem().setRepresentedObject_(item)
 
 
-class PathOption(NullableStringOption):
+class PathOption(NullableUnicodeOption):
     def __init__(self, object, name, option):
-        NullableStringOption.__init__(self, object, name, option)
+        NullableUnicodeOption.__init__(self, object, name, option)
 
         frame = self.frame()
         frame.size.height += 4
@@ -698,8 +741,7 @@ class PathOption(NullableStringOption):
         panel.setCanChooseDirectories_(True)
 
         if panel.runModal() == NSOKButton:
-            path = panel.filename()
-            self.text.setStringValue_(path)
+            self.text.setStringValue_(unicodedata.normalize('NFC', panel.filename()))
             self.store()
 
 
@@ -844,6 +886,7 @@ class SoundFileOption(Option):
         path = os.path.join(SIPSimpleSettings().user_data_directory, "sounds")
         makedirs(path)
         for filename in (name for name in os.listdir(path) if name.endswith('.wav')):
+            filename = unicodedata.normalize('NFC', filename.decode(sys.getfilesystemencoding()))
             self.popup.addItemWithTitle_(os.path.basename(filename))
             self.popup.lastItem().setRepresentedObject_(os.path.join(path, filename))
 
@@ -869,7 +912,7 @@ class SoundFileOption(Option):
             if not path:
                 return
             self.play.setImage_(NSImage.imageNamed_("pause"))
-            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path), volume=self.slider.integerValue()*10)
+            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
             NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
@@ -895,7 +938,7 @@ class SoundFileOption(Option):
             panel.setCanChooseDirectories_(False)
             
             if panel.runModalForTypes_(NSArray.arrayWithObject_(u"wav")) == NSOKButton:
-                path = str(panel.filename())
+                path = unicodedata.normalize('NFC', panel.filename())
                 self.oldIndex = self.addItemForPath(path)
             else:
                 self.popup.selectItemAtIndex_(self.oldIndex)
@@ -904,7 +947,7 @@ class SoundFileOption(Option):
     def addItemForPath(self, path):
         for i in range(self.popup.numberOfItems()):
             item = self.popup.itemAtIndex_(i)
-            if str(item.representedObject()) == path:
+            if unicode(item.representedObject()) == path:
                 break
         else:
             i = self.popup.numberOfItems() - 2
@@ -916,8 +959,7 @@ class SoundFileOption(Option):
     def _store(self):
         value = self.popup.selectedItem().representedObject()
         if value:
-            path = str(value)
-            self.set(SoundFile(path, volume=self.slider.integerValue()*10))
+            self.set(SoundFile(unicode(value), volume=self.slider.integerValue()*10))
             self.slider.setEnabled_(True)
         else:
             self.set(None)
@@ -936,7 +978,7 @@ class SoundFileOption(Option):
         found = False
         for i in range(self.popup.numberOfItems()):
             item = self.popup.itemAtIndex_(i)
-            if str(item.representedObject()) == value:
+            if unicode(item.representedObject()) == value:
                 self.popup.selectItemAtIndex_(i)
                 found = True
                 break
@@ -1039,7 +1081,7 @@ class AccountSoundFileOption(SoundFileOption):
             value = self.get()
             if value and value.sound_file:
                 path = value.sound_file.path.normalized
-                self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path), volume=self.slider.integerValue()*10)
+                self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
                 NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
                 SIPApplication.voice_audio_bridge.add(self.sound)
                 self.sound.start()
@@ -1048,14 +1090,13 @@ class AccountSoundFileOption(SoundFileOption):
 
 
     def _store(self):
-        value = self.popup.selectedItem().representedObject()
-        if value == "DEFAULT":
+        value = unicode(self.popup.selectedItem().representedObject())
+        if value == u"DEFAULT":
             self.set(DefaultValue)
             self.slider.setEnabled_(False)
         elif value:
             self.slider.setEnabled_(True)
-            path = str(value)
-            self.set(AccountSoundFile(path, volume=self.slider.integerValue()*10))
+            self.set(AccountSoundFile(value, volume=self.slider.integerValue()*10))
         else:
             self.slider.setEnabled_(False)
             self.set(None)
@@ -1063,7 +1104,7 @@ class AccountSoundFileOption(SoundFileOption):
 
     def restore(self):
         value = self.get()
-        if unicode(value) == "DEFAULT":
+        if unicode(value) == u"DEFAULT":
             self.popup.selectItemAtIndex_(0)
             self.slider.setEnabled_(False)
         elif value is None or value.sound_file is None:

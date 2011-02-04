@@ -10,10 +10,10 @@ __all__ = ['SIPSimpleSettingsExtension']
 import os
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.configuration.datatypes import NonNegativeInteger, Path, SampleRate
+from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, FileTransferSettings, LogsSettings
 
-from configuration.datatypes import AudioInputDevice, AudioOutputDevice, HTTPURL, SoundFile, UserDataPath
+from configuration.datatypes import AudioInputDevice, AudioOutputDevice, HTTPURL, SoundFile, Path, UserDataPath
 
 
 class AnsweringMachineSettings(SettingsGroup):

@@ -9,6 +9,7 @@ import objc
 from random import randint
 import os
 import struct
+import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application import log
@@ -145,7 +146,7 @@ class BlinkAppDelegate(NSObject):
 
         options = {"config_file":   NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/config",
                    "log_directory": NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink",
-                   "resources_directory": str(NSBundle.mainBundle().resourcePath())}
+                   "resources_directory": unicodedata.normalize('NFC', NSBundle.mainBundle().resourcePath())}
 
         self.backend = SIPManager()
 
