@@ -5,7 +5,7 @@ from Foundation import *
 from AppKit import *
 
 from application.notification import IObserver, NotificationCenter
-from sipsimple.core import SIPURI
+from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp
 from util import *
@@ -178,9 +178,14 @@ class ChatHistoryViewer(NSWindowController):
     def renderDailyEntries(self, results):
         self.dayly_entries = []
         for result in results:
+            try:
+                remote_uri = format_identity(SIPURI.parse(str('sip:'+result[2])), check_contact=True)
+            except SIPCoreError:
+                remote_uri = result[2]
+
             entry = {
                 'local_uri'  : result[1],
-                'remote_uri' : format_identity(SIPURI.parse(str('sip:'+result[2])), check_contact=True),
+                'remote_uri' : remote_uri,
                 'date'       : result[0],
                 'type'       : result[3]
             }
