@@ -67,7 +67,9 @@ class ChatHistoryViewer(NSWindowController):
         if self:
             NSBundle.loadNibNamed_owner_("ChatHistory", self)
 
-            NotificationCenter().add_observer(self, name='ChatViewControllerDidDisplayMessage')
+            self.notification_center = NotificationCenter()
+            self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
+            self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
@@ -416,4 +418,7 @@ class ChatHistoryViewer(NSWindowController):
             if notification.data.local_party != 'bonjour':
                 exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
                 if not exists:
-                    self.refreshContacts()      
+                    self.refreshContacts()
+        elif notification.name == 'BlinkContactsHaveChanged':
+            self.refreshContacts()
+
