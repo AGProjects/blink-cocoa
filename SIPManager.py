@@ -562,7 +562,7 @@ class SIPManager(object):
             line = "missed\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
             f.write(line)
 
-        if 'audio' in (s.type for s in session.streams or session.proposed_streams or []):
+        if 'audio' in (s.type for s in session.streams or session.proposed_streams or []) and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
             message= 'Missed incoming audio call'
             media_type = 'audio'
             local_uri = format_identity_address(session.account)
@@ -588,7 +588,7 @@ class SIPManager(object):
             line = "in\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
             f.write(line)
 
-        if 'audio' in data.streams:
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message= 'Incoming audio call %s' % duration
             media_type = 'audio'
@@ -614,7 +614,7 @@ class SIPManager(object):
             line = "in\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
             f.write(line)
 
-        if 'audio' in [s.type for s in session.streams or session.proposed_streams]:
+        if 'audio' in [s.type for s in session.streams or session.proposed_streams] and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
             message= 'Incoming audio call answered elsewhere'
             media_type = 'audio'
             local_uri = format_identity_address(session.account)
@@ -641,7 +641,7 @@ class SIPManager(object):
             line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams:
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
             message= 'Failed outgoing audio call'
             media_type = 'audio'
             local_uri = format_identity_address(session.account)
@@ -668,7 +668,7 @@ class SIPManager(object):
             line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams:
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_from_text(data.target_uri)[0]):
             message= 'Cancelled outgoing audio call'
             media_type = 'audio'
             local_uri = format_identity_address(session.account)
@@ -695,7 +695,7 @@ class SIPManager(object):
             line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams:
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message= 'Outgoing audio call %s' % duration
             media_type = 'audio'
