@@ -304,7 +304,6 @@ class ChatWindowController(NSWindowController):
             if ret != NSAlertDefaultReturn:
                 return False
 
-        self.drawer.close()
         self.window().close()
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
