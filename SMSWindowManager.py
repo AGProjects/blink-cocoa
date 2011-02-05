@@ -148,7 +148,7 @@ class SMSWindowController(NSWindowController):
             contactWindow = self._owner._owner
             contactWindow.showChatTranscripts_(None)
             session = self.selectedSession()
-            contactWindow.chatHistoryViewer.filterByContact(format_identity(session.target_uri), media_type='sms')
+            contactWindow.historyViewer.filterByContact(format_identity(session.target_uri), media_type='sms')
 
 
 SMSWindowManagerInstance = None

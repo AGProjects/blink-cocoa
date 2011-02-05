@@ -29,7 +29,7 @@ class MyTableView(NSTableView):
         else:
             NSTableView.keyDown_(self, event)
 
-class ChatHistoryViewer(NSWindowController):
+class HistoryViewer(NSWindowController):
     implements(IObserver)
     
     chatViewController = objc.IBOutlet()
@@ -65,7 +65,7 @@ class ChatHistoryViewer(NSWindowController):
 
     def __init__(self):
         if self:
-            NSBundle.loadNibNamed_owner_("ChatHistory", self)
+            NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')

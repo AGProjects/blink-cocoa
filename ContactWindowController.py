@@ -26,7 +26,7 @@ from PresencePolicy import fillPresenceMenu
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from BlinkLogger import BlinkLogger
-from ChatHistoryViewer import ChatHistoryViewer
+from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveContactIcon
 from DebugWindow import DebugWindow
@@ -143,7 +143,7 @@ class ContactWindowController(NSWindowController):
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
 
-    chatHistoryViewer = None
+    historyViewer = None
 
     picker = None
 
@@ -1307,9 +1307,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatTranscripts_(self, sender):
-        if not self.chatHistoryViewer:
-            self.chatHistoryViewer = ChatHistoryViewer()
-        self.chatHistoryViewer.showWindow_(None)
+        if not self.historyViewer:
+            self.historyViewer = HistoryViewer()
+        self.historyViewer.showWindow_(None)
 
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
@@ -1874,7 +1874,7 @@ class ContactWindowController(NSWindowController):
             pass
         else:
             self.showChatTranscripts_(None)
-            self.chatHistoryViewer.filterByContact(contact.uri)
+            self.historyViewer.filterByContact(contact.uri)
 
     def updateRecordingsMenu(self):
         def format_item(name, when):

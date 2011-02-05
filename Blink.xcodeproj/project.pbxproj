@@ -129,8 +129,8 @@
 		1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
 		1F22730B12B554F50010A8B2 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
-		1F22730D12B554F50010A8B2 /* ChatHistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */; };
-		1F22730E12B554F50010A8B2 /* ChatHistory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* ChatHistory.xib */; };
+		1F22730D12B554F50010A8B2 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
+		1F22730E12B554F50010A8B2 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
 		1F22730F12B554F50010A8B2 /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
 		1F22731012B554F50010A8B2 /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
 		1F22731112B554F50010A8B2 /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
@@ -380,7 +380,7 @@
 		2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
 		2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
 		2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
-		2B96EC7410F6DFF6004E6875 /* ChatHistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */; };
+		2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		2BA28D691028FD2800B99A0E /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BA28D671028FD2800B99A0E /* AudioSession.xib */; };
 		2BAF381A0FE088C70040117A /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
@@ -392,7 +392,7 @@
 		2BAF382C0FE088E80040117A /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
 		2BAF387E0FE096A00040117A /* EnrollmentController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF387D0FE096A00040117A /* EnrollmentController.py */; };
 		2BAF39C40FE1B0CF0040117A /* Main.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF39C30FE1B0CF0040117A /* Main.py */; };
-		2BB36D3710FE504600DA4577 /* ChatHistory.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* ChatHistory.xib */; };
+		2BB36D3710FE504600DA4577 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
 		2BB376431103C98400DA4577 /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
 		2BC08A791063B3570069AB9A /* AnsweringMachine.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08A781063B3570069AB9A /* AnsweringMachine.py */; };
 		2BC08CC3106679940069AB9A /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
@@ -833,7 +833,7 @@
 		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DesktopServerWindow.xib; sourceTree = "<group>"; };
 		2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
-		2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatHistoryViewer.py; sourceTree = "<group>"; };
+		2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryViewer.py; sourceTree = "<group>"; };
 		2BA28D681028FD2800B99A0E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddContact.xib; sourceTree = "<group>"; };
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Enrollment.xib; sourceTree = "<group>"; };
@@ -845,7 +845,7 @@
 		2BAF38270FE088E80040117A /* SIPManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SIPManager.py; sourceTree = "<group>"; };
 		2BAF387D0FE096A00040117A /* EnrollmentController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EnrollmentController.py; sourceTree = "<group>"; };
 		2BAF39C30FE1B0CF0040117A /* Main.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Main.py; sourceTree = "<group>"; };
-		2BB36D3610FE504600DA4577 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatHistory.xib; sourceTree = "<group>"; };
+		2BB36D3610FE504600DA4577 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
 		2BB376421103C98300DA4577 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
 		2BC08A781063B3570069AB9A /* AnsweringMachine.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AnsweringMachine.py; sourceTree = "<group>"; };
 		2BC08CC2106679940069AB9A /* FileTransferSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferSession.py; sourceTree = "<group>"; };
@@ -1006,6 +1006,16 @@
 				1FD6E05B12D32F2C00168F95 /* JoinConferenceWindow.xib */,
 			);
 			name = ServerConference;
+			sourceTree = "<group>";
+		};
+		1F89844212FCC78900490C6C /* History */ = {
+			isa = PBXGroup;
+			children = (
+				1FBBF2E612E9B3500077E766 /* HistoryManager.py */,
+				2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */,
+				2BB36D3510FE504600DA4577 /* HistoryViewer.xib */,
+			);
+			name = History;
 			sourceTree = "<group>";
 		};
 		1FAF8D2E12DA1F5F0029857C /* Video */ = {
@@ -1271,8 +1281,6 @@
 				2BD011E110D8198400D27A92 /* ChatView.html */,
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
-				2B96EC7310F6DFF6004E6875 /* ChatHistoryViewer.py */,
-				2BB36D3510FE504600DA4577 /* ChatHistory.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 			);
 			name = Chat;
@@ -1312,7 +1320,6 @@
 			children = (
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2B240839102117F200079580 /* SessionRinger.py */,
-				1FBBF2E612E9B3500077E766 /* HistoryManager.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				1FAF8D2E12DA1F5F0029857C /* Video */,
@@ -1320,6 +1327,7 @@
 				2B0CE72710CD822100325F30 /* SMS */,
 				2BC09104106884CE0069AB9A /* DesktopSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
+				1F89844212FCC78900490C6C /* History */,
 			);
 			name = Sessions;
 			sourceTree = "<group>";
@@ -1591,8 +1599,8 @@
 				1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */,
 				1F22730B12B554F50010A8B2 /* growl.py in Resources */,
 				1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */,
-				1F22730D12B554F50010A8B2 /* ChatHistoryViewer.py in Resources */,
-				1F22730E12B554F50010A8B2 /* ChatHistory.xib in Resources */,
+				1F22730D12B554F50010A8B2 /* HistoryViewer.py in Resources */,
+				1F22730E12B554F50010A8B2 /* HistoryViewer.xib in Resources */,
 				1F22730F12B554F50010A8B2 /* SoundRecorder.xib in Resources */,
 				1F22731012B554F50010A8B2 /* unavailable_message.wav in Resources */,
 				1F22731112B554F50010A8B2 /* AnsweringMachineSetting.xib in Resources */,
@@ -1745,8 +1753,8 @@
 				2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */,
 				1F0FD67B10E627310032B310 /* growl.py in Resources */,
 				1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */,
-				2B96EC7410F6DFF6004E6875 /* ChatHistoryViewer.py in Resources */,
-				2BB36D3710FE504600DA4577 /* ChatHistory.xib in Resources */,
+				2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */,
+				2BB36D3710FE504600DA4577 /* HistoryViewer.xib in Resources */,
 				2BB376431103C98400DA4577 /* SoundRecorder.xib in Resources */,
 				1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */,
 				2B24D071110FD522003A18DE /* AnsweringMachineSetting.xib in Resources */,
@@ -1995,12 +2003,12 @@
 			name = ChatView.xib;
 			sourceTree = "<group>";
 		};
-		2BB36D3510FE504600DA4577 /* ChatHistory.xib */ = {
+		2BB36D3510FE504600DA4577 /* HistoryViewer.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2BB36D3610FE504600DA4577 /* English */,
 			);
-			name = ChatHistory.xib;
+			name = HistoryViewer.xib;
 			sourceTree = "<group>";
 		};
 		2BB376411103C98300DA4577 /* SoundRecorder.xib */ = {
