@@ -641,15 +641,15 @@ class SIPManager(object):
             line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_from_text(data.target_uri)[0]):
             message= 'Failed outgoing audio call'
             media_type = 'audio'
             local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_address(session.remote_identity)
+            remote_uri = format_identity_from_text(data.target_uri)[0]
             direction = 'incoming'
             status = 'delivered'
-            cpim_from = format_identity(session.remote_identity, check_contact=True)
-            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            cpim_from = data.target_uri
+            cpim_to = data.target_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
