@@ -1358,7 +1358,7 @@ PreferenceOptionTypes = {
 "STUNServerAddressList" : STUNServerAddressListOption,
 "SIPProxyAddress" : SIPProxyAddressOption,
 "Digits" : DigitsOption,
-"HTTPURL": NullableStringOption,
+"HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
