@@ -110,8 +110,6 @@ class SessionController(NSObject):
         self.participants_log = []
         self.remote_focus_log = False
 
-        self.notification_center.add_observer(self, name='BlinkPrivateChatSessionDidEnd')
-
         return self
 
     def initWithSession_(self, session):
@@ -140,8 +138,6 @@ class SessionController(NSObject):
         self.streams_log = []
         self.participants_log = []
         self.remote_focus_log = False
-
-        self.notification_center.add_observer(self, name='BlinkPrivateChatSessionDidEnd')
 
         return self
 
