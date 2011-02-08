@@ -107,7 +107,7 @@ class ISIPManagerDelegate(Interface):
     def handle_incoming_session(self, session, streams):
         pass
 
-    def sip_session_missed(self, session):
+    def sip_session_missed(self, session, stream_types):
         pass
 
     def sip_error(self, message):
@@ -550,87 +550,79 @@ class SIPManager(object):
 
         return duration_print
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def log_incoming_session_missed(self, session, data):
-        account = session.account
-        if account is BonjourAccount():
-            return
-
-        with self._open_call_history_file() as f:
-            streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "missed\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
-            f.write(line)
-
-        if 'audio' in (s.type for s in session.streams or session.proposed_streams or []) and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
-            message= 'Missed incoming audio call'
-            media_type = 'audio'
-            local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_address(session.remote_identity)
-            direction = 'incoming'
-            status = 'failed'
-            cpim_from = format_identity(session.remote_identity, check_contact=True)
-            cpim_to = format_identity(session.remote_identity, check_contact=True)
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
-
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-
-
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def log_incoming_session_ended(self, session, data):
-        account = session.account
+    def log_incoming_session_missed(self, controller, data):
+        account = controller.account
         if account is BonjourAccount():
             return
 
         with self._open_call_history_file() as f:
             streams = ",".join(data.streams)
-            line = "in\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), session.start_time, session.end_time)
+            line = "missed\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp)
             f.write(line)
 
-        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
-            duration = self.get_printed_duration(session.start_time, session.end_time)
-            message= 'Incoming audio call %s' % duration
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(controller.target_uri):
+            message = 'Missed incoming audio call'
             media_type = 'audio'
-            local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_address(session.remote_identity)
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
-            status = 'delivered'
-            cpim_from = format_identity(session.remote_identity, check_contact=True)
-            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            status = 'failed'
+            cpim_from = data.target_uri
+            cpim_to = data.target_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def log_incoming_session_answered_elsewhere(self, session, data):
-        account = session.account
+    def log_incoming_session_ended(self, controller, data):
+        account = controller.account
+        session = controller.session
         if account is BonjourAccount():
             return
 
         with self._open_call_history_file() as f:
-            streams = ",".join(s.type for s in session.streams or session.proposed_streams or [])
-            line = "in\t%s\t%s\t%s\t%s\n" % (streams, account.id, format_identity(session.remote_identity, check_contact=True), data.timestamp)
+            streams = ",".join(data.streams)
+            line = "in\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, session.start_time, session.end_time)
             f.write(line)
 
-        if 'audio' in [s.type for s in session.streams or session.proposed_streams] and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
-            message= 'Incoming audio call answered elsewhere'
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(controller.target_uri):
+            duration = self.get_printed_duration(session.start_time, session.end_time)
+            message= 'Incoming audio call %s' % duration
             media_type = 'audio'
-            local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_address(session.remote_identity)
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
-            cpim_from = format_identity(session.remote_identity, check_contact=True)
-            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            cpim_from = data.target_uri
+            cpim_to = data.target_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def log_outgoing_session_failed(self, session, data):
-        account = session.account
+    def log_incoming_session_answered_elsewhere(self, controller, data):
+        account = controller.account
+        if account is BonjourAccount():
+            return
+
+        with self._open_call_history_file() as f:
+            streams = ",".join(data.streams)
+            line = "in\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp)
+            f.write(line)
+
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(controller.target_uri):
+            message= 'Incoming audio call answered elsewhere'
+            media_type = 'audio'
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(controller.target_uri)
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = data.target_uri
+            cpim_to = data.target_uri
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
+    def log_outgoing_session_failed(self, controller, data):
+        account = controller.account
         if account is BonjourAccount():
             return
 
@@ -641,11 +633,11 @@ class SIPManager(object):
             line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_from_text(data.target_uri)[0]):
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(controller.target_uri):
             message= 'Failed outgoing audio call'
             media_type = 'audio'
-            local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_from_text(data.target_uri)[0]
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
@@ -654,10 +646,8 @@ class SIPManager(object):
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def log_outgoing_session_cancelled(self, session, data):
-        account = session.account
+    def log_outgoing_session_cancelled(self, controller, data):
+        account = controller.account
         if account is BonjourAccount():
             return
 
@@ -665,14 +655,14 @@ class SIPManager(object):
             streams = ",".join(data.streams)
             participants = ",".join(data.participants)
             focus = 1 if data.focus else 0
-            line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
+            line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_from_text(data.target_uri)[0]):
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(controller.target_uri):
             message= 'Cancelled outgoing audio call'
             media_type = 'audio'
-            local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_from_text(data.target_uri)[0]
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
@@ -681,10 +671,9 @@ class SIPManager(object):
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def log_outgoing_session_ended(self, session, data):
-        account = session.account
+    def log_outgoing_session_ended(self, controller, data):
+        account = controller.account
+        session = controller.session
         if account is BonjourAccount():
             return
 
@@ -692,25 +681,24 @@ class SIPManager(object):
             streams = ",".join(data.streams)
             participants = ",".join(data.participants)
             focus = 1 if data.focus else 0
-            line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
+            line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
             f.write(line)
 
-        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(format_identity_address(session.remote_identity)):
+        if 'audio' in data.streams and NSApp.delegate().windowController.hasContactMatchingURI(controller.target_uri):
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message= 'Outgoing audio call %s' % duration
             media_type = 'audio'
-            local_uri = format_identity_address(session.account)
-            remote_uri = format_identity_address(session.remote_identity)
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'                  
-            cpim_from = format_identity(session.remote_identity, check_contact=True)
-            cpim_to = format_identity(session.remote_identity, check_contact=True)
+            cpim_from = data.target_uri
+            cpim_to = data.target_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))                       
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     @run_in_green_thread
-    @allocate_autorelease_pool
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "text", "0", status)
 
@@ -1160,40 +1148,38 @@ class SIPManager(object):
         if data.succeeded:
             call_in_gui_thread(self._delegate.sip_nat_detected, data.nat_type)
 
-    def _NH_BlinkSessionDidEnd(self, session, data):
-        if session.direction == "incoming":
-            self.log_incoming_session_ended(session, data)
-        else:
-            self.log_outgoing_session_ended(session, data)
-
-    @allocate_autorelease_pool
     @run_in_gui_thread
-    def _NH_SIPSessionDidFail(self, session, data):
+    def _NH_BlinkSessionDidEnd(self, session_controller, data):
+        session = session_controller.session
         if session.direction == "incoming":
-            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
-                self.log_incoming_session_answered_elsewhere(session, data)
-            else:
-                self.log_incoming_session_missed(session, data)
+            self.log_incoming_session_ended(session_controller, data)
+        else:
+            self.log_outgoing_session_ended(session_controller, data)
 
+    @run_in_gui_thread
+    def _NH_BlinkSessionDidFail(self, session_controller, data):
+        if data.direction == "outgoing":
+            if data.code == 487:
+                self.log_outgoing_session_cancelled(session_controller, data)
+            else:
+                self.log_outgoing_session_failed(session_controller, data)
+        elif data.direction == "incoming":
+            session = session_controller.session
+            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
+                self.log_incoming_session_answered_elsewhere(session_controller, data)
+            else:
+                self.log_incoming_session_missed(session_controller, data)
             if data.code == 487 and data.failure_reason != 'Call completed elsewhere':
+                if data.streams == ['file-transfer']:
+                    return
                 growl_data = TimestampedNotificationData()
                 growl_data.caller = format_identity_simple(session.remote_identity, check_contact=True)
                 growl_data.timestamp = data.timestamp
-                if (len(session.proposed_streams) == 1 and session.proposed_streams[0].type == 'file-transfer'):
-                    return
-                growl_data.streams = ",".join(s.type for s in session.proposed_streams or [])
+                growl_data.streams = ",".join(data.streams)
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                self._delegate.sip_session_missed(session)
+                self._delegate.sip_session_missed(session, data.streams)
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidFail(self, session, data):
-        if data.direction == "outgoing":
-            if data.code == 487:
-                self.log_outgoing_session_cancelled(session, data)
-            else:
-                self.log_outgoing_session_failed(session, data)
 
     def _NH_AudioStreamGotDTMF(self, sender, data):
         key = data.digit

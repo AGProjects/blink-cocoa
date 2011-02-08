@@ -368,22 +368,24 @@ class ContactWindowController(NSWindowController):
         return contacts
 
     def startIncomingSession(self, session, streams, answeringMachine=False):
-        sessionController = SessionController.alloc().initWithSession_(session)
-        sessionController.setOwner_(self)
-        sessionController.setAnsweringMachineMode_(answeringMachine)
-        self.sessionControllers.append(sessionController)
-        sessionController.handleIncomingStreams(streams, False)
+        try:
+            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+        except StopIteration:
+            sessionController = SessionController.alloc().initWithSession_(session)
+            sessionController.setOwner_(self)
+            self.sessionControllers.append(sessionController)
+        session_controller.setAnsweringMachineMode_(answeringMachine)
+        session_controller.handleIncomingStreams(streams, False)
 
     def acceptIncomingProposal(self, session, streams):
-        for session_controller in self.sessionControllers:
-            if session_controller.session == session:
-                session_controller.handleIncomingStreams(streams, True)
-                session.accept_proposal(streams)
-                break
-        else:
+        try:
+            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+        except StopIteration:
             session.reject_proposal()
             log_error("Cannot find session controller for session: %s" % session)
-
+        else:
+            session_controller.handleIncomingStreams(streams, True)
+            session.accept_proposal(streams)
 
     def windowShouldClose_(self, sender):
         ev = NSApp.currentEvent()
@@ -1379,6 +1381,9 @@ class ContactWindowController(NSWindowController):
             if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
                 self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
             else:
+                sessionController = SessionController.alloc().initWithSession_(session)
+                sessionController.setOwner_(self)
+                self.sessionControllers.append(sessionController)
                 if not self.alertPanel:
                     self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
                 self.alertPanel.addIncomingSession(session)
@@ -1423,9 +1428,9 @@ class ContactWindowController(NSWindowController):
             self.alertPanel.addIncomingStreamProposal(session, streams)
             self.alertPanel.show()
 
-    def sip_session_missed(self, session):
+    def sip_session_missed(self, session, stream_types):
         BlinkLogger().log_info(u"Missed incoming session from %s" % session.remote_identity)
-        if 'audio' in (stream.type for stream in session.proposed_streams):
+        if 'audio' in stream_types:
             NSApp.delegate().noteMissedCall()
 
     def sip_nat_detected(self, nat_type):
