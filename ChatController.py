@@ -840,64 +840,70 @@ class ChatController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
-    def _NH_ChatStreamGotMessage(self, sender, data):
+    def _NH_ChatStreamGotMessage(self, stream, data):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         message = data.message
-        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(message.sender))
 
         hash = hashlib.sha1()
         hash.update(message.body.encode("utf-8")+str(message.timestamp))
         msgid = hash.hexdigest()
 
         if msgid not in self.history_msgid_list:
-            name = format_identity(message.sender)
+            sender = message.sender
             recipient = message.recipients[0]
             recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
             private = True if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri != self.remote_uri else False
-            recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
-            self.chatViewController.showMessage(msgid, 'incoming', name, icon, message.body, message.timestamp, is_private=private, recipient=recipient_html, state="delivered")
+            text = message.body
+            timestamp = message.timestamp
+            if window:
+                name = format_identity(sender)
+                icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
+                recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
+                self.chatViewController.showMessage(msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered")
 
-            window = self.chatViewController.outputView.window()
-            window_is_key = window.isKeyWindow() if window else False
+                tab = self.chatViewController.outputView.window()
+                tab_is_key = tab.isKeyWindow() if tab else False
 
-            # FancyTabViewSwitcher will set unfocused tab item views as Hidden
-            if not window_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
-                # notify growl
-                growl_data = TimestampedNotificationData()
-                growl_data.sender = format_identity_simple(message.sender)
-                if message.content_type == 'text/html':
-                    growl_data.content = html2txt(message.body[0:400])
-                else:
-                    growl_data.content = message.body[0:400]
-                NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
+                # FancyTabViewSwitcher will set unfocused tab item views as Hidden
+                if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
+                    # notify growl
+                    growl_data = TimestampedNotificationData()
+                    growl_data.sender = format_identity_simple(sender)
+                    if message.content_type == 'text/html':
+                        growl_data.content = html2txt(message.body[0:400])
+                    else:
+                        growl_data.content = message.body[0:400]
+                    NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # save to history
-            message = MessageInfo(msgid, direction='incoming', sender=message.sender, recipient=recipient, timestamp=message.timestamp, text=message.body, private=private, status="delivered")
+            message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered")
             self.handler.add_to_history(message)
 
-    def _NH_ChatStreamGotComposingIndication(self, sender, data):
+    def _NH_ChatStreamGotComposingIndication(self, stream, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        if window:
-            flag = data.state == "active"
-            if flag:
-                refresh = data.refresh if data.refresh is not None else 120
+        if not window:
+            return
+        flag = data.state == "active"
+        if flag:
+            refresh = data.refresh if data.refresh is not None else 120
 
-                if data.last_active is not None and (data.last_active - datetime.datetime.now(tzlocal()) > datetime.timedelta(seconds=refresh)):
-                    # message is old, discard it
-                    return
+            if data.last_active is not None and (data.last_active - datetime.datetime.now(tzlocal()) > datetime.timedelta(seconds=refresh)):
+                # message is old, discard it
+                return
 
-                if self.remoteTypingTimer:
-                    # if we don't get any indications in the request refresh, then we assume remote to be idle
-                    self.remoteTypingTimer.setFireDate_(NSDate.dateWithTimeIntervalSinceNow_(refresh))
-                else:
-                    self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
+            if self.remoteTypingTimer:
+                # if we don't get any indications in the request refresh, then we assume remote to be idle
+                self.remoteTypingTimer.setFireDate_(NSDate.dateWithTimeIntervalSinceNow_(refresh))
             else:
-                if self.remoteTypingTimer:
-                    self.remoteTypingTimer.invalidate()
-                    self.remoteTypingTimer = None
+                self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
+        else:
+            if self.remoteTypingTimer:
+                self.remoteTypingTimer.invalidate()
+                self.remoteTypingTimer = None
 
-            window.noteSession_isComposing_(self.sessionController, flag)
+        window.noteSession_isComposing_(self.sessionController, flag)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         message = "Session failed: %s" % data.failure_reason
@@ -921,43 +927,42 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         BlinkLogger().log_info(u"Chat stream ended")
 
         self.notification_center.remove_observer(self, sender=sender)
-
-        if self.handler:
-            self.handler.setDisconnected()
-
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        if window:
-            window.noteSession_isComposing_(self.sessionController, False)
 
         if self.status == STREAM_CONNECTED:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
             self.removeFromSession()
-
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
+        if window:
+            self.handler.setDisconnected()
+            window.noteSession_isComposing_(self.sessionController, False)
+        else:
+            self.handler = None
+        self.stream = None
+
     def _NH_MediaStreamDidFail(self, sender, data):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         BlinkLogger().log_info(u"Chat stream failed: %s" % data.reason)
         self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
-
-        self.handler.setDisconnected()
-
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        if window:
-            window.noteSession_isComposing_(self.sessionController, False)
 
         self.changeStatus(STREAM_FAILED, data.reason)
         self.removeFromSession()
 
+        if window:
+            self.handler.setDisconnected()
+            window.noteSession_isComposing_(self.sessionController, False)
+        else:
+            self.handler = None
+        self.stream = None
+
     def closeTabView(self):
         self.chatViewController.close()
         self.removeFromSession()
-        
         self.handler.setDisconnected()
-
-        self.stream = None
-        self.handler = None
+        # Cleanup will be performed in the MediaStreamDidEnd/MediaStreamDidFail notification handlers
 
