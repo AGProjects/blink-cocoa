@@ -863,7 +863,7 @@ class ChatController(MediaStream):
             if not window_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
                 # notify growl
                 growl_data = TimestampedNotificationData()
-                growl_data.sender = format_identity_address(message.sender)
+                growl_data.sender = format_identity_simple(message.sender)
                 if message.content_type == 'text/html':
                     growl_data.content = html2txt(message.body[0:400])
                 else:
