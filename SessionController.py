@@ -638,7 +638,7 @@ class SessionController(NSObject):
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
-        log_info(self, "Proposal failure %s" % data)
+        log_info(self, "Proposal failure %s (%s)" % (data.reason, data.failure_reason))
         if data.streams:
             for stream in data.streams:
                 if stream == self.cancelledStream:
