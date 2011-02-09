@@ -907,7 +907,7 @@ class ChatController(MediaStream):
         window.noteSession_isComposing_(self.sessionController, flag)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        message = "Session failed: %s" % data.failure_reason
+        message = "Session failed: %s" % data.reason
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
         self.notification_center.remove_observer(self, sender=sender)
