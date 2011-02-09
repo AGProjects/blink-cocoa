@@ -398,7 +398,7 @@ class SMSViewController(NSObject):
         try:
             results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries)
         except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))
+            BlinkLogger().log_error(u"Failed to retrive sms history for %s: %s" % (self.remote_uri, e))
             return
         messages = [row for row in reversed(list(results))]
         self.render_history_messages(messages)
