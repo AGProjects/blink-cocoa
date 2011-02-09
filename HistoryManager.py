@@ -46,7 +46,7 @@ class ChatHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().chat.directory.normalized,"history.sqlite")
+        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().user_data_directory,"history/history.sqlite")
         self.db = connectionForURI(db_uri)
 
         ChatMessage._connection = self.db
@@ -204,7 +204,7 @@ class FileTransferHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().chat.directory.normalized,"history.sqlite")
+        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().user_data_directory,"history/history.sqlite")
         self.db = connectionForURI(db_uri)
 
         FileTransfer._connection = self.db

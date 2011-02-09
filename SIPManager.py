@@ -512,15 +512,6 @@ class SIPManager(object):
                 traceback.print_exc()
                 BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
 
-    def get_chat_history_directory(self):
-        dirname = unicode(SIPSimpleSettings().chat.directory).strip()
-        if dirname == "":
-            return os.path.join(self.log_directory, "history")
-        elif os.path.isabs(dirname):
-            return dirname
-        else:
-            return os.path.join(self.log_directory, dirname)
-
     def get_call_history_directory(self):
         dirname = unicode(SIPSimpleSettings().audio.directory).strip()
         if dirname == "":
@@ -703,7 +694,7 @@ class SIPManager(object):
         ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "text", "0", status)
 
     def get_audio_recordings_directory(self):
-        return self.get_chat_history_directory()
+        return os.path.join(self.log_directory, "history")
 
     def get_audio_recordings(self):
         result = []

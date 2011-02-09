@@ -32,7 +32,6 @@ class AudioSettingsExtension(AudioSettings):
 
 
 class ChatSettingsExtension(ChatSettings):
-    directory = Setting(type=UserDataPath, default=UserDataPath('history'))
     auto_accept = Setting(type=bool, default=False)
     sms_replication = Setting(type=bool, default=True)
 
