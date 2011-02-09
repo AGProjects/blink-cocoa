@@ -647,8 +647,6 @@ class SessionController(NSObject):
                 handler = self.streamHandlerForStream(stream)
                 if handler:
                     handler.changeStatus(STREAM_FAILED, data.failure_reason)
-                else:
-                    log_error(self, "Got proposal failure for unhandled stream type: %r" % stream)
 
             # notify Chat Window controller to update the toolbar buttons
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
