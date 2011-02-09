@@ -219,11 +219,11 @@ class NullableUnicodeOption(UnicodeOption):
         self.emptyIsNone = True
 
 
-class MSRPRelayAddresOption(StringOption):
+class MSRPRelayAddresOption(UnicodeOption):
     def _store(self):
         current = self.get()
-        if current != str(self.text.stringValue()) and not (current is None and self.text.stringValue().length() == 0):
-            self.set(MSRPRelayAddress.from_description(str(self.text.stringValue())))
+        if current != unicode(self.text.stringValue()) and not (current is None and self.text.stringValue().length() == 0):
+            self.set(MSRPRelayAddress.from_description(unicode(self.text.stringValue())))
 
 
 class StringTupleOption(StringOption):
@@ -747,7 +747,7 @@ class PathOption(NullableUnicodeOption):
 
 class TLSCAListPathOption(PathOption):
     def _store(self):
-        cert_path = str(self.text.stringValue()) or None
+        cert_path = unicode(self.text.stringValue()) or None
         if cert_path is not None:
             X509Certificate(open(os.path.expanduser(cert_path)).read()) # validate the certificate
         PathOption._store(self)
@@ -755,7 +755,7 @@ class TLSCAListPathOption(PathOption):
 
 class TLSCertificatePathOption(PathOption):
     def _store(self):
-        cert_path = str(self.text.stringValue()) or None
+        cert_path = unicode(self.text.stringValue()) or None
         if cert_path is not None:
             contents = open(os.path.expanduser(cert_path)).read()
             X509Certificate(contents) # validate the certificate
@@ -1317,10 +1317,10 @@ class ResolutionOption(NumberPairOption):
             self.second.setIntegerValue_(res.height)
 
 
-class SIPProxyAddressOption(StringOption):
+class SIPProxyAddressOption(UnicodeOption):
     def _store(self):
         current = self.get()
-        value = SIPProxyAddress.from_description(str(self.text.stringValue()))
+        value = SIPProxyAddress.from_description(unicode(self.text.stringValue()))
         if current != value:
             self.set(value)
 
