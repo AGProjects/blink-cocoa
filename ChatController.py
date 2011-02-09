@@ -48,6 +48,7 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
         sessionController.startChatSession()
     elif tag == SessionController.TOOLBAR_HISTORY:
         contactWindow = sessionController.owner
+        contactWindow.showChatTranscripts_(None)
         if sessionController.account is BonjourAccount():
             contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
         else:
