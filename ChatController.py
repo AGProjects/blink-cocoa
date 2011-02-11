@@ -486,6 +486,7 @@ class ChatController(MediaStream):
          self.replay_history()
 
     @run_in_green_thread
+    @allocate_autorelease_pool
     def replay_history(self):
         if self.sessionController.account is BonjourAccount():
             return
