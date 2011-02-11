@@ -450,7 +450,8 @@
 								<object class="NSMenuItem" id="209324156">
 									<reference key="NSMenu" ref="728662662"/>
 									<string key="NSTitle">Add Contact...</string>
-									<string key="NSKeyEquiv"/>
+									<string key="NSKeyEquiv">n</string>
+									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
