@@ -300,7 +300,7 @@ class ChatController(MediaStream):
     sessionController = None
     stream = None
     finishedLoading = False
-    showHistoryEntries = 200
+    showHistoryEntries = 20
 
     history = None
     handler = None
