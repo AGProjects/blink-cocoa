@@ -134,10 +134,10 @@ class ContactWindowController(NSWindowController):
     historyMenu = objc.IBOutlet()
     recordingsMenu = objc.IBOutlet()
     contactsMenu = objc.IBOutlet()
-    audioMenu = objc.IBOutlet()
+    devicesMenu = objc.IBOutlet()
     statusMenu = objc.IBOutlet()
     toolsMenu = objc.IBOutlet()
-    conferenceMenu = objc.IBOutlet()
+    callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
@@ -409,10 +409,10 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_info(u"New device %s detected, checking if we should switch to it..." % new_device)
             call_in_gui_thread(self.switchAudioDevice, new_device)
         else:
-            call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
+            call_in_gui_thread(self.menuWillOpen_, self.devicesMenu)
 
     def _NH_DefaultAudioDeviceDidChange(self, notification):
-        call_in_gui_thread(self.menuWillOpen_, self.audioMenu)
+        call_in_gui_thread(self.menuWillOpen_, self.devicesMenu)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -499,7 +499,7 @@ class ContactWindowController(NSWindowController):
                 settings.audio.output_device = str(device)
                 settings.save()
 
-        self.menuWillOpen_(self.audioMenu)
+        self.menuWillOpen_(self.devicesMenu)
 
     def _NH_BlinkSessionChangedState(self, notification):
         sender = notification.sender
@@ -831,12 +831,13 @@ class ContactWindowController(NSWindowController):
         self.searchContacts()
 
     @objc.IBAction
-    def startConferenceMenuClicked_(self, sender):
+    def joinConferenceClicked_(self, sender):
         startConferenceWindow = StartConferenceWindow()
         conference = startConferenceWindow.run()
         if conference is not None:
             self.startConference(conference.target, conference.media_types, conference.participants)
 
+    # not used anymore -adi
     @objc.IBAction
     def joinConferenceMenuClicked_(self, sender):
         joinConferenceWindow = JoinConferenceWindow()
@@ -1606,64 +1607,16 @@ class ContactWindowController(NSWindowController):
         item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
 
-    def updateConferenceMenu(self):
-        menu = self.conferenceMenu
+    def updateCallMenu(self):
+        menu = self.callMenu
 
         account = self.activeAccount()
 
-        item = menu.itemWithTag_(44) # Start Conference
+        item = menu.itemWithTag_(44) # Join Conference
         item.setEnabled_(bool(not isinstance(account, BonjourAccount)))
 
-        while menu.numberOfItems() > 2:
-            menu.removeItemAtIndex_(2)
 
-        try:
-            res = self.backend.get_last_call_history_entries(12, True)
-            in_items, out_items, miss_items = res
-        except:
-            in_items, out_items, miss_items = [], [], []
-
-        mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
-
-        def format_conference_item(item, time_attribs):
-            a = NSMutableAttributedString.alloc().init()
-            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_("%(party)s    "%item, normal)
-            a.appendAttributedString_(n)
-            text = "%(when)s"%item
-            t = NSAttributedString.alloc().initWithString_attributes_(text, time_attribs)
-            a.appendAttributedString_(t)
-            return a
-
-        if out_items:
-            menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Previous outgoing conferences", "", "")
-            lastItem.setEnabled_(False)
-
-            for item in out_items:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
-                lastItem.setAttributedTitle_(format_conference_item(item, mini_blue))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
-
-        if in_items:
-            menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Previous incoming conferences", "", "")
-            lastItem.setEnabled_(False)
-
-            for item in in_items:
-                if NSApp.delegate().applicationName == 'Blink Pro':
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "conferenceMenutemClicked:", "")
-                else:
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
-                lastItem.setAttributedTitle_(format_conference_item(item, mini_blue))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
-
-    def conferenceMenutemClicked_(self, sender):
+    def callMenuItemClicked_(self, sender):
         item = sender.representedObject()
         target = item["address"]
         participants = item["participants"] or []
@@ -1695,11 +1648,11 @@ class ContactWindowController(NSWindowController):
 
     def updateHistoryMenu(self):
         menu = self.historyMenu
-        while menu.numberOfItems() > 6:
-            menu.removeItemAtIndex_(6)
+        while menu.numberOfItems() > 4:
+            menu.removeItemAtIndex_(4)
 
         try:
-          res = self.backend.get_last_call_history_entries(12)
+          res = self.backend.get_last_call_history_entries(10)
         except:
           import traceback
           traceback.print_exc()
@@ -1795,12 +1748,47 @@ class ContactWindowController(NSWindowController):
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
 
+        # conference entries
+        try:
+            res = self.backend.get_last_call_history_entries(12, True)
+            in_items, out_items, miss_items = res
+        except:
+            in_items, out_items, miss_items = [], [], []
+
+        if out_items:
+            menu.addItem_(NSMenuItem.separatorItem())
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Previous outgoing conferences", "", "")
+            lastItem.setEnabled_(False)
+
+            for item in out_items:
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "callMenuItemClicked:", "")
+                lastItem.setAttributedTitle_(format_call_item(item, mini_blue))
+                lastItem.setIndentationLevel_(1)
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(item)
+
+        if in_items:
+            menu.addItem_(NSMenuItem.separatorItem())
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Previous incoming conferences", "", "")
+            lastItem.setEnabled_(False)
+
+            for item in in_items:
+                if NSApp.delegate().applicationName == 'Blink Pro':
+                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "callMenuItemClicked:", "")
+                else:
+                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
+                lastItem.setAttributedTitle_(format_call_item(item, mini_blue))
+                lastItem.setIndentationLevel_(1)
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(item)
+
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "", "")
         lastItem.setEnabled_(in_items or out_items or miss_items)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
         lastItem.setAction_("historyClicked:")
+
 
     def historyClicked_(self, sender):
         if sender.tag() == 444:
@@ -2020,7 +2008,7 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_("None")
             item.setTarget_(self)
             item.setTag_(tag*100)
-            item.setIndentationLevel_(1)
+            item.setIndentationLevel_(2)
             item.setState_(NSOnState if value in (None, "None") else NSOffState)
             index += 1
 
@@ -2028,7 +2016,7 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_("system_default")
             item.setTarget_(self)
             item.setTag_(tag*100+1)
-            item.setIndentationLevel_(1)
+            item.setIndentationLevel_(2)
             item.setState_(NSOnState if value in ("default", "system_default") else NSOffState)
             index += 1
 
@@ -2038,12 +2026,12 @@ class ContactWindowController(NSWindowController):
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)
                 item.setTag_(tag*100+i)
-                item.setIndentationLevel_(1)
+                item.setIndentationLevel_(2)
                 i += 1
                 item.setState_(NSOnState if value == dev else NSOffState)
                 index += 1
 
-        if menu == self.audioMenu:
+        if menu == self.devicesMenu:
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices, "input_device", "selectInputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device", "selectAlertDevice:")
@@ -2057,8 +2045,8 @@ class ContactWindowController(NSWindowController):
             self.updateContactContextMenu()
         elif menu == self.statusMenu:
             self.updateStatusMenu()
-        elif menu == self.conferenceMenu:
-            self.updateConferenceMenu()
+        elif menu == self.callMenu:
+            self.updateCallMenu()
         elif menu == self.toolsMenu:
             self.updateToolsMenu()
         elif menu == self.chatMenu:
