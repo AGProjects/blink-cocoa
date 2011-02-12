@@ -385,7 +385,6 @@ class AudioController(MediaStream):
         oldstatus = self.status
     
         if self.status != newstate:
-            log_debug(self, "Changing audio state to "+newstate)
             self.status = newstate
 
         status = self.status

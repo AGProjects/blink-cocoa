@@ -504,11 +504,9 @@ class ContactWindowController(NSWindowController):
     def _NH_BlinkSessionChangedState(self, notification):
         sender = notification.sender
         if sender.ended:
-            BlinkLogger().log_info(u"Session %s ended, disposing..." % sender.session)
             self.sessionControllers.remove(sender)
         else:
             if sender not in self.sessionControllers:
-                BlinkLogger().log_info(u"Session %s re-started" % sender.session)
                 self.sessionControllers.append(sender)
         self.updatePresenceStatus()
 

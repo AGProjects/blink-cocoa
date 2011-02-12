@@ -970,7 +970,6 @@ class SIPManager(object):
         return (message, party), default_action, alt_action
 
     def reject_incoming_session(self, session, code=603, reason=None):
-        BlinkLogger().log_info(u"Rejecting Session from %s (code %s)" % (session.remote_identity, code))
         session.reject(code, reason)
 
     def is_muted(self):
@@ -1082,11 +1081,11 @@ class SIPManager(object):
         print "SIP Engine Exception", data
 
     def _NH_SIPAccountDidActivate(self, account, data):
-        BlinkLogger().log_debug(u"%s activated" % account)
+        BlinkLogger().log_info(u"%s activated" % account)
         call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
-        BlinkLogger().log_debug(u"%s deactivated" % account)
+        BlinkLogger().log_info(u"%s deactivated" % account)
         MWIData.remove(account)
         call_in_gui_thread(self._delegate.sip_account_list_refresh)
 

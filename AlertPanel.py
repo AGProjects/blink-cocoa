@@ -550,7 +550,7 @@ class AlertPanel(NSObject, object):
                     BlinkLogger().log_info(u"Rejecting proposal for streams %s of session to %s"%([str(type(stream)) for stream in s.proposed_streams], s.remote_identity))
                     s.reject_proposal()
                 else:
-                    BlinkLogger().log_info(u"Rejecting session to %s" % s.remote_identity)
+                    BlinkLogger().log_info(u"Rejecting session %s" % s.remote_identity)
                     SIPManager().reject_incoming_session(s, 603, "Busy Everywhere")
             except Exception, exc:
                 import traceback

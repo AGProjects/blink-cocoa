@@ -400,7 +400,6 @@ class ChatController(MediaStream):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
-        log_debug(self, "Changing chat state to "+newstate)
 
         if newstate == STREAM_DISCONNECTING:
             BlinkLogger().log_info(u"Ending session")

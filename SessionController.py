@@ -202,7 +202,6 @@ class SessionController(NSObject):
         if self.state in (STATE_DNS_FAILED, STATE_DNS_LOOKUP):
             return
         if  self.session:
-            log_info(self, "Ending Session (%s)"%str(self.session.streams))
             self.session.end()
 
     def endStream(self, streamHandler):
@@ -264,7 +263,6 @@ class SessionController(NSObject):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeSessionState(self, newstate, fail_reason=None):
-        log_debug(self, "Changing Session state to " + newstate)
         self.state = newstate
         # Below it makes a copy of the list because sessionChangedState can have the side effect of removing the handler from the list.
         # This is very bad behavior and should be fixed. -Dan
@@ -330,15 +328,15 @@ class SessionController(NSObject):
                 self.originallyRequestedStreamTypes.append(controller.stream.type)
 
                 if not new_session:
-                    log_debug(self, "Adding %s stream to session"%stype.capitalize())
+                    log_info(self, "Adding %s stream to session"%stype.capitalize())
                     # there is already a session, add audio stream to it
                     add_streams.append(controller.stream)
 
             else:
-                log_debug(self, "Stream already exists: %s"%self.streamHandlers)
+                log_info(self, "Stream already exists: %s"%self.streamHandlers)
 
         if new_session:
-            log_debug(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
+            log_info(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
             self.changeSessionState(STATE_DNS_LOOKUP)
             SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
               
@@ -383,7 +381,7 @@ class SessionController(NSObject):
                 self.startBaseSession(self.account)
                 self.desktopRequested = True
             else:
-                log_debug(self, "Adding Desktop Stream (server) to session")
+                log_info(self, "Adding Desktop Stream (server) to session")
                 # there is already a session, add stream to it
                 pass
 
