@@ -5,7 +5,6 @@ from Foundation import *
 from AppKit import *
 
 from application.notification import IObserver, NotificationCenter
-from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp
 from util import *
@@ -130,11 +129,13 @@ class HistoryViewer(NSWindowController):
         for row in results:
             contact = getContactMatchingURI(row[0])
             if contact:
-                contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
+                detail = contact.uri
+                contact = Contact(unicode(row[0]), name=contact.name, icon=contact.icon)
             else:
+                detail = unicode(row[0])
                 contact = Contact(unicode(row[0]), name=unicode(row[0]))
 
-            contact.setDetail(contact.uri)
+            contact.setDetail(detail)
             self.contacts.append(contact)
 
         real_contacts = len(self.contacts)-2
@@ -178,11 +179,13 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderDailyEntries(self, results):
+        getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
         self.dayly_entries = []
         for result in results:
-            try:
-                remote_uri = format_identity(SIPURI.parse(str('sip:'+result[2])), check_contact=True)
-            except SIPCoreError:
+            contact = getContactMatchingURI(result[2])
+            if contact:
+                remote_uri = '%s <%s>' % (contact.name, contact.uri)
+            else:
                 remote_uri = result[2]
 
             entry = {
