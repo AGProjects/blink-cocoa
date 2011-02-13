@@ -1131,6 +1131,50 @@ class ContactWindowController(NSWindowController):
         #    5.6.  REFER: Requesting a User to Dial in to a Conference Using a Conference URI
 
     @objc.IBAction
+    def startAudioToSelected_(self, sender):
+        self.startSessionToSelectedContact("audio")
+
+    @objc.IBAction
+    def startVideoToSelected_(self, sender):
+        self.startSessionToSelectedContact("video")
+
+    @objc.IBAction
+    def startChatToSelected_(self, sender):
+        self.startSessionToSelectedContact("chat")
+
+    @objc.IBAction
+    def sendSMSToSelected_(self, sender):
+        account = self.activeAccount()
+        if not account:
+            NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
+            return
+
+        try:
+            contact = self.getSelectedContacts()[0]
+        except IndexError:
+            target = unicode(self.searchBox.stringValue()).strip()
+            if not target:
+                return
+            display_name = ''
+        else:
+            target = contact.uri
+            display_name = contact.display_name
+
+        if contact in self.model.bonjourgroup.contacts:
+            account = BonjourAccount()
+
+        target = self.backend.parse_sip_uri(target, account)
+        if not target:
+            return
+
+        try:
+            NSApp.activateIgnoringOtherApps_(True)
+            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
+        except:
+            import traceback
+            traceback.print_exc()
+
+    @objc.IBAction
     def startDesktopToSelected_(self, sender):
         if sender:
             tag = sender.tag()
