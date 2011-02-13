@@ -143,8 +143,6 @@ class AudioController(MediaStream):
         self.changeStatus(STREAM_RINGING)
 
     def end(self):
-        log_info(self, "Ending audio session in %s"%self.status)
-
         status = self.status
 
         SIPManager().ringer.stop_ringing(self.session)

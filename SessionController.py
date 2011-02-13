@@ -206,8 +206,6 @@ class SessionController(NSObject):
 
     def endStream(self, streamHandler):
         if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
-            # end the whole ds+audio session
-            log_info(self, "Ending the whole desktop sharing session")
             self.end()
             return True
 
