@@ -842,14 +842,6 @@ class ContactWindowController(NSWindowController):
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
 
-    # not used anymore -adi
-    @objc.IBAction
-    def joinConferenceMenuClicked_(self, sender):
-        joinConferenceWindow = JoinConferenceWindow()
-        conference = joinConferenceWindow.run()
-        if conference is not None:
-            self.joinConference(conference.target, conference.media_types)
-
     @objc.IBAction
     def addContact_(self, sender):
         if sender != self.addContactButton:
@@ -1137,74 +1129,6 @@ class ContactWindowController(NSWindowController):
         # TODO: When session is established, request the other participants to join using REFER method, RFC4579 -adi
         #    5.5.  REFER: Requesting a Focus to Add a New Resource to a Conference
         #    5.6.  REFER: Requesting a User to Dial in to a Conference Using a Conference URI
-
-    def joinConference(self, target, media):
-        # activate the app in case the app is not active
-        NSApp.activateIgnoringOtherApps_(True)
-        account = self.activeAccount()
-        if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
-            return
-
-        target = self.backend.parse_sip_uri(target, account)
-        if not target:
-            return
-
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(target))
-        session.setOwner_(self)
-        self.sessionControllers.append(session)
-
-        if type(media) is not tuple:
-            if not session.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
-        else:
-            if not session.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
-
-
-    @objc.IBAction
-    def startAudioToSelected_(self, sender):
-        self.startSessionToSelectedContact("audio")
-
-    @objc.IBAction
-    def startVideoToSelected_(self, sender):
-        self.startSessionToSelectedContact("video")
-
-    @objc.IBAction
-    def startChatToSelected_(self, sender):
-        self.startSessionToSelectedContact("chat")
-
-    @objc.IBAction
-    def sendSMSToSelected_(self, sender):
-        account = self.activeAccount()
-        if not account:
-            NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
-            return
-
-        try:
-            contact = self.getSelectedContacts()[0]
-        except IndexError:
-            target = unicode(self.searchBox.stringValue()).strip()
-            if not target:
-                return
-            display_name = ''
-        else:
-            target = contact.uri
-            display_name = contact.display_name
-
-        if contact in self.model.bonjourgroup.contacts:
-            account = BonjourAccount()
-
-        target = self.backend.parse_sip_uri(target, account)
-        if not target:
-            return
-
-        try:
-            NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
-        except:
-            import traceback
-            traceback.print_exc()
 
     @objc.IBAction
     def startDesktopToSelected_(self, sender):
