@@ -115,7 +115,7 @@ class ChatHistory(object):
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
 
-            query += "group by date, media_type order by date desc, local_uri asc"
+            query += " group by date, media_type order by date desc, local_uri asc"
 
         elif local_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages"
