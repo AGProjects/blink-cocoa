@@ -152,6 +152,8 @@ class ContactWindowController(NSWindowController):
                     NSColor.grayColor(), NSForegroundColorAttributeName)
 
     conference = None
+    startConferenceWindow = None
+
 
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
@@ -647,7 +649,6 @@ class ContactWindowController(NSWindowController):
         # number of sessions that can be conferenced
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         conference.setEnabled_(c > 1)
-        self.addContactToConference.setEnabled_(c > 0)
 
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
@@ -691,6 +692,9 @@ class ContactWindowController(NSWindowController):
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk, 1)
         self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
+
+        c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
+        self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or c > 0) else False)
 
     def startCallWithURIText(self, text, session_type="audio"):
         account = self.activeAccount()
@@ -737,6 +741,9 @@ class ContactWindowController(NSWindowController):
             exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
             self.addContactButtonSearch.setHidden_(exists)
         self.searchOutline.reloadData()
+
+    def isJoinConferenceWindowOpen(self):
+        return any(window for window in NSApp().windows() if window.title() == 'Join Conference' and window.isVisible())
 
     def getContactMatchingURI(self, uri):
         return self.model.getContactMatchingURI(uri)
@@ -830,8 +837,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def joinConferenceClicked_(self, sender):
-        startConferenceWindow = StartConferenceWindow()
-        conference = startConferenceWindow.run()
+        self.startConferenceWindow = StartConferenceWindow()
+        conference = self.startConferenceWindow.run()
         if conference is not None:
             self.startConference(conference.target, conference.media_types, conference.participants)
 
@@ -995,21 +1002,24 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def addContactToConference_(self, sender):
         active_sessions = [s for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
-        if active_sessions:
+
+        try:
+            contact = self.getSelectedContacts()[0]
+        except IndexError:
+            target = unicode(self.searchBox.stringValue()).strip()
+            if not target:
+                return
+        else:
+            target = contact.uri
+
+        if self.isJoinConferenceWindowOpen():
+            self.startConferenceWindow.addParticipant(target)
+        elif active_sessions:
             # start conference with active audio sessions
             for s in active_sessions:
                 handler = s.streamHandlerOfType("audio")
                 handler.view.setConferencing_(True)
 
-            # call the selected contact and set up for it to get added to the conference
-            try:
-                contact = self.getSelectedContacts()[0]
-            except IndexError:
-                target = unicode(self.searchBox.stringValue()).strip()
-                if not target:
-                    return
-            else:
-                target = contact.uri
             session = self.startCallWithURIText(target, "audio")
             handler = session.streamHandlerOfType("audio")
             handler.view.setConferencing_(True)
@@ -1620,8 +1630,8 @@ class ContactWindowController(NSWindowController):
         participants = item["participants"] or []
         media = item["streams"] or []
 
-        startConferenceWindow = StartConferenceWindow(target=target, participants=participants, media=media)
-        conference = startConferenceWindow.run()
+        self.startConferenceWindow = StartConferenceWindow(target=target, participants=participants, media=media)
+        conference = self.startConferenceWindow.run()
         if conference is not None:
             self.startConference(conference.target, conference.media_types, conference.participants)
 
