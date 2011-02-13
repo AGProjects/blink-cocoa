@@ -25,7 +25,7 @@ def validateParticipant(uri):
         return sip_uri.user is not None and sip_uri.host is not None
 
 
-class StartConferenceWindow(NSObject):
+class JoinConferenceWindow(NSObject):
     window = objc.IBOutlet()
     room = objc.IBOutlet()
     addRemove = objc.IBOutlet()
@@ -40,7 +40,7 @@ class StartConferenceWindow(NSObject):
         return cls.alloc().init()
 
     def __init__(self, target=None, participants=[], media=["chat"]):
-        NSBundle.loadNibNamed_owner_("StartConferenceWindow", self)
+        NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
 
         if target is not None and validateParticipant(target):
             self.room.setStringValue_(target)
@@ -202,107 +202,6 @@ class StartConferenceWindow(NSObject):
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
             NSRunAlertPanel("Start a new Conference", text,"OK", None, None)
-            return False
-
-        return True
-
-
-class JoinConferenceWindow(NSObject):
-    window = objc.IBOutlet()
-    room = objc.IBOutlet()
-    chat = objc.IBOutlet()
-    audio = objc.IBOutlet()
-    message = objc.IBOutlet()
-    title = objc.IBOutlet()
-     
-    default_conference_server = 'conference.sip2sip.info'
-
-    def __new__(cls, *args, **kwargs):
-        return cls.alloc().init()
-
-    def __init__(self, target=None, media=[], message=None, title=None):
-        NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
-
-        if target is not None and validateParticipant(target):
-            self.room.setStringValue_(target)
-
-        if media:
-            self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
-
-        if title is not None:
-            self.title.setTitle_(message)
-        else:
-            self.message.setHidden_(True)
-
-        if message is not None:
-            self.message.setHidden_(False)
-            self.message.setTitle_(message)
-        else:
-            self.message.setHidden_(True)
-        
-    def run(self):
-        self.window.makeKeyAndOrderFront_(None)
-        rc = NSApp.runModalForWindow_(self.window)
-        self.window.orderOut_(self)
-
-        if rc == NSOKButton:
-            if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
-                media_types = ("chat", "audio")
-            elif self.chat.state() == NSOnState:
-                media_types = "chat"
-            else:
-                media_types = "audio"
-
-            return ServerConferenceRoom(self.target, media_types, [])
-        else:
-            return None
-
-    @objc.IBAction
-    def okClicked_(self, sender):
-        if self.validateConference():
-            NSApp.stopModalWithCode_(NSOKButton)
-
-    @objc.IBAction
-    def cancelClicked_(self, sender):
-        NSApp.stopModalWithCode_(NSCancelButton)
-
-    def windowShouldClose_(self, sender):
-        NSApp.stopModalWithCode_(NSCancelButton)
-        return True
-        
-    def validateConference(self):
-        if not self.room.stringValue().strip():
-            NSRunAlertPanel("Start a new Conference", "Please enter the Conference Room.",
-                "OK", None, None)
-            return False
-
-        if not re.match("^[1-9a-z][0-9a-z_.-]{1,65}[0-9a-z]", self.room.stringValue().strip()):
-            NSRunAlertPanel("Join Conference", "Please enter a valid conference room of at least 3 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
-                "OK", None, None)
-            return False
-
-        if self.chat.state() == NSOffState and self.audio.state() == NSOffState:
-            NSRunAlertPanel("Join Conference", "Please select at least one media type.",
-                "OK", None, None)
-            return False
-
-        if "@" in self.room.stringValue().strip():
-            self.target = u'%s' % self.room.stringValue().strip()
-        else:
-            account = AccountManager().default_account
-            if account is BonjourAccount():
-                NSRunAlertPanel("Join Conference", "Please enter the address in user@domain format.",
-                    "OK", None, None)
-                return False
-            else:
-                if account.server.conference_server:
-                    self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
-                else:
-                    self.target = u'%s@%s' % (self.room.stringValue().strip(), self.default_conference_server)
-
-        if not validateParticipant(self.target):
-            text = 'Invalid conference SIP URI: %s' % self.target
-            NSRunAlertPanel("Join Conference", text,"OK", None, None)
             return False
 
         return True

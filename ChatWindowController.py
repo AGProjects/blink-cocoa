@@ -17,7 +17,7 @@ from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
-from ServerConferenceWindowController import AddParticipantsWindow, StartConferenceWindow
+from ServerConferenceWindowController import AddParticipantsWindow, JoinConferenceWindow
 import SessionController
 import ChatWindowManager
 from ChatPrivateMessage import ChatPrivateMessage
@@ -315,7 +315,7 @@ class ChatWindowController(NSWindowController):
 
         return True
 
-    def startConferenceWindow(self, session, participants=[]):
+    def joinConferenceWindow(self, session, participants=[]):
         media = []
         if session.hasStreamOfType("chat"):
             media.append("chat")
@@ -325,10 +325,10 @@ class ChatWindowController(NSWindowController):
         if format_identity_address(session.remotePartyObject) not in participants:
             participants.append(format_identity_address(session.remotePartyObject))
 
-        startConferenceWindow = StartConferenceWindow(participants=participants, media=media)
-        conference = startConferenceWindow.run()
+        joinConferenceWindow = JoinConferenceWindow(participants=participants, media=media)
+        conference = joinConferenceWindow.run()
         if conference is not None:
-            NSApp.delegate().windowController.startConference(conference.target, conference.media_types, conference.participants)
+            NSApp.delegate().windowController.joinConference(conference.target, conference.media_types, conference.participants)
 
     def getSelectedParticipant(self):
         row = self.drawerTableView.selectedRow()
@@ -474,7 +474,7 @@ class ChatWindowController(NSWindowController):
 
                 self.refreshDrawer()
             else:
-                self.startConferenceWindow(session)
+                self.joinConferenceWindow(session)
 
  
     @objc.IBAction
@@ -807,7 +807,7 @@ class ChatWindowController(NSWindowController):
                 except:
                     return False
             elif not isinstance(session.account, BonjourAccount):
-                self.startConferenceWindow(session, [uri])
+                self.joinConferenceWindow(session, [uri])
 
         return True
 

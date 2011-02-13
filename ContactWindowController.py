@@ -32,7 +32,7 @@ from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveC
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
-from ServerConferenceWindowController import StartConferenceWindow, JoinConferenceWindow
+from ServerConferenceWindowController import JoinConferenceWindow
 from SessionController import SessionController
 from ChatWindowManager import ChatWindowManager
 from SIPManager import MWIData
@@ -152,7 +152,7 @@ class ContactWindowController(NSWindowController):
                     NSColor.grayColor(), NSForegroundColorAttributeName)
 
     conference = None
-    startConferenceWindow = None
+    joinConferenceWindow = None
 
 
     def awakeFromNib(self):
@@ -837,10 +837,10 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def joinConferenceClicked_(self, sender):
-        self.startConferenceWindow = StartConferenceWindow()
-        conference = self.startConferenceWindow.run()
+        self.joinConferenceWindow = JoinConferenceWindow()
+        conference = self.joinConferenceWindow.run()
         if conference is not None:
-            self.startConference(conference.target, conference.media_types, conference.participants)
+            self.joinConference(conference.target, conference.media_types, conference.participants)
 
     # not used anymore -adi
     @objc.IBAction
@@ -1013,7 +1013,7 @@ class ContactWindowController(NSWindowController):
             target = contact.uri
 
         if self.isJoinConferenceWindowOpen():
-            self.startConferenceWindow.addParticipant(target)
+            self.joinConferenceWindow.addParticipant(target)
         elif active_sessions:
             # start conference with active audio sessions
             for s in active_sessions:
@@ -1098,7 +1098,7 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
-    def startConference(self, target, media, participants=[]):
+    def joinConference(self, target, media, participants=[]):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
         account = self.activeAccount()
@@ -1630,10 +1630,10 @@ class ContactWindowController(NSWindowController):
         participants = item["participants"] or []
         media = item["streams"] or []
 
-        self.startConferenceWindow = StartConferenceWindow(target=target, participants=participants, media=media)
-        conference = self.startConferenceWindow.run()
+        self.joinConferenceWindow = JoinConferenceWindow(target=target, participants=participants, media=media)
+        conference = self.joinConferenceWindow.run()
         if conference is not None:
-            self.startConference(conference.target, conference.media_types, conference.participants)
+            self.joinConference(conference.target, conference.media_types, conference.participants)
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
