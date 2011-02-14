@@ -1586,11 +1586,47 @@ class ContactWindowController(NSWindowController):
     def updateCallMenu(self):
         menu = self.callMenu
 
+        while menu.numberOfItems() > 6:
+            menu.removeItemAtIndex_(6)
+
         account = self.activeAccount()
 
         item = menu.itemWithTag_(44) # Join Conference
         item.setEnabled_(bool(not isinstance(account, BonjourAccount)))
 
+        def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
+            a = NSMutableAttributedString.alloc().init()
+            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+            n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal)
+            a.appendAttributedString_(n)
+            if mwi_data.get('messages_waiting') and mwi_data.get('new_messages') != 0:
+                text = "%d new messages" % mwi_data['new_messages']
+                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_new)
+            else:
+                text = "No new messages"
+                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_nonew)
+            a.appendAttributedString_(t)
+            return a
+
+        mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
+        mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+            NSColor.redColor(), NSForegroundColorAttributeName)
+       
+        menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail", "", "")
+        lastItem.setEnabled_(False)
+
+        if any(account.message_summary.enabled for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled)):
+            for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
+                mwi_data = MWIData.get(account.id)
+                lastItem.setEnabled_(account.voicemail_uri is not None)
+                lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, mini_red, mini_blue))
+                lastItem.setIndentationLevel_(1)
+                lastItem.setTag_(555)
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(account)
 
     def callMenuItemClicked_(self, sender):
         item = sender.representedObject()
@@ -1637,6 +1673,11 @@ class ContactWindowController(NSWindowController):
         else:
             in_items, out_items, miss_items = [], [], []
 
+        mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
+        mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+            NSColor.redColor(), NSForegroundColorAttributeName)
+
         def format_call_item(item, time_attribs, show_failed=False):
             a = NSMutableAttributedString.alloc().init()
             normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -1661,39 +1702,6 @@ class ContactWindowController(NSWindowController):
             t = NSAttributedString.alloc().initWithString_attributes_(text, time_attribs)
             a.appendAttributedString_(t)
             return a
-
-        def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
-            a = NSMutableAttributedString.alloc().init()
-            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal)
-            a.appendAttributedString_(n)
-            if mwi_data.get('messages_waiting') and mwi_data.get('new_messages') != 0:
-                text = "%d new messages" % mwi_data['new_messages']
-                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_new)
-            else:
-                text = "No new messages"
-                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_nonew)
-            a.appendAttributedString_(t)
-            return a
-
-        mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
-        mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.redColor(), NSForegroundColorAttributeName)
-
-        if any(account.message_summary.enabled for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled)):
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail", "", "")
-            lastItem.setEnabled_(False)
-            for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
-                mwi_data = MWIData.get(account.id)
-                lastItem.setEnabled_(account.voicemail_uri is not None)
-                lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, mini_red, mini_blue))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTag_(555)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(account)
-            menu.addItem_(NSMenuItem.separatorItem())
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
         lastItem.setEnabled_(False)

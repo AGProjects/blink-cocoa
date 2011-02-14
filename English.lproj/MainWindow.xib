@@ -3215,14 +3215,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1076</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">conferenceMenu</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="1038306992"/>
-					</object>
-					<int key="connectionID">1082</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
 						<string key="label">showWindow:</string>
 						<reference key="source" ref="160575707"/>
@@ -3351,14 +3343,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1121</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">callMenu</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="214498531"/>
-					</object>
-					<int key="connectionID">1123</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
 						<string key="label">joinConferenceClicked:</string>
 						<reference key="source" ref="900429702"/>
@@ -3373,6 +3357,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="365086973"/>
 					</object>
 					<int key="connectionID">1127</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">callMenu</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="1038306992"/>
+					</object>
+					<int key="connectionID">1130</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -5563,7 +5555,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1129</int>
+			<int key="maxID">1130</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -5867,9 +5859,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>deleteContact:</string>
 							<string>deleteGroup:</string>
 							<string>editContact:</string>
-							<string>goToConferenceMenuClicked:</string>
 							<string>hangupAllClicked:</string>
-							<string>joinConferenceMenuClicked:</string>
+							<string>joinConferenceClicked:</string>
 							<string>muteClicked:</string>
 							<string>presenceTextAction:</string>
 							<string>presentStatusChanged:</string>
@@ -5939,7 +5930,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
-							<string>id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="actionInfosByName">
@@ -5958,9 +5948,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>deleteContact:</string>
 							<string>deleteGroup:</string>
 							<string>editContact:</string>
-							<string>goToConferenceMenuClicked:</string>
 							<string>hangupAllClicked:</string>
-							<string>joinConferenceMenuClicked:</string>
+							<string>joinConferenceClicked:</string>
 							<string>muteClicked:</string>
 							<string>presenceTextAction:</string>
 							<string>presentStatusChanged:</string>
@@ -6039,15 +6028,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">goToConferenceMenuClicked:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
 								<string key="name">hangupAllClicked:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">joinConferenceMenuClicked:</string>
+								<string key="name">joinConferenceClicked:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
