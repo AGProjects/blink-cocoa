@@ -373,9 +373,9 @@ class ContactWindowController(NSWindowController):
         try:
             session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
         except StopIteration:
-            sessionController = SessionController.alloc().initWithSession_(session)
-            sessionController.setOwner_(self)
-            self.sessionControllers.append(sessionController)
+            session_controller = SessionController.alloc().initWithSession_(session)
+            session_controller.setOwner_(self)
+            self.sessionControllers.append(session_controller)
         session_controller.setAnsweringMachineMode_(answeringMachine)
         session_controller.handleIncomingStreams(streams, False)
 
