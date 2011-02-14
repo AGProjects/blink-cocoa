@@ -112,7 +112,8 @@ class HistoryViewer(NSWindowController):
             self.updateBusyIndicator(True)
             try:
                 media_type = self.search_media if self.search_media else None
-                results = self.history.get_contacts(media_type=media_type)
+                search_text = self.search_text if self.search_text else None
+                results = self.history.get_contacts(media_type=media_type, search_text=search_text)
             except Exception, e:
                 BlinkLogger().log_error(u"Failed to refresh contacts: %s" % e)
                 return
@@ -283,6 +284,7 @@ class HistoryViewer(NSWindowController):
     def search_(self, sender):
         if self.history:
             self.search_text = unicode(sender.stringValue()).lower()
+            self.refreshContacts()
             row = self.indexTable.selectedRow()
             if row > 0:
                 self.refreshDailyEntries()

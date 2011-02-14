@@ -103,10 +103,12 @@ class ChatHistory(object):
             BlinkLogger().log_error(u"Error adding record to history table: %s" % e)
             return False
 
-    def get_contacts(self, media_type=None):
+    def get_contacts(self, media_type=None, search_text=None):
         query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour'"
         if media_type:
             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+        if search_text:
+            query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         query += " order by remote_uri asc"
         return block_on(deferToThread(self.db.queryAll, query))
 
