@@ -111,7 +111,8 @@ class HistoryViewer(NSWindowController):
         if self.history:
             self.updateBusyIndicator(True)
             try:
-                results = self.history.get_contacts()
+                media_type = self.search_media if self.search_media else None
+                results = self.history.get_contacts(media_type=media_type)
             except Exception, e:
                 BlinkLogger().log_error(u"Failed to refresh contacts: %s" % e)
                 return
