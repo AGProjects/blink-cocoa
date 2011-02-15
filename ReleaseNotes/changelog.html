@@ -6,6 +6,57 @@
 
 <body>
 
+<h2>Version 0.23.2</h2>
+
+<p>February 15th, 2011
+
+<ul>
+<li>Added Cmd-J short-key for Join conference
+<li>Changed Silent short-key to Cmd-S 
+<li>Replace Cmd-A with Cmd-N short-key for add contact action
+<li>Allow add contact from search results to join conference window
+<li>Disable participants menu items for bonjour accounts
+<li>Moved Voicemail items from History to Call menu
+<li>Filter contacts by search text in History viewer
+<li>Filter contacts by media type in History viewer
+<li>Renamed menu Audio to Devices and Conference to Call
+<li>Reduce number of previous chat messages fetched from history
+<li>Fixed display of audio devices with unicode characters
+<li>Fixed unicode support in preferences
+<li>Refactored handling of unicode filenames on file transfer
+<li>Fixed saving and retrieving unicode data from history files
+<li>Fixed unicode support for unicode capable objects
+<li>Fixed handling utf-8 encoded display name in chat sessions
+<li>Removed chat history folder setting
+<li>Add both reason and failure_reason to BlinkSessionDidFail notification
+<li>Fixed TLS path, SIP proxy and MSRP relay options display in preferences
+<li>Fixed race condition when chat message is received and window is closed
+<li>Render the display name in chat Growl notifications
+<li>Fixed grouping history entries by account
+<li>Made sessions logging more consistent
+<li>Fixed exception when right clicking an empty area on history window
+<li>Fixed HTTPURL datatype in the preferences panel
+<li>Do not close drawer on window close to avoid transition artifacts
+<li>Fixed saving history entry for failed audio calls
+<li>Renamed Chat history to History viewer
+<li>Refresh the Contacts list of History viewer when a contact has changed
+<li>Log audio calls to chat history only if the contact exists
+<li>Handle exception when not a valid SIP URI in daily entries
+<li>Added filter by media popUp button on history toolbar
+<li>Added file transfer information to chat history
+<li>Fixed session duration formatting
+<li>Fixed logging rejected audio session and made statement more efficient
+<li>Added entries in chat history for audio calls
+<li>Update status when file transfer session failed during DNS lookup
+<li>Fixed exception when adding a contact to a folded group
+<li>Fixed service provider settings provisioning
+<li>Fixed stopping chat controller when DNS lookup fails
+<li>Fixed accouting for failed calls during DNS lookup
+<li>Print a generic message in chat view when MSRP chat stream failed
+<li>Refactored File Transfer to use sqlobject storage backend
+</ul>
+
+
 <h2>Version 0.23.1</h2>
 
 <p>January 29th, 2011
