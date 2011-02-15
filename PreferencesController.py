@@ -323,7 +323,7 @@ class PreferencesController(NSWindowController, object):
             self.settingViews['audio.silent'].restore()
 
     def updateAudioDevices_(self, object):
-        audio_device_option_types = (PreferenceOptionTypes["AudioInputDevice"], PreferenceOptionTypes["AudioOutputDevice"])
+        audio_device_option_types = (PreferenceOptionTypes["audio.input_device"], PreferenceOptionTypes["audio.output_device"])
         for view in (v for v in self.settingViews.itervalues() if isinstance(v, audio_device_option_types)):
             view.refresh()
             view.restore()

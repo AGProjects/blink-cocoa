@@ -475,8 +475,8 @@ class ContactWindowController(NSWindowController):
         if hasAudio:
             BlinkLogger().log_info(u"We have active sessions, switching input/output devices to %s" % device)
             settings = SIPSimpleSettings()
-            settings.audio.input_device = str(device)
-            settings.audio.output_device = str(device)
+            settings.audio.input_device = unicode(device)
+            settings.audio.output_device = unicode(device)
             settings.save()
         else:
             panel = NSGetInformationalAlertPanel("New Audio Device",
@@ -497,8 +497,8 @@ class ContactWindowController(NSWindowController):
             if ret == NSAlertDefaultReturn:
                 BlinkLogger().log_info(u"Switching input/output devices to %s" % device)
                 settings = SIPSimpleSettings()
-                settings.audio.input_device = str(device)
-                settings.audio.output_device = str(device)
+                settings.audio.input_device = unicode(device)
+                settings.audio.output_device = unicode(device)
                 settings.save()
 
         self.menuWillOpen_(self.devicesMenu)
@@ -2058,21 +2058,19 @@ class ContactWindowController(NSWindowController):
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
         dev = sender.representedObject()
-        if dev:
-            dev= str(dev)
-        settings.audio.input_device = dev
+        settings.audio.input_device = unicode(dev)
         settings.save()
 
     def selectOutputDevice_(self, sender):
         settings = SIPSimpleSettings()
         dev = sender.representedObject()
-        settings.audio.output_device = str(dev)
+        settings.audio.output_device = unicode(dev)
         settings.save()
 
     def selectAlertDevice_(self, sender):
         settings = SIPSimpleSettings()
         dev = sender.representedObject()
-        settings.audio.alert_device = str(dev)
+        settings.audio.alert_device = unicode(dev)
         settings.save()
 
     def photoClicked(self, sender):

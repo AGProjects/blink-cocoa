@@ -609,15 +609,15 @@ class PopUpMenuOption(Option):
 
     def _store(self):
         if self.useRepresentedObject:
-            item = self.popup.selectedItem().representedObject()
-            if str(item) != str(self.get()):
-                self.set(str(item))
+            item = unicode(self.popup.selectedItem().representedObject())
+            if item != unicode(self.get()):
+                self.set(item)
         else:
-            if str(self.popup.titleOfSelectedItem()) != str(self.get()):
-                self.set(str(self.popup.titleOfSelectedItem()))
+            if unicode(self.popup.titleOfSelectedItem()) != unicode(self.get()):
+                self.set(unicode(self.popup.titleOfSelectedItem()))
     
     def restore(self):
-        value = str(self.get(False))
+        value = unicode(self.get(False))
         if self.useRepresentedObject:
             index = self.popup.indexOfItemWithRepresentedObject_(value)
             if index < 0 and self.addMissingOptions:
@@ -1329,8 +1329,6 @@ PreferenceOptionTypes = {
 "str" : StringOption,
 "NonNegativeInteger" : NonNegativeIntegerOption,
 "Hostname" : NullableStringOption,
-"AudioInputDevice" : AudioInputDeviceOption,
-"AudioOutputDevice" : AudioOutputDeviceOption,
 "bool" : BoolOption,
 "Path" : PathOption,
 "ContentTypeList" : StringTupleOption,
@@ -1360,6 +1358,9 @@ PreferenceOptionTypes = {
 "Digits" : DigitsOption,
 "HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
+"audio.alert_device" : AudioOutputDeviceOption,
+"audio.input_device" : AudioInputDeviceOption,
+"audio.output_device" : AudioOutputDeviceOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
 "tls.ca_list": TLSCAListPathOption,

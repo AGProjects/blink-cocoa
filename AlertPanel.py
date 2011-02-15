@@ -212,14 +212,14 @@ class AlertPanel(NSObject, object):
         if has_audio_streams:
             outdev = SIPSimpleSettings().audio.output_device
             indev = SIPSimpleSettings().audio.input_device
-            if outdev == "system_default":
-                outdev = "System Default"
-            if indev == "system_default":
-                indev = "System Default"
+            if outdev == u"system_default":
+                outdev = u"System Default"
+            if indev == u"system_default":
+                indev = u"System Default"
             if outdev != indev:
-                self.deviceLabel.setStringValue_("Selected Output Device is %s, Input is %s"%(outdev.strip(), indev.strip()))
+                self.deviceLabel.setStringValue_(u"Selected Output Device is %s, Input is %s" % (outdev.strip(), indev.strip()))
             else:
-                self.deviceLabel.setStringValue_("Selected Audio Device is %s"%outdev.strip())
+                self.deviceLabel.setStringValue_(u"Selected Audio Device is %s" % outdev.strip())
             self.deviceLabel.sizeToFit()
             self.deviceLabel.setHidden_(False)
         else:

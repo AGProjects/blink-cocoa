@@ -13,7 +13,7 @@ from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtens
 from sipsimple.configuration.datatypes import NonNegativeInteger, Path, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, FileTransferSettings, LogsSettings
 
-from configuration.datatypes import AudioInputDevice, AudioOutputDevice, HTTPURL, SoundFile, UserDataPath
+from configuration.datatypes import HTTPURL, SoundFile, UserDataPath
 
 
 class AnsweringMachineSettings(SettingsGroup):
@@ -25,9 +25,9 @@ class AnsweringMachineSettings(SettingsGroup):
 
 class AudioSettingsExtension(AudioSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('history'))
-    alert_device = Setting(type=AudioOutputDevice, default='system_default', nillable=True)
-    input_device = Setting(type=AudioInputDevice, default='system_default', nillable=True)
-    output_device = Setting(type=AudioOutputDevice, default='system_default', nillable=True)
+    alert_device = Setting(type=unicode, default=u'system_default', nillable=True)
+    input_device = Setting(type=unicode, default=u'system_default', nillable=True)
+    output_device = Setting(type=unicode, default=u'system_default', nillable=True)
     sample_rate = Setting(type=SampleRate, default=44100)
 
 

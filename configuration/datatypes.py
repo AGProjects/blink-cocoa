@@ -220,13 +220,3 @@ class HTTPURL(object):
         return unicode(self.url.geturl())
 
 
-## Dummy datatypes that only exist so that the preferences can build special controls for them (like a combobox for audio devices)
-
-class AudioInputDevice(str):
-    pass
-
-
-class AudioOutputDevice(str):
-    pass
-
-
