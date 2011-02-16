@@ -68,6 +68,9 @@ class HistoryViewer(NSWindowController):
         if self:
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
+            self.all_contacts = Contact('Any Address', name=u'All Contacts')
+            self.bonjour_contact = Contact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
@@ -126,10 +129,9 @@ class HistoryViewer(NSWindowController):
     @run_in_gui_thread
     def renderContacts(self, results):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
-        all_contact = Contact('Any Address', name=u'All Contacts')
-        bonjour_contact = Contact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
-        self.contacts = [all_contact, bonjour_contact]
+        self.contacts = [self.all_contacts, self.bonjour_contact]
+        self.allContacts = []
         for row in results:
             contact = getContactMatchingURI(row[0])
             if contact:
@@ -141,10 +143,9 @@ class HistoryViewer(NSWindowController):
 
             contact.setDetail(detail)
             self.contacts.append(contact)
+            self.allContacts.append(contact)
 
         real_contacts = len(self.contacts)-2
-
-        self.allContacts = self.contacts
 
         self.contactTable.reloadData()
 
@@ -305,8 +306,11 @@ class HistoryViewer(NSWindowController):
     @objc.IBAction
     def searchContacts_(self, sender):
         text = unicode(self.searchContactBox.stringValue().strip())
-        self.contacts = [contact for contact in self.allContacts if text in contact] if text else self.allContacts
+        contacts = [contact for contact in self.allContacts if text in contact] if text else self.allContacts
+        self.contacts = [self.all_contacts, self.bonjour_contact] + contacts
         self.contactTable.reloadData()
+        self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
+        self.contactTable.scrollRowToVisible_(0)
 
     def tableViewSelectionDidChange_(self, notification):
         if self.history:
