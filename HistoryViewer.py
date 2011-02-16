@@ -41,8 +41,10 @@ class HistoryViewer(NSWindowController):
     foundMessagesLabel = objc.IBOutlet()
     foundContactsLabel = objc.IBOutlet()
     busyIndicator = objc.IBOutlet()
+    searchContactBox = objc.IBOutlet()
 
     # viewer sections
+    allContacts = []
     contacts = []
     dayly_entries = []
     messages = []
@@ -141,6 +143,8 @@ class HistoryViewer(NSWindowController):
             self.contacts.append(contact)
 
         real_contacts = len(self.contacts)-2
+
+        self.allContacts = self.contacts
 
         self.contactTable.reloadData()
 
@@ -297,6 +301,12 @@ class HistoryViewer(NSWindowController):
                 else:    
                     self.refreshDailyEntries()
                     self.refreshMessages()
+
+    @objc.IBAction
+    def searchContacts_(self, sender):
+        text = unicode(self.searchContactBox.stringValue().strip())
+        self.contacts = [contact for contact in self.allContacts if text in contact] if text else self.allContacts
+        self.contactTable.reloadData()
 
     def tableViewSelectionDidChange_(self, notification):
         if self.history:
