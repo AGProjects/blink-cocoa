@@ -285,7 +285,7 @@ class ChatViewController(NSObject):
         text = processHTMLText(text, self.expandSmileys, is_html)
         private = 1 if is_private else "null"
 
-        if is_private and sender and recipient:
+        if is_private and recipient:
             label = 'Private message to %s' % cgi.escape(recipient) if direction == 'outgoing' else 'Private message from %s' % cgi.escape(sender)
         else: 
             label = cgi.escape(format_identity(self.account)) if sender is None else cgi.escape(sender)
