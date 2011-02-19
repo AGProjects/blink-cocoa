@@ -8,6 +8,8 @@ import datetime
 import os
 import string
 import time
+import uuid
+
 from itertools import izip, chain, repeat
 
 from application.notification import IObserver, NotificationCenter
@@ -19,13 +21,16 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import AudioStream
-from sipsimple.util import TimestampedNotificationData
+from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import Timestamp, TimestampedNotificationData
 
 import AudioSession
 
+from AnsweringMachine import AnsweringMachine
+from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
-from AnsweringMachine import AnsweringMachine
+
 from configuration.datatypes import ResourcePath
 from util import *
 
@@ -64,6 +69,8 @@ class AudioController(MediaStream):
     holdByRemote = False
     holdByLocal = False
     mutedInConference = False
+
+    recording_path = None
 
     status = STREAM_IDLE
 
@@ -626,6 +633,7 @@ class AudioController(MediaStream):
                 self.stream.stop_recording()
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
+                self.addRecordingToHistory()
             else:
                 settings = SIPSimpleSettings()
                 session = self.sessionController.session
@@ -633,7 +641,8 @@ class AudioController(MediaStream):
                 remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
                 filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
                 path = os.path.join(settings.audio.directory.normalized, session.account.id)
-                self.stream.start_recording(os.path.join(path, filename))
+                self.recording_path=os.path.join(path, filename)
+                self.stream.start_recording(self.recording_path)
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
         elif seg == 2: # stop audio
@@ -647,6 +656,25 @@ class AudioController(MediaStream):
             self.mutedInConference = not self.mutedInConference
             self.stream.muted = self.mutedInConference
             sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
+
+    def addRecordingToHistory(self):
+        message = "<h3>Audio Session Recorded</h3>"
+        message += "<p>%s" % self.recording_path
+        message += "<p><audio src='%s' controls='controls'>" % self.recording_path
+        media_type = 'audio-recording'
+        local_uri = format_identity_address(self.sessionController.session.account)
+        remote_uri = format_identity_address(self.sessionController.target_uri)
+        direction = 'incoming'
+        status = 'delivered'
+        cpim_from = format_identity_address(self.sessionController.target_uri)
+        cpim_to = format_identity_address(self.sessionController.target_uri)
+        timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+        self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
+    @run_in_green_thread
+    def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
+        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
