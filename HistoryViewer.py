@@ -79,6 +79,7 @@ class HistoryViewer(NSWindowController):
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
+            self.notification_center.add_observer(self, name='AudioCallLoggedToHistory')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
@@ -457,7 +458,7 @@ class HistoryViewer(NSWindowController):
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
-        if notification.name == "ChatViewControllerDidDisplayMessage":
+        if notification.name in ("ChatViewControllerDidDisplayMessage", "AudioCallLoggedToHistory"):
             if notification.data.local_party != 'bonjour':
                 exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
                 if not exists:

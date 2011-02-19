@@ -530,14 +530,13 @@ class SIPManager(object):
     def get_printed_duration(self, start_time, end_time):
         duration = end_time - start_time
         if (duration.days > 0 or duration.seconds > 0):
-            duration_print = " ("
+            duration_print = ""
             if duration.days > 0 or duration.seconds > 3600:
                 duration_print  += "%i hours, " % (duration.days*24 + duration.seconds/3600)
             seconds = duration.seconds % 3600
             duration_print += "%02i:%02i" % (seconds/60, seconds%60)
-            duration_print += ")"
         else:
-            duration_print = ""
+            duration_print = "00:00"
 
         return duration_print
 
@@ -552,17 +551,18 @@ class SIPManager(object):
             f.write(line)
 
         if 'audio' in data.streams:
-            message = 'Missed incoming audio call'
+            message = '<h3>Missed Incoming Audio Call</h3>'
             media_type = 'audio'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'failed'
             cpim_from = data.target_uri
-            cpim_to = data.target_uri
+            cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_ended(self, controller, data):
         account = controller.account
@@ -577,17 +577,19 @@ class SIPManager(object):
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
-            message= 'Incoming audio call %s' % duration
+            message = '<h3>Incoming Audio Call</h3>'
+            message += '<p>Call duration: %s' % duration
             media_type = 'audio'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = data.target_uri
+            cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
         account = controller.account
@@ -600,17 +602,19 @@ class SIPManager(object):
             f.write(line)
 
         if 'audio' in data.streams:
-            message= 'Incoming audio call answered elsewhere'
+            message= '<h3>Incoming Audio Call</h3>'
+            message += '<p>The call has been answered elsewhere'
             media_type = 'audio'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = data.target_uri
+            cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_failed(self, controller, data):
         account = controller.account
@@ -625,17 +629,20 @@ class SIPManager(object):
             f.write(line)
 
         if 'audio' in data.streams:
-            message= 'Failed outgoing audio call'
+            message = '<h3>Failed Outgoing Audio Call</h3>'
+            message += '<p>Reason: %s' % data.failure_reason or data.reason
+            message += '<br>Code: %s' % data.code
             media_type = 'audio'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = data.target_uri
+            cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_cancelled(self, controller, data):
         account = controller.account
@@ -650,17 +657,18 @@ class SIPManager(object):
             f.write(line)
 
         if 'audio' in data.streams:
-            message= 'Cancelled outgoing audio call'
+            message= '<h3>Cancelled Outgoing Audio Call</h3>'
             media_type = 'audio'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = data.target_uri
+            cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
         account = controller.account
@@ -677,21 +685,23 @@ class SIPManager(object):
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
-            message= 'Outgoing audio call %s' % duration
+            message= '<h3>Outgoing Audio Call</h3>'
+            message += '<p>Call duration: %s' % duration
             media_type = 'audio'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'                  
             cpim_from = data.target_uri
-            cpim_to = data.target_uri
+            cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))                       
 
             self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     @run_in_green_thread
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "text", "0", status)
+        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     def get_audio_recordings_directory(self):
         return os.path.join(self.log_directory, "history")
