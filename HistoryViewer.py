@@ -3,6 +3,7 @@
 
 from Foundation import *
 from AppKit import *
+import datetime
 
 from application.notification import IObserver, NotificationCenter
 from sipsimple.threading.green import run_in_green_thread
@@ -35,13 +36,16 @@ class HistoryViewer(NSWindowController):
     indexTable = objc.IBOutlet()
     contactTable = objc.IBOutlet()
     toolbar = objc.IBOutlet()
+
+    afterDate = objc.IBOutlet()
     searchText = objc.IBOutlet()
     searchMedia = objc.IBOutlet()
+    searchContactBox = objc.IBOutlet()
+
     paginationButton = objc.IBOutlet()
     foundMessagesLabel = objc.IBOutlet()
     foundContactsLabel = objc.IBOutlet()
     busyIndicator = objc.IBOutlet()
-    searchContactBox = objc.IBOutlet()
 
     # viewer sections
     allContacts = []
@@ -58,6 +62,8 @@ class HistoryViewer(NSWindowController):
     search_contact = None
     search_local = None
     search_media = None
+    after_date = None
+
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file'}
 
@@ -98,6 +104,10 @@ class HistoryViewer(NSWindowController):
         self.search_contact = None
         self.search_local = None
         self.search_media = None
+
+        last_day=datetime.datetime.now()-datetime.timedelta(days=1)
+        self.after_date = last_day.strftime("%Y-%m-%d")
+
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
@@ -118,7 +128,8 @@ class HistoryViewer(NSWindowController):
             try:
                 media_type = self.search_media if self.search_media else None
                 search_text = self.search_text if self.search_text else None
-                results = self.history.get_contacts(media_type=media_type, search_text=search_text)
+                after_date = self.after_date if self.after_date else None
+                results = self.history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date)
             except Exception, e:
                 BlinkLogger().log_error(u"Failed to refresh contacts: %s" % e)
                 return
@@ -175,8 +186,9 @@ class HistoryViewer(NSWindowController):
             remote_uri = self.search_contact if self.search_contact else None
             local_uri = self.search_local if self.search_local else None
             media_type = self.search_media if self.search_media else None
+            after_date = self.after_date if self.after_date else None
             try:
-                results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text)
+                results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date)
             except Exception, e:
                 BlinkLogger().log_error(u"Failed to refresh daily entries: %s" % e)
                 return
@@ -198,6 +210,7 @@ class HistoryViewer(NSWindowController):
             entry = {
                 'local_uri'  : result[1],
                 'remote_uri' : remote_uri,
+                'remote_uri_sql' : result[2],
                 'date'       : result[0],
                 'type'       : result[3]
             }
@@ -209,7 +222,7 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     @allocate_autorelease_pool
-    def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None):
+    def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None):
         self.updateBusyIndicator(True)
         if self.history:
             search_text = self.search_text if self.search_text else None
@@ -219,9 +232,11 @@ class HistoryViewer(NSWindowController):
                 local_uri = self.search_local if self.search_local else None
             if not media_type:
                 media_type = self.search_media if self.search_media else None
+            if not after_date:
+                after_date = self.after_date if self.after_date else None
 
             try:
-                results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text)
+                results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date)
             except Exception, e:
                 BlinkLogger().log_error(u"Failed to refresh messages: %s" % e)
                 return
@@ -331,8 +346,7 @@ class HistoryViewer(NSWindowController):
             else:
                 row = self.indexTable.selectedRow()
                 if row >= 0:
-                    remote_uri = format_identity_from_text(self.dayly_entries[row]['remote_uri'])[0]
-                    self.refreshMessages(remote_uri=remote_uri, local_uri=self.dayly_entries[row]['local_uri'], date=self.dayly_entries[row]['date'], media_type=self.dayly_entries[row]['type'])
+                    self.refreshMessages(remote_uri=self.dayly_entries[row]['remote_uri_sql'], local_uri=self.dayly_entries[row]['local_uri'], date=self.dayly_entries[row]['date'], media_type=self.dayly_entries[row]['type'])
 
     def numberOfRowsInTableView_(self, table):
         if table == self.indexTable:
@@ -391,6 +405,15 @@ class HistoryViewer(NSWindowController):
     def filterByMediaChanged_(self, sender):
         tag = sender.selectedItem().tag()
         self.search_media = self.media_type_array[tag]
+        self.refreshContacts()
+        self.refreshDailyEntries()
+        self.refreshMessages()
+
+    @objc.IBAction
+    def filterByDateChanged_(self, sender):
+        tag = sender.selectedItem().tag()
+        date_type_array = {0: None, 1: datetime.datetime.now()-datetime.timedelta(days=1), 2: datetime.datetime.now()-datetime.timedelta(days=7), 3: datetime.datetime.now()-datetime.timedelta(days=31)}
+        self.after_date = date_type_array[tag].strftime("%Y-%m-%d") if date_type_array[tag] else None
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()

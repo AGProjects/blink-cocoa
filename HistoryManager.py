@@ -103,22 +103,26 @@ class ChatHistory(object):
             BlinkLogger().log_error(u"Error adding record to history table: %s" % e)
             return False
 
-    def get_contacts(self, media_type=None, search_text=None):
+    def get_contacts(self, media_type=None, search_text=None, after_date=None):
         query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour'"
         if media_type:
             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
         if search_text:
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+        if after_date:
+            query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         query += " order by remote_uri asc"
         return block_on(deferToThread(self.db.queryAll, query))
 
-    def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None):
+    def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None):
         if remote_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri = %s" % ChatMessage.sqlrepr(remote_uri)
             if media_type:
                 query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+            if after_date:
+                query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
 
             query += " group by date, media_type order by date desc, local_uri asc"
 
@@ -129,6 +133,8 @@ class ChatHistory(object):
                 query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+            if after_date:
+                query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
 
             query += " group by date, remote_uri, media_type"
 
@@ -141,9 +147,10 @@ class ChatHistory(object):
             query = "select date, local_uri, remote_uri, media_type from chat_messages where 1=1"
             if media_type:
                 query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
-
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
+            if after_date:
+                query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
 
             query += " group by date, local_uri, remote_uri, media_type"
 
@@ -154,7 +161,7 @@ class ChatHistory(object):
                 
         return block_on(deferToThread(self.db.queryAll, query))
 
-    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, search_text=None, orderBy='id', orderType='desc', count=50):
+    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, search_text=None, orderBy='id', orderType='desc', count=50):
         query='1=1'
         if msgid:
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
@@ -167,19 +174,20 @@ class ChatHistory(object):
         if search_text:
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         if date:
-            query += " and date like '%s%s'" % (date, '%')
+            query += " and date like %s" % ChatMessage.sqlrepr(date+'%')
+        if after_date:
+            query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         query += " order by %s %s limit %d" % (orderBy, orderType, count)
-
         return block_on(deferToThread(ChatMessage.select, query))
 
-    def delete_messages(self, local_uri=None, remote_uri=None, date=None):
+    def delete_messages(self, local_uri=None, remote_uri=None, after_date=None):
         query = "delete from chat_messages where 1=1"
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
             query += " and remote_uri=%s" % ChatMessage.sqlrepr(remote_uri)
-        if date:
-             query += " and date = '%s'" % date
+        if after_date:
+             query += " and date >= '%s'" % ChatMessage.sqlrepr(after_date)
 
         return block_on(deferToThread(self.db.queryAll, query))
 
