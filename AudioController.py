@@ -9,6 +9,7 @@ import os
 import string
 import time
 import uuid
+import urllib
 
 from itertools import izip, chain, repeat
 
@@ -633,7 +634,6 @@ class AudioController(MediaStream):
                 self.stream.stop_recording()
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
-                self.addRecordingToHistory()
             else:
                 settings = SIPSimpleSettings()
                 session = self.sessionController.session
@@ -657,10 +657,10 @@ class AudioController(MediaStream):
             self.stream.muted = self.mutedInConference
             sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
 
-    def addRecordingToHistory(self):
+    def addRecordingToHistory(self, filename):
         message = "<h3>Audio Session Recorded</h3>"
-        message += "<p>%s" % self.recording_path
-        message += "<p><audio src='%s' controls='controls'>" % self.recording_path
+        message += "<p>%s" % filename
+        message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
         media_type = 'audio-recording'
         local_uri = format_identity_address(self.sessionController.session.account)
         remote_uri = format_identity_address(self.sessionController.target_uri)
@@ -694,7 +694,7 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
         log_info(self, 'Stopped recording audio to %s\n' % data.filename)
-        
+        self.addRecordingToHistory(data.filename)
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
         growl_data.timestamp = datetime.datetime.now(tzlocal())
