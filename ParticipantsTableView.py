@@ -3,8 +3,11 @@
 
 from AppKit import *
 
+from application.notification import NotificationCenter
+
 
 class ParticipantsTableView(NSTableView):
+
     def menuForEvent_(self, event):
         self.window().makeFirstResponder_(self)
 
@@ -14,4 +17,8 @@ class ParticipantsTableView(NSTableView):
         if row != -1:
             self.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
             return self.menu()
+
+    def mouseDown_(self, event):
+        NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self)
+        NSTableView.mouseDown_(self, event)
 

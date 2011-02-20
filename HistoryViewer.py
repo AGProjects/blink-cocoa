@@ -29,6 +29,10 @@ class MyTableView(NSTableView):
         else:
             NSTableView.keyDown_(self, event)
 
+    def mouseDown_(self, event):
+        NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self)
+        NSTableView.mouseDown_(self, event)
+
 class HistoryViewer(NSWindowController):
     implements(IObserver)
     
@@ -81,6 +85,7 @@ class HistoryViewer(NSWindowController):
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
             self.notification_center.add_observer(self, name='AudioCallLoggedToHistory')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
+            self.notification_center.add_observer(self, name='BlinkTableViewSelectionChaged')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
@@ -94,6 +99,8 @@ class HistoryViewer(NSWindowController):
 
             self.history = ChatHistory()
             self.refreshViewer()
+
+            self.selectedTableView = self.contactTable
  
     def close_(self, sender):
         self.window().close()
@@ -465,4 +472,6 @@ class HistoryViewer(NSWindowController):
                     self.refreshContacts()
         elif notification.name == 'BlinkContactsHaveChanged':
             self.refreshContacts()
+        elif notification.name == 'BlinkTableViewSelectionChaged':
+            self.selectedTableView = notification.sender
 
