@@ -746,6 +746,12 @@ class ChatWindowController(NSWindowController):
             remote_uri = format_identity_address(session.remotePartyObject)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
+            column_header_title = u'Remote Party'
+            if session.conference_info is not None:
+                column_header_title = u'%d Participants' % len(self.participants) if len(self.participants) > 1 else u'Participants'
+
+            self.drawerTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
+
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         session = self.selectedSession()
