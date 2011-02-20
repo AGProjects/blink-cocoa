@@ -149,7 +149,7 @@ class FileTransfer(object):
 
         message  = "<h3>%s File Transfer</h3>" % self.ft_info.direction.capitalize()
         message += "<p>%s (%s)" % (self.ft_info.file_path, format_size(self.ft_info.file_size))
-        media_type = 'file'
+        media_type = 'file-transfer'
         local_uri = self.ft_info.local_uri
         remote_uri = self.ft_info.remote_uri
         direction = self.ft_info.direction
