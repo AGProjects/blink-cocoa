@@ -1075,11 +1075,17 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
             return
 
+        contact = self.getContactMatchingURI(target)
+        if contact:
+            display_name = contact.display_name
+        else:
+            display_name = ''
+
         target = self.backend.parse_sip_uri(target, account)
         if not target:
             return
 
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(target))
+        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(display_name))
         session.setOwner_(self)
         self.sessionControllers.append(session)
 
