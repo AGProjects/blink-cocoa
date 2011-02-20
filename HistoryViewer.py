@@ -121,9 +121,9 @@ class HistoryViewer(NSWindowController):
         self.refreshMessages()
 
     @run_in_green_thread
-    def delete_messages(self, local_uri=None, remote_uri=None):
+    def delete_messages(self, local_uri=None, remote_uri=None, date=None, media_type=None):
         try:
-            self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri)
+            self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, media_type=media_type)
         except Exception, e:
             BlinkLogger().log_error(u"Failed to delete messages: %s" % e)
             return
@@ -433,22 +433,39 @@ class HistoryViewer(NSWindowController):
             sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
         elif sender.tag() == 101: # purge messages
-            row = self.contactTable.selectedRow()
-            if row == 0:
-                ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of All history messages. This operation cannot be undone.", u"Confirm", u"Cancel", None)
-                if ret == NSAlertDefaultReturn:
-                    self.delete_messages()
-            elif row == 1:
-                remote_uri=self.contacts[row].uri
-                ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of Bonjour chat messages. This operation cannot be undone.", u"Confirm", u"Cancel", None)
-                if ret == NSAlertDefaultReturn:
-                    self.delete_messages(local_uri='bonjour')
-            else: 
-                remote_uri=self.contacts[row].uri
-                ret = NSRunAlertPanel(u"Purge message history", u"Please confirm the deletion of chat messages from %s. This operation cannot be undone."%remote_uri, u"Confirm", u"Cancel", None)
-                if ret == NSAlertDefaultReturn:
-                    self.delete_messages(remote_uri=remote_uri)
-                
+            if self.selectedTableView == self.contactTable:
+                try:
+                    row = self.contactTable.selectedRow()
+                    if row == 0:
+                        ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of All history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+                        if ret == NSAlertDefaultReturn:
+                            self.delete_messages()
+                    elif row == 1:
+                        remote_uri=self.contacts[row].uri
+                        ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of Bonjour history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+                        if ret == NSAlertDefaultReturn:
+                            self.delete_messages(local_uri='bonjour')
+                    else:
+                        remote_uri=self.contacts[row].uri
+                        ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of history entries from %s. This operation cannot be undone."%remote_uri, u"Confirm", u"Cancel", None)
+                        if ret == NSAlertDefaultReturn:
+                            self.delete_messages(remote_uri=remote_uri)
+                except IndexError:
+                    pass
+
+            elif self.selectedTableView == self.indexTable:
+                try:
+                    row = self.indexTable.selectedRow()
+                    remote_uri = self.dayly_entries[row]['remote_uri_sql']
+                    date = self.dayly_entries[row]['date']
+                    media_type = self.dayly_entries[row]['type']
+
+                    ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
+                    if ret == NSAlertDefaultReturn:
+                        self.delete_messages(remote_uri=remote_uri, media_type=media_type, date=date)
+                except IndexError:
+                    pass
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def updateBusyIndicator(self, busy=False):
