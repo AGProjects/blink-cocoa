@@ -3,18 +3,24 @@
 
 import datetime
 import os
+import uuid
+import urllib
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
+from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import Timestamp
 
 from BlinkLogger import BlinkLogger
+from HistoryManager import ChatHistory
 from configuration.datatypes import ResourcePath
-from util import allocate_autorelease_pool
+from util import *
 
 
 class AnsweringMachine(object):
@@ -122,5 +128,25 @@ class AnsweringMachine(object):
 
     def _NH_AudioStreamDidStopRecordingAudio(self, notification):
         BlinkLogger().log_info(u"Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
+        self.addAnsweringMachineRecordingToHistory(notification.data.filename, self.duration)
 
+    def addAnsweringMachineRecordingToHistory(self, filename, duration):
+        message = "<h3>Answering Machine Recording</h3>"
+        message += "<p>%s" % filename
+        message += "<br>Duration: %s" % duration
+        message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
+        media_type = 'voicemail'
+        local_uri = format_identity_address(self.session.account)
+        remote_uri = format_identity_address(self.session.remote_identity)
+        direction = 'incoming'
+        status = 'delivered'
+        cpim_from = format_identity_address(self.session.remote_identity)
+        cpim_to = format_identity_address(self.session.remote_identity)
+        timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+        self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
+    @run_in_green_thread
+    def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
+        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
