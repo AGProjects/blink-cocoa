@@ -180,14 +180,16 @@ class ChatHistory(object):
         query += " order by %s %s limit %d" % (orderBy, orderType, count)
         return block_on(deferToThread(ChatMessage.select, query))
 
-    def delete_messages(self, local_uri=None, remote_uri=None, after_date=None):
+    def delete_messages(self, local_uri=None, remote_uri=None, media_type=None, date=None):
         query = "delete from chat_messages where 1=1"
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
             query += " and remote_uri=%s" % ChatMessage.sqlrepr(remote_uri)
-        if after_date:
-             query += " and date >= '%s'" % ChatMessage.sqlrepr(after_date)
+        if media_type:
+             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+        if date:
+             query += " and date = %s" % ChatMessage.sqlrepr(date)
 
         return block_on(deferToThread(self.db.queryAll, query))
 
