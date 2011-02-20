@@ -133,7 +133,7 @@ class AnsweringMachine(object):
     def addAnsweringMachineRecordingToHistory(self, filename, duration):
         message = "<h3>Answering Machine Recording</h3>"
         message += "<p>%s" % filename
-        message += "<br>Duration: %s" % duration
+        message += "<br>Duration: %s seconds" % duration
         message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
         media_type = 'voicemail'
         local_uri = format_identity_address(self.session.account)
