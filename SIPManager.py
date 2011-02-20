@@ -556,7 +556,7 @@ class SIPManager(object):
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
-            status = 'failed'
+            status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
