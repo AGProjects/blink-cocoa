@@ -98,6 +98,10 @@ class HistoryViewer(NSWindowController):
                 col.setSortDescriptorPrototype_(descriptor)
 
             self.history = ChatHistory()
+
+            last_day=datetime.datetime.now()-datetime.timedelta(days=1)
+            self.after_date = last_day.strftime("%Y-%m-%d")
+
             self.refreshViewer()
 
             self.selectedTableView = self.contactTable
@@ -112,9 +116,6 @@ class HistoryViewer(NSWindowController):
         self.search_contact = None
         self.search_local = None
         self.search_media = None
-
-        last_day=datetime.datetime.now()-datetime.timedelta(days=1)
-        self.after_date = last_day.strftime("%Y-%m-%d")
 
         self.refreshContacts()
         self.refreshDailyEntries()
