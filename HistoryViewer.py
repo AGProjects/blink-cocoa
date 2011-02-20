@@ -457,13 +457,14 @@ class HistoryViewer(NSWindowController):
             elif self.selectedTableView == self.indexTable:
                 try:
                     row = self.indexTable.selectedRow()
+                    local_uri = self.dayly_entries[row]['local_uri']
                     remote_uri = self.dayly_entries[row]['remote_uri_sql']
                     date = self.dayly_entries[row]['date']
                     media_type = self.dayly_entries[row]['type']
 
                     ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
                     if ret == NSAlertDefaultReturn:
-                        self.delete_messages(remote_uri=remote_uri, media_type=media_type, date=date)
+                        self.delete_messages(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date)
                 except IndexError:
                     pass
 
