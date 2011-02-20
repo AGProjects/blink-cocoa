@@ -161,7 +161,7 @@ class ChatHistory(object):
                 
         return block_on(deferToThread(self.db.queryAll, query))
 
-    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, search_text=None, orderBy='id', orderType='desc', count=50):
+    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, search_text=None, orderBy='time', orderType='desc', count=50):
         query='1=1'
         if msgid:
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
