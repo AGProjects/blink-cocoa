@@ -1129,6 +1129,24 @@ class SIPManager(object):
         if summary.messages_waiting and growl_data.new_messages > 0:
             self.notification_center.post_notification("GrowlGotMWI", sender=self, data=growl_data)
 
+            message = '<h3>New Voicemail Available on the Server</h3>'
+            if growl_data.new_messages:
+                message += '<p>New messages: %s' % growl_data.new_messages
+            if growl_data.old_messages:
+                message += '<br>Old messages: %s' % growl_data.old_messages
+            if account.voicemail_uri:
+                message += "<p>To listen to the messages call %s" % account.voicemail_uri
+            media_type = 'voicemail'
+            local_uri = format_identity_address(account)
+            remote_uri = format_identity_address(account)
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = format_identity_address(account)
+            cpim_to = format_identity_address(account)
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+
+            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'message_summary.enabled' in data.modified:
