@@ -65,7 +65,7 @@ class HistoryViewer(NSWindowController):
     after_date = None
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
-    media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file', 5: 'audio-recording', 6: 'video-recording', 7: 'voicemail'}
+    media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file', 5: 'audio-recording', 6: 'video-recording', 7: 'voicemail', 8: 'missed-calls'}
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()

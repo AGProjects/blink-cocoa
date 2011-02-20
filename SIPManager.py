@@ -552,7 +552,7 @@ class SIPManager(object):
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
-            media_type = 'audio'
+            media_type = 'missed-call'
             local_uri = format_identity_address(account)
             remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
