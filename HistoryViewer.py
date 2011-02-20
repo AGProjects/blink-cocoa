@@ -185,7 +185,7 @@ class HistoryViewer(NSWindowController):
             self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
             self.contactTable.scrollRowToVisible_(0)
 
-        self.foundContactsLabel.setStringValue_(u'%d contact(s) found'%real_contacts if real_contacts else u'No contact found')
+        self.foundContactsLabel.setStringValue_(u'%d contacts found'%real_contacts if real_contacts else u'No contact found')
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
@@ -472,7 +472,6 @@ class HistoryViewer(NSWindowController):
     @run_in_gui_thread
     def updateBusyIndicator(self, busy=False):
         if busy:
-            self.foundContactsLabel.setHidden_(True)
             self.busyIndicator.setHidden_(False)
             self.busyIndicator.setIndeterminate_(True)
             self.busyIndicator.setStyle_(NSProgressIndicatorSpinningStyle)
@@ -480,7 +479,6 @@ class HistoryViewer(NSWindowController):
         else:
             self.busyIndicator.stopAnimation_(None)
             self.busyIndicator.setHidden_(True)
-            self.foundContactsLabel.setHidden_(False)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
