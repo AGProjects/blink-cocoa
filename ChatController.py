@@ -911,7 +911,7 @@ class ChatController(MediaStream):
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        if self.sessionController.remoteSIPAddress == sender.remote_identity and window and _video_file_extension_pattern.search(data.file_path):
+        if self.sessionController.remoteSIPAddress == sender.remote_identity and window and video_file_extension_pattern.search(data.file_path):
             text  = "Incoming video file transfer has finished"
             text += "<p><video src='%s' controls='controls' autoplay='autoplay'></video>" % data.file_path
             name = format_identity(self.sessionController.session.remote_identity)

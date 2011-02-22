@@ -3,7 +3,7 @@
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs', 'parse_datetime',
-           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', '_video_file_extension_pattern']
+           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern']
 
 import datetime
 import errno
@@ -18,7 +18,7 @@ from Foundation import NSAutoreleasePool, NSThread
 
 from sipsimple.core import SIPURI, FrozenSIPURI
 
-_video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
+video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 
 def format_identity(identity, check_contact=False):
     """
