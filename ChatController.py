@@ -7,8 +7,10 @@ from AppKit import *
 import datetime
 import hashlib
 import os
+import re
 import time
 import unicodedata
+import uuid
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -327,6 +329,7 @@ class ChatController(MediaStream):
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, sender=self.sessionController)
+            self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
 
             NSBundle.loadNibNamed_owner_("ChatView", self)
 
@@ -906,14 +909,27 @@ class ChatController(MediaStream):
 
         window.noteSession_isComposing_(self.sessionController, flag)
 
+    def _NH_BlinkFileTransferDidEnd(self, sender, data):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if self.sessionController.remoteSIPAddress == sender.remote_identity and window and _video_file_extension_pattern.search(data.file_path):
+            text  = "Incoming video file transfer has finished"
+            text += "<p><video src='%s' controls='controls' autoplay='autoplay'></video>" % data.file_path
+            name = format_identity(self.sessionController.session.remote_identity)
+            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(self.sessionController.session.remote_identity))
+            now = datetime.datetime.now(tzlocal())
+            timestamp = Timestamp(now)
+            self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
+
     def _NH_BlinkSessionDidFail(self, sender, data):
         message = "Session failed: %s" % data.reason
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
         self.notification_center.remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
 
     def _NH_MediaStreamDidStart(self, sender, data):
         endpoint = str(self.stream.msrp.full_remote_path[0])

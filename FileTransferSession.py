@@ -149,6 +149,8 @@ class FileTransfer(object):
 
         message  = "<h3>%s File Transfer</h3>" % self.ft_info.direction.capitalize()
         message += "<p>%s (%s)" % (self.ft_info.file_path, format_size(self.ft_info.file_size))
+        if _video_file_extension_pattern.search(self.ft_info.file_path):
+            message += "<p><video src='%s' controls='controls'></video>" % self.ft_info.file_path
         media_type = 'file-transfer'
         local_uri = self.ft_info.local_uri
         remote_uri = self.ft_info.remote_uri
@@ -303,7 +305,7 @@ class IncomingFileTransfer(FileTransfer):
             self.ft_info.status="completed"
             self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
-            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, None)
+            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, data=TimestampedNotificationData(file_path=self.file_path))
 
         NotificationCenter().remove_observer(self, sender=sender)
 
@@ -519,7 +521,7 @@ class OutgoingFileTransfer(FileTransfer):
             self.ft_info.status="completed"
             self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
-            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, None)
+            SIPManager.SIPManager().post_in_main("BlinkFileTransferDidEnd", self, data=TimestampedNotificationData(file_path=self.file_path))
 
         if self.calculated_checksum:
             NotificationCenter().remove_observer(self, sender=self.stream)
