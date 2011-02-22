@@ -180,8 +180,8 @@ class JoinConferenceWindow(NSObject):
                 "OK", None, None)
             return False
 
-        if not re.match("^[1-9a-z][0-9a-z_.-]{1,65}[0-9a-z]", self.room.stringValue().strip()):
-            NSRunAlertPanel("Start a new Conference", "Please enter a valid conference room of at least 3 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
+        if not re.match("^[1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", self.room.stringValue().strip()):
+            NSRunAlertPanel("Start a new Conference", "Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
                 "OK", None, None)
             return False
 
