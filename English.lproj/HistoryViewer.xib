@@ -82,9 +82,11 @@
 								<string key="NSToolbarItemPaletteLabel">Search Content</string>
 								<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 								<object class="NSSearchField" key="NSToolbarItemView" id="122148039">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
-									<string key="NSFrame">{{0, 14}, {217, 22}}</string>
+									<string key="NSFrame">{{0, 14}, {191, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSSearchFieldCell" key="NSCell" id="884355243">
 										<int key="NSCellFlags">343539264</int>
@@ -166,8 +168,8 @@
 								<nil key="NSToolbarItemImage"/>
 								<nil key="NSToolbarItemTarget"/>
 								<nil key="NSToolbarItemAction"/>
-								<string key="NSToolbarItemMinSize">{200, 22}</string>
-								<string key="NSToolbarItemMaxSize">{217, 22}</string>
+								<string key="NSToolbarItemMinSize">{191, 22}</string>
+								<string key="NSToolbarItemMaxSize">{217, 26}</string>
 								<bool key="NSToolbarItemEnabled">YES</bool>
 								<bool key="NSToolbarItemAutovalidates">YES</bool>
 								<int key="NSToolbarItemTag">0</int>
@@ -182,9 +184,11 @@
 								<string key="NSToolbarItemPaletteLabel">Filter by Date</string>
 								<nil key="NSToolbarItemToolTip"/>
 								<object class="NSPopUpButton" key="NSToolbarItemView" id="110720404">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">265</int>
-									<string key="NSFrame">{{0, 14}, {112, 26}}</string>
+									<string key="NSFrame">{{0, 14}, {100, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="155804980">
 										<int key="NSCellFlags">-2076049856</int>
@@ -196,8 +200,8 @@
 										</object>
 										<reference key="NSControlView" ref="110720404"/>
 										<int key="NSButtonFlags">-2035138305</int>
-										<int key="NSButtonFlags2">65</int>
-										<object class="NSFont" key="NSAlternateImage" id="1030487386">
+										<int key="NSButtonFlags2">1</int>
+										<object class="NSFont" key="NSAlternateImage" id="392123562">
 											<string key="NSName">LucidaGrande</string>
 											<double key="NSSize">11</double>
 											<int key="NSfFlags">16</int>
@@ -277,8 +281,8 @@
 								<nil key="NSToolbarItemImage"/>
 								<nil key="NSToolbarItemTarget"/>
 								<nil key="NSToolbarItemAction"/>
-								<string key="NSToolbarItemMinSize">{112, 19}</string>
-								<string key="NSToolbarItemMaxSize">{140, 50}</string>
+								<string key="NSToolbarItemMinSize">{0, 22}</string>
+								<string key="NSToolbarItemMaxSize">{140, 26}</string>
 								<bool key="NSToolbarItemEnabled">YES</bool>
 								<bool key="NSToolbarItemAutovalidates">YES</bool>
 								<int key="NSToolbarItemTag">0</int>
@@ -293,9 +297,11 @@
 								<string key="NSToolbarItemPaletteLabel">Filter by Media</string>
 								<nil key="NSToolbarItemToolTip"/>
 								<object class="NSPopUpButton" key="NSToolbarItemView" id="814329240">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">265</int>
-									<string key="NSFrame">{{0, 14}, {112, 26}}</string>
+									<string key="NSFrame">{{0, 14}, {112, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="149939024">
 										<int key="NSCellFlags">-2076049856</int>
@@ -304,7 +310,7 @@
 										<reference key="NSControlView" ref="814329240"/>
 										<int key="NSButtonFlags">-2035138305</int>
 										<int key="NSButtonFlags2">65</int>
-										<reference key="NSAlternateImage" ref="1030487386"/>
+										<reference key="NSAlternateImage" ref="392123562"/>
 										<string key="NSAlternateContents"/>
 										<string key="NSKeyEquivalent"/>
 										<int key="NSPeriodicDelay">400</int>
@@ -434,8 +440,8 @@
 								<nil key="NSToolbarItemImage"/>
 								<nil key="NSToolbarItemTarget"/>
 								<nil key="NSToolbarItemAction"/>
-								<string key="NSToolbarItemMinSize">{112, 19}</string>
-								<string key="NSToolbarItemMaxSize">{140, 50}</string>
+								<string key="NSToolbarItemMinSize">{112, 22}</string>
+								<string key="NSToolbarItemMaxSize">{140, 26}</string>
 								<bool key="NSToolbarItemEnabled">YES</bool>
 								<bool key="NSToolbarItemAutovalidates">YES</bool>
 								<int key="NSToolbarItemTag">0</int>
@@ -446,13 +452,15 @@
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">518AE8FE-A72E-43F6-9D3D-7AB3FEB40465</characters>
 								</object>
-								<string key="NSToolbarItemLabel">Search Contact</string>
-								<string key="NSToolbarItemPaletteLabel">Search Contact</string>
+								<string key="NSToolbarItemLabel">Filter by Contact</string>
+								<string key="NSToolbarItemPaletteLabel">Filter by Contact</string>
 								<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 								<object class="NSSearchField" key="NSToolbarItemView" id="889615600">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
-									<string key="NSFrame">{{0, 14}, {139, 22}}</string>
+									<string key="NSFrame">{{0, 14}, {127, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSSearchFieldCell" key="NSCell" id="117868059">
 										<int key="NSCellFlags">343539264</int>
@@ -613,9 +621,9 @@
 						<reference ref="346932705"/>
 						<reference ref="234151151"/>
 						<reference ref="563229469"/>
+						<reference ref="407128098"/>
 						<reference ref="1022648705"/>
 						<reference ref="515774140"/>
-						<reference ref="407128098"/>
 					</object>
 					<object class="NSMutableArray" key="NSToolbarIBSelectableItems">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -673,7 +681,7 @@
 															<object class="NSTableHeaderCell" key="NSHeaderCell">
 																<int key="NSCellFlags">75628096</int>
 																<int key="NSCellFlags2">2048</int>
-																<string key="NSContents">Filter by Contact</string>
+																<string key="NSContents">Contacts</string>
 																<reference key="NSSupport" ref="26"/>
 																<object class="NSColor" key="NSBackgroundColor">
 																	<int key="NSColorSpace">3</int>
@@ -2050,9 +2058,9 @@
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{284, 225}, {692, 530}}</string>
+					<string>{{359, 131}, {692, 530}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{284, 225}, {692, 530}}</string>
+					<string>{{359, 131}, {692, 530}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -2116,7 +2124,7 @@
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{337, 569}, {120, 71}}</string>
+					<string>{{414, 473}, {120, 71}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2135,7 +2143,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{322, 755}, {616, 0}}</string>
+					<string>{{397, 661}, {616, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2194,7 +2202,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">138</int>
+			<int key="maxID">144</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
