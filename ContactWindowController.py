@@ -2018,7 +2018,36 @@ class ContactWindowController(NSWindowController):
                 item.setState_(NSOnState if value == dev else NSOffState)
                 index += 1
 
+        def setupAudioInputOutputDeviceMenu(menu, tag, devices, selector):
+            for i in range(100):
+                old = menu.itemWithTag_(tag*100+i)
+                if old:
+                    menu.removeItem_(old)
+                else:
+                    break
+
+            if not devices:
+                menu.itemWithTag_(404).setHidden_(True)
+                menu.itemWithTag_(405).setHidden_(True)
+            else:
+                menu.itemWithTag_(404).setHidden_(False)
+                menu.itemWithTag_(405).setHidden_(False)
+                index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
+                i = 0
+                for dev in devices:
+                    item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
+                    item.setRepresentedObject_(dev)
+                    item.setTarget_(self)
+                    item.setTag_(tag*100+i)
+                    item.setIndentationLevel_(2)
+                    i += 1
+                    index += 1
+
         if menu == self.devicesMenu:
+            in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
+            if u'Built-in Microphone' in self.backend._app.engine.input_devices and u'Built-in Output' in self.backend._app.engine.output_devices:
+                in_out_devices.append(u'Built-in Microphone and Output')
+            setupAudioInputOutputDeviceMenu(menu, 404, in_out_devices, "selectInputOutputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices, "input_device", "selectInputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device", "selectAlertDevice:")
@@ -2068,6 +2097,17 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         dev = sender.representedObject()
         settings.audio.output_device = unicode(dev)
+        settings.save()
+
+    def selectInputOutputDevice_(self, sender):
+        settings = SIPSimpleSettings()
+        dev = sender.representedObject()
+        if dev == u'Built-in Microphone and Output':
+            settings.audio.output_device = unicode('Built-in Output')
+            settings.audio.input_device = unicode('Built-in Microphone')
+        else:
+            settings.audio.output_device = unicode(dev)
+            settings.audio.input_device = unicode(dev)
         settings.save()
 
     def selectAlertDevice_(self, sender):
