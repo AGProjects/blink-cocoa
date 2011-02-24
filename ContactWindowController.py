@@ -1371,10 +1371,11 @@ class ContactWindowController(NSWindowController):
 
     def handle_incoming_proposal(self, session, streams):
         stream_type_list = list(set(stream.type for stream in streams))
+        
         if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
-                BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
-                self.acceptIncomingProposal(session, streams)
-                return
+            BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
+            self.acceptIncomingProposal(session, streams)
+            return
         elif session.account is BonjourAccount():
             if stream_type_list == ['chat']:
                 BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
