@@ -334,7 +334,7 @@ class SessionController(NSObject):
                 log_info(self, "Stream already exists: %s"%self.streamHandlers)
 
         if new_session:
-            log_info(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
+            log_info(self, u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
             self.changeSessionState(STATE_DNS_LOOKUP)
             SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
               
@@ -648,7 +648,7 @@ class SessionController(NSObject):
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
-        log_info(self, "Received conference-info update for %s" % self.getTitle())
+        log_info(self, u"Received conference-info update for %s" % self.getTitle())
 
         self.pending_removal_participants = set()
         self.conference_info = data.conference_info

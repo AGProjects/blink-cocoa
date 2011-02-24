@@ -185,7 +185,7 @@ class FileTransfer(object):
         SIPManager.SIPManager().post_in_main("BlinkFileTransferUpdate", self)
 
     def _NH_SIPSessionDidEnd(self, sender, data):
-        log_info(self, "File Transfer Session ended by %s"%data.originator)
+        log_info(self, u"File Transfer Session ended by %s"%data.originator)
         NotificationCenter().remove_observer(self, sender=sender)
         if not self.finished_transfer and data.originator == "remote":
             self.fail_reason = "File Transfer interrupted by remote party"
@@ -239,12 +239,12 @@ class IncomingFileTransfer(FileTransfer):
         
         dirname = os.path.dirname(self.file_path)
         if not os.path.exists(dirname):
-            log_info(self, "Downloads folder doesn't exist, creating %s..." % dirname)
+            log_info(self, u"Downloads folder doesn't exist, creating %s..." % dirname)
             makedirs(dirname)
 
         self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
 
-        log_info(self, "Will write file to %s" % self.file_path)
+        log_info(self, u"Will write file to %s" % self.file_path)
         self.file_selector.fd = open(self.file_path, "w+")
 
         self.ft_info.status="preparing"
@@ -280,15 +280,15 @@ class IncomingFileTransfer(FileTransfer):
                 if local_hash == remote_hash:
                     oname = self.file_path
                     self.file_path = self.file_path[:-len(".download")]
-                    log_info(self, "Renaming downloaded file to %s" % self.file_path)
+                    log_info(self, u"Renaming downloaded file to %s" % self.file_path)
                     os.rename(oname, self.file_path)
                 else:
                     self.fail_reason = "File hash mismatch"
-                    log_info(self, "Removing corrupted file %s" % self.file_path)
+                    log_info(self, u"Removing corrupted file %s" % self.file_path)
                     os.remove(self.file_path)
             else:
                 os.remove(self.file_path)
-                log_info(self, "Removing incomplete file %s" % self.file_path)
+                log_info(self, u"Removing incomplete file %s" % self.file_path)
 
         log_info(self, "Incoming File Transfer ended (%i of %i bytes transferred)" % (self.file_pos, self.file_size))
         if not self.fail_reason and not self.finished_transfer:
@@ -398,7 +398,7 @@ class OutgoingFileTransfer(FileTransfer):
         else:
             notification_center.post_notification("BlinkFileTransferInitializing", self)
 
-        log_info(self, "Computing checksum for file %s" % os.path.basename(self.file_path))
+        log_info(self, u"Computing checksum for file %s" % os.path.basename(self.file_path))
 
         self.stop_event.clear()
         self.initiate_file_transfer()
@@ -437,7 +437,7 @@ class OutgoingFileTransfer(FileTransfer):
 
         notification_center.post_notification("BlinkFileTransferInitiated", self)
 
-        log_info(self, "Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
+        log_info(self, u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
         SIPManager.SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
     def end(self):

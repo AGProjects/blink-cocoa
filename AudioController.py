@@ -261,7 +261,7 @@ class AudioController(MediaStream):
             return
         
         if type(peer) == str:
-            log_info(self, "New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
+            log_info(self, u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
                   peer))
             # start audio session to peer and add it to conference
             self.view.setConferencing_(True)
@@ -276,7 +276,7 @@ class AudioController(MediaStream):
                 
             return False
         else:
-            log_info(self, "Conference of %s with %s initiated through drag&drop" % (self.sessionController.getTitle(),
+            log_info(self, u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.getTitle(),
                   peer.sessionController.getTitle()))
             # if conference already exists and neither self nor peer are part of it:
             #     return False
@@ -292,7 +292,7 @@ class AudioController(MediaStream):
             return True
 
     def sessionBoxDidRemoveFromConference(self, sender):
-        log_info(self, "Removed %s from conference through drag&drop" % self.sessionController.getTitle())
+        log_info(self, u"Removed %s from conference through drag&drop" % self.sessionController.getTitle())
         self.removeFromConference()
 
     def addToConference(self):
@@ -690,10 +690,10 @@ class AudioController(MediaStream):
             self.hold()
 
     def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
-        log_info(self, 'Recording audio to %s\n' % data.filename)
+        log_info(self, u'Recording audio to %s\n' % data.filename)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
-        log_info(self, 'Stopped recording audio to %s\n' % data.filename)
+        log_info(self, u'Stopped recording audio to %s\n' % data.filename)
         self.addRecordingToHistory(data.filename)
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
@@ -702,7 +702,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_AudioStreamDidChangeHoldState(self, sender, data):
-        log_info(self, "%s requested %s"%(data.originator,(data.on_hold and "hold" or "unhold")))
+        log_info(self, u"%s requested %s"%(data.originator,(data.on_hold and "hold" or "unhold")))
         if data.originator != "local":
             self.holdByRemote = data.on_hold
             self.changeStatus(self.status)
