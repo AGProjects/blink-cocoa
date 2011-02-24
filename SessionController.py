@@ -579,7 +579,7 @@ class SessionController(NSObject):
         self.proposalOriginator = 'remote'
         if data.originator != "local":
             stream_names = ', '.join(stream.type for stream in data.streams)
-            log_info(self, "Got a Stream proposal from %s with streams %s" % (sender.remote_identity, stream_names))
+            log_info(self, u"Got a Stream proposal from %s with streams %s" % (sender.remote_identity, stream_names))
             self.owner.handle_incoming_proposal(sender, data.streams)
 
             # needed to temporarily disable the Chat Window toolbar buttons
