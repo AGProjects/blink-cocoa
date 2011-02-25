@@ -274,7 +274,17 @@ class HistoryViewer(NSWindowController):
         self.paginationButton.setEnabled_forSegment_(True if self.start else False, 1)
         self.paginationButton.setEnabled_forSegment_(True if self.start+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 2)
         self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and len(self.messages) - self.start > 2*MAX_MESSAGES_PER_PAGE else False, 3)
-        self.foundMessagesLabel.setStringValue_(u'Displaying %d to %d out of %d messages'%(self.start+1, end, len(self.messages)) if len(self.messages) else u'No message found')
+
+        text = u'No entry found'
+        if len(self.messages):
+            if len(self.messages) == 1:
+                text = u'Displaying 1 entry'
+            elif MAX_MESSAGES_PER_PAGE > len(self.messages):
+                text = u'Displaying %d entries' % end
+            else:
+                text = u'Displaying %d to %d out of %d entries' % (self.start+1, end, len(self.messages))
+
+        self.foundMessagesLabel.setStringValue_(text)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
