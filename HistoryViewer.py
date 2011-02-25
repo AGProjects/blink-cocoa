@@ -48,6 +48,7 @@ class HistoryViewer(NSWindowController):
 
     paginationButton = objc.IBOutlet()
     foundMessagesLabel = objc.IBOutlet()
+    queryDatabaseLabel = objc.IBOutlet()
     busyIndicator = objc.IBOutlet()
 
     # viewer sections
@@ -486,6 +487,7 @@ class HistoryViewer(NSWindowController):
     @run_in_gui_thread
     def updateBusyIndicator(self, busy=False):
         if busy:
+            self.queryDatabaseLabel.setHidden_(False)
             self.busyIndicator.setHidden_(False)
             self.busyIndicator.setIndeterminate_(True)
             self.busyIndicator.setStyle_(NSProgressIndicatorSpinningStyle)
@@ -493,6 +495,7 @@ class HistoryViewer(NSWindowController):
         else:
             self.busyIndicator.stopAnimation_(None)
             self.busyIndicator.setHidden_(True)
+            self.queryDatabaseLabel.setHidden_(True)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
