@@ -48,7 +48,6 @@ class HistoryViewer(NSWindowController):
 
     paginationButton = objc.IBOutlet()
     foundMessagesLabel = objc.IBOutlet()
-    foundContactsLabel = objc.IBOutlet()
     busyIndicator = objc.IBOutlet()
 
     # viewer sections
@@ -185,7 +184,7 @@ class HistoryViewer(NSWindowController):
             self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
             self.contactTable.scrollRowToVisible_(0)
 
-        self.foundContactsLabel.setStringValue_(u'%d contacts found'%real_contacts if real_contacts else u'No contact found')
+        self.contactTable.tableColumnWithIdentifier_('contacts').headerCell(). setStringValue_(u'%d Contacts'%real_contacts if real_contacts else u'Contacts')
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):

@@ -667,6 +667,7 @@
 													<object class="NSMutableArray" key="NSTableColumns">
 														<bool key="EncodedWithXMLCoder">YES</bool>
 														<object class="NSTableColumn" id="891020856">
+															<string key="NSIdentifier">contacts</string>
 															<double key="NSWidth">162</double>
 															<double key="NSMinWidth">40</double>
 															<double key="NSMaxWidth">1000</double>
@@ -898,7 +899,7 @@
 																	<object class="NSTableHeaderCell" key="NSHeaderCell">
 																		<int key="NSCellFlags">75628096</int>
 																		<int key="NSCellFlags2">2048</int>
-																		<string key="NSContents">Remote Party</string>
+																		<string key="NSContents">Remote Contact</string>
 																		<reference key="NSSupport" ref="26"/>
 																		<reference key="NSBackgroundColor" ref="980821077"/>
 																		<reference key="NSTextColor" ref="810802336"/>
@@ -1154,29 +1155,12 @@
 								<string key="NSContents">No  messages found</string>
 								<reference key="NSSupport" ref="22"/>
 								<reference key="NSControlView" ref="706479359"/>
-								<object class="NSColor" key="NSBackgroundColor" id="98027188">
+								<object class="NSColor" key="NSBackgroundColor">
 									<int key="NSColorSpace">6</int>
 									<string key="NSCatalogName">System</string>
 									<string key="NSColorName">controlColor</string>
 									<reference key="NSColor" ref="815828687"/>
 								</object>
-								<reference key="NSTextColor" ref="234652328"/>
-							</object>
-						</object>
-						<object class="NSTextField" id="932620268">
-							<reference key="NSNextResponder" ref="1006"/>
-							<int key="NSvFlags">292</int>
-							<string key="NSFrame">{{26, 8}, {145, 11}}</string>
-							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSWindow"/>
-							<bool key="NSEnabled">YES</bool>
-							<object class="NSTextFieldCell" key="NSCell" id="586516377">
-								<int key="NSCellFlags">68288064</int>
-								<int key="NSCellFlags2">4457472</int>
-								<string key="NSContents">No contacts found</string>
-								<reference key="NSSupport" ref="22"/>
-								<reference key="NSControlView" ref="932620268"/>
-								<reference key="NSBackgroundColor" ref="98027188"/>
 								<reference key="NSTextColor" ref="234652328"/>
 							</object>
 						</object>
@@ -1392,14 +1376,6 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">foundContactsLabel</string>
-						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="932620268"/>
-					</object>
-					<int key="connectionID">89</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
 						<string key="label">foundMessagesLabel</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="706479359"/>
@@ -1523,7 +1499,6 @@
 						<reference key="object" ref="1006"/>
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="932620268"/>
 							<reference ref="255480301"/>
 							<reference ref="735166932"/>
 							<reference ref="288036754"/>
@@ -1781,20 +1756,6 @@
 						<int key="objectID">83</int>
 						<reference key="object" ref="484215523"/>
 						<reference key="parent" ref="735166932"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">87</int>
-						<reference key="object" ref="932620268"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="586516377"/>
-						</object>
-						<reference key="parent" ref="1006"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">88</int>
-						<reference key="object" ref="586516377"/>
-						<reference key="parent" ref="932620268"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">91</int>
@@ -2055,9 +2016,6 @@
 					<string>82.IBPluginDependency</string>
 					<string>83.IBPluginDependency</string>
 					<string>83.IBSegmentedControlInspectorSelectedSegmentMetadataKey</string>
-					<string>87.IBPluginDependency</string>
-					<string>87.IBViewBoundsToFrameTransform</string>
-					<string>88.IBPluginDependency</string>
 					<string>9.IBPluginDependency</string>
 					<string>91.IBPluginDependency</string>
 					<string>91.IBViewBoundsToFrameTransform</string>
@@ -2184,11 +2142,6 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="0"/>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABAAAAAwZAAAA</bytes>
-					</object>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
@@ -2352,7 +2305,6 @@
 							<string>busyIndicator</string>
 							<string>chatViewController</string>
 							<string>contactTable</string>
-							<string>foundContactsLabel</string>
 							<string>foundMessagesLabel</string>
 							<string>indexTable</string>
 							<string>paginationButton</string>
@@ -2374,7 +2326,6 @@
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
-							<string>id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
@@ -2385,7 +2336,6 @@
 							<string>busyIndicator</string>
 							<string>chatViewController</string>
 							<string>contactTable</string>
-							<string>foundContactsLabel</string>
 							<string>foundMessagesLabel</string>
 							<string>indexTable</string>
 							<string>paginationButton</string>
@@ -2410,10 +2360,6 @@
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">contactTable</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">foundContactsLabel</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
@@ -3087,8 +3033,8 @@
 				<string>{9, 8}</string>
 				<string>{7, 2}</string>
 				<string>{9, 9}</string>
-				<string>{48, 32}</string>
-				<string>{48, 32}</string>
+				<string>{48, 30}</string>
+				<string>{48, 30}</string>
 				<string>{32, 32}</string>
 				<string>{128, 128}</string>
 			</object>
