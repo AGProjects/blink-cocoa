@@ -11,6 +11,10 @@
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F092DB412B2785E000CEE7F /* ServerConferenceWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */; };
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
+		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
+		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
+		1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
+		1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
 		1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1FC04812D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
@@ -666,6 +670,8 @@
 		1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ServerConferenceWindowController.py; sourceTree = "<group>"; };
 		1F092DB512B27864000CEE7F /* English */ = {isa = PBXFileReference; explicitFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
+		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
+		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
 		1F226DE412B54FBE0010A8B2 /* Vine Server.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Vine Server.app"; path = "/Applications/Vine Server.app"; sourceTree = "<absolute>"; };
@@ -1098,6 +1104,8 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F1DCC8B13182C69004DB88B /* begin_arrow.png */,
+				1F1DCC8513182ADF004DB88B /* end_arrow.png */,
 				1FD671D312F5A58D00B0E78C /* outgoing_file.png */,
 				1FBD0E0012EB705E00087347 /* trash.png */,
 				2BFB35531017E363002D79FB /* blink.icns */,
@@ -1627,6 +1635,8 @@
 				1FBBF2E712E9B3500077E766 /* HistoryManager.py in Resources */,
 				1FBD0E0212EB705E00087347 /* trash.png in Resources */,
 				1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */,
+				1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */,
+				1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1780,6 +1790,8 @@
 				1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */,
 				1FBD0E0112EB705E00087347 /* trash.png in Resources */,
 				1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */,
+				1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */,
+				1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

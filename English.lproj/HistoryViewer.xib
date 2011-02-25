@@ -82,11 +82,9 @@
 								<string key="NSToolbarItemPaletteLabel">Search Content</string>
 								<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 								<object class="NSSearchField" key="NSToolbarItemView" id="122148039">
-									<reference key="NSNextResponder"/>
+									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {191, 22}}</string>
-									<reference key="NSSuperview"/>
-									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSSearchFieldCell" key="NSCell" id="884355243">
 										<int key="NSCellFlags">343539264</int>
@@ -184,11 +182,9 @@
 								<string key="NSToolbarItemPaletteLabel">Filter by Date</string>
 								<nil key="NSToolbarItemToolTip"/>
 								<object class="NSPopUpButton" key="NSToolbarItemView" id="110720404">
-									<reference key="NSNextResponder"/>
+									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">265</int>
 									<string key="NSFrame">{{0, 14}, {100, 22}}</string>
-									<reference key="NSSuperview"/>
-									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="155804980">
 										<int key="NSCellFlags">-2076049856</int>
@@ -297,11 +293,9 @@
 								<string key="NSToolbarItemPaletteLabel">Filter by Media</string>
 								<nil key="NSToolbarItemToolTip"/>
 								<object class="NSPopUpButton" key="NSToolbarItemView" id="814329240">
-									<reference key="NSNextResponder"/>
+									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">265</int>
 									<string key="NSFrame">{{0, 14}, {112, 22}}</string>
-									<reference key="NSSuperview"/>
-									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="149939024">
 										<int key="NSCellFlags">-2076049856</int>
@@ -456,11 +450,9 @@
 								<string key="NSToolbarItemPaletteLabel">Filter by Contact</string>
 								<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 								<object class="NSSearchField" key="NSToolbarItemView" id="889615600">
-									<reference key="NSNextResponder"/>
+									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {127, 22}}</string>
-									<reference key="NSSuperview"/>
-									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSSearchFieldCell" key="NSCell" id="117868059">
 										<int key="NSCellFlags">343539264</int>
@@ -1095,12 +1087,12 @@
 						<object class="NSSegmentedControl" id="735166932">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">289</int>
-							<string key="NSFrame">{{589, 6}, {71, 15}}</string>
+							<string key="NSFrame">{{544, 6}, {129, 15}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSSegmentedCell" key="NSCell" id="484215523">
-								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags">-2080244224</int>
 								<int key="NSCellFlags2">262144</int>
 								<object class="NSFont" key="NSSupport" id="22">
 									<string key="NSName">LucidaGrande</string>
@@ -1111,20 +1103,36 @@
 								<object class="NSMutableArray" key="NSSegmentImages">
 									<bool key="EncodedWithXMLCoder">YES</bool>
 									<object class="NSSegmentItem">
-										<double key="NSSegmentItemWidth">32</double>
+										<double key="NSSegmentItemWidth">30</double>
 										<object class="NSCustomResource" key="NSSegmentItemImage">
 											<string key="NSClassName">NSImage</string>
-											<string key="NSResourceName">NSLeftFacingTriangleTemplate</string>
+											<string key="NSResourceName">begin_arrow</string>
 										</object>
 										<int key="NSSegmentItemImageScaling">0</int>
 									</object>
 									<object class="NSSegmentItem">
-										<double key="NSSegmentItemWidth">32</double>
+										<double key="NSSegmentItemWidth">30</double>
+										<object class="NSCustomResource" key="NSSegmentItemImage">
+											<string key="NSClassName">NSImage</string>
+											<string key="NSResourceName">NSLeftFacingTriangleTemplate</string>
+										</object>
+										<int key="NSSegmentItemTag">1</int>
+										<int key="NSSegmentItemImageScaling">0</int>
+									</object>
+									<object class="NSSegmentItem">
+										<double key="NSSegmentItemWidth">30</double>
 										<object class="NSCustomResource" key="NSSegmentItemImage">
 											<string key="NSClassName">NSImage</string>
 											<string key="NSResourceName">NSRightFacingTriangleTemplate</string>
 										</object>
-										<int key="NSSegmentItemTag">1</int>
+										<int key="NSSegmentItemImageScaling">0</int>
+									</object>
+									<object class="NSSegmentItem">
+										<double key="NSSegmentItemWidth">30</double>
+										<object class="NSCustomResource" key="NSSegmentItemImage">
+											<string key="NSClassName">NSImage</string>
+											<string key="NSResourceName">end_arrow</string>
+										</object>
 										<int key="NSSegmentItemImageScaling">0</int>
 									</object>
 								</object>
@@ -1136,7 +1144,7 @@
 						<object class="NSTextField" id="706479359">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">289</int>
-							<string key="NSFrame">{{194, 8}, {389, 11}}</string>
+							<string key="NSFrame">{{208, 8}, {325, 11}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
@@ -1515,11 +1523,11 @@
 						<reference key="object" ref="1006"/>
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="288036754"/>
-							<reference ref="735166932"/>
-							<reference ref="706479359"/>
 							<reference ref="932620268"/>
 							<reference ref="255480301"/>
+							<reference ref="735166932"/>
+							<reference ref="288036754"/>
+							<reference ref="706479359"/>
 						</object>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -2037,6 +2045,7 @@
 					<string>69.IBPluginDependency</string>
 					<string>7.IBPluginDependency</string>
 					<string>76.IBPluginDependency</string>
+					<string>76.IBViewBoundsToFrameTransform</string>
 					<string>78.IBPluginDependency</string>
 					<string>8.IBPluginDependency</string>
 					<string>80.IBPluginDependency</string>
@@ -2159,15 +2168,18 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAAC/gAAAxAQAAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABEEsAAwaAAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABEEAAAwZgAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABDQgAAwZAAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABDVwAAwYgAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3064,6 +3076,8 @@
 				<string>NSMenuCheckmark</string>
 				<string>NSMenuMixedState</string>
 				<string>NSRightFacingTriangleTemplate</string>
+				<string>begin_arrow</string>
+				<string>end_arrow</string>
 				<string>smiley_on</string>
 				<string>trash</string>
 			</object>
@@ -3073,6 +3087,8 @@
 				<string>{9, 8}</string>
 				<string>{7, 2}</string>
 				<string>{9, 9}</string>
+				<string>{48, 32}</string>
+				<string>{48, 32}</string>
 				<string>{32, 32}</string>
 				<string>{128, 128}</string>
 			</object>

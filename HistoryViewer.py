@@ -270,8 +270,10 @@ class HistoryViewer(NSWindowController):
         for row in self.messages[self.start:end]:
             self.renderMessage(row)
 
-        self.paginationButton.setEnabled_forSegment_(True if self.start else False, 0)
-        self.paginationButton.setEnabled_forSegment_(True if self.start+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 1)
+        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and self.start > MAX_MESSAGES_PER_PAGE else False, 0)
+        self.paginationButton.setEnabled_forSegment_(True if self.start else False, 1)
+        self.paginationButton.setEnabled_forSegment_(True if self.start+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 2)
+        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and len(self.messages) - self.start > 2*MAX_MESSAGES_PER_PAGE else False, 3)
         self.foundMessagesLabel.setStringValue_(u'Displaying %d to %d out of %d messages'%(self.start+1, end, len(self.messages)) if len(self.messages) else u'No message found')
 
     @allocate_autorelease_pool
@@ -291,13 +293,16 @@ class HistoryViewer(NSWindowController):
     @objc.IBAction
     def paginateResults_(self, sender):
         if sender.selectedSegment() == 0:
+           self.start = 0
+        elif sender.selectedSegment() == 1:
            next_start = self.start - MAX_MESSAGES_PER_PAGE
            self.start = next_start if next_start >= 0 else self.start
-           self.renderMessages()
-        elif sender.selectedSegment() == 1:
+        elif sender.selectedSegment() == 2:
            next_start = self.start + MAX_MESSAGES_PER_PAGE
            self.start = next_start if next_start < len(self.messages)-1 else self.start
-           self.renderMessages()
+        elif sender.selectedSegment() == 3:
+           self.start = len(self.messages) - len(self.messages)%MAX_MESSAGES_PER_PAGE if len(self.messages) > MAX_MESSAGES_PER_PAGE else 0
+        self.renderMessages()
 
     def tableView_deleteRow_(self, table, row):
         pass
