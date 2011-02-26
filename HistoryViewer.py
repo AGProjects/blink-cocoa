@@ -51,6 +51,8 @@ class HistoryViewer(NSWindowController):
     queryDatabaseLabel = objc.IBOutlet()
     busyIndicator = objc.IBOutlet()
 
+    contactMenu = objc.IBOutlet()
+
     # viewer sections
     allContacts = []
     contacts = []
@@ -106,6 +108,9 @@ class HistoryViewer(NSWindowController):
 
             self.selectedTableView = self.contactTable
  
+    def awakeFromNib(self):
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
+
     def close_(self, sender):
         self.window().close()
 
@@ -452,20 +457,7 @@ class HistoryViewer(NSWindowController):
             if self.selectedTableView == self.contactTable:
                 try:
                     row = self.contactTable.selectedRow()
-                    if row == 0:
-                        ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of All history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
-                        if ret == NSAlertDefaultReturn:
-                            self.delete_messages()
-                    elif row == 1:
-                        remote_uri=self.contacts[row].uri
-                        ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of Bonjour history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
-                        if ret == NSAlertDefaultReturn:
-                            self.delete_messages(local_uri='bonjour')
-                    else:
-                        remote_uri=self.contacts[row].uri
-                        ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of history entries from %s. This operation cannot be undone."%remote_uri, u"Confirm", u"Cancel", None)
-                        if ret == NSAlertDefaultReturn:
-                            self.delete_messages(remote_uri=remote_uri)
+                    self.showDeleteConfirmationDialog(row)
                 except IndexError:
                     pass
 
@@ -482,6 +474,22 @@ class HistoryViewer(NSWindowController):
                         self.delete_messages(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date)
                 except IndexError:
                     pass
+
+    def showDeleteConfirmationDialog(self, row):
+        if row == 0:
+            ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of All history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+            if ret == NSAlertDefaultReturn:
+                self.delete_messages()
+        elif row == 1:
+            remote_uri=self.contacts[row].uri
+            ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of Bonjour history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+            if ret == NSAlertDefaultReturn:
+                self.delete_messages(local_uri='bonjour')
+        else:
+            remote_uri=self.contacts[row].uri
+            ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of history entries from %s. This operation cannot be undone."%remote_uri, u"Confirm", u"Cancel", None)
+            if ret == NSAlertDefaultReturn:
+                self.delete_messages(remote_uri=remote_uri)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -509,3 +517,40 @@ class HistoryViewer(NSWindowController):
         elif notification.name == 'BlinkTableViewSelectionChaged':
             self.selectedTableView = notification.sender
 
+    def contactSelectionChanged_(self, notification):
+        hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
+        try:
+            row = self.contactTable.selectedRow()
+            remote_uri=self.contacts[row].uri
+            self.contactMenu.itemWithTag_(1).setEnabled_(False if hasContactMatchingURI(remote_uri) or row < 2 else True)
+            self.contactMenu.itemWithTag_(3).setEnabled_(False if row < 2 else True)
+        except:
+            self.contactMenu.itemWithTag_(1).setEnabled_(False)
+
+    def menuWillOpen_(self, menu):
+        if menu == self.contactMenu:
+            pass
+
+    @objc.IBAction
+    def userClickedContactMenu_(self, sender):
+        try:
+            row = self.contactTable.selectedRow()
+        except:
+            return
+
+        try:
+            contact = self.contacts[row]
+        except IndexError:
+            return
+
+        tag = sender.tag()
+
+        if tag == 1:
+            NSApp.delegate().windowController.addContact(contact.uri, contact.display_name)
+        elif tag == 2:
+            self.showDeleteConfirmationDialog(row)
+        elif tag == 3:
+            NSApp.delegate().windowController.searchBox.setStringValue_(contact.uri)
+            NSApp.delegate().windowController.searchContacts()
+            NSApp.delegate().windowController.window().makeFirstResponder_(NSApp.delegate().windowController.searchBox)
+            NSApp.delegate().windowController.window().makeKeyWindow()

@@ -82,9 +82,11 @@
 								<string key="NSToolbarItemPaletteLabel">Search Content</string>
 								<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 								<object class="NSSearchField" key="NSToolbarItemView" id="122148039">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {191, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSSearchFieldCell" key="NSCell" id="884355243">
 										<int key="NSCellFlags">343539264</int>
@@ -178,13 +180,15 @@
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">2AF7BC69-9C46-4FA9-BA4A-202B661F50F3</characters>
 								</object>
-								<string key="NSToolbarItemLabel">Filter by Date</string>
-								<string key="NSToolbarItemPaletteLabel">Filter by Date</string>
+								<string key="NSToolbarItemLabel">Search by Date</string>
+								<string key="NSToolbarItemPaletteLabel">Search by Date</string>
 								<nil key="NSToolbarItemToolTip"/>
 								<object class="NSPopUpButton" key="NSToolbarItemView" id="110720404">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">265</int>
 									<string key="NSFrame">{{0, 14}, {100, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="155804980">
 										<int key="NSCellFlags">-2076049856</int>
@@ -289,13 +293,15 @@
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">2B4E8F2E-3342-434C-A85E-8083D0CE95E6</characters>
 								</object>
-								<string key="NSToolbarItemLabel">Filter by Media</string>
-								<string key="NSToolbarItemPaletteLabel">Filter by Media</string>
+								<string key="NSToolbarItemLabel">Search by Media</string>
+								<string key="NSToolbarItemPaletteLabel">Search by Media</string>
 								<nil key="NSToolbarItemToolTip"/>
 								<object class="NSPopUpButton" key="NSToolbarItemView" id="814329240">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">265</int>
 									<string key="NSFrame">{{0, 14}, {112, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSPopUpButtonCell" key="NSCell" id="149939024">
 										<int key="NSCellFlags">-2076049856</int>
@@ -450,9 +456,11 @@
 								<string key="NSToolbarItemPaletteLabel">Filter by Contact</string>
 								<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 								<object class="NSSearchField" key="NSToolbarItemView" id="889615600">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {127, 22}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSSearchFieldCell" key="NSCell" id="117868059">
 										<int key="NSCellFlags">343539264</int>
@@ -1203,6 +1211,44 @@
 			<object class="NSCustomObject" id="487788250">
 				<string key="NSClassName">ChatViewController</string>
 			</object>
+			<object class="NSMenu" id="512228850">
+				<string key="NSTitle">Contact</string>
+				<object class="NSMutableArray" key="NSMenuItems">
+					<bool key="EncodedWithXMLCoder">YES</bool>
+					<object class="NSMenuItem" id="117047996">
+						<reference key="NSMenu" ref="512228850"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Add to Contacts...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="486617995"/>
+						<reference key="NSMixedImage" ref="66089543"/>
+						<int key="NSTag">1</int>
+					</object>
+					<object class="NSMenuItem" id="166331562">
+						<reference key="NSMenu" ref="512228850"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Delete History...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="486617995"/>
+						<reference key="NSMixedImage" ref="66089543"/>
+						<int key="NSTag">2</int>
+					</object>
+					<object class="NSMenuItem" id="537960881">
+						<reference key="NSMenu" ref="512228850"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Start Session...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="486617995"/>
+						<reference key="NSMixedImage" ref="66089543"/>
+						<int key="NSTag">3</int>
+					</object>
+				</object>
+				<bool key="NSNoAutoenable">YES</bool>
+			</object>
 		</object>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
 			<object class="NSMutableArray" key="connectionRecords">
@@ -1478,6 +1524,46 @@
 						<reference key="destination" ref="65254725"/>
 					</object>
 					<int key="connectionID">147</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">contactMenu</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="512228850"/>
+					</object>
+					<int key="connectionID">162</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">menu</string>
+						<reference key="source" ref="922972453"/>
+						<reference key="destination" ref="512228850"/>
+					</object>
+					<int key="connectionID">163</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedContactMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="117047996"/>
+					</object>
+					<int key="connectionID">164</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedContactMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="166331562"/>
+					</object>
+					<int key="connectionID">166</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedContactMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="537960881"/>
+					</object>
+					<int key="connectionID">168</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -1978,6 +2064,32 @@
 						<reference key="object" ref="208078050"/>
 						<reference key="parent" ref="65254725"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">148</int>
+						<reference key="object" ref="512228850"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="117047996"/>
+							<reference ref="166331562"/>
+							<reference ref="537960881"/>
+						</object>
+						<reference key="parent" ref="1002"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">149</int>
+						<reference key="object" ref="117047996"/>
+						<reference key="parent" ref="512228850"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">165</int>
+						<reference key="object" ref="166331562"/>
+						<reference key="parent" ref="512228850"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">167</int>
+						<reference key="object" ref="537960881"/>
+						<reference key="parent" ref="512228850"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -2026,8 +2138,13 @@
 					<string>145.IBPluginDependency</string>
 					<string>145.IBViewBoundsToFrameTransform</string>
 					<string>146.IBPluginDependency</string>
+					<string>148.IBEditorWindowLastContentRect</string>
+					<string>148.IBPluginDependency</string>
+					<string>149.IBPluginDependency</string>
 					<string>15.IBPluginDependency</string>
 					<string>16.IBPluginDependency</string>
+					<string>165.IBPluginDependency</string>
+					<string>167.IBPluginDependency</string>
 					<string>17.IBPluginDependency</string>
 					<string>18.IBPluginDependency</string>
 					<string>2.IBPluginDependency</string>
@@ -2068,9 +2185,9 @@
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{358, 131}, {692, 530}}</string>
+					<string>{{247, 441}, {692, 530}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{358, 131}, {692, 530}}</string>
+					<string>{{247, 441}, {692, 530}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -2151,6 +2268,7 @@
 						<bytes key="NSTransformStruct">P4AAAL+AAABB0AAAwYgAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{277, 773}, {175, 63}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2158,7 +2276,11 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{397, 661}, {616, 0}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{285, 971}, {616, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2215,7 +2337,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">147</int>
+			<int key="maxID">168</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -2295,9 +2417,11 @@
 							<string>paginateResults:</string>
 							<string>search:</string>
 							<string>searchContacts:</string>
+							<string>userClickedContactMenu:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -2316,6 +2440,7 @@
 							<string>paginateResults:</string>
 							<string>search:</string>
 							<string>searchContacts:</string>
+							<string>userClickedContactMenu:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2343,6 +2468,10 @@
 								<string key="name">searchContacts:</string>
 								<string key="candidateClassName">id</string>
 							</object>
+							<object class="IBActionInfo">
+								<string key="name">userClickedContactMenu:</string>
+								<string key="candidateClassName">id</string>
+							</object>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="outlets">
@@ -2352,6 +2481,7 @@
 							<string>afterDate</string>
 							<string>busyIndicator</string>
 							<string>chatViewController</string>
+							<string>contactMenu</string>
 							<string>contactTable</string>
 							<string>foundMessagesLabel</string>
 							<string>indexTable</string>
@@ -2376,6 +2506,7 @@
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
+							<string>id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
@@ -2385,6 +2516,7 @@
 							<string>afterDate</string>
 							<string>busyIndicator</string>
 							<string>chatViewController</string>
+							<string>contactMenu</string>
 							<string>contactTable</string>
 							<string>foundMessagesLabel</string>
 							<string>indexTable</string>
@@ -2407,6 +2539,10 @@
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">chatViewController</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">contactMenu</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
