@@ -42,7 +42,7 @@ class AlertPanel(NSObject, object):
         return self
 
     def show(self):
-        self.panel.makeKeyAndOrderFront_(self)
+        self.panel.orderFront_(self)
         self.attention = NSApp.requestUserAttention_(NSCriticalRequest)
 
     def close(self):
