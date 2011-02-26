@@ -553,6 +553,7 @@ class HistoryViewer(NSWindowController):
             NSApp.delegate().windowController.searchBox.setStringValue_(contact.uri)
             NSApp.delegate().windowController.searchContacts()
             NSApp.delegate().windowController.window().makeFirstResponder_(NSApp.delegate().windowController.searchBox)
+            NSApp.delegate().windowController.window().deminiaturize_(sender)
             NSApp.delegate().windowController.window().makeKeyWindow()
 
     @objc.IBAction
