@@ -1197,6 +1197,7 @@
 							<string key="NSFrame">{{6, 4}, {20, 18}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
+							<double key="NSViewAlphaValue">0.69999999999999973</double>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="370785323">
 								<int key="NSCellFlags">67239424</int>
@@ -2238,9 +2239,9 @@
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{771, 171}, {692, 530}}</string>
+					<string>{{509, 115}, {692, 530}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{771, 171}, {692, 530}}</string>
+					<string>{{509, 115}, {692, 530}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
