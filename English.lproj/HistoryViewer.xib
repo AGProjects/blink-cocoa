@@ -1088,7 +1088,7 @@
 						<object class="NSSegmentedControl" id="735166932">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">289</int>
-							<string key="NSFrame">{{544, 6}, {129, 15}}</string>
+							<string key="NSFrame">{{523, 5}, {129, 15}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
@@ -1145,7 +1145,7 @@
 						<object class="NSTextField" id="706479359">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">289</int>
-							<string key="NSFrame">{{160, 8}, {370, 11}}</string>
+							<string key="NSFrame">{{245, 7}, {272, 11}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
@@ -1166,9 +1166,9 @@
 						</object>
 						<object class="NSProgressIndicator" id="255480301">
 							<reference key="NSNextResponder" ref="1006"/>
-							<int key="NSvFlags">1316</int>
+							<int key="NSvFlags">1313</int>
 							<object class="NSPSMatrix" key="NSDrawMatrix"/>
-							<string key="NSFrame">{{34, 5}, {16, 16}}</string>
+							<string key="NSFrame">{{659, 4}, {16, 16}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<int key="NSpiFlags">20746</int>
@@ -1177,7 +1177,7 @@
 						<object class="NSTextField" id="65254725">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">-2147483356</int>
-							<string key="NSFrame">{{55, 8}, {116, 11}}</string>
+							<string key="NSFrame">{{31, 8}, {116, 11}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
@@ -1194,19 +1194,19 @@
 						<object class="NSButton" id="1069466800">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">292</int>
-							<string key="NSFrame">{{6, 4}, {20, 18}}</string>
+							<string key="NSFrame">{{-1, -1}, {27, 27}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<double key="NSViewAlphaValue">0.69999999999999973</double>
+							<double key="NSViewAlphaValue">0.80000000000000004</double>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="370785323">
 								<int key="NSCellFlags">67239424</int>
-								<int key="NSCellFlags2">134348800</int>
+								<int key="NSCellFlags2">134479872</int>
 								<string key="NSContents"/>
-								<reference key="NSSupport" ref="26"/>
+								<reference key="NSSupport" ref="22"/>
 								<reference key="NSControlView" ref="1069466800"/>
 								<int key="NSButtonFlags">-2033434369</int>
-								<int key="NSButtonFlags2">99</int>
+								<int key="NSButtonFlags2">6</int>
 								<object class="NSCustomResource" key="NSNormalImage">
 									<string key="NSClassName">NSImage</string>
 									<string key="NSResourceName">NSActionTemplate</string>
@@ -1641,12 +1641,12 @@
 						<reference key="object" ref="1006"/>
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="735166932"/>
 							<reference ref="288036754"/>
-							<reference ref="706479359"/>
-							<reference ref="255480301"/>
-							<reference ref="65254725"/>
 							<reference ref="1069466800"/>
+							<reference ref="735166932"/>
+							<reference ref="65254725"/>
+							<reference ref="255480301"/>
+							<reference ref="706479359"/>
 						</object>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -2319,7 +2319,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABCXAAAwZgAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABCXAAAwYgAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{277, 773}, {175, 63}}</string>
@@ -2352,7 +2352,7 @@
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABAwAAAwagAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAAAAAAAAwdAAAA</bytes>
 					</object>
 					<real value="0.0"/>
 					<object class="NSColor">
@@ -2390,11 +2390,11 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABEEAAAwZgAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABEAsAAwZAAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABDIwAAwYgAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABDXQAAwYgAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2402,7 +2402,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABCCAAAwagAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABEJkAAwZAAAA</bytes>
 					</object>
 					<string>ContactCell</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
