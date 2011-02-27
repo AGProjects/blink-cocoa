@@ -180,7 +180,7 @@ class JoinConferenceWindow(NSObject):
                 "OK", None, None)
             return False
 
-        if not re.match("^[1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", self.room.stringValue().strip()):
+        if not re.match("^[1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", self.room.stringValue().lower().strip()):
             NSRunAlertPanel("Start a new Conference", "Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
                 "OK", None, None)
             return False
@@ -191,13 +191,13 @@ class JoinConferenceWindow(NSObject):
             return False
 
         if "@" in self.room.stringValue().strip():
-            self.target = u'%s' % self.room.stringValue().strip()
+            self.target = u'%s' % self.room.stringValue().lower().strip()
         else:
             account = AccountManager().default_account
             if account.server.conference_server:
-                self.target = u'%s@%s' % (self.room.stringValue().strip(), account.server.conference_server)
+                self.target = u'%s@%s' % (self.room.stringValue().lower().strip(), account.server.conference_server)
             else:
-                self.target = u'%s@%s' % (self.room.stringValue().strip(), self.default_conference_server)
+                self.target = u'%s@%s' % (self.room.stringValue().lower().strip(), self.default_conference_server)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
