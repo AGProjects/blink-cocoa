@@ -473,6 +473,8 @@ class SessionController(NSObject):
         handler(notification.sender, notification.data)
 
     def _NH_ITunesPauseDidExecute(self, sender, data):
+        if not self.waitingForITunes:
+            return
         self.notification_center.remove_observer(self, sender=sender)
         self.waitingForITunes = False
         if self.routes:
