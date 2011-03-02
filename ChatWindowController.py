@@ -676,7 +676,7 @@ class ChatWindowController(NSWindowController):
             # Add conference participants if any
             if session.conference_info is not None:
 
-                if isinstance(session.account, BonjourAccount):
+                if session.account is BonjourAccount():
                     own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
                 else:
                     own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
