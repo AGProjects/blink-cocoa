@@ -1836,7 +1836,7 @@ class ContactWindowController(NSWindowController):
     def sendFile_(self, sender):
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Send File", u"There are currently no active SIP accounts", u"OK", None, None)
             return
         try:
             contact = self.getSelectedContacts()[0]
