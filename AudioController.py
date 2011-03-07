@@ -58,7 +58,10 @@ class AudioController(MediaStream):
     srtpIcon = objc.IBOutlet()
     tlsIcon = objc.IBOutlet()
     audioSegmented = objc.IBOutlet()
+    transferSegmented = objc.IBOutlet()
     conferenceSegmented = objc.IBOutlet()
+    transferMenu = objc.IBOutlet()
+    sessionMenu = objc.IBOutlet()
 
     recordingImage = 0
     audioEndTime = None
@@ -70,6 +73,7 @@ class AudioController(MediaStream):
     holdByRemote = False
     holdByLocal = False
     mutedInConference = False
+    transferEnabled = False
 
     recording_path = None
 
@@ -92,7 +96,6 @@ class AudioController(MediaStream):
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
             item.setTitle_("Add %s to Contacts" % format_identity(self.sessionController.remotePartyObject))
 
-
             self.elapsed.setStringValue_("")
             self.info.setStringValue_("")
             self.view.setDelegate_(self)
@@ -103,6 +106,16 @@ class AudioController(MediaStream):
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
 
             loadImages()
+            
+            # TODO: add call transfer -adi
+            #self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
+
+            if self.transferEnabled:
+                self.transferSegmented.setHidden_(False)
+                self.audioSegmented.setHidden_(True)
+            else:
+                self.transferSegmented.setHidden_(True)
+                self.audioSegmented.setHidden_(False)
 
         return self
 
@@ -120,9 +133,13 @@ class AudioController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
         if is_answering_machine:
             log_info(self, "Sending session to answering machine")
-            self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio_small"), 0)
+            self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.audioSegmented.setEnabled_forSegment_(False, 1)
-            self.audioSegmented.cell().setToolTip_forSegment_("Take the call from answering machine", 0)
+            self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
+            self.transferSegmented.setEnabled_forSegment_(False, 1)
+            self.transferSegmented.setEnabled_forSegment_(False, 2)
+            self.audioSegmented.cell().setToolTip_forSegment_("Take over the call", 0)
+            self.transferSegmented.cell().setToolTip_forSegment_("Take over the call", 0)
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
 
@@ -184,12 +201,22 @@ class AudioController(MediaStream):
     def canConference(self):
         return self.status not in (STREAM_FAILED, STREAM_IDLE, STREAM_DISCONNECTING)
 
+    @property
+    def canTransfer(self):
+        return self.status in (STREAM_CONNECTED)
+
     def answerCall(self):
         log_info(self, "Taking over call on answering machine...")
         self.audioSegmented.cell().setToolTip_forSegment_("Put the call on hold", 0)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
         self.audioSegmented.setEnabled_forSegment_(True, 1)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
+        self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 0)
+        self.transferSegmented.cell().setToolTip_forSegment_("Call transfer", 1)
+        self.transferSegmented.cell().setToolTip_forSegment_("Put the call on hold", 1)
+        self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
+        self.transferSegmented.setEnabled_forSegment_(True, 2)
+        self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % ("HD Audio" if self.stream.sample_rate > 8000 else "Audio", self.stream.codec, self.stream.sample_rate/1000))
         self.audioStatus.sizeToFit()
         self.answeringMachine.stop()
@@ -301,13 +328,19 @@ class AudioController(MediaStream):
         self.mutedInConference = False
         self.sessionManager.addAudioSessionToConference(self)
         self.audioSegmented.setHidden_(True)
+        self.transferSegmented.setHidden_(True)
         self.conferenceSegmented.setHidden_(False)
         self.view.setConferencing_(True)
         self.updateLabelColor()
     
     def removeFromConference(self):
         self.sessionManager.removeAudioSessionFromConference(self)
-        self.audioSegmented.setHidden_(False)
+        if self.transferEnabled:
+            self.transferSegmented.setHidden_(False)
+            self.audioSegmented.setHidden_(True)
+        else:
+            self.transferSegmented.setHidden_(True)
+            self.audioSegmented.setHidden_(False)
         self.conferenceSegmented.setHidden_(True)
         if not self.isActive:
             self.hold()
@@ -342,11 +375,12 @@ class AudioController(MediaStream):
                 timer.invalidate()
                 self.audioEndTime = None
     
-        if self.stream and self.stream.recording_active and self.audioSegmented:
+        if self.stream and self.stream.recording_active and (self.audioSegmented or self.transferSegmented):
             if self.isConferencing:
                 self.conferenceSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 2)
             else:
                 self.audioSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 1)
+                self.transferSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 2)
             self.recordingImage += 1
             if self.recordingImage >= len(RecordingImages):
                 self.recordingImage = 0
@@ -375,7 +409,7 @@ class AudioController(MediaStream):
     def updateTLSIcon(self):
         if self.session.transport == "tls":
             frame = self.label.frame()
-            frame.origin.x = NSMaxX(self.tlsIcon.frame()) + 2
+            frame.origin.x = NSMaxX(self.tlsIcon.frame())
             self.label.setFrame_(frame)
             self.tlsIcon.setHidden_(False)
         else:
@@ -383,6 +417,18 @@ class AudioController(MediaStream):
             frame.origin.x = NSMinX(self.tlsIcon.frame())
             self.label.setFrame_(frame)
             self.tlsIcon.setHidden_(True)
+
+    def updateSRTPIcon(self):
+        if self.stream.srtp_active:
+            frame = self.audioStatus.frame()
+            frame.origin.x = NSMaxX(self.srtpIcon.frame())
+            self.audioStatus.setFrame_(frame)
+            self.srtpIcon.setHidden_(False)
+        else:
+            frame = self.audioStatus.frame()
+            frame.origin.x = NSMinX(self.srtpIcon.frame())
+            self.audioStatus.setFrame_(frame)
+            self.srtpIcon.setHidden_(True)
 
     def changeStatus(self, newstate, fail_reason=None):
         if not NSThread.isMainThread():
@@ -419,16 +465,22 @@ class AudioController(MediaStream):
                 if self.holdByLocal:
                     self.audioSegmented.setSelected_forSegment_(True, 0)
                     self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 0)
+                    self.transferSegmented.setSelected_forSegment_(True, 1)
+                    self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 1)
                     self.conferenceSegmented.setSelected_forSegment_(True, 1)
                     self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 1)
                 else:
                     self.audioSegmented.setSelected_forSegment_(False, 0)
                     self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
+                    self.transferSegmented.setSelected_forSegment_(False, 1)
+                    self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
                     self.conferenceSegmented.setSelected_forSegment_(False, 1)
                     self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
             else:
                 self.audioSegmented.setSelected_forSegment_(True, 1)
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
+                self.transferSegmented.setSelected_forSegment_(True, 2)
+                self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
 
             if self.holdByLocal:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
@@ -439,7 +491,7 @@ class AudioController(MediaStream):
             else:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
                 if self.answeringMachine:
-                    self.audioStatus.setStringValue_(u"Answering machine, take over:")
+                    self.audioStatus.setStringValue_(u"Answering machine active")
                 elif self.stream.sample_rate and self.stream.codec:
                     if self.stream.sample_rate > 8000:
                         hd_label = 'HD Audio'
@@ -450,14 +502,7 @@ class AudioController(MediaStream):
 
             self.audioStatus.sizeToFit()
             self.updateTLSIcon()
-
-            if self.stream.srtp_active:
-                self.srtpIcon.setHidden_(False)
-                frame = self.srtpIcon.frame()
-                frame.origin.x = NSMaxX(self.audioStatus.frame()) + 4
-                self.srtpIcon.setFrame_(frame)
-            else:
-                self.srtpIcon.setHidden_(True)
+            self.updateSRTPIcon()
 
             self.sessionManager.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
@@ -493,19 +538,25 @@ class AudioController(MediaStream):
 
         if status == STREAM_CONNECTED:
             self.audioSegmented.setEnabled_forSegment_(True, 0)
+            self.transferSegmented.setEnabled_forSegment_(True, 1)
+            self.transferSegmented.setEnabled_forSegment_(True, 0)
             self.conferenceSegmented.setEnabled_forSegment_(True, 0)
             self.conferenceSegmented.setEnabled_forSegment_(True, 1)
             if not self.answeringMachine:
                 self.audioSegmented.setEnabled_forSegment_(True, 1)
+                self.transferSegmented.setEnabled_forSegment_(True, 2)
                 self.conferenceSegmented.setEnabled_forSegment_(True, 2)
             self.audioSegmented.setEnabled_forSegment_(True, 2)
+            self.transferSegmented.setEnabled_forSegment_(True, 3)
             self.conferenceSegmented.setEnabled_forSegment_(True, 3)
         elif status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING):
             # can cancel the call, but not put on hold
             for i in range(2):
                 self.audioSegmented.setEnabled_forSegment_(False, i) 
             self.audioSegmented.setEnabled_forSegment_(True, 2)
-
+            for i in range(3):
+                self.transferSegmented.setEnabled_forSegment_(False, i)
+            self.transferSegmented.setEnabled_forSegment_(True, 3)
             for i in range(3):
                 self.conferenceSegmented.setEnabled_forSegment_(False, i)
             self.conferenceSegmented.setEnabled_forSegment_(True, 3)
@@ -513,10 +564,14 @@ class AudioController(MediaStream):
             for i in range(3):
                 self.audioSegmented.setEnabled_forSegment_(False, i)
             for i in range(4):
+                self.transferSegmented.setEnabled_forSegment_(False, i)
+            for i in range(4):
                 self.conferenceSegmented.setEnabled_forSegment_(False, i)
         else:
             for i in range(3):
                 self.audioSegmented.setEnabled_forSegment_(False, i)
+            for i in range(4):
+                self.transferSegmented.setEnabled_forSegment_(False, i)
             for i in range(4):
                 self.conferenceSegmented.setEnabled_forSegment_(False, i)
 
@@ -575,25 +630,44 @@ class AudioController(MediaStream):
             self.info.setStringValue_("")
 
     def menuWillOpen_(self, menu):
-        can_propose = self.status == STREAM_CONNECTED and not self.sessionController.inProposal
-        item = menu.itemWithTag_(10) # Add Chat
-        item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat"))
+        if menu == self.transferMenu:
+            while menu.numberOfItems() > 1:
+                menu.removeItemAtIndex_(1)
 
-        item = menu.itemWithTag_(13) # Add Video
-        # TODO: enable video -adi
-        item.setEnabled_(False)
+            transferable_sessions = [s for s in NSApp.delegate().windowController.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer and s.streamHandlerOfType("audio") != self] or []
 
-        title = self.sessionController.getTitleShort()
-        have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
-        item = menu.itemWithTag_(11)
-        item.setTitle_("Request Desktop from %s" % title)
-        item.setEnabled_(not have_desktop_sharing and can_propose)
-        item = menu.itemWithTag_(12)
-        item.setTitle_("Share My Desktop with %s" % title)
-        item.setEnabled_(not have_desktop_sharing and can_propose)
+            if not transferable_sessions:
+                item = menu.addItemWithTitle_action_keyEquivalent_(u'No session available', "", "")
+                item.setIndentationLevel_(1)
+                item.setEnabled_(False)
+            else:
+                for session in transferable_sessions:
+                    item = menu.addItemWithTitle_action_keyEquivalent_(session.getTitleFull(), "userClickedTransferMenuItem:", "")
+                    item.setIndentationLevel_(1)
+                    item.setTarget_(self)
+                    transfer_entities={'from': self.sessionController, 'to': session}
+                    item.setRepresentedObject_(transfer_entities)
+
+        else:
+            can_propose = self.status == STREAM_CONNECTED and not self.sessionController.inProposal
+            item = menu.itemWithTag_(10) # Add Chat
+            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat"))
+
+            item = menu.itemWithTag_(13) # Add Video
+            # TODO: enable video -adi
+            item.setEnabled_(False)
+
+            title = self.sessionController.getTitleShort()
+            have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
+            item = menu.itemWithTag_(11)
+            item.setTitle_("Request Desktop from %s" % title)
+            item.setEnabled_(not have_desktop_sharing and can_propose)
+            item = menu.itemWithTag_(12)
+            item.setTitle_("Share My Desktop with %s" % title)
+            item.setEnabled_(not have_desktop_sharing and can_propose)
 
     @objc.IBAction
-    def userClickedMenuItem_(self, sender):
+    def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 10: # add chat
             self.sessionController.addChatToSession()
@@ -612,27 +686,43 @@ class AudioController(MediaStream):
             sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
 
     @objc.IBAction
+    def userClickedTransferMenuItem_(self, sender):
+        transfer_session = sender.representedObject()
+        log_info(self, u'Initiating call transfer from %s to %s' % (transfer_session['from'].getTitleFull(), transfer_session['to'].getTitleFull()))
+        # TODO: add call transfer -adi
+
+    @objc.IBAction
     def userClickedAudioButton_(self, sender):
         seg = sender.selectedSegment()
-        if sender == self.conferenceSegmented:
-            seg -= 1
-        
-        if seg == 0: # hold / take call (if in answering machine mode)
-            if self.answeringMachine:
-                if self.holdByLocal:
-                    self.view.setSelected_(True)
-                    self.unhold()
-                self.answerCall()
+        if sender == self.conferenceSegmented and seg == 0:
+            segment_action = 'mute_conference'
+        elif sender == self.transferSegmented and seg == 0:
+            segment_action = 'take_over_answering_machine' if self.answeringMachine else 'call_transfer'
+        elif sender == self.audioSegmented and seg == 0:
+            segment_action = 'take_over_answering_machine'
+        else:
+            segment_action = None
+
+        if self.transferEnabled or sender == self.conferenceSegmented:
+           hold_segment = 1
+           record_segment = 2
+           stop_segment = 3
+        else:
+           hold_segment = None if self.answeringMachine else 0
+           record_segment = 1
+           stop_segment = 2
+
+        if seg == hold_segment: # hold / take call (if in answering machine mode)
+            if self.holdByLocal:
+                self.view.setSelected_(True)
+                self.unhold()
             else:
-                if self.holdByLocal:
-                    self.view.setSelected_(True)
-                    self.unhold()
-                else:
-                    self.hold()
-        elif seg == 1: # record
+                self.hold()
+        elif seg == record_segment:
             if self.stream.recording_active:
                 self.stream.stop_recording()
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
+                self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
             else:
                 settings = SIPSimpleSettings()
@@ -644,18 +734,34 @@ class AudioController(MediaStream):
                 self.recording_path=os.path.join(path, filename)
                 self.stream.start_recording(self.recording_path)
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
+                self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
-        elif seg == 2: # stop audio
+        elif seg == stop_segment:
             self.end()
             if sender == self.audioSegmented:
                 i = 2
             else:
                 i = 3
             sender.setSelected_forSegment_(False, i)
-        elif seg == -1: # mute (in conference)
-            self.mutedInConference = not self.mutedInConference
-            self.stream.muted = self.mutedInConference
-            sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
+        elif segment_action:
+            if segment_action == 'mute_conference':
+                # mute (in conference)
+                self.mutedInConference = not self.mutedInConference
+                self.stream.muted = self.mutedInConference
+                sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
+            elif segment_action == 'call_transfer':
+                point = sender.convertPointToBase_(NSZeroPoint)
+                point.x += sender.widthForSegment_(0)
+                point.y -= NSHeight(sender.frame())
+                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                                sender.window().graphicsContext(), 0, 1, 0)
+                NSMenu.popUpContextMenu_withEvent_forView_(self.transferMenu, event, sender)
+            elif segment_action == 'take_over_answering_machine':
+                if self.holdByLocal:
+                    self.view.setSelected_(True)
+                    self.unhold()
+                self.answerCall()
 
     def addRecordingToHistory(self, filename):
         message = "<h3>Audio Session Recorded</h3>"
@@ -713,6 +819,7 @@ class AudioController(MediaStream):
             else:
                 tip = "Hold"
             self.audioSegmented.cell().setToolTip_forSegment_(tip, 0)
+            self.transferSegmented.cell().setToolTip_forSegment_(tip, 1)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
