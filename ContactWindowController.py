@@ -5,6 +5,7 @@ from Foundation import *
 from AppKit import *
 import objc
 
+import datetime
 import os
 
 from application.notification import NotificationCenter, IObserver
@@ -14,7 +15,9 @@ from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
+from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
+
 
 import ContactOutlineView
 import ListView
@@ -26,6 +29,7 @@ from PresencePolicy import fillPresenceMenu
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from BlinkLogger import BlinkLogger
+from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveContactIcon
@@ -1632,9 +1636,9 @@ class ContactWindowController(NSWindowController):
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(account)
 
-    def callMenuItemClicked_(self, sender):
+    def conferenceHistoryClicked_(self, sender):
         item = sender.representedObject()
-        target = item["address"]
+        target = item["target_uri"]
         participants = item["participants"] or []
         media = item["streams"] or []
 
@@ -1662,56 +1666,183 @@ class ContactWindowController(NSWindowController):
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjourgroup.contacts))
 
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def get_session_history_entries(self, count=10):
+        def format_date(dt):
+            if not dt:
+                return "unknown"
+            now = datetime.datetime.now()
+            delta = now - dt
+            if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
+                return dt.strftime("at %H:%M")
+            elif delta.days <= 1:
+                return "Yesterday at %s" % dt.strftime("%H:%M")
+            elif delta.days < 7:
+                return dt.strftime("on %A")
+            elif delta.days < 300:
+                return dt.strftime("on %B %d")
+            else:
+                return dt.strftime("on %Y-%m-%d")
+
+        entries = {'incoming': [], 'outgoing': [], 'missed': [], 'incoming_conferences': [], 'outgoing_conferences': [] }
+
+        try:
+            results = SessionHistory().get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to retrieve incoming session history: %s" % e)
+            return
+
+        for result in list(results):
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+
+            item = {
+            "streams": result.media_types.split(","),
+            "account": result.local_uri,
+            "remote_party": fancy_uri,
+            "target_uri": target_uri,
+            "status": result.status,
+            "failure_reason": result.failure_reason,
+            "start_time": format_date(result.start_time),
+            "duration": result.end_time - result.start_time,
+            "focus": result.remote_focus,
+            "participants": result.participants.split(",") if result.participants else []
+            }
+            entries['incoming'].append(item)
+
+        try:
+            results = SessionHistory().get_entries(direction='outgoing', count=count, remote_focus="0")
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to retrieve outgoing session history: %s" % e)
+            return
+
+        for result in list(results):
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            item = {
+            "streams": result.media_types.split(","),
+            "account": result.local_uri,
+            "remote_party": fancy_uri,
+            "target_uri": target_uri,
+            "status": result.status,
+            "failure_reason": result.failure_reason,
+            "start_time": format_date(result.start_time),
+            "duration": result.end_time - result.start_time,
+            "focus": result.remote_focus,
+            "participants": result.participants.split(",") if result.participants else []
+            }
+            entries['outgoing'].append(item)
+
+        try:
+            results = SessionHistory().get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to retrieve outgoing session history: %s" % e)
+            return
+
+        for result in list(results):
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            item = {
+            "streams": result.media_types.split(","),
+            "account": result.local_uri,
+            "remote_party": fancy_uri,
+            "target_uri": target_uri,
+            "status": result.status,
+            "failure_reason": result.failure_reason,
+            "start_time": format_date(result.start_time),
+            "duration": result.end_time - result.start_time,
+            "focus": result.remote_focus,
+            "participants": result.participants.split(",") if result.participants else []
+            }
+            entries['missed'].append(item)
+
+        try:
+            results = SessionHistory().get_entries(direction='incoming', count=count, remote_focus="1")
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to retrieve incoming session history: %s" % e)
+            return
+
+        for result in list(results):
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            item = {
+            "streams": result.media_types.split(","),
+            "account": result.local_uri,
+            "remote_party": fancy_uri,
+            "target_uri": target_uri,
+            "status": result.status,
+            "failure_reason": result.failure_reason,
+            "start_time": format_date(result.start_time),
+            "duration": result.end_time - result.start_time,
+            "focus": result.remote_focus,
+            "participants":result.participants.split(",") if result.participants else []
+            }
+            entries['incoming_conferences'].append(item)
+
+        try:
+            results = SessionHistory().get_entries(direction='outgoing', count=count, remote_focus="1")
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to retrieve outgoing session history: %s" % e)
+            return
+
+        for result in list(results):
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            item = {
+            "streams": result.media_types.split(","),
+            "account": result.local_uri,
+            "remote_party": fancy_uri,
+            "target_uri": target_uri,
+            "status": result.status,
+            "failure_reason": result.failure_reason,
+            "start_time": format_date(result.start_time),
+            "duration": result.end_time - result.start_time,
+            "focus": result.remote_focus,
+            "participants": result.participants.split(",") if result.participants else []
+            }
+            entries['outgoing_conferences'].append(item)
+
+        self.renderHistoryMenu(entries)
+
     def updateHistoryMenu(self):
+        self.get_session_history_entries()
+
+    @run_in_gui_thread
+    def renderHistoryMenu(self, entries):
         menu = self.historyMenu
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
-
-        try:
-          res = self.backend.get_last_call_history_entries(10)
-        except:
-          import traceback
-          traceback.print_exc()
-        if res:
-            in_items, out_items, miss_items = res
-        else:
-            in_items, out_items, miss_items = [], [], []
-
+ 
         mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
         mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.redColor(), NSForegroundColorAttributeName)
 
-        def format_call_item(item, time_attribs, show_failed=False):
+        def format_history_menu_item(item):
             a = NSMutableAttributedString.alloc().init()
             normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_("%(party)s    "%item, normal)
+            n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  "%item, normal)
             a.appendAttributedString_(n)
-            text = "%(when)s"%item
-            if item.get("duration") is not None:
-                if (item["duration"].days > 0 or item["duration"].seconds > 0):
-                    text += " ("
-                    dur = item["duration"]
-                    if dur.days > 0 or dur.seconds > 60*60:
-                        text += "%i hours, "%(dur.days*60*60*24 + int(dur.seconds/(60*60)))
-                    s = dur.seconds%(60*60)
-                    text += "%02i:%02i"%(int(s/60), s%60)
-                    text += ")"
+            text = "%(start_time)s"%item
+            if (item["duration"].seconds > 0):
+                text += " for "
+                dur = item["duration"]
+                if dur.days > 0 or dur.seconds > 60*60:
+                    text += "%i hours, "%(dur.days*60*60*24 + int(dur.seconds/(60*60)))
+                s = dur.seconds%(60*60)
+                text += "%02i:%02i"%(int(s/60), s%60)
             else:
-                if show_failed:
-                    if item.get("result", None) == "cancelled":
-                        text += " (cancelled)"
-                    else:
-                        text += " (failed)"
-            t = NSAttributedString.alloc().initWithString_attributes_(text, time_attribs)
+                if item['status'] == 'failed':
+                    text += " %s" % item['failure_reason'].capitalize()
+                elif item['status'] not in ('completed', 'missed'):
+                    text += " %s" % item['status'].capitalize()
+
+            text_format = mini_red if item['status'] == 'failed' else mini_blue
+            t = NSAttributedString.alloc().initWithString_attributes_(text, text_format)
             a.appendAttributedString_(t)
             return a
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
         lastItem.setEnabled_(False)
-        for item in miss_items:
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_call_item(item, mini_blue))
+        for item in entries['missed']:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
+            lastItem.setAttributedTitle_(format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
@@ -1719,9 +1850,9 @@ class ContactWindowController(NSWindowController):
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming", "", "")
         lastItem.setEnabled_(False)
-        for item in in_items:
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_call_item(item, mini_blue, True))
+        for item in entries['incoming']:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
+            lastItem.setAttributedTitle_(format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
@@ -1729,58 +1860,54 @@ class ContactWindowController(NSWindowController):
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing", "", "")
         lastItem.setEnabled_(False)
-        for item in out_items:
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_call_item(item, mini_blue, True))
+        for item in entries['outgoing']:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
+            lastItem.setAttributedTitle_(format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
 
-        # conference entries
-        try:
-            res = self.backend.get_last_call_history_entries(12, True)
-            in_items, out_items, miss_items = res
-        except:
-            in_items, out_items, miss_items = [], [], []
-
-        if out_items:
+        if entries['outgoing_conferences']:
             menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Previous outgoing conferences", "", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing Conferences", "", "")
             lastItem.setEnabled_(False)
 
-            for item in out_items:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "callMenuItemClicked:", "")
-                lastItem.setAttributedTitle_(format_call_item(item, mini_blue))
+            for item in entries['outgoing_conferences']:
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
+                lastItem.setAttributedTitle_(format_history_menu_item(item))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(item)
 
-        if in_items:
+        if entries['incoming_conferences']:
             menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Previous incoming conferences", "", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming Conferences", "", "")
             lastItem.setEnabled_(False)
 
-            for item in in_items:
-                if NSApp.delegate().applicationName == 'Blink Pro':
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "callMenuItemClicked:", "")
-                else:
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(party)s  %(when)s"%item, "historyClicked:", "")
-                lastItem.setAttributedTitle_(format_call_item(item, mini_blue))
+            for item in entries['incoming_conferences']:
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
+                lastItem.setAttributedTitle_(format_history_menu_item(item))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(item)
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "", "")
-        lastItem.setEnabled_(in_items or out_items or miss_items)
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
+        lastItem.setEnabled_(True if entries['incoming_conferences'] or entries['outgoing_conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
-        lastItem.setAction_("historyClicked:")
 
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def delete_session_history_entries(self):
+        try:
+            SessionHistory().delete_entries()
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to delete session history: %s" % e)
 
     def historyClicked_(self, sender):
         if sender.tag() == 444:
-            self.backend.clear_call_history()
+            self.delete_session_history_entries()
         elif sender.tag() == 555:
             # Voicemail
             account = sender.representedObject()
@@ -1794,7 +1921,7 @@ class ContactWindowController(NSWindowController):
             session.startAudioSession()
         else:
             item = sender.representedObject()
-            who = item["address"]
+            target_uri = item["target_uri"]
             try:
                 account = AccountManager().get_account(item["account"])
             except:
@@ -1805,32 +1932,54 @@ class ContactWindowController(NSWindowController):
                 AccountManager().default_account = account
                 self.refreshAccountList()
 
-            self.searchBox.setStringValue_(who)
+            self.searchBox.setStringValue_(target_uri)
             self.searchContacts()
             self.window().makeFirstResponder_(self.searchBox)
             self.window().makeKeyWindow()
 
     @objc.IBAction
     def redialLast_(self, sender):
-        info = self.backend.get_last_outgoing_call_info()
-        if info:
-            account, who, streams = info
-            BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account,who,streams))
-            if not account:
-                account = self.activeAccount()
-            target_uri = self.backend.parse_sip_uri(who, account)
-            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
-            self.sessionControllers.append(session)
-            session.setOwner_(self)
+        self.get_last_outgoing_session_from_history()
 
-            if 'audio' in streams and 'chat' in streams:
-                # give priority to chat stream so that we do not open audio drawer for composite streams
-                sorted_streams = sorted(streams, key=lambda stream: 0 if stream=='chat' else 1)
-                session.startCompositeSessionWithStreamsOfTypes(sorted_streams)
-            elif 'audio' in streams:
-                session.startAudioSession()
-            elif 'chat' in streams:
-                session.startChatSession()
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def get_last_outgoing_session_from_history(self):
+        try:
+            results = SessionHistory().get_entries(direction='outgoing', count=1)
+        except Exception, e:
+            BlinkLogger().log_error(u"Failed to retrieve the last outgoing session from history: %s" % e)
+            return
+
+        if len(list(results)) == 1:
+            session_info = list(results)[0]
+            self.redial(session_info)      
+
+    @run_in_gui_thread
+    def redial(self, session_info):
+        try:
+            account = AccountManager().get_account(session_info.local_uri)
+        except:
+            account = None
+
+        target_uri = format_identity_from_text(session_info.remote_uri)[0]
+        streams = session_info.media_types.split(",")
+
+        BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account, target_uri, streams))
+        if not account:
+            account = self.activeAccount()
+        target_uri = self.backend.parse_sip_uri(target_uri, account)
+        session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
+        self.sessionControllers.append(session)
+        session.setOwner_(self)
+
+        if 'audio' in streams and 'chat' in streams:
+            # give priority to chat stream so that we do not open audio drawer for composite streams
+            sorted_streams = sorted(streams, key=lambda stream: 0 if stream=='chat' else 1)
+            session.startCompositeSessionWithStreamsOfTypes(sorted_streams)
+        elif 'audio' in streams:
+            session.startAudioSession()
+        elif 'chat' in streams:
+            session.startChatSession()
 
     @objc.IBAction
     def sendFile_(self, sender):

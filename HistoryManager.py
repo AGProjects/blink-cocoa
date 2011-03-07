@@ -15,6 +15,93 @@ from twisted.internet.threads import deferToThread
 
 from BlinkLogger import BlinkLogger
 
+class SessionHistoryEntry(SQLObject):
+    class sqlmeta:
+        table = 'sessions'
+    session_id        = StringCol()
+    media_types       = StringCol()
+    direction         = StringCol()
+    status            = StringCol()
+    failure_reason    = StringCol()
+    start_time        = DateTimeCol()
+    end_time          = DateTimeCol()
+    duration          = IntCol()
+    sip_callid        = StringCol(default='')
+    sip_fromtag       = StringCol(default='')
+    sip_totag         = StringCol(default='')
+    local_uri         = UnicodeCol(length=128, dbEncoding="latin1")
+    remote_uri        = UnicodeCol(length=128, dbEncoding="latin1")
+    remote_focus      = StringCol()
+    participants      = UnicodeCol(sqlType='LONGTEXT')
+    session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
+    local_idx         = DatabaseIndex('local_uri')
+    remote_idx        = DatabaseIndex('remote_uri')
+
+
+class SessionHistory(object):
+    __metaclass__ = Singleton
+
+    def __init__(self):
+        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().user_data_directory,"history/history.sqlite")
+        self.db = connectionForURI(db_uri)
+
+        SessionHistoryEntry._connection = self.db
+        try:
+            if SessionHistoryEntry.tableExists():
+                # change here schema in the future as necessary
+                pass
+            else:
+                try:
+                    SessionHistoryEntry.createTable()
+                    BlinkLogger().log_info(u"Created table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
+
+        except Exception, e:
+            BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
+
+    def _add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
+        try:
+            SessionHistoryEntry(
+                          session_id          = session_id,
+                          media_types         = media_types,
+                          direction           = direction,
+                          status              = status,
+                          failure_reason      = failure_reason,
+                          start_time          = start_time,
+                          end_time            = end_time,
+                          duration            = duration,
+                          local_uri           = local_uri,
+                          remote_uri          = remote_uri,
+                          remote_focus        = remote_focus,
+                          participants        = participants
+                          )
+        except Exception, e:
+            BlinkLogger().log_error(u"Error adding record %s to sessions table: %s" % (session_id, e))
+            return False
+
+    def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
+        try:
+            return block_on(deferToThread(self._add_entry, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error adding record to %s table" % e)
+            return False
+
+    def get_entries(self, direction=None, status=None, remote_focus=None, count=12):
+        query='1=1'
+        if direction:
+            query += " and direction = %s" % SessionHistoryEntry.sqlrepr(direction)
+        if status:
+            query += " and status = %s" % SessionHistoryEntry.sqlrepr(status)
+        if remote_focus:
+            query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
+        query += " order by start_time desc limit %d" % count
+        return block_on(deferToThread(SessionHistoryEntry.select, query))
+
+    def delete_entries(self):
+        query = "delete from sessions"
+        return block_on(deferToThread(self.db.queryAll, query))
+
 
 class ChatMessage(SQLObject):
     class sqlmeta:

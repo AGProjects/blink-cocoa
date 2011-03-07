@@ -39,7 +39,7 @@ from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import TimestampedNotificationData, Timestamp
 
-from HistoryManager import ChatHistory
+from HistoryManager import ChatHistory, SessionHistory
 from SessionRinger import Ringer
 from FileTransferSession import OutgoingFileTransfer
 from BlinkLogger import BlinkLogger, FileLogger
@@ -162,22 +162,6 @@ def parse_history_line(line):
         pass
     return None
 
-
-def format_date(dt):
-    if not dt:
-        return "unknown"
-    now = datetime.datetime.now()
-    delta = now - dt
-    if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
-        return dt.strftime("%H:%M")
-    elif delta.days <= 1:
-        return "Yesterday (%s)" % dt.strftime("%H:%M")
-    elif delta.days < 7:
-        return dt.strftime("%A")
-    elif delta.days < 300:
-        return dt.strftime("%B %d")
-    else:
-        return dt.strftime("%Y-%m-%d")
 
 _pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
 _pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
@@ -511,21 +495,6 @@ class SIPManager(object):
                 traceback.print_exc()
                 BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
 
-    def get_call_history_directory(self):
-        dirname = unicode(SIPSimpleSettings().audio.directory).strip()
-        if dirname == "":
-            return os.path.join(self.log_directory, "history")
-        elif os.path.isabs(dirname):
-            return dirname
-        else:
-            return os.path.join(self.log_directory, dirname)
-
-    def _open_call_history_file(self):
-        dirname = self.get_call_history_directory()
-        makedirs(dirname, 0700)
-        fname = os.path.join(self.get_call_history_directory(), 'calls.txt')
-        return codecs.open(fname, "a+", "utf-8")
-
     def get_printed_duration(self, start_time, end_time):
         duration = end_time - start_time
         if (duration.days > 0 or duration.seconds > 0):
@@ -544,24 +513,28 @@ class SIPManager(object):
         if account is BonjourAccount():
             return
 
-        with self._open_call_history_file() as f:
-            streams = ",".join(data.streams)
-            line = "missed\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp)
-            f.write(line)
+        id=str(uuid.uuid1())
+        media_types = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        local_uri = format_identity_address(account)
+        remote_uri = format_identity_address(controller.target_uri)
+        focus = "1" if data.focus else "0"
+        failure_reason = ''
+        duration = 0 
+
+        self.add_to_history(id, media_types, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
             media_type = 'missed-call'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = format_identity_address(account)
+            cpim_to = local_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_ended(self, controller, data):
         account = controller.account
@@ -569,105 +542,117 @@ class SIPManager(object):
         if account is BonjourAccount():
             return
 
-        with self._open_call_history_file() as f:
-            streams = ",".join(data.streams)
-            line = "in\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, session.start_time, session.end_time)
-            f.write(line)
+        id=str(uuid.uuid1())
+        media_types = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        local_uri = format_identity_address(account)
+        remote_uri = format_identity_address(controller.target_uri)
+        focus = "1" if data.focus else "0"
+        failure_reason = ''
+        duration = session.end_time - session.start_time
+
+        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message = '<h3>Incoming Audio Call</h3>'
             message += '<p>Call duration: %s' % duration
             media_type = 'audio'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
         account = controller.account
         if account is BonjourAccount():
             return
 
-        with self._open_call_history_file() as f:
-            streams = ",".join(data.streams)
-            line = "in\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp)
-            f.write(line)
+        id=str(uuid.uuid1())
+        media_types = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        local_uri = format_identity_address(account)
+        remote_uri = format_identity_address(controller.target_uri)
+        focus = "1" if data.focus else "0"
+        failure_reason = 'Answered elsewhere'
+
+        self.add_to_history(id, media_types, 'incoming', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
             message += '<p>The call has been answered elsewhere'
             media_type = 'audio'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(controller.target_uri)
+            local_uri = local_uri
+            remote_uri = remote_uri
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = format_identity_address(account)
+            cpim_to = local_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_failed(self, controller, data):
         account = controller.account
         if account is BonjourAccount():
             return
 
-        with self._open_call_history_file() as f:
-            streams = ",".join(data.streams)
-            participants = ",".join(data.participants)
-            focus = 1 if data.focus else 0
-            line = "failed\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
-            f.write(line)
+        id=str(uuid.uuid1())
+        media_types = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        focus = "1" if data.focus else "0"
+        local_uri = format_identity_address(account)
+        remote_uri = format_identity_address(controller.target_uri)
+        failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
+
+        self.add_to_history(id, media_types, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
-            message += '<p>Reason: %s' % data.failure_reason or data.reason
-            message += '<br>Code: %s' % data.code
+            message += '<p>Reason: %s (%s)' % (data.reason or data.failure_reason, data.code) 
             media_type = 'audio'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(controller.target_uri)
+            local_uri = local_uri
+            remote_uri = remote_uri
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = format_identity_address(account)
+            cpim_to = local_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_cancelled(self, controller, data):
         account = controller.account
         if account is BonjourAccount():
             return
 
-        with self._open_call_history_file() as f:
-            streams = ",".join(data.streams)
-            participants = ",".join(data.participants)
-            focus = 1 if data.focus else 0
-            line = "cancelled\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, data.timestamp, data.timestamp, focus, participants)
-            f.write(line)
+        id=str(uuid.uuid1())
+        media_types = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        focus = "1" if data.focus else "0"
+        local_uri = format_identity_address(account)
+        remote_uri = format_identity_address(controller.target_uri)
+        failure_reason = ''
+
+        self.add_to_history(id, media_types, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
             media_type = 'audio'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(controller.target_uri)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = format_identity_address(account)
+            cpim_to = local_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
         account = controller.account
@@ -675,32 +660,38 @@ class SIPManager(object):
         if account is BonjourAccount():
             return
 
-        with self._open_call_history_file() as f:
-            streams = ",".join(data.streams)
-            participants = ",".join(data.participants)
-            focus = 1 if data.focus else 0
-            line = "out\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (streams, account.id, data.target_uri, session.start_time, session.end_time, focus, participants)
-            f.write(line)
+        id=str(uuid.uuid1())
+        media_types = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        focus = "1" if data.focus else "0"
+        local_uri = format_identity_address(account)
+        remote_uri = format_identity_address(controller.target_uri)
+        direction = 'incoming'
+        status = 'delivered'
+        failure_reason = ''                  
+        duration = session.end_time - session.start_time
+        
+        self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message= '<h3>Outgoing Audio Call</h3>'
             message += '<p>Call duration: %s' % duration
             media_type = 'audio'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(controller.target_uri)
-            direction = 'incoming'
-            status = 'delivered'                  
             cpim_from = data.target_uri
-            cpim_to = format_identity_address(account)
+            cpim_to = local_uri
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))                       
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=format_identity_address(account) if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     @run_in_green_thread
-    def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
+    def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
+        SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants)
+
+    @run_in_green_thread
+    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
+        ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     def get_audio_recordings_directory(self):
         return os.path.join(self.log_directory, "history")
@@ -751,141 +742,6 @@ class SIPManager(object):
 
         result.sort(lambda a,b: cmp(a[0],b[0]))
         return result
-
-    def get_last_outgoing_call_info(self):
-        path = "%s/calls.txt" % (self.get_call_history_directory())
-
-        if not os.path.exists(path):
-            return None
-
-        last_call = None
-        with codecs.open(path, "r", "utf-8") as f:
-            for line in f:
-                if line.startswith("out") or line.startswith("failed") or line.startswith("cancelled"):
-                    last_call = line
-
-        if last_call:
-            toks = last_call.split("\t")
-            streams = toks[1].split(",")
-            account_name = toks[2]
-            address, display_name, full_uri, fancy_uri = format_identity_from_text(toks[3])
-
-            try:
-                account = AccountManager().get_account(account_name)
-            except:
-                account = None
-
-            return (account, address, streams)
-
-        return None
-
-    def get_last_call_history_entries(self, count, isfocus=False):
-        path = "%s/calls.txt"%(self.get_call_history_directory())
-
-        if not os.path.exists(path):
-            return None
-
-        in_lines = []
-        out_lines = []
-        missed_lines = []
-
-        with codecs.open(path, "r", "utf-8") as f:
-            for line in f:
-                if line.startswith("in"):
-                    in_lines.append(line.rstrip("\n"))
-                elif line.startswith("out") or line.startswith("failed") or line.startswith("cancelled"):
-                    out_lines.append(line.rstrip("\n"))
-                elif line.startswith("missed"):
-                    missed_lines.append(line.rstrip("\n"))
-
-        in_lines = in_lines[-count:]
-        out_lines = out_lines[-count:]
-        missed_lines = missed_lines[-count:]
-
-        in_entries = []
-        out_entries = []
-        missed_entries = []
-
-        for line in in_lines:
-            toks = line.split("\t")
-            i = len(toks) 
-            if i < 8:
-               while i < 8:
-                   toks.append("")
-                   i = i + 1
-            t, streams,account,party,start,end,focus,participants = toks
-            if isfocus and focus != '1':
-                continue
-            address, display_name, full_uri, fancy_uri = format_identity_from_text(party)
-            item = {
-            "streams":streams.split(","),
-            "account":account,
-            "party": fancy_uri,
-            "address":address,
-            "start":parse_datetime(start),
-            "end":parse_datetime(end),
-            "when":format_date(parse_datetime(start)),
-            "focus":focus,
-            "participants":participants.split(",") if participants else []
-            }
-            if item["start"] and item["end"]:
-                item["duration"] = item["end"] - item["start"]
-            else:
-                item["duration"] = None
-            in_entries.append(item)
-
-        for line in out_lines:
-            toks = line.split("\t")
-            i = len(toks) 
-            if i < 8:
-               while i < 8:
-                   toks.append("")
-                   i = i + 1
-            t, streams,account,party,start,end,focus,participants = toks
-            if isfocus and focus != '1':
-                continue
-            address, display_name, full_uri, fancy_uri = format_identity_from_text(party)
-
-            item = {"streams": streams.split(","),
-                    "account": account,
-                    "party":   fancy_uri,
-                    "address": address,
-                    "start":   parse_datetime(start),
-                    "end":     parse_datetime(end),
-                    "when":    format_date(parse_datetime(start)),
-                    "focus":   focus,
-                    "participants":participants.split(",") if participants else [], 
-                    "result":  t}
-
-            if item["start"] and item["end"]:
-                item["duration"] = item["end"] - item["start"]
-            else:
-                item["duration"] = None
-
-            out_entries.append(item)
-
-        for line in missed_lines:
-            toks = line.split("\t")
-            t, streams,account,party,start = toks
-            address, display_name, full_uri, fancy_uri = format_identity_from_text(party)
-            item = {"streams":  streams.split(","),
-                    "account":  account,
-                    "party":    fancy_uri,
-                    "address":  address,
-                    "start":    parse_datetime(start),
-                    "when":     format_date(parse_datetime(start)),
-                    "duration": None}
-
-            missed_entries.append(item)
-
-        in_entries.reverse()
-        out_entries.reverse()
-        missed_entries.reverse()
-        return in_entries, out_entries, missed_entries
-
-    def clear_call_history(self):
-        path = "%s/calls.txt"%(self.get_call_history_directory())
-        os.remove(path)
 
     def add_contact_to_call_session(self, session, contact):
         pass
@@ -1061,7 +917,7 @@ class SIPManager(object):
             cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            self.add_to_chat_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
