@@ -35,7 +35,6 @@ from sipsimple.configuration.backend.file import FileBackend
 from sipsimple.core import SIPURI, PJSIPError, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import SessionManager
-from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, DesktopSharingStream
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import TimestampedNotificationData, Timestamp
@@ -898,89 +897,6 @@ class SIPManager(object):
         except:
             details = ""
         return details
-
-    def format_incoming_session_update_message(self, session, streams):
-        party = format_identity(session.remote_identity)
-
-        default_action = u"Accept"
-
-        if len(streams) != 1:
-            type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
-            if "Desktop sharing" in type_names:
-                ds = [s for s in streams if s.type == "desktop-sharing"]
-                if ds:
-                    type_names.remove("Desktop sharing")
-                    if ds[0].handler.type == "active":
-                        type_names.append("Remote Desktop offered by")
-                    else:
-                        type_names.append("Access to my Desktop requested by")
-                message = u"Addition of %s" % " and ".join(type_names)
-            else:
-                message = u"Addition of %s to Session requested by" % " and ".join(type_names)
-
-            alt_action = u"Chat Only"
-        elif type(streams[0]) is AudioStream:
-            message = u"Addition of Audio to existing session requested by"
-            alt_action = None
-        elif type(streams[0]) is ChatStream:
-            message = u"Addition of Chat to existing session requested by"
-            alt_action = None
-        elif type(streams[0]) is FileTransferStream:
-            message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024))
-            alt_action = None
-        elif type(streams[0]) is DesktopSharingStream:
-            if streams[0].handler.type == "active":
-                message = u"Remote Desktop offered by"
-            else:
-                message = u"Access to my Desktop requested by"
-            alt_action = None
-        else:
-            message = u"Addition of unknown Stream to existing Session requested by"
-            alt_action = None
-            print "Unknown Session contents"
-        return (message, party), default_action, alt_action
-
-    def format_incoming_session_message(self, session, streams):
-        party = format_identity(session.remote_identity)
-
-        default_action = u"Accept"
-        alt_action = None
-
-        if len(streams) != 1:                    
-            type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
-            if "Chat" in type_names:
-                alt_action = u"Chat Only"
-            elif "Audio" in type_names and len(type_names) > 1:
-                alt_action = u"Audio Only"
-            if "Desktop sharing" in type_names:
-                ds = [s for s in streams if s.type == "desktop-sharing"]
-                if ds:
-                    type_names.remove("Desktop sharing")
-                    if ds[0].handler.type == "active":
-                        type_names.append("Remote Desktop offered by")
-                    else:
-                        type_names.append("Access to my Desktop requested by")
-                message = u"%s" % " and ".join(type_names)
-            else:
-                message = u"%s session requested by" % " and ".join(type_names)
-        elif type(streams[0]) is AudioStream:
-            message = u"Audio Session requested by"
-        elif type(streams[0]) is ChatStream:
-            message = u"Chat Session requested by"
-        elif type(streams[0]) is DesktopSharingStream:
-            if streams[0].handler.type == "active":
-                message = u"Remote Desktop offered by"
-            else:
-                message = u"Access to my Desktop requested by"
-        elif type(streams[0]) is FileTransferStream:
-            message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
-        else:
-            message = u"Incoming Session request from"
-            BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
-        return (message, party), default_action, alt_action
-
-    def reject_incoming_session(self, session, code=603, reason=None):
-        session.reject(code, reason)
 
     def is_muted(self):
         return self._app.voice_audio_mixer and self._app.voice_audio_mixer.muted

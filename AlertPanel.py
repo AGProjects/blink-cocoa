@@ -9,6 +9,7 @@ from application.notification import NotificationCenter, IObserver
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import SessionManager
+from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, DesktopSharingStream
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
@@ -194,10 +195,10 @@ class AlertPanel(NSObject, object):
         panelRejectB = self.panel.contentView().viewWithTag_(12)
         panelBusyB = self.panel.contentView().viewWithTag_(13)
         if is_update_proposal:
-            message, accept, other = SIPManager().format_incoming_session_update_message(session, streams)
+            message, accept, other = self.format_incoming_session_update_message(session, streams)
             other = ""
         else:
-            message, accept, other = SIPManager().format_incoming_session_message(session, streams)
+            message, accept, other = self.format_incoming_session_message(session, streams)
         captionT.setStringValue_(message[0])
         captionT.sizeToFit()
 
@@ -265,6 +266,89 @@ class AlertPanel(NSObject, object):
                 for i in (5, 6, 7, 8):
                     btn = v.viewWithTag_(i)
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
+
+    def format_incoming_session_update_message(self, session, streams):
+        party = format_identity(session.remote_identity)
+
+        default_action = u"Accept"
+
+        if len(streams) != 1:
+            type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
+            if "Desktop sharing" in type_names:
+                ds = [s for s in streams if s.type == "desktop-sharing"]
+                if ds:
+                    type_names.remove("Desktop sharing")
+                    if ds[0].handler.type == "active":
+                        type_names.append("Remote Desktop offered by")
+                    else:
+                        type_names.append("Access to my Desktop requested by")
+                message = u"Addition of %s" % " and ".join(type_names)
+            else:
+                message = u"Addition of %s to Session requested by" % " and ".join(type_names)
+
+            alt_action = u"Chat Only"
+        elif type(streams[0]) is AudioStream:
+            message = u"Addition of Audio to existing session requested by"
+            alt_action = None
+        elif type(streams[0]) is ChatStream:
+            message = u"Addition of Chat to existing session requested by"
+            alt_action = None
+        elif type(streams[0]) is FileTransferStream:
+            message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024))
+            alt_action = None
+        elif type(streams[0]) is DesktopSharingStream:
+            if streams[0].handler.type == "active":
+                message = u"Remote Desktop offered by"
+            else:
+                message = u"Access to my Desktop requested by"
+            alt_action = None
+        else:
+            message = u"Addition of unknown Stream to existing Session requested by"
+            alt_action = None
+            print "Unknown Session contents"
+        return (message, party), default_action, alt_action
+
+    def format_incoming_session_message(self, session, streams):
+        party = format_identity(session.remote_identity)
+
+        default_action = u"Accept"
+        alt_action = None
+
+        if len(streams) != 1:                    
+            type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
+            if "Chat" in type_names:
+                alt_action = u"Chat Only"
+            elif "Audio" in type_names and len(type_names) > 1:
+                alt_action = u"Audio Only"
+            if "Desktop sharing" in type_names:
+                ds = [s for s in streams if s.type == "desktop-sharing"]
+                if ds:
+                    type_names.remove("Desktop sharing")
+                    if ds[0].handler.type == "active":
+                        type_names.append("Remote Desktop offered by")
+                    else:
+                        type_names.append("Access to my Desktop requested by")
+                message = u"%s" % " and ".join(type_names)
+            else:
+                message = u"%s session requested by" % " and ".join(type_names)
+        elif type(streams[0]) is AudioStream:
+            message = u"Audio Session requested by"
+        elif type(streams[0]) is ChatStream:
+            message = u"Chat Session requested by"
+        elif type(streams[0]) is DesktopSharingStream:
+            if streams[0].handler.type == "active":
+                message = u"Remote Desktop offered by"
+            else:
+                message = u"Access to my Desktop requested by"
+        elif type(streams[0]) is FileTransferStream:
+            message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
+        else:
+            message = u"Incoming Session request from"
+            BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
+        return (message, party), default_action, alt_action
+
+    def reject_incoming_session(self, session, code=603, reason=None):
+        session.reject(code, reason)
 
     def cancelSession(self, session, reason):
         """Session cancelled by something other than the user"""
@@ -512,7 +596,7 @@ class AlertPanel(NSObject, object):
                 return
         elif resp == 2: # Reject
             try:
-                SIPManager().reject_incoming_session(session, 603, "Busy Everywhere")
+                self.reject_incoming_session(session, 603, "Busy Everywhere")
             except Exception, exc:
                 # possibly the session was cancelled in the meantime
                 self.removeSession(session)
@@ -521,7 +605,7 @@ class AlertPanel(NSObject, object):
             self.removeSession(session)
         elif resp == 3: # Reject (busy)
             try:
-                SIPManager().reject_incoming_session(session, 486)
+                self.reject_incoming_session(session, 486)
             except Exception, exc:
                 import traceback
                 traceback.print_exc()
@@ -551,7 +635,7 @@ class AlertPanel(NSObject, object):
                     s.reject_proposal()
                 else:
                     BlinkLogger().log_info(u"Rejecting session %s" % s.remote_identity)
-                    SIPManager().reject_incoming_session(s, 603, "Busy Everywhere")
+                    self.reject_incoming_session(s, 603, "Busy Everywhere")
             except Exception, exc:
                 import traceback
                 traceback.print_exc()
@@ -608,7 +692,7 @@ class AlertPanel(NSObject, object):
             for s in self.sessions.keys():
                 try:
                     BlinkLogger().log_info(u"Rejecting session (busy) to %s" % s.remote_identity)
-                    SIPManager().reject_incoming_session(s, 486)
+                    self.reject_incoming_session(s, 486)
                 except Exception, exc:
                     import traceback
                     traceback.print_exc()
