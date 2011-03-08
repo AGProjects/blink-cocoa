@@ -461,7 +461,6 @@ class AudioController(MediaStream):
             self.audioStatus.setStringValue_(u"Adding Audio...")
             self.audioStatus.sizeToFit()
         elif status == STREAM_CONNECTED:
-            #self.infoButton.setToolTip_(self.backend.format_session_details(self.session))
             if not self.answeringMachine:
                 if self.holdByLocal:
                     self.audioSegmented.setSelected_forSegment_(True, 0)

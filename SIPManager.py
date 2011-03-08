@@ -76,46 +76,6 @@ PresenceStatusList =  [(1, "Available", None),
                        (-1, "Holiday", None)]
 
 
-class BackendError(Exception):
-    pass
-
-
-class NotificationPrinter(object):
-    implements(IObserver)
-
-    def handle_notification(self, notification):
-        print "got notification", notification
-
-
-class ISIPManagerDelegate(Interface):
-    def sip_account_activated(self, account):
-        pass
-
-    def sip_account_registration_succeeded(self, account):
-        pass
-
-    def sip_account_registration_ended(self, account):
-        pass
-
-    def sip_account_registration_failed(self, account):
-        pass
-
-    def sip_account_list_refresh(self):
-        pass
-
-    def handle_incoming_session(self, session, streams):
-        pass
-
-    def sip_session_missed(self, session, stream_types):
-        pass
-
-    def sip_error(self, message):
-        pass
-
-    def sip_nat_detected(self, nat_type):
-        pass
-
-
 class IPAddressMonitor(object):
     def __init__(self):
         self.greenlet = None
@@ -145,22 +105,6 @@ class IPAddressMonitor(object):
         if self.greenlet is not None:
             api.kill(self.greenlet, api.GreenletExit())
             self.greenlet = None
-
-
-def parse_history_line(line):
-    toks = line.split("\t", 2)
-    if len(toks) != 3:
-        return None
-    try:
-        unescaped = eval(toks[2], {"__builtins__":None}, {})
-        try:
-            sender = toks[1][1:-1]
-        except:
-            sender = ""
-        return (parse_datetime(toks[0]), sender, unescaped)
-    except:
-        pass
-    return None
 
 
 _pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
@@ -224,8 +168,6 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPSessionDidFail')
 
     def set_delegate(self, delegate):
-        # doesnt work for PyCocoa objects 
-        # ISIPManagerDelegate.implementedBy(delegate)
         self._delegate= delegate
 
     def init(self, platform_options, version):
@@ -422,10 +364,6 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Enrollment Server returned no response")
 
         raise Exception("No response received from %s"%url)
-
-    def has_accounts(self):
-        am = AccountManager()
-        return any(a for a in am.get_accounts() if not isinstance(a, BonjourAccount))
 
     def lookup_sip_proxies(self, account, target_uri, session_controller):
         assert isinstance(target_uri, SIPURI)
@@ -746,14 +684,6 @@ class SIPManager(object):
     def add_contact_to_call_session(self, session, contact):
         pass
 
-    def format_session_details(self, sess):
-        try:
-            details = u"Codec: '%s' at %dHz\n" % (sess.audio_codec, sess.audio_sample_rate)
-            details += u"Audio RTP endpoints %s:%d <-> %s:%d\n" % (sess.audio_local_rtp_address, sess.audio_local_rtp_port, sess.audio_remote_rtp_address_sdp, sess.audio_remote_rtp_port_sdp)
-        except:
-            details = ""
-        return details
-
     def is_muted(self):
         return self._app.voice_audio_mixer and self._app.voice_audio_mixer.muted
 
@@ -769,9 +699,6 @@ class SIPManager(object):
 
     def get_default_account(self):
         return AccountManager().default_account
-
-    def is_account_registration_failed(self, account):
-        return account in self._failed_accounts
 
     def set_default_account(self, account):
         if account != AccountManager().default_account:

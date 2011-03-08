@@ -2,7 +2,7 @@
 #
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
-           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs', 'parse_datetime',
+           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs',
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern']
 
 import datetime
@@ -208,19 +208,6 @@ def escape_html(text):
 
 def compare_identity_addresses(id1, id2):
     return format_identity_address(id1) == format_identity_address(id2)
-
-
-def parse_datetime(s):
-    if not s or s == "None":
-        return None
-    #FIXME: temporary workaround to be able to parse timestamps lacking a date
-    # This workaround should be removed once timestamps are consistently
-    # written. -Luci
-    timestamp = s.split(".")[0]
-    try:
-        return datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-    except ValueError:
-        return datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime(timestamp, "%H:%M:%S").time())
 
 
 def html2txt(s):

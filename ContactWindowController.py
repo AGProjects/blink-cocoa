@@ -300,19 +300,10 @@ class ContactWindowController(NSWindowController):
                     self.accountPopUp.addItemWithTitle_(address)
                 item = self.accountPopUp.lastItem()
                 item.setRepresentedObject_(account)
-                #if account is BonjourAccount():
-                #    self.accountPopUp.lastItem().set
                 if account is not BonjourAccount():
                     if not account.registered and account.sip.register:
-                        #if self.backend.is_account_registration_failed(account):
                         title = NSAttributedString.alloc().initWithString_attributes_(address, grayAttrs)
                         item.setAttributedTitle_(title)
-                        #else:
-                        #    pass
-                            ##image = NSImage.imageNamed_("NSActionTemplate")
-                            #image.setScalesWhenResized_(True)
-                            #image.setSize_(NSMakeSize(12,12))
-                            #item.setImage_(image)
                 else:
                     image = NSImage.imageNamed_("NSBonjour")
                     image.setScalesWhenResized_(True)
