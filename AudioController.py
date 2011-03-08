@@ -144,7 +144,8 @@ class AudioController(MediaStream):
             self.answeringMachine.start()
 
     def startOutgoing(self, is_update):
-        self.label.setStringValue_(self.sessionController.contactDisplayName if self.sessionController.contactDisplayName else format_identity_simple(self.sessionController.remotePartyObject))
+        display_name = self.sessionController.contactDisplayName if self.sessionController.contactDisplayName and not self.sessionController.contactDisplayName.startswith('sip:') and not self.sessionController.contactDisplayName.startswith('sips:') else None
+        self.label.setStringValue_(display_name if display_name else format_identity_simple(self.sessionController.remotePartyObject))
         self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
         self.updateTLSIcon()
