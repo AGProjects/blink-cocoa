@@ -50,6 +50,9 @@ class BlinkAppDelegate(NSObject):
     missedChats = 0
     vncServerTask = None
     urisToOpen = []
+    middleware_started = False
+    enroll_now = False
+    enroll_finished_before_middleware_started = False
     
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -58,6 +61,8 @@ class BlinkAppDelegate(NSObject):
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
             
             nc = NotificationCenter()
+
+            nc.add_observer(self, name="SIPApplicationDidStart")
             nc.add_observer(self, name="SIPSessionNewIncoming")
             nc.add_observer(self, name="SIPSessionGotProposal")
             nc.add_observer(self, name="SIPSessionGotRejectProposal")
@@ -163,6 +168,7 @@ class BlinkAppDelegate(NSObject):
                 self.backend.fetch_account()
                 accounts = AccountManager().get_accounts()
                 if not accounts or (first_run and accounts == [BonjourAccount()]):
+                    self.enroll_now = True
                     self.enroll()
                 break
             except FileParserError, exc:
@@ -183,19 +189,21 @@ You might need to Replace it and re-enter your account information. Your old fil
                 NSApp.terminate_(None)
                 return
 
-
-        # window should be shown only after enrollment check
-        # "pl do not show Main interface at the first start, just show the wizard"
-        self.windowController.showWindow_(None)
-
-        self.windowController.setupFinished()
-
         smileys = SmileyManager()
         smileys.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
 
         self.ready = True
         for uri, session_type in self.urisToOpen:
             self.windowController.startCallWithURIText(uri, session_type)
+
+        self.windowController.setupFinished()
+
+        if self.enroll_now:
+            if self.middleware_started:
+                BlinkLogger().log_info(u"Launching the GUI now");
+                self.windowController.showWindow_(None)
+            else:
+                self.enroll_finished_before_middleware_started = True
 
     def killSelfAfterTimeout_(self, arg):
         # wait 4 seconds then kill self
@@ -223,6 +231,13 @@ You might need to Replace it and re-enter your account information. Your old fil
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_SIPApplicationDidStart(self, notification):
+        self.middleware_started = True
+        BlinkLogger().log_info(u"The middleware has started")
+        if not self.enroll_now or self.enroll_finished_before_middleware_started:
+            BlinkLogger().log_info(u"Launching the GUI now");
+            self.windowController.showWindow_(None)
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
