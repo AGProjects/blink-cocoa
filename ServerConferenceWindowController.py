@@ -6,7 +6,9 @@ from Foundation import *
 
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.core import SIPCoreError, SIPURI
+import random
 import re
+import string
 
 class ServerConferenceRoom(object):
     def __init__(self, target, media_types, participants):
@@ -176,11 +178,11 @@ class JoinConferenceWindow(NSObject):
 
     def validateConference(self):
         if not self.room.stringValue().strip():
-            NSRunAlertPanel("Start a new Conference", "Please enter the Conference Room.",
-                "OK", None, None)
-            return False
+            room=''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(6))
+        else:
+            room=self.room.stringValue().lower().strip()
 
-        if not re.match("^[1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", self.room.stringValue().lower().strip()):
+        if not re.match("^[1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", room):
             NSRunAlertPanel("Start a new Conference", "Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
                 "OK", None, None)
             return False
@@ -190,14 +192,14 @@ class JoinConferenceWindow(NSObject):
                 "OK", None, None)
             return False
 
-        if "@" in self.room.stringValue().strip():
-            self.target = u'%s' % self.room.stringValue().lower().strip()
+        if "@" in room:
+            self.target = u'%s' % room
         else:
             account = AccountManager().default_account
             if account.server.conference_server:
-                self.target = u'%s@%s' % (self.room.stringValue().lower().strip(), account.server.conference_server)
+                self.target = u'%s@%s' % (room, account.server.conference_server)
             else:
-                self.target = u'%s@%s' % (self.room.stringValue().lower().strip(), self.default_conference_server)
+                self.target = u'%s@%s' % (room, self.default_conference_server)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
