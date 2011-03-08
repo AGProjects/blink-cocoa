@@ -1,6 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+import re
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -489,7 +490,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidStart(self, sender, data):
         self.remoteParty = format_identity(self.session.remote_identity)
-        if hasattr(self.session, "remote_focus") and self.session.remote_focus:
+        if self.session.remote_focus:
             self.remote_focus = True
             self.remote_focus_log = True
         else:
@@ -498,6 +499,8 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         log_info(self, "Session started")
+        for contact in self.invited_participants:
+            self.session.conference.add_participant(contact.uri)
 
     def _NH_SIPSessionWillEnd(self, sender, data):
         log_info(self, "Session will end (%s)"%data.originator)
@@ -659,7 +662,7 @@ class SessionController(NSObject):
             uri = uri.replace("sip:", "", 1)
  
             # save uri for accounting pusposes
-            if uri not in self.participants_log:
+            if uri != self.account.id and uri not in self.participants_log:
                 self.participants_log.append(uri)    
 
             # remove invited participants that joined the conference
@@ -667,6 +670,39 @@ class SessionController(NSObject):
                 if uri == contact.uri:
                     self.invited_participants.remove(contact)
 
+        # notify controllers who need conference information
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+
+    def _NH_SIPConferenceDidAddParticipant(self, sender, data):
+        log_info(self, u"Added participant to conference: %s" % data.participant)
+        uri = re.sub("^(sip:|sips:)", "", str(data.participant))
+        for contact in self.invited_participants:
+            if uri == contact.uri:
+                self.invited_participants.remove(contact)
+        # notify controllers who need conference information
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+
+    def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
+        log_info(self, u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
+        uri = re.sub("^(sip:|sips:)", "", str(data.participant))
+        for contact in self.invited_participants:
+            if uri == contact.uri:
+                self.invited_participants.remove(contact)
+        # notify controllers who need conference information
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+
+    def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
+        uri = re.sub("^(sip:|sips:)", "", str(data.participant))
+        for contact in self.invited_participants:
+            if uri == contact.uri:
+                if data.code == 100:
+                    contact.setDetail('Connecting...')
+                elif data.code in (180, 183):
+                    contact.setDetail('Ringing...')
+                elif data.code == 200:
+                    contact.setDetail('Invitation accepted')
+                else:
+                    contact.setDetail(data.reason)
         # notify controllers who need conference information
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 

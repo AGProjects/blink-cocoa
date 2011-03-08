@@ -1133,10 +1133,6 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
-        # TODO: When session is established, request the other participants to join using REFER method, RFC4579 -adi
-        #    5.5.  REFER: Requesting a Focus to Add a New Resource to a Conference
-        #    5.6.  REFER: Requesting a User to Dial in to a Conference Using a Conference URI
-
     @objc.IBAction
     def startAudioToSelected_(self, sender):
         self.startSessionToSelectedContact("audio")

@@ -442,7 +442,7 @@ class ChatWindowController(NSWindowController):
             if session.remote_focus and self.isConferenceParticipant(uri):
                 BlinkLogger().log_info(u"Request server for removal of %s from conference" % uri)
                 session.pending_removal_participants.add(uri)
-                # TODO: send REFER with BYE to remove participant -adi
+                session.session.conference.remove_participant(uri)
 
             self.drawerTableView.deselectAll_(self)
             self.refreshDrawer()
@@ -470,7 +470,7 @@ class ChatWindowController(NSWindowController):
                             session.invited_participants.append(contact)
                             session.participants_log.append(uri)
                             BlinkLogger().log_info(u"Invite %s to conference" % uri)
-                            # TODO: send REFER to invite each participant -adi
+                            session.session.conference.add_participant(uri)
 
                 self.refreshDrawer()
             else:
@@ -708,7 +708,7 @@ class ChatWindowController(NSWindowController):
 
                     # detail will be reset on receival of next conference-info update
                     if uri in session.pending_removal_participants:
-                        contact.setDetail('Pending removal...')
+                        contact.setDetail('Removal requested...')
 
                     if own_uri and self.own_icon and contact.uri == own_uri:
                         contact.setIcon(self.own_icon)
@@ -811,7 +811,7 @@ class ChatWindowController(NSWindowController):
                         session.participants_log.append(uri)
                         self.refreshDrawer()
                         BlinkLogger().log_info(u"Invite %s to conference" % uri)
-                        # TODO: send REFER to invite participant to the conference -adi
+                        session.session.conference.add_participant(uri)
                 except:
                     return False
             elif not isinstance(session.account, BonjourAccount):
