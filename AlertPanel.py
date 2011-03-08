@@ -195,11 +195,11 @@ class AlertPanel(NSObject, object):
         panelRejectB = self.panel.contentView().viewWithTag_(12)
         panelBusyB = self.panel.contentView().viewWithTag_(13)
         if is_update_proposal:
-            message, accept, other = self.format_incoming_session_update_message(session, streams)
+            subject, accept, other = self.format_subject_for_incoming_reinvite(session, streams)
             other = ""
         else:
-            message, accept, other = self.format_incoming_session_message(session, streams)
-        captionT.setStringValue_(message[0])
+            subject, accept, other = self.format_subject_for_incoming_invite(session, streams)
+        captionT.setStringValue_(subject)
         captionT.sizeToFit()
 
         caller_contact = self.owner.getContactMatchingURI(str(session.remote_identity.uri))
@@ -267,9 +267,7 @@ class AlertPanel(NSObject, object):
                     btn = v.viewWithTag_(i)
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
 
-    def format_incoming_session_update_message(self, session, streams):
-        party = format_identity(session.remote_identity)
-
+    def format_subject_for_incoming_reinvite(self, session, streams):
         default_action = u"Accept"
 
         if len(streams) != 1:
@@ -282,35 +280,33 @@ class AlertPanel(NSObject, object):
                         type_names.append("Remote Desktop offered by")
                     else:
                         type_names.append("Access to my Desktop requested by")
-                message = u"Addition of %s" % " and ".join(type_names)
+                subject = u"Addition of %s" % " and ".join(type_names)
             else:
-                message = u"Addition of %s to Session requested by" % " and ".join(type_names)
+                subject = u"Addition of %s to Session requested by" % " and ".join(type_names)
 
             alt_action = u"Chat Only"
         elif type(streams[0]) is AudioStream:
-            message = u"Addition of Audio to existing session requested by"
+            subject = u"Addition of Audio to existing session requested by"
             alt_action = None
         elif type(streams[0]) is ChatStream:
-            message = u"Addition of Chat to existing session requested by"
+            subject = u"Addition of Chat to existing session requested by"
             alt_action = None
         elif type(streams[0]) is FileTransferStream:
-            message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024))
+            subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024))
             alt_action = None
         elif type(streams[0]) is DesktopSharingStream:
             if streams[0].handler.type == "active":
-                message = u"Remote Desktop offered by"
+                subject = u"Remote Desktop offered by"
             else:
-                message = u"Access to my Desktop requested by"
+                subject = u"Access to my Desktop requested by"
             alt_action = None
         else:
-            message = u"Addition of unknown Stream to existing Session requested by"
+            subject = u"Addition of unknown Stream to existing Session requested by"
             alt_action = None
             print "Unknown Session contents"
-        return (message, party), default_action, alt_action
+        return subject, default_action, alt_action
 
-    def format_incoming_session_message(self, session, streams):
-        party = format_identity(session.remote_identity)
-
+    def format_subject_for_incoming_invite(self, session, streams):
         default_action = u"Accept"
         alt_action = None
 
@@ -328,24 +324,24 @@ class AlertPanel(NSObject, object):
                         type_names.append("Remote Desktop offered by")
                     else:
                         type_names.append("Access to my Desktop requested by")
-                message = u"%s" % " and ".join(type_names)
+                subject = u"%s" % " and ".join(type_names)
             else:
-                message = u"%s session requested by" % " and ".join(type_names)
+                subject = u"%s session requested by" % " and ".join(type_names)
         elif type(streams[0]) is AudioStream:
-            message = u"Audio Session requested by"
+            subject = u"Audio Session requested by"
         elif type(streams[0]) is ChatStream:
-            message = u"Chat Session requested by"
+            subject = u"Chat Session requested by"
         elif type(streams[0]) is DesktopSharingStream:
             if streams[0].handler.type == "active":
-                message = u"Remote Desktop offered by"
+                subject = u"Remote Desktop offered by"
             else:
-                message = u"Access to my Desktop requested by"
+                subject = u"Access to my Desktop requested by"
         elif type(streams[0]) is FileTransferStream:
-            message = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
+            subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
         else:
-            message = u"Incoming Session request from"
+            subject = u"Incoming Session request from"
             BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
-        return (message, party), default_action, alt_action
+        return subject, default_action, alt_action
 
     def reject_incoming_session(self, session, code=603, reason=None):
         session.reject(code, reason)
