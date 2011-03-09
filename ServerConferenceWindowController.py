@@ -80,6 +80,8 @@ class JoinConferenceWindow(NSObject):
             participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
             if participant and "@" not in participant and self.default_domain:
                 participant = '%s@%s' % (participant, self.default_domain)
+            if participant:
+                participant = re.sub("^(sip:|sips:)", "", str(participant))
             try:
                 if participant not in self._participants:
                     self._participants.append(participant)
@@ -93,6 +95,8 @@ class JoinConferenceWindow(NSObject):
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
             participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+            if participant:
+                participant = re.sub("^(sip:|sips:)", "", str(participant))
             if participant and "@" not in participant and self.default_domain:
                 participant = '%s@%s' % (participant, self.default_domain)
             if participant is None or not validateParticipant(participant):
@@ -136,6 +140,8 @@ class JoinConferenceWindow(NSObject):
     def addRemoveParticipant_(self, sender):
         if sender.selectedSegment() == 0:
             participant = self.participant.stringValue().strip().lower()
+            if participant:
+                participant = re.sub("^(sip:|sips:)", "", str(participant))
             self.addParticipant(participant)
         elif sender.selectedSegment() == 1:
             participant = self.selectedParticipant()
@@ -251,6 +257,8 @@ class AddParticipantsWindow(NSObject):
         participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
+        if participant:
+            participant = re.sub("^(sip:|sips:)", "", str(participant))
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
@@ -265,6 +273,8 @@ class AddParticipantsWindow(NSObject):
         participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
+        if participant:
+            participant = re.sub("^(sip:|sips:)", "", str(participant))
         try:
             if participant is None or not validateParticipant(participant):
                 return NSDragOperationNone
@@ -301,6 +311,9 @@ class AddParticipantsWindow(NSObject):
 
             if participant and "@" not in participant and self.default_domain:
                 participant = '%s@%s' % (participant, self.default_domain)
+
+            if participant:
+                participant = re.sub("^(sip:|sips:)", "", str(participant))
 
             if not participant or not validateParticipant(participant):
                 NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)

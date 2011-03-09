@@ -26,6 +26,7 @@ from SIPManager import SIPManager
 import FancyTabSwitcher
 from util import allocate_autorelease_pool, format_identity_address
 
+import re
 import time
 
 class ChatWindowController(NSWindowController):
@@ -786,6 +787,8 @@ class ChatWindowController(NSWindowController):
                 pboard = info.draggingPasteboard()
                 if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                     uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                    if uri:
+                        uri = re.sub("^(sip:|sips:)", "", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
                         
@@ -818,8 +821,11 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
-            if uri and "@" not in uri:
-                uri = '%s@%s' % (uri, session.account.id.domain)
+            if uri:
+                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                if "@" not in uri:
+                    uri = '%s@%s' % (uri, session.account.id.domain)
+
             if session.remote_focus:
                 try:
                     session = self.selectedSessionController()

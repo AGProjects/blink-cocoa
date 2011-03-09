@@ -663,9 +663,7 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.conference_info = data.conference_info
         for user in data.conference_info.users:
-            uri = user.entity.replace("sips:", "", 1)
-            uri = uri.replace("sip:", "", 1)
- 
+            uri = re.sub("^(sip:|sips:)", "", str(user.entity))
             # save uri for accounting pusposes
             if uri != self.account.id and uri not in self.participants_log:
                 self.participants_log.append(uri)    
