@@ -684,15 +684,21 @@ class SessionController(NSObject):
         for contact in self.invited_participants:
             if uri == contact.uri:
                 self.invited_participants.remove(contact)
-        # notify controllers who need conference information
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                # notify controllers who need conference information
+                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                break
 
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         log_info(self, u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
         for contact in self.invited_participants:
             if uri == contact.uri:
+                contact.setDetail('%s (%s)' % (data.reason, data.code))
                 self.failed_to_join_participants[uri]=time.time()
+                if data.code >= 400:
+                    contact.setDetail('%s (%s)' % (data.reason, data.code))
+                    self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                    break
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
@@ -704,10 +710,11 @@ class SessionController(NSObject):
                     contact.setDetail('Ringing...')
                 elif data.code == 200:
                     contact.setDetail('Invitation accepted')
-                else:
-                    contact.setDetail(data.reason)
-        # notify controllers who need conference information
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                elif data.code < 400:
+                    contact.setDetail('%s (%s)' % (data.reason, data.code))
+                # notify controllers who need conference information
+                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                break
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         # update Chat Window toolbar buttons depending on session and stream state
