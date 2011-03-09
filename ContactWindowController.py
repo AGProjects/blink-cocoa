@@ -1675,7 +1675,7 @@ class ContactWindowController(NSWindowController):
             else:
                 return dt.strftime("on %Y-%m-%d")
 
-        entries = {'incoming': [], 'outgoing': [], 'missed': [], 'incoming_conferences': [], 'outgoing_conferences': [] }
+        entries = {'incoming': [], 'outgoing': [], 'missed': [], 'conferences': []}
 
         try:
             results = SessionHistory().get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
@@ -1745,7 +1745,7 @@ class ContactWindowController(NSWindowController):
             entries['missed'].append(item)
 
         try:
-            results = SessionHistory().get_entries(direction='incoming', count=count, remote_focus="1")
+            results = SessionHistory().get_entries(count=count, remote_focus="1")
         except Exception, e:
             BlinkLogger().log_error(u"Failed to retrieve incoming session history: %s" % e)
             return
@@ -1764,29 +1764,7 @@ class ContactWindowController(NSWindowController):
             "focus": result.remote_focus,
             "participants":result.participants.split(",") if result.participants else []
             }
-            entries['incoming_conferences'].append(item)
-
-        try:
-            results = SessionHistory().get_entries(direction='outgoing', count=count, remote_focus="1")
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrieve outgoing session history: %s" % e)
-            return
-
-        for result in list(results):
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
-            item = {
-            "streams": result.media_types.split(","),
-            "account": result.local_uri,
-            "remote_party": fancy_uri,
-            "target_uri": target_uri,
-            "status": result.status,
-            "failure_reason": result.failure_reason,
-            "start_time": format_date(result.start_time),
-            "duration": result.end_time - result.start_time,
-            "focus": result.remote_focus,
-            "participants": result.participants.split(",") if result.participants else []
-            }
-            entries['outgoing_conferences'].append(item)
+            entries['conferences'].append(item)
 
         self.renderHistoryMenu(entries)
 
@@ -1857,24 +1835,12 @@ class ContactWindowController(NSWindowController):
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
 
-        if entries['outgoing_conferences']:
+        if entries['conferences']:
             menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing Conferences", "", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Conferences", "", "")
             lastItem.setEnabled_(False)
 
-            for item in entries['outgoing_conferences']:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
-                lastItem.setAttributedTitle_(format_history_menu_item(item))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
-
-        if entries['incoming_conferences']:
-            menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming Conferences", "", "")
-            lastItem.setEnabled_(False)
-
-            for item in entries['incoming_conferences']:
+            for item in entries['conferences']:
                 lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
                 lastItem.setAttributedTitle_(format_history_menu_item(item))
                 lastItem.setIndentationLevel_(1)
@@ -1883,7 +1849,7 @@ class ContactWindowController(NSWindowController):
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
-        lastItem.setEnabled_(True if entries['incoming_conferences'] or entries['outgoing_conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
+        lastItem.setEnabled_(True if entries['conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
 
