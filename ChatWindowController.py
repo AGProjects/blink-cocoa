@@ -90,7 +90,7 @@ class ChatWindowController(NSWindowController):
 
     def updateTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             change = False
             for uri in session.failed_to_join_participants.keys():
@@ -185,12 +185,10 @@ class ChatWindowController(NSWindowController):
 
         return True
 
-    def selectedSession(self):
+    def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
         if activeTab and self.sessions.has_key(activeTab.identifier()):
             return self.sessions[activeTab.identifier()]
-        if activeTab:
-            print "Request for invalid tab %s"%activeTab.identifier()
         return None
 
     def updateTitle(self):
@@ -200,7 +198,7 @@ class ChatWindowController(NSWindowController):
 
     def getConferenceTitle(self):
         title = None
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
@@ -233,7 +231,7 @@ class ChatWindowController(NSWindowController):
             item.setBadgeLabel_(str(count))
 
     def windowDidBecomeKey_(self, notification):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
 
         if session and session.streamHandlerOfType("chat"):
             self.window().makeFirstResponder_(session.streamHandlerOfType("chat").chatViewController.inputText)
@@ -289,7 +287,7 @@ class ChatWindowController(NSWindowController):
                 self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def validateToolbarItem_(self, item):
-        selectedSession = self.selectedSession()
+        selectedSession = self.selectedSessionController()
         if selectedSession:
             return selectedSession.validateToolbarButton(item)
         else:
@@ -297,7 +295,7 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def close_(self, sender):
-        selectedSession = self.selectedSession()
+        selectedSession = self.selectedSessionController()
         if selectedSession:
             if len(self.sessions) == 1:
                 self.window().close()
@@ -364,7 +362,7 @@ class ChatWindowController(NSWindowController):
             return None
 
     def isConferenceParticipant(self, uri):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session and hasattr(session.conference_info, "users"):
             for user in session.conference_info.users:
                 participant = user.entity.replace("sip:", "", 1)
@@ -375,7 +373,7 @@ class ChatWindowController(NSWindowController):
         return False
 
     def isInvitedParticipant(self, uri):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         try:
            return uri in (contact.uri for contact in session.invited_participants)
         except AttributeError:
@@ -383,7 +381,7 @@ class ChatWindowController(NSWindowController):
 
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()
-        session = self.selectedSession()
+        session = self.selectedSessionController()
 
         if not session or contact is None:
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False)
@@ -417,7 +415,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
     def sendPrivateMessage(self):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             row = self.drawerTableView.selectedRow()
             try:
@@ -438,18 +436,18 @@ class ChatWindowController(NSWindowController):
                 chat_stream.handler.send(message, recipient, True)
 
     def canGoToConferenceWebsite(self):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
             return True
         return False
 
     def canBeRemovedFromConference(self, uri):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
         return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
     def removeParticipant(self, uri):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             # remove uri from invited participants
             try:
@@ -471,7 +469,7 @@ class ChatWindowController(NSWindowController):
             self.refreshDrawer()
 
     def addParticipants(self):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             if session.remote_focus:
                 addParticipantsWindow = AddParticipantsWindow(self.getConferenceTitle())
@@ -525,13 +523,13 @@ class ChatWindowController(NSWindowController):
             return
 
         # dispatch the click to the active session
-        selectedSession = self.selectedSession()
+        selectedSession = self.selectedSessionController()
         if selectedSession:
             selectedSession.userClickedToolbarButton(sender)
 
     @objc.IBAction
     def useClickedRemoveFromConference_(self, sender):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             row = self.drawerTableView.selectedRow()
             try:
@@ -543,7 +541,7 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             tag = sender.tag()
 
@@ -659,7 +657,7 @@ class ChatWindowController(NSWindowController):
 
         self.participants = []
 
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
                 
             if session.hasStreamOfType("audio"):
@@ -779,7 +777,7 @@ class ChatWindowController(NSWindowController):
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             if session.remote_focus:
                 # do not allow drag if remote party is not conference focus
@@ -815,12 +813,12 @@ class ChatWindowController(NSWindowController):
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
         pboard = info.draggingPasteboard()
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if session.remote_focus:
                 try:
-                    session = self.selectedSession()
+                    session = self.selectedSessionController()
                     if session:
 
                         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
@@ -843,12 +841,12 @@ class ChatWindowController(NSWindowController):
         return True
 
     def drawerDidOpen_(self, notification):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             session.mustShowDrawer = True
 
     def drawerDidClose_(self, notification):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             session.mustShowDrawer = False
 

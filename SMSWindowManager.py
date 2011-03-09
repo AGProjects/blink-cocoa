@@ -37,14 +37,14 @@ class SMSWindowController(NSWindowController):
             self.unreadMessageCounts = {}
         return self
 
-    def selectedSession(self):
+    def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
         if activeTab:
             return activeTab.identifier()
         return None
     
     def updateTitle(self, display_name = None):
-        session = self.selectedSession()
+        session = self.selectedSessionController()
         if session:
             sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
             if display_name and display_name != sip_address:
@@ -101,7 +101,7 @@ class SMSWindowController(NSWindowController):
         return (item.identifier() for item in self.tabView.tabViewItems())
     
     def close_(self, sender):
-        selected = self.selectedSession()
+        selected = self.selectedSessionController()
         if self.unreadMessageCounts.has_key(selected):
             del self.unreadMessageCounts[selected]
         self.tabSwitcher.removeTabViewItem_(self.tabView.selectedTabViewItem())
@@ -140,14 +140,14 @@ class SMSWindowController(NSWindowController):
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):
         if sender.tag() == 100: # smileys
-            chatViewController = self.selectedSession().chatViewController
+            chatViewController = self.selectedSessionController().chatViewController
             chatViewController.expandSmileys = not chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
         elif sender.tag() == 101: # history
             contactWindow = self._owner._owner
             contactWindow.showChatTranscripts_(None)
-            session = self.selectedSession()
+            session = self.selectedSessionController()
             contactWindow.historyViewer.filterByContact(format_identity(session.target_uri), media_type='sms')
 
 
