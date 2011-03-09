@@ -41,8 +41,10 @@ class JoinConferenceWindow(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, target=None, participants=[], media=["chat"]):
+    def __init__(self, target=None, participants=[], media=["chat"], default_domain=None):
         NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
+
+        self.default_domain = default_domain
 
         if target is not None and validateParticipant(target):
             self.room.setStringValue_(target)
@@ -76,7 +78,8 @@ class JoinConferenceWindow(NSObject):
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
             participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
-
+            if participant and "@" not in participant and self.default_domain:
+                participant = '%s@%s' % (participant, self.default_domain)
             try:
                 if participant not in self._participants:
                     self._participants.append(participant)
@@ -90,6 +93,8 @@ class JoinConferenceWindow(NSObject):
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
             participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+            if participant and "@" not in participant and self.default_domain:
+                participant = '%s@%s' % (participant, self.default_domain)
             if participant is None or not validateParticipant(participant):
                 return NSDragOperationNone
             return NSDragOperationGeneric
@@ -208,7 +213,6 @@ class JoinConferenceWindow(NSObject):
 
         return True
 
-
 class AddParticipantsWindow(NSObject):
     window = objc.IBOutlet()
     addRemove = objc.IBOutlet()
@@ -219,8 +223,9 @@ class AddParticipantsWindow(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, target=None):
+    def __init__(self, target=None, default_domain=None):
         self._participants = []
+        self.default_domain = default_domain
         NSBundle.loadNibNamed_owner_("AddParticipantsWindow", self)
 
         if target is not None:
@@ -244,6 +249,8 @@ class AddParticipantsWindow(NSObject):
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+        if participant and "@" not in participant and self.default_domain:
+            participant = '%s@%s' % (participant, self.default_domain)
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
@@ -252,11 +259,12 @@ class AddParticipantsWindow(NSObject):
                 return True
         except:
             pass
-
         return False
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+        if participant and "@" not in participant and self.default_domain:
+            participant = '%s@%s' % (participant, self.default_domain)
         try:
             if participant is None or not validateParticipant(participant):
                 return NSDragOperationNone
@@ -290,6 +298,9 @@ class AddParticipantsWindow(NSObject):
     def addRemoveParticipant_(self, sender):
         if sender.selectedSegment() == 0:
             participant = self.participant.stringValue().strip().lower()
+
+            if participant and "@" not in participant and self.default_domain:
+                participant = '%s@%s' % (participant, self.default_domain)
 
             if not participant or not validateParticipant(participant):
                 NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)

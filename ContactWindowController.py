@@ -832,7 +832,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def joinConferenceClicked_(self, sender):
-        self.joinConferenceWindow = JoinConferenceWindow()
+        account = self.activeAccount()
+        self.joinConferenceWindow = JoinConferenceWindow(default_domain=account.id.domain)
         conference = self.joinConferenceWindow.run()
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
@@ -1629,7 +1630,9 @@ class ContactWindowController(NSWindowController):
         participants = item["participants"] or []
         media = item["streams"] or []
 
-        self.joinConferenceWindow = JoinConferenceWindow(target=target, participants=participants, media=media)
+        account = self.activeAccount()
+
+        self.joinConferenceWindow = JoinConferenceWindow(target=target, participants=participants, media=media, default_domain=account.id.domain)
         conference = self.joinConferenceWindow.run()
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)

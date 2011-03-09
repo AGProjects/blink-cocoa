@@ -472,7 +472,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             if session.remote_focus:
-                addParticipantsWindow = AddParticipantsWindow(self.getConferenceTitle())
+                addParticipantsWindow = AddParticipantsWindow(self.getConferenceTitle(), session.account.id.domain)
                 participants = addParticipantsWindow.run()
                 if participants is not None:
                     getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
@@ -481,6 +481,8 @@ class ChatWindowController(NSWindowController):
                     if remote_uri in participants:
                         participants.remove(remote_uri)
                     for uri in participants:
+                        if uri and "@" not in uri:
+                            uri='%s@%s' % (uri, session.account.id.domain)
                         contact = getContactMatchingURI(uri)
                         if contact:
                             contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
@@ -816,6 +818,8 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
+            if uri and "@" not in uri:
+                uri = '%s@%s' % (uri, session.account.id.domain)
             if session.remote_focus:
                 try:
                     session = self.selectedSessionController()
