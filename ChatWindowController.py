@@ -26,6 +26,8 @@ from SIPManager import SIPManager
 import FancyTabSwitcher
 from util import allocate_autorelease_pool, format_identity_address
 
+import time
+
 class ChatWindowController(NSWindowController):
     implements(IObserver)
 
@@ -41,6 +43,8 @@ class ChatWindowController(NSWindowController):
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
+
+    timer = None
 
     def init(self):
         self = super(ChatWindowController, self).init()
@@ -77,7 +81,26 @@ class ChatWindowController(NSWindowController):
             if path:
                 self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
 
+            if not self.timer:
+                self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
+
         return self
+
+    def updateTimer_(self, timer):
+        # remove tile after few seconds to have time to see the reason in the drawer
+        session = self.selectedSession()
+        if session:
+            change = False
+            for uri in session.failed_to_join_participants.keys():
+                for contact in session.invited_participants:
+                    if uri == contact.uri and (time.time() - session.failed_to_join_participants[uri] > 5):
+                        session.invited_participants.remove(contact)
+                        del session.failed_to_join_participants[uri]
+                        change = True
+            if change:
+                self.refreshDrawer()
 
     def awakeFromNib(self):
         self.drawerTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))

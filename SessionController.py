@@ -2,6 +2,7 @@
 #
 
 import re
+import time
 
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
@@ -104,6 +105,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.pending_removal_participants = set()
+        self.failed_to_join_participants = {}
         self.mustShowDrawer = True
 
         # used for accounting
@@ -133,6 +135,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.pending_removal_participants = set()
+        self.failed_to_join_participants = {}
         self.mustShowDrawer = True
 
         # used for accounting
@@ -282,6 +285,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.pending_removal_participants = set()
+        self.failed_to_join_participants = {}
         self.participants_log = []
         self.streams_log = []
 
@@ -656,6 +660,7 @@ class SessionController(NSObject):
         log_info(self, u"Received conference-info update for %s" % self.getTitle())
 
         self.pending_removal_participants = set()
+        self.failed_to_join_participants = {}
         self.conference_info = data.conference_info
         for user in data.conference_info.users:
             uri = user.entity.replace("sips:", "", 1)
@@ -687,9 +692,7 @@ class SessionController(NSObject):
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
         for contact in self.invited_participants:
             if uri == contact.uri:
-                self.invited_participants.remove(contact)
-        # notify controllers who need conference information
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                self.failed_to_join_participants[uri]=time.time()
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
