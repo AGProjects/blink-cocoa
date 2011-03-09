@@ -316,31 +316,34 @@ class AlertPanel(NSObject, object):
                 alt_action = u"Chat Only"
             elif "Audio" in type_names and len(type_names) > 1:
                 alt_action = u"Audio Only"
-            if "Desktop sharing" in type_names:
-                ds = [s for s in streams if s.type == "desktop-sharing"]
-                if ds:
-                    type_names.remove("Desktop sharing")
-                    if ds[0].handler.type == "active":
-                        type_names.append("Remote Desktop offered by")
-                    else:
-                        type_names.append("Access to my Desktop requested by")
-                subject = u"%s" % " and ".join(type_names)
-            else:
-                subject = u"%s session requested by" % " and ".join(type_names)
-        elif type(streams[0]) is AudioStream:
-            subject = u"Audio Session requested by"
-        elif type(streams[0]) is ChatStream:
-            subject = u"Chat Session requested by"
-        elif type(streams[0]) is DesktopSharingStream:
-            if streams[0].handler.type == "active":
-                subject = u"Remote Desktop offered by"
-            else:
-                subject = u"Access to my Desktop requested by"
-        elif type(streams[0]) is FileTransferStream:
-            subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
+
+        if session.subject:
+            subject = session.subject
         else:
-            subject = u"Incoming Session request from"
-            BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
+            if len(streams) != 1:
+                if "Desktop sharing" in type_names:
+                    ds = [s for s in streams if s.type == "desktop-sharing"]
+                    if ds:
+                        type_names.remove("Desktop sharing")
+                        if ds[0].handler.type == "active":
+                            type_names.append("Remote Desktop offered by")
+                        else:
+                            type_names.append("Access to my Desktop requested by")
+                    subject = u"%s" % " and ".join(type_names)
+                else:
+                    subject = u"%s session requested by" % " and ".join(type_names)
+            elif type(streams[0]) is AudioStream:
+                subject = u"Audio Session requested by"
+            elif type(streams[0]) is ChatStream:
+                subject = u"Chat Session requested by"
+            elif type(streams[0]) is DesktopSharingStream:
+                subject = u"Remote Desktop offered by" if streams[0].handler.type == "active" else u"Access to my Desktop requested by"
+            elif type(streams[0]) is FileTransferStream and not subject:
+                subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
+            else:
+                subject = u"Incoming Session request from"
+                BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
+
         return subject, default_action, alt_action
 
     def reject_incoming_session(self, session, code=603, reason=None):
