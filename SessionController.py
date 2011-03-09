@@ -110,7 +110,7 @@ class SessionController(NSObject):
 
         # used for accounting
         self.streams_log = []
-        self.participants_log = []
+        self.participants_log = set()
         self.remote_focus_log = False
 
         return self
@@ -140,7 +140,7 @@ class SessionController(NSObject):
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
-        self.participants_log = []
+        self.participants_log = set()
         self.remote_focus_log = False
 
         return self
@@ -286,7 +286,7 @@ class SessionController(NSObject):
         self.invited_participants = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
-        self.participants_log = []
+        self.participants_log = set()
         self.streams_log = []
 
     def initializeSessionWithAccount(self, account):
@@ -539,7 +539,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
-        self.participants_log = []
+        self.participants_log = set()
         self.streams_log = []
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
@@ -577,7 +577,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
-        self.participants_log = []
+        self.participants_log = set()
         self.streams_log = []
         self.mustShowDrawer = False
 
@@ -665,8 +665,8 @@ class SessionController(NSObject):
         for user in data.conference_info.users:
             uri = re.sub("^(sip:|sips:)", "", str(user.entity))
             # save uri for accounting pusposes
-            if uri != self.account.id and uri not in self.participants_log:
-                self.participants_log.append(uri)    
+            if uri != self.account.id:
+                self.participants_log.add(uri)
 
             # remove invited participants that joined the conference
             for contact in self.invited_participants:

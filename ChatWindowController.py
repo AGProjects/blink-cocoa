@@ -492,7 +492,7 @@ class ChatWindowController(NSWindowController):
                         contact.setDetail('Invitation sent...')
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
-                            session.participants_log.append(uri)
+                            session.participants_log.add(uri)
                             BlinkLogger().log_info(u"Invite %s to conference" % uri)
                             session.session.conference.add_participant(uri)
 
@@ -839,7 +839,7 @@ class ChatWindowController(NSWindowController):
                             contact = Contact(uri, name=uri)
                         contact.setDetail('Invitation sent...')
                         session.invited_participants.append(contact)
-                        session.participants_log.append(uri)
+                        session.participants_log.add(uri)
                         self.refreshDrawer()
                         BlinkLogger().log_info(u"Invite %s to conference" % uri)
                         session.session.conference.add_participant(uri)

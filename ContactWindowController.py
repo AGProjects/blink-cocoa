@@ -1116,7 +1116,7 @@ class ContactWindowController(NSWindowController):
                     contact = Contact(uri=uri, name=uri)
                 contact.setDetail('Invitation sent...')
                 session.invited_participants.append(contact)
-                session.participants_log.append(uri)
+                session.participants_log.add(uri)
 
         if type(media) is not tuple:
             if not session.startSessionWithStreamOfType(media):
