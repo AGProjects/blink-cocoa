@@ -485,7 +485,7 @@ class ChatWindowController(NSWindowController):
                             uri='%s@%s' % (uri, session.account.id.domain)
                         contact = getContactMatchingURI(uri)
                         if contact:
-                            contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
+                            contact = Contact(uri, name=contact.name, icon=contact.icon)
                         else:
                             contact = Contact(uri, name=uri)
                         contact.setDetail('Invitation sent...')
@@ -828,7 +828,7 @@ class ChatWindowController(NSWindowController):
                         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
                         contact = getContactMatchingURI(uri)
                         if contact:
-                            contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
+                            contact = Contact(uri, name=contact.name, icon=contact.icon)
                         else:
                             contact = Contact(uri, name=uri)
                         contact.setDetail('Invitation sent...')

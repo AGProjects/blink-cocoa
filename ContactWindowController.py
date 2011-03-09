@@ -1111,7 +1111,7 @@ class ContactWindowController(NSWindowController):
             for uri in participants:
                 contact = self.getContactMatchingURI(uri)
                 if contact:
-                    contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
+                    contact = Contact(uri, name=contact.name, icon=contact.icon)
                 else:
                     contact = Contact(uri=uri, name=uri)
                 contact.setDetail('Invitation sent...')
