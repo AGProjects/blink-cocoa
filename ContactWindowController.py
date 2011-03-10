@@ -36,7 +36,7 @@ from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveC
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
-from ServerConferenceWindowController import JoinConferenceWindow
+from ServerConferenceWindowController import JoinConferenceWindow, AddParticipantsWindow
 from SessionController import SessionController
 from ChatWindowManager import ChatWindowManager
 from SIPManager import MWIData
@@ -157,7 +157,7 @@ class ContactWindowController(NSWindowController):
 
     conference = None
     joinConferenceWindow = None
-
+    addParticipantsWindow = None
 
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
@@ -689,7 +689,7 @@ class ContactWindowController(NSWindowController):
         self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
-        self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or c > 0) else False)
+        self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) else False)
 
     def startCallWithURIText(self, text, session_type="audio"):
         account = self.activeAccount()
@@ -739,6 +739,9 @@ class ContactWindowController(NSWindowController):
 
     def isJoinConferenceWindowOpen(self):
         return any(window for window in NSApp().windows() if window.title() == 'Join Conference' and window.isVisible())
+
+    def isAddParticipantsWindowOpen(self):
+        return any(window for window in NSApp().windows() if window.title() == 'Add Participants' and window.isVisible())
 
     def getContactMatchingURI(self, uri):
         return self.model.getContactMatchingURI(uri)
@@ -833,10 +836,19 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def joinConferenceClicked_(self, sender):
         account = self.activeAccount()
-        self.joinConferenceWindow = JoinConferenceWindow(default_domain=account.id.domain)
-        conference = self.joinConferenceWindow.run()
+        conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
+
+    def showJoinConferenceWindow(self, target=None, participants=None, media=None, default_domain=None):
+        self.joinConferenceWindow = JoinConferenceWindow(target=target, participants=participants, media=media, default_domain=default_domain)
+        conference = self.joinConferenceWindow.run()
+        return conference
+
+    def showAddParticipantsWindow(self, target=None, default_domain=None):
+        self.addParticipantsWindow = AddParticipantsWindow(target=None, default_domain=None)
+        participants = self.addParticipantsWindow.run()
+        return participants
 
     @objc.IBAction
     def addContact_(self, sender):
@@ -1002,6 +1014,8 @@ class ContactWindowController(NSWindowController):
 
         if self.isJoinConferenceWindowOpen():
             self.joinConferenceWindow.addParticipant(target)
+        elif self.isAddParticipantsWindowOpen():
+            self.addParticipantsWindow.addParticipant(target)
         elif active_sessions:
             # start conference with active audio sessions
             for s in active_sessions:
@@ -1631,9 +1645,7 @@ class ContactWindowController(NSWindowController):
         media = item["streams"] or []
 
         account = self.activeAccount()
-
-        self.joinConferenceWindow = JoinConferenceWindow(target=target, participants=participants, media=media, default_domain=account.id.domain)
-        conference = self.joinConferenceWindow.run()
+        conference = self.showJoinConferenceWindow(target=target, participants=participants, media=media, default_domain=account.id.domain)
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
 

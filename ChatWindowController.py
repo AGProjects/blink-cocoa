@@ -17,7 +17,6 @@ from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
-from ServerConferenceWindowController import AddParticipantsWindow, JoinConferenceWindow
 import SessionController
 import ChatWindowManager
 from ChatPrivateMessage import ChatPrivateMessage
@@ -355,8 +354,7 @@ class ChatWindowController(NSWindowController):
         if format_identity_address(session.remotePartyObject) not in participants:
             participants.append(format_identity_address(session.remotePartyObject))
 
-        joinConferenceWindow = JoinConferenceWindow(participants=participants, media=media)
-        conference = joinConferenceWindow.run()
+        conference = NSApp.delegate().windowController.showJoinConferenceWindow(participants=participants, media=media)
         if conference is not None:
             NSApp.delegate().windowController.joinConference(conference.target, conference.media_types, conference.participants)
 
@@ -481,8 +479,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             if session.remote_focus:
-                addParticipantsWindow = AddParticipantsWindow(self.getConferenceTitle(), session.account.id.domain)
-                participants = addParticipantsWindow.run()
+                participants = NSApp.delegate().windowController.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
                 if participants is not None:
                     getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
                     remote_uri = format_identity_address(session.remotePartyObject)

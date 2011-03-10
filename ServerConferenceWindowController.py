@@ -153,7 +153,7 @@ class JoinConferenceWindow(NSObject):
 
     def addParticipant(self, participant):
         if participant and "@" not in participant:
-            participant = participant + '@' + AccountManager().default_account.id.domain
+            participant = participant + '@' + self.default_domain
 
         if not participant or not validateParticipant(participant):
             NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
@@ -331,6 +331,20 @@ class AddParticipantsWindow(NSObject):
             if participant is not None:
                 self._participants.remove(participant)
                 self.participantsTable.reloadData()
+
+    def addParticipant(self, participant):
+        if participant and "@" not in participant:
+            participant = participant + '@' + self.default_domain
+
+        if not participant or not validateParticipant(participant):
+            NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
+            return
+
+        if participant not in self._participants:
+            self._participants.append(participant)
+            self.participantsTable.reloadData()
+            self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
+            self.participant.setStringValue_('')
 
     @objc.IBAction
     def okClicked_(self, sender):
