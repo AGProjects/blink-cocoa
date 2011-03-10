@@ -1,4 +1,13 @@
 
+Bugs
+----
+
+- cannot clear search while add participant window is open
+- contrast of drawer elements
+- own picture change does not refresh drawer
+- open audio drawer when tab closes rather than window
+
+
 Main tasks
 ----------
 
