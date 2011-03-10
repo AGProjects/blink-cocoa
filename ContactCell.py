@@ -17,6 +17,7 @@ class ContactCell(NSTextFieldCell):
 
     defaultIcon = None
     audioIcon = NSImage.imageNamed_("audio_16")
+    audioHoldIcon = NSImage.imageNamed_("paused_16")
     chatIcon = NSImage.imageNamed_("pencil")
 
     def setContact_(self, contact):
@@ -46,13 +47,18 @@ class ContactCell(NSTextFieldCell):
             self.drawIcon(icon, 2, frame.origin.y+3, 28, 28)
 
         # Align media icons to the right of the frame
-        if 'message' in self.contact.active_media and 'audio' in self.contact.active_media:
+        if 'message' in self.contact.active_media and ('audio' in self.contact.active_media or 'audio-onhold' in self.contact.active_media):
             self.drawIcon(self.chatIcon,  frame.size.width-32, frame.origin.y +14, 16, 16)
-            self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+            if 'audio-onhold' in self.contact.active_media:
+                self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+            else:
+                self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
         elif 'message' in self.contact.active_media:
             self.drawIcon(self.chatIcon,  frame.size.width-16, frame.origin.y +14, 16, 16)
         elif 'audio' in self.contact.active_media:
             self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+        elif 'audio-onhold' in self.contact.active_media:
+            self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
 
         # Print Display Name 1st line
         frame.origin.x = 35

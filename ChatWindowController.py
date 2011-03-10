@@ -103,7 +103,6 @@ class ChatWindowController(NSWindowController):
                             change = True
                     except KeyError:
                         pass
-
             if change:
                 self.refreshDrawer()
 
@@ -721,6 +720,8 @@ class ChatWindowController(NSWindowController):
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
                     if audio_endpoints and not user_on_hold:
                         active_media.append('audio')
+                    elif audio_endpoints and user_on_hold:
+                        active_media.append('audio-onhold')
 
                     contact = getContactMatchingURI(uri)
                     if contact:

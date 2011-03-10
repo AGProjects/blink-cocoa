@@ -221,6 +221,8 @@
 		1F22738212B5559C0010A8B2 /* libz.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722D12B554000010A8B2 /* libz.1.dylib */; };
 		1F22739612B5565E0010A8B2 /* Vine Server.app in Copy Helper Binaries */ = {isa = PBXBuildFile; fileRef = 1F226DE412B54FBE0010A8B2 /* Vine Server.app */; };
 		1F22739712B5568E0010A8B2 /* Vine Server.app in Copy Helper Binaries */ = {isa = PBXBuildFile; fileRef = 1F226DE412B54FBE0010A8B2 /* Vine Server.app */; };
+		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
+		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
 		1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1F5615C312BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
@@ -686,6 +688,7 @@
 		1F22722B12B554000010A8B2 /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblzo.1.dylib; path = Distribution/Frameworks/liblzo.1.dylib; sourceTree = "<group>"; };
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
 		1F22722D12B554000010A8B2 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = Distribution/Frameworks/libz.1.dylib; sourceTree = "<group>"; };
+		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "test@conference.sip2sip.info.tiff"; path = "icons/test@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
@@ -1107,6 +1110,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F2A32341328CEE00078F01D /* paused_16.png */,
 				1F5677C01323DDDD00D087D1 /* transfer.png */,
 				1F1DCC8B13182C69004DB88B /* begin_arrow.png */,
 				1F1DCC8513182ADF004DB88B /* end_arrow.png */,
@@ -1642,6 +1646,7 @@
 				1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */,
 				1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */,
 				1F5677C21323DDDD00D087D1 /* transfer.png in Resources */,
+				1F2A32351328CEE00078F01D /* paused_16.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1798,6 +1803,7 @@
 				1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */,
 				1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */,
 				1F5677C11323DDDD00D087D1 /* transfer.png in Resources */,
+				1F2A32361328CEE00078F01D /* paused_16.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
