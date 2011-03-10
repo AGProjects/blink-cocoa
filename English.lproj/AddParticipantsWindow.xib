@@ -42,7 +42,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 177}, {504, 333}}</string>
 				<int key="NSWTFlags">544735232</int>
-				<string key="NSWindowTitle">Invite Participants to Conference</string>
+				<string key="NSWindowTitle">Add Participants</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{504, 333}</string>
@@ -62,7 +62,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="356328764">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">Invite participants to the conference room:</string>
+								<string key="NSContents">Add participants to the conference room:</string>
 								<object class="NSFont" key="NSSupport" id="487624446">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
@@ -836,9 +836,9 @@
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>{{637, 505}, {504, 333}}</string>
+					<string>{{338, 240}, {504, 333}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{637, 505}, {504, 333}}</string>
+					<string>{{338, 240}, {504, 333}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -1425,6 +1425,13 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBFrameworkSource</string>
 						<string key="minorKey">Sparkle.framework/Headers/SUAppcast.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBFrameworkSource</string>
+						<string key="minorKey">Sparkle.framework/Headers/SUUpdater.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
