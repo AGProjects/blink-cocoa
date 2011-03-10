@@ -482,6 +482,31 @@
 								<int key="NSSegmentStyle">2</int>
 							</object>
 						</object>
+						<object class="NSButton" id="627535326">
+							<reference key="NSNextResponder" ref="1006"/>
+							<int key="NSvFlags">-2147483380</int>
+							<string key="NSFrame">{{97, 79}, {40, 32}}</string>
+							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSButtonCell" key="NSCell" id="597204785">
+								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags2">134217728</int>
+								<string key="NSContents"/>
+								<reference key="NSSupport" ref="658349089"/>
+								<reference key="NSControlView" ref="627535326"/>
+								<int key="NSButtonFlags">-2042347265</int>
+								<int key="NSButtonFlags2">134</int>
+								<object class="NSCustomResource" key="NSNormalImage">
+									<string key="NSClassName">NSImage</string>
+									<string key="NSResourceName">trash</string>
+								</object>
+								<string key="NSAlternateContents"/>
+								<string key="NSKeyEquivalent"/>
+								<int key="NSPeriodicDelay">400</int>
+								<int key="NSPeriodicInterval">75</int>
+							</object>
+						</object>
 					</object>
 					<string key="NSFrameSize">{511, 355}</string>
 					<reference key="NSSuperview"/>
@@ -600,6 +625,22 @@
 					</object>
 					<int key="connectionID">102</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">removeAllParticipants</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="627535326"/>
+					</object>
+					<int key="connectionID">107</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">removeAllParticipants:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="627535326"/>
+					</object>
+					<int key="connectionID">108</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -655,6 +696,7 @@
 							<reference ref="440380584"/>
 							<reference ref="978401457"/>
 							<reference ref="222224844"/>
+							<reference ref="627535326"/>
 						</object>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -870,6 +912,20 @@
 						<reference key="object" ref="1023056721"/>
 						<reference key="parent" ref="1062225965"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">105</int>
+						<reference key="object" ref="627535326"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="597204785"/>
+						</object>
+						<reference key="parent" ref="1006"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">106</int>
+						<reference key="object" ref="597204785"/>
+						<reference key="parent" ref="627535326"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -887,6 +943,10 @@
 					<string>1.windowTemplate.maxSize</string>
 					<string>1.windowTemplate.minSize</string>
 					<string>10.IBPluginDependency</string>
+					<string>105.IBAttributePlaceholdersKey</string>
+					<string>105.IBPluginDependency</string>
+					<string>105.IBViewBoundsToFrameTransform</string>
+					<string>106.IBPluginDependency</string>
 					<string>17.IBAttributePlaceholdersKey</string>
 					<string>17.IBPluginDependency</string>
 					<string>17.IBViewBoundsToFrameTransform</string>
@@ -945,9 +1005,9 @@
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>{{260, 164}, {511, 355}}</string>
+					<string>{{244, 616}, {511, 355}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{260, 164}, {511, 355}}</string>
+					<string>{{244, 616}, {511, 355}}</string>
 					<integer value="1"/>
 					<string>{196, 240}</string>
 					<string>{{202, 428}, {480, 270}}</string>
@@ -955,6 +1015,19 @@
 					<boolean value="YES"/>
 					<string>{511, 355}</string>
 					<string>{511, 355}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSMutableDictionary">
+						<string key="NS.key.0">ToolTip</string>
+						<object class="IBToolTipAttribute" key="NS.object.0">
+							<string key="name">ToolTip</string>
+							<reference key="object" ref="627535326"/>
+							<string key="toolTip">Remove All Participants</string>
+						</object>
+					</object>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABCqgAAwtgAAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSMutableDictionary">
 						<string key="NS.key.0">AccessibilityDescription</string>
@@ -1104,7 +1177,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">102</int>
+			<int key="maxID">108</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1119,9 +1192,11 @@
 							<string>addRemoveParticipant:</string>
 							<string>cancelClicked:</string>
 							<string>okClicked:</string>
+							<string>removeAllParticipants:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -1134,6 +1209,7 @@
 							<string>addRemoveParticipant:</string>
 							<string>cancelClicked:</string>
 							<string>okClicked:</string>
+							<string>removeAllParticipants:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1149,6 +1225,10 @@
 								<string key="name">okClicked:</string>
 								<string key="candidateClassName">id</string>
 							</object>
+							<object class="IBActionInfo">
+								<string key="name">removeAllParticipants:</string>
+								<string key="candidateClassName">id</string>
+							</object>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="outlets">
@@ -1160,11 +1240,13 @@
 							<string>chat</string>
 							<string>participant</string>
 							<string>participantsTable</string>
+							<string>removeAllParticipants</string>
 							<string>room</string>
 							<string>window</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -1183,6 +1265,7 @@
 							<string>chat</string>
 							<string>participant</string>
 							<string>participantsTable</string>
+							<string>removeAllParticipants</string>
 							<string>room</string>
 							<string>window</string>
 						</object>
@@ -1206,6 +1289,10 @@
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">participantsTable</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">removeAllParticipants</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
@@ -1746,6 +1833,7 @@
 				<string>NSRemoveTemplate</string>
 				<string>NSSwitch</string>
 				<string>test@conference.sip2sip.info</string>
+				<string>trash</string>
 			</object>
 			<object class="NSMutableArray" key="dict.values">
 				<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1753,6 +1841,7 @@
 				<string>{8, 8}</string>
 				<string>{15, 15}</string>
 				<string>{140, 140}</string>
+				<string>{128, 128}</string>
 			</object>
 		</object>
 	</data>

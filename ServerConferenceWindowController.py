@@ -35,6 +35,7 @@ class JoinConferenceWindow(NSObject):
     participantsTable = objc.IBOutlet()
     chat = objc.IBOutlet()
     audio = objc.IBOutlet()
+    removeAllParticipants = objc.IBOutlet()
 
     default_conference_server = 'conference.sip2sip.info'
 
@@ -55,7 +56,8 @@ class JoinConferenceWindow(NSObject):
             self._participants = []
 
         self.participantsTable.reloadData()
-        
+        self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
+
         if media:
             self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
             self.chat.setState_(NSOnState if "chat" in media else NSOffState) 
@@ -86,6 +88,7 @@ class JoinConferenceWindow(NSObject):
                 if participant not in self._participants:
                     self._participants.append(participant)
                     self.participantsTable.reloadData()
+                    self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
                     self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
                     return True
             except:
@@ -151,6 +154,14 @@ class JoinConferenceWindow(NSObject):
                 self._participants.remove(participant)
                 self.participantsTable.reloadData()
 
+        self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
+
+    @objc.IBAction
+    def removeAllParticipants_(self, sender):
+        self._participants=[]
+        self.participantsTable.reloadData()
+        self.removeAllParticipants.setHidden_(True)
+
     def addParticipant(self, participant):
         if participant and "@" not in participant:
             participant = participant + '@' + self.default_domain
@@ -162,6 +173,7 @@ class JoinConferenceWindow(NSObject):
         if participant not in self._participants:
             self._participants.append(participant)
             self.participantsTable.reloadData()
+            self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
             self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
             self.participant.setStringValue_('')
 
@@ -174,6 +186,7 @@ class JoinConferenceWindow(NSObject):
     def cancelClicked_(self, sender):
         self._participants = []
         self.participantsTable.reloadData()
+        self.removeAllParticipants.setHidden_(True)
         NSApp.stopModalWithCode_(NSCancelButton)
 
     def windowShouldClose_(self, sender):
