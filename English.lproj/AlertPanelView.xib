@@ -44,15 +44,15 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<object class="NSTextField" id="879985823">
 								<reference key="NSNextResponder" ref="525011264"/>
-								<int key="NSvFlags">268</int>
+								<int key="NSvFlags">264</int>
 								<string key="NSFrame">{{65, 71}, {382, 16}}</string>
 								<reference key="NSSuperview" ref="525011264"/>
 								<reference key="NSWindow"/>
 								<int key="NSTag">1</int>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSTextFieldCell" key="NSCell" id="324975022">
-									<int key="NSCellFlags">68288064</int>
-									<int key="NSCellFlags2">272630784</int>
+									<int key="NSCellFlags">67239488</int>
+									<int key="NSCellFlags2">272631808</int>
 									<string key="NSContents">Incoming audio and chat session from</string>
 									<object class="NSFont" key="NSSupport" id="1008023441">
 										<string key="NSName">LucidaGrande</string>

@@ -200,7 +200,10 @@ class AlertPanel(NSObject, object):
         else:
             subject, accept, other = self.format_subject_for_incoming_invite(session, streams)
         captionT.setStringValue_(subject)
-        captionT.sizeToFit()
+
+        frame = captionT.frame()
+        frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
+        captionT.setFrame_(frame)
 
         caller_contact = self.owner.getContactMatchingURI(str(session.remote_identity.uri))
         if caller_contact:
