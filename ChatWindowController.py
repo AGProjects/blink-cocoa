@@ -99,11 +99,8 @@ class ChatWindowController(NSWindowController):
                         uri_time = session.failed_to_join_participants[uri]
                         if uri == contact.uri and (time.time() - uri_time > 5):
                             session.invited_participants.remove(contact)
-                            try:
-                                del session.failed_to_join_participants[uri]
-                                change = True
-                            except KeyError:
-                                pass
+                            del session.failed_to_join_participants[uri]
+                            change = True
                     except KeyError:
                         pass
 
