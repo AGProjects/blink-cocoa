@@ -338,7 +338,7 @@ class AlertPanel(NSObject, object):
                 subject = u"Chat Session requested by"
             elif type(streams[0]) is DesktopSharingStream:
                 subject = u"Remote Desktop offered by" if streams[0].handler.type == "active" else u"Access to my Desktop requested by"
-            elif type(streams[0]) is FileTransferStream and not subject:
+            elif type(streams[0]) is FileTransferStream:
                 subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
             else:
                 subject = u"Incoming Session request from"
