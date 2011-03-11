@@ -2137,6 +2137,7 @@ class ContactWindowController(NSWindowController):
                 index += 1
 
         def setupAudioInputOutputDeviceMenu(menu, tag, devices, selector):
+            settings = SIPSimpleSettings()
             for i in range(100):
                 old = menu.itemWithTag_(tag*100+i)
                 if old:
@@ -2154,6 +2155,13 @@ class ContactWindowController(NSWindowController):
                 i = 0
                 for dev in devices:
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
+                    if settings.audio.input_device == dev and settings.audio.output_device == dev:
+                        state = NSOnState
+                    elif dev == u'Built-in Microphone and Output' and settings.audio.input_device == u'Built-in Microphone' and settings.audio.output_device == u'Built-in Output':
+                        state = NSOnState
+                    else:
+                        state = NSOffState
+                    item.setState_(state)
                     item.setRepresentedObject_(dev)
                     item.setTarget_(self)
                     item.setTag_(tag*100+i)
