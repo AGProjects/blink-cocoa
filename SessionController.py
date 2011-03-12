@@ -598,7 +598,11 @@ class SessionController(NSObject):
     def _NH_SIPSessionGotRejectProposal(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
-        log_info(self, "Proposal got rejected %s"%(data.reason))
+        log_info(self, "Proposal got rejected: %s"%(data.reason))
+
+        log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason)
+        self.notification_center.post_notification("BlinkProposalGotRejected", sender=self, data=log_data)
+
         if data.streams:
             for stream in data.streams:
                 if stream == self.cancelledStream:
@@ -645,6 +649,10 @@ class SessionController(NSObject):
         self.inProposal = False
         self.proposalOriginator = None
         log_info(self, "Proposal failure: %s" % data.failure_reason)
+
+        log_data = TimestampedNotificationData(timestamp=datetime.now(), failure_reason=data.failure_reason)
+        self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
+
         if data.streams:
             for stream in data.streams:
                 if stream == self.cancelledStream:

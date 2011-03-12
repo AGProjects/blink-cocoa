@@ -913,6 +913,14 @@ class ChatController(MediaStream):
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
 
+    def _NH_BlinkProposalDidFail(self, sender, data):
+        message = "Proposal failed: %s" % data.failure_reason
+        self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+
+    def _NH_BlinkProposalGotRejected(self, sender, data):
+        message = "Proposal failed: %s" % data.reason
+        self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
