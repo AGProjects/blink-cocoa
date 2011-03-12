@@ -382,36 +382,25 @@ class ChatController(MediaStream):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
-    def end(self, autoclose=False):
-        log_info(self, "Ending session in %s"%self.status)
-        status = self.status
-        if status in (STREAM_IDLE, STREAM_FAILED):
-            self.closeChatWindow()
-        elif status != STREAM_DISCONNECTING:
+    def closeTab(self):
+        # called by ChatWindowController when a chat tab or chat window is closed
+        if self.status in (STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING):
+            ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
+        elif self.status != STREAM_DISCONNECTING:
             self.changeStatus(STREAM_DISCONNECTING)
-            if status == STREAM_PROPOSING or status == STREAM_RINGING:
+            if self.status == STREAM_PROPOSING or self.status == STREAM_RINGING:
                 self.sessionController.cancelProposal(self.stream)
                 self.changeStatus(STREAM_CANCELLING)
-            elif self.session and self.stream and self.session.streams == [self.stream]:
+            elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
                 self.sessionController.end()
             else:
-                log_info(self, "Removing Chat Stream from session")                    
                 self.sessionController.endStream(self)
-        if autoclose or status == STREAM_DISCONNECTING:
-            self.closeChatWindow()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
-
-        if newstate == STREAM_DISCONNECTING:
-            BlinkLogger().log_info(u"Ending session")
-        elif newstate == STREAM_CANCELLING:
-            BlinkLogger().log_info(u"Cancelling Chat Proposal")
-
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
-        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def startOutgoing(self, is_update):
         ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
@@ -420,9 +409,6 @@ class ChatController(MediaStream):
     def startIncoming(self, is_update):
         ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
-
-    def closeChatWindow(self):
-        ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
 
     def sendFiles(self, fnames):
         ws = NSWorkspace.sharedWorkspace()
@@ -976,10 +962,4 @@ class ChatController(MediaStream):
         else:
             self.handler = None
         self.stream = None
-
-    def closeTabView(self):
-        self.chatViewController.close()
-        self.removeFromSession()
-        self.handler.setDisconnected()
-        # Cleanup will be performed in the MediaStreamDidEnd/MediaStreamDidFail notification handlers
 

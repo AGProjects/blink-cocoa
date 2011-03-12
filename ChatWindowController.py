@@ -150,8 +150,8 @@ class ChatWindowController(NSWindowController):
         self.tabSwitcher.addTabViewItem_(tabItem)
         self.tabSwitcher.selectLastTabViewItem_(None)
 
-        chatHandler = session.streamHandlerOfType("chat")
-        self.tabSwitcher.setTabViewItem_busy_(tabItem, chatHandler.isConnecting if chatHandler else False)
+        chat_stream = session.streamHandlerOfType("chat")
+        self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting if chat_stream else False)
 
         self.updateTitle()
         if session.mustShowDrawer:
@@ -183,9 +183,11 @@ class ChatWindowController(NSWindowController):
         if not self.detachSession_(session):
             return False
 
-        chatHandler = session.streamHandlerOfType("chat")
-        if chatHandler:
-            chatHandler.closeTabView()
+        chat_stream = session.streamHandlerOfType("chat")
+        if chat_stream:
+            chat_stream.chatViewController.close()
+            chat_stream.removeFromSession()
+            chat_stream.handler.setDisconnected()
 
         return True
 
@@ -248,22 +250,22 @@ class ChatWindowController(NSWindowController):
         if name == "BlinkStreamHandlerChangedState":
             session = sender.sessionController
             if session:
-                chatHandler = session.streamHandlerOfType("chat")
-                if chatHandler:
+                chat_stream = session.streamHandlerOfType("chat")
+                if chat_stream:
                     index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
                     if index != NSNotFound:
                         tabItem = self.tabView.tabViewItemAtIndex_(index)
-                        self.tabSwitcher.setTabViewItem_busy_(tabItem, chatHandler.isConnecting)
+                        self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
             self.revalidateToolbar()
         elif name == "BlinkSessionChangedState":
             session = sender
             if session:
-                chatHandler = session.streamHandlerOfType("chat")
-                if chatHandler:
+                chat_stream = session.streamHandlerOfType("chat")
+                if chat_stream:
                     index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
                     if index != NSNotFound:
                         tabItem = self.tabView.tabViewItemAtIndex_(index)
-                        self.tabSwitcher.setTabViewItem_busy_(tabItem, chatHandler.isConnecting)
+                        self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
             self.revalidateToolbar()
             self.refreshDrawer()
         elif name == "BlinkAudioStreamChangedHoldState":
@@ -315,7 +317,8 @@ class ChatWindowController(NSWindowController):
                 self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
             chat_stream = selectedSession.streamHandlerOfType("chat")
             if chat_stream:
-                chat_stream.end(True)
+                chat_stream.closeTab()
+                ChatWindowManager.ChatWindowManager().removeChatSession(chat_stream.sessionController)
             else:
                 self.detachSession_(selectedSession)
 
@@ -333,7 +336,7 @@ class ChatWindowController(NSWindowController):
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
-                chat_stream.end()
+                chat_stream.closeTab()
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self)
@@ -644,7 +647,8 @@ class ChatWindowController(NSWindowController):
         if self.sessions.has_key(item.identifier()):
             chat_stream = self.sessions[item.identifier()].streamHandlerOfType("chat")
             if chat_stream:
-                chat_stream.end(True)
+                chat_stream.closeTab()
+                ChatWindowManager.ChatWindowManager().removeChatSession(chat_stream.sessionController)
                 return False
         return True
 
