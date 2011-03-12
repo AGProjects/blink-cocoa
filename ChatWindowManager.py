@@ -57,7 +57,7 @@ class ChatWindowManager(object):
                     window.window().orderOut_(None)
                     self.sessionWindows.remove(window)
                 if view:
-                    return self.showChatSession(sessionController, True, view)
+                    return self.addChatSession(sessionController, True, view)
                 break
         else:
             return None
