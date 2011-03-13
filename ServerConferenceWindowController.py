@@ -4,17 +4,31 @@
 from AppKit import *
 from Foundation import *
 
-from sipsimple.account import AccountManager, BonjourAccount
-from sipsimple.core import SIPCoreError, SIPURI
+import cPickle
 import random
 import re
 import string
+
+from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.core import SIPCoreError, SIPURI
+
+from ConferenceConfigurationPanel import ConferenceConfigurationPanel
+
 
 class ServerConferenceRoom(object):
     def __init__(self, target, media_types, participants):
         self.target = target
         self.media_types = media_types
         self.participants = participants
+
+
+class ConferenceConfiguration(object):
+    def __init__(self, name, target, participants=None, media_types=None):
+        self.name = name
+        self.target = target
+        self.participants = participants
+        self.media_types = media_types
+
 
 def validateParticipant(uri):
     if not (uri.startswith('sip:') or uri.startswith('sips:')):
@@ -36,6 +50,7 @@ class JoinConferenceWindow(NSObject):
     chat = objc.IBOutlet()
     audio = objc.IBOutlet()
     removeAllParticipants = objc.IBOutlet()
+    configurationsButton = objc.IBOutlet()
 
     default_conference_server = 'conference.sip2sip.info'
 
@@ -44,6 +59,8 @@ class JoinConferenceWindow(NSObject):
 
     def __init__(self, target=None, participants=[], media=["chat"], default_domain=None):
         NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
+
+        self.selected_configuration = None
 
         self.default_domain = default_domain
 
@@ -61,7 +78,114 @@ class JoinConferenceWindow(NSObject):
         if media:
             self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
             self.chat.setState_(NSOnState if "chat" in media else NSOffState) 
+
+        self.loadConfigurations()
+        self.updateConfigurationsPopupButton()
+
+    def loadConfigurations(self):
+        self.storage_path = unicode(NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/conference_configurations.pickle")
+        try:
+            self.conference_configurations = cPickle.load(open(self.storage_path))
+        except:
+            self.conference_configurations = {}
+
+    @objc.IBAction
+    def configurationsButtonClicked_(self, sender):
+        if sender.selectedItem() == sender.itemWithTitle_(u"Save Configuration..."):
+            if self.validateConference(allow_random_room=False):
+                if self.selected_configuration:
+                    configuration_name = self.selected_configuration
+                else:
+                    configurationPanel = ConferenceConfigurationPanel.alloc().init()
+                    configuration_name = configurationPanel.runModal()
+
+                if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
+                    media_types = ("chat", "audio")
+                elif self.chat.state() == NSOnState:
+                    media_types = "chat"
+                else:
+                    media_types = "audio"
+
+                if configuration_name:
+                    if configuration_name in self.conference_configurations.keys():
+                        self.conference_configurations[configuration_name].name = configuration_name
+                        self.conference_configurations[configuration_name].target = self.target
+                        self.conference_configurations[configuration_name].participants = self._participants
+                        self.conference_configurations[configuration_name].media_types = media_types
+                    else:
+                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_types=media_types)
+                        self.conference_configurations[configuration_name] = configuration
+
+                    self.selected_configuration = configuration_name
+                    cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+            else:
+                self.selected_configuration = None
+
+        elif sender.selectedItem() == sender.itemWithTitle_(u"Rename Configuration..."):
+            configurationPanel = ConferenceConfigurationPanel.alloc().init()
+            configuration_name = configurationPanel.runModalForRename_(self.selected_configuration)
+            if configuration_name and configuration_name != self.selected_configuration:
+                old_configuration = self.conference_configurations[self.selected_configuration]
+                old_configuration.name = configuration_name
+                self.conference_configurations[configuration_name] = old_configuration
+                del self.conference_configurations[self.selected_configuration]
+                self.selected_configuration = configuration_name
+                cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+
+        elif sender.selectedItem() == sender.itemWithTitle_(u"Delete Configuration...") and self.selected_configuration:
+           del self.conference_configurations[self.selected_configuration]
+           cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+           self.setDefaults()
+        else:
+            configuration = sender.selectedItem().representedObject()
+            if configuration:
+                self.room.setStringValue_(configuration.target)
+                self.selected_configuration = configuration.name
+                self._participants = configuration.participants
+                self.participantsTable.reloadData() 
+                self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
+                self.audio.setState_(NSOnState if "audio" in configuration.media_types else NSOffState)
+                self.chat.setState_(NSOnState if "chat" in configuration.media_types else NSOffState)
+            else:
+                self.setDefaults()
+
+        self.updateConfigurationsPopupButton()
+
+    def updateConfigurationsPopupButton(self):
+        self.configurationsButton.removeAllItems()
+        if self.conference_configurations:
+            self.configurationsButton.addItemWithTitle_(u"Select configuration")
+            self.configurationsButton.lastItem().setEnabled_(False)
+            self.configurationsButton.selectItem_(self.configurationsButton.lastItem())
+            self.configurationsButton.addItemWithTitle_(u"None")
+            self.configurationsButton.lastItem().setEnabled_(True)
+            for key in self.conference_configurations.keys():
+                self.configurationsButton.addItemWithTitle_(key)
+                item = self.configurationsButton.lastItem()
+                item.setRepresentedObject_(self.conference_configurations[key])
+                if self.selected_configuration and self.selected_configuration == key:
+                    self.configurationsButton.selectItem_(item)
+        else:
+            self.configurationsButton.addItemWithTitle_(u"No saved configurations")
+            self.configurationsButton.lastItem().setEnabled_(False)
              
+        self.configurationsButton.menu().addItem_(NSMenuItem.separatorItem())
+        self.configurationsButton.addItemWithTitle_(u"Save Configuration...")
+        self.configurationsButton.lastItem().setEnabled_(True)
+        self.configurationsButton.addItemWithTitle_(u"Rename Configuration...")
+        self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
+        self.configurationsButton.addItemWithTitle_(u"Delete Configuration...")
+        self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
+
+    def setDefaults(self):
+        self.selected_configuration = None
+        self.room.setStringValue_(u'')
+        self._participants = []
+        self.removeAllParticipants.setHidden_(True)
+        self.participantsTable.reloadData()
+        self.audio.setState_(NSOnState)
+        self.chat.setState_(NSOnState)
+
     def numberOfRowsInTableView_(self, table):
         try:
             return len(self._participants)
@@ -200,15 +324,22 @@ class JoinConferenceWindow(NSObject):
         except IndexError:
             return None
 
-    def validateConference(self):
-        if not self.room.stringValue().strip():
+    def validateRoom(self, allow_random_room=True):
+        if not self.room.stringValue().strip() and allow_random_room:
             room=''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(6))
         else:
             room=self.room.stringValue().lower().strip()
 
         if not re.match("^[1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", room):
-            NSRunAlertPanel("Start a new Conference", "Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
+            NSRunAlertPanel("Conference Room", "Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a positive digit or letter",
                 "OK", None, None)
+            return False
+        else:
+            return room
+
+    def validateConference(self, allow_random_room=True):
+        room = self.validateRoom(allow_random_room)
+        if not room:
             return False
 
         if self.chat.state() == NSOffState and self.audio.state() == NSOffState:

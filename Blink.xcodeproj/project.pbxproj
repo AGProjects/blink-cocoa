@@ -10,6 +10,10 @@
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F092DB412B2785E000CEE7F /* ServerConferenceWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */; };
+		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
+		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
+		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
+		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
@@ -673,6 +677,8 @@
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ServerConferenceWindowController.py; sourceTree = "<group>"; };
 		1F092DB512B27864000CEE7F /* English */ = {isa = PBXFileReference; explicitFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1F0D0EC1132D231C00614205 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
+		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
@@ -1012,6 +1018,8 @@
 				1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */,
 				1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */,
 				1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */,
+				1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */,
+				1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */,
 			);
 			name = ServerConference;
 			sourceTree = "<group>";
@@ -1647,6 +1655,8 @@
 				1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */,
 				1F5677C21323DDDD00D087D1 /* transfer.png in Resources */,
 				1F2A32351328CEE00078F01D /* paused_16.png in Resources */,
+				1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
+				1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1804,6 +1814,8 @@
 				1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */,
 				1F5677C11323DDDD00D087D1 /* transfer.png in Resources */,
 				1F2A32361328CEE00078F01D /* paused_16.png in Resources */,
+				1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
+				1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1835,6 +1847,14 @@
 				089C165DFE840E0CC02AAC07 /* English */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F0D0EC1132D231C00614205 /* English */,
+			);
+			name = ConferenceConfigurationPanel.xib;
 			sourceTree = "<group>";
 		};
 		1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */ = {
