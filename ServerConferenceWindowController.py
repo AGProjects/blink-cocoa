@@ -91,7 +91,7 @@ class JoinConferenceWindow(NSObject):
 
     @objc.IBAction
     def configurationsButtonClicked_(self, sender):
-        if sender.selectedItem() == sender.itemWithTitle_(u"Save Configuration..."):
+        if sender.selectedItem() == sender.itemWithTitle_(u"Save configuration..."):
             if self.validateConference(allow_random_room=False):
                 if self.selected_configuration:
                     configuration_name = self.selected_configuration
@@ -121,7 +121,7 @@ class JoinConferenceWindow(NSObject):
             else:
                 self.selected_configuration = None
 
-        elif sender.selectedItem() == sender.itemWithTitle_(u"Rename Configuration..."):
+        elif sender.selectedItem() == sender.itemWithTitle_(u"Rename configuration..."):
             configurationPanel = ConferenceConfigurationPanel.alloc().init()
             configuration_name = configurationPanel.runModalForRename_(self.selected_configuration)
             if configuration_name and configuration_name != self.selected_configuration:
@@ -132,7 +132,7 @@ class JoinConferenceWindow(NSObject):
                 self.selected_configuration = configuration_name
                 cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
 
-        elif sender.selectedItem() == sender.itemWithTitle_(u"Delete Configuration") and self.selected_configuration:
+        elif sender.selectedItem() == sender.itemWithTitle_(u"Delete configuration") and self.selected_configuration:
            del self.conference_configurations[self.selected_configuration]
            cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
            self.setDefaults()
@@ -166,15 +166,15 @@ class JoinConferenceWindow(NSObject):
                 if self.selected_configuration and self.selected_configuration == key:
                     self.configurationsButton.selectItem_(item)
         else:
-            self.configurationsButton.addItemWithTitle_(u"No saved configurations")
+            self.configurationsButton.addItemWithTitle_(u"No configurations saved")
             self.configurationsButton.lastItem().setEnabled_(False)
              
         self.configurationsButton.menu().addItem_(NSMenuItem.separatorItem())
-        self.configurationsButton.addItemWithTitle_(u"Save Configuration...")
+        self.configurationsButton.addItemWithTitle_(u"Save configuration...")
         self.configurationsButton.lastItem().setEnabled_(True)
-        self.configurationsButton.addItemWithTitle_(u"Rename Configuration...")
+        self.configurationsButton.addItemWithTitle_(u"Rename configuration...")
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
-        self.configurationsButton.addItemWithTitle_(u"Delete Configuration")
+        self.configurationsButton.addItemWithTitle_(u"Delete configuration")
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
 
     def setDefaults(self):
