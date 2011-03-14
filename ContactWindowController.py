@@ -846,7 +846,7 @@ class ContactWindowController(NSWindowController):
         return conference
 
     def showAddParticipantsWindow(self, target=None, default_domain=None):
-        self.addParticipantsWindow = AddParticipantsWindow(target=None, default_domain=None)
+        self.addParticipantsWindow = AddParticipantsWindow(target=target, default_domain=default_domain)
         participants = self.addParticipantsWindow.run()
         return participants
 
