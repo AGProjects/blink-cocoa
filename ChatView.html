@@ -379,12 +379,12 @@ function markFailed(msgid)
     
   msg = document.getElementById('t'+msgid)
   if (msg != null)
-      msg.style.display = "none";
+      msg.style.display = "block";
 
   msg = document.getElementById('s'+msgid)
   if (msg != null)
   {
-    msg.style.display = "block";
+    msg.style.display = "none";
   }
 }
 
