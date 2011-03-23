@@ -382,20 +382,6 @@ class ChatController(MediaStream):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
-    def closeTab(self):
-        # called by ChatWindowController when a chat tab or chat window is closed
-        if self.status in (STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING):
-            ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
-        elif self.status != STREAM_DISCONNECTING:
-            self.changeStatus(STREAM_DISCONNECTING)
-            if self.status == STREAM_PROPOSING or self.status == STREAM_RINGING:
-                self.sessionController.cancelProposal(self.stream)
-                self.changeStatus(STREAM_CANCELLING)
-            elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
-                self.sessionController.end()
-            else:
-                self.sessionController.endStream(self)
-
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
@@ -404,10 +390,14 @@ class ChatController(MediaStream):
 
     def startOutgoing(self, is_update):
         ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window.chat_controllers.add(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
         ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window.chat_controllers.add(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def sendFiles(self, fnames):
@@ -970,4 +960,25 @@ class ChatController(MediaStream):
         else:
             self.handler = None
         self.stream = None
+
+    def closeTab(self):
+        if self.status != STREAM_DISCONNECTING:
+            self.changeStatus(STREAM_DISCONNECTING)
+            if self.status == STREAM_PROPOSING or self.status == STREAM_RINGING:
+                self.sessionController.cancelProposal(self.stream)
+                self.changeStatus(STREAM_CANCELLING)
+            elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
+                self.sessionController.end()
+            else:
+                self.sessionController.endStream(self)
+
+        # remove this controller from session stream handlers list
+        self.removeFromSession()
+
+        # remove held reference needed by the GUI
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window.chat_controllers.remove(self)
+
+        # remove allocated tab/window
+        ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
 

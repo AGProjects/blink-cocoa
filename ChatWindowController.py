@@ -53,6 +53,9 @@ class ChatWindowController(NSWindowController):
             self.sessions = {}
             self.toolbarItems = {}
             self.unreadMessageCounts = {}
+            # keep a reference to the controller object  because it may be used later by cocoa
+            self.chat_controllers = set()
+
             NSBundle.loadNibNamed_owner_("ChatSession", self)
 
             self.notification_center = NotificationCenter()
@@ -318,7 +321,6 @@ class ChatWindowController(NSWindowController):
             chat_stream = selectedSession.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
-                ChatWindowManager.ChatWindowManager().removeChatSession(chat_stream.sessionController)
             else:
                 self.detachSession_(selectedSession)
 
@@ -648,7 +650,6 @@ class ChatWindowController(NSWindowController):
             chat_stream = self.sessions[item.identifier()].streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
-                ChatWindowManager.ChatWindowManager().removeChatSession(chat_stream.sessionController)
                 return False
         return True
 
