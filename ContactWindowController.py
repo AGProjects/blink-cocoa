@@ -38,7 +38,6 @@ from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
 from ServerConferenceWindowController import JoinConferenceWindow, AddParticipantsWindow
 from SessionController import SessionController
-from ChatWindowManager import ChatWindowManager
 from SIPManager import MWIData
 from util import *
 
