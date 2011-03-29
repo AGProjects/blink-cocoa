@@ -897,7 +897,7 @@ class ChatController(MediaStream):
             self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        message = "Session failed: %s" % data.reason
+        message = "Session failed: %s" % (data.reason or data.failure_reason)
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
         self.notification_center.remove_observer(self, sender=sender)
