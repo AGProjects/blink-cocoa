@@ -165,7 +165,6 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
-        self.notification_center.add_observer(self, name='SIPSessionDidFail')
 
     def set_delegate(self, delegate):
         self._delegate= delegate
