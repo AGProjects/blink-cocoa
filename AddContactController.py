@@ -22,8 +22,6 @@ class AddContactController(NSObject):
     preferredMedia = objc.IBOutlet()
     presencePopUp = objc.IBOutlet()
     aliasText = objc.IBOutlet()
-    subscribePresenceCheck = objc.IBOutlet()
-    subscribeDialogCheck = objc.IBOutlet() 
 
     defaultPhotoImage = NSImage.imageNamed_("NSUser")
     
@@ -49,8 +47,6 @@ class AddContactController(NSObject):
         if index < 0:
             index = 0
         self.presencePopUp.selectItemAtIndex_(index)        
-        self.subscribeDialogCheck.setState_(contact.attributes.get("subscribe_to_dialog", False) and NSOnState or NSOffState)
-        self.subscribePresenceCheck.setState_(contact.attributes.get("subscribe_to_presence", False) and NSOnState or NSOffState)
         
         if contact.preferred_media == "chat":
             self.preferredMedia.selectCellWithTag_(2)
@@ -89,8 +85,6 @@ class AddContactController(NSObject):
             self.contact.setPreferredMedia(media)
             if self.presencePopUp.selectedItem():
                 self.contact.stored_in_account = str(self.presencePopUp.selectedItem().representedObject())
-            self.contact.attributes["subscribe_to_dialog"] = self.subscribeDialogCheck.state() == NSOnState
-            self.contact.attributes["subscribe_to_presence"] = self.subscribePresenceCheck.state() == NSOnState
             return True, group
         return False, None
     
