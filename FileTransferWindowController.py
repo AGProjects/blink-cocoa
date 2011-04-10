@@ -20,6 +20,9 @@ import SIPManager
 
 
 def openFileTransferSelectionDialog(account, dest_uri):
+    if not SIPManager.SIPManager().isMediaTypeSupported('file-transfer'):
+        return
+
     panel = NSOpenPanel.openPanel()
     panel.setTitle_(u"Send File")
     panel.setAllowsMultipleSelection_(True)
@@ -109,7 +112,8 @@ class FileTransferWindowController(NSObject, object):
 
     @objc.IBAction
     def showWindow_(self, sender):
-        self.window.makeKeyAndOrderFront_(None)
+        if SIPManager.SIPManager().isMediaTypeSupported('file-transfer'):
+            self.window.makeKeyAndOrderFront_(None)
 
     @run_in_green_thread
     def delete_history_transfers(self):

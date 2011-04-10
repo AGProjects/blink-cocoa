@@ -420,6 +420,9 @@ class SIPManager(object):
         return target_uri
 
     def send_files_to_contact(self, account, contact_uri, filenames):
+        if not self.isMediaTypeSupported('file-transfer'):
+            return
+
         target_uri = self.parse_sip_uri(contact_uri, self.get_default_account())
 
         for file in filenames:
@@ -855,7 +858,51 @@ class SIPManager(object):
                     MWIData.remove(account)
             call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
+    def isProposedMediaTypeSupported(self, streams):
+        stream_type_list = list(set(stream.type for stream in streams))
+        if NSApp.delegate().applicationName == 'Blink Lite' and stream_type_list != ['audio']:
+            return False
+
+        settings = SIPSimpleSettings()
+
+        if settings.desktop_sharing.disabled and any(s for s in streams if s.type == 'desktop-sharing'):
+            BlinkLogger().log_info(u"Desktop Sharing is disabled in configuration")
+            return False
+
+        if settings.file_transfer.disabled and any(s for s in streams if s.type == 'file-transfer'):
+            BlinkLogger().log_info(u"File Transfer is disabled in configuration")
+            return False
+
+        if settings.chat.disabled and any(s for s in streams if s.type == 'chat'):
+            BlinkLogger().log_info(u"Chat sessions are disabled in configuration")
+            return False
+
+        return True
+
+    def isMediaTypeSupported(self, type):
+        if NSApp.delegate().applicationName == 'Blink Lite' and type != 'audio':
+            return False
+
+        settings = SIPSimpleSettings()
+
+        if settings.desktop_sharing.disabled and type in ('desktop-sharing', 'desktop-server', 'desktop-client'):
+            return False
+
+        if settings.file_transfer.disabled and type == 'file-transfer':
+            return False
+
+        if settings.chat.disabled and type == 'chat':
+            return False
+
+        return True
+
     def _NH_SIPSessionNewIncoming(self, session, data):
+        BlinkLogger().log_info(u"Incoming session request from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in data.streams)))
+        if not self.isProposedMediaTypeSupported(data.streams):
+            BlinkLogger().log_info(u"Unsupported media type, session rejected")
+            session.reject(488, 'Incompatible media')
+            return
+
         self.ringer.add_incoming(session, data.streams)
         call_in_gui_thread(self._delegate.handle_incoming_session, session, data.streams)
 

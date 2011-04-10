@@ -15,7 +15,7 @@ from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 
-from AppKit import NSRunAlertPanel, NSAlertDefaultReturn
+from AppKit import NSApp, NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
 from AudioController import AudioController
 from VideoController import VideoController
@@ -155,11 +155,8 @@ class SessionController(NSObject):
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream.type=='chat' else 1)
             for s in sorted_streams:
                 log_info(self, "Handling incoming %s Stream" % s.type)
-                handler = StreamHandlerForType.get(s.type, None)
-                if not handler:
-                    BlinkLogger().log_warning(u"Unknown incoming Stream type: %s (%s)" % (s, s.type))
-                    raise TypeError("Unsupported stream type %s" % s.type)
-                else:
+                if SIPManager().isMediaTypeSupported(s.type):
+                    handler = StreamHandlerForType.get(s.type, None)
                     controller = handler(self, s)
                     self.streamHandlers.append(controller)
                     if s.type not in self.streams_log:
@@ -168,6 +165,9 @@ class SessionController(NSObject):
                         controller.startIncoming(is_update=is_update, is_answering_machine=True)
                     else:
                         controller.startIncoming(is_update=is_update)
+                else:
+                    BlinkLogger().log_warning(u"Unknown incoming Stream type: %s (%s)" % (s, s.type))
+                    raise TypeError("Unsupported stream type %s" % s.type)
 
             if not is_update:
                 self.session.accept(streams)
@@ -323,8 +323,10 @@ class SessionController(NSObject):
             if not self.hasStreamOfType(stype):
                 if stype not in self.streams_log:
                     self.streams_log.append(stype)
-                handlerClass = StreamHandlerForType[stype]
-                stream = handlerClass.createStream(self.account)
+                stream = None
+                if SIPManager().isMediaTypeSupported(stype):
+                    handlerClass = StreamHandlerForType[stype]
+                    stream = handlerClass.createStream(self.account)
                 if not stream:
                     log_info(self, "Cancelled session")
                     return False

@@ -58,6 +58,8 @@ class BlinkAppDelegate(NSObject):
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
             
             nc = NotificationCenter()
+            nc.add_observer(self, name="CFGSettingsObjectDidChange")
+            nc.add_observer(self, name="SIPApplicationDidStart")
             nc.add_observer(self, name="SIPSessionNewIncoming")
             nc.add_observer(self, name="SIPSessionGotProposal")
             nc.add_observer(self, name="SIPSessionGotRejectProposal")
@@ -124,25 +126,16 @@ class BlinkAppDelegate(NSObject):
         self.missedChats = 0
         self.updateDockTile()
 
-    def startVNCServerInPort_(self, port):
-        BlinkLogger().log_info(u"Starting VNC server at port %i..." % port)
-
-        path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
-        args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
-        args += ["-protocol", "3.3"]
-        args += ["-rendezvous", "N"]
-        #args += ["-maxdepth", "8"]
-
-        self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
-
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+       settings = SIPSimpleSettings()
+       if notification.data.modified.has_key("desktop_sharing.disabled"):
+            if settings.desktop_sharing.disabled:
+                self.stopLocalVNCServer()
+            else:
+                self.startLocalVNCServer()
 
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationName)
-
-        self.vncServerPort = randint(5950, 5990)
-        self.startVNCServerInPort_(self.vncServerPort)
-
-        DesktopSharingController.vncServerPort = self.vncServerPort
 
         options = {"config_file":   NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/config",
                    "log_directory": NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink",
@@ -209,9 +202,7 @@ You might need to Replace it and re-enter your account information. Your old fil
     def applicationShouldTerminate_(self, sender):
         self.windowController.model.saveContacts()
         self.windowController.closeAllSessions()
-        if self.vncServerTask:
-            self.vncServerTask.terminate()
-
+        self.stopLocalVNCServer()
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
 
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
@@ -223,6 +214,34 @@ You might need to Replace it and re-enter your account information. Your old fil
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def startLocalVNCServer_(self, port):
+
+        path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
+        args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
+        args += ["-protocol", "3.3"]
+        args += ["-rendezvous", "N"]
+
+        self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
+
+    def startLocalVNCServer(self):
+        if not SIPManager().isMediaTypeSupported('desktop-sharing'):
+            return
+
+        if self.vncServerTask is None:
+            self.vncServerPort = randint(5950, 5990)
+            BlinkLogger().log_info(u"Starting VNC server at port %i..." % self.vncServerPort)
+            self.startLocalVNCServer_(self.vncServerPort)
+            DesktopSharingController.vncServerPort = self.vncServerPort
+
+    def stopLocalVNCServer(self):
+        if self.vncServerTask:
+            BlinkLogger().log_info(u"Stopping VNC server at port %i..." % self.vncServerPort)
+            self.vncServerTask.terminate()
+            self.vncServerTask = None
+
+    def _NH_SIPApplicationDidStart(self, notification):
+        self.startLocalVNCServer()
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)

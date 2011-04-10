@@ -11,7 +11,7 @@ import os
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, Path, SampleRate
-from sipsimple.configuration.settings import AudioSettings, ChatSettings, FileTransferSettings, LogsSettings
+from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings
 
 from configuration.datatypes import HTTPURL, SoundFile, UserDataPath
 
@@ -34,11 +34,17 @@ class AudioSettingsExtension(AudioSettings):
 class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
     sms_replication = Setting(type=bool, default=True)
+    disabled = Setting(type=bool, default=False)
+
+
+class DesktopSharingSettingsExtension(DesktopSharingSettings):
+    disabled = Setting(type=bool, default=False)
 
 
 class FileTransferSettingsExtension(FileTransferSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath(os.path.expanduser('~/Downloads')))
     auto_accept = Setting(type=bool, default=False)
+    disabled = Setting(type=bool, default=False)
 
 
 class LogsSettingsExtension(LogsSettings):
@@ -76,6 +82,7 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
     chat = ChatSettingsExtension
+    desktop_sharing = DesktopSharingSettingsExtension
     file_transfer = FileTransferSettingsExtension
     logs = LogsSettingsExtension
     server = ServerSettings

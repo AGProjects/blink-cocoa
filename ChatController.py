@@ -612,7 +612,7 @@ class ChatController(MediaStream):
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_SEND_FILE:
                 if self.status == STREAM_CONNECTED:
-                    item.setEnabled_(True)
+                    item.setEnabled_(True and SIPManager().isMediaTypeSupported('file-transfer'))
                 else:
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
@@ -623,7 +623,9 @@ class ChatController(MediaStream):
                 title = self.sessionController.getTitleShort()
                 menu = toolbar.delegate().desktopShareMenu
                 menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Desktop from %s" % title)
+                menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(SIPManager().isMediaTypeSupported('desktop-sharing'))
                 menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP_MENU).setTitle_("Share My Desktop with %s" % title)
+                menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP_MENU).setEnabled_(SIPManager().isMediaTypeSupported('desktop-sharing'))
             elif tag == SessionController.TOOLBAR_SMILEY:
                 if self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
@@ -696,10 +698,10 @@ class ChatController(MediaStream):
             if self.sessionController.inProposal:
                 return False
             return True
-        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED:
+        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED and SIPManager().isMediaTypeSupported('file-transfer'):
             return True
         elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON, SessionController.TOOLBAR_SHARE_DESKTOP_MENU, SessionController.TOOLBAR_REQUEST_DESKTOP_MENU):
-            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
+            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus or not SIPManager().isMediaTypeSupported('desktop-sharing'):
                 return False
             return True
         elif tag == SessionController.TOOLBAR_SMILEY and self.status == STREAM_CONNECTED:

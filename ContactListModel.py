@@ -757,7 +757,7 @@ class ContactListModel(NSObject):
             ws = NSWorkspace.sharedWorkspace()
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if item.bonjour_neighbour is not None else AccountManager().default_account
-            if filenames and account:
+            if filenames and account and SIPManager().isMediaTypeSupported('file-transfer'):
                 SIPManager().send_files_to_contact(account, item.uri, filenames)
                 return True
             return False

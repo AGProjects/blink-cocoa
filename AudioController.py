@@ -651,7 +651,7 @@ class AudioController(MediaStream):
         else:
             can_propose = self.status == STREAM_CONNECTED and not self.sessionController.inProposal
             item = menu.itemWithTag_(10) # Add Chat
-            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat"))
+            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
 
             item = menu.itemWithTag_(13) # Add Video
             # TODO: enable video -adi
@@ -661,10 +661,10 @@ class AudioController(MediaStream):
             have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
             item = menu.itemWithTag_(11)
             item.setTitle_("Request Desktop from %s" % title)
-            item.setEnabled_(not have_desktop_sharing and can_propose)
+            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-sharing'))
             item = menu.itemWithTag_(12)
             item.setTitle_("Share My Desktop with %s" % title)
-            item.setEnabled_(not have_desktop_sharing and can_propose)
+            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-sharing'))
 
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):

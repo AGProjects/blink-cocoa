@@ -1342,9 +1342,8 @@ class ContactWindowController(NSWindowController):
 
     def handle_incoming_session(self, session, streams):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info(u"Incoming session from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in streams)))
-
         stream_type_list = list(set(stream.type for stream in streams))
+
         if self.model.hasContactMatchingURI(session.remote_identity.uri):
             if settings.chat.auto_accept and stream_type_list == ['chat']:
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
@@ -1375,9 +1374,14 @@ class ContactWindowController(NSWindowController):
                 self.alertPanel.show()
 
     def handle_incoming_proposal(self, session, streams):
+        settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
-        
-        if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
+
+        if not self.backend.isProposedMediaTypeSupported(streams):
+            BlinkLogger().log_info(u"Unsupported media type, proposal rejected")
+            session.reject_proposal()
+            return
+        elif stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
             BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
             self.acceptIncomingProposal(session, streams)
             return
@@ -1569,9 +1573,11 @@ class ContactWindowController(NSWindowController):
 
         item = self.statusMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
+        item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
 
         item = self.statusMenu.itemWithTag_(52) # file
         item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
+        item.setEnabled_(self.backend.isMediaTypeSupported('file-transfer'))
 
         item = self.statusMenu.itemWithTag_(53) # bonjour audio
         account = BonjourAccount()
@@ -1601,7 +1607,7 @@ class ContactWindowController(NSWindowController):
         account = self.activeAccount()
 
         item = menu.itemWithTag_(44) # Join Conference
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount)))
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.backend.isMediaTypeSupported('chat')))
 
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
@@ -1662,10 +1668,10 @@ class ContactWindowController(NSWindowController):
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
-            item.setEnabled_(is_full_sip_uri(contact.uri) or no_contact_selected)
+            item.setEnabled_((is_full_sip_uri(contact.uri) or no_contact_selected) and self.backend.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
-            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjourgroup.contacts))
+            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjourgroup.contacts) and self.backend.isMediaTypeSupported('chat'))
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -1785,6 +1791,10 @@ class ContactWindowController(NSWindowController):
     @run_in_gui_thread
     def renderHistoryMenu(self, entries):
         menu = self.historyMenu
+
+        item = menu.itemWithTag_(100) # file transfer
+        item.setEnabled_(self.backend.isMediaTypeSupported('file-transfer'))
+
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
  
@@ -2059,26 +2069,26 @@ class ContactWindowController(NSWindowController):
             has_full_sip_uri = is_full_sip_uri(item.uri)
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
-            chat_item.setEnabled_(has_full_sip_uri)
+            chat_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('chat'))
             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
             video_item.setEnabled_(False)
             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
-            sms_item.setEnabled_(item not in self.model.bonjourgroup.contacts and not isinstance(self.activeAccount(), BonjourAccount))
+            sms_item.setEnabled_(item not in self.model.bonjourgroup.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
-            sf_item.setEnabled_(has_full_sip_uri)
+            sf_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('file-transfer'))
             if item not in self.model.bonjourgroup.contacts:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View Chat History...", "viewChatHistory:", "")
-                sf_item.setEnabled_(has_full_sip_uri)
+                sf_item.setEnabled_(has_full_sip_uri  and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(1)
-            mitem.setEnabled_(has_full_sip_uri)
+            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(2)
-            mitem.setEnabled_(has_full_sip_uri)
+            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             if item.addressbook_id:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
@@ -2200,8 +2210,10 @@ class ContactWindowController(NSWindowController):
             else:
                 item = self.desktopShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Desktop from %s" % contact.display_name)
+                item.setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
                 item = self.desktopShareMenu.itemWithTag_(2)
                 item.setTitle_("Share My Desktop with %s" % contact.display_name)
+                item.setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
         elif menu == self.contactsMenu:
             item = self.contactsMenu.itemWithTag_(31) # Edit Contact
             item.setEnabled_(NSApp.keyWindow() == self.window())
