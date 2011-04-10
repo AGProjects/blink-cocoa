@@ -348,6 +348,8 @@ You might need to Replace it and re-enter your account information. Your old fil
         if sender.tag() == 400: # Changelog
             if self.applicationName == 'Blink Pro':
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
+            elif self.applicationName == 'Blink Lite':
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
             else:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
         elif sender.tag() == 3: # Donate

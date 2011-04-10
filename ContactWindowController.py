@@ -1524,7 +1524,12 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showHelp_(self, sender):
-        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help.phtml"))
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-lite.phtml"))
+        elif  NSApp.delegate().applicationName == 'Blink Pro':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-pro.phtml"))
+        else:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help.phtml"))
 
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
@@ -1536,6 +1541,9 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
+        elif NSApp.delegate().applicationName == 'Blink Lite':
+            self.blinkMenu.itemWithTag_(2).setHidden_(True)
+            self.blinkMenu.itemWithTag_(3).setHidden_(True)
         else:
             self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(False)

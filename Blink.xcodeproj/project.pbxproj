@@ -242,6 +242,231 @@
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
+		1F8DC326135084FA0034815C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
+		1F8DC328135084FA0034815C /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
+		1F8DC329135084FA0034815C /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
+		1F8DC32A135084FA0034815C /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
+		1F8DC32B135084FA0034815C /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
+		1F8DC32C135084FA0034815C /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
+		1F8DC32D135084FA0034815C /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
+		1F8DC32E135084FA0034815C /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
+		1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
+		1F8DC330135084FA0034815C /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
+		1F8DC331135084FA0034815C /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
+		1F8DC332135084FA0034815C /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
+		1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
+		1F8DC334135084FA0034815C /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
+		1F8DC335135084FA0034815C /* EnrollmentController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF387D0FE096A00040117A /* EnrollmentController.py */; };
+		1F8DC336135084FA0034815C /* Main.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF39C30FE1B0CF0040117A /* Main.py */; };
+		1F8DC337135084FA0034815C /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
+		1F8DC338135084FA0034815C /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11AA570FF323A1007FC176 /* pause.png */; };
+		1F8DC339135084FA0034815C /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
+		1F8DC33A135084FA0034815C /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
+		1F8DC33B135084FA0034815C /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
+		1F8DC33C135084FA0034815C /* AddContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE4B40FFC501E00701821 /* AddContactController.py */; };
+		1F8DC33D135084FA0034815C /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
+		1F8DC33E135084FA0034815C /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
+		1F8DC33F135084FA0034815C /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
+		1F8DC340135084FA0034815C /* message_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67A0FFDAE1400701821 /* message_received.wav */; };
+		1F8DC341135084FA0034815C /* message_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67B0FFDAE1400701821 /* message_sent.wav */; };
+		1F8DC342135084FA0034815C /* ring_inbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67C0FFDAE1400701821 /* ring_inbound.wav */; };
+		1F8DC343135084FA0034815C /* ring_outbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67D0FFDAE1400701821 /* ring_outbound.wav */; };
+		1F8DC344135084FA0034815C /* VerticalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE9EA100447D700701821 /* VerticalBoxView.py */; };
+		1F8DC345135084FA0034815C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
+		1F8DC346135084FA0034815C /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
+		1F8DC347135084FA0034815C /* AudioSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B103E361015721E00002158 /* AudioSession.py */; };
+		1F8DC348135084FA0034815C /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
+		1F8DC349135084FA0034815C /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
+		1F8DC34A135084FA0034815C /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
+		1F8DC34B135084FA0034815C /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
+		1F8DC34C135084FA0034815C /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
+		1F8DC34D135084FA0034815C /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
+		1F8DC34E135084FA0034815C /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
+		1F8DC34F135084FA0034815C /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
+		1F8DC350135084FA0034815C /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
+		1F8DC351135084FA0034815C /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
+		1F8DC352135084FA0034815C /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
+		1F8DC353135084FA0034815C /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
+		1F8DC354135084FA0034815C /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BA28D671028FD2800B99A0E /* AudioSession.xib */; };
+		1F8DC355135084FA0034815C /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
+		1F8DC356135084FA0034815C /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
+		1F8DC357135084FA0034815C /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
+		1F8DC358135084FA0034815C /* record.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A441040EC0F00BEE04E /* record.png */; };
+		1F8DC359135084FA0034815C /* recording1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A541040FF0C00BEE04E /* recording1.png */; };
+		1F8DC35A135084FA0034815C /* recording2.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A551040FF0C00BEE04E /* recording2.png */; };
+		1F8DC35B135084FA0034815C /* recording3.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A561040FF0C00BEE04E /* recording3.png */; };
+		1F8DC35C135084FA0034815C /* mic.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F81047809C00F40437 /* mic.png */; };
+		1F8DC35D135084FA0034815C /* speaker.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F91047809C00F40437 /* speaker.png */; };
+		1F8DC35E135084FA0034815C /* bell.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40FF104783D800F40437 /* bell.png */; };
+		1F8DC35F135084FA0034815C /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
+		1F8DC360135084FA0034815C /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
+		1F8DC361135084FA0034815C /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
+		1F8DC362135084FA0034815C /* FileTransfers.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */; };
+		1F8DC363135084FA0034815C /* FileTransferItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */; };
+		1F8DC364135084FA0034815C /* FileTransferItem.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */; };
+		1F8DC365135084FA0034815C /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
+		1F8DC366135084FA0034815C /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
+		1F8DC367135084FA0034815C /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
+		1F8DC368135084FA0034815C /* AnsweringMachine.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08A781063B3570069AB9A /* AnsweringMachine.py */; };
+		1F8DC369135084FA0034815C /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
+		1F8DC36A135084FA0034815C /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BE7632910732DC000A1DF24 /* About.xib */; };
+		1F8DC36B135084FA0034815C /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
+		1F8DC36C135084FA0034815C /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
+		1F8DC36D135084FA0034815C /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
+		1F8DC36E135084FA0034815C /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
+		1F8DC36F135084FA0034815C /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
+		1F8DC370135084FA0034815C /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
+		1F8DC371135084FA0034815C /* ChatWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430E81082F32500F04A6C /* ChatWindowManager.py */; };
+		1F8DC372135084FA0034815C /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
+		1F8DC373135084FA0034815C /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
+		1F8DC374135084FA0034815C /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
+		1F8DC375135084FA0034815C /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
+		1F8DC376135084FA0034815C /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
+		1F8DC377135084FA0034815C /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
+		1F8DC378135084FA0034815C /* dtmf_2_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1071095BFF500284E18 /* dtmf_2_tone.wav */; };
+		1F8DC379135084FA0034815C /* dtmf_3_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1081095BFF500284E18 /* dtmf_3_tone.wav */; };
+		1F8DC37A135084FA0034815C /* dtmf_4_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1091095BFF500284E18 /* dtmf_4_tone.wav */; };
+		1F8DC37B135084FA0034815C /* dtmf_5_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10A1095BFF500284E18 /* dtmf_5_tone.wav */; };
+		1F8DC37C135084FA0034815C /* dtmf_6_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10B1095BFF500284E18 /* dtmf_6_tone.wav */; };
+		1F8DC37D135084FA0034815C /* dtmf_7_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10C1095BFF500284E18 /* dtmf_7_tone.wav */; };
+		1F8DC37E135084FA0034815C /* dtmf_8_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10D1095BFF500284E18 /* dtmf_8_tone.wav */; };
+		1F8DC37F135084FA0034815C /* dtmf_9_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10E1095BFF500284E18 /* dtmf_9_tone.wav */; };
+		1F8DC380135084FA0034815C /* dtmf_A_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10F1095BFF500284E18 /* dtmf_A_tone.wav */; };
+		1F8DC381135084FA0034815C /* dtmf_B_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1101095BFF500284E18 /* dtmf_B_tone.wav */; };
+		1F8DC382135084FA0034815C /* dtmf_C_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1111095BFF500284E18 /* dtmf_C_tone.wav */; };
+		1F8DC383135084FA0034815C /* dtmf_D_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1121095BFF500284E18 /* dtmf_D_tone.wav */; };
+		1F8DC384135084FA0034815C /* dtmf_pound_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1131095BFF500284E18 /* dtmf_pound_tone.wav */; };
+		1F8DC385135084FA0034815C /* dtmf_star_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1141095BFF500284E18 /* dtmf_star_tone.wav */; };
+		1F8DC386135084FA0034815C /* hangup_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1151095BFF500284E18 /* hangup_tone.wav */; };
+		1F8DC387135084FA0034815C /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
+		1F8DC388135084FA0034815C /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
+		1F8DC389135084FA0034815C /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
+		1F8DC38A135084FA0034815C /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
+		1F8DC38B135084FA0034815C /* AddGroup.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */; };
+		1F8DC38C135084FA0034815C /* AddGroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */; };
+		1F8DC38D135084FA0034815C /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
+		1F8DC38E135084FA0034815C /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
+		1F8DC38F135084FA0034815C /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
+		1F8DC390135084FA0034815C /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
+		1F8DC391135084FA0034815C /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
+		1F8DC392135084FA0034815C /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
+		1F8DC393135084FA0034815C /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
+		1F8DC394135084FA0034815C /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
+		1F8DC395135084FA0034815C /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
+		1F8DC396135084FA0034815C /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
+		1F8DC397135084FA0034815C /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
+		1F8DC398135084FA0034815C /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
+		1F8DC399135084FA0034815C /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
+		1F8DC39A135084FA0034815C /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
+		1F8DC39B135084FA0034815C /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
+		1F8DC39C135084FA0034815C /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
+		1F8DC39D135084FA0034815C /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
+		1F8DC39E135084FA0034815C /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
+		1F8DC39F135084FA0034815C /* 3333@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */; };
+		1F8DC3A0135084FA0034815C /* PresenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresenceWindow.xib */; };
+		1F8DC3A1135084FA0034815C /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
+		1F8DC3A2135084FA0034815C /* NewWatcherDialog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */; };
+		1F8DC3A3135084FA0034815C /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
+		1F8DC3A4135084FA0034815C /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
+		1F8DC3A5135084FA0034815C /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
+		1F8DC3A6135084FA0034815C /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
+		1F8DC3A7135084FA0034815C /* ServerConferenceWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */; };
+		1F8DC3A8135084FA0034815C /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
+		1F8DC3A9135084FA0034815C /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
+		1F8DC3AA135084FA0034815C /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
+		1F8DC3AB135084FA0034815C /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
+		1F8DC3AC135084FA0034815C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
+		1F8DC3AD135084FA0034815C /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
+		1F8DC3AE135084FA0034815C /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
+		1F8DC3AF135084FA0034815C /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
+		1F8DC3B0135084FA0034815C /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
+		1F8DC3B1135084FA0034815C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
+		1F8DC3B2135084FA0034815C /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
+		1F8DC3B3135084FA0034815C /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1F8DC3B4135084FA0034815C /* ChatPrivateMessage.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */; };
+		1F8DC3B5135084FA0034815C /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
+		1F8DC3B6135084FA0034815C /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
+		1F8DC3B7135084FA0034815C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
+		1F8DC3B8135084FA0034815C /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
+		1F8DC3B9135084FA0034815C /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
+		1F8DC3BA135084FA0034815C /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
+		1F8DC3BB135084FA0034815C /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
+		1F8DC3BC135084FA0034815C /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
+		1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
+		1F8DC3BF135084FA0034815C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		1F8DC3C1135084FA0034815C /* libgcrypt.11.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
+		1F8DC3C2135084FA0034815C /* libgnutls-extra.26.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
+		1F8DC3C3135084FA0034815C /* libgnutls.26.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
+		1F8DC3C4135084FA0034815C /* libgpg-error.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
+		1F8DC3C5135084FA0034815C /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722912B554000010A8B2 /* libiconv.2.dylib */; };
+		1F8DC3C6135084FA0034815C /* libintl.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722A12B554000010A8B2 /* libintl.8.dylib */; };
+		1F8DC3C8135084FA0034815C /* libtasn1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
+		1F8DC3C9135084FA0034815C /* libz.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722D12B554000010A8B2 /* libz.1.dylib */; };
+		1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
+		1F8DC3CD135084FA0034815C /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
+		1F8DC3CE135084FA0034815C /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
+		1F8DC3CF135084FA0034815C /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
+		1F8DC3D0135084FA0034815C /* beer.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF648105DC53A00F267F9 /* beer.png */; };
+		1F8DC3D1135084FA0034815C /* camera.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF649105DC53A00F267F9 /* camera.png */; };
+		1F8DC3D2135084FA0034815C /* cigarette.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64A105DC53A00F267F9 /* cigarette.png */; };
+		1F8DC3D3135084FA0034815C /* coffee.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64B105DC53A00F267F9 /* coffee.png */; };
+		1F8DC3D4135084FA0034815C /* monkey.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF714105DDF1200F267F9 /* monkey.png */; };
+		1F8DC3D5135084FA0034815C /* confused.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64C105DC53A00F267F9 /* confused.png */; };
+		1F8DC3D6135084FA0034815C /* console.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64D105DC53A00F267F9 /* console.png */; };
+		1F8DC3D7135084FA0034815C /* cool.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64E105DC53A00F267F9 /* cool.png */; };
+		1F8DC3D8135084FA0034815C /* cross.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64F105DC53A00F267F9 /* cross.png */; };
+		1F8DC3D9135084FA0034815C /* crying.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF650105DC53A00F267F9 /* crying.png */; };
+		1F8DC3DA135084FA0034815C /* devil.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF651105DC53A00F267F9 /* devil.png */; };
+		1F8DC3DB135084FA0034815C /* dont-know.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF652105DC53A00F267F9 /* dont-know.png */; };
+		1F8DC3DC135084FA0034815C /* grin.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF653105DC53A00F267F9 /* grin.png */; };
+		1F8DC3DD135084FA0034815C /* hug-left.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF654105DC53A00F267F9 /* hug-left.png */; };
+		1F8DC3DE135084FA0034815C /* hug-right.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF655105DC53A00F267F9 /* hug-right.png */; };
+		1F8DC3DF135084FA0034815C /* kiss.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF656105DC53A00F267F9 /* kiss.png */; };
+		1F8DC3E0135084FA0034815C /* love.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF657105DC53A00F267F9 /* love.png */; };
+		1F8DC3E1135084FA0034815C /* meeting.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF658105DC53A00F267F9 /* meeting.png */; };
+		1F8DC3E2135084FA0034815C /* musical-note.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF659105DC53A00F267F9 /* musical-note.png */; };
+		1F8DC3E3135084FA0034815C /* nerdy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65A105DC53A00F267F9 /* nerdy.png */; };
+		1F8DC3E4135084FA0034815C /* neutral.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65B105DC53A00F267F9 /* neutral.png */; };
+		1F8DC3E5135084FA0034815C /* party.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65C105DC53A00F267F9 /* party.png */; };
+		1F8DC3E6135084FA0034815C /* phone.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65D105DC53A00F267F9 /* phone.png */; };
+		1F8DC3E7135084FA0034815C /* plate.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65E105DC53A00F267F9 /* plate.png */; };
+		1F8DC3E8135084FA0034815C /* question.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65F105DC53A00F267F9 /* question.png */; };
+		1F8DC3E9135084FA0034815C /* sad.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF661105DC53A00F267F9 /* sad.png */; };
+		1F8DC3EA135084FA0034815C /* shame.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF662105DC53A00F267F9 /* shame.png */; };
+		1F8DC3EB135084FA0034815C /* shock.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF663105DC53A00F267F9 /* shock.png */; };
+		1F8DC3EC135084FA0034815C /* sick.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF664105DC53A00F267F9 /* sick.png */; };
+		1F8DC3ED135084FA0034815C /* silent.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF665105DC53A00F267F9 /* silent.png */; };
+		1F8DC3EE135084FA0034815C /* sleepy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF666105DC53A00F267F9 /* sleepy.png */; };
+		1F8DC3EF135084FA0034815C /* smile-big.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF668105DC53A00F267F9 /* smile-big.png */; };
+		1F8DC3F0135084FA0034815C /* smile.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF669105DC53A00F267F9 /* smile.png */; };
+		1F8DC3F1135084FA0034815C /* theme in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66A105DC53A00F267F9 /* theme */; };
+		1F8DC3F2135084FA0034815C /* thinking.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66B105DC53A00F267F9 /* thinking.png */; };
+		1F8DC3F3135084FA0034815C /* tongue.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66C105DC53A00F267F9 /* tongue.png */; };
+		1F8DC3F4135084FA0034815C /* tv.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66D105DC53A00F267F9 /* tv.png */; };
+		1F8DC3F5135084FA0034815C /* uhm-yeah.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66E105DC53A00F267F9 /* uhm-yeah.png */; };
+		1F8DC3F6135084FA0034815C /* wink.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66F105DC53A00F267F9 /* wink.png */; };
+		1F8DC3F7135084FA0034815C /* yawn.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF670105DC53A00F267F9 /* yawn.png */; };
+		1F8DC3FA135084FA0034815C /* Vine Server.app in Copy Helper Binaries */ = {isa = PBXBuildFile; fileRef = 1F226DE412B54FBE0010A8B2 /* Vine Server.app */; };
+		1F8DC3FC135084FA0034815C /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
+		1F8DC3FD135084FA0034815C /* account.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550410F643350083D346 /* account.py */; };
+		1F8DC3FE135084FA0034815C /* datatypes.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550510F643350083D346 /* datatypes.py */; };
+		1F8DC3FF135084FA0034815C /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
+		1F8DC401135084FA0034815C /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
+		1F8DC402135084FA0034815C /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
+		1F8DC404135084FA0034815C /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1F8DC406135084FA0034815C /* libgcrypt.11.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
+		1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
+		1F8DC408135084FA0034815C /* libgnutls.26.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
+		1F8DC409135084FA0034815C /* libgpg-error.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
+		1F8DC40A135084FA0034815C /* libiconv.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722912B554000010A8B2 /* libiconv.2.dylib */; };
+		1F8DC40B135084FA0034815C /* libintl.8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722A12B554000010A8B2 /* libintl.8.dylib */; };
+		1F8DC40C135084FA0034815C /* liblzo.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
+		1F8DC40D135084FA0034815C /* libtasn1.3.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
+		1F8DC40E135084FA0034815C /* libz.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722D12B554000010A8B2 /* libz.1.dylib */; };
+		1F8DC9121351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
+		1F8DC9131351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F9A8DA612BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
 		1F9A8DA712BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
 		1FAF8C5D12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
@@ -568,6 +793,133 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1F8DC3CC135084FA0034815C /* Copy Smiley Files (default) */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = smileys/default;
+			dstSubfolderSpec = 7;
+			files = (
+				1F8DC3CD135084FA0034815C /* victory.png in Copy Smiley Files (default) */,
+				1F8DC3CE135084FA0034815C /* angel.png in Copy Smiley Files (default) */,
+				1F8DC3CF135084FA0034815C /* angry.png in Copy Smiley Files (default) */,
+				1F8DC3D0135084FA0034815C /* beer.png in Copy Smiley Files (default) */,
+				1F8DC3D1135084FA0034815C /* camera.png in Copy Smiley Files (default) */,
+				1F8DC3D2135084FA0034815C /* cigarette.png in Copy Smiley Files (default) */,
+				1F8DC3D3135084FA0034815C /* coffee.png in Copy Smiley Files (default) */,
+				1F8DC3D4135084FA0034815C /* monkey.png in Copy Smiley Files (default) */,
+				1F8DC3D5135084FA0034815C /* confused.png in Copy Smiley Files (default) */,
+				1F8DC3D6135084FA0034815C /* console.png in Copy Smiley Files (default) */,
+				1F8DC3D7135084FA0034815C /* cool.png in Copy Smiley Files (default) */,
+				1F8DC3D8135084FA0034815C /* cross.png in Copy Smiley Files (default) */,
+				1F8DC3D9135084FA0034815C /* crying.png in Copy Smiley Files (default) */,
+				1F8DC3DA135084FA0034815C /* devil.png in Copy Smiley Files (default) */,
+				1F8DC3DB135084FA0034815C /* dont-know.png in Copy Smiley Files (default) */,
+				1F8DC3DC135084FA0034815C /* grin.png in Copy Smiley Files (default) */,
+				1F8DC3DD135084FA0034815C /* hug-left.png in Copy Smiley Files (default) */,
+				1F8DC3DE135084FA0034815C /* hug-right.png in Copy Smiley Files (default) */,
+				1F8DC3DF135084FA0034815C /* kiss.png in Copy Smiley Files (default) */,
+				1F8DC3E0135084FA0034815C /* love.png in Copy Smiley Files (default) */,
+				1F8DC3E1135084FA0034815C /* meeting.png in Copy Smiley Files (default) */,
+				1F8DC3E2135084FA0034815C /* musical-note.png in Copy Smiley Files (default) */,
+				1F8DC3E3135084FA0034815C /* nerdy.png in Copy Smiley Files (default) */,
+				1F8DC3E4135084FA0034815C /* neutral.png in Copy Smiley Files (default) */,
+				1F8DC3E5135084FA0034815C /* party.png in Copy Smiley Files (default) */,
+				1F8DC3E6135084FA0034815C /* phone.png in Copy Smiley Files (default) */,
+				1F8DC3E7135084FA0034815C /* plate.png in Copy Smiley Files (default) */,
+				1F8DC3E8135084FA0034815C /* question.png in Copy Smiley Files (default) */,
+				1F8DC3E9135084FA0034815C /* sad.png in Copy Smiley Files (default) */,
+				1F8DC3EA135084FA0034815C /* shame.png in Copy Smiley Files (default) */,
+				1F8DC3EB135084FA0034815C /* shock.png in Copy Smiley Files (default) */,
+				1F8DC3EC135084FA0034815C /* sick.png in Copy Smiley Files (default) */,
+				1F8DC3ED135084FA0034815C /* silent.png in Copy Smiley Files (default) */,
+				1F8DC3EE135084FA0034815C /* sleepy.png in Copy Smiley Files (default) */,
+				1F8DC3EF135084FA0034815C /* smile-big.png in Copy Smiley Files (default) */,
+				1F8DC3F0135084FA0034815C /* smile.png in Copy Smiley Files (default) */,
+				1F8DC3F1135084FA0034815C /* theme in Copy Smiley Files (default) */,
+				1F8DC3F2135084FA0034815C /* thinking.png in Copy Smiley Files (default) */,
+				1F8DC3F3135084FA0034815C /* tongue.png in Copy Smiley Files (default) */,
+				1F8DC3F4135084FA0034815C /* tv.png in Copy Smiley Files (default) */,
+				1F8DC3F5135084FA0034815C /* uhm-yeah.png in Copy Smiley Files (default) */,
+				1F8DC3F6135084FA0034815C /* wink.png in Copy Smiley Files (default) */,
+				1F8DC3F7135084FA0034815C /* yawn.png in Copy Smiley Files (default) */,
+			);
+			name = "Copy Smiley Files (default)";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC3F8135084FA0034815C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC3F9135084FA0034815C /* Copy Helper Binaries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				1F8DC3FA135084FA0034815C /* Vine Server.app in Copy Helper Binaries */,
+			);
+			name = "Copy Helper Binaries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC3FB135084FA0034815C /* Copy Configuration Package */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = configuration;
+			dstSubfolderSpec = 7;
+			files = (
+				1F8DC3FC135084FA0034815C /* __init__.py in Copy Configuration Package */,
+				1F8DC3FD135084FA0034815C /* account.py in Copy Configuration Package */,
+				1F8DC3FE135084FA0034815C /* datatypes.py in Copy Configuration Package */,
+				1F8DC3FF135084FA0034815C /* settings.py in Copy Configuration Package */,
+			);
+			name = "Copy Configuration Package";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC400135084FA0034815C /* Copy Interfaces Package */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = interfaces;
+			dstSubfolderSpec = 7;
+			files = (
+				1F8DC401135084FA0034815C /* __init__.py in Copy Interfaces Package */,
+				1F8DC402135084FA0034815C /* itunes.py in Copy Interfaces Package */,
+			);
+			name = "Copy Interfaces Package";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC403135084FA0034815C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				1F8DC404135084FA0034815C /* lib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC405135084FA0034815C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1F8DC406135084FA0034815C /* libgcrypt.11.dylib in CopyFiles */,
+				1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in CopyFiles */,
+				1F8DC408135084FA0034815C /* libgnutls.26.dylib in CopyFiles */,
+				1F8DC409135084FA0034815C /* libgpg-error.0.dylib in CopyFiles */,
+				1F8DC40A135084FA0034815C /* libiconv.2.dylib in CopyFiles */,
+				1F8DC40B135084FA0034815C /* libintl.8.dylib in CopyFiles */,
+				1F8DC40C135084FA0034815C /* liblzo.1.dylib in CopyFiles */,
+				1F8DC40D135084FA0034815C /* libtasn1.3.dylib in CopyFiles */,
+				1F8DC40E135084FA0034815C /* libz.1.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2B0C1E8B10781A62008266C7 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -704,6 +1056,9 @@
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
+		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F8DC74C1351D6F40034815C /* Blink */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Blink; path = /Users/adigeo/Blink; sourceTree = "<absolute>"; };
+		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
 		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
@@ -916,6 +1271,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1F8DC3C0135084FA0034815C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F8DC3C1135084FA0034815C /* libgcrypt.11.dylib in Frameworks */,
+				1F8DC3C2135084FA0034815C /* libgnutls-extra.26.dylib in Frameworks */,
+				1F8DC3C3135084FA0034815C /* libgnutls.26.dylib in Frameworks */,
+				1F8DC3C4135084FA0034815C /* libgpg-error.0.dylib in Frameworks */,
+				1F8DC3C5135084FA0034815C /* libiconv.2.dylib in Frameworks */,
+				1F8DC3C6135084FA0034815C /* libintl.8.dylib in Frameworks */,
+				1F8DC3C8135084FA0034815C /* libtasn1.3.dylib in Frameworks */,
+				1F8DC3C9135084FA0034815C /* libz.1.dylib in Frameworks */,
+				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
+				1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -974,6 +1346,7 @@
 			children = (
 				8D1107320486CEB800E47090 /* Blink.app */,
 				1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */,
+				1F8DC412135084FA0034815C /* Blink Lite.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1050,6 +1423,7 @@
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
+				1F8DC74C1351D6F40034815C /* Blink */,
 			);
 			name = MacSip;
 			sourceTree = "<group>";
@@ -1060,6 +1434,7 @@
 				2B2DF645105DC51900F267F9 /* Smileys */,
 				2B5DE6760FFDADE300701821 /* Sounds */,
 				2B24517D0FCF8AA30023DBFB /* Icons */,
+				1F8DC9111351D7460034815C /* Info-lite.plist */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				1FCF160812B5639F00F71BE5 /* Info-pro.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
@@ -1452,6 +1827,31 @@
 			productReference = 1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */;
 			productType = "com.apple.product-type.application";
 		};
+		1F8DC324135084FA0034815C /* Blink Lite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1F8DC40F135084FA0034815C /* Build configuration list for PBXNativeTarget "Blink Lite" */;
+			buildPhases = (
+				1F8DC325135084FA0034815C /* Resources */,
+				1F8DC3BE135084FA0034815C /* Sources */,
+				1F8DC3C0135084FA0034815C /* Frameworks */,
+				1F8DC3CC135084FA0034815C /* Copy Smiley Files (default) */,
+				1F8DC3F8135084FA0034815C /* CopyFiles */,
+				1F8DC3F9135084FA0034815C /* Copy Helper Binaries */,
+				1F8DC3FB135084FA0034815C /* Copy Configuration Package */,
+				1F8DC400135084FA0034815C /* Copy Interfaces Package */,
+				1F8DC403135084FA0034815C /* CopyFiles */,
+				1F8DC405135084FA0034815C /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Blink Lite";
+			productInstallPath = "$(HOME)/Applications";
+			productName = MacSip;
+			productReference = 1F8DC412135084FA0034815C /* Blink Lite.app */;
+			productType = "com.apple.product-type.application";
+		};
 		8D1107260486CEB800E47090 /* Blink */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Blink" */;
@@ -1496,6 +1896,7 @@
 			targets = (
 				8D1107260486CEB800E47090 /* Blink */,
 				1F22729312B554F50010A8B2 /* Blink Pro */,
+				1F8DC324135084FA0034815C /* Blink Lite */,
 			);
 		};
 /* End PBXProject section */
@@ -1657,6 +2058,166 @@
 				1F2A32351328CEE00078F01D /* paused_16.png in Resources */,
 				1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
+				1F8DC9131351D7460034815C /* Info-lite.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC325135084FA0034815C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F8DC326135084FA0034815C /* InfoPlist.strings in Resources */,
+				1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */,
+				1F8DC328135084FA0034815C /* ContactCell.py in Resources */,
+				1F8DC329135084FA0034815C /* ContactListModel.py in Resources */,
+				1F8DC32A135084FA0034815C /* reconnect.png in Resources */,
+				1F8DC32B135084FA0034815C /* SessionController.py in Resources */,
+				1F8DC32C135084FA0034815C /* HorizontalBoxView.py in Resources */,
+				1F8DC32D135084FA0034815C /* AddContact.xib in Resources */,
+				1F8DC32E135084FA0034815C /* Enrollment.xib in Resources */,
+				1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */,
+				1F8DC330135084FA0034815C /* Preferences.xib in Resources */,
+				1F8DC331135084FA0034815C /* ChatSession.xib in Resources */,
+				1F8DC332135084FA0034815C /* ChatView.xib in Resources */,
+				1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */,
+				1F8DC334135084FA0034815C /* SIPManager.py in Resources */,
+				1F8DC335135084FA0034815C /* EnrollmentController.py in Resources */,
+				1F8DC336135084FA0034815C /* Main.py in Resources */,
+				1F8DC337135084FA0034815C /* ChatController.py in Resources */,
+				1F8DC338135084FA0034815C /* pause.png in Resources */,
+				1F8DC339135084FA0034815C /* BlinkLogger.py in Resources */,
+				1F8DC33A135084FA0034815C /* mute.png in Resources */,
+				1F8DC33B135084FA0034815C /* paused.png in Resources */,
+				1F8DC33C135084FA0034815C /* AddContactController.py in Resources */,
+				1F8DC33D135084FA0034815C /* PreferencesController.py in Resources */,
+				1F8DC33E135084FA0034815C /* file_received.wav in Resources */,
+				1F8DC33F135084FA0034815C /* file_sent.wav in Resources */,
+				1F8DC340135084FA0034815C /* message_received.wav in Resources */,
+				1F8DC341135084FA0034815C /* message_sent.wav in Resources */,
+				1F8DC342135084FA0034815C /* ring_inbound.wav in Resources */,
+				1F8DC343135084FA0034815C /* ring_outbound.wav in Resources */,
+				1F8DC344135084FA0034815C /* VerticalBoxView.py in Resources */,
+				1F8DC345135084FA0034815C /* PreferenceOptions.py in Resources */,
+				1F8DC346135084FA0034815C /* TableView.py in Resources */,
+				1F8DC347135084FA0034815C /* AudioSession.py in Resources */,
+				1F8DC348135084FA0034815C /* muted.png in Resources */,
+				1F8DC349135084FA0034815C /* srtp.png in Resources */,
+				1F8DC34A135084FA0034815C /* AlertPanel.py in Resources */,
+				1F8DC34B135084FA0034815C /* AlertPanelView.xib in Resources */,
+				1F8DC34C135084FA0034815C /* AlertPanel.xib in Resources */,
+				1F8DC34D135084FA0034815C /* blink.icns in Resources */,
+				1F8DC34E135084FA0034815C /* util.py in Resources */,
+				1F8DC34F135084FA0034815C /* SessionRinger.py in Resources */,
+				1F8DC350135084FA0034815C /* DebugWindow.py in Resources */,
+				1F8DC351135084FA0034815C /* DebugWindow.xib in Resources */,
+				1F8DC352135084FA0034815C /* PhotoPicker.xib in Resources */,
+				1F8DC353135084FA0034815C /* PhotoPicker.py in Resources */,
+				1F8DC354135084FA0034815C /* AudioSession.xib in Resources */,
+				1F8DC355135084FA0034815C /* SoundSetting.xib in Resources */,
+				1F8DC356135084FA0034815C /* audio.png in Resources */,
+				1F8DC357135084FA0034815C /* display.png in Resources */,
+				1F8DC358135084FA0034815C /* record.png in Resources */,
+				1F8DC359135084FA0034815C /* recording1.png in Resources */,
+				1F8DC35A135084FA0034815C /* recording2.png in Resources */,
+				1F8DC35B135084FA0034815C /* recording3.png in Resources */,
+				1F8DC35C135084FA0034815C /* mic.png in Resources */,
+				1F8DC35D135084FA0034815C /* speaker.png in Resources */,
+				1F8DC35E135084FA0034815C /* bell.png in Resources */,
+				1F8DC35F135084FA0034815C /* bluelock.png in Resources */,
+				1F8DC360135084FA0034815C /* greenlock.png in Resources */,
+				1F8DC361135084FA0034815C /* ContactOutlineView.py in Resources */,
+				1F8DC362135084FA0034815C /* FileTransfers.xib in Resources */,
+				1F8DC363135084FA0034815C /* FileTransferItem.xib in Resources */,
+				1F8DC364135084FA0034815C /* FileTransferItem.py in Resources */,
+				1F8DC365135084FA0034815C /* ListView.py in Resources */,
+				1F8DC366135084FA0034815C /* FileTransferWindowController.py in Resources */,
+				1F8DC367135084FA0034815C /* SmileyManager.py in Resources */,
+				1F8DC368135084FA0034815C /* AnsweringMachine.py in Resources */,
+				1F8DC369135084FA0034815C /* FileTransferSession.py in Resources */,
+				1F8DC36A135084FA0034815C /* About.xib in Resources */,
+				1F8DC36B135084FA0034815C /* incoming_file.png in Resources */,
+				1F8DC36C135084FA0034815C /* upfile.png in Resources */,
+				1F8DC36D135084FA0034815C /* hangup.png in Resources */,
+				1F8DC36E135084FA0034815C /* belloff.png in Resources */,
+				1F8DC36F135084FA0034815C /* bellon.png in Resources */,
+				1F8DC370135084FA0034815C /* AudioController.py in Resources */,
+				1F8DC371135084FA0034815C /* ChatWindowManager.py in Resources */,
+				1F8DC372135084FA0034815C /* MediaStream.py in Resources */,
+				1F8DC373135084FA0034815C /* AccountSettings.py in Resources */,
+				1F8DC374135084FA0034815C /* AccountSettings.xib in Resources */,
+				1F8DC375135084FA0034815C /* answering_machine_tone.wav in Resources */,
+				1F8DC376135084FA0034815C /* dtmf_0_tone.wav in Resources */,
+				1F8DC377135084FA0034815C /* dtmf_1_tone.wav in Resources */,
+				1F8DC378135084FA0034815C /* dtmf_2_tone.wav in Resources */,
+				1F8DC379135084FA0034815C /* dtmf_3_tone.wav in Resources */,
+				1F8DC37A135084FA0034815C /* dtmf_4_tone.wav in Resources */,
+				1F8DC37B135084FA0034815C /* dtmf_5_tone.wav in Resources */,
+				1F8DC37C135084FA0034815C /* dtmf_6_tone.wav in Resources */,
+				1F8DC37D135084FA0034815C /* dtmf_7_tone.wav in Resources */,
+				1F8DC37E135084FA0034815C /* dtmf_8_tone.wav in Resources */,
+				1F8DC37F135084FA0034815C /* dtmf_9_tone.wav in Resources */,
+				1F8DC380135084FA0034815C /* dtmf_A_tone.wav in Resources */,
+				1F8DC381135084FA0034815C /* dtmf_B_tone.wav in Resources */,
+				1F8DC382135084FA0034815C /* dtmf_C_tone.wav in Resources */,
+				1F8DC383135084FA0034815C /* dtmf_D_tone.wav in Resources */,
+				1F8DC384135084FA0034815C /* dtmf_pound_tone.wav in Resources */,
+				1F8DC385135084FA0034815C /* dtmf_star_tone.wav in Resources */,
+				1F8DC386135084FA0034815C /* hangup_tone.wav in Resources */,
+				1F8DC387135084FA0034815C /* hold_tone.wav in Resources */,
+				1F8DC388135084FA0034815C /* ring_outbound2.wav in Resources */,
+				1F8DC389135084FA0034815C /* ring_tone.wav in Resources */,
+				1F8DC38A135084FA0034815C /* FancyTabSwitcher.py in Resources */,
+				1F8DC38B135084FA0034815C /* AddGroup.xib in Resources */,
+				1F8DC38C135084FA0034815C /* AddGroupController.py in Resources */,
+				1F8DC38D135084FA0034815C /* pencil.png in Resources */,
+				1F8DC38E135084FA0034815C /* DesktopServerWindow.xib in Resources */,
+				1F8DC38F135084FA0034815C /* DesktopSharingController.py in Resources */,
+				1F8DC390135084FA0034815C /* SMSSession.xib in Resources */,
+				1F8DC391135084FA0034815C /* SMSView.xib in Resources */,
+				1F8DC392135084FA0034815C /* ChatViewController.py in Resources */,
+				1F8DC393135084FA0034815C /* ChatView.html in Resources */,
+				1F8DC394135084FA0034815C /* smiley_off.png in Resources */,
+				1F8DC395135084FA0034815C /* smiley_on.png in Resources */,
+				1F8DC396135084FA0034815C /* growl.py in Resources */,
+				1F8DC397135084FA0034815C /* SMSWindowManager.py in Resources */,
+				1F8DC398135084FA0034815C /* HistoryViewer.py in Resources */,
+				1F8DC399135084FA0034815C /* HistoryViewer.xib in Resources */,
+				1F8DC39A135084FA0034815C /* SoundRecorder.xib in Resources */,
+				1F8DC39B135084FA0034815C /* unavailable_message.wav in Resources */,
+				1F8DC39C135084FA0034815C /* AnsweringMachineSetting.xib in Resources */,
+				1F8DC39D135084FA0034815C /* audio_small.png in Resources */,
+				1F8DC39E135084FA0034815C /* SMSViewController.py in Resources */,
+				1F8DC39F135084FA0034815C /* 3333@sip2sip.info.tiff in Resources */,
+				1F8DC3A0135084FA0034815C /* PresenceWindow.xib in Resources */,
+				1F8DC3A1135084FA0034815C /* PresencePolicy.py in Resources */,
+				1F8DC3A2135084FA0034815C /* NewWatcherDialog.xib in Resources */,
+				1F8DC3A3135084FA0034815C /* PresenceOfflineWindow.xib in Resources */,
+				1F8DC3A4135084FA0034815C /* 4444@sip2sip.info.tiff in Resources */,
+				1F8DC3A5135084FA0034815C /* 200901@login.zipdx.com.tiff in Resources */,
+				1F8DC3A6135084FA0034815C /* blink-full-72dpi.tif in Resources */,
+				1F8DC3A7135084FA0034815C /* ServerConferenceWindowController.py in Resources */,
+				1F8DC3A8135084FA0034815C /* JoinConferenceWindow.xib in Resources */,
+				1F8DC3A9135084FA0034815C /* test@conference.sip2sip.info.tiff in Resources */,
+				1F8DC3AA135084FA0034815C /* ChatWindowController.py in Resources */,
+				1F8DC3AB135084FA0034815C /* AddParticipantsWindow.xib in Resources */,
+				1F8DC3AC135084FA0034815C /* FileTransferController.py in Resources */,
+				1F8DC3AD135084FA0034815C /* ParticipantsTableView.py in Resources */,
+				1F8DC3AE135084FA0034815C /* hangup_small.png in Resources */,
+				1F8DC3AF135084FA0034815C /* audio_16.png in Resources */,
+				1F8DC3B0135084FA0034815C /* video.png in Resources */,
+				1F8DC3B1135084FA0034815C /* VideoController.py in Resources */,
+				1F8DC3B2135084FA0034815C /* video-hangup.png in Resources */,
+				1F8DC3B3135084FA0034815C /* ChatPrivateMessage.xib in Resources */,
+				1F8DC3B4135084FA0034815C /* ChatPrivateMessage.py in Resources */,
+				1F8DC3B5135084FA0034815C /* HistoryManager.py in Resources */,
+				1F8DC3B6135084FA0034815C /* trash.png in Resources */,
+				1F8DC3B7135084FA0034815C /* outgoing_file.png in Resources */,
+				1F8DC3B8135084FA0034815C /* end_arrow.png in Resources */,
+				1F8DC3B9135084FA0034815C /* begin_arrow.png in Resources */,
+				1F8DC3BA135084FA0034815C /* transfer.png in Resources */,
+				1F8DC3BB135084FA0034815C /* paused_16.png in Resources */,
+				1F8DC3BC135084FA0034815C /* ConferenceConfigurationPanel.xib in Resources */,
+				1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1816,6 +2377,7 @@
 				1F2A32361328CEE00078F01D /* paused_16.png in Resources */,
 				1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
+				1F8DC9121351D7460034815C /* Info-lite.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1827,6 +2389,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F22732212B554F50010A8B2 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F8DC3BE135084FA0034815C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F8DC3BF135084FA0034815C /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2110,6 +2680,56 @@
 			};
 			name = Release;
 		};
+		1F8DC410135084FA0034815C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Blink_Prefix.pch;
+				INFOPLIST_FILE = "Info-lite.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\\\"$(SRCROOT)/Distribution/Frameworks\\\"",
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = "Blink Lite";
+				VALID_ARCHS = "i386 x86_64";
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		1F8DC411135084FA0034815C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = i386;
+				CODE_SIGN_IDENTITY = "Don't Code Sign";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Blink_Prefix.pch;
+				INFOPLIST_FILE = "Info-lite.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\\\"$(SRCROOT)/Distribution/Frameworks\\\"",
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = "Blink Lite";
+				VALID_ARCHS = "i386 x86_64";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2188,6 +2808,15 @@
 			buildConfigurations = (
 				1F22736112B554F50010A8B2 /* Debug */,
 				1F22736212B554F50010A8B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1F8DC40F135084FA0034815C /* Build configuration list for PBXNativeTarget "Blink Lite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1F8DC410135084FA0034815C /* Debug */,
+				1F8DC411135084FA0034815C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
