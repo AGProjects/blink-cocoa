@@ -2667,7 +2667,7 @@
 				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				GCC_MODEL_TUNING = G5;
+				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-pro.plist";
@@ -2675,9 +2675,10 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
-					/usr/local/lib,
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "Blink Pro";
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 			};
