@@ -14,6 +14,8 @@ from eventlet.twistedutil import block_on
 from twisted.internet.threads import deferToThread
 
 from BlinkLogger import BlinkLogger
+from util import makedirs
+
 
 class SessionHistoryEntry(SQLObject):
     class sqlmeta:
@@ -42,10 +44,13 @@ class SessionHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().user_data_directory,"history/history.sqlite")
-        self.db = connectionForURI(db_uri)
+        path = os.path.join(SIPSimpleSettings().user_data_directory,"history")
+        makedirs(path, mode=0755)
+        db_uri="sqlite://" + os.path.join(path,"history.sqlite")
 
+        self.db = connectionForURI(db_uri)
         SessionHistoryEntry._connection = self.db
+
         try:
             if SessionHistoryEntry.tableExists():
                 # change here schema in the future as necessary
@@ -133,10 +138,13 @@ class ChatHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().user_data_directory,"history/history.sqlite")
-        self.db = connectionForURI(db_uri)
+        path = os.path.join(SIPSimpleSettings().user_data_directory,"history")
+        makedirs(path, mode=0755)
+        db_uri="sqlite://" + os.path.join(path,"history.sqlite")
 
+        self.db = connectionForURI(db_uri)
         ChatMessage._connection = self.db
+
         try:
             if ChatMessage.tableExists():
                 # change here schema in the future as necessary
@@ -306,10 +314,13 @@ class FileTransferHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        db_uri="sqlite://" + os.path.join(SIPSimpleSettings().user_data_directory,"history/history.sqlite")
-        self.db = connectionForURI(db_uri)
+        path = os.path.join(SIPSimpleSettings().user_data_directory,"history")
+        makedirs(path, mode=0755)
+        db_uri="sqlite://" + os.path.join(path,"history.sqlite")
 
+        self.db = connectionForURI(db_uri)
         FileTransfer._connection = self.db
+
         try:
             if FileTransfer.tableExists():
                 # change here schema in the future as necessary
