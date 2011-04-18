@@ -1037,7 +1037,7 @@
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
-		1F226DE412B54FBE0010A8B2 /* Vine Server.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Vine Server.app"; path = "/Applications/Vine Server.app"; sourceTree = "<absolute>"; };
+		1F226DE412B54FBE0010A8B2 /* Vine Server.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = "Vine Server.app"; path = "Distribution/Resources/Vine Server.app"; sourceTree = "<group>"; };
 		1F22722512B554000010A8B2 /* libgcrypt.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgcrypt.11.dylib; path = Distribution/Frameworks/libgcrypt.11.dylib; sourceTree = "<group>"; };
 		1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libgnutls-extra.26.dylib"; path = "Distribution/Frameworks/libgnutls-extra.26.dylib"; sourceTree = "<group>"; };
 		1F22722712B554000010A8B2 /* libgnutls.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.26.dylib; path = Distribution/Frameworks/libgnutls.26.dylib; sourceTree = "<group>"; };
