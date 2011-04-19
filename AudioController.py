@@ -109,6 +109,13 @@ class AudioController(MediaStream):
             
             # TODO: add call transfer -adi
             #self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
+            self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
+
+            if NSApp.delegate().applicationName == 'Blink Lite':
+                rec_label = u'Record the Audio Session to file (available in Blink Pro)'
+                self.audioSegmented.cell().setToolTip_forSegment_(rec_label, 1)
+                self.transferSegmented.cell().setToolTip_forSegment_(rec_label, 2)
+                self.conferenceSegmented.cell().setToolTip_forSegment_(rec_label, 2)
 
             if self.transferEnabled:
                 self.transferSegmented.setHidden_(False)
@@ -210,13 +217,13 @@ class AudioController(MediaStream):
         log_info(self, "Taking over call on answering machine...")
         self.audioSegmented.cell().setToolTip_forSegment_("Put the call on hold", 0)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
-        self.audioSegmented.setEnabled_forSegment_(True, 1)
+        self.audioSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 1)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 0)
         self.transferSegmented.cell().setToolTip_forSegment_("Call transfer", 1)
         self.transferSegmented.cell().setToolTip_forSegment_("Put the call on hold", 1)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
-        self.transferSegmented.setEnabled_forSegment_(True, 2)
+        self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % ("HD Audio" if self.stream.sample_rate > 8000 else "Audio", self.stream.codec, self.stream.sample_rate/1000))
         self.audioStatus.sizeToFit()
@@ -543,9 +550,9 @@ class AudioController(MediaStream):
             self.conferenceSegmented.setEnabled_forSegment_(True, 0)
             self.conferenceSegmented.setEnabled_forSegment_(True, 1)
             if not self.answeringMachine:
-                self.audioSegmented.setEnabled_forSegment_(True, 1)
-                self.transferSegmented.setEnabled_forSegment_(True, 2)
-                self.conferenceSegmented.setEnabled_forSegment_(True, 2)
+                self.audioSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 1)
+                self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
+                self.conferenceSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
             self.audioSegmented.setEnabled_forSegment_(True, 2)
             self.transferSegmented.setEnabled_forSegment_(True, 3)
             self.conferenceSegmented.setEnabled_forSegment_(True, 3)
