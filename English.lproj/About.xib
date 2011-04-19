@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10J567</string>
+		<string key="IBDocument.SystemVersion">10J869</string>
 		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">462.00</string>
+		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">823</string>
@@ -184,6 +184,23 @@
 								<reference key="NSTextColor" ref="541934191"/>
 							</object>
 						</object>
+						<object class="NSTextField" id="598190755">
+							<reference key="NSNextResponder" ref="661994322"/>
+							<int key="NSvFlags">-2147483380</int>
+							<string key="NSFrame">{{245, 355}, {49, 17}}</string>
+							<reference key="NSSuperview" ref="661994322"/>
+							<reference key="NSWindow"/>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSTextFieldCell" key="NSCell" id="64866840">
+								<int key="NSCellFlags">68288064</int>
+								<int key="NSCellFlags2">272630784</int>
+								<string key="NSContents">Lite</string>
+								<reference key="NSSupport" ref="258894516"/>
+								<reference key="NSControlView" ref="598190755"/>
+								<reference key="NSBackgroundColor" ref="474886256"/>
+								<reference key="NSTextColor" ref="541934191"/>
+							</object>
+						</object>
 						<object class="NSTextField" id="290987934">
 							<reference key="NSNextResponder" ref="661994322"/>
 							<int key="NSvFlags">268</int>
@@ -235,6 +252,14 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 					</object>
 					<int key="connectionID">19</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">aboutBundle</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="598190755"/>
+					</object>
+					<int key="connectionID">32</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -284,6 +309,7 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 							<reference ref="847835958"/>
 							<reference ref="115938858"/>
 							<reference ref="647659762"/>
+							<reference ref="598190755"/>
 						</object>
 						<reference key="parent" ref="649789553"/>
 					</object>
@@ -371,6 +397,20 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 						<reference key="object" ref="275874291"/>
 						<reference key="parent" ref="290987934"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">30</int>
+						<reference key="object" ref="598190755"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="64866840"/>
+						</object>
+						<reference key="parent" ref="661994322"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">31</int>
+						<reference key="object" ref="64866840"/>
+						<reference key="parent" ref="598190755"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -389,10 +429,14 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 					<string>18.IBPluginDependency</string>
 					<string>2.IBPluginDependency</string>
 					<string>26.IBPluginDependency</string>
+					<string>26.IBViewBoundsToFrameTransform</string>
 					<string>27.IBPluginDependency</string>
 					<string>28.IBPluginDependency</string>
 					<string>29.IBPluginDependency</string>
 					<string>3.IBPluginDependency</string>
+					<string>30.IBPluginDependency</string>
+					<string>30.IBViewBoundsToFrameTransform</string>
+					<string>31.IBPluginDependency</string>
 					<string>5.IBPluginDependency</string>
 					<string>8.IBPluginDependency</string>
 				</object>
@@ -401,18 +445,26 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{363, 348}, {345, 425}}</string>
+					<string>{{277, 581}, {345, 425}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{363, 348}, {345, 425}}</string>
+					<string>{{277, 581}, {345, 425}}</string>
 					<boolean value="NO"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABCPAAAw6eAAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABDeQAAw7mAAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -434,7 +486,7 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">29</int>
+			<int key="maxID">32</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -478,6 +530,7 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>aboutBundle</string>
 							<string>aboutPanel</string>
 							<string>aboutVersion</string>
 							<string>blinkMenu</string>
@@ -485,6 +538,7 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -495,6 +549,7 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>aboutBundle</string>
 							<string>aboutPanel</string>
 							<string>aboutVersion</string>
 							<string>blinkMenu</string>
@@ -502,6 +557,10 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBToOneOutletInfo">
+								<string key="name">aboutBundle</string>
+								<string key="candidateClassName">id</string>
+							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">aboutPanel</string>
 								<string key="candidateClassName">id</string>
@@ -876,6 +935,13 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBFrameworkSource</string>
 						<string key="minorKey">Sparkle.framework/Headers/SUAppcast.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBFrameworkSource</string>
+						<string key="minorKey">Sparkle.framework/Headers/SUUpdater.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
