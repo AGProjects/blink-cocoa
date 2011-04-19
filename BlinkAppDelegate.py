@@ -42,6 +42,7 @@ class BlinkAppDelegate(NSObject):
     windowController = objc.IBOutlet()
     aboutPanel = objc.IBOutlet()
     aboutVersion = objc.IBOutlet()
+    aboutBundle = objc.IBOutlet()
     blinkMenu = objc.IBOutlet()
     activeAudioStreams = set()
     incomingSessions = set()
@@ -307,6 +308,13 @@ You might need to Replace it and re-enter your account information. Your old fil
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
             self.aboutVersion.setStringValue_("Version "+version+"\n"+vdate)
             self.aboutPanel.setTitle_('About %s' % self.applicationName)
+
+            if self.applicationName == 'Blink Pro':
+                self.aboutBundle.setStringValue_("Pro")
+                self.aboutBundle.setHidden_(False)
+            elif self.applicationName == 'Blink Lite':
+                self.aboutBundle.setStringValue_("Lite")
+                self.aboutBundle.setHidden_(False)
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
