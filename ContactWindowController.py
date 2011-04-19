@@ -684,8 +684,8 @@ class ContactWindowController(NSWindowController):
                 chatOk = audioOk
                 desktopOk = audioOk
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
-        self.actionButtons.setEnabled_forSegment_(chatOk, 1)
-        self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
+        self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
+        self.actionButtons.setEnabled_forSegment_(desktopOk and self.backend.isMediaTypeSupported('desktop-sharing'), 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) else False)
