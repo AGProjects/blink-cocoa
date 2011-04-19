@@ -23,6 +23,7 @@ from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, SoundFile
+from resources import Resources
 from util import allocate_autorelease_pool, makedirs
 
 
@@ -805,7 +806,7 @@ class MessageRecorder(NSObject):
         self.counter -= 1
         if self.counter == 0 or self.recording:
             if not self.recording:
-                sound_dir = os.path.dirname(self.requested_path) or os.path.join(SIPSimpleSettings().user_data_directory, "sounds")
+                sound_dir = os.path.dirname(self.requested_path) or Resources.get('sounds')
                 makedirs(sound_dir)
                 self.path = self.requested_path or os.path.join(sound_dir, "temporary_recording.wav")
                 self.file = WaveRecorder(SIPApplication.voice_audio_mixer, self.path)
@@ -883,7 +884,7 @@ class SoundFileOption(Option):
             self.popup.addItemWithTitle_(os.path.basename(filename))
             self.popup.lastItem().setRepresentedObject_(os.path.join(path, filename))
 
-        path = os.path.join(SIPSimpleSettings().user_data_directory, "sounds")
+        path = Resources.get('sounds')
         makedirs(path)
         for filename in (name for name in os.listdir(path) if name.endswith('.wav')):
             filename = unicodedata.normalize('NFC', filename.decode(sys.getfilesystemencoding()))
@@ -971,7 +972,7 @@ class SoundFileOption(Option):
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.volume/10)
             self.volumeText.setStringValue_("Volume: %i%%"%value.volume)
-            value = unicode(value.path.normalized)
+            value = unicode(value.path)
         else:
             self.slider.setEnabled_(False)
             
@@ -1007,7 +1008,7 @@ class AnsweringMessageOption(Option):
         self.addSubview_(self.caption)
 
         NSBundle.loadNibNamed_owner_("AnsweringMachineSetting", self)        
-        self.custom_file = os.path.join(SIPSimpleSettings().user_data_directory, "sounds/unavailable_message_custom.wav")        
+        self.custom_file = Resources.get("sounds/unavailable_message_custom.wav")
         self.addSubview_(self.view)
         self.radio.cellWithTag_(2).setEnabled_(os.path.exists(self.custom_file))
 
@@ -1062,7 +1063,7 @@ class AnsweringMessageOption(Option):
     def restore(self):
         value = self.get()
         if value:
-            value = unicode(value.path.normalized)
+            value = unicode(value.path)
             if value.endswith("unavailable_message_custom.wav"):
                 self.radio.selectCellWithTag_(2)
             else:
@@ -1080,7 +1081,7 @@ class AccountSoundFileOption(SoundFileOption):
         if self.popup.indexOfSelectedItem() == 0:
             value = self.get()
             if value and value.sound_file:
-                path = value.sound_file.path.normalized
+                path = value.sound_file.path
                 self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
                 NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
                 SIPApplication.voice_audio_bridge.add(self.sound)
@@ -1114,7 +1115,7 @@ class AccountSoundFileOption(SoundFileOption):
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
             self.volumeText.setStringValue_("Volume: %i%%" % value.sound_file.volume)
-            path = unicode(value.sound_file.path.normalized)
+            path = unicode(value.sound_file.path)
             for i in range(self.popup.numberOfItems()):
                 if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
                     self.popup.selectItemAtIndex_(i)

@@ -1,6 +1,7 @@
 # Copyright (C) 2010-2011 AG Projects. See LICENSE for details.
 #
 
+import os
 import re
 import cPickle
 
@@ -13,6 +14,7 @@ from Foundation import *
 from AppKit import *
 
 import SIPManager
+from resources import ApplicationData
 from util import allocate_autorelease_pool
 
 
@@ -90,8 +92,8 @@ class PresencePolicy(NSWindowController):
             NotificationCenter().add_observer(self, name="SIPAccountDidDeactivate")
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
             
-            self.storage_path = unicode(NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/policy.pickle")
-            
+            self.storage_path = ApplicationData.get('policy.pickle')
+
             try:
                 self.tmpPolicyData = cPickle.load(open(self.storage_path))
             except:
@@ -309,7 +311,7 @@ class PresencePolicy(NSWindowController):
 
         self.offlineWindow.performClose_(None)
 
-        storage_path = unicode(NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/offline.pickle")
+        storage_path = ApplicationData.get('offline.pickle')
         cPickle.dump({"note":note, "activity":activity}, open(storage_path, "w+"))
 
     @objc.IBAction
@@ -320,7 +322,7 @@ class PresencePolicy(NSWindowController):
             self.offlineWindowShown = True
         
         try:
-            storage_path = unicode(NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/offline.pickle")
+            storage_path = ApplicationData.get('offline.pickle')
             info = cPickle.load(open(storage_path, "r"))
             self.offlineNote.setStringValue_(info["note"])
             self.offlineActivity.selectItemWithTitle_(info["activity"])

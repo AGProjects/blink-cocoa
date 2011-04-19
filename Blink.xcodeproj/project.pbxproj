@@ -664,6 +664,9 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
+		DEFD8CA0135DF34200456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
+		DEFD8CA2135DF34400456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1251,6 +1254,7 @@
 		85E8550610F643350083D346 /* settings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = settings.py; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEFD8C5E135DD6CD00456E86 /* resources.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = resources.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1746,6 +1750,7 @@
 		2BEFC1BD0FD1C93F00447EFB /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
@@ -2061,6 +2066,7 @@
 				1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 				1F8DC9131351D7460034815C /* Info-lite.plist in Resources */,
+				DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2220,6 +2226,7 @@
 				1F8DC3BB135084FA0034815C /* paused_16.png in Resources */,
 				1F8DC3BC135084FA0034815C /* ConferenceConfigurationPanel.xib in Resources */,
 				1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */,
+				DEFD8CA0135DF34200456E86 /* resources.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2380,6 +2387,7 @@
 				1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 				1F8DC9121351D7460034815C /* Info-lite.plist in Resources */,
+				DEFD8CA2135DF34400456E86 /* resources.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

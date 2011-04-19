@@ -13,7 +13,7 @@ from sipsimple.account import AccountManager
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 
-from configuration.datatypes import ResourcePath
+from resources import Resources
 from util import allocate_autorelease_pool
 
 
@@ -142,9 +142,9 @@ class Ringer(object):
                         new_tone.start()
             setattr(self, name, new_tone)
 
-        change_tone("initial_hold_tone", WavePlayer(app.voice_audio_mixer, ResourcePath('hold_tone.wav').normalized, volume=10))
+        change_tone("initial_hold_tone", WavePlayer(app.voice_audio_mixer, Resources.get('hold_tone.wav'), volume=10))
         app.voice_audio_bridge.add(self.initial_hold_tone)
-        change_tone("hold_tone", WavePlayer(app.voice_audio_mixer, ResourcePath('hold_tone.wav').normalized, loop_count=0, pause_time=45, volume=10, initial_play=False))
+        change_tone("hold_tone", WavePlayer(app.voice_audio_mixer, Resources.get('hold_tone.wav'), loop_count=0, pause_time=45, volume=10, initial_play=False))
         app.voice_audio_bridge.add(self.hold_tone)
 
         if account:
@@ -155,17 +155,17 @@ class Ringer(object):
         if inbound_ringtone and not settings.audio.silent:
             # Workaround not to use same device from two bridges. -Saul
             if settings.audio.alert_device is not None and app.alert_audio_mixer.real_output_device == app.voice_audio_mixer.real_output_device:
-                new_tone = WavePlayer(app.voice_audio_mixer, inbound_ringtone.path.normalized, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
+                new_tone = WavePlayer(app.voice_audio_mixer, inbound_ringtone.path, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
                 app.voice_audio_bridge.add(new_tone)
             else:
-                new_tone = WavePlayer(app.alert_audio_mixer, inbound_ringtone.path.normalized, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
+                new_tone = WavePlayer(app.alert_audio_mixer, inbound_ringtone.path, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
                 app.alert_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("inbound_ringtone", new_tone)
 
         if inbound_ringtone and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -174,17 +174,17 @@ class Ringer(object):
         if inbound_ringtone and not settings.audio.silent:
             # Workaround not to use same device from two bridges. -Saul
             if settings.audio.alert_device is not None and app.alert_audio_mixer.real_output_device == app.voice_audio_mixer.real_output_device:
-                new_tone = WavePlayer(app.voice_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+                new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
                 app.voice_audio_bridge.add(new_tone)
             else:
-                new_tone = WavePlayer(app.alert_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+                new_tone = WavePlayer(app.alert_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
                 app.alert_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("chat_ringtone", new_tone)
 
         if inbound_ringtone and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, ResourcePath('ring_tone.wav').normalized, loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -192,7 +192,7 @@ class Ringer(object):
 
         msg_out_sound = settings.sounds.message_sent
         if msg_out_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, str(msg_out_sound.path.normalized), volume=msg_out_sound.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, msg_out_sound.path, volume=msg_out_sound.volume)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -200,7 +200,7 @@ class Ringer(object):
 
         msg_in_sound = settings.sounds.message_received
         if msg_in_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, str(msg_in_sound.path.normalized), volume=msg_in_sound.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, msg_in_sound.path, volume=msg_in_sound.volume)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -208,7 +208,7 @@ class Ringer(object):
 
         file_out_sound = settings.sounds.file_sent
         if file_out_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, str(file_out_sound.path.normalized), volume=file_out_sound.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, file_out_sound.path, volume=file_out_sound.volume)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -216,7 +216,7 @@ class Ringer(object):
 
         file_in_sound = settings.sounds.file_received
         if file_in_sound and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, str(file_in_sound.path.normalized), volume=file_in_sound.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, file_in_sound.path, volume=file_in_sound.volume)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -248,7 +248,7 @@ class Ringer(object):
 
     def play_hangup(self):
         if time.time() - self.last_hangup_tone_time > HANGUP_TONE_THROTLE_DELAY:
-            hangup_tone = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath('hangup_tone.wav').normalized, volume=30)
+            hangup_tone = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get('hangup_tone.wav'), volume=30)
             NotificationCenter().add_observer(self, sender=hangup_tone, name="WavePlayerDidEnd")
             SIPApplication.voice_audio_bridge.add(hangup_tone)
             hangup_tone.start()

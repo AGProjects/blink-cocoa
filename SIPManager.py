@@ -31,10 +31,10 @@ from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.configuration.backend.file import FileBackend
 from sipsimple.core import SIPURI, PJSIPError, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import SessionManager
+from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import TimestampedNotificationData, Timestamp
@@ -45,8 +45,8 @@ from FileTransferSession import OutgoingFileTransfer
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
-from configuration.datatypes import ResourcePath
 from configuration.settings import SIPSimpleSettingsExtension
+from resources import ApplicationData, Resources
 from util import *
 
 
@@ -169,32 +169,20 @@ class SIPManager(object):
     def set_delegate(self, delegate):
         self._delegate= delegate
 
-    def init(self, platform_options, version):
-        self._version = version
+    def init(self):
+        self._version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
 
-        if not os.path.exists(platform_options["config_file"]):
-            first_start = True
-        else:
-            first_start = False
-
-        config_be = FileBackend(platform_options["config_file"])
+        first_start = not os.path.exists(ApplicationData.get('config'))
 
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
-        self._app.start(config_backend=config_be)
-
-        self.log_directory = platform_options["log_directory"]
+        self._app.start(FileStorage(ApplicationData.directory))
         self.init_configurations(first_start)
 
-        settings = SIPSimpleSettings()
-
-        settings.resources_directory = platform_options["resources_directory"]
-        settings.save()
-
         # start session mgr
-        sm = SessionManager()
+        SessionManager()
 
     def init_configurations(self, first_time=False):
         account_manager = AccountManager()
@@ -234,7 +222,7 @@ class SIPManager(object):
             return None
 
         home_directory = os.path.expanduser('~/')
-        tls_folder = os.path.join(SIPSimpleSettings().user_data_directory, "tls")
+        tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
             os.mkdir(tls_folder, 0700)
 
@@ -629,7 +617,7 @@ class SIPManager(object):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     def get_audio_recordings_directory(self):
-        return os.path.join(self.log_directory, "history")
+        return ApplicationData.get('history')
 
     def get_audio_recordings(self):
         result = []
@@ -942,7 +930,7 @@ class SIPManager(object):
     def _NH_AudioStreamGotDTMF(self, sender, data):
         key = data.digit
         filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
-        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath(filename).normalized)
+        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
         self.notification_center.add_observer(self, sender=wave_player)
         SIPApplication.voice_audio_bridge.add(wave_player)
         wave_player.start()

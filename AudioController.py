@@ -32,7 +32,7 @@ from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
 
-from configuration.datatypes import ResourcePath
+from resources import Resources
 from util import *
 
 
@@ -268,7 +268,7 @@ class AudioController(MediaStream):
                     pass
                 else:
                     filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
-                    wave_player = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath(filename).normalized)
+                    wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
                     self.notification_center.add_observer(self, sender=wave_player)
                     if self.session.account.rtp.inband_dtmf:
                         self.stream.bridge.add(wave_player)
@@ -584,7 +584,7 @@ class AudioController(MediaStream):
 
         if status == STREAM_RINGING and self.outbound_ringtone is None:
             outbound_ringtone = SIPSimpleSettings().sounds.audio_outbound
-            self.outbound_ringtone = WavePlayer(self.stream.mixer, outbound_ringtone.path.normalized, volume=outbound_ringtone.volume, loop_count=0, pause_time=5)
+            self.outbound_ringtone = WavePlayer(self.stream.mixer, outbound_ringtone.path, volume=outbound_ringtone.volume, loop_count=0, pause_time=5)
             self.stream.bridge.add(self.outbound_ringtone)
             self.outbound_ringtone.start()
         elif status in (STREAM_CONNECTED, STREAM_DISCONNECTING, STREAM_IDLE, STREAM_FAILED) and self.outbound_ringtone is not None:

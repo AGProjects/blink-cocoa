@@ -5,7 +5,6 @@ import datetime
 import os
 
 from application.python.util import Singleton
-from sipsimple.configuration.settings import SIPSimpleSettings
 from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex
 from sqlobject import connectionForURI
 from sqlobject import dberrors
@@ -14,6 +13,7 @@ from eventlet.twistedutil import block_on
 from twisted.internet.threads import deferToThread
 
 from BlinkLogger import BlinkLogger
+from resources import ApplicationData
 from util import makedirs
 
 
@@ -44,7 +44,7 @@ class SessionHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        path = os.path.join(SIPSimpleSettings().user_data_directory,"history")
+        path = ApplicationData.get('history')
         makedirs(path, mode=0755)
         db_uri="sqlite://" + os.path.join(path,"history.sqlite")
 
@@ -138,7 +138,7 @@ class ChatHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        path = os.path.join(SIPSimpleSettings().user_data_directory,"history")
+        path = ApplicationData.get('history')
         makedirs(path, mode=0755)
         db_uri="sqlite://" + os.path.join(path,"history.sqlite")
 
@@ -314,7 +314,7 @@ class FileTransferHistory(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        path = os.path.join(SIPSimpleSettings().user_data_directory,"history")
+        path = ApplicationData.get('history')
         makedirs(path, mode=0755)
         db_uri="sqlite://" + os.path.join(path,"history.sqlite")
 

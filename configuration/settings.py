@@ -10,7 +10,7 @@ __all__ = ['SIPSimpleSettingsExtension']
 import os
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.configuration.datatypes import NonNegativeInteger, Path, SampleRate
+from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings
 
 from configuration.datatypes import HTTPURL, SoundFile, UserDataPath
@@ -76,9 +76,6 @@ class SoundsSettings(SettingsGroup):
 
 
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
-    user_data_directory = Setting(type=Path, default=Path(os.path.expanduser('~/Library/Application Support/Blink')))
-    resources_directory = Setting(type=Path, default=None, nillable=True)
-
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
     chat = ChatSettingsExtension

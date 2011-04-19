@@ -10,6 +10,7 @@ from AppKit import *
 import QTKit
 from Quartz import CoreVideo
 
+from resources import ApplicationData
 from util import makedirs
 
 
@@ -166,7 +167,7 @@ class PhotoPicker(NSObject):
         return self
 
     def refreshLibrary(self):
-        path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/photos"
+        path = ApplicationData.get('photos')
 
         if os.path.exists(path):
           files = os.listdir(path)
@@ -261,7 +262,7 @@ class PhotoPicker(NSObject):
             self.photoView.setFrame_(NSMakeRect(x, y, w, h))
 
     def storeCaptured(self):
-        path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/photos"
+        path = ApplicationData.get('photos')
         makedirs(path)
 
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -291,7 +292,7 @@ class PhotoPicker(NSObject):
         self.cropWindowImage.setImage_(image)
 
         if NSApp.runModalForWindow_(self.cropWindow) == NSOKButton:
-            path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/photos"
+            path = ApplicationData.get('photos')
             dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
             image = self.cropWindowImage.getCropped()
@@ -307,9 +308,7 @@ class PhotoPicker(NSObject):
         #self.addImageFile(path)
 
     def addImageFile(self, path):
-        photodir = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/photos"
-
-        photodir = os.path.normpath(photodir)
+        photodir = ApplicationData.get('photos')
         path = os.path.normpath(path)
 
         if os.path.dirname(path) != photodir:

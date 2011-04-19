@@ -9,7 +9,6 @@ import objc
 from random import randint
 import os
 import struct
-import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application import log
@@ -29,6 +28,7 @@ from EnrollmentController import EnrollmentController
 import PreferencesController
 from DesktopSharingController import DesktopSharingController
 from interfaces.itunes import ITunesInterface
+from resources import ApplicationData
 from util import allocate_autorelease_pool, call_in_gui_thread
 
 
@@ -138,22 +138,17 @@ class BlinkAppDelegate(NSObject):
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationName)
 
-        options = {"config_file":   NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/config",
-                   "log_directory": NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink",
-                   "resources_directory": unicodedata.normalize('NFC', NSBundle.mainBundle().resourcePath())}
-
+        config_file = ApplicationData.get('config')
         self.backend = SIPManager()
 
         os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool YES")
 
         self.windowController.setup(self.backend)
 
-        version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
-
         while True:
             try:
-                first_run = not os.path.exists(options['config_file'])
-                self.backend.init(options, version)
+                first_run = not os.path.exists(config_file)
+                self.backend.init()
                 self.backend.fetch_account()
                 accounts = AccountManager().get_accounts()
                 if not accounts or (first_run and accounts == [BonjourAccount()]):
@@ -167,8 +162,8 @@ You might need to Replace it and re-enter your account information. Your old fil
                     "Replace", "Quit", None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
-                os.rename(options["config_file"], options["config_file"]+".oldfmt")
-                BlinkLogger().log_info(u"Renamed configuration file to %s" % options["config_file"]+".oldfmt") 
+                os.rename(config_file, config_file+".oldfmt")
+                BlinkLogger().log_info(u"Renamed configuration file to %s" % config_file+".oldfmt") 
             except BaseException, exc:
                 import traceback
                 print traceback.print_exc()

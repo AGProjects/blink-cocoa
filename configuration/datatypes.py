@@ -5,16 +5,15 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'ResourcePath', 'SoundFile', 'UserDataPath', 'HTTPURL', 'AudioInputDevice', 'AudioOutputDevice']
+__all__ = ['Digits', 'AccountSoundFile', 'SoundFile', 'UserDataPath', 'HTTPURL', 'AudioInputDevice', 'AudioOutputDevice']
 
 import os
-import sys
 import urlparse
 
 from application.python.descriptor import WriteOnceAttribute
 
+from resources import ApplicationData, Resources
 from sipsimple.configuration.datatypes import Hostname
-from sipsimple.util import classproperty
 
 
 ## PSTN datatypes
@@ -25,96 +24,27 @@ class Digits(str):
 
 ## Path datatypes
 
-class ResourcePath(object):
-    def __init__(self, path):
-        self.path = os.path.normpath(path)
-
-    def __getstate__(self):
-        return unicode(self.path)
-
-    def __setstate__(self, state):
-        self.__init__(state)
+class UserDataPath(unicode):
+    def __new__(cls, path):
+        path = os.path.normpath(path)
+        if path.startswith(ApplicationData.directory+os.path.sep):
+            path = path[len(ApplicationData.directory+os.path.sep):]
+        return unicode.__new__(cls, path)
 
     @property
     def normalized(self):
-        path = os.path.expanduser(self.path)
-        if os.path.isabs(path):
-            return os.path.realpath(path)
-        return os.path.realpath(os.path.join(self.resources_directory, path))
-   
-    @classproperty
-    def resources_directory(cls):
-        binary_directory = os.path.dirname(os.path.realpath(sys.argv[0]))
-        if os.path.basename(binary_directory) in ('bin', 'scripts', 'MacOS'):
-            application_directory = os.path.dirname(binary_directory)
-        else:
-            application_directory = binary_directory
-        from sipsimple.configuration.settings import SIPSimpleSettings
-        settings = SIPSimpleSettings()
-        mapping = dict(bin='share/sipclient', scripts='resources', MacOS='Resources')
-        resources_component = settings.resources_directory or mapping.get(os.path.basename(binary_directory)) or ''
-        return os.path.realpath(os.path.join(application_directory, resources_component))
-
-    def __eq__(self, other):
-        try:
-            return self.path == other.path
-        except AttributeError:
-            return False
-
-    def __hash__(self):
-        return hash(self.path)
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.path)
-
-    def __unicode__(self):
-        return unicode(self.path)
-
-
-class UserDataPath(object):
-    def __init__(self, path):
-        self.path = os.path.normpath(path)
-
-    def __getstate__(self):
-        return unicode(self.path)
-
-    def __setstate__(self, state):
-        self.__init__(state)
-
-    @property
-    def normalized(self):
-        path = os.path.expanduser(self.path)
-        if os.path.isabs(path):
-            return path
-        from sipsimple.configuration.settings import SIPSimpleSettings
-        settings = SIPSimpleSettings()
-        return os.path.realpath(os.path.join(settings.user_data_directory, path))
-
-    def __eq__(self, other):
-        try:
-            return self.path == other.path
-        except AttributeError:
-            return False
-
-    def __hash__(self):
-        return hash(self.path)
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.path)
-
-    def __unicode__(self):
-        return unicode(self.path)
+        return ApplicationData.get(self)
 
 
 class SoundFile(object):
     def __init__(self, path, volume=100):
-        self.path = ResourcePath(path)
+        self.path = path
         self.volume = int(volume)
         if self.volume < 0 or self.volume > 100:
             raise ValueError("illegal volume level: %d" % self.volume)
 
     def __getstate__(self):
-        return u'%s,%s' % (self.path.__getstate__(), self.volume)
+        return u'%s,%s' % (self.__dict__['path'], self.volume)
 
     def __setstate__(self, state):
         try:
@@ -127,8 +57,15 @@ class SoundFile(object):
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.path, self.volume)
 
-    def __unicode__(self):
-        return u'%s,%d' % (self.path, self.volume)
+    def _get_path(self):
+        return Resources.get(self.__dict__['path'])
+    def _set_path(self, path):
+        path = os.path.normpath(path)
+        if path.startswith(Resources.directory+os.path.sep):
+            path = path[len(Resources.directory+os.path.sep):]
+        self.__dict__['path'] = path
+    path = property(_get_path, _set_path)
+    del _get_path, _set_path
 
 
 class AccountSoundFile(object):

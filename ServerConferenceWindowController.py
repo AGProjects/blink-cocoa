@@ -5,6 +5,7 @@ from AppKit import *
 from Foundation import *
 
 import cPickle
+import os
 import random
 import re
 import string
@@ -13,6 +14,7 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.core import SIPCoreError, SIPURI
 
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
+from resources import ApplicationData
 
 
 class ServerConferenceRoom(object):
@@ -83,7 +85,7 @@ class JoinConferenceWindow(NSObject):
         self.updateConfigurationsPopupButton()
 
     def loadConfigurations(self):
-        self.storage_path = unicode(NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + "/Blink/conference_configurations.pickle")
+        self.storage_path = ApplicationData.get('conference_configurations.pickle')
         try:
             self.conference_configurations = cPickle.load(open(self.storage_path))
         except:

@@ -17,13 +17,12 @@ from sipsimple.account import AccountManager, BonjourAccount
 from SIPManager import SIPManager, strip_addressbook_special_characters
 from AddContactController import AddContactController, EditContactController
 from AddGroupController import AddGroupController
+from resources import ApplicationData
 from util import makedirs
 
 
 def contactIconPathForURI(uri):
-    path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0]
-    path += "/Blink/photos/%s.tiff" % uri
-    return path
+    return ApplicationData.get('photos/%s.tiff' % uri)
 
 def saveContactIcon(image, uri):
     path = contactIconPathForURI(uri)
@@ -366,8 +365,7 @@ class ContactListModel(NSObject):
     contactGroupsList = []
 
     def saveContacts(self):
-        path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0]
-        path += "/Blink/contacts_"
+        path = ApplicationData.get('contacts_')
 
         dump = []
         contactGroupsList = self.contactGroupsList[:]
@@ -388,8 +386,7 @@ class ContactListModel(NSObject):
 
 
     def loadContacts(self):
-        path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0]
-        path += "/Blink/contacts_"
+        path = ApplicationData.get('contacts_')
 
         self.abgroup = None
         self.bonjourgroup = None
@@ -432,7 +429,7 @@ class ContactListModel(NSObject):
             # copy default icons for test contacts to photos folder
             for uri in ["3333@sip2sip.info", "4444@sip2sip.info", "200901@login.zipdx.com", "test@conference.sip2sip.info"]:
                 icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
-                path = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0] + ("/Blink/photos/%s.tiff" % uri)
+                path = ApplicationData.get('photos/%s.tiff' % uri)
                 NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
             # create test contacts
             contactsT = [

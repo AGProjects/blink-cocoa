@@ -19,7 +19,7 @@ from sipsimple.util import Timestamp
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
-from configuration.datatypes import ResourcePath
+from resources import Resources
 from util import *
 
 
@@ -34,12 +34,12 @@ class AnsweringMachine(object):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, sender=self.stream)
 
-        self.beep = WavePlayer(SIPApplication.voice_audio_mixer, ResourcePath('answering_machine_tone.wav').normalized)
+        self.beep = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get('answering_machine_tone.wav'))
         notification_center.add_observer(self, sender=self.beep)
 
         message_wav = SIPSimpleSettings().answering_machine.unavailable_message
         if message_wav:
-            self.unavailable_message = WavePlayer(SIPApplication.voice_audio_mixer, message_wav.path.normalized, message_wav.volume, 1, 2, False)
+            self.unavailable_message = WavePlayer(SIPApplication.voice_audio_mixer, message_wav.path, message_wav.volume, 1, 2, False)
             notification_center.add_observer(self, sender=self.unavailable_message)
             self.stream.bridge.add(self.unavailable_message)
         else:
