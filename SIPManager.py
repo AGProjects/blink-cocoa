@@ -182,16 +182,8 @@ class SIPManager(object):
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
-        try:
-            self._app.start(config_backend=config_be)
-        except PJSIPError, exc:
-            if str(exc).find("(PJSIP_TLS_ECACERT)") >= 0:
-                BlinkLogger().log_error(u"Invalid TLS settings detected. Resetting and restarting...")
-                SIPSimpleSettings().tls.certificate = None
-                SIPSimpleSettings().save()
-                self._app.start(config_backend=config_be)
-            else:
-              raise exc
+
+        self._app.start(config_backend=config_be)
 
         self.log_directory = platform_options["log_directory"]
         self.init_configurations(first_start)
