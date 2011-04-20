@@ -7,11 +7,12 @@ Blink account settings extensions.
 
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
-from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, XCAPSettings
+from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport
-from configuration.datatypes import AccountSoundFile, Digits, HTTPURL
-from sipsimple.configuration.datatypes import NonNegativeInteger
+from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger
+
+from configuration.datatypes import AccountSoundFile, Digits, HTTPURL, UserDataPath
+
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
     transport = Setting(type=MSRPTransport, default='tcp')
@@ -57,6 +58,10 @@ class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=AccountSoundFile, default=AccountSoundFile(AccountSoundFile.DefaultSoundFile('sounds.audio_inbound')), nillable=True)
 
 
+class TLSSettingsExtension(TLSSettings):
+    certificate = Setting(type=UserDataPath, default=None, nillable=True)
+
+
 class XCAPSettingsExtension(XCAPSettings):
     enabled = Setting(type=bool, default=False)
 
@@ -72,6 +77,7 @@ class AccountExtension(SettingsObjectExtension):
     server = ServerSettings
     sip = SIPSettingsExtension
     sounds = SoundsSettings
+    tls = TLSSettingsExtension
     xcap = XCAPSettingsExtension
 
 

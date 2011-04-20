@@ -11,7 +11,7 @@ import os
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
-from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings
+from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
 
 from configuration.datatypes import HTTPURL, SoundFile, UserDataPath
 
@@ -75,6 +75,10 @@ class SoundsSettings(SettingsGroup):
     message_sent = Setting(type=SoundFile, default=SoundFile("message_sent.wav", volume=10), nillable=True)
 
 
+class TLSSettingsExtension(TLSSettings):
+    ca_list = Setting(type=UserDataPath, default=None, nillable=True)
+
+
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
@@ -85,5 +89,6 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     server = ServerSettings
     service_provider = ServiceProviderSettings
     sounds = SoundsSettings
+    tls = TLSSettingsExtension
 
 

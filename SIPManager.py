@@ -221,7 +221,6 @@ class SIPManager(object):
             BlinkLogger().log_error(u"Invalid certificate data: %s" % e)
             return None
 
-        home_directory = os.path.expanduser('~/')
         tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
             os.mkdir(tls_folder, 0700)
@@ -233,8 +232,6 @@ class SIPManager(object):
         f.write(key)
         f.close()
         BlinkLogger().log_info(u"Saved new TLS Certificate and Private Key to %s" % crt_path)
-        if crt_path.startswith(home_directory):
-            crt_path = crt_path.replace(home_directory, '~/')
 
         ca_path = os.path.join(tls_folder, 'ca.crt')
 
@@ -252,10 +249,9 @@ class SIPManager(object):
             f.write(ca_list)
             f.close()
             BlinkLogger().log_info(u"Added new CA to %s" % ca_path)
-            if ca_path.startswith(home_directory):
-                ca_path = ca_path.replace(home_directory, '~/')
-            SIPSimpleSettings().tls.ca_list = ca_path
-            SIPSimpleSettings().save()
+            settings = SIPSimpleSettings()
+            settings.tls.ca_list = ca_path
+            settings.save()
         else:
             BlinkLogger().log_info(u"CA already present in %s" % ca_path)
 
