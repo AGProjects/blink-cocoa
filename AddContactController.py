@@ -52,6 +52,10 @@ class AddContactController(NSObject):
             self.preferredMedia.selectCellWithTag_(2)
         else:
             self.preferredMedia.selectCellWithTag_(1)
+
+        application_name = NSApp.delegate().applicationName
+        if application_name == 'Blink Lite':
+            self.preferredMedia.cellWithTag_(2).setEnabled_(False)
         
         self.contact = contact
 
