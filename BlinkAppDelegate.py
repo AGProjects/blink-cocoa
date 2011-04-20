@@ -1,6 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from __future__ import with_statement
+
 from Foundation import *
 from AppKit import *
 import LaunchServices
@@ -8,7 +10,10 @@ import objc
 
 from random import randint
 import os
+import re
+import shutil
 import struct
+import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application import log
@@ -71,6 +76,24 @@ class BlinkAppDelegate(NSObject):
             nc.add_observer(self, name="MediaStreamDidFail")
 
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
+
+            # Migrate configuration from Blink Lite to Blink Pro
+            path = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0])
+            lite_path = os.path.join(path, 'Blink Lite')
+            pro_path = os.path.join(path, 'Blink')
+            if self.applicationName == 'Blink Pro' and os.path.isdir(lite_path) and not os.path.exists(pro_path):
+                try:
+                    shutil.copytree(lite_path, pro_path)
+                except shutil.Error, e:
+                    BlinkLogger().log_info(u"Could not migrate configuration from Blink Lite: %s" % e) 
+                else:
+                    with open(os.path.join(pro_path, 'config'), 'r+') as f:
+                        data = ''.join(f.readlines())
+                        f.seek(0, 0)
+                        f.truncate()
+                        data = re.sub('Library/Application Support/Blink Lite', 'Library/Application Support/Blink', data)
+                        data = re.sub('Blink Lite.app/Contents/Resources', 'Blink Pro.app/Contents/Resources', data)
+                        f.write(data)
 
         return self
 
