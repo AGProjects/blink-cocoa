@@ -436,8 +436,10 @@ class ContactListModel(NSObject):
                 Contact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
                 Contact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Call Test"),
                 Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
-                Contact("test@conference.sip2sip.info", loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat")
             ]
+            # don't create test conference contact if version is Lite
+            if NSApp.delegate().applicationName != 'Blink Lite':
+                contactsT.append(Contact("test@conference.sip2sip.info", loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat"))
             contactGroups = [ContactGroup(u"Test", contactsT)]
 
         if self.bonjourgroup is None:
