@@ -23,7 +23,7 @@ from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, SoundFile
-from resources import Resources
+from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, makedirs
 
 
@@ -750,7 +750,11 @@ class TLSCAListPathOption(PathOption):
     def _store(self):
         cert_path = unicode(self.text.stringValue()) or None
         if cert_path is not None:
-            X509Certificate(open(os.path.expanduser(cert_path)).read()) # validate the certificate
+            if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                contents = open(os.path.expanduser(cert_path)).read()
+            else:
+                contents = open(ApplicationData.get(cert_path)).read()
+            X509Certificate(contents)  # validate the certificate
         PathOption._store(self)
 
 
@@ -758,7 +762,10 @@ class TLSCertificatePathOption(PathOption):
     def _store(self):
         cert_path = unicode(self.text.stringValue()) or None
         if cert_path is not None:
-            contents = open(os.path.expanduser(cert_path)).read()
+            if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                contents = open(os.path.expanduser(cert_path)).read()
+            else:
+                contents = open(ApplicationData.get(cert_path)).read()
             X509Certificate(contents) # validate the certificate
             X509PrivateKey(contents)  # validate the private key
         PathOption._store(self)
