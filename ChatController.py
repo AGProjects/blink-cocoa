@@ -968,14 +968,17 @@ class ChatController(MediaStream):
 
     def closeTab(self):
         if self.status != STREAM_DISCONNECTING:
-            self.changeStatus(STREAM_DISCONNECTING)
-            if self.status == STREAM_PROPOSING or self.status == STREAM_RINGING:
+            SIPManager().ringer.stop_ringing(self.sessionController.session)
+
+            if self.status == STREAM_PROPOSING:
                 self.sessionController.cancelProposal(self.stream)
                 self.changeStatus(STREAM_CANCELLING)
             elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
                 self.sessionController.end()
+                self.changeStatus(STREAM_DISCONNECTING)
             else:
                 self.sessionController.endStream(self)
+                self.changeStatus(STREAM_DISCONNECTING)
 
         # remove this controller from session stream handlers list
         self.removeFromSession()
