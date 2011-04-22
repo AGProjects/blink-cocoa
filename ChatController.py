@@ -951,7 +951,10 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         BlinkLogger().log_info(u"Chat stream failed: %s" % data.reason)
-        self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
+        if data.reason == "Connection was closed cleanly.":
+            self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
+        else:
+            self.chatViewController.showSystemMessage('Connection failed: %s'%data.reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
         self.removeFromSession()
