@@ -26,7 +26,7 @@ class Digits(str):
 
 class UserDataPath(unicode):
     def __new__(cls, path):
-        path = os.path.normpath(path)
+        path = os.path.expanduser(os.path.normpath(path))
         if path.startswith(ApplicationData.directory+os.path.sep):
             path = path[len(ApplicationData.directory+os.path.sep):]
         return unicode.__new__(cls, path)
