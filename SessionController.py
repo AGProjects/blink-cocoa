@@ -263,10 +263,6 @@ class SessionController(NSObject):
         # notify Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-        if not len(self.streamHandlers):
-            log_info(self, "There are no streams anymore, ending the session")
-            self.end()
-
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeSessionState(self, newstate, fail_reason=None):
@@ -670,6 +666,11 @@ class SessionController(NSObject):
 
             # notify Chat Window controller to update the toolbar buttons
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+
+    def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
+        if data.action == 'remove' and not sender.streams:
+            log_info(self, "There are no streams anymore, ending the session")
+            self.end()
 
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
         log_info(self, u"Received conference-info update for %s" % self.getTitle())
