@@ -2029,13 +2029,12 @@ class ContactWindowController(NSWindowController):
         self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_audio_recordings_directory())
 
         recordings = self.backend.get_audio_recordings()[-10:]
-        if recordings:
-            for dt, name, f in recordings:
-                title = name + "  " + dt
-                item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
-                item.setTarget_(self)
-                item.setRepresentedObject_(f)
-                item.setAttributedTitle_(format_item(name,dt))
+        for dt, name, f in recordings:
+            title = name + "  " + dt
+            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
+            item.setTarget_(self)
+            item.setRepresentedObject_(f)
+            item.setAttributedTitle_(format_item(name,dt))
         else:
             item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
             item.setEnabled_(False)
