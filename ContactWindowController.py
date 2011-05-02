@@ -131,8 +131,6 @@ class ContactWindowController(NSWindowController):
     notFoundTextOffset = None
     searchOutlineTopOffset = None
 
-    addContactToConference = objc.IBOutlet()
-
     blinkMenu = objc.IBOutlet()
     historyMenu = objc.IBOutlet()
     recordingsMenu = objc.IBOutlet()
@@ -688,9 +686,6 @@ class ContactWindowController(NSWindowController):
         self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
         self.actionButtons.setEnabled_forSegment_(desktopOk and self.backend.isMediaTypeSupported('desktop-sharing'), 2)
 
-        c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
-        self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) else False)
-
     def startCallWithURIText(self, text, session_type="audio"):
         account = self.activeAccount()
         if not account:
@@ -998,37 +993,6 @@ class ContactWindowController(NSWindowController):
                     self.startCallWithURIText(text, session_type)
                     self.searchBox.setStringValue_(u"")
             self.searchContacts()
-
-    @objc.IBAction
-    def addContactToConference_(self, sender):
-        active_sessions = [s for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
-
-        try:
-            contact = self.getSelectedContacts()[0]
-        except IndexError:
-            target = unicode(self.searchBox.stringValue()).strip()
-            if not target:
-                return
-        else:
-            target = contact.uri
-
-        if self.isJoinConferenceWindowOpen():
-            self.joinConferenceWindow.addParticipant(target)
-        elif self.isAddParticipantsWindowOpen():
-            self.addParticipantsWindow.addParticipant(target)
-        elif active_sessions:
-            # start conference with active audio sessions
-            for s in active_sessions:
-                handler = s.streamHandlerOfType("audio")
-                handler.view.setConferencing_(True)
-
-            session = self.startCallWithURIText(target, "audio")
-            handler = session.streamHandlerOfType("audio")
-            handler.view.setConferencing_(True)
-            handler.addToConference()
-            for s in active_sessions:
-                handler = s.streamHandlerOfType("audio")
-                handler.addToConference()
 
     def closeAllSessions(self):
         for session in self.sessionControllers[:]:
