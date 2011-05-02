@@ -205,13 +205,14 @@ class AudioSession(NSView):
         unhighlight(self)
         self.foreachConferenceSession(unhighlight)
 
-        if pboard.availableTypeFromArray_(["x-blink-audio-session"]):
-            info.draggingSource().draggedOut = False
-            info.draggingSource().setNeedsDisplay_(True)
-            return self.delegate.sessionBoxDidAddConferencePeer(self, source.delegate)
-        elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
-            uri = str(pboard.stringForType_("x-blink-sip-uri"))
-            return self.delegate.sessionBoxDidAddConferencePeer(self, uri)
+        if hasattr(self.delegate, 'sessionBoxDidAddConferencePeer'):
+            if pboard.availableTypeFromArray_(["x-blink-audio-session"]):
+                info.draggingSource().draggedOut = False
+                info.draggingSource().setNeedsDisplay_(True)
+                return self.delegate.sessionBoxDidAddConferencePeer(self, source.delegate)
+            elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+                uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                return self.delegate.sessionBoxDidAddConferencePeer(self, uri)
 
     def setConferencing_(self, flag):
         self.conferencing = flag
