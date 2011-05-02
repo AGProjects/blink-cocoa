@@ -269,7 +269,6 @@ class AudioController(MediaStream):
                 else:
                     filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
                     wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
-                    self.notification_center.add_observer(self, sender=wave_player)
                     if self.session.account.rtp.inband_dtmf:
                         self.stream.bridge.add(wave_player)
                     SIPApplication.voice_audio_bridge.add(wave_player)
@@ -864,10 +863,4 @@ class AudioController(MediaStream):
         elif data.state == 'ICE Negotiation In Progress':
             self.audioStatus.setStringValue_("Negotiating ICE...")
         self.audioStatus.sizeToFit()
-
-    def _NH_WavePlayerDidFail(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender)
-
-    def _NH_WavePlayerDidEnd(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender)
 
