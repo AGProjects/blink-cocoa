@@ -5,7 +5,7 @@ from Foundation import *
 from AppKit import *
 
 from SIPManager import SIPManager
-from sipsimple.account import Account, AccountManager
+from sipsimple.account import Account, AccountManager, BonjourAccount
 import re
 
 class EnrollmentController(NSObject):
@@ -20,7 +20,6 @@ class EnrollmentController(NSObject):
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
     
-    
     displayNameText = objc.IBOutlet()
     addressText = objc.IBOutlet()
     passwordText = objc.IBOutlet()
@@ -31,8 +30,8 @@ class EnrollmentController(NSObject):
     newConfirmText = objc.IBOutlet()
     newEmailText = objc.IBOutlet()
 
-
     nextButton = objc.IBOutlet()
+    purchaseProLabel = objc.IBOutlet()
     
     backend = None
     
@@ -41,6 +40,12 @@ class EnrollmentController(NSObject):
         if self:
             NSBundle.loadNibNamed_owner_("Enrollment", self)
             self.selectRadio_(self.radioMatrix)
+            if NSApp.delegate().applicationName == 'Blink Lite':
+                accounts = list(account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
+                if len(accounts):
+                    self.nextButton.setEnabled_(False)
+                    self.purchaseProLabel.setHidden_(False)
+
         return self
 
 
