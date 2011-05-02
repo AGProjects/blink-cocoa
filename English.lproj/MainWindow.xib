@@ -1191,7 +1191,7 @@
 									<double key="NSSize">12</double>
 									<int key="NSfFlags">16</int>
 								</object>
-								<string key="NSPlaceholderString">Search Contacts or Enter Address</string>
+								<string key="NSPlaceholderString">Enter Address or Phone Number</string>
 								<reference key="NSControlView" ref="945249183"/>
 								<bool key="NSDrawsBackground">YES</bool>
 								<int key="NSTextBezelStyle">1</int>
