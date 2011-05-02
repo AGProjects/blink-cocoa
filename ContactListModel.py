@@ -819,6 +819,11 @@ class ContactListModel(NSObject):
                 pboard.setString_forType_(str((g, contact_index)), "dragged-contact")
                 pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
                 return True
+            else:
+                pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
+                pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
+                return True
+
         return False
 
 

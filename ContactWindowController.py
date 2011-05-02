@@ -176,6 +176,7 @@ class ContactWindowController(NSWindowController):
 
         self.searchOutline.setTarget_(self)
         self.searchOutline.setDoubleAction_("actionButtonClicked:")
+        self.contactOutline.setDraggingSourceOperationMask_forLocal_(NSDragOperationCopy, True)
         self.searchOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", NSFilenamesPboardType))
 
         self.chatMenu.setAutoenablesItems_(False)
