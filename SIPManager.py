@@ -872,6 +872,7 @@ class SIPManager(object):
 
         return True
 
+    @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
         BlinkLogger().log_info(u"Incoming session request from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in data.streams)))
         if not self.isProposedMediaTypeSupported(data.streams):
@@ -880,7 +881,16 @@ class SIPManager(object):
             return
 
         self.ringer.add_incoming(session, data.streams)
-        call_in_gui_thread(self._delegate.handle_incoming_session, session, data.streams)
+        self._delegate.handle_incoming_session(session, data.streams)
+
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            settings = SIPSimpleSettings()
+            if settings.service_provider.alert_url:
+                url = unicode(settings.service_provider.alert_url)
+                replace_with = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
+                url = url.replace('($sip_uri)', replace_with[2:])
+                BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
         BlinkLogger().log_info(u"Outgoing Session request to %s (%s)" % (session.remote_identity, [s.type for s in data.streams]))

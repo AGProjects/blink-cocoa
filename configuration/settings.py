@@ -64,6 +64,7 @@ class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
     about_url = Setting(type=HTTPURL, default=None, nillable=True)
     help_url = Setting(type=HTTPURL, default=None, nillable=True)
+    alert_url = Setting(type=HTTPURL, default=None, nillable=True)
 
 
 class SoundsSettings(SettingsGroup):
