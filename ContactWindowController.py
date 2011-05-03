@@ -239,6 +239,8 @@ class ContactWindowController(NSWindowController):
             self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
         self.photoImage.callback = self.photoClicked
 
+        self.window().makeFirstResponder_(self.contactOutline)
+
         self.loaded = True
 
 
