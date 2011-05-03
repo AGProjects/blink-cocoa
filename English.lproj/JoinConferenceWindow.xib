@@ -152,7 +152,7 @@
 								<int key="NSCellFlags2">306185216</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="658349089"/>
-								<string key="NSPlaceholderString">Enter Room or leave empty to create a random one</string>
+								<string key="NSPlaceholderString">Enter a room or leave empty to create a random one</string>
 								<reference key="NSControlView" ref="554033624"/>
 								<bool key="NSDrawsBackground">YES</bool>
 								<object class="NSColor" key="NSBackgroundColor" id="156535985">
@@ -310,7 +310,7 @@
 								<int key="NSCellFlags2">306185216</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="658349089"/>
-								<string key="NSPlaceholderString">Enter SIP address or drag Contacts to the list</string>
+								<string key="NSPlaceholderString">Enter address or drag contacts to the list</string>
 								<reference key="NSControlView" ref="961434340"/>
 								<bool key="NSDrawsBackground">YES</bool>
 								<reference key="NSBackgroundColor" ref="156535985"/>
