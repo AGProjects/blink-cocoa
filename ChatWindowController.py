@@ -79,17 +79,21 @@ class ChatWindowController(NSWindowController):
                 self.muteButton.setImage_(NSImage.imageNamed_("mute"))
                 self.muteButton.setState_(NSOffState)
 
-            self.own_icon = None
-            path = NSApp.delegate().windowController.iconPathForSelf()
-            if path:
-                self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
-
             if not self.timer:
                 self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
 
+            self.setOwnIcon()
+
         return self
+
+    def setOwnIcon(self):
+        self.own_icon = None
+        path = NSApp.delegate().windowController.iconPathForSelf()
+        if path:
+            self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
+
 
     def updateTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
@@ -285,6 +289,7 @@ class ChatWindowController(NSWindowController):
             self.updateTitle()
             self.refreshDrawer()
         elif name == "BlinkContactsHaveChanged":
+            self.setOwnIcon()
             self.updateTitle()
             self.refreshDrawer()
         elif name == "BlinkMuteChangedState":

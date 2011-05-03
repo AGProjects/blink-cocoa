@@ -2295,5 +2295,5 @@ class ContactWindowController(NSWindowController):
         if image and path:
             self.photoImage.setImage_(image)
             NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
         self.picker = None
-
