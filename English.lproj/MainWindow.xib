@@ -5272,7 +5272,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<object class="IBToolTipAttribute" key="NS.object.0">
 							<string key="name">ToolTip</string>
 							<reference key="object" ref="945249183"/>
-							<string key="toolTip">Type text to search the Contacts List and press Return to start a session to the selected contact</string>
+							<string key="toolTip">You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number.</string>
 						</object>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
