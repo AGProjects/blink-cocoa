@@ -319,6 +319,7 @@ class ChatController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
+        self.mediastream_failed = False
 
         if self:
             self.history_msgid_list=set()
@@ -899,8 +900,9 @@ class ChatController(MediaStream):
             self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        message = "Session failed (%s): %s" % (data.originator, data.failure_reason or data.reason)
-        self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+        if not self.mediastream_failed:
+            message = "Session failed (%s): %s" % (data.originator, data.failure_reason or data.reason)
+            self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
@@ -954,7 +956,8 @@ class ChatController(MediaStream):
         if data.reason == "Connection was closed cleanly.":
             self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
         else:
-            self.chatViewController.showSystemMessage('Connection failed: %s'%data.reason, datetime.datetime.now(tzlocal()), True)
+            reason = 'Timeout' if data.reason == 'MSRPConnectTimeout' else data.reason
+            self.chatViewController.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
         self.removeFromSession()
@@ -965,6 +968,7 @@ class ChatController(MediaStream):
         else:
             self.handler = None
         self.stream = None
+        self.mediastream_failed = True
 
     def closeTab(self):
         if self.status != STREAM_DISCONNECTING:
