@@ -70,6 +70,12 @@ def formatName(name):
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
+
+class HiddenOption(object):
+    """Marker class to hide options in the preferences panel"""
+    pass
+
+
 class Option(HorizontalBoxView):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 22))    
@@ -662,13 +668,6 @@ class MSRPTransportOption(PopUpMenuOption):
         self.popup.sizeToFit()
 
 class MSRPConnectionModelOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
-        for item in option.type.available_values:
-            self.popup.addItemWithTitle_(str(item))
-        self.popup.sizeToFit()
-
-class TLSProtocolOption(PopUpMenuOption):
     def __init__(self, object, name, option):
         PopUpMenuOption.__init__(self, object, name, option)
         for item in option.type.available_values:
@@ -1356,7 +1355,6 @@ PreferenceOptionTypes = {
 "SampleRate" : SampleRateOption,
 "SoundFile" : SoundFileOption,
 "AccountSoundFile" : AccountSoundFileOption,
-"TLSProtocol" : TLSProtocolOption,
 "SIPTransportList" : SIPTransportListOption,
 "AudioCodecList" : AudioCodecListOption,
 "AudioCodecList:account" : AccountAudioCodecListOption,
@@ -1369,9 +1367,20 @@ PreferenceOptionTypes = {
 "audio.alert_device" : AudioOutputDeviceOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
+"message_summary.enabled" : HiddenOption,
+"msrp.connection_model" : HiddenOption,
+"server.enrollment_url" : HiddenOption,
+"sip.register" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
 "tls.ca_list": TLSCAListPathOption,
-"tls.certificate": TLSCertificatePathOption
+"tls.certificate": TLSCertificatePathOption,
+"tls.protocol" : HiddenOption,
+"xcap.enabled" : HiddenOption
 }
+
+DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
+
+DisabledPreferenceSections = ['server', 'service_provider']
+
 

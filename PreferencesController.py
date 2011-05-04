@@ -12,7 +12,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import PreferenceOptionTypes, formatName
+from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, HiddenOption, PreferenceOptionTypes, formatName
 from VerticalBoxView import VerticalBoxView
 from util import allocate_autorelease_pool
 
@@ -107,7 +107,7 @@ class PreferencesController(NSWindowController, object):
         frame = self.generalTabView.frame()
         frame.origin.x = 0
         frame.origin.y = 0
-        for part in parts:
+        for part in (part for part in parts if part not in DisabledPreferenceSections):
             view = self.createUIForSection(settings, frame, part, getattr(SIPSimpleSettings, part))
             self.generalPop.addItemWithTitle_(formatName(part))
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(part)
@@ -122,7 +122,7 @@ class PreferencesController(NSWindowController, object):
 
         parts = [part for part in dir(account.__class__) if isinstance(getattr(account.__class__, part, None), SettingsGroupMeta)]
         frame = self.advancedTabView.frame()
-        for part in parts:
+        for part in (part for part in parts if part not in DisabledAccountPreferenceSections):
             view = self.createUIForSection(account, frame, part, getattr(account.__class__, part), True)
             
             self.advancedPop.addItemWithTitle_(formatName(part))
@@ -164,7 +164,8 @@ class PreferencesController(NSWindowController, object):
             if not controlFactory:
                 print "Error: Option type %s is not supported (while reading %s)" % (option.type, option_name)
                 controlFactory = PreferenceOptionTypes[str.__name__]
-
+            if controlFactory is HiddenOption:
+                continue
             control = controlFactory(section_object, option_name, option)
             self.settingViews[section_name+"."+option_name] = control
             vbox.addSubview_(control)

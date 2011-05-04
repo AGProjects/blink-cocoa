@@ -7,7 +7,7 @@ Blink account settings extensions.
 
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
-from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
+from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger
 
@@ -59,7 +59,7 @@ class TLSSettingsExtension(TLSSettings):
 
 
 class XCAPSettingsExtension(XCAPSettings):
-    enabled = Setting(type=bool, default=False)
+    enabled = Setting(type=bool, default=True)
 
 
 class AccountExtension(SettingsObjectExtension):
