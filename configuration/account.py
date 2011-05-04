@@ -31,10 +31,6 @@ class MSRPSettingsExtension(MSRPSettings):
     connection_model = Setting(type=MSRPConnectionModel, default='relay')
 
 
-class NATTraversalSettingsExtension(NATTraversalSettings):
-    use_msrp_relay_for_inbound = Setting(type=bool, default=True)
-
-
 class PSTNSettings(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
@@ -71,7 +67,6 @@ class AccountExtension(SettingsObjectExtension):
 
     message_summary = MessageSummarySettingsExtension
     msrp = MSRPSettingsExtension
-    nat_traversal = NATTraversalSettingsExtension
     pstn = PSTNSettings
     rtp = RTPSettingsExtension
     server = ServerSettings
