@@ -73,7 +73,6 @@ def formatName(name):
 
 class HiddenOption(object):
     """Marker class to hide options in the preferences panel"""
-    pass
 
 
 class Option(HorizontalBoxView):
