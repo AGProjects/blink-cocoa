@@ -1013,9 +1013,10 @@ class ContactWindowController(NSWindowController):
                     new_value = new_value + translate_alpha2digit(l)
                 else:
                     self.searchBox.setStringValue_(new_value)
-                    key = translate_alpha2digit(str(event.characters()))
-                    if key in string.digits:
-                        self.play_dtmf(key)
+                    if event.type() == NSKeyUp:
+                        key = translate_alpha2digit(str(event.characters()))
+                        if key in string.digits:
+                            self.play_dtmf(key)
 
             if text != u"" and event.type() == NSKeyDown and event.characters() == u"\r":
                 try:
