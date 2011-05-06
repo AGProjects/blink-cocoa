@@ -12,7 +12,6 @@ import re
 import shlex
 
 from application.python.decorator import decorator, preserve_signature
-from itertools import izip, chain, repeat
 
 from AppKit import NSApp
 from Foundation import NSAutoreleasePool, NSThread
@@ -273,8 +272,7 @@ def allocate_autorelease_pool(func):
 
 
 def translate_alpha2digit(key):
-    L = key.upper()
-    letter_map = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
-    letter_map = dict(chain(*(izip(letters, repeat(digit)) for digit, letters in letter_map.iteritems())))
-    return letter_map.get(L, L)
+    digit_map  = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
+    letter_map = dict((letter, digit) for digit, letter_group in digit_map.iteritems() for letter in letter_group)
+    return letter_map.get(key.upper(), key)
 
