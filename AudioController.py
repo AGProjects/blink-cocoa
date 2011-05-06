@@ -11,8 +11,6 @@ import time
 import uuid
 import urllib
 
-from itertools import izip, chain, repeat
-
 from application.notification import IObserver, NotificationCenter
 from application.python.util import Null
 from dateutil.tz import tzlocal
@@ -259,20 +257,27 @@ class AudioController(MediaStream):
                 if not self.isConferencing:
                     self.end();
             elif key in string.digits+string.uppercase+'#*':
-                letter_map = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
-                letter_map = dict(chain(*(izip(letters, repeat(digit)) for digit, letters in letter_map.iteritems())))
-                key = letter_map.get(key, key)
-                try:
-                    self.stream.send_dtmf(key)
-                except RuntimeError:
-                    pass
-                else:
-                    filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
-                    wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
-                    if self.session.account.rtp.inband_dtmf:
-                        self.stream.bridge.add(wave_player)
-                    SIPApplication.voice_audio_bridge.add(wave_player)
-                    wave_player.start()
+                self.send_dtmf(key)
+
+    def send_dtmf(self, key):
+        if not self.stream:
+            return
+
+        key = translate_alpha2digit(key)
+
+        try:
+            self.stream.send_dtmf(key)
+        except RuntimeError:
+            pass
+        else:
+            log_info(self, u"Sent DTMF code %s" % key)
+            filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
+            wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
+            if self.session.account.rtp.inband_dtmf:
+                self.stream.bridge.add(wave_player)
+            SIPApplication.voice_audio_bridge.add(wave_player)
+            wave_player.start()
+
 
     def sessionBoxDidActivate(self, sender):
         if self.isConferencing:

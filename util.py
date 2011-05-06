@@ -3,7 +3,7 @@
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs',
-           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern']
+           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit']
 
 import datetime
 import errno
@@ -12,6 +12,7 @@ import re
 import shlex
 
 from application.python.decorator import decorator, preserve_signature
+from itertools import izip, chain, repeat
 
 from AppKit import NSApp
 from Foundation import NSAutoreleasePool, NSThread
@@ -270,4 +271,10 @@ def allocate_autorelease_pool(func):
         func(*args, **kw)
     return wrapper
 
+
+def translate_alpha2digit(key):
+    L = key.upper()
+    letter_map = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
+    letter_map = dict(chain(*(izip(letters, repeat(digit)) for digit, letters in letter_map.iteritems())))
+    return letter_map.get(L, L)
 
