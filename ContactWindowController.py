@@ -7,17 +7,19 @@ import objc
 
 import datetime
 import os
+import string
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
 from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.application import SIPApplication
+from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
 from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
-
 
 import ContactOutlineView
 import ListView
@@ -28,6 +30,7 @@ import PresencePolicy
 from PresencePolicy import fillPresenceMenu
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
+from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
@@ -39,6 +42,8 @@ from FileTransferWindowController import FileTransferWindowController, openFileT
 from ServerConferenceWindowController import JoinConferenceWindow, AddParticipantsWindow
 from SessionController import SessionController
 from SIPManager import MWIData
+
+from resources import Resources
 from util import *
 
 SearchContactToolbarIdentifier= u"SearchContact"
@@ -113,6 +118,7 @@ class ContactWindowController(NSWindowController):
     actionButtons = objc.IBOutlet()
     addContactButton = objc.IBOutlet()
     addContactButtonSearch = objc.IBOutlet()
+    addContactButtonDialPad = objc.IBOutlet()
     mainTabView = objc.IBOutlet()
     conferenceButton = objc.IBOutlet()
 
@@ -132,6 +138,7 @@ class ContactWindowController(NSWindowController):
     searchOutlineTopOffset = None
 
     addContactToConference = objc.IBOutlet()
+    addContactToConferenceDialPad = objc.IBOutlet()
 
     blinkMenu = objc.IBOutlet()
     historyMenu = objc.IBOutlet()
@@ -157,6 +164,10 @@ class ContactWindowController(NSWindowController):
     conference = None
     joinConferenceWindow = None
     addParticipantsWindow = None
+
+    silence_player = None
+    dialPadView = objc.IBOutlet()
+
 
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
@@ -337,10 +348,10 @@ class ContactWindowController(NSWindowController):
                 self.contactOutline.expandItem_expandChildren_(group, False)
 
     def getSelectedContacts(self, includeGroups=False):
-        contacts= []
+        contacts = []
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             outline = self.contactOutline
-        else:
+        elif self.mainTabView.selectedTabViewItem().identifier() == "search":
             outline = self.searchOutline
 
             if outline.selectedRowIndexes().count() == 0:
@@ -354,6 +365,8 @@ class ContactWindowController(NSWindowController):
                     return []
                 contact = Contact(text, name=text)
                 return [contact]
+        else:
+           return
         selection= outline.selectedRowIndexes()
         item= selection.firstIndex()
         while item != NSNotFound:
@@ -686,12 +699,17 @@ class ContactWindowController(NSWindowController):
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = audioOk
                 desktopOk = audioOk
+            elif tabItem == "dialpad":
+                audioOk = self.searchBox.stringValue().strip() != u""
+                chatOk = audioOk
+
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
         self.actionButtons.setEnabled_forSegment_(desktopOk and self.backend.isMediaTypeSupported('desktop-sharing'), 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) else False)
+        self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
 
     def startCallWithURIText(self, text, session_type="audio"):
         account = self.activeAccount()
@@ -719,6 +737,10 @@ class ContactWindowController(NSWindowController):
             return None
 
     def searchContacts(self):
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            self.updateActionButtons()
+            return
+
         text = self.searchBox.stringValue().strip()
         if text == u"":
             self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
@@ -826,8 +848,12 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def clearSearchField_(self, sender):
+        self.clearSearchField()
+
+    def clearSearchField(self):
         self.searchBox.setStringValue_("")
-        self.searchContacts()
+        self.addContactToConferenceDialPad.setEnabled_(False)
+        self.addContactButtonDialPad.setEnabled_(False)
 
     @objc.IBAction
     def addGroup_(self, sender):
@@ -858,7 +884,7 @@ class ContactWindowController(NSWindowController):
             contact = self.model.addNewContact(self.searchBox.stringValue())
 
             if contact:
-                self.searchBox.setStringValue_("")
+                self.clearSearchField()
                 self.refreshContactsList()
                 self.searchContacts()
 
@@ -978,6 +1004,19 @@ class ContactWindowController(NSWindowController):
         if sender == self.searchBox:
             text = unicode(self.searchBox.stringValue()).strip()
             event = NSApp.currentEvent()
+
+            if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+                self.addContactButtonDialPad.setEnabled_(True if text != u"" else False)
+
+                new_value = ""
+                for l in unicode(self.searchBox.stringValue().strip()):
+                    new_value = new_value + translate_alpha2digit(l)
+                else:
+                    self.searchBox.setStringValue_(new_value)
+                    key = translate_alpha2digit(str(event.characters()))
+                    if key in string.digits:
+                        self.play_dtmf(key)
+
             if text != u"" and event.type() == NSKeyDown and event.characters() == u"\r":
                 try:
                     text = unicode(text)
@@ -997,8 +1036,9 @@ class ContactWindowController(NSWindowController):
                     except IndexError:
                         session_type = None
 
+                    self.clearSearchField()
                     self.startCallWithURIText(text, session_type)
-                    self.searchBox.setStringValue_(u"")
+
             self.searchContacts()
 
     @objc.IBAction
@@ -1007,7 +1047,7 @@ class ContactWindowController(NSWindowController):
 
         try:
             contact = self.getSelectedContacts()[0]
-        except IndexError:
+        except IndexError, TypeError:
             target = unicode(self.searchBox.stringValue()).strip()
             if not target:
                 return
@@ -1031,6 +1071,9 @@ class ContactWindowController(NSWindowController):
             for s in active_sessions:
                 handler = s.streamHandlerOfType("audio")
                 handler.addToConference()
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            self.searchBox.setStringValue_(u"")
+            self.addContactToConferenceDialPad.setEnabled_(True)
 
     def closeAllSessions(self):
         for session in self.sessionControllers[:]:
@@ -1207,41 +1250,50 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
             return
 
-        try:
-            contact = self.getSelectedContacts()[0]
-        except IndexError:
-            return
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            target = unicode(self.searchBox.stringValue()).strip()
+            if not target:
+                return
 
-        media = None
-        if sender == self.contactOutline or sender == self.searchOutline:
-            if contact.preferred_media == "chat":
-                media = "chat"
+            self.startCallWithURIText(target)
+            self.searchBox.setStringValue_(u"")
+            self.addContactToConferenceDialPad.setEnabled_(False)
+            self.addContactToConferenceDialPad.setEnabled_(False)
+        else:
+            media = None
+            try:
+                contact = self.getSelectedContacts()[0]
+            except IndexError:
+                return
+            if sender == self.contactOutline or sender == self.searchOutline:
+                if contact.preferred_media == "chat":
+                    media = "chat"
+                else:
+                    media = "audio"
+            elif sender.selectedSegment() == 1:
+                # IM button
+                point = sender.convertPointToBase_(NSZeroPoint)
+                point.x += sender.widthForSegment_(0)
+                point.y -= NSHeight(sender.frame())
+                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                                sender.window().graphicsContext(), 0, 1, 0)
+                NSMenu.popUpContextMenu_withEvent_forView_(self.chatMenu, event, sender)
+                return
+            elif sender.selectedSegment() == 2:
+                # DS button
+                point = sender.convertPointToBase_(NSZeroPoint)
+                point.x += sender.widthForSegment_(0) + sender.widthForSegment_(1)
+                point.y -= NSHeight(sender.frame())
+                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                                sender.window().graphicsContext(), 0, 1, 0)
+                NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
+                return
             else:
                 media = "audio"
-        elif sender.selectedSegment() == 1:
-            # IM button
-            point = sender.convertPointToBase_(NSZeroPoint)
-            point.x += sender.widthForSegment_(0)
-            point.y -= NSHeight(sender.frame())
-            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                            NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                            sender.window().graphicsContext(), 0, 1, 0)
-            NSMenu.popUpContextMenu_withEvent_forView_(self.chatMenu, event, sender)
-            return
-        elif sender.selectedSegment() == 2:
-            # DS button
-            point = sender.convertPointToBase_(NSZeroPoint)
-            point.x += sender.widthForSegment_(0) + sender.widthForSegment_(1)
-            point.y -= NSHeight(sender.frame())
-            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                            NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                            sender.window().graphicsContext(), 0, 1, 0)
-            NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
-            return
-        else:
-            media = "audio"
 
-        self.startSessionToSelectedContact(media)
+            self.startSessionToSelectedContact(media)
 
     @objc.IBAction
     def sessionButtonClicked_(self, sender):
@@ -2047,6 +2099,104 @@ class ContactWindowController(NSWindowController):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
     @objc.IBAction
+    def toggleDialPadClicked_(self, sender):
+        self.mainTabView.selectTabViewItemWithIdentifier_("dialpad" if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else "contacts")
+
+        frame = self.window().frame()
+        old_top_left  = frame.origin.y + frame.size.height
+        frame.size.width = 274
+
+        self.window().makeFirstResponder_(self.searchBox)
+        self.window().makeKeyWindow()
+
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            self.searchBox.cell().setPlaceholderString_("Enter Phone Number")
+
+            new_value = ""
+            for l in unicode(self.searchBox.stringValue().strip()):
+                new_value = new_value + translate_alpha2digit(l)
+            else:
+                self.searchBox.setStringValue_(new_value)
+
+            frame.size.height = 480
+            self.window().setContentMinSize_(frame.size)
+            self.window().setContentMaxSize_(frame.size)
+            self.window().setContentSize_(frame.size)
+
+            # move the window vertically in old position gives artifeacts
+            # frame = self.window().frame()
+            # frame.origin.y = old_top_left - frame.size.height
+            # self.window().setFrame_display_animate_(frame, True, False)
+
+        else:
+            self.searchBox.cell().setPlaceholderString_("Search Contacts or Enter Address")
+            frame.size.height = 132
+            self.window().setContentMinSize_(frame.size)
+
+            frame.size.height = 2000
+            frame.size.width = 800
+            self.window().setContentMaxSize_(frame.size)
+
+            self.searchContacts()
+
+    def playSilence(self):
+        # used to keep the audio device open
+        audio_active = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        if not audio_active and SIPApplication.voice_audio_bridge:
+            if self.silence_player is None:
+                self.silence_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get('silence.wav'), volume=0, loop_count=15)
+                SIPApplication.voice_audio_bridge.add(self.silence_player)
+
+            if not self.silence_player.is_active:
+                self.silence_player.start()
+
+    @objc.IBAction
+    def dialPadButtonClicked_(self, sender):
+        self.playSilence()
+
+        if sender:
+            tag = sender.tag()
+            if tag == 10:
+               key = '*'
+            elif tag == 11:
+               key = '#'
+            else:
+               key = str(tag)
+
+            if key in string.digits+'#*':
+                first_responder = self.window().firstResponder()
+
+                if isinstance(first_responder, AudioSession) and first_responder.delegate is not None:
+                    first_responder.delegate.send_dtmf(key)
+                else:
+                    self.searchBox.setStringValue_(unicode(self.searchBox.stringValue())+unicode(key))
+                    search_box_editor = self.window().fieldEditor_forObject_(True, self.searchBox)
+                    search_box_editor.setSelectedRange_(NSMakeRange(len(self.searchBox.stringValue()), 0))
+                    search_box_editor.setNeedsDisplay_(True)
+
+                    self.addContactButtonDialPad.setEnabled_(True)
+                    self.play_dtmf(key)
+
+                    if key == '#':
+                        target = unicode(self.searchBox.stringValue()).strip()[:-1]
+                        if not target:
+                            return
+
+                        self.startCallWithURIText(target)
+                        self.clearSearchField()
+
+                    self.updateActionButtons()
+
+    def play_dtmf(self, key):
+        self.playSilence()
+        if SIPApplication.voice_audio_bridge:
+            filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
+            wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename), volume=50)
+            SIPApplication.voice_audio_bridge.add(wave_player)
+            wave_player.start()
+
+
+    @objc.IBAction
     def showAccountSettings_(self, sender):
         account = self.activeAccount()
         if not self.accountSettingsPanels.has_key(account):
@@ -2258,6 +2408,18 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(NSApp.keyWindow() == self.window())
             item = self.contactsMenu.itemWithTag_(34) # Delete Group
             item.setEnabled_(NSApp.keyWindow() == self.window())
+
+            item = self.contactsMenu.itemWithTag_(42) # Dialpad
+            if NSApp.delegate().applicationName == 'Blink Pro':
+                item.setEnabled_(True)
+                item.setTitle_('Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else 'Hide Dialpad')
+            elif NSApp.delegate().applicationName == 'Blink Lite':
+                item.setEnabled_(False)
+                item.setTitle_('Show Dialpad (Available in Blink Pro)')
+            else:
+                menu.removeItem_(item)
+                item = self.contactsMenu.itemWithTag_(41) # Dialpad delimiter
+                menu.removeItem_(item)
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()

@@ -15,6 +15,8 @@
 		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
+		1F17C25E137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
+		1F17C25F137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
@@ -1036,6 +1038,7 @@
 		1F0D0EC1132D231C00614205 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
+		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
@@ -1612,7 +1615,6 @@
 			isa = PBXGroup;
 			children = (
 				2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */,
-				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */,
 				2B5DE4B40FFC501E00701821 /* AddContactController.py */,
 				2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */,
@@ -1638,6 +1640,7 @@
 		2B5DE6760FFDADE300701821 /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
+				1F17C25D137335D700DF4724 /* silence.wav */,
 				1FF5936B110F07C70047E2CD /* unavailable_message.wav */,
 				1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */,
 				1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */,
@@ -1752,6 +1755,7 @@
 			children = (
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
+				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
@@ -2067,6 +2071,7 @@
 				1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 				1F8DC9131351D7460034815C /* Info-lite.plist in Resources */,
 				DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */,
+				1F17C25F137335D700DF4724 /* silence.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2388,6 +2393,7 @@
 				1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 				1F8DC9121351D7460034815C /* Info-lite.plist in Resources */,
 				DEFD8CA2135DF34400456E86 /* resources.py in Resources */,
+				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
