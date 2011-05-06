@@ -5,7 +5,6 @@ __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_add
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs',
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit']
 
-import datetime
 import errno
 import os
 import re
