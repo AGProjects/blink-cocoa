@@ -272,7 +272,11 @@ def allocate_autorelease_pool(func):
 
 
 def translate_alpha2digit(key):
-    digit_map  = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
-    letter_map = dict((letter, digit) for digit, letter_group in digit_map.iteritems() for letter in letter_group)
+    try:
+        letter_map = translate_alpha2digit.letter_map
+    except AttributeError:
+        digit_map  = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
+        letter_map = dict((letter, digit) for digit, letter_group in digit_map.iteritems() for letter in letter_group)
+        translate_alpha2digit.letter_map = letter_map
     return letter_map.get(key.upper(), key)
 
