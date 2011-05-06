@@ -834,8 +834,7 @@ class ChatController(MediaStream):
         if msgid not in self.history_msgid_list:
             sender = message.sender
             recipient = message.recipients[0]
-            recipient_uri = '%s@%s' % (recipient.uri.user, recipient.uri.host)
-            private = True if self.sessionController.remote_focus and self.stream.private_messages_allowed and recipient_uri != self.remote_uri else False
+            private = data.private
             text = message.body
             timestamp = message.timestamp
             if window:
