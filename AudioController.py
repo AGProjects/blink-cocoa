@@ -304,7 +304,7 @@ class AudioController(MediaStream):
                   peer))
             # start audio session to peer and add it to conference
             self.view.setConferencing_(True)
-            session = self.sessionManager.startCallWithURIText(peer)
+            session = self.sessionManager.startSessionWithSIPURI(peer)
             if session:
                 peer = session.streamHandlerOfType("audio")
                 peer.view.setConferencing_(True)

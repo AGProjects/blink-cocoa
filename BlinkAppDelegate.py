@@ -207,7 +207,7 @@ You might need to Replace it and re-enter your account information. Your old fil
 
         self.ready = True
         for uri, session_type in self.urisToOpen:
-            self.windowController.startCallWithURIText(uri, session_type)
+            self.windowController.startSessionWithSIPURI(uri, session_type)
 
     def killSelfAfterTimeout_(self, arg):
         # wait 4 seconds then kill self
@@ -356,7 +356,7 @@ You might need to Replace it and re-enter your account information. Your old fil
         if not self.ready:
             self.urisToOpen.append((unicode(url), session_type))
         else:
-            self.windowController.startCallWithURIText(unicode(url), session_type)
+            self.windowController.startSessionWithSIPURI(unicode(url), session_type)
 
     def registerURLHandler(self):
         event_class = event_id = fourcharToInt("GURL")

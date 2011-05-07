@@ -711,56 +711,6 @@ class ContactWindowController(NSWindowController):
         self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) else False)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
 
-    def startCallWithURIText(self, text, session_type="audio"):
-        account = self.activeAccount()
-        if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
-                            "OK", None, None)
-            return None
-        if not text:
-            return None
-
-        target_uri = self.backend.parse_sip_uri(text, account)
-        if target_uri:
-            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
-            self.sessionControllers.append(session)
-            session.setOwner_(self)
-            if session_type == "audio":
-                session.startAudioSession()
-            elif session_type == "chat":
-                session.startChatSession()
-            else:
-                session.startAudioSession()
-            return session
-        else:
-            print "Error parsing URI %s"%text
-            return None
-
-    def searchContacts(self):
-        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
-            self.updateActionButtons()
-            return
-
-        text = self.searchBox.stringValue().strip()
-        if text == u"":
-            self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
-        else:
-            self.contactOutline.deselectAll_(None)
-            self.mainTabView.selectTabViewItemWithIdentifier_("search")
-        self.updateActionButtons()
-        self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList for contact in group.contacts if text in contact]
-
-        if not self.searchResultsModel.contactGroupsList:
-            self.searchOutline.enclosingScrollView().setHidden_(True)
-            self.notFoundText.setStringValue_(u"No matching contacts found.\nPress Return to start a call to\n'%s'\nor use the buttons below\nto start a session."%text)
-            #self.notFoundText.sizeToFit()
-            self.addContactButtonSearch.setHidden_(False)
-        else:
-            self.searchOutline.enclosingScrollView().setHidden_(False)
-            exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
-            self.addContactButtonSearch.setHidden_(exists)
-        self.searchOutline.reloadData()
-
     def isJoinConferenceWindowOpen(self):
         return any(window for window in NSApp().windows() if window.title() == 'Join Conference' and window.isVisible())
 
@@ -848,9 +798,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def clearSearchField_(self, sender):
-        self.clearSearchField()
+        self.resetWidgets()
 
-    def clearSearchField(self):
+    def resetWidgets(self):
         self.searchBox.setStringValue_("")
         self.addContactToConferenceDialPad.setEnabled_(False)
         self.addContactButtonDialPad.setEnabled_(False)
@@ -885,7 +835,7 @@ class ContactWindowController(NSWindowController):
             contact = self.model.addNewContact(self.searchBox.stringValue())
 
             if contact:
-                self.clearSearchField()
+                self.resetWidgets()
                 self.refreshContactsList()
                 self.searchContacts()
 
@@ -1001,7 +951,7 @@ class ContactWindowController(NSWindowController):
             account.save()
 
     @objc.IBAction
-    def callSearchTextContact_(self, sender):
+    def searchContacts_(self, sender):
         if sender == self.searchBox:
             text = unicode(self.searchBox.stringValue()).strip()
             event = NSApp.currentEvent()
@@ -1038,10 +988,36 @@ class ContactWindowController(NSWindowController):
                     except IndexError:
                         session_type = None
 
-                    self.clearSearchField()
-                    self.startCallWithURIText(text, session_type)
+                    self.resetWidgets()
+                    self.startSessionWithSIPURI(text, session_type)
 
             self.searchContacts()
+
+    def searchContacts(self):
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            self.updateActionButtons()
+            return
+
+        text = self.searchBox.stringValue().strip()
+        if text == u"":
+            self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
+        else:
+            self.contactOutline.deselectAll_(None)
+            self.mainTabView.selectTabViewItemWithIdentifier_("search")
+        self.updateActionButtons()
+        self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList for contact in group.contacts if text in contact]
+
+        if not self.searchResultsModel.contactGroupsList:
+            self.searchOutline.enclosingScrollView().setHidden_(True)
+            self.notFoundText.setStringValue_(u"No matching contacts found.\nPress Return to start a call to\n'%s'\nor use the buttons below\nto start a session."%text)
+            #self.notFoundText.sizeToFit()
+            self.addContactButtonSearch.setHidden_(False)
+        else:
+            self.searchOutline.enclosingScrollView().setHidden_(False)
+            exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
+            self.addContactButtonSearch.setHidden_(exists)
+        self.searchOutline.reloadData()
+
 
     @objc.IBAction
     def addContactToConference_(self, sender):
@@ -1061,7 +1037,7 @@ class ContactWindowController(NSWindowController):
             else:
                 target = contact.uri
 
-        self.clearSearchField()
+        self.resetWidgets()
 
         if self.isJoinConferenceWindowOpen():
             self.joinConferenceWindow.addParticipant(target)
@@ -1073,7 +1049,7 @@ class ContactWindowController(NSWindowController):
                 handler = s.streamHandlerOfType("audio")
                 handler.view.setConferencing_(True)
 
-            session = self.startCallWithURIText(target, "audio")
+            session = self.startSessionWithSIPURI(target, "audio")
             handler = session.streamHandlerOfType("audio")
             handler.view.setConferencing_(True)
             handler.addToConference()
@@ -1153,6 +1129,32 @@ class ContactWindowController(NSWindowController):
         else:
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
+
+
+    def startSessionWithSIPURI(self, text, session_type="audio"):
+        account = self.activeAccount()
+        if not account:
+            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
+                            "OK", None, None)
+            return None
+        if not text:
+            return None
+
+        target_uri = self.backend.parse_sip_uri(text, account)
+        if target_uri:
+            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
+            self.sessionControllers.append(session)
+            session.setOwner_(self)
+            if session_type == "audio":
+                session.startAudioSession()
+            elif session_type == "chat":
+                session.startChatSession()
+            else:
+                session.startAudioSession()
+            return session
+        else:
+            print "Error parsing URI %s"%text
+            return None
 
     def joinConference(self, target, media, participants=[]):
         # activate the app in case the app is not active
@@ -1261,7 +1263,7 @@ class ContactWindowController(NSWindowController):
             if not target:
                 return
 
-            self.startCallWithURIText(target)
+            self.startSessionWithSIPURI(target)
             self.searchBox.setStringValue_(u"")
             self.addContactToConferenceDialPad.setEnabled_(False)
             self.addContactToConferenceDialPad.setEnabled_(False)
@@ -2188,8 +2190,8 @@ class ContactWindowController(NSWindowController):
                         if not target:
                             return
 
-                        self.startCallWithURIText(target)
-                        self.clearSearchField()
+                        self.startSessionWithSIPURI(target)
+                        self.resetWidgets()
 
                     self.updateActionButtons()
 

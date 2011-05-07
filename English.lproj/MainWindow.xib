@@ -2978,7 +2978,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">callSearchTextContact:</string>
+						<string key="label">searchContacts:</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="945249183"/>
 					</object>
@@ -6928,7 +6928,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>addContact:</string>
 							<string>addContactToConference:</string>
 							<string>addGroup:</string>
-							<string>callSearchTextContact:</string>
+							<string>searchContacts:</string>
 							<string>clearSearchField:</string>
 							<string>close:</string>
 							<string>conferenceClicked:</string>
@@ -7021,7 +7021,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>addContact:</string>
 							<string>addContactToConference:</string>
 							<string>addGroup:</string>
-							<string>callSearchTextContact:</string>
+							<string>searchContacts:</string>
 							<string>clearSearchField:</string>
 							<string>close:</string>
 							<string>conferenceClicked:</string>
@@ -7082,7 +7082,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">callSearchTextContact:</string>
+								<string key="name">searchContacts:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
