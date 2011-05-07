@@ -854,6 +854,7 @@ class ContactWindowController(NSWindowController):
         self.searchBox.setStringValue_("")
         self.addContactToConferenceDialPad.setEnabled_(False)
         self.addContactButtonDialPad.setEnabled_(False)
+        self.updateActionButtons()
 
     @objc.IBAction
     def addGroup_(self, sender):
