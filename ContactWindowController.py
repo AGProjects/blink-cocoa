@@ -797,6 +797,11 @@ class ContactWindowController(NSWindowController):
             group.loadAddressBook()
 
     @objc.IBAction
+    def backToContacts_(self, sender):
+        self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
+        self.resetWidgets()
+
+    @objc.IBAction
     def clearSearchField_(self, sender):
         self.resetWidgets()
 
