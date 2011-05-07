@@ -1046,14 +1046,21 @@ class ContactWindowController(NSWindowController):
     def addContactToConference_(self, sender):
         active_sessions = [s for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
 
-        try:
-            contact = self.getSelectedContacts()[0]
-        except IndexError, TypeError:
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             target = unicode(self.searchBox.stringValue()).strip()
             if not target:
                 return
         else:
-            target = contact.uri
+            try:
+                contact = self.getSelectedContacts()[0]
+            except IndexError:
+                target = unicode(self.searchBox.stringValue()).strip()
+                if not target:
+                    return
+            else:
+                target = contact.uri
+
+        self.clearSearchField()
 
         if self.isJoinConferenceWindowOpen():
             self.joinConferenceWindow.addParticipant(target)
@@ -1072,9 +1079,6 @@ class ContactWindowController(NSWindowController):
             for s in active_sessions:
                 handler = s.streamHandlerOfType("audio")
                 handler.addToConference()
-        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
-            self.searchBox.setStringValue_(u"")
-            self.addContactToConferenceDialPad.setEnabled_(True)
 
     def closeAllSessions(self):
         for session in self.sessionControllers[:]:
