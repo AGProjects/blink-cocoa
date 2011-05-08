@@ -3,12 +3,12 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">851</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -891,7 +891,7 @@
 								<object class="NSMenuItem" id="575023229">
 									<reference key="NSMenu" ref="835318025"/>
 									<string key="NSTitle">Zoom</string>
-									<string key="NSKeyEquiv"/>
+									<string key="NSKeyEquiv">z</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -5941,7 +5941,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{799, 754}, {147, 43}}</string>
+					<string>{{838, 705}, {144, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{596, 852}, {216, 23}}</string>
@@ -6114,7 +6114,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{587, 89}, {194, 213}}</string>
+					<string>{{767, 535}, {194, 213}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
@@ -6123,9 +6123,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
 					<string>{{539, 906}, {519, 20}}</string>
-					<string>{{1210, 676}, {274, 480}}</string>
+					<string>{{1210, 526}, {274, 480}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{1210, 676}, {274, 480}}</string>
+					<string>{{1210, 526}, {274, 480}}</string>
 					<integer value="0"/>
 					<string>{{238, 285}, {274, 439}}</string>
 					<boolean value="NO"/>
@@ -6667,18 +6667,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>close:</string>
-							<string>doubleClickReceived:</string>
 							<string>muteClicked:</string>
 							<string>useClickedRemoveFromConference:</string>
 							<string>userClickedActionsButton:</string>
 							<string>userClickedParticipantMenu:</string>
-							<string>userClickedSharedFileMenu:</string>
 							<string>userClickedToolbarButton:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
-							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -6692,22 +6688,16 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>close:</string>
-							<string>doubleClickReceived:</string>
 							<string>muteClicked:</string>
 							<string>useClickedRemoveFromConference:</string>
 							<string>userClickedActionsButton:</string>
 							<string>userClickedParticipantMenu:</string>
-							<string>userClickedSharedFileMenu:</string>
 							<string>userClickedToolbarButton:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<object class="IBActionInfo">
 								<string key="name">close:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">doubleClickReceived:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -6727,10 +6717,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">userClickedSharedFileMenu:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
 								<string key="name">userClickedToolbarButton:</string>
 								<string key="candidateClassName">id</string>
 							</object>
@@ -6742,25 +6728,19 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>actionsButton</string>
 							<string>audioStatus</string>
-							<string>conferenceFilesTableView</string>
-							<string>conferenceFilesView</string>
 							<string>desktopShareMenu</string>
 							<string>drawer</string>
 							<string>drawerScrollView</string>
+							<string>drawerTableView</string>
 							<string>muteButton</string>
 							<string>participantMenu</string>
-							<string>participantsTableView</string>
 							<string>recordButton</string>
-							<string>sharedFileMenu</string>
 							<string>tabSwitcher</string>
 							<string>tabView</string>
 							<string>toolbar</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
-							<string>id</string>
-							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -6781,16 +6761,13 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>actionsButton</string>
 							<string>audioStatus</string>
-							<string>conferenceFilesTableView</string>
-							<string>conferenceFilesView</string>
 							<string>desktopShareMenu</string>
 							<string>drawer</string>
 							<string>drawerScrollView</string>
+							<string>drawerTableView</string>
 							<string>muteButton</string>
 							<string>participantMenu</string>
-							<string>participantsTableView</string>
 							<string>recordButton</string>
-							<string>sharedFileMenu</string>
 							<string>tabSwitcher</string>
 							<string>tabView</string>
 							<string>toolbar</string>
@@ -6806,14 +6783,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">conferenceFilesTableView</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">conferenceFilesView</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
 								<string key="name">desktopShareMenu</string>
 								<string key="candidateClassName">id</string>
 							</object>
@@ -6826,6 +6795,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
+								<string key="name">drawerTableView</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
 								<string key="name">muteButton</string>
 								<string key="candidateClassName">id</string>
 							</object>
@@ -6834,15 +6807,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">participantsTableView</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
 								<string key="name">recordButton</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">sharedFileMenu</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
