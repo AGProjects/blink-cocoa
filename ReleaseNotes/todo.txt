@@ -3,7 +3,6 @@ Bugs
 ----
 
 - retry database inserts if we get database is locked exception
-- contrast of drawer elements
 
 
 Main tasks
