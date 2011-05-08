@@ -102,6 +102,7 @@ class ContactWindowController(NSWindowController):
     loaded = False
     collapsedState = False
     originalSize = None
+    originalWindowPosition = None
     alertPanel = None
     accountSettingsPanels = {}
 
@@ -2131,6 +2132,8 @@ class ContactWindowController(NSWindowController):
             else:
                 self.searchBox.setStringValue_(new_value)
 
+            self.originalWindowPosition = self.window().frame()
+
             frame.size.height = 480
             self.window().setContentMinSize_(frame.size)
             self.window().setContentMaxSize_(frame.size)
@@ -2149,6 +2152,9 @@ class ContactWindowController(NSWindowController):
             frame.size.height = 2000
             frame.size.width = 800
             self.window().setContentMaxSize_(frame.size)
+
+            if self.originalWindowPosition is not None:
+                self.window().setFrame_display_animate_(self.originalWindowPosition, True, False)
 
             self.searchContacts()
 
