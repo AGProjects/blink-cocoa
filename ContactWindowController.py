@@ -2120,10 +2120,12 @@ class ContactWindowController(NSWindowController):
         old_top_left  = frame.origin.y + frame.size.height
         frame.size.width = 274
 
-        self.window().makeFirstResponder_(self.searchBox)
         self.window().makeKeyWindow()
 
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            if not isinstance(self.window().firstResponder(), AudioSession):
+                self.window().makeFirstResponder_(self.searchBox)
+
             self.searchBox.cell().setPlaceholderString_("Enter Phone Number")
 
             new_value = ""
