@@ -2129,6 +2129,9 @@ class ContactWindowController(NSWindowController):
 
             self.searchBox.cell().setPlaceholderString_("Enter Phone Number")
 
+            if not isinstance(self.window().firstResponder(), AudioSession):
+                self.window().makeFirstResponder_(self.searchBox)
+
             new_value = ""
             for l in unicode(self.searchBox.stringValue().strip()):
                 new_value = new_value + translate_alpha2digit(l)
@@ -2141,11 +2144,6 @@ class ContactWindowController(NSWindowController):
             self.window().setContentMinSize_(frame.size)
             self.window().setContentMaxSize_(frame.size)
             self.window().setContentSize_(frame.size)
-
-            # move the window vertically in old position gives artifeacts
-            # frame = self.window().frame()
-            # frame.origin.y = old_top_left - frame.size.height
-            # self.window().setFrame_display_animate_(frame, True, False)
 
         else:
             self.searchBox.cell().setPlaceholderString_("Search Contacts or Enter Address")
