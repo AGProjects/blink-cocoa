@@ -360,14 +360,15 @@ class ContactWindowController(NSWindowController):
                     text = str(self.searchBox.stringValue())
                 except:
                     self.sip_error("SIP address must not contain unicode characters (%s)" % unicode(self.searchBox.stringValue()))
-                    return None
+                    return []
 
                 if not text:
                     return []
                 contact = Contact(text, name=text)
                 return [contact]
         else:
-           return
+           return []
+
         selection= outline.selectedRowIndexes()
         item= selection.firstIndex()
         while item != NSNotFound:
@@ -376,7 +377,7 @@ class ContactWindowController(NSWindowController):
                 contacts.append(object)
             elif includeGroups and isinstance(object, ContactGroup):
                 contacts.append(object)
-            item= selection.indexGreaterThanIndex_(item)
+            item = selection.indexGreaterThanIndex_(item)
 
         return contacts
 
