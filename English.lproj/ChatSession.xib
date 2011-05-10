@@ -3,16 +3,17 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">851</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="396"/>
+			<integer value="348"/>
+			<integer value="1"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -419,7 +420,7 @@
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSWindowContentMinSize">{621, 433}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -445,6 +446,7 @@
 						</object>
 					</object>
 					<string key="NSFrameSize">{621, 433}</string>
+					<reference key="NSSuperview"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{621, 509}</string>
@@ -1539,6 +1541,14 @@
 					</object>
 					<int key="connectionID">439</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">participantsView</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="361918259"/>
+					</object>
+					<int key="connectionID">440</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -2291,7 +2301,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">439</int>
+			<int key="maxID">440</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -2388,6 +2398,7 @@
 							<string>muteButton</string>
 							<string>participantMenu</string>
 							<string>participantsTableView</string>
+							<string>participantsView</string>
 							<string>recordButton</string>
 							<string>sharedFileMenu</string>
 							<string>tabSwitcher</string>
@@ -2396,6 +2407,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -2429,6 +2441,7 @@
 							<string>muteButton</string>
 							<string>participantMenu</string>
 							<string>participantsTableView</string>
+							<string>participantsView</string>
 							<string>recordButton</string>
 							<string>sharedFileMenu</string>
 							<string>tabSwitcher</string>
@@ -2479,6 +2492,10 @@
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">participantsTableView</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">participantsView</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">

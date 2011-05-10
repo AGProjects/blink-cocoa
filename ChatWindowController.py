@@ -41,13 +41,15 @@ class ChatWindowController(NSWindowController):
     drawer = objc.IBOutlet()
     participantsTableView = objc.IBOutlet()
     conferenceFilesTableView = objc.IBOutlet()
-    conferenceFilesView = objc.IBOutlet()
     drawerScrollView = objc.IBOutlet()
     drawerSplitView = objc.IBOutlet()
     actionsButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
+
+    conferenceFilesView = objc.IBOutlet()
+    participantsView = objc.IBOutlet()
 
     timer = None
 
@@ -126,6 +128,7 @@ class ChatWindowController(NSWindowController):
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
         ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
+        ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
 
         self.participantsTableView.setTarget_(self)
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
@@ -133,6 +136,8 @@ class ChatWindowController(NSWindowController):
         self.conferenceFilesTableView.setDoubleAction_("doubleClickReceived:")
 
     def splitView_shouldHideDividerAtIndex_(self, view, index):
+        if self.conference_shared_files:
+            return False
         return True
 
     def _findInactiveSessionCompatibleWith_(self, session):
@@ -452,6 +457,26 @@ class ChatWindowController(NSWindowController):
             conference_file = self.conference_shared_files[row]
             self.sharedFileMenu.itemWithTag_(100).setEnabled_(conference_file.file.status == 'OK')
 
+    def resizeDrawerSplitter(self):
+        session = self.selectedSessionController()
+        if session:
+            chat_stream = session.streamHandlerOfType("chat")
+            if chat_stream and chat_stream.drawerSplitterPosition is not None:
+                self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
+                self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
+            else:
+                frame = self.conferenceFilesView.frame()
+                frame.size.height = 0
+                self.conferenceFilesView.setFrame_(frame)
+
+    def drawerSplitViewDidResize_(self, notification):
+        if notification.userInfo() is not None:
+            session = self.selectedSessionController()
+            if session:
+                chat_stream = session.streamHandlerOfType("chat")
+                if chat_stream:
+                    chat_stream.drawerSplitterPosition = {'topFrame': self.conferenceFilesView.frame(), 'bottomFrame': self.participantsView.frame() }
+
     def sendPrivateMessage(self):
         session = self.selectedSessionController()
         if session:
@@ -721,6 +746,7 @@ class ChatWindowController(NSWindowController):
 
         session = self.selectedSessionController()
         if session:
+            chat_stream = session.streamHandlerOfType("chat")
                 
             if session.hasStreamOfType("audio"):
                 audio_stream = session.streamHandlerOfType("audio")
@@ -730,7 +756,6 @@ class ChatWindowController(NSWindowController):
 
                 # Add remote party
                 if session.hasStreamOfType("chat"):
-                    chat_stream = session.streamHandlerOfType("chat")
                     if chat_stream.status == STREAM_CONNECTED:
                         active_media.append('message')
 
@@ -847,17 +872,24 @@ class ChatWindowController(NSWindowController):
                     item = ConferenceFile(file)
                     self.conference_shared_files.append(item)
 
-                frame = self.conferenceFilesView.frame()
+                self.conferenceFilesTableView.reloadData()
+
                 if session.conference_shared_files:
                     column_header_title = u'%d Shared Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Shared Files'
-                    frame.size.height = 130
+                    if chat_stream and chat_stream.drawerSplitterPosition is None:
+                        top_frame = self.conferenceFilesView.frame()
+                        top_frame.size.height = 130
+                        bottom_frame = self.participantsView.frame()
+                        bottom_frame.size.height = bottom_frame.size.height - 130
+                        chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
                 else:
                     column_header_title = u'Shared Files'
-                    frame.size.height = 0
+                    if chat_stream:
+                        chat_stream.drawerSplitterPosition = None
 
                 self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
-                self.conferenceFilesView.setFrame_(frame)
-                self.conferenceFilesTableView.reloadData()
+
+                self.resizeDrawerSplitter()
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):

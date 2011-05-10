@@ -343,6 +343,8 @@ class ChatController(MediaStream):
 
             self.history=ChatHistory()
 
+            self.drawerSplitterPosition = None
+
         return self
 
     def awakeFromNib(self):
