@@ -9,12 +9,14 @@ from AppKit import *
 from WebKit import WebView
 from WebKit import WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
-import time
+import calendar
 import cgi
 import datetime
-import calendar
-import urllib
+import os
 import re
+import time
+import unicodedata
+import urllib
 
 from SmileyManager import SmileyManager
 from util import call_in_gui_thread, escape_html, format_identity
@@ -107,27 +109,33 @@ class ChatInputTextView(NSTextView):
         else:
             return NSTextView.readSelectionFromPasteboard_type_(self, pboard, type)
 
-    def preferredPasteboardTypeFromArray_restrictedToTypesFromArray_(self, availableTypes, allowedTypes):
-        if availableTypes.containsObject_(NSStringPboardType) and (not allowedTypes or allowedTypes.containsObject_(NSStringPboardType)):
-            return NSStringPboardType
-        if hasattr(self.owner.delegate, "sendFiles") and availableTypes.containsObject_(NSFilenamesPboardType) and (not allowedTypes or allowedTypes.containsObject_(NSFilenamesPboardType)):
-            return NSFilenamesPboardType
-        return None
-
     def draggingEntered_(self, sender):
-        if hasattr(self.owner.delegate, "sendFiles"):
+        pboard = sender.draggingPasteboard()
+        if pboard.types().containsObject_(NSFilenamesPboardType) and hasattr(self.owner.delegate, "sendFiles"):
             pboard = sender.draggingPasteboard()
-            if pboard.types().containsObject_(NSFilenamesPboardType):
-                return NSDragOperationAll
+            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f):
+                    return NSDragOperationNone
+            return NSDragOperationCopy
         return NSDragOperationNone
 
+    def prepareForDragOperation_(self, sender):
+        pboard = sender.draggingPasteboard()
+        if pboard.types().containsObject_(NSFilenamesPboardType):
+            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f):
+                    return False
+            return True
+        return False
+
     def performDragOperation_(self, sender):
-        if hasattr(self.owner.delegate, "sendFiles"):
-            pboard = sender.draggingPasteboard()
-            if pboard.types().containsObject_(NSFilenamesPboardType):
-                ws = NSWorkspace.sharedWorkspace()
-                fnames = pboard.propertyListForType_(NSFilenamesPboardType)
-                return self.owner.delegate.sendFiles(fnames)
+        pboard = sender.draggingPasteboard()
+        if hasattr(self.owner.delegate, "sendFiles") and pboard.types().containsObject_(NSFilenamesPboardType):
+            ws = NSWorkspace.sharedWorkspace()
+            filenames = pboard.propertyListForType_(NSFilenamesPboardType)
+            return self.owner.delegate.sendFiles(filenames)
         return False
 
     def keyDown_(self, event):
@@ -139,10 +147,13 @@ class ChatInputTextView(NSTextView):
 
 class ChatWebView(WebView):
     def draggingEntered_(self, sender):
-        if hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
-            pboard = sender.draggingPasteboard()
-            if pboard.types().containsObject_(NSFilenamesPboardType):
-                return NSDragOperationAll
+        pboard = sender.draggingPasteboard()
+        if pboard.types().containsObject_(NSFilenamesPboardType) and hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
+            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f):
+                    return NSDragOperationNone
+            return NSDragOperationCopy
         return NSDragOperationNone
 
     def performDragOperation_(self, sender):
@@ -150,8 +161,8 @@ class ChatWebView(WebView):
             pboard = sender.draggingPasteboard()
             if pboard.types().containsObject_(NSFilenamesPboardType):
                 ws = NSWorkspace.sharedWorkspace()
-                fnames = pboard.propertyListForType_(NSFilenamesPboardType)
-                return self.frameLoadDelegate().delegate.sendFiles(fnames)
+                filenames = pboard.propertyListForType_(NSFilenamesPboardType)
+                return self.frameLoadDelegate().delegate.sendFiles(filenames)
         return False
 
 
