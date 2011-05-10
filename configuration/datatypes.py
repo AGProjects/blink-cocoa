@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'SoundFile', 'UserDataPath', 'HTTPURL', 'AudioInputDevice', 'AudioOutputDevice']
+__all__ = ['Digits', 'AccountSoundFile', 'SoundFile', 'UserDataPath', 'HTTPURL']
 
 import os
 import urlparse
