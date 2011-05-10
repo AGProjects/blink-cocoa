@@ -440,7 +440,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
 
-    def sharedFileSelectionChanged_(self, notifuication):
+    def sharedFileSelectionChanged_(self, notification):
         # TODO: When/if more items are added to this menu, save item tags as module level variables
         session = self.selectedSessionController()
         if not session:
