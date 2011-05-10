@@ -2,7 +2,7 @@
 #
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
-           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'escape_html', 'html2txt', 'makedirs',
+           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt', 'makedirs',
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit']
 
 import errno
@@ -189,6 +189,17 @@ def format_size(s, minsize=0):
         return "%.02f MB"%(s/(1024.0*1024.0))
     else:
         return "%.04f GB"%(s/(1024.0*1024.0*1024.0))
+
+
+def format_size_rounded(s, minsize=0):
+    if max(s,minsize) < 1024:
+        return "%s B"%s
+    elif max(s,minsize) < 1024*1024:
+        return "%.00f KB"%(s/1024.0)
+    elif max(s,minsize) < 1024*1024*1024:
+        return "%.01f MB"%(s/(1024.0*1024.0))
+    else:
+        return "%.01f GB"%(s/(1024.0*1024.0*1024.0))
 
 
 def escape_html(text):

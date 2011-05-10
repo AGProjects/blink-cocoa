@@ -105,6 +105,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.conference_info = None
         self.invited_participants = []
+        self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
@@ -135,6 +136,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.conference_info = None
         self.invited_participants = []
+        self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
@@ -285,6 +287,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
+        self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.participants_log = set()
@@ -503,6 +506,7 @@ class SessionController(NSObject):
         else:
             # Remove any invited participants as the remote party does not support conferencing
             self.invited_participants = []
+            self.conference_shared_files = []
         self.mustShowDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         log_info(self, "Session started")
@@ -542,6 +546,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
+        self.conference_shared_files = []
         self.participants_log = set()
         self.streams_log = []
 
@@ -580,6 +585,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
+        self.conference_shared_files = []
         self.participants_log = set()
         self.streams_log = []
         self.mustShowDrawer = False
@@ -677,6 +683,7 @@ class SessionController(NSObject):
 
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
+        self.conference_shared_files = []
         self.conference_info = data.conference_info
         for user in data.conference_info.users:
             uri = re.sub("^(sip:|sips:)", "", str(user.entity))
@@ -688,6 +695,10 @@ class SessionController(NSObject):
             for contact in self.invited_participants:
                 if uri == contact.uri:
                     self.invited_participants.remove(contact)
+
+        if data.conference_info.conference_description.resources is not None and data.conference_info.conference_description.resources.files is not None:
+            for file in data.conference_info.conference_description.resources.files:
+                self.conference_shared_files.append(file)
 
         # notify controllers who need conference information
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)

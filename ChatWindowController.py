@@ -14,6 +14,7 @@ from sipsimple.streams.applications.chat import CPIMIdentity
 
 from MediaStream import *
 from BlinkLogger import BlinkLogger
+from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import Contact
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
@@ -23,7 +24,7 @@ from ChatPrivateMessage import ChatPrivateMessage
 from SIPManager import SIPManager
 
 import FancyTabSwitcher
-from util import allocate_autorelease_pool, format_identity_address
+from util import allocate_autorelease_pool, format_identity_address, format_size_rounded
 
 import re
 import time
@@ -36,9 +37,13 @@ class ChatWindowController(NSWindowController):
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
+    sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
-    drawerTableView = objc.IBOutlet()
+    participantsTableView = objc.IBOutlet()
+    conferenceFilesTableView = objc.IBOutlet()
+    conferenceFilesView = objc.IBOutlet()
     drawerScrollView = objc.IBOutlet()
+    drawerSplitView = objc.IBOutlet()
     actionsButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
@@ -50,6 +55,7 @@ class ChatWindowController(NSWindowController):
         self = super(ChatWindowController, self).init()
         if self:
             self.participants = []
+            self.conference_shared_files = []
             self.sessions = {}
             self.toolbarItems = {}
             self.unreadMessageCounts = {}
@@ -114,9 +120,20 @@ class ChatWindowController(NSWindowController):
                 self.refreshDrawer()
 
     def awakeFromNib(self):
-        self.drawerTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
+        self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
+        self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
+        self.conferenceFilesTableView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
         ns_nc = NSNotificationCenter.defaultCenter()
-        ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.drawerTableView)
+        ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
+        ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
+
+        self.participantsTableView.setTarget_(self)
+        self.participantsTableView.setDoubleAction_("doubleClickReceived:")
+        self.conferenceFilesTableView.setTarget_(self)
+        self.conferenceFilesTableView.setDoubleAction_("doubleClickReceived:")
+
+    def splitView_shouldHideDividerAtIndex_(self, view, index):
+        return True
 
     def _findInactiveSessionCompatibleWith_(self, session):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
@@ -163,7 +180,7 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
         if session.mustShowDrawer:
             self.drawer.open()
-            self.drawerTableView.deselectAll_(self)
+            self.participantsTableView.deselectAll_(self)
 
     def selectSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -365,8 +382,8 @@ class ChatWindowController(NSWindowController):
             NSApp.delegate().windowController.joinConference(conference.target, conference.media_types, conference.participants)
 
     def getSelectedParticipant(self):
-        row = self.drawerTableView.selectedRow()
-        if not self.drawerTableView.isRowSelected_(row):
+        row = self.participantsTableView.selectedRow()
+        if not self.participantsTableView.isRowSelected_(row):
             return None
 
         try:
@@ -423,6 +440,18 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
 
+    def sharedFileSelectionChanged_(self, notifuication):
+        # TODO: When/if more items are added to this menu, save item tags as module level variables
+        session = self.selectedSessionController()
+        if not session:
+            self.sharedFileMenu.itemWithTag_(100).setEnabled_(False)
+        else:
+            row = self.conferenceFilesTableView.selectedRow()
+            if row == -1:
+                return
+            conference_file = self.conference_shared_files[row]
+            self.sharedFileMenu.itemWithTag_(100).setEnabled_(conference_file.file.status == 'OK')
+
     def menuWillOpen_(self, menu):
         if menu == self.participantMenu:
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
@@ -431,7 +460,7 @@ class ChatWindowController(NSWindowController):
     def sendPrivateMessage(self):
         session = self.selectedSessionController()
         if session:
-            row = self.drawerTableView.selectedRow()
+            row = self.participantsTableView.selectedRow()
             try:
                 contact = self.participants[row]
             except IndexError:
@@ -479,7 +508,7 @@ class ChatWindowController(NSWindowController):
                 session.pending_removal_participants.add(uri)
                 session.session.conference.remove_participant(uri)
 
-            self.drawerTableView.deselectAll_(self)
+            self.participantsTableView.deselectAll_(self)
             self.refreshDrawer()
 
     def addParticipants(self):
@@ -546,7 +575,7 @@ class ChatWindowController(NSWindowController):
     def useClickedRemoveFromConference_(self, sender):
         session = self.selectedSessionController()
         if session:
-            row = self.drawerTableView.selectedRow()
+            row = self.participantsTableView.selectedRow()
             try:
                 object = self.participants[row]
             except IndexError:
@@ -560,7 +589,7 @@ class ChatWindowController(NSWindowController):
         if session:
             tag = sender.tag()
 
-            row = self.drawerTableView.selectedRow()
+            row = self.participantsTableView.selectedRow()
             try:
                 object = self.participants[row]
             except IndexError:
@@ -596,6 +625,28 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "chat")
             elif tag == SessionController.PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
+
+    @objc.IBAction
+    def userClickedSharedFileMenu_(self, sender):
+        self.requestFileTransfer()
+
+    @objc.IBAction
+    def doubleClickReceived_(self, sender):
+        if sender == self.conferenceFilesTableView:
+            self.requestFileTransfer()
+
+    def requestFileTransfer(self):
+        session = self.selectedSessionController()
+        if session:
+            row = self.conferenceFilesTableView.selectedRow()
+            if row == -1:
+                return
+            conference_file = self.conference_shared_files[row]
+            file = conference_file.file
+            if file.status != 'OK':
+                return
+            BlinkLogger().log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
+            # TODO: request transfer of the remote file from the conferecen server -adi
 
     @objc.IBAction
     def muteClicked_(self, sender):
@@ -635,7 +686,8 @@ class ChatWindowController(NSWindowController):
             if session.mustShowDrawer:
                 self.refreshDrawer()
                 self.drawer.open()
-                self.drawerTableView.deselectAll_(self)
+                self.participantsTableView.deselectAll_(self)
+                self.conferenceFilesTableView.deselectAll_(self)
             else:
                 self.drawer.close()
 
@@ -761,7 +813,7 @@ class ChatWindowController(NSWindowController):
                 for contact in session.invited_participants:
                     self.participants.append(contact)
  
-            self.drawerTableView.reloadData()
+            self.participantsTableView.reloadData()
 
             if session.hasStreamOfType("audio"):
                 if audio_stream.holdByLocal:
@@ -790,7 +842,27 @@ class ChatWindowController(NSWindowController):
             if session.conference_info is not None:
                 column_header_title = u'%d Participants' % len(self.participants) if len(self.participants) > 1 else u'Participants'
 
-            self.drawerTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
+            self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
+
+            if NSApp.delegate().applicationName == 'Blink Pro':
+                # TODO - don't re-render everything, use file hashes to calculate additions, removals
+                self.conference_shared_files = []
+
+                for file in reversed(session.conference_shared_files):
+                    item = ConferenceFile(file)
+                    self.conference_shared_files.append(item)
+
+                frame = self.conferenceFilesView.frame()
+                if session.conference_shared_files:
+                    column_header_title = u'%d Shared Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Shared Files'
+                    frame.size.height = 130
+                else:
+                    column_header_title = u'Shared Files'
+                    frame.size.height = 0
+
+                self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
+                self.conferenceFilesView.setFrame_(frame)
+                self.conferenceFilesTableView.reloadData()
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
@@ -817,13 +889,12 @@ class ChatWindowController(NSWindowController):
                         # do not invite users already present in the conference
                         if session.conference_info is not None:
                             for user in session.conference_info.users:
-                                if uri == user.entity.replace("sip:", "", 1):
-                                    return NSDragOperationNone
-                                if uri == user.entity.replace("sip:", "", 1):
+                                if uri == re.sub("^(sip:|sips:)", "", user.entity):
                                     return NSDragOperationNone
                     except:
                         return NSDragOperationNone
-
+                    return NSDragOperationAll
+                elif pboard.types().containsObject_(NSFilenamesPboardType):
                     return NSDragOperationAll
             elif not isinstance(session.account, BonjourAccount):
                 return NSDragOperationAll
@@ -833,6 +904,7 @@ class ChatWindowController(NSWindowController):
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
         pboard = info.draggingPasteboard()
         session = self.selectedSessionController()
+
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
@@ -861,8 +933,12 @@ class ChatWindowController(NSWindowController):
                     return False
             elif not isinstance(session.account, BonjourAccount):
                 self.joinConferenceWindow(session, [uri])
-
-        return True
+            return True
+        elif pboard.types().containsObject_(NSFilenamesPboardType):
+            chat_controller = session.streamHandlerOfType("chat")
+            ws = NSWorkspace.sharedWorkspace()
+            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
+            return chat_controller.sendFiles(fnames)
 
     def drawerDidOpen_(self, notification):
         session = self.selectedSessionController()
@@ -876,15 +952,18 @@ class ChatWindowController(NSWindowController):
 
     # TableView dataSource
     def numberOfRowsInTableView_(self, tableView):
-        if tableView == self.drawerTableView:
+        if tableView == self.participantsTableView:
             try:
                 return len(self.participants)
             except:
                 pass
+        elif tableView == self.conferenceFilesTableView:
+            return len(self.conference_shared_files)
+
         return 0
 
     def tableView_objectValueForTableColumn_row_(self, tableView, tableColumn, row):
-        if tableView == self.drawerTableView:
+        if tableView == self.participantsTableView:
             try:
                 if row < len(self.participants):
                     if type(self.participants[row]) in (str, unicode):
@@ -893,11 +972,14 @@ class ChatWindowController(NSWindowController):
                         return self.participants[row].name
             except:
                 pass
+        elif tableView == self.conferenceFilesTableView:
+            if row < len(self.conference_shared_files):
+                return self.conference_shared_files[row].name
         return None
 
         
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
-        if tableView == self.drawerTableView:
+        if tableView == self.participantsTableView:
             try:
                 if row < len(self.participants):
                     if type(self.participants[row]) in (str, unicode):
@@ -906,4 +988,28 @@ class ChatWindowController(NSWindowController):
                         cell.setContact_(self.participants[row])
             except:
                 pass
+        elif tableView == self.conferenceFilesTableView:
+            if row < len(self.conference_shared_files):
+                cell.conference_file = self.conference_shared_files[row]
+
+
+class ConferenceFile(NSObject):
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self, file, icon=None):
+        self.icon = icon
+        self.file = file
+
+    def copyWithZone_(self, zone):
+        return self
+
+    @property
+    def name(self):
+        return NSString.stringWithString_('%s (%s)'% (self.file.name, format_size_rounded(self.file.size) if self.file.status == 'OK' else 'failed'))
+
+    @property
+    def sender(self):
+        return NSString.stringWithString_(re.sub("^(sip:|sips:)", "", self.file.sender))
+
 

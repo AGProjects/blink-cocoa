@@ -666,6 +666,9 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
+		DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
+		DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
 		DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA0135DF34200456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA2135DF34400456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
@@ -1257,6 +1260,7 @@
 		85E8550610F643350083D346 /* settings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = settings.py; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceFileCell.py; sourceTree = "<group>"; };
 		DEFD8C5E135DD6CD00456E86 /* resources.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = resources.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1739,6 +1743,7 @@
 		2BEFC1A00FD1C2DE00447EFB /* CustomWidgets */ = {
 			isa = PBXGroup;
 			children = (
+				DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */,
 				2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */,
 				2B5DE9EA100447D700701821 /* VerticalBoxView.py */,
 				2B2DF5EC105D467000F267F9 /* ListView.py */,
@@ -2072,6 +2077,7 @@
 				1F8DC9131351D7460034815C /* Info-lite.plist in Resources */,
 				DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */,
 				1F17C25F137335D700DF4724 /* silence.wav in Resources */,
+				DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2232,6 +2238,7 @@
 				1F8DC3BC135084FA0034815C /* ConferenceConfigurationPanel.xib in Resources */,
 				1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */,
 				DEFD8CA0135DF34200456E86 /* resources.py in Resources */,
+				DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2394,6 +2401,7 @@
 				1F8DC9121351D7460034815C /* Info-lite.plist in Resources */,
 				DEFD8CA2135DF34400456E86 /* resources.py in Resources */,
 				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
+				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
