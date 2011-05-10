@@ -403,7 +403,7 @@ class ChatController(MediaStream):
 
     def sendFiles(self, fnames):
         ws = NSWorkspace.sharedWorkspace()
-        filenames = [unicodedata.normalize('NFC', file) for file in fnames]
+        filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file)]
         if filenames:
             SIPManager().send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
             return True
