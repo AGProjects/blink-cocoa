@@ -452,11 +452,6 @@ class ChatWindowController(NSWindowController):
             conference_file = self.conference_shared_files[row]
             self.sharedFileMenu.itemWithTag_(100).setEnabled_(conference_file.file.status == 'OK')
 
-    def menuWillOpen_(self, menu):
-        if menu == self.participantMenu:
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
-
     def sendPrivateMessage(self):
         session = self.selectedSessionController()
         if session:
