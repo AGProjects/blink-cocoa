@@ -988,7 +988,10 @@ class ChatController(MediaStream):
 
         # remove held reference needed by the GUI
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        window.chat_controllers.remove(self)
+        try:
+            window.chat_controllers.remove(self)
+        except KeyError:
+            pass
 
         # remove allocated tab/window
         ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
