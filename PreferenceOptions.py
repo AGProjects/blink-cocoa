@@ -22,7 +22,7 @@ from zope.interface import implements
 from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
 
-from configuration.datatypes import AccountSoundFile, SoundFile
+from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, makedirs
 
@@ -1013,9 +1013,9 @@ class AnsweringMessageOption(Option):
         self.addSubview_(self.caption)
 
         NSBundle.loadNibNamed_owner_("AnsweringMachineSetting", self)        
-        self.custom_file = Resources.get("sounds/unavailable_message_custom.wav")
+        self.custom_file = AnsweringMachineSoundFile("sounds/unavailable_message_custom.wav")
         self.addSubview_(self.view)
-        self.radio.cellWithTag_(2).setEnabled_(os.path.exists(self.custom_file))
+        self.radio.cellWithTag_(2).setEnabled_(os.path.exists(self.custom_file.sound_file.path))
 
     @objc.IBAction
     def selectRadio_(self, sender):
@@ -1024,9 +1024,9 @@ class AnsweringMessageOption(Option):
     @objc.IBAction
     def record_(self, sender):
         rec = MessageRecorder.alloc().init()
-        rec.setOutputPath_(self.custom_file)
+        rec.setOutputPath_(self.custom_file.sound_file.path)
         rec.run()
-        self.radio.cellWithTag_(2).setEnabled_(os.path.exists(self.custom_file))
+        self.radio.cellWithTag_(2).setEnabled_(os.path.exists(self.custom_file.sound_file.path))
         self.radio.selectCellWithTag_(2)
         self.selectRadio_(self.radio)
 
@@ -1037,12 +1037,11 @@ class AnsweringMessageOption(Option):
             self.finished_(None)
             return
     
-        if self.radio.selectedCell().tag() == 1:
-            path = unicode(NSBundle.mainBundle().resourcePath()) + "/" + "unavailable_message.wav"
-        else:
-            path = self.custom_file
+        settings = SIPSimpleSettings()
+        file = settings.answering_machine.unavailable_message
+
         self.play.setImage_(NSImage.imageNamed_("pause"))
-        self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path))
+        self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(file.sound_file.path))
         SIPApplication.voice_audio_bridge.add(self.sound)
         NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
         self.sound.start()
@@ -1060,19 +1059,17 @@ class AnsweringMessageOption(Option):
 
     def _store(self):
         if self.radio.selectedCell().tag() == 1:
-            path = unicode(NSBundle.mainBundle().resourcePath()) + "/" + "unavailable_message.wav"
+            self.set(DefaultValue)
         else:
-            path = self.custom_file
-        self.set(SoundFile(path))
+            self.set(self.custom_file)
 
     def restore(self):
         value = self.get()
         if value:
-            value = unicode(value.path)
-            if value.endswith("unavailable_message_custom.wav"):
-                self.radio.selectCellWithTag_(2)
-            else:
+            if unicode(value) == u"DEFAULT":
                 self.radio.selectCellWithTag_(1)
+            else:
+                self.radio.selectCellWithTag_(2)
 
 class AccountSoundFileOption(SoundFileOption):    
     def __init__(self, object, name, option):

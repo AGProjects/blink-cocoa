@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'SoundFile', 'UserDataPath', 'HTTPURL']
+__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile','SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL']
 
 import os
 import urlparse
@@ -120,6 +120,67 @@ class AccountSoundFile(object):
             return u'DEFAULT'
         else:
             return u'%s,%d' % (self._sound_file.path, self._sound_file.volume)
+
+
+class AnsweringMachineSoundFile(object):
+    class DefaultSoundFile(object):
+        def __init__(self, setting):
+            self.setting = setting
+        def __repr__(self):
+            return 'AnsweringMachineSoundFile.DefaultSoundFile(%s)' % self.setting
+        __str__ = __repr__
+
+    def __init__(self, sound_file, volume=100):
+        if isinstance(sound_file, self.DefaultSoundFile):
+            self._sound_file = sound_file
+        else:
+            self._sound_file = UserSoundFile(sound_file, volume)
+
+    def __getstate__(self):
+        if isinstance(self._sound_file, self.DefaultSoundFile):
+            return u'default:%s' % self._sound_file.setting
+        else:
+            return u'file:%s' % self._sound_file.__getstate__()
+
+    def __setstate__(self, state):
+        type, value = state.split(u':', 1)
+        if type == u'default':
+            self._sound_file = self.DefaultSoundFile(value)
+        elif type == u'file':
+            self._sound_file = UserSoundFile.__new__(UserSoundFile)
+            self._sound_file.__setstate__(value)
+
+    @property
+    def sound_file(self):
+        if isinstance(self._sound_file, self.DefaultSoundFile):
+            return UserSoundFile(Resources.get(self._sound_file.setting))
+        else:
+            return self._sound_file
+
+    def __repr__(self):
+        if isinstance(self._sound_file, self.DefaultSoundFile):
+            return '%s(%r)' % (self.__class__.__name__, self._sound_file)
+        else:
+            return '%s(%r, volume=%d)' % (self.__class__.__name__, self._sound_file.path, self._sound_file.volume)
+
+    def __unicode__(self):
+        if isinstance(self._sound_file, self.DefaultSoundFile):
+            return u'DEFAULT'
+        else:
+            return u'%s,%d' % (self._sound_file.path, self._sound_file.volume)
+
+
+class UserSoundFile(SoundFile):
+
+    def _get_path(self):
+        return ApplicationData.get(self.__dict__['path'])
+    def _set_path(self, path):
+        path = os.path.normpath(path)
+        if path.startswith(ApplicationData.directory+os.path.sep):
+            path = path[len(ApplicationData.directory+os.path.sep):]
+        self.__dict__['path'] = path
+    path = property(_get_path, _set_path)
+    del _get_path, _set_path
 
 
 ## Miscellaneous datatypes

@@ -13,14 +13,14 @@ from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtens
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
 
-from configuration.datatypes import HTTPURL, SoundFile, UserDataPath
+from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath
 
 
 class AnsweringMachineSettings(SettingsGroup):
     enabled = Setting(type=bool, default=False)
     answer_delay = Setting(type=NonNegativeInteger, default=10)
     max_recording_duration = Setting(type=NonNegativeInteger, default=120)
-    unavailable_message = Setting(type=SoundFile, default=SoundFile('unavailable_message.wav'), nillable=True)
+    unavailable_message = Setting(type=AnsweringMachineSoundFile, default=AnsweringMachineSoundFile(AnsweringMachineSoundFile.DefaultSoundFile('unavailable_message.wav')), nillable=True)
 
 
 class AudioSettingsExtension(AudioSettings):

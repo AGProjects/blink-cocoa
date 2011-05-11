@@ -39,7 +39,7 @@ class AnsweringMachine(object):
 
         message_wav = SIPSimpleSettings().answering_machine.unavailable_message
         if message_wav:
-            self.unavailable_message = WavePlayer(SIPApplication.voice_audio_mixer, message_wav.path, message_wav.volume, 1, 2, False)
+            self.unavailable_message = WavePlayer(SIPApplication.voice_audio_mixer, message_wav.sound_file.path, message_wav.sound_file.volume, 1, 2, False)
             notification_center.add_observer(self, sender=self.unavailable_message)
             self.stream.bridge.add(self.unavailable_message)
         else:
