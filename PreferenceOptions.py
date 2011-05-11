@@ -23,8 +23,8 @@ from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile
-from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, makedirs
+from resources import ApplicationData
+from util import allocate_autorelease_pool
 
 
 LABEL_WIDTH = 120
@@ -811,8 +811,7 @@ class MessageRecorder(NSObject):
         self.counter -= 1
         if self.counter == 0 or self.recording:
             if not self.recording:
-                sound_dir = os.path.dirname(self.requested_path) or Resources.get('sounds')
-                makedirs(sound_dir)
+                sound_dir = os.path.dirname(self.requested_path)
                 self.path = self.requested_path or os.path.join(sound_dir, "temporary_recording.wav")
                 self.file = WaveRecorder(SIPApplication.voice_audio_mixer, self.path)
                 self.bridge = AudioBridge(SIPApplication.voice_audio_mixer)
@@ -886,13 +885,6 @@ class SoundFileOption(Option):
 
         path = NSBundle.mainBundle().resourcePath()
         for filename in (name for name in os.listdir(path) if name.endswith('.wav')):
-            self.popup.addItemWithTitle_(os.path.basename(filename))
-            self.popup.lastItem().setRepresentedObject_(os.path.join(path, filename))
-
-        path = Resources.get('sounds')
-        makedirs(path)
-        for filename in (name for name in os.listdir(path) if name.endswith('.wav')):
-            filename = unicodedata.normalize('NFC', filename.decode(sys.getfilesystemencoding()))
             self.popup.addItemWithTitle_(os.path.basename(filename))
             self.popup.lastItem().setRepresentedObject_(os.path.join(path, filename))
 
