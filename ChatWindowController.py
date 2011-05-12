@@ -740,6 +740,7 @@ class ChatWindowController(NSWindowController):
                 self.refreshDrawer()
 
     def refreshDrawer(self):
+        # TODO: do not repaint the whole drawer everytime, use insert/remove -adi
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
 
         self.participants = []
