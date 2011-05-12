@@ -762,6 +762,8 @@ class ChatWindowController(NSWindowController):
                 if session.hasStreamOfType("audio"):
                     if not audio_stream.holdByRemote and not audio_stream.holdByLocal:
                         active_media.append('audio')
+                    else:
+                        active_media.append('audio-onhold')
 
                 contact = getContactMatchingURI(session.remoteSIPAddress)
                 if contact:
