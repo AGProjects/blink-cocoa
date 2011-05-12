@@ -297,6 +297,23 @@ class ChatWindowController(NSWindowController):
                         self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
             self.revalidateToolbar()
             self.refreshDrawer()
+
+            # Update drawer status when not connected
+            state = notification.data['state']
+            detail = notification.data['reason']
+            if state == STATE_CONNECTING:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setHidden_(False)
+                self.audioStatus.setStringValue_(u"Connecting...")
+            elif state == STATE_CONNECTED:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setHidden_(False)
+                self.audioStatus.setStringValue_(u"Connected")
+            elif state == STATE_FINISHED:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setHidden_(True)
+                self.audioStatus.setStringValue_('')
+
         elif name == "BlinkAudioStreamChangedHoldState":
             self.refreshDrawer()
         elif name == "BlinkStreamHandlersChanged":
@@ -838,6 +855,7 @@ class ChatWindowController(NSWindowController):
  
             self.participantsTableView.reloadData()
 
+            # Update drawer status
             if session.hasStreamOfType("audio"):
                 if audio_stream.holdByLocal:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
@@ -851,8 +869,13 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     self.audioStatus.setStringValue_(u"%s (%s)" % ("HD Audio" if audio_stream.stream.sample_rate > 8000 else "Audio", audio_stream.stream.codec))
                     self.audioStatus.setHidden_(False)
+            elif session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setStringValue_(u"Connected")
+                self.audioStatus.setHidden_(False)
             else:
                 self.audioStatus.setHidden_(True)
+                self.audioStatus.setStringValue_('')
 
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
