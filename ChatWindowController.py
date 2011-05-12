@@ -683,7 +683,7 @@ class ChatWindowController(NSWindowController):
             if file.status != 'OK':
                 return
             BlinkLogger().log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
-            # TODO: request transfer of the remote file from the conferecen server -adi
+            # TODO: request transfer of the remote file from the conference server -adi
 
     @objc.IBAction
     def muteClicked_(self, sender):
