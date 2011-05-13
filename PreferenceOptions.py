@@ -1358,6 +1358,7 @@ PreferenceOptionTypes = {
 "message_summary.enabled" : HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : HiddenOption,
+"rtp.use_srtp_without_tls" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
 "sip.register" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
