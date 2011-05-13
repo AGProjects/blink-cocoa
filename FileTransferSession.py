@@ -426,7 +426,7 @@ class OutgoingFileTransfer(FileTransfer):
         self.file_selector.fd.seek(0)
         self.file_selector.hash = hash
         notification_center.post_notification('BlinkFileTransferDidComputeHash', sender=self)
-        self.stream = FileTransferStream(self.account, self.file_selector)
+        self.stream = FileTransferStream(self.account, self.file_selector, 'sendonly')
         self.session = Session(self.account)
 
         notification_center.add_observer(self, sender=self.session)
