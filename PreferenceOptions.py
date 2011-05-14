@@ -1353,12 +1353,17 @@ PreferenceOptionTypes = {
 "HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
 "audio.alert_device" : AudioOutputDeviceOption,
+"audio.directory": HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
+"audio.sample_rate": HiddenOption,
+"audio.tail_length": HiddenOption,
+"chat.sms_replication": HiddenOption,
 "message_summary.enabled" : HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : HiddenOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
+"rtp.timeout": HiddenOption,
 "server.enrollment_url" : HiddenOption,
 "sip.register" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
@@ -1366,6 +1371,7 @@ PreferenceOptionTypes = {
 "tls.ca_list": TLSCAListPathOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.protocol" : HiddenOption,
+"tls.timeout" : HiddenOption,
 "xcap.enabled" : HiddenOption
 }
 
