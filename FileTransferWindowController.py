@@ -137,7 +137,7 @@ class FileTransferWindowController(NSObject, object):
         h = NSHeight(self.listView.frame())
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
-        self.window.makeKeyAndOrderFront_(None)
+        self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
         if count == 1:
@@ -150,7 +150,7 @@ class FileTransferWindowController(NSObject, object):
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
-        # jump dock icon and bring dl window to front
+        # jump dock icon and bring window to front
         self.window.orderFront_(None)
         NSApp.requestUserAttention_(NSInformationalRequest)
 
