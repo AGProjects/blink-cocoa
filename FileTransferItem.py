@@ -11,7 +11,7 @@ from application.python.util import Null
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
-from FileTransferSession import OutgoingFileTransfer
+from FileTransferSession import OutgoingPushFileTransferHandler
 from util import allocate_autorelease_pool, format_size, run_in_gui_thread
 
 
@@ -82,7 +82,7 @@ class FileTransferItem(NSView):
 
             filename = self.transfer.file_path
 
-            if type(self.transfer) == OutgoingFileTransfer:
+            if type(self.transfer) == OutgoingPushFileTransferHandler:
                 self.fromText.setStringValue_(u"To:  %s" % self.transfer.account.id)
             else:
                 if filename.endswith(".download"):
@@ -121,7 +121,7 @@ class FileTransferItem(NSView):
                 NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1)
 
         # overlay file transfer direction icon 
-        if type(self.transfer) == OutgoingFileTransfer or (self.oldTransferInfo and self.oldTransferInfo.direction == "outgoing"):
+        if type(self.transfer) == OutgoingPushFileTransferHandler or (self.oldTransferInfo and self.oldTransferInfo.direction == "outgoing"):
             icon = NSImage.imageNamed_("outgoing_file")
         else:
             icon = NSImage.imageNamed_("incoming_file")
@@ -206,15 +206,7 @@ class FileTransferItem(NSView):
 
         self.sizeText.setTextColor_(NSColor.grayColor())
         self.relayoutForRetry()
-        try:
-            self.transfer.retry()
-        except Exception, exc:
-            import traceback
-            traceback.print_exc()
-            BlinkLogger().log_error(u"Error while attempting to resume file transfer: %s" % exc)
-            self._NH_BlinkFileTransferDidFail(None, None)
-            self.sizeText.setStringValue_("Error: %s" % exc)
-            return
+        self.transfer.retry()
 
     @objc.IBAction
     def revealFile_(self, sender):
@@ -260,7 +252,7 @@ class FileTransferItem(NSView):
         self.updateProgressInfo()
 
         self.stopButton.setHidden_(True)
-        if type(self.transfer) == OutgoingFileTransfer:
+        if type(self.transfer) == OutgoingPushFileTransferHandler:
             self.retryButton.setHidden_(False)
         self.relayoutForDone()
         self.done = True

@@ -2,7 +2,7 @@
 #
 
 from MediaStream import *
-from FileTransferSession import OutgoingFileTransfer, IncomingFileTransfer
+from FileTransferSession import IncomingFileTransferHandler
 
 class FileTransferController(MediaStream):
     """
@@ -14,10 +14,9 @@ class FileTransferController(MediaStream):
         return super(FileTransferController, self).initWithOwner_stream_(scontroller, stream)
     
     def startIncoming(self, is_update):
-        self.transfer = IncomingFileTransfer(self.session, self.stream)
+        self.transfer = IncomingFileTransferHandler(self.session, self.stream)
         self.transfer.start()
 
     def startOutgoing(self, is_update, file_path=None, content_type=None):
-        self.transfer = OutgoingFileTransfer(self.sessionController.account, self.sessionController.target_uri, file_path, content_type)
-        self.transfer.start()
+        raise NotImplementedError
 

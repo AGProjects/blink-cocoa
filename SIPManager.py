@@ -41,7 +41,7 @@ from sipsimple.util import TimestampedNotificationData, Timestamp
 
 from HistoryManager import ChatHistory, SessionHistory
 from SessionRinger import Ringer
-from FileTransferSession import OutgoingFileTransfer
+from FileTransferSession import OutgoingPushFileTransferHandler
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
@@ -403,7 +403,7 @@ class SIPManager(object):
 
         for file in filenames:
             try:
-                xfer = OutgoingFileTransfer(account, target_uri, file)
+                xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
                 self._active_transfers.append(xfer)
                 xfer.start()
             except Exception, exc:
