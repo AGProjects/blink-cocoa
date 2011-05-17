@@ -2684,6 +2684,7 @@
 					/usr/local/lib,
 				);
 				PRODUCT_NAME = "Blink Pro";
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -2735,6 +2736,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = "Blink Lite";
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -2758,6 +2760,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = "Blink Lite";
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 			};
