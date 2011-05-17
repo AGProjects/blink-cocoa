@@ -26,6 +26,7 @@ from SIPManager import SIPManager
 import FancyTabSwitcher
 from util import allocate_autorelease_pool, format_identity_address, format_size_rounded
 
+import os
 import re
 import time
 
@@ -1050,9 +1051,10 @@ class ConferenceFile(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, file, icon=None):
-        self.icon = icon
+    def __init__(self, file):
         self.file = file
+        name, ext = os.path.splitext(file.name)
+        self.icon = NSWorkspace.sharedWorkspace().iconForFileType_(ext.strip('.'))
 
     def copyWithZone_(self, zone):
         return self

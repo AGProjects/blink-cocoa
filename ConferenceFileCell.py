@@ -15,8 +15,6 @@ class ConferenceFileCell(NSTextFieldCell):
       NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
       NSColor.grayColor(), NSForegroundColorAttributeName)
 
-    defaultIcon = None
-
     def drawingRectForBounds_(self, rect):
         return rect
 
@@ -30,12 +28,7 @@ class ConferenceFileCell(NSTextFieldCell):
             tmp = frame
             return super(ConferenceFileCell, self).drawWithFrame_inView_(tmp, view)
 
-        if self.defaultIcon is None:
-            self.defaultIcon = NSImage.imageNamed_("NSMultipleDocuments")
-
-        icon = self.conference_file.icon or self.defaultIcon
-        if icon:
-            self.drawIcon(icon, 2, frame.origin.y+3, 28, 28)
+        self.drawIcon(self.conference_file.icon, 2, frame.origin.y+3, 28, 28)
 
         # 1st line: file name
         frame.origin.x = 35
@@ -59,3 +52,4 @@ class ConferenceFileCell(NSTextFieldCell):
             icon_flipped = icon.copy()
             icon_flipped.setFlipped_(True)
             icon_flipped.drawInRect_fromRect_operation_fraction_(trect, rect, NSCompositeSourceOver, 1.0)
+
