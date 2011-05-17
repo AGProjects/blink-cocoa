@@ -1649,6 +1649,10 @@ class ContactWindowController(NSWindowController):
         item = self.statusMenu.itemWithTag_(50) # Answering machine
         item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
 
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            item.setEnabled_(False)
+            item.setTitle_(u'Enable Answering Machine (Available in Blink Pro)')
+
         item = self.statusMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
         item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
@@ -1686,6 +1690,9 @@ class ContactWindowController(NSWindowController):
 
         item = menu.itemWithTag_(44) # Join Conference
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.backend.isMediaTypeSupported('chat')))
+
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            item.setTitle_(u'Join Conference... (Available in Blink Pro)')
 
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
