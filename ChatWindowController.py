@@ -16,6 +16,7 @@ from MediaStream import *
 from BlinkLogger import BlinkLogger
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import Contact
+from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
 import SessionController
@@ -684,7 +685,8 @@ class ChatWindowController(NSWindowController):
             if file.status != 'OK':
                 return
             BlinkLogger().log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
-            # TODO: request transfer of the remote file from the conference server -adi
+            transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
+            transfer_handler.start()
 
     @objc.IBAction
     def muteClicked_(self, sender):
