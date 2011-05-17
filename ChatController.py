@@ -85,6 +85,8 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif tag == SessionController.TOOLBAR_SMILEY:
             item.setImage_(NSImage.imageNamed_("smiley_on"))
             item.setEnabled_(False)
+        elif tag == SessionController.TOOLBAR_EDITOR:
+            item.setEnabled_(True)
 
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
@@ -635,6 +637,8 @@ class ChatController(MediaStream):
                 else:
                     item.setEnabled_(False)
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
+            elif tag == SessionController.TOOLBAR_EDITOR:
+                item.setEnabled_(True)
 
     def validateToolbarButton(self, item):
         """Called automatically by Cocoa in ChatWindowController"""
@@ -708,6 +712,8 @@ class ChatController(MediaStream):
                 return False
             return True
         elif tag == SessionController.TOOLBAR_SMILEY and self.status == STREAM_CONNECTED:
+            return True
+        elif tag == SessionController.TOOLBAR_EDITOR:
             return True
         elif tag == SessionController.TOOLBAR_HISTORY:
             return True
@@ -793,6 +799,11 @@ class ChatController(MediaStream):
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
+        elif tag == SessionController.TOOLBAR_EDITOR and self.sessionController.account is not BonjourAccount():
+            self.chatViewController.editorStatus = not self.chatViewController.editorStatus
+            self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
+            sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
+
         elif tag == SessionController.TOOLBAR_HISTORY:
             contactWindow = self.sessionController.owner
             contactWindow.showChatTranscripts_(None)

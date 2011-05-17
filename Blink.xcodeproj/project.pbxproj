@@ -471,6 +471,9 @@
 		1F8DC9131351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F9A8DA612BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
 		1F9A8DA712BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
+		1FA6252013828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
+		1FA6252113828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
+		1FA6252213828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
 		1FACA0EA135C4E3500991593 /* liblzo.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
 		1FAF8C5D12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
 		1FAF8C5E12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
@@ -1069,6 +1072,7 @@
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F8DC74C1351D6F40034815C /* Blink */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Blink; path = /Users/adigeo/Blink; sourceTree = "<absolute>"; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
+		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
 		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
@@ -1506,6 +1510,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FA6251F13828E2500DFC8E3 /* editor.png */,
 				1F2A32341328CEE00078F01D /* paused_16.png */,
 				1F5677C01323DDDD00D087D1 /* transfer.png */,
 				1F1DCC8B13182C69004DB88B /* begin_arrow.png */,
@@ -2078,6 +2083,7 @@
 				DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */,
 				1F17C25F137335D700DF4724 /* silence.wav in Resources */,
 				DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
+				1FA6252113828E2500DFC8E3 /* editor.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2239,6 +2245,7 @@
 				1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */,
 				DEFD8CA0135DF34200456E86 /* resources.py in Resources */,
 				DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
+				1FA6252213828E2500DFC8E3 /* editor.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2402,6 +2409,7 @@
 				DEFD8CA2135DF34400456E86 /* resources.py in Resources */,
 				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
+				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

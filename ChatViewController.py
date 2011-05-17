@@ -12,6 +12,7 @@ from WebKit import WebViewProgressFinishedNotification, WebActionOriginalURLKey
 import calendar
 import cgi
 import datetime
+import hashlib
 import os
 import re
 import time
@@ -170,6 +171,9 @@ class ChatViewController(NSObject):
     view = objc.IBOutlet()
     outputView = objc.IBOutlet()
     inputText = objc.IBOutlet()
+    inputView = objc.IBOutlet()
+
+    splitterHeight = None
 
     delegate = objc.IBOutlet()
     account = None
@@ -177,6 +181,7 @@ class ChatViewController(NSObject):
     finishedLoading = False
 
     expandSmileys = True
+    editorStatus = False
 
     rendered_messages = set()
 
@@ -318,6 +323,47 @@ class ChatViewController(NSObject):
     def updateMessage(self, msgid, text, is_html, expandSmileys):
         text = processHTMLText(text, expandSmileys, is_html)
         script = """updateMessageBodyContent('%s', "%s")""" % (msgid, text)
+        call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
+        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+
+    def toggleCollaborationEditor(self, editor_status):
+        if editor_status:
+            self.showCollaborationEditor()
+        else:
+            self.hideCollaborationEditor()
+
+    def showCollaborationEditor(self):
+        gateway = 'http://mobwrite3.appspot.com/scripts/q.py'
+
+        frame=self.inputView.frame()
+        self.splitterHeight = frame.size.height
+        frame.size.height = 0
+        self.inputView.setFrame_(frame)
+
+        hash = hashlib.sha1()
+
+        if self.delegate.sessionController.remote_focus:
+            id = '%s' % (self.delegate.sessionController.remoteSIPAddress)
+        else:
+            if self.delegate.sessionController.session.direction == "incoming":
+                id = '%s_%s' % (self.delegate.sessionController.remoteSIPAddress, self.delegate.sessionController.account.id)
+            else:
+                id = '%s_%s' % (self.delegate.sessionController.account.id, self.delegate.sessionController.remoteSIPAddress)
+
+        hash.update(id)
+        area = hash.hexdigest()
+        area = re.sub("[0-9]","", area) # replace digits of collabaration formid, they don't work for some reason
+        script = """showCollaborationEditor("%s", "%s")""" % (area, gateway)
+        call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
+        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+
+    def hideCollaborationEditor(self):
+        if self.splitterHeight is not None:
+            frame=self.inputView.frame()
+            frame.size.height = self.splitterHeight
+            self.inputView.setFrame_(frame)
+
+        script = "hideCollaborationEditor()"
         call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 

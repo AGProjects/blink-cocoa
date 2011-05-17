@@ -12,8 +12,8 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="348"/>
-			<integer value="1"/>
+			<integer value="123"/>
+			<integer value="135"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -67,6 +67,7 @@
 							<string>91FA6B1F-67F1-4778-BE23-5E3E60B93288</string>
 							<string>9277B918-C2D9-41A1-A62A-32504D846977</string>
 							<string>9DE13838-0083-46B3-8591-750282FD0FC1</string>
+							<string>A6D99212-6BF1-48B7-94D2-46D3AFC16163</string>
 							<string>CF784727-4755-45B6-804D-EFE9BF65B174</string>
 							<string>D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9</string>
 							<string>DF25641C-2845-4BEF-AD31-C7BAD51ABFC1</string>
@@ -208,6 +209,28 @@
 								<bool key="NSToolbarIsUserRemovable">YES</bool>
 								<int key="NSToolbarItemVisibilityPriority">0</int>
 							</object>
+							<object class="NSToolbarItem" id="786517751">
+								<object class="NSMutableString" key="NSToolbarItemIdentifier">
+									<characters key="NS.bytes">A6D99212-6BF1-48B7-94D2-46D3AFC16163</characters>
+								</object>
+								<string key="NSToolbarItemLabel">Editor</string>
+								<string key="NSToolbarItemPaletteLabel">Editor</string>
+								<string key="NSToolbarItemToolTip">Enable Collaborative Editor</string>
+								<nil key="NSToolbarItemView"/>
+								<object class="NSCustomResource" key="NSToolbarItemImage">
+									<string key="NSClassName">NSImage</string>
+									<string key="NSResourceName">editor</string>
+								</object>
+								<nil key="NSToolbarItemTarget"/>
+								<nil key="NSToolbarItemAction"/>
+								<string key="NSToolbarItemMinSize">{0, 0}</string>
+								<string key="NSToolbarItemMaxSize">{0, 0}</string>
+								<bool key="NSToolbarItemEnabled">YES</bool>
+								<bool key="NSToolbarItemAutovalidates">YES</bool>
+								<int key="NSToolbarItemTag">109</int>
+								<bool key="NSToolbarIsUserRemovable">YES</bool>
+								<int key="NSToolbarItemVisibilityPriority">0</int>
+							</object>
 							<object class="NSToolbarItem" id="743289717">
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">CF784727-4755-45B6-804D-EFE9BF65B174</characters>
@@ -260,9 +283,11 @@
 								<string key="NSToolbarItemPaletteLabel">Desktop</string>
 								<string key="NSToolbarItemToolTip">Start Desktop Sharing </string>
 								<object class="NSButton" key="NSToolbarItemView" id="452326362">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{0, 14}, {96, 32}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<int key="NSTag">200</int>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="126467494">
@@ -291,7 +316,7 @@
 								<nil key="NSToolbarItemTarget"/>
 								<nil key="NSToolbarItemAction"/>
 								<string key="NSToolbarItemMinSize">{32, 32}</string>
-								<string key="NSToolbarItemMaxSize">{96, 32}</string>
+								<string key="NSToolbarItemMaxSize">{32, 32}</string>
 								<bool key="NSToolbarItemEnabled">YES</bool>
 								<bool key="NSToolbarItemAutovalidates">NO</bool>
 								<int key="NSToolbarItemTag">200</int>
@@ -389,6 +414,7 @@
 						<reference ref="283573762"/>
 						<reference ref="677469062"/>
 						<reference ref="1013492277"/>
+						<reference ref="786517751"/>
 						<reference ref="63630264"/>
 						<reference ref="597906289"/>
 						<reference ref="371190645"/>
@@ -405,6 +431,7 @@
 						<reference ref="283573762"/>
 						<reference ref="677469062"/>
 						<reference ref="1013492277"/>
+						<reference ref="786517751"/>
 						<reference ref="161783912"/>
 						<reference ref="597906289"/>
 						<reference ref="371190645"/>
@@ -429,6 +456,7 @@
 							<int key="NSvFlags">290</int>
 							<string key="NSFrame">{{0, -1}, {621, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -436,6 +464,7 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 21}, {621, 412}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<object class="NSMutableArray" key="NSTabViewItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
 							</object>
@@ -447,6 +476,7 @@
 					</object>
 					<string key="NSFrameSize">{621, 433}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{621, 509}</string>
@@ -1549,6 +1579,14 @@
 					</object>
 					<int key="connectionID">440</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedToolbarButton:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="786517751"/>
+					</object>
+					<int key="connectionID">442</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -1665,6 +1703,7 @@
 							<reference ref="1013492277"/>
 							<reference ref="944666825"/>
 							<reference ref="371190645"/>
+							<reference ref="786517751"/>
 						</object>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -2008,6 +2047,11 @@
 						<reference key="parent" ref="1033395367"/>
 						<string key="objectName">Menu Item (Request File Transfer...)</string>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">441</int>
+						<reference key="object" ref="786517751"/>
+						<reference key="parent" ref="567731717"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -2104,6 +2148,7 @@
 					<string>405.IBPluginDependency</string>
 					<string>417.IBPluginDependency</string>
 					<string>43.IBPluginDependency</string>
+					<string>441.IBPluginDependency</string>
 					<string>72.IBEditorWindowLastContentRect</string>
 					<string>72.IBPluginDependency</string>
 					<string>78.IBPluginDependency</string>
@@ -2116,10 +2161,10 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{187, 41}, {621, 433}}</string>
+					<string>{{499, 101}, {621, 433}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<boolean value="NO"/>
-					<string>{{187, 41}, {621, 433}}</string>
+					<string>{{499, 101}, {621, 433}}</string>
 					<boolean value="YES"/>
 					<string>{196, 240}</string>
 					<string>{{357, 418}, {480, 270}}</string>
@@ -2277,7 +2322,8 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{189, 474}, {617, 0}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{501, 534}, {617, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2301,7 +2347,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">440</int>
+			<int key="maxID">442</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -3172,6 +3218,7 @@
 				<string>NSUserAccounts</string>
 				<string>audio</string>
 				<string>display</string>
+				<string>editor</string>
 				<string>mute</string>
 				<string>muted</string>
 				<string>pause</string>
@@ -3190,6 +3237,7 @@
 				<string>{32, 32}</string>
 				<string>{239.114, 239.114}</string>
 				<string>{32, 32}</string>
+				<string>{153, 153}</string>
 				<string>{24, 24}</string>
 				<string>{24, 24}</string>
 				<string>{48, 48}</string>
