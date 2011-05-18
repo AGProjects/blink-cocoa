@@ -83,9 +83,6 @@ class PhotoView(NSImageView):
             path.fill()
 
 
-def account_display_name(account):
-    return str(account.id)
-
 class ContactWindowController(NSWindowController):
     implements(IObserver)
 
