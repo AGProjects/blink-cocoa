@@ -190,6 +190,9 @@ class ChatViewController(NSObject):
     # timer is triggered every TYPING_IDLE_TIMEOUT, and a new is-composing msg is sent
     typingTimer = None
 
+    # Collaboration editor taken from http://code.google.com/p/google-mobwrite/
+    default_collaboration_url = 'http://mobwrite3.appspot.com/scripts/q.py'
+
     def resetRenderedMessages(self):
         self.rendered_messages=set()
 
@@ -333,7 +336,10 @@ class ChatViewController(NSObject):
             self.hideCollaborationEditor()
 
     def showCollaborationEditor(self):
-        gateway = 'http://mobwrite3.appspot.com/scripts/q.py'
+        if self.delegate.sessionController.account.server.collaboration_url:
+            collaboration_url = self.delegate.sessionController.account.server.collaboration_url
+        else:
+            collaboration_url = self.default_collaboration_url
 
         frame=self.inputView.frame()
         self.splitterHeight = frame.size.height
@@ -351,9 +357,8 @@ class ChatViewController(NSObject):
                 id = '%s_%s' % (self.delegate.sessionController.account.id, self.delegate.sessionController.remoteSIPAddress)
 
         hash.update(id)
-        area = hash.hexdigest()
-        area = re.sub("[0-9]","", area) # replace digits of collabaration formid, they don't work for some reason
-        script = """showCollaborationEditor("%s", "%s")""" % (area, gateway)
+        form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
+        script = """showCollaborationEditor("%s", "%s")""" % (form_id, collaboration_url)
         call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
