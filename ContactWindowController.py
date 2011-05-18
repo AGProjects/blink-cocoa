@@ -407,6 +407,7 @@ class ContactWindowController(NSWindowController):
 
 
     @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
@@ -418,12 +419,12 @@ class ContactWindowController(NSWindowController):
         if diff:
             new_device = diff.pop()
             BlinkLogger().log_info(u"New device %s detected, checking if we should switch to it..." % new_device)
-            call_in_gui_thread(self.switchAudioDevice, new_device)
+            self.switchAudioDevice(new_device)
         else:
-            call_in_gui_thread(self.menuWillOpen_, self.devicesMenu)
+            self.menuWillOpen_(self.devicesMenu)
 
     def _NH_DefaultAudioDeviceDidChange(self, notification):
-        call_in_gui_thread(self.menuWillOpen_, self.devicesMenu)
+        self.menuWillOpen_(self.devicesMenu)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -432,8 +433,8 @@ class ContactWindowController(NSWindowController):
         uri = notification.data.uri
         BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
         self.model.bonjourgroup.addBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
-        call_in_gui_thread(self.contactOutline.reloadData)
-        call_in_gui_thread(self.searchContacts)
+        self.contactOutline.reloadData()
+        self.searchContacts()
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -442,22 +443,22 @@ class ContactWindowController(NSWindowController):
         uri = notification.data.uri
         BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
         self.model.bonjourgroup.updateBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
-        call_in_gui_thread(self.refreshContactsList)
-        call_in_gui_thread(self.searchContacts)
+        self.refreshContactsList()
+        self.searchContacts()
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
         self.model.bonjourgroup.removeBonjourNeighbour(notification.data.neighbour)
-        call_in_gui_thread(self.contactOutline.reloadData)
-        call_in_gui_thread(self.searchContacts)
+        self.contactOutline.reloadData()
+        self.searchContacts()
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
-            call_in_gui_thread(self.updateAudioButtons)
+            self.updateAudioButtons()
 
     def _NH_MediaStreamDidEnd(self, notification):
         if notification.sender.type == "audio":
-            call_in_gui_thread(self.updateAudioButtons)
+            self.updateAudioButtons()
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
