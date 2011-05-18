@@ -689,9 +689,6 @@ class SIPManager(object):
     def account_for_contact(self, contact):
         return AccountManager().find_account(contact)
 
-    def post_in_main(self, name, sender, data=None):
-        call_in_gui_thread(self.notification_center.post_notification, name, sender, data)
-
     @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
