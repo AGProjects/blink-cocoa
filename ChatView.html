@@ -201,34 +201,34 @@ var lastTimestamp;
 
 function clear()
 {
-  var placeholder;
-  placeholder = document.getElementById("placeholder"); 
-  placeholder.innerHTML = "";
+  var chat_session;
+  chat_session = document.getElementById("chat_session");
+  chat_session.innerHTML = "";
 }
 
 function formatTimestamp(timestamp)
 {
     return timestamp;
-    
+   
     var ts = timestamp.split(" ");
     var date = ts[0];
     var time = ts[1];
-    
+   
     var ts = time.split(":");
-    
+   
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
 function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private)
 {
-  var placeholder;
+  var chat_session;
   var content;
   var idstr;
   var message_class;
-  
+ 
   timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
+ 
+  chat_session = document.getElementById("chat_session");
 
   status = ''
   show_sending_state = ''
@@ -255,12 +255,12 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       box_class = default_box_class;
       status = timestamp;
   }
-  
+ 
   if (content != null)
       content.id = "";
 
   if (show_sending_state == 'yes') {
-    placeholder.innerHTML += 
+    chat_session.innerHTML +=
     "<div>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
     "<div class='"+box_class+"' id='"+msgid+"'>"+
@@ -275,7 +275,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "</div>"+
     "</div>";
   } else {
-    placeholder.innerHTML += 
+    chat_session.innerHTML +=
     "<div>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
     "<div class='"+box_class+"'>"+
@@ -287,12 +287,12 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
             "<span class='body'>"+text+"</span>"+
         "</div>"+
     "</div>"+
-    "</div>";  
+    "</div>"; 
   }
 
   lastSender = sender;
   lastTimestamp = timestamp;
-  
+ 
   scrollToBottom();
 }
 
@@ -306,24 +306,24 @@ function updateMessageBodyContent(msgid, text)
 
 function renderSystemMessage(text, timestamp, is_error)
 {
-  var placeholder;
+  var chat_session;
   var content;
-  
+ 
   timestamp = formatTimestamp(timestamp);
-  
-  placeholder = document.getElementById("placeholder");
+ 
+  chat_session = document.getElementById("chat_session");
   content = document.getElementById("content");
-  
+ 
   if (is_error == null) {
       sys_class = "sys"
   } else {
       sys_class = "sys_error"
   }
-  
+ 
   if (content != null)
       content.id = "";
 
-  placeholder.innerHTML += 
+  chat_session.innerHTML +=
     "<div class="+sys_class+">"+
             "<div class='systimestamp'>"+timestamp+"</div>"+
             "<div class='sysmsg'>"+
@@ -332,9 +332,9 @@ function renderSystemMessage(text, timestamp, is_error)
     "</div>";
 
   lastSender = "";
-  
+ 
   scrollToBottom();
-  
+ 
   return 0;
 }
 
@@ -380,7 +380,7 @@ function markFailed(msgid)
   var msg = document.getElementById(msgid);
   if (msg != null)
     msg.className = "msgbox_failed";
-    
+   
   msg = document.getElementById('t'+msgid)
   if (msg != null)
       msg.style.display = "block";
@@ -397,10 +397,10 @@ function scrollToBottom()
     window.scroll(0, document.body.scrollHeight);
 }
 
-function showCollaborationEditor(area, gateway)
+function showCollaborationEditor(form_id, collaboration_url)
 {
-  var collaboration = document.getElementById("collaboration");
-  var placeholder = document.getElementById("placeholder");
+  var collaboration_editor = document.getElementById("collaboration_editor");
+  var chat_session = document.getElementById("chat_session");
   (function(){var a;function diff_match_patch(){function b(){var c=0,d=1;for(var e=2;d!=e;){c++;d=e;e<<=1}return c}this.Diff_Timeout=1;this.Diff_EditCost=4;this.Diff_DualThreshold=32;this.Match_Threshold=0.5;this.Match_Distance=1E3;this.Patch_DeleteThreshold=0.5;this.Patch_Margin=4;this.Match_MaxBits=b()}a=diff_match_patch.prototype;
 a.diff_main=function(b,c,d){if(b==null||c==null)throw Error("Null input. (diff_main)");if(b==c)return[[0,b]];if(typeof d=="undefined")d=true;var e=d,f=this.diff_commonPrefix(b,c);d=b.substring(0,f);b=b.substring(f);c=c.substring(f);f=this.diff_commonSuffix(b,c);var g=b.substring(b.length-f);b=b.substring(0,b.length-f);c=c.substring(0,c.length-f);b=this.diff_compute(b,c,e);d&&b.unshift([0,d]);g&&b.push([0,g]);this.diff_cleanupMerge(b);return b};
 a.diff_compute=function(b,c,d){var e;if(!b)return[[1,c]];if(!c)return[[-1,b]];e=b.length>c.length?b:c;var f=b.length>c.length?c:b,g=e.indexOf(f);if(g!=-1){e=[[1,e.substring(0,g)],[0,f],[1,e.substring(g+f.length)]];if(b.length>c.length)e[0][0]=e[2][0]=-1;return e}if(e=this.diff_halfMatch(b,c)){var h=e[0];b=e[1];f=e[2];c=e[3];e=e[4];h=this.diff_main(h,f,d);d=this.diff_main(b,c,d);return h.concat([[0,e]],d)}if(d&&(b.length<100||c.length<100))d=false;if(d){h=this.diff_linesToChars(b,c);b=h[0];c=h[1];
@@ -499,29 +499,29 @@ a.restoreCursor_=function(b){this.dmp.Match_Distance=1E3;this.dmp.Match_Threshol
 h+=this.dmp.diff_xIndex(e,b.endPrefix.length)}}if(g===null&&h!==null)g=h;else if(g===null&&h===null)g=b.startOffset;if(h===null)h=g;if("selectionStart"in this.element){this.element.selectionStart=g;this.element.selectionEnd=h}else{for(c=this.element;c.parentNode;)c=c.parentNode;if(!c.selection||!c.selection.createRange)return;d=this.element.value.substring(0,g);d=d.replace(/\r\n/g,"\n").length;c=c.body.createTextRange();c.moveToElementText(this.element);c.collapse(true);c.moveStart("character",d);
 if(!b.collapsed){d=this.element.value.substring(g,h);g=d.replace(/\r\n/g,"\n").length;c.moveEnd("character",g)}c.select()}if("scrollTop"in b){this.element.scrollTop=b.scrollTop*this.element.scrollHeight;this.element.scrollLeft=b.scrollLeft*this.element.scrollWidth}};mobwrite.shareTextareaObj.normalizeLinebreaks_=function(b){return b.replace(/\r\n/g,"\n").replace(/\r/g,"\n")};
 mobwrite.shareTextareaObj.shareHandler=function(b){if(typeof b=="string")b=document.getElementById(b);if(b&&"value"in b&&"type"in b&&(b.type=="textarea"||b.type=="text"||b.type=="password")){if(mobwrite.UA_webkit){b.addEventListener("focus",function(){this.activeElement=true},false);b.addEventListener("blur",function(){this.activeElement=false},false);b.activeElement=false}return new mobwrite.shareTextareaObj(b)}return null};mobwrite.shareHandlers.push(mobwrite.shareTextareaObj.shareHandler);})()
- 
-  collaboration.innerHTML = "<h2 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Collaborative Text Editor</h2>"+
+
+  collaboration_editor.innerHTML = "<h2 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Collaborative Text Editor</h2>"+
   "<p class=msgbox>Text entered in the area below can be modified simultaneously by all participants:"+
   "<TABLE STYLE='height: 85%; width: 100%'>"+
-  "<TR><TD><TEXTAREA ID='"+area+"' STYLE='width: 100%; height:100%'></TEXTAREA></TD></TR>"+
+  "<TR><TD><TEXTAREA ID='"+form_id+"' STYLE='width: 100%; height:100%'></TEXTAREA></TD></TR>"+
   "</TABLE>";
-  
-  placeholder.style.display = "none";
-  collaboration.style.display = "block";
-  
-  mobwrite.syncGateway = gateway;
-  mobwrite.share(area);
+ 
+  chat_session.style.display = "none";
+  collaboration_editor.style.display = "block";
+ 
+  mobwrite.syncGateway = collaboration_url;
+  mobwrite.share(form_id);
 
   scrollToBottom();
 
 }
 
 function hideCollaborationEditor() {
-  var collaboration = document.getElementById("collaboration");
-  var placeholder = document.getElementById("placeholder");
-  
-  collaboration.style.display = "none";
-  placeholder.style.display = "block";
+  var collaboration_editor = document.getElementById("collaboration_editor");
+  var chat_session = document.getElementById("chat_session");
+ 
+  collaboration_editor.style.display = "none";
+  chat_session.style.display = "block";
 
   scrollToBottom();
 }
@@ -531,8 +531,8 @@ function hideCollaborationEditor() {
 <body>
 
 
-<div id="placeholder"></div>
-<div id="collaboration"</div>
+<div id="chat_session"></div>
+<div id="collaboration_editor"</div>
 </body>
 </html>
 
