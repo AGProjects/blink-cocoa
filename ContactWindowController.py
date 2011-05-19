@@ -11,7 +11,7 @@ import string
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
-from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
@@ -19,6 +19,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
 from sipsimple.threading.green import run_in_green_thread
+from operator import attrgetter
 from zope.interface import implements
 
 import ContactOutlineView
@@ -86,6 +87,7 @@ class PhotoView(NSImageView):
 class ContactWindowController(NSWindowController):
     implements(IObserver)
 
+    accounts = []
     sessionWindows = []
     model = objc.IBOutlet()
     backend = None
@@ -212,6 +214,17 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
         nc.add_observer(self, name="SIPApplicationDidStart")
+        nc.add_observer(self, name="SIPAccountDidActivate")
+        nc.add_observer(self, name="SIPAccountDidDeactivate")
+        nc.add_observer(self, name="SIPAccountWillRegister")
+        nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
+        nc.add_observer(self, name="SIPAccountRegistrationDidFail")
+        nc.add_observer(self, name="SIPAccountRegistrationDidEnd")
+        nc.add_observer(self, name="BonjourAccountWillRegister")
+        nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
+        nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
+        nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
+        nc.add_observer(self, sender=AccountManager())
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
@@ -258,7 +271,6 @@ class ContactWindowController(NSWindowController):
         self.backend.set_delegate(self)
 
     def setupFinished(self):
-        self.refreshAccountList()
         if self.backend.is_muted():
             self.muteButton.setImage_(NSImage.imageNamed_("muted"))
             self.muteButton.setState_(NSOnState)
@@ -293,36 +305,28 @@ class ContactWindowController(NSWindowController):
         super(ContactWindowController, self).showWindow_(sender)
 
     def refreshAccountList(self):
-        self.accountPopUp.removeAllItems()
-
-        am = AccountManager()
-
         grayAttrs = NSDictionary.dictionaryWithObject_forKey_(NSColor.disabledControlTextColor(), NSForegroundColorAttributeName)
+        self.accountPopUp.removeAllItems()
+        self.accounts.sort(key=attrgetter('order'))
 
-        accounts = list(am.get_accounts())
-        accounts.sort(lambda a,b:a.order-b.order)
+        account_manager = AccountManager()
 
-        for account in accounts:
-            if account.enabled:
-                address = format_identity_address(account)
-                if account is BonjourAccount():
-                    self.accountPopUp.addItemWithTitle_("Bonjour")
-                else:
-                    self.accountPopUp.addItemWithTitle_(address)
-                item = self.accountPopUp.lastItem()
-                item.setRepresentedObject_(account)
-                if account is not BonjourAccount():
-                    if not account.registered and account.sip.register:
-                        title = NSAttributedString.alloc().initWithString_attributes_(address, grayAttrs)
-                        item.setAttributedTitle_(title)
-                else:
-                    image = NSImage.imageNamed_("NSBonjour")
-                    image.setScalesWhenResized_(True)
-                    image.setSize_(NSMakeSize(12,12))
-                    item.setImage_(image)
+        for account_info in (account_info for account_info in self.accounts if account_info.account.enabled):
+            self.accountPopUp.addItemWithTitle_(account_info.name)
+            item = self.accountPopUp.lastItem()
+            item.setRepresentedObject_(account_info.account)
+            if isinstance(account_info.account, BonjourAccount):
+                image = NSImage.imageNamed_("NSBonjour")
+                image.setScalesWhenResized_(True)
+                image.setSize_(NSMakeSize(12,12))
+                item.setImage_(image)
+            else:
+                if not account_info.registration_state == 'succeeded':
+                    title = NSAttributedString.alloc().initWithString_attributes_(account_info.name, grayAttrs)
+                    item.setAttributedTitle_(title)
 
-                if am.default_account is account:
-                    self.accountPopUp.selectItem_(item)
+            if account_info.account is account_manager.default_account:
+                self.accountPopUp.selectItem_(item)
 
         if self.accountPopUp.numberOfItems() == 0:
             self.accountPopUp.addItemWithTitle_(u"No Accounts")
@@ -331,10 +335,10 @@ class ContactWindowController(NSWindowController):
         self.accountPopUp.menu().addItem_(NSMenuItem.separatorItem())
         self.accountPopUp.addItemWithTitle_(u"Add Account...")
 
-        if am.default_account:
-            self.nameText.setStringValue_(format_identity_simple(am.default_account))
+        if account_manager.default_account:
+            self.nameText.setStringValue_(account_manager.default_account.display_name)
         else:
-            self.nameText.setStringValue_("")
+            self.nameText.setStringValue_(u'')
 
     def activeAccount(self):
         return self.accountPopUp.selectedItem().representedObject()
@@ -411,6 +415,72 @@ class ContactWindowController(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_SIPAccountManagerDidAddAccount(self, notification):
+        account = notification.data.account
+        self.accounts.insert(account.order, AccountInfo(account))
+        self.refreshAccountList()
+
+    def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
+        position = self.accounts.index(notification.data.account)
+        del self.accounts[position]
+        self.refreshAccountList()
+
+    def _NH_SIPAccountDidActivate(self, notification):
+        self.refreshAccountList()
+        if notification.sender is BonjourAccount():
+            self.model.setShowBonjourGroup(True)
+            self.contactOutline.reloadData()
+
+    def _NH_SIPAccountDidDeactivate(self, notification):
+        self.refreshAccountList()
+        if notification.sender is BonjourAccount():
+            self.model.setShowBonjourGroup(False)
+            self.contactOutline.reloadData()
+
+    def _NH_SIPAccountWillRegister(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'started'
+        self.refreshAccountList()
+
+    def _NH_SIPAccountRegistrationDidSucceed(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'succeeded'
+        self.refreshAccountList()
+
+    def _NH_SIPAccountRegistrationDidFail(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'failed'
+        self.refreshAccountList()
+        if notification.data.error == 'Authentication failed':
+            if not self.authFailPopupShown:
+                self.authFailPopupShown = True
+                NSRunAlertPanel(u"Registration Error",
+                    u"The account %s could not be registered because of an authentication error" % notification.sender.id,
+                    u"OK", None, None)
+                self.authFailPopupShown = False
+
+    def _NH_SIPAccountRegistrationDidEnd(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'ended'
+        self.refreshAccountList()
+
+    _NH_BonjourAccountWillRegister = _NH_SIPAccountWillRegister
+    _NH_BonjourAccountRegistrationDidSucceed = _NH_SIPAccountRegistrationDidSucceed
+    _NH_BonjourAccountRegistrationDidFail = _NH_SIPAccountRegistrationDidFail
+    _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
     def _NH_AudioDevicesDidChange(self, notification):
         old_devices = notification.data.old_devices
@@ -526,20 +596,22 @@ class ContactWindowController(NSWindowController):
         self.updatePresenceStatus()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-       settings = SIPSimpleSettings()
-       if notification.data.modified.has_key("audio.silent"):
+        settings = SIPSimpleSettings()
+        if notification.data.modified.has_key("audio.silent"):
             if self.backend.is_silent():
                 self.silentButton.setImage_(NSImage.imageNamed_("belloff"))
                 self.silentButton.setState_(NSOnState)
             else:
                 self.silentButton.setImage_(NSImage.imageNamed_("bellon"))
                 self.silentButton.setState_(NSOffState)
-       if notification.data.modified.has_key("service_provider.name"):
+        if notification.data.modified.has_key("service_provider.name"):
             if settings.service_provider.name:
                 window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
                 self.window().setTitle_(window_title)
             else:
                 self.window().setTitle_(NSApp.delegate().applicationName)
+        if isinstance(notification.sender, (Account, BonjourAccount)) and 'order' in notification.data.modified:
+            self.refreshAccountList()
 
     def showAudioSession(self, streamController):
         self.sessionListView.addItemView_(streamController.view)
@@ -1383,30 +1455,6 @@ class ContactWindowController(NSWindowController):
 
     def sip_warning(self, message):
         NSRunAlertPanel("Warning", message, "OK", None, None)
-
-    def sip_account_list_refresh(self):
-        self.refreshAccountList()
-        self.model.setShowBonjourGroup(BonjourAccount().enabled)
-        self.contactOutline.reloadData()
-
-    def sip_account_registration_succeeded(self, account):
-        self.refreshAccountList()
-        BlinkLogger().log_info(u"%s was registered" % account.id)
-
-    def sip_account_registration_ended(self, account):
-        self.refreshAccountList()
-        BlinkLogger().log_info(u"Account %s was unregistered" % account.id)
-
-    def sip_account_registration_failed(self, account, error):
-        BlinkLogger().log_error(u"The account %s failed to register(%s)" % (account.id, error))
-        self.refreshAccountList()
-        if error == 'Authentication failed':
-            if not self.authFailPopupShown:
-                self.authFailPopupShown = True
-                NSRunAlertPanel(u"Registration Error",
-                    u"The account %s could not be registered because of an authentication error"%account.id,
-                    u"OK", None, None)
-                self.authFailPopupShown = False
 
     def handle_incoming_session(self, session, streams):
         settings = SIPSimpleSettings()

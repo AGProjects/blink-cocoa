@@ -769,12 +769,10 @@ class SIPManager(object):
 
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info(u"%s activated" % account)
-        call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info(u"%s deactivated" % account)
         MWIData.remove(account)
-        call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         message = u'%s Registered Contact Address "%s" for sip:%s at %s:%d;transport=%s (expires in %d seconds).\n' % (datetime.datetime.now().replace(microsecond=0), data.contact_header.uri, account.id, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
@@ -782,15 +780,12 @@ class SIPManager(object):
         if len(contact_header_list) > 1:
             message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         BlinkLogger().log_info(message)
-        call_in_gui_thread(self._delegate.sip_account_registration_succeeded, account)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info(u"%s was unregistered" % account)
-        call_in_gui_thread(self._delegate.sip_account_registration_ended, account)
 
     def _NH_SIPAccountRegistrationDidFail(self, account, data):
         BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, data.error, data.timeout))
-        call_in_gui_thread(self._delegate.sip_account_registration_failed, account, data.error)
 
     @run_in_gui_thread
     def _NH_SIPAccountMWIDidGetSummary(self, account, data):
@@ -829,7 +824,6 @@ class SIPManager(object):
             if 'message_summary.enabled' in data.modified:
                 if not account.message_summary.enabled:
                     MWIData.remove(account)
-            call_in_gui_thread(self._delegate.sip_account_list_refresh)
 
     def isProposedMediaTypeSupported(self, streams):
         stream_type_list = list(set(stream.type for stream in streams))
