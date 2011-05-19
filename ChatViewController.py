@@ -16,7 +16,6 @@ import hashlib
 import os
 import re
 import time
-import unicodedata
 import urllib
 
 from sipsimple.configuration.settings import SIPSimpleSettings
