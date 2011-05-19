@@ -19,6 +19,8 @@ import time
 import unicodedata
 import urllib
 
+from sipsimple.configuration.settings import SIPSimpleSettings
+
 from SmileyManager import SmileyManager
 from util import call_in_gui_thread, escape_html, format_identity
 
@@ -190,9 +192,6 @@ class ChatViewController(NSObject):
     # timer is triggered every TYPING_IDLE_TIMEOUT, and a new is-composing msg is sent
     typingTimer = None
 
-    # Collaboration editor taken from http://code.google.com/p/google-mobwrite/
-    default_collaboration_url = 'http://mobwrite3.appspot.com/scripts/q.py'
-
     def resetRenderedMessages(self):
         self.rendered_messages=set()
 
@@ -336,10 +335,7 @@ class ChatViewController(NSObject):
             self.hideCollaborationEditor()
 
     def showCollaborationEditor(self):
-        if self.delegate.sessionController.account.server.collaboration_url:
-            collaboration_url = self.delegate.sessionController.account.server.collaboration_url
-        else:
-            collaboration_url = self.default_collaboration_url
+        settings = SIPSimpleSettings()
 
         frame=self.inputView.frame()
         self.splitterHeight = frame.size.height
@@ -358,7 +354,7 @@ class ChatViewController(NSObject):
 
         hash.update(id)
         form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
-        script = """showCollaborationEditor("%s", "%s")""" % (form_id, collaboration_url)
+        script = """showCollaborationEditor("%s", "%s")""" % (form_id, settings.server.collaboration_url)
         call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 

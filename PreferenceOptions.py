@@ -1365,7 +1365,6 @@ PreferenceOptionTypes = {
 "rtp.use_srtp_without_tls" : HiddenOption,
 "rtp.timeout": HiddenOption,
 "server.enrollment_url" : HiddenOption,
-"server.collaboration_url" : HiddenOption,
 "sip.register" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
