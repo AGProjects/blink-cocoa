@@ -876,8 +876,8 @@ class SIPManager(object):
 
         if NSApp.delegate().applicationName == 'Blink Pro':
             settings = SIPSimpleSettings()
-            if settings.service_provider.alert_url:
-                url = unicode(settings.service_provider.alert_url)
+            if settings.server.alert_url:
+                url = unicode(settings.server.alert_url)
                 replace_with = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
                 url = url.replace('($sip_uri)', replace_with[2:])
                 BlinkLogger().log_info(u"Opening HTTP URL %s"% url)

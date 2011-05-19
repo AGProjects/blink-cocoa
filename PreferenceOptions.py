@@ -1364,6 +1364,7 @@ PreferenceOptionTypes = {
 "nat_traversal.stun_server_list" : HiddenOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
 "rtp.timeout": HiddenOption,
+"server.collaboration_url" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
 "sip.register" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
@@ -1377,6 +1378,6 @@ PreferenceOptionTypes = {
 
 DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
 
-DisabledPreferenceSections = ['server', 'service_provider']
+DisabledPreferenceSections = ['service_provider']
 
 
