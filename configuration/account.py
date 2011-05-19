@@ -48,7 +48,7 @@ class SIPSettingsExtension(SIPSettings):
 
 class ServerSettings(SettingsGroup):
     settings_url = Setting(type=HTTPURL, default=None, nillable=True)
-    conference_urlserver = Setting(type=Hostname, default=None, nillable=True)
+    conference_server = Setting(type=Hostname, default=None, nillable=True)
     collaboration_url = Setting(type=HTTPURL, default=None, nillable=True)
 
 
