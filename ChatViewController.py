@@ -21,7 +21,7 @@ import urllib
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 from SmileyManager import SmileyManager
-from util import call_in_gui_thread, escape_html, format_identity
+from util import escape_html, format_identity
 
 
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent
@@ -258,13 +258,13 @@ class ChatViewController(NSObject):
         if state == MSG_STATE_DELIVERED:
             is_private = 1 if private else "null"
             script = "markDelivered('%s',%s)"%(msgid, is_private)
-            call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
+            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         elif state == MSG_STATE_DEFERRED:
             script = "markDeferred('%s')"%msgid
-            call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
+            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
-            call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
+            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def clear(self):
         if self.finishedLoading:
@@ -324,7 +324,6 @@ class ChatViewController(NSObject):
     def updateMessage(self, msgid, text, is_html, expandSmileys):
         text = processHTMLText(text, expandSmileys, is_html)
         script = """updateMessageBodyContent('%s', "%s")""" % (msgid, text)
-        call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def toggleCollaborationEditor(self, editor_status):
@@ -354,7 +353,6 @@ class ChatViewController(NSObject):
         hash.update(id)
         form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
         script = """showCollaborationEditor("%s", "%s")""" % (form_id, settings.server.collaboration_url)
-        call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def hideCollaborationEditor(self):
@@ -364,7 +362,6 @@ class ChatViewController(NSObject):
             self.inputView.setFrame_(frame)
 
         script = "hideCollaborationEditor()"
-        call_in_gui_thread(self.outputView.stringByEvaluatingJavaScriptFromString_, script)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def webviewFinishedLoading_(self, notification):
