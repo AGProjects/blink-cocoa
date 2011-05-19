@@ -6,7 +6,7 @@ from Foundation import *
 
 from application.notification import NotificationCenter, IObserver
 from application.python.util import Null
-from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
@@ -14,7 +14,7 @@ from zope.interface import implements
 from EnrollmentController import EnrollmentController
 from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, HiddenOption, PreferenceOptionTypes, formatName
 from VerticalBoxView import VerticalBoxView
-from util import allocate_autorelease_pool
+from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
 
 class PreferencesController(NSWindowController, object):
@@ -35,15 +35,27 @@ class PreferencesController(NSWindowController, object):
     generalPop = objc.IBOutlet()
     generalTabView = objc.IBOutlet()
 
-    updating = False
-
     settingViews = {}
+    accounts = []
 
-    newAccounts = []
-
-    registering = set()
+    updating = False
     saving = False
 
+
+    def init(self):
+        self = super(PreferencesController, self).init()
+        if self:
+            notification_center = NotificationCenter()
+            notification_center.add_observer(self, name="SIPAccountWillRegister")
+            notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
+            notification_center.add_observer(self, name="SIPAccountRegistrationDidFail")
+            notification_center.add_observer(self, name="SIPAccountRegistrationDidEnd")
+            notification_center.add_observer(self, name="BonjourAccountWillRegister")
+            notification_center.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
+            notification_center.add_observer(self, name="BonjourAccountRegistrationDidFail")
+            notification_center.add_observer(self, name="BonjourAccountRegistrationDidEnd")
+            notification_center.add_observer(self, sender=AccountManager())
+            return self
 
     def showWindow_(self, sender):
         if not self.window():
@@ -54,9 +66,9 @@ class PreferencesController(NSWindowController, object):
         default_account = AccountManager().default_account
         if default_account:
             try:
-                row = self.getAccounts().index(default_account)
+                row = self.accounts.index(default_account)
                 self.accountTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
-            except:
+            except ValueError:
                 pass
 
         for view in self.settingViews.values():
@@ -88,11 +100,9 @@ class PreferencesController(NSWindowController, object):
             self.accountTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
             self.accountTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-account"))
 
-        NotificationCenter().add_observer(self, name="SIPAccountWillRegister")
-        NotificationCenter().add_observer(self, name="SIPAccountRegistrationDidSucceed")
-        NotificationCenter().add_observer(self, name="SIPAccountRegistrationDidFail")
-        NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
-        NotificationCenter().add_observer(self, name="AudioDevicesDidChange")
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
+        notification_center.add_observer(self, name="AudioDevicesDidChange")
 
         self.window().setTitle_("%s Preferences" % NSApp.delegate().applicationName)
 
@@ -187,7 +197,7 @@ class PreferencesController(NSWindowController, object):
             self.displayNameText.setStringValue_(u"")
 
         if not isinstance(account, BonjourAccount):
-            self.addressText.setStringValue_(str(account.id))
+            self.addressText.setStringValue_(unicode(account.id))
             self.passwordText.setStringValue_(account.auth.password)
 
             userdef = NSUserDefaults.standardUserDefaults()
@@ -212,38 +222,31 @@ class PreferencesController(NSWindowController, object):
         enroll.runModal()
 
     def removeSelectedAccount(self):
-        account = self.selectedAccount()
-        if account:
-            if NSRunAlertPanel("Remove Account", "Permanently remove account %s?" % account.id, "Remove", "Cancel", None) != NSAlertDefaultReturn:
+        account_info = self.selectedAccount()
+        if account_info:
+            account = account_info.account
+            if NSRunAlertPanel("Remove Account", "Permanently remove account %s?" % account_info.name, "Remove", "Cancel", None) != NSAlertDefaultReturn:
                 return
-            
+
             if account.tls.certificate:
                 from application.system import unlink
                 unlink(account.tls.certificate.normalized)
 
             account_manager = AccountManager()
-
             if account_manager.default_account is account:
-                active_accounts = [a for a in account_manager.iter_accounts() if a.enabled]
-                account_index = active_accounts.index(account)
-                if account_index < len(active_accounts)-1:
-                    account_manager.default_account = active_accounts[account_index+1]
-                    self.accountTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(account_index+1), False)
-                elif account_index > 0:
-                    account_manager.default_account = active_accounts[account_index-1]
-                    self.accountTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(account_index-1), False)
-                else:
+                try:
+                    account_manager.default_account = (acc for acc in account_manager.iter_accounts() if acc is not account and acc.enabled).next()
+                except StopIteration:
                     account_manager.default_account = None
-                del active_accounts
 
             account.delete()
 
-            self.accountTable.reloadData()
             self.tableViewSelectionDidChange_(None)
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if not self.updating:
-            account = self.selectedAccount()
+            account_info = self.selectedAccount()
+            account = account_info.account
 
             userdef = NSUserDefaults.standardUserDefaults()
             section = self.advancedPop.indexOfSelectedItem()
@@ -254,8 +257,9 @@ class PreferencesController(NSWindowController, object):
                 userdef.setInteger_forKey_(section, "SelectedAdvancedBonjourSection")
 
     def controlTextDidEndEditing_(self, notification):
-        account = self.selectedAccount()
-        if account:
+        account_info = self.selectedAccount()
+        if account_info:
+            account = account_info.account
             if notification.object() == self.displayNameText:
                 account.display_name = unicode(self.displayNameText.stringValue())
                 account.save()
@@ -271,42 +275,71 @@ class PreferencesController(NSWindowController, object):
             return None
         return self.getAccountForRow(selected)
 
-    def getAccounts(self):
-        accounts = list(AccountManager().get_accounts()[:])
-        accounts.sort(lambda a,b:a.order - b.order)
-        return accounts
-
     def getAccountForRow(self, row):
-        accounts = self.getAccounts()
-        if row < 0 or row >= len(accounts):
-            return None
-        return accounts[row]
+        return self.accounts[row]
+
+    def refresh_account_table(self):
+        if self.accountTable:
+            self.accountTable.reloadData()
 
     @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    def _NH_SIPAccountManagerDidAddAccount(self, notification):
+        account = notification.data.account
+        self.accounts.insert(account.order, AccountInfo(account))
+        self.refresh_account_table()
+
+    def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
+        position = self.accounts.index(notification.data.account)
+        del self.accounts[position]
+        self.refresh_account_table()
+
     def _NH_SIPAccountWillRegister(self, notification):
-        self.registering.add(notification.sender)
-        if self.accountTable:
-            self.accountTable.reloadData()
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'started'
+        self.refresh_account_table()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
-        self.registering.discard(notification.sender)
-        if self.accountTable:
-            self.accountTable.reloadData()
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'succeeded'
+        self.refresh_account_table()
 
     def _NH_SIPAccountRegistrationDidFail(self, notification):
-        self.registering.discard(notification.sender)
-        if self.accountTable:
-            self.accountTable.reloadData()
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'failed'
+        self.refresh_account_table()
+
+    def _NH_SIPAccountRegistrationDidEnd(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].registration_state = 'ended'
+        self.refresh_account_table()
+
+    _NH_BonjourAccountWillRegister = _NH_SIPAccountWillRegister
+    _NH_BonjourAccountRegistrationDidSucceed = _NH_SIPAccountRegistrationDidSucceed
+    _NH_BonjourAccountRegistrationDidFail = _NH_SIPAccountRegistrationDidFail
+    _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateSettings:", notification, False)
+        self.updateSettings_(notification)
 
     def _NH_AudioDevicesDidChange(self, notification):
-        self.performSelectorOnMainThread_withObject_waitUntilDone_("updateAudioDevices:", None, False)
+        self.updateAudioDevices_(None)
 
     def updateSettings_(self, notification):
         sender = notification.sender
@@ -314,12 +347,7 @@ class PreferencesController(NSWindowController, object):
             for option in (o for o in notification.data.modified if o in self.settingViews):
                 self.settingViews[option].restore() 
             if 'display_name' in notification.data.modified:
-                if sender.display_name:
-                    self.displayNameText.setStringValue_(sender.display_name)
-                else:
-                    self.displayNameText.setStringValue_(u"")
-        if 'sip.register' in notification.data.modified:
-            self.accountTable.reloadData()
+                self.displayNameText.setStringValue_(sender.display_name or u'')
         if 'audio.silent' in notification.data.modified:
             self.settingViews['audio.silent'].restore()
 
@@ -330,34 +358,35 @@ class PreferencesController(NSWindowController, object):
             view.restore()
 
     def numberOfRowsInTableView_(self, table):
-        return len(AccountManager().get_accounts())
+        return len(self.accounts)
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if column.identifier() == "enable":
-            account = self.getAccountForRow(row)
-            return NSOnState if account and account.enabled else NSOffState
+            account_info = self.getAccountForRow(row)
+            return NSOnState if account_info and account_info.account.enabled else NSOffState
         elif column.identifier() == "name":
-            account = self.getAccountForRow(row)
-            return account and account.id
+            account_info = self.getAccountForRow(row)
+            return account_info and account_info.name
 
     def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
         if column.identifier() == "status":
-            account = self.getAccountForRow(row)
-            if not account.enabled:
+            account_info = self.getAccountForRow(row)
+            if not account_info.account.enabled:
                 cell.setImage_(None)
-            elif account.registered or account is BonjourAccount():
+            elif account_info.registration_state == 'succeeded':
                 cell.setImage_(self.dots["green"])
-            elif account in self.registering:
+            elif account_info.registration_state == 'started':
                 cell.setImage_(self.dots["yellow"])
-            elif account.sip.register:
+            elif account_info.registration_state == 'failed':
                 cell.setImage_(self.dots["red"])
             else:
                 cell.setImage_(None)
 
     def tableViewSelectionDidChange_(self, notification):
         sv = self.passwordText.superview()
-        account = self.selectedAccount()
-        if account:
+        account_info = self.selectedAccount()
+        if account_info:
+            account = account_info.account
             self.showOptionsForAccount(account)
             self.addressText.setEditable_(False)
             self.passwordText.setEditable_(True)
@@ -385,15 +414,15 @@ class PreferencesController(NSWindowController, object):
             sv.viewWithTag_(20).setHidden_(False)
             sv.viewWithTag_(21).setHidden_(False)
             
-        self.removeButton.setEnabled_(account is not None and not isinstance(account, BonjourAccount))
+        self.removeButton.setEnabled_(account_info is not None and account_info.account is not BonjourAccount())
     
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
-        account = self.getAccountForRow(row)
+        account_info = self.getAccountForRow(row)
         if not object:
-            account.enabled = False
+            account_info.account.enabled = False
         else:
-            account.enabled = True
-        account.save()
+            account_info.account.enabled = True
+        account_info.account.save()
         self.accountTable.reloadData()
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
@@ -406,17 +435,15 @@ class PreferencesController(NSWindowController, object):
         draggedRow = int(pboard.stringForType_("dragged-account"))
         
         if draggedRow != row+1 or oper != 0:
-            accounts = self.getAccounts()
-            ac = accounts[draggedRow]
-            del accounts[draggedRow]
+            account_info = self.accounts.pop(draggedRow)
             if draggedRow < row:
                 row -= 1
-            accounts.insert(row, ac)
-            for i in range(len(accounts)):
-                ac = accounts[i]
-                if ac.order != i:
-                    ac.order = i
-                    ac.save()
+            self.accounts.insert(row, account_info)
+            for i in xrange(len(self.accounts)):
+                account_info = self.accounts[i]
+                if account_info.account.order != i:
+                    account_info.account.order = i
+                    account_info.account.save()
             table.reloadData()
             return True
         return False
@@ -434,11 +461,6 @@ class PreferencesController(NSWindowController, object):
         return True
     
 
-    #def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
-    #    account = self.getAccountForRow(row)
-    #    if column.identifier() == "name":
-    #        cell.set
-        
     @objc.IBAction
     def openSite_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://ag-projects.com"))

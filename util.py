@@ -3,7 +3,8 @@
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt', 'makedirs',
-           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit']
+           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit',
+           'AccountInfo']
 
 import errno
 import os
@@ -15,6 +16,7 @@ from application.python.decorator import decorator, preserve_signature
 from AppKit import NSApp
 from Foundation import NSAutoreleasePool, NSThread
 
+from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import SIPURI, FrozenSIPURI
 
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
@@ -289,4 +291,31 @@ def translate_alpha2digit(key):
         letter_map = dict((letter, digit) for digit, letter_group in digit_map.iteritems() for letter in letter_group)
         translate_alpha2digit.letter_map = letter_map
     return letter_map.get(key.upper(), key)
+
+
+class AccountInfo(object):
+    def __init__(self, account):
+        self.account = account
+        self.registration_state = None
+
+    @property
+    def name(self):
+        return u'Bonjour' if isinstance(self.account, BonjourAccount) else unicode(self.account.id)
+
+    @property
+    def order(self):
+        return self.account.order
+
+    def __eq__(self, other):
+        if isinstance(other, basestring):
+            return self.name == other
+        elif isinstance(other, (Account, BonjourAccount)):
+            return self.account == other
+        elif isinstance(other, AccountInfo):
+            return self.account == other
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
