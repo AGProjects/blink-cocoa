@@ -261,8 +261,6 @@ class DesktopSharingController(MediaStream):
             # middleware is supposed to end the session now
         else:
             log_error(self, "Desktop sharing error: %s" % data.reason)
-            print "Desktop sharing handler error: %r" % data
-            data.failure.printTraceback()
 
 
 class DesktopSharingViewerController(DesktopSharingController):
