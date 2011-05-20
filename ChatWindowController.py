@@ -675,18 +675,22 @@ class ChatWindowController(NSWindowController):
             self.requestFileTransfer()
 
     def requestFileTransfer(self):
-        session = self.selectedSessionController()
-        if session:
-            row = self.conferenceFilesTableView.selectedRow()
-            if row == -1:
-                return
-            conference_file = self.conference_shared_files[row]
-            file = conference_file.file
-            if file.status != 'OK':
-                return
-            BlinkLogger().log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
-            transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
-            transfer_handler.start()
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            session = self.selectedSessionController()
+            if session:
+                row = self.conferenceFilesTableView.selectedRow()
+                if row == -1:
+                    return
+                conference_file = self.conference_shared_files[row]
+                file = conference_file.file
+                if file.status != 'OK':
+                    return
+                BlinkLogger().log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
+                transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
+                transfer_handler.start()
+        else:
+            NSRunAlertPanel(u"Request File Transfer", u"This feature is available in Blink Pro. ", u"Close", None, None)
+
 
     @objc.IBAction
     def muteClicked_(self, sender):
@@ -893,32 +897,31 @@ class ChatWindowController(NSWindowController):
 
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 
-            if NSApp.delegate().applicationName == 'Blink Pro':
-                # TODO - don't re-render everything, use file hashes to calculate additions, removals
-                self.conference_shared_files = []
+            # TODO - don't re-render everything, use file hashes to calculate additions, removals
+            self.conference_shared_files = []
 
-                for file in reversed(session.conference_shared_files):
-                    item = ConferenceFile(file)
-                    self.conference_shared_files.append(item)
+            for file in reversed(session.conference_shared_files):
+                item = ConferenceFile(file)
+                self.conference_shared_files.append(item)
 
-                self.conferenceFilesTableView.reloadData()
+            self.conferenceFilesTableView.reloadData()
 
-                if session.conference_shared_files:
-                    column_header_title = u'%d Shared Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Shared Files'
-                    if chat_stream and chat_stream.drawerSplitterPosition is None:
-                        top_frame = self.conferenceFilesView.frame()
-                        top_frame.size.height = 130
-                        bottom_frame = self.participantsView.frame()
-                        bottom_frame.size.height = bottom_frame.size.height - 130
-                        chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
-                else:
-                    column_header_title = u'Shared Files'
-                    if chat_stream:
-                        chat_stream.drawerSplitterPosition = None
+            if session.conference_shared_files:
+                column_header_title = u'%d Shared Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Shared Files'
+                if chat_stream and chat_stream.drawerSplitterPosition is None:
+                    top_frame = self.conferenceFilesView.frame()
+                    top_frame.size.height = 130
+                    bottom_frame = self.participantsView.frame()
+                    bottom_frame.size.height = bottom_frame.size.height - 130
+                    chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
+            else:
+                column_header_title = u'Shared Files'
+                if chat_stream:
+                    chat_stream.drawerSplitterPosition = None
 
-                self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
+            self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
 
-                self.resizeDrawerSplitter()
+            self.resizeDrawerSplitter()
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
