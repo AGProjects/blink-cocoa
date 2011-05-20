@@ -263,6 +263,9 @@ class ContactWindowController(NSWindowController):
 
         self.window().makeFirstResponder_(self.contactOutline)
 
+        # dialpad
+        self.contactsMenu.itemWithTag_(42).setEnabled_(True if NSApp.delegate().applicationName == 'Blink Pro' else False)
+
         self.loaded = True
 
 
