@@ -340,20 +340,24 @@ class ChatViewController(NSObject):
         frame.size.height = 0
         self.inputView.setFrame_(frame)
 
-        hash = hashlib.sha1()
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            hash = hashlib.sha1()
 
-        if self.delegate.sessionController.remote_focus:
-            id = '%s' % (self.delegate.sessionController.remoteSIPAddress)
-        else:
-            if self.delegate.sessionController.session.direction == "incoming":
-                id = '%s_%s' % (self.delegate.sessionController.remoteSIPAddress, self.delegate.sessionController.account.id)
+            if self.delegate.sessionController.remote_focus:
+                id = '%s' % (self.delegate.sessionController.remoteSIPAddress)
             else:
-                id = '%s_%s' % (self.delegate.sessionController.account.id, self.delegate.sessionController.remoteSIPAddress)
+                if self.delegate.sessionController.session.direction == "incoming":
+                    id = '%s_%s' % (self.delegate.sessionController.remoteSIPAddress, self.delegate.sessionController.account.id)
+                else:
+                    id = '%s_%s' % (self.delegate.sessionController.account.id, self.delegate.sessionController.remoteSIPAddress)
 
-        hash.update(id)
-        form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
-        script = """showCollaborationEditor("%s", "%s")""" % (form_id, settings.server.collaboration_url)
-        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+            hash.update(id)
+            form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
+            script = """showCollaborationEditor("%s", "%s")""" % (form_id, settings.server.collaboration_url)
+            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+        else:
+            script = "showDisabledCollaborationEditor()"
+            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def hideCollaborationEditor(self):
         if self.splitterHeight is not None:
