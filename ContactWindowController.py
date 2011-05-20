@@ -2489,13 +2489,9 @@ class ContactWindowController(NSWindowController):
             if NSApp.delegate().applicationName == 'Blink Pro':
                 item.setEnabled_(True)
                 item.setTitle_('Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else 'Hide Dialpad')
-            elif NSApp.delegate().applicationName == 'Blink Lite':
+            else:
                 item.setEnabled_(False)
                 item.setTitle_('Show Dialpad (Available in Blink Pro)')
-            else:
-                menu.removeItem_(item)
-                item = self.contactsMenu.itemWithTag_(41) # Dialpad delimiter
-                menu.removeItem_(item)
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
