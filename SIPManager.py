@@ -878,8 +878,11 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             if settings.server.alert_url:
                 url = unicode(settings.server.alert_url)
-                replace_with = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
-                url = url.replace('($sip_uri)', replace_with[2:])
+                replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
+                print replace_caller
+                url = url.replace('$caller_party', replace_caller[5:])
+                replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
+                url = url.replace('$called_party', replace_account[5:])
                 BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
 
