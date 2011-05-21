@@ -11,9 +11,17 @@ class ConferenceFileCell(NSTextFieldCell):
     nameAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
       NSFont.systemFontOfSize_(12.0), NSFontAttributeName)
 
+    nameAttrs_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(
+      NSFont.systemFontOfSize_(12.0), NSFontAttributeName,
+      NSColor.whiteColor(), NSForegroundColorAttributeName)
+
     infoAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
       NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
       NSColor.grayColor(), NSForegroundColorAttributeName)
+
+    infoAttrs_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(
+      NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
+      NSColor.whiteColor(), NSForegroundColorAttributeName)
 
     def drawingRectForBounds_(self, rect):
         return rect
@@ -33,12 +41,14 @@ class ConferenceFileCell(NSTextFieldCell):
         # 1st line: file name
         frame.origin.x = 35
         frame.origin.y += 2
-        self.conference_file.name.drawAtPoint_withAttributes_(frame.origin, self.nameAttrs)
+        attrs = self.nameAttrs if not self.isHighlighted() else self.nameAttrs_highlighted
+        self.conference_file.name.drawAtPoint_withAttributes_(frame.origin, attrs)
 
         # 2nd line: file sender
         point = frame.origin
         point.y += 15
-        self.conference_file.sender.drawAtPoint_withAttributes_(point, self.infoAttrs)
+        attrs = self.infoAttrs if not self.isHighlighted() else self.infoAttrs_highlighted
+        self.conference_file.sender.drawAtPoint_withAttributes_(point, attrs)
 
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()

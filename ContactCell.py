@@ -11,9 +11,17 @@ class ContactCell(NSTextFieldCell):
     nameAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
       NSFont.systemFontOfSize_(12.0), NSFontAttributeName)
 
+    nameAttrs_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(
+      NSFont.systemFontOfSize_(12.0), NSFontAttributeName,
+      NSColor.whiteColor(), NSForegroundColorAttributeName)
+
     infoAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
       NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
       NSColor.grayColor(), NSForegroundColorAttributeName)
+
+    infoAttrs_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(
+      NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
+      NSColor.whiteColor(), NSForegroundColorAttributeName)
 
     defaultIcon = None
     audioIcon = NSImage.imageNamed_("audio_16")
@@ -63,13 +71,15 @@ class ContactCell(NSTextFieldCell):
         # Print Display Name 1st line
         frame.origin.x = 35
         frame.origin.y += 2
-        self.stringValue().drawAtPoint_withAttributes_(frame.origin, self.nameAttrs)
+        attrs = self.nameAttrs if not self.isHighlighted() else self.nameAttrs_highlighted
+        self.stringValue().drawAtPoint_withAttributes_(frame.origin, attrs)
 
         # Print Detail 2nd line
         if self.contact.detail:
             point = frame.origin
             point.y += 15
-            self.contact.detail.drawAtPoint_withAttributes_(point, self.infoAttrs)
+            attrs = self.infoAttrs if not self.isHighlighted() else self.infoAttrs_highlighted
+            self.contact.detail.drawAtPoint_withAttributes_(point, attrs)
 
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
