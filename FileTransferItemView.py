@@ -15,7 +15,7 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from util import allocate_autorelease_pool, format_size, run_in_gui_thread
 
 
-class FileTransferItem(NSView):
+class FileTransferItemView(NSView):
     implements(IObserver)
     
     view = objc.IBOutlet()
@@ -43,7 +43,7 @@ class FileTransferItem(NSView):
         if self:
             self.oldTransferInfo = transferInfo
 
-            NSBundle.loadNibNamed_owner_("FileTransferItem", self)
+            NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
             filename = transferInfo.file_path
             if filename.endswith(".download"):
@@ -78,7 +78,7 @@ class FileTransferItem(NSView):
             self.transfer = transfer
             NotificationCenter().add_observer(self, sender=transfer)
 
-            NSBundle.loadNibNamed_owner_("FileTransferItem", self)
+            NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
             filename = self.transfer.file_path
 

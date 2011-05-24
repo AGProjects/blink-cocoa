@@ -7,7 +7,7 @@ from AppKit import *
 from ChatViewController import ChatInputTextView
 from SmileyManager import SmileyManager
 
-class ChatPrivateMessage(NSObject):
+class ChatPrivateMessageController(NSObject):
     window = objc.IBOutlet()
     title = objc.IBOutlet()
     inputText = objc.IBOutlet()

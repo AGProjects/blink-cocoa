@@ -21,7 +21,7 @@ from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
 import SessionController
 import ChatWindowManager
-from ChatPrivateMessage import ChatPrivateMessage
+from ChatPrivateMessageController import ChatPrivateMessageController
 from SIPManager import SIPManager
 
 import FancyTabSwitcher
@@ -519,7 +519,7 @@ class ChatWindowController(NSWindowController):
             except SIPCoreError:
                 return
 
-            controller = ChatPrivateMessage(contact)
+            controller = ChatPrivateMessageController(contact)
             message = controller.runModal()
 
             if message:

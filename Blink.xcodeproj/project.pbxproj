@@ -85,9 +85,9 @@
 		1F2272D112B554F50010A8B2 /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
 		1F2272D212B554F50010A8B2 /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
 		1F2272D312B554F50010A8B2 /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
-		1F2272D412B554F50010A8B2 /* FileTransfers.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */; };
-		1F2272D512B554F50010A8B2 /* FileTransferItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */; };
-		1F2272D612B554F50010A8B2 /* FileTransferItem.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */; };
+		1F2272D412B554F50010A8B2 /* FileTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */; };
+		1F2272D512B554F50010A8B2 /* FileTransferItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */; };
+		1F2272D612B554F50010A8B2 /* FileTransferItemView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */; };
 		1F2272D712B554F50010A8B2 /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
 		1F2272D812B554F50010A8B2 /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
 		1F2272D912B554F50010A8B2 /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
@@ -323,9 +323,9 @@
 		1F8DC35F135084FA0034815C /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
 		1F8DC360135084FA0034815C /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
 		1F8DC361135084FA0034815C /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
-		1F8DC362135084FA0034815C /* FileTransfers.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */; };
-		1F8DC363135084FA0034815C /* FileTransferItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */; };
-		1F8DC364135084FA0034815C /* FileTransferItem.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */; };
+		1F8DC362135084FA0034815C /* FileTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */; };
+		1F8DC363135084FA0034815C /* FileTransferItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */; };
+		1F8DC364135084FA0034815C /* FileTransferItemView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */; };
 		1F8DC365135084FA0034815C /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
 		1F8DC366135084FA0034815C /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
 		1F8DC367135084FA0034815C /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
@@ -405,7 +405,7 @@
 		1F8DC3B1135084FA0034815C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
 		1F8DC3B2135084FA0034815C /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
 		1F8DC3B3135084FA0034815C /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
-		1F8DC3B4135084FA0034815C /* ChatPrivateMessage.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */; };
+		1F8DC3B4135084FA0034815C /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1F8DC3B5135084FA0034815C /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1F8DC3B6135084FA0034815C /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1F8DC3B7135084FA0034815C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
@@ -530,8 +530,8 @@
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
-		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessage.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */; };
-		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessage.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */; };
+		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
+		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
@@ -564,9 +564,9 @@
 		2B2DE97D1053431600F267F9 /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
 		2B2DE97E1053431600F267F9 /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
 		2B2DF3C81059F27C00F267F9 /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
-		2B2DF5E0105CBFCA00F267F9 /* FileTransfers.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */; };
-		2B2DF5E4105CC03400F267F9 /* FileTransferItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */; };
-		2B2DF5EA105D3CDD00F267F9 /* FileTransferItem.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */; };
+		2B2DF5E0105CBFCA00F267F9 /* FileTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */; };
+		2B2DF5E4105CC03400F267F9 /* FileTransferItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */; };
+		2B2DF5EA105D3CDD00F267F9 /* FileTransferItemView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */; };
 		2B2DF5ED105D467000F267F9 /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
 		2B2DF60F105D494000F267F9 /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
 		2B2DF672105DC56A00F267F9 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
@@ -1130,7 +1130,7 @@
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
-		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessage.py; sourceTree = "<group>"; };
+		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -1166,9 +1166,9 @@
 		2B2DE97B1053431600F267F9 /* bluelock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bluelock.png; path = icons/bluelock.png; sourceTree = "<group>"; };
 		2B2DE97C1053431600F267F9 /* greenlock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = greenlock.png; path = icons/greenlock.png; sourceTree = "<group>"; };
 		2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactOutlineView.py; sourceTree = "<group>"; };
-		2B2DF5DF105CBFCA00F267F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FileTransfers.xib; sourceTree = "<group>"; };
-		2B2DF5E3105CC03400F267F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FileTransferItem.xib; sourceTree = "<group>"; };
-		2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferItem.py; sourceTree = "<group>"; };
+		2B2DF5DF105CBFCA00F267F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
+		2B2DF5E3105CC03400F267F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
+		2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferItemView.py; sourceTree = "<group>"; };
 		2B2DF5EC105D467000F267F9 /* ListView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ListView.py; sourceTree = "<group>"; };
 		2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferWindowController.py; sourceTree = "<group>"; };
 		2B2DF646105DC53A00F267F9 /* angel.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = angel.png; path = smileys/default/angel.png; sourceTree = "<group>"; };
@@ -1592,11 +1592,11 @@
 			isa = PBXGroup;
 			children = (
 				1F8760B412C026840090846C /* FileTransferController.py */,
-				2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */,
 				2BC08CC2106679940069AB9A /* FileTransferSession.py */,
-				2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */,
-				2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */,
-				2B2DF5E9105D3CDD00F267F9 /* FileTransferItem.py */,
+				2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */,
+				2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */,
+				2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */,
+				2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */,
 			);
 			name = FileTransfer;
 			sourceTree = "<group>";
@@ -1656,9 +1656,10 @@
 			children = (
 				2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */,
 				2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */,
+				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2B5DE4B40FFC501E00701821 /* AddContactController.py */,
-				2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */,
 				2BAF38080FE088C70040117A /* AddContact.xib */,
+				2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */,
 				2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */,
 			);
 			name = Contacts;
@@ -1723,7 +1724,7 @@
 				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
 				2BAF38160FE088C70040117A /* ChatView.xib */,
 				2BD011E110D8198400D27A92 /* ChatView.html */,
-				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */,
+				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
@@ -1797,7 +1798,6 @@
 			children = (
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
-				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
@@ -1813,10 +1813,10 @@
 		2BF42C7A107E6E7600F04A6C /* Audio */ = {
 			isa = PBXGroup;
 			children = (
-				2BC08A781063B3570069AB9A /* AnsweringMachine.py */,
 				2BF430B01082EEFE00F04A6C /* AudioController.py */,
 				2B103E361015721E00002158 /* AudioSession.py */,
 				2BA28D671028FD2800B99A0E /* AudioSession.xib */,
+				2BC08A781063B3570069AB9A /* AnsweringMachine.py */,
 			);
 			name = Audio;
 			sourceTree = "<group>";
@@ -2019,9 +2019,9 @@
 				1F2272D112B554F50010A8B2 /* bluelock.png in Resources */,
 				1F2272D212B554F50010A8B2 /* greenlock.png in Resources */,
 				1F2272D312B554F50010A8B2 /* ContactOutlineView.py in Resources */,
-				1F2272D412B554F50010A8B2 /* FileTransfers.xib in Resources */,
-				1F2272D512B554F50010A8B2 /* FileTransferItem.xib in Resources */,
-				1F2272D612B554F50010A8B2 /* FileTransferItem.py in Resources */,
+				1F2272D412B554F50010A8B2 /* FileTransferWindow.xib in Resources */,
+				1F2272D512B554F50010A8B2 /* FileTransferItemView.xib in Resources */,
+				1F2272D612B554F50010A8B2 /* FileTransferItemView.py in Resources */,
 				1F2272D712B554F50010A8B2 /* ListView.py in Resources */,
 				1F2272D812B554F50010A8B2 /* FileTransferWindowController.py in Resources */,
 				1F2272D912B554F50010A8B2 /* SmileyManager.py in Resources */,
@@ -2101,7 +2101,7 @@
 				1FAF8C5E12DA18960029857C /* VideoController.py in Resources */,
 				1FAF8D5412DA31100029857C /* video-hangup.png in Resources */,
 				1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */,
-				1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessage.py in Resources */,
+				1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */,
 				1FBBF2E712E9B3500077E766 /* HistoryManager.py in Resources */,
 				1FBD0E0212EB705E00087347 /* trash.png in Resources */,
 				1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */,
@@ -2189,9 +2189,9 @@
 				1F8DC35F135084FA0034815C /* bluelock.png in Resources */,
 				1F8DC360135084FA0034815C /* greenlock.png in Resources */,
 				1F8DC361135084FA0034815C /* ContactOutlineView.py in Resources */,
-				1F8DC362135084FA0034815C /* FileTransfers.xib in Resources */,
-				1F8DC363135084FA0034815C /* FileTransferItem.xib in Resources */,
-				1F8DC364135084FA0034815C /* FileTransferItem.py in Resources */,
+				1F8DC362135084FA0034815C /* FileTransferWindow.xib in Resources */,
+				1F8DC363135084FA0034815C /* FileTransferItemView.xib in Resources */,
+				1F8DC364135084FA0034815C /* FileTransferItemView.py in Resources */,
 				1F8DC365135084FA0034815C /* ListView.py in Resources */,
 				1F8DC366135084FA0034815C /* FileTransferWindowController.py in Resources */,
 				1F8DC367135084FA0034815C /* SmileyManager.py in Resources */,
@@ -2271,7 +2271,7 @@
 				1F8DC3B1135084FA0034815C /* VideoController.py in Resources */,
 				1F8DC3B2135084FA0034815C /* video-hangup.png in Resources */,
 				1F8DC3B3135084FA0034815C /* ChatPrivateMessage.xib in Resources */,
-				1F8DC3B4135084FA0034815C /* ChatPrivateMessage.py in Resources */,
+				1F8DC3B4135084FA0034815C /* ChatPrivateMessageController.py in Resources */,
 				1F8DC3B5135084FA0034815C /* HistoryManager.py in Resources */,
 				1F8DC3B6135084FA0034815C /* trash.png in Resources */,
 				1F8DC3B7135084FA0034815C /* outgoing_file.png in Resources */,
@@ -2357,9 +2357,9 @@
 				2B2DE97D1053431600F267F9 /* bluelock.png in Resources */,
 				2B2DE97E1053431600F267F9 /* greenlock.png in Resources */,
 				2B2DF3C81059F27C00F267F9 /* ContactOutlineView.py in Resources */,
-				2B2DF5E0105CBFCA00F267F9 /* FileTransfers.xib in Resources */,
-				2B2DF5E4105CC03400F267F9 /* FileTransferItem.xib in Resources */,
-				2B2DF5EA105D3CDD00F267F9 /* FileTransferItem.py in Resources */,
+				2B2DF5E0105CBFCA00F267F9 /* FileTransferWindow.xib in Resources */,
+				2B2DF5E4105CC03400F267F9 /* FileTransferItemView.xib in Resources */,
+				2B2DF5EA105D3CDD00F267F9 /* FileTransferItemView.py in Resources */,
 				2B2DF5ED105D467000F267F9 /* ListView.py in Resources */,
 				2B2DF60F105D494000F267F9 /* FileTransferWindowController.py in Resources */,
 				2B2DF6AA105DC69900F267F9 /* SmileyManager.py in Resources */,
@@ -2439,7 +2439,7 @@
 				1FAF8C5D12DA18960029857C /* VideoController.py in Resources */,
 				1FAF8D5312DA31100029857C /* video-hangup.png in Resources */,
 				1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */,
-				1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessage.py in Resources */,
+				1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */,
 				1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */,
 				1FBD0E0112EB705E00087347 /* trash.png in Resources */,
 				1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */,
@@ -2589,20 +2589,20 @@
 			name = PresenceOfflineWindow.xib;
 			sourceTree = "<group>";
 		};
-		2B2DF5DE105CBFCA00F267F9 /* FileTransfers.xib */ = {
+		2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2B2DF5DF105CBFCA00F267F9 /* English */,
 			);
-			name = FileTransfers.xib;
+			name = FileTransferWindow.xib;
 			sourceTree = "<group>";
 		};
-		2B2DF5E2105CC03400F267F9 /* FileTransferItem.xib */ = {
+		2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2B2DF5E3105CC03400F267F9 /* English */,
 			);
-			name = FileTransferItem.xib;
+			name = FileTransferItemView.xib;
 			sourceTree = "<group>";
 		};
 		2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */ = {

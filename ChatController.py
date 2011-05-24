@@ -569,6 +569,9 @@ class ChatController(MediaStream):
         self.exitFullScreen()
 
     def enterFullScreen(self):
+        if not self.fullScreenVideoPanel:
+            NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
+
         self.saveSplitterPosition()
 
         self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
@@ -594,19 +597,15 @@ class ChatController(MediaStream):
         window.window().setMovable_(False)
 
         self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
+       
+        self.fullScreenVideoPanel.orderFront_(None)
+        self.fullScreenVideoPanelToobar.validateVisibleItems()
 
-        if not self.fullScreenVideoPanel:
-            NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
-        
-        if self.fullScreenVideoPanel:
-            self.fullScreenVideoPanel.orderFront_(None)
-            self.fullScreenVideoPanelToobar.validateVisibleItems()
+        self.updateToolbarMuteIcon()
+        content_frame=self.fullScreenVideoPanel.contentView().frame()
 
-            self.updateToolbarMuteIcon()
-            content_frame=self.fullScreenVideoPanel.contentView().frame()
-
-            if content_frame.size.height > 1:
-                self.showMirror()
+        if content_frame.size.height > 1:
+            self.showMirror()
 
         window.window().setInitialFirstResponder_(self.videoContainer)
 

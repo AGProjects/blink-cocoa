@@ -13,7 +13,7 @@ from zope.interface import implements
 
 import ListView
 from HistoryManager import FileTransferHistory
-from FileTransferItem import FileTransferItem
+from FileTransferItemView import FileTransferItemView
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 import SIPManager
@@ -48,7 +48,7 @@ class FileTransferWindowController(NSObject, object):
 
         NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
 
-        NSBundle.loadNibNamed_owner_("FileTransfers", self)
+        NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
 
         return self
 
@@ -67,7 +67,7 @@ class FileTransferWindowController(NSObject, object):
         last_displayed_item = self.listView.subviews().lastObject()
 
         for transfer in transfers:
-            item = FileTransferItem.alloc().initWithFrame_oldTransfer_(NSMakeRect(0, 0, 100, 100), transfer)
+            item = FileTransferItemView.alloc().initWithFrame_oldTransfer_(NSMakeRect(0, 0, 100, 100), transfer)
 
             if last_displayed_item:
                 self.listView.insertItemView_before_(item, last_displayed_item)
@@ -131,7 +131,7 @@ class FileTransferWindowController(NSObject, object):
         self.listView.relayout()
 
     def _NH_BlinkFileTransferInitializing(self, sender, data):
-        item = FileTransferItem.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
+        item = FileTransferItemView.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
 
         self.listView.addItemView_(item)
         h = NSHeight(self.listView.frame())
