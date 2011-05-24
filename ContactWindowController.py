@@ -1617,6 +1617,13 @@ class ContactWindowController(NSWindowController):
         self.debugWindow.show()
 
     @objc.IBAction
+    def toggleMirrorWindow_(self, sender):
+        if self.mirrorWindow.visible:
+            self.mirrorWindow.hide()
+        else:
+            self.mirrorWindow.show()
+
+    @objc.IBAction
     def presenceTextAction_(self, sender):
         if sender == self.nameText:
             name = unicode(self.nameText.stringValue())
@@ -1718,6 +1725,9 @@ class ContactWindowController(NSWindowController):
         item = self.statusMenu.itemWithTag_(53) # bonjour audio
         account = BonjourAccount()
         item.setState_(account.audio.auto_accept and NSOnState or NSOffState)
+
+        item = self.statusMenu.itemWithTag_(54) # my video
+        item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
 
     def updateToolsMenu(self):
         account = self.activeAccount()
