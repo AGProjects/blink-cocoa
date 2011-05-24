@@ -75,6 +75,8 @@ class VideoMirrorWindowController(NSObject):
 
 
 class VideoMirrowView(NSView):
+    initialLocation = None
+
     def keyDown_(self, event):
         s = event.characters()
         key = s[0].upper()
@@ -82,3 +84,22 @@ class VideoMirrowView(NSView):
             self.delegate.hide()
         else:
             NSView.keyDown_(self, event)
+
+    def mouseDown_(self, event):
+        self.initialLocation = event.locationInWindow()
+
+    def mouseDragged_(self, event):
+        screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
+        windowFrame = self.window().frame();
+        newOrigin = windowFrame.origin;
+
+        currentLocation = event.locationInWindow()
+
+        newOrigin.x += (currentLocation.x - self.initialLocation.x);
+        newOrigin.y += (currentLocation.y - self.initialLocation.y);
+
+        if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
+            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height);
+
+        self.window().setFrameOrigin_(newOrigin);
+
