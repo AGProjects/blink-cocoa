@@ -36,7 +36,7 @@
 		1F22729E12B554F50010A8B2 /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
 		1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
-		1F2272A212B554F50010A8B2 /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
+		1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
 		1F2272A412B554F50010A8B2 /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
 		1F2272A512B554F50010A8B2 /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
@@ -227,10 +227,25 @@
 		1F22738212B5559C0010A8B2 /* libz.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722D12B554000010A8B2 /* libz.1.dylib */; };
 		1F22739612B5565E0010A8B2 /* Vine Server.app in Copy Helper Binaries */ = {isa = PBXBuildFile; fileRef = 1F226DE412B54FBE0010A8B2 /* Vine Server.app */; };
 		1F22739712B5568E0010A8B2 /* Vine Server.app in Copy Helper Binaries */ = {isa = PBXBuildFile; fileRef = 1F226DE412B54FBE0010A8B2 /* Vine Server.app */; };
+		1F2746791388755F0052C384 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
+		1F27467A1388755F0052C384 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
+		1F27467B1388755F0052C384 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
+		1F2747C51388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */; };
+		1F2747C61388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */; };
+		1F2747C71388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */; };
+		1F2747D31388FC5C0052C384 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
+		1F2747D41388FC5C0052C384 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
+		1F2747D51388FC5C0052C384 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
+		1F274896138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
+		1F274897138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
+		1F274898138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
 		1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
+		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
+		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
+		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F5615C312BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
 		1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
 		1F5677C11323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
@@ -244,6 +259,10 @@
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
+		1F8A7630138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
+		1F8A7631138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
+		1F8A7632138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
+		1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F8DC326135084FA0034815C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F8DC328135084FA0034815C /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
@@ -255,7 +274,7 @@
 		1F8DC32E135084FA0034815C /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
 		1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		1F8DC330135084FA0034815C /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
-		1F8DC331135084FA0034815C /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
+		1F8DC331135084FA0034815C /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		1F8DC332135084FA0034815C /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
 		1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
 		1F8DC334135084FA0034815C /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
@@ -627,7 +646,7 @@
 		2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* Enrollment.xib */; };
 		2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		2BAF381E0FE088C70040117A /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
-		2BAF381F0FE088C70040117A /* ChatSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatSession.xib */; };
+		2BAF381F0FE088C70040117A /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		2BAF38210FE088C70040117A /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
 		2BAF382A0FE088E80040117A /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
 		2BAF382C0FE088E80040117A /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
@@ -1059,9 +1078,14 @@
 		1F22722B12B554000010A8B2 /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblzo.1.dylib; path = Distribution/Frameworks/liblzo.1.dylib; sourceTree = "<group>"; };
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
 		1F22722D12B554000010A8B2 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = Distribution/Frameworks/libz.1.dylib; sourceTree = "<group>"; };
+		1F274637138868010052C384 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
+		1F2746781388755F0052C384 /* fullscreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = fullscreen.png; path = icons/fullscreen.png; sourceTree = "<group>"; };
+		1F2747D21388FC5C0052C384 /* restore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = restore.png; path = icons/restore.png; sourceTree = "<group>"; };
+		1F274895138930580052C384 /* VideoView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoView.py; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
+		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
 		1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "test@conference.sip2sip.info.tiff"; path = "icons/test@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F5677C01323DDDD00D087D1 /* transfer.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = transfer.png; path = icons/transfer.png; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
@@ -1069,8 +1093,9 @@
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
+		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
+		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		1F8DC74C1351D6F40034815C /* Blink */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Blink; path = /Users/adigeo/Blink; sourceTree = "<absolute>"; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
@@ -1223,7 +1248,7 @@
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Enrollment.xib; sourceTree = "<group>"; };
 		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainWindow.xib; sourceTree = "<group>"; };
 		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Preferences.xib; sourceTree = "<group>"; };
-		2BAF38130FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatSession.xib; sourceTree = "<group>"; };
+		2BAF38130FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatWindow.xib; sourceTree = "<group>"; };
 		2BAF38170FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatView.xib; sourceTree = "<group>"; };
 		2BAF38250FE088E80040117A /* BlinkAppDelegate.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlinkAppDelegate.py; sourceTree = "<group>"; };
 		2BAF38270FE088E80040117A /* SIPManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SIPManager.py; sourceTree = "<group>"; };
@@ -1284,6 +1309,7 @@
 				1F22738212B5559C0010A8B2 /* libz.1.dylib in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F22732512B554F50010A8B2 /* Python.framework in Frameworks */,
+				1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1344,6 +1370,7 @@
 				2B0CD87410BD6F0500325F30 /* Sparkle.framework */,
 				77631A260C06C501005415CB /* Python.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -1428,6 +1455,7 @@
 			isa = PBXGroup;
 			children = (
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
+				1F274895138930580052C384 /* VideoView.py */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -1440,7 +1468,6 @@
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
-				1F8DC74C1351D6F40034815C /* Blink */,
 			);
 			name = MacSip;
 			sourceTree = "<group>";
@@ -1510,6 +1537,10 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F8A762F138A982E007E84C0 /* mute-white.png */,
+				1F4D4FBF1389AF7500A2CE0B /* mirror.png */,
+				1F2747D21388FC5C0052C384 /* restore.png */,
+				1F2746781388755F0052C384 /* fullscreen.png */,
 				1FA6251F13828E2500DFC8E3 /* editor.png */,
 				1F2A32341328CEE00078F01D /* paused_16.png */,
 				1F5677C01323DDDD00D087D1 /* transfer.png */,
@@ -1685,16 +1716,17 @@
 		2B6328740FE421BD00446655 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
-				2BF430E81082F32500F04A6C /* ChatWindowManager.py */,
 				2B6328840FE422AE00446655 /* ChatController.py */,
+				2BF430E81082F32500F04A6C /* ChatWindowManager.py */,
 				1F71724712BE201200CBA476 /* ChatWindowController.py */,
+				2BAF38120FE088C70040117A /* ChatWindow.xib */,
 				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
-				2BAF38120FE088C70040117A /* ChatSession.xib */,
 				2BAF38160FE088C70040117A /* ChatView.xib */,
 				2BD011E110D8198400D27A92 /* ChatView.html */,
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessage.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
+				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
@@ -1938,7 +1970,7 @@
 				1F22729E12B554F50010A8B2 /* Enrollment.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
 				1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */,
-				1F2272A212B554F50010A8B2 /* ChatSession.xib in Resources */,
+				1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
 				1F2272A412B554F50010A8B2 /* BlinkAppDelegate.py in Resources */,
 				1F2272A512B554F50010A8B2 /* SIPManager.py in Resources */,
@@ -2084,6 +2116,12 @@
 				1F17C25F137335D700DF4724 /* silence.wav in Resources */,
 				DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1FA6252113828E2500DFC8E3 /* editor.png in Resources */,
+				1F2747C61388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */,
+				1F2746791388755F0052C384 /* fullscreen.png in Resources */,
+				1F2747D31388FC5C0052C384 /* restore.png in Resources */,
+				1F274896138930580052C384 /* VideoView.py in Resources */,
+				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
+				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2102,7 +2140,7 @@
 				1F8DC32E135084FA0034815C /* Enrollment.xib in Resources */,
 				1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */,
 				1F8DC330135084FA0034815C /* Preferences.xib in Resources */,
-				1F8DC331135084FA0034815C /* ChatSession.xib in Resources */,
+				1F8DC331135084FA0034815C /* ChatWindow.xib in Resources */,
 				1F8DC332135084FA0034815C /* ChatView.xib in Resources */,
 				1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */,
 				1F8DC334135084FA0034815C /* SIPManager.py in Resources */,
@@ -2246,6 +2284,12 @@
 				DEFD8CA0135DF34200456E86 /* resources.py in Resources */,
 				DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1FA6252213828E2500DFC8E3 /* editor.png in Resources */,
+				1F2747C71388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */,
+				1F27467A1388755F0052C384 /* fullscreen.png in Resources */,
+				1F2747D41388FC5C0052C384 /* restore.png in Resources */,
+				1F274897138930580052C384 /* VideoView.py in Resources */,
+				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
+				1F8A7632138A982E007E84C0 /* mute-white.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2264,7 +2308,7 @@
 				2BAF381B0FE088C70040117A /* Enrollment.xib in Resources */,
 				2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */,
 				2BAF381E0FE088C70040117A /* Preferences.xib in Resources */,
-				2BAF381F0FE088C70040117A /* ChatSession.xib in Resources */,
+				2BAF381F0FE088C70040117A /* ChatWindow.xib in Resources */,
 				2BAF38210FE088C70040117A /* ChatView.xib in Resources */,
 				2BAF382A0FE088E80040117A /* BlinkAppDelegate.py in Resources */,
 				2BAF382C0FE088E80040117A /* SIPManager.py in Resources */,
@@ -2410,6 +2454,12 @@
 				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
+				1F2747C51388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */,
+				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
+				1F2747D51388FC5C0052C384 /* restore.png in Resources */,
+				1F274898138930580052C384 /* VideoView.py in Resources */,
+				1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */,
+				1F8A7630138A982E007E84C0 /* mute-white.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2457,6 +2507,14 @@
 				1F0D0EC1132D231C00614205 /* English */,
 			);
 			name = ConferenceConfigurationPanel.xib;
+			sourceTree = "<group>";
+		};
+		1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F274637138868010052C384 /* English */,
+			);
+			name = FullScreenVideoPanel.xib;
 			sourceTree = "<group>";
 		};
 		1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */ = {
@@ -2619,12 +2677,12 @@
 			name = Preferences.xib;
 			sourceTree = "<group>";
 		};
-		2BAF38120FE088C70040117A /* ChatSession.xib */ = {
+		2BAF38120FE088C70040117A /* ChatWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2BAF38130FE088C70040117A /* English */,
 			);
-			name = ChatSession.xib;
+			name = ChatWindow.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38160FE088C70040117A /* ChatView.xib */ = {

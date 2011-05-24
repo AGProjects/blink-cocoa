@@ -173,6 +173,7 @@ class ChatViewController(NSObject):
     outputView = objc.IBOutlet()
     inputText = objc.IBOutlet()
     inputView = objc.IBOutlet()
+    videoView = objc.IBOutlet()
 
     splitterHeight = None
 
@@ -185,6 +186,10 @@ class ChatViewController(NSObject):
     editorStatus = False
 
     rendered_messages = set()
+
+    video_source = None
+    video_visible = False
+    video_initialized = False
 
     lastTypedTime = None
     lastTypeNotifyTime = None
@@ -218,9 +223,11 @@ class ChatViewController(NSObject):
         self.outputView.mainFrame().loadRequest_(request)
         assert self.outputView.preferences().isJavaScriptEnabled()
 
+
     def close(self):
         self.inputText.setOwner(None)
         self.outputView.close()
+        self.videoView.close()
 
     def appendAttributedString_(self, text):
         storage = self.inputText.textStorage()

@@ -66,7 +66,7 @@ class ChatWindowController(NSWindowController):
             # keep a reference to the controller object  because it may be used later by cocoa
             self.chat_controllers = set()
 
-            NSBundle.loadNibNamed_owner_("ChatSession", self)
+            NSBundle.loadNibNamed_owner_("ChatWindow", self)
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="AudioStreamDidStartRecordingAudio")
@@ -79,6 +79,8 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkSessionChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlerChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlersChanged")
+            self.notification_center.add_observer(self, name="BlinkVideoEnteredFullScreen")
+            self.notification_center.add_observer(self, name="BlinkVideoExitedFullScreen")
 
             self.backend = SIPManager()
 
@@ -321,6 +323,10 @@ class ChatWindowController(NSWindowController):
         elif name == "BlinkStreamHandlersChanged":
             self.revalidateToolbar()
             self.refreshDrawer()
+        elif name == "BlinkVideoEnteredFullScreen":
+            self.toolbar.setVisible_(False)
+        elif name == "BlinkVideoExitedFullScreen":
+            self.toolbar.setVisible_(True)
         elif name in( "AudioStreamDidStartRecordingAudio", "AudioStreamDidStopRecordingAudio"):
             self.revalidateToolbar()
         elif name == "BlinkGotProposal":
@@ -380,11 +386,14 @@ class ChatWindowController(NSWindowController):
             if ret != NSAlertDefaultReturn:
                 return False
 
+
         self.window().close()
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
+                chat_stream.exitFullScreen()
+
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self)

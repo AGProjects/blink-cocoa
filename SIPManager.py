@@ -844,6 +844,9 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Chat sessions are disabled in configuration")
             return False
 
+        if NSApp.delegate().applicationName != 'Blink Pro' and type == 'video':
+            return False
+
         return True
 
     def isMediaTypeSupported(self, type):
@@ -860,6 +863,13 @@ class SIPManager(object):
 
         if settings.chat.disabled and type == 'chat':
             return False
+
+        if NSApp.delegate().applicationName != 'Blink Pro' and type == 'video':
+            return False
+
+        if type == 'video':
+            # TODO: enable video -adi
+            return True
 
         return True
 

@@ -69,7 +69,7 @@ class SMSViewController(NSObject):
     chatViewController = objc.IBOutlet()
     splitView = objc.IBOutlet()
     smileyButton = objc.IBOutlet()
-    upperContainer = objc.IBOutlet()
+    outputContainer = objc.IBOutlet()
     addContactView = objc.IBOutlet()
     addContactLabel = objc.IBOutlet()
 
@@ -149,7 +149,7 @@ class SMSViewController(NSObject):
         self.addContactView.removeFromSuperview()
         frame = self.chatViewController.outputView.frame()
         frame.origin.y = 0
-        frame.size = self.upperContainer.frame().size
+        frame.size = self.outputContainer.frame().size
         self.chatViewController.outputView.setFrame_(frame)
     
     def enableAddContactPanel(self):
@@ -160,7 +160,7 @@ class SMSViewController(NSObject):
         frame.size.height -= NSHeight(self.addContactView.frame())
         frame.origin.y += NSHeight(self.addContactView.frame())
         self.chatViewController.outputView.setFrame_(frame)
-        self.upperContainer.addSubview_(self.addContactView)
+        self.outputContainer.addSubview_(self.addContactView)
         frame = self.addContactView.frame()
         frame.origin = NSZeroPoint
         self.addContactView.setFrame_(frame)

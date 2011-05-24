@@ -3,6 +3,7 @@
 
 from Foundation import *
 from AppKit import *
+import QTKit
 
 import datetime
 import hashlib
@@ -31,14 +32,37 @@ import ChatWindowManager
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
+from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 
+kUIModeNormal = 0
+kUIModeContentSuppressed = 1
+kUIModeContentHidden = 2
+kUIModeAllSuppressed = 4
+kUIModeAllHidden = 3
+kUIOptionAutoShowMenuBar = 1 << 0
+kUIOptionDisableAppleMenu = 1 << 2
+kUIOptionDisableProcessSwitch = 1 << 3
+kUIOptionDisableForceQuit = 1 << 4
+kUIOptionDisableSessionTerminate = 1 << 5
+kUIOptionDisableHide = 1 << 6
 
 MAX_MESSAGE_LENGTH = 16*1024
+
+FULLSCREEN_TOOLBAR_HANGUP = 1
+FULLSCREEN_TOOLBAR_HOLD = 2
+FULLSCREEN_TOOLBAR_PARTICIPANTS = 3
+FULLSCREEN_TOOLBAR_EXIT = 4
+FULLSCREEN_TOOLBAR_MUTE = 5
+FULLSCREEN_TOOLBAR_MIRROR = 6
+
+bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
+objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
+
 
 def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
     """
@@ -55,7 +79,6 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
             contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
         else:
             contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
-
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
     return item.tag() in (SessionController.TOOLBAR_RECONNECT, SessionController.TOOLBAR_HISTORY)
@@ -85,7 +108,7 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif tag == SessionController.TOOLBAR_SMILEY:
             item.setImage_(NSImage.imageNamed_("smiley_on"))
             item.setEnabled_(False)
-        elif tag == SessionController.TOOLBAR_EDITOR:
+        elif tag == SessionController.TOOLBAR_EDITOR and sessionController.account is not BonjourAccount():
             item.setEnabled_(True)
 
 class MessageInfo(object):
@@ -290,15 +313,31 @@ class MessageHandler(NSObject):
         except Exception, e:
             BlinkLogger().log_error(u"Failed to add message to history: %s" % e)
 
+
 class ChatController(MediaStream):
     implements(IObserver)
 
     chatViewController = objc.IBOutlet()
     smileyButton = objc.IBOutlet()
-    upperContainer = objc.IBOutlet()
+
     addContactView = objc.IBOutlet()
     addContactLabel = objc.IBOutlet()
 
+    splitView = objc.IBOutlet()
+    splitViewFrame = None
+    video_frame_visible = False
+    video_view_is_full_screen = False
+
+    videoContainer = objc.IBOutlet()
+    inputContainer = objc.IBOutlet()
+    outputContainer = objc.IBOutlet()
+
+    fullScreenVideoPanel = objc.IBOutlet()
+    fullScreenVideoPanelToobar = objc.IBOutlet()
+    mirrorView = objc.IBOutlet()
+    mirrorSession = None
+    mirror_visible = False 
+    
     document = None
     fail_reason = None
     sessionController = None
@@ -314,6 +353,9 @@ class ChatController(MediaStream):
 
     # timer is reset whenever remote end sends is-composing active, when it times out, go to idle
     remoteTypingTimer = None
+
+    drawerSplitterPosition = None
+    mainViewSplitterPosition = None
 
     @classmethod
     def createStream(self, account):
@@ -333,10 +375,12 @@ class ChatController(MediaStream):
             self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, sender=self.sessionController)
             self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
+            self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
             NSBundle.loadNibNamed_owner_("ChatView", self)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+
             self.chatViewController.setAccount_(self.sessionController.account)
             self.chatViewController.resetRenderedMessages()
 
@@ -345,7 +389,7 @@ class ChatController(MediaStream):
 
             self.history=ChatHistory()
 
-            self.drawerSplitterPosition = None
+            self.backend = SIPManager()
 
         return self
 
@@ -373,6 +417,18 @@ class ChatController(MediaStream):
             item.setAttributedTitle_(atext)
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
+
+    def saveSplitterPosition(self):
+        self.mainViewSplitterPosition={'output_frame': self.outputContainer.frame(), 'input_frame': self.inputContainer.frame()}
+        if self.videoContainer:
+            self.mainViewSplitterPosition['video_frame']=self.videoContainer.frame()
+
+    def restoreSplitterPosition(self):
+        if self.mainViewSplitterPosition:
+            if self.videoContainer and self.mainViewSplitterPosition['video_frame']:
+                self.videoContainer.setFrame_(self.mainViewSplitterPosition['video_frame'])
+            self.outputContainer.setFrame_(self.mainViewSplitterPosition['output_frame'])
+            self.inputContainer.setFrame_(self.mainViewSplitterPosition['input_frame'])
 
     def dealloc(self):
         if self.remoteTypingTimer:
@@ -409,9 +465,38 @@ class ChatController(MediaStream):
         ws = NSWorkspace.sharedWorkspace()
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file)]
         if filenames:
-            SIPManager().send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
+            self.backend.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
             return True
         return False
+
+    def validateToolbarItem_(self, item):
+        return True
+
+    @objc.IBAction
+    def userClickedFullScreenToolbarButton_(self, sender):
+        if sender.tag() == FULLSCREEN_TOOLBAR_HANGUP:
+            self.closeTab()
+        elif sender.tag() == FULLSCREEN_TOOLBAR_MIRROR:
+            self.toggleMirror()
+        elif sender.tag() == FULLSCREEN_TOOLBAR_MUTE:
+            self.backend.mute(False if self.backend.is_muted() else True)
+            self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
+        elif sender.tag() == FULLSCREEN_TOOLBAR_HOLD:
+            if self.sessionController.hasStreamOfType("audio"):
+                audio_stream = self.sessionController.streamHandlerOfType("audio")
+                if self.status == STREAM_CONNECTED and not self.sessionController.inProposal:
+                    if audio_stream.holdByLocal:
+                        audio_stream.unhold()
+                        audio_stream.view.setSelected_(True)
+                        sender.setImage_(NSImage.imageNamed_("pause"))
+                    else:
+                        sender.setImage_(NSImage.imageNamed_("paused"))
+                        audio_stream.hold()
+        elif sender.tag() == FULLSCREEN_TOOLBAR_PARTICIPANTS:
+            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+            window.window().performZoom_(None)
+        elif sender.tag() == FULLSCREEN_TOOLBAR_EXIT:
+            self.exitFullScreen()
 
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
@@ -420,7 +505,7 @@ class ChatController(MediaStream):
         self.addContactView.removeFromSuperview()
         frame = self.chatViewController.outputView.frame()
         frame.origin.y = 0
-        frame.size = self.upperContainer.frame().size
+        frame.size = self.outputContainer.frame().size
         self.chatViewController.outputView.setFrame_(frame)
     
     def enableAddContactPanel(self):
@@ -430,7 +515,7 @@ class ChatController(MediaStream):
         frame.size.height -= NSHeight(self.addContactView.frame())
         frame.origin.y += NSHeight(self.addContactView.frame())
         self.chatViewController.outputView.setFrame_(frame)
-        self.upperContainer.addSubview_(self.addContactView)
+        self.outputContainer.addSubview_(self.addContactView)
         frame = self.addContactView.frame()
         frame.origin = NSZeroPoint
         self.addContactView.setFrame_(frame)
@@ -467,6 +552,206 @@ class ChatController(MediaStream):
 
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
+
+    def updateToolbarMuteIcon(self):
+        if self.fullScreenVideoPanel:
+            try:
+                mute_item = (item for item in self.fullScreenVideoPanelToobar.visibleItems() if item.tag()==FULLSCREEN_TOOLBAR_MUTE).next()
+            except StopIteration:
+                pass
+            else:
+                if self.backend.is_muted():
+                    mute_item.setImage_(NSImage.imageNamed_("muted"))
+                else:
+                    mute_item.setImage_(NSImage.imageNamed_("mute"))
+
+    def fullScreenViewPressedEscape(self):
+        self.exitFullScreen()
+
+    def enterFullScreen(self):
+        self.saveSplitterPosition()
+
+        self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
+        output_frame = self.outputContainer.frame()
+        output_frame.size.height = 0
+        self.outputContainer.setFrame_(output_frame)
+        input_frame = self.outputContainer.frame()
+        input_frame.size.height = 0
+        self.inputContainer.setFrame_(input_frame)
+
+        # Hide Dock and other desktop items
+        SetSystemUIMode(kUIModeAllHidden, 0)
+
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        self.splitViewFrame = window.window().frame()
+
+        window.window().makeFirstResponder_(self.videoContainer)
+
+        window.window().setMovableByWindowBackground_(True)
+        fullframe = NSScreen.mainScreen().frame()
+        fullframe.size.height += 20
+        window.window().setFrame_display_animate_(fullframe, True, True)
+        window.window().setMovable_(False)
+
+        self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
+
+        if not self.fullScreenVideoPanel:
+            NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
+        
+        if self.fullScreenVideoPanel:
+            self.fullScreenVideoPanel.orderFront_(None)
+            self.fullScreenVideoPanelToobar.validateVisibleItems()
+
+            self.updateToolbarMuteIcon()
+            content_frame=self.fullScreenVideoPanel.contentView().frame()
+
+            if content_frame.size.height > 1:
+                self.showMirror()
+
+        window.window().setInitialFirstResponder_(self.videoContainer)
+
+        self.video_view_is_full_screen = True
+
+    def exitFullScreen(self):
+        if not self.video_view_is_full_screen:
+            return
+
+        self.hideMirror()
+
+        if self.splitViewFrame:
+            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+            window.window().setFrame_display_(self.splitViewFrame, True)
+            window.window().setMovable_(True)
+
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
+            self.restoreSplitterPosition()
+            self.splitViewFrame = None
+
+        if self.fullScreenVideoPanel:
+            self.fullScreenVideoPanel.orderOut_(self)
+
+        # Restore Dock and other desktop items
+        SetSystemUIMode(kUIModeNormal, kUIOptionAutoShowMenuBar)
+
+        self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self)
+
+        self.video_view_is_full_screen = False
+
+    def showMirror(self):
+        if self.fullScreenVideoPanel:
+            window_frame=self.fullScreenVideoPanel.frame()
+            content_frame=self.fullScreenVideoPanel.contentView().frame()
+
+            if content_frame.size.height == 1:
+                content_frame.size.height = 245
+                self.fullScreenVideoPanel.setContentSize_(content_frame.size)
+                window_frame.origin.y -= 245 if window_frame.origin.y >= 245 else 0
+                window_frame.size.height += 245
+                self.fullScreenVideoPanel.setFrame_display_animate_(window_frame, True, True)
+
+            if self.mirrorSession is None:
+                try:
+                    self.mirrorSession = QTKit.QTCaptureSession.alloc().init()
+
+                    # Find a video device
+                    device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
+                    success, error = device.open_(None)
+                    if not success:
+                        return
+
+                    # Add a device input for that device to the capture session
+                    captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
+                    success, error = self.mirrorSession.addInput_error_(captureDeviceInput, None)
+                    if not success:
+                        return
+
+                    # Add a decompressed video output that returns raw frames to the session
+                    captureDecompressedVideoOutput = QTKit.QTCaptureVideoPreviewOutput.alloc().init()
+                    captureDecompressedVideoOutput.setDelegate_(self)
+                    success, error = self.mirrorSession.addOutput_error_(captureDecompressedVideoOutput, None)
+                    if not success:
+                        return
+
+                    self.mirrorView.setCaptureSession_(self.mirrorSession)
+
+                except:
+                    pass
+
+            if self.mirrorSession:
+                self.mirrorSession.startRunning()
+
+            self.mirror_visible = True
+
+    @run_in_gui_thread
+    def hideMirror(self):
+        if self.mirror_visible:
+            if self.mirrorSession:
+                self.mirrorSession.stopRunning()
+
+            if self.fullScreenVideoPanel:
+                window_frame=self.fullScreenVideoPanel.frame()
+                content_frame=self.fullScreenVideoPanel.contentView().frame()
+
+                window_frame.origin.y += 245
+                window_frame.size.height -= 245 if window_frame.size.height >= 245 else 0
+                self.fullScreenVideoPanel.setFrame_display_animate_(window_frame, True, True)
+
+                content_frame.size.height = 1
+                self.fullScreenVideoPanel.setContentSize_(content_frame.size)
+
+            self.mirror_visible = False
+
+    @run_in_gui_thread
+    def toggleMirror(self):
+        if self.mirror_visible:
+            self.hideMirror()
+        else:
+            self.showMirror()
+
+    def toggleVideoFrame(self):
+        default_video_height = 400
+        splitter_height = 10
+        minimum_output_height = 100
+
+        view_height = self.splitView.frame().size.height
+
+        input_frame = self.inputContainer.frame()
+        output_frame = self.outputContainer.frame()
+
+        if not self.video_frame_visible:
+            self.splitView.addSubview_positioned_relativeTo_(self.videoContainer,  NSWindowBelow, self.outputContainer)
+            self.videoContainer.setDelegate_(self)
+            self.videoContainer.showVideo()
+
+            # video frame
+            available_height = view_height - input_frame.size.height - 2 * splitter_height - minimum_output_height
+            video_height = default_video_height if available_height > default_video_height else available_height
+            video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
+            self.videoContainer.setFrame_(video_frame)
+
+            # output frame
+            output_height = view_height - input_frame.size.height - video_height - 2 * splitter_height
+            output_frame.size.height = output_height if output_height > 0 else 0
+            self.outputContainer.setFrame_(output_frame)
+
+            # input frame
+            self.inputContainer.setFrame_(input_frame)
+
+            self.video_frame_visible = True
+
+        else:
+            self.videoContainer.hideVideo()
+            self.videoContainer.removeFromSuperview()
+            self.videoContainer.setDelegate_(None)
+
+            # output frame
+            output_frame.size.height = view_height - input_frame.size.height - splitter_height
+            self.outputContainer.setFrame_(output_frame)
+
+            # input frame
+            self.inputContainer.setFrame_(input_frame)
+
+            self.video_frame_visible = False
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -579,6 +864,7 @@ class ChatController(MediaStream):
                     else:
                         item.setImage_(NSImage.imageNamed_("record"))
             elif tag == SessionController.TOOLBAR_HOLD:
+                # TODO: add hold for video -adi
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
                         if audio_stream.holdByRemote:
@@ -594,10 +880,12 @@ class ChatController(MediaStream):
                 else:
                     item.setImage_(NSImage.imageNamed_("pause"))
                     item.setEnabled_(False)
-            elif tag == SessionController.TOOLBAR_VIDEO:
-                item.setEnabled_(False)
-                continue
+            elif tag == SessionController.TOOLBAR_FULLSCREEN and self.video_frame_visible:
+                item.setEnabled_(True)
+            elif tag == SessionController.TOOLBAR_VIDEO and self.backend.isMediaTypeSupported('video'):
+                item.setEnabled_(True)
                 # TODO: enable video -adi
+                continue
                 if self.sessionController.hasStreamOfType("video"):
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
                         item.setToolTip_('Click to cancel the video call')
@@ -617,7 +905,7 @@ class ChatController(MediaStream):
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_SEND_FILE:
                 if self.status == STREAM_CONNECTED:
-                    item.setEnabled_(True and SIPManager().isMediaTypeSupported('file-transfer'))
+                    item.setEnabled_(True and self.backend.isMediaTypeSupported('file-transfer'))
                 else:
                     item.setEnabled_(False)
             elif tag == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
@@ -628,16 +916,16 @@ class ChatController(MediaStream):
                 title = self.sessionController.getTitleShort()
                 menu = toolbar.delegate().desktopShareMenu
                 menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Desktop from %s" % title)
-                menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(SIPManager().isMediaTypeSupported('desktop-sharing'))
+                menu.itemWithTag_(SessionController.TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
                 menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP_MENU).setTitle_("Share My Desktop with %s" % title)
-                menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP_MENU).setEnabled_(SIPManager().isMediaTypeSupported('desktop-sharing'))
+                menu.itemWithTag_(SessionController.TOOLBAR_SHARE_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
             elif tag == SessionController.TOOLBAR_SMILEY:
                 if self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
-            elif tag == SessionController.TOOLBAR_EDITOR:
+            elif tag == SessionController.TOOLBAR_EDITOR and self.sessionController.account is not BonjourAccount():
                 item.setEnabled_(True)
 
     def validateToolbarButton(self, item):
@@ -688,8 +976,10 @@ class ChatController(MediaStream):
                     return False
             else:
                 return False
-        elif tag == SessionController.TOOLBAR_VIDEO and self.status == STREAM_CONNECTED:
-            return False
+        elif tag == SessionController.TOOLBAR_FULLSCREEN and self.video_frame_visible:
+            return True
+        elif tag == SessionController.TOOLBAR_VIDEO and self.backend.isMediaTypeSupported('video'):
+            return True
             # TODO: enable video -adi
             if self.sessionController.hasStreamOfType("video"):
                 if video_stream.status == STREAM_CONNECTED:
@@ -705,15 +995,15 @@ class ChatController(MediaStream):
             if self.sessionController.inProposal:
                 return False
             return True
-        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED and SIPManager().isMediaTypeSupported('file-transfer'):
+        elif tag == SessionController.TOOLBAR_SEND_FILE and self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('file-transfer'):
             return True
         elif self.status==STREAM_CONNECTED and tag in (SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON, SessionController.TOOLBAR_SHARE_DESKTOP_MENU, SessionController.TOOLBAR_REQUEST_DESKTOP_MENU):
-            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus or not SIPManager().isMediaTypeSupported('desktop-sharing'):
+            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus or not self.backend.isMediaTypeSupported('desktop-sharing'):
                 return False
             return True
         elif tag == SessionController.TOOLBAR_SMILEY and self.status == STREAM_CONNECTED:
             return True
-        elif tag == SessionController.TOOLBAR_EDITOR:
+        elif tag == SessionController.TOOLBAR_EDITOR and self.sessionController.account is not BonjourAccount():
             return True
         elif tag == SessionController.TOOLBAR_HISTORY:
             return True
@@ -749,6 +1039,7 @@ class ChatController(MediaStream):
                     sender.setToolTip_('Click to cancel the audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))
                     self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session, data=TimestampedNotificationData())
+
         elif tag == SessionController.TOOLBAR_RECORD:
             if audio_stream.stream.recording_active:
                 audio_stream.stream.stop_recording()
@@ -762,7 +1053,9 @@ class ChatController(MediaStream):
                 path = os.path.join(settings.audio.directory.normalized, session.account.id)
                 audio_stream.stream.start_recording(os.path.join(path, filename))
                 sender.setImage_(NSImage.imageNamed_("recording1"))
+
         elif tag == SessionController.TOOLBAR_HOLD:
+            # TODO: put video on hold -adi
             if self.status == STREAM_CONNECTED and self.sessionController.hasStreamOfType("audio") and not self.sessionController.inProposal:
                 if audio_stream.holdByLocal:
                     audio_stream.unhold()
@@ -771,7 +1064,12 @@ class ChatController(MediaStream):
                 else:
                     sender.setImage_(NSImage.imageNamed_("paused"))
                     audio_stream.hold()
+
         elif tag == SessionController.TOOLBAR_VIDEO:
+            self.toggleVideoFrame()
+            sender.setImage_(NSImage.imageNamed_("video") if not self.video_frame_visible else NSImage.imageNamed_("video-hangup"))
+            # TODO: add interaction with video stream from middleware -adi
+            return
             if self.status == STREAM_CONNECTED:
                 if self.sessionController.hasStreamOfType("video"):
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
@@ -780,25 +1078,30 @@ class ChatController(MediaStream):
                         self.sessionController.removeVideoFromSession()
 
                     sender.setToolTip_('Click to add video to this session')
-                    sender.setImage_(NSImage.imageNamed_("video"))
 
                     # The button will be enabled again after operation is finished
                     sender.setEnabled_(False)
                 else:
                     self.sessionController.addVideoToSession()
                     sender.setToolTip_('Click to cancel the video call')
-                    sender.setImage_(NSImage.imageNamed_("video-hangup"))
+
+        elif tag == SessionController.TOOLBAR_FULLSCREEN:
+            self.enterFullScreen()
+
         elif tag == SessionController.TOOLBAR_SEND_FILE:
             openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.session.remote_identity.uri)
+
         elif tag == SessionController.TOOLBAR_RECONNECT:
             if self.status in (STREAM_IDLE, STREAM_FAILED):
                 BlinkLogger().log_info(u"Re-establishing session to %s" % self.remoteParty)
                 self.sessionController.mustShowDrawer = True
                 self.sessionController.startChatSession()
+
         elif tag == SessionController.TOOLBAR_SMILEY:
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
+
         elif tag == SessionController.TOOLBAR_EDITOR and self.sessionController.account is not BonjourAccount():
             self.chatViewController.editorStatus = not self.chatViewController.editorStatus
             self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
@@ -900,6 +1203,9 @@ class ChatController(MediaStream):
 
         window.noteSession_isComposing_(self.sessionController, flag)
 
+    def _NH_BlinkMuteChangedState(self, sender, data):
+        self.updateToolbarMuteIcon()
+
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if self.sessionController.remoteSIPAddress == sender.remote_identity and window and video_file_extension_pattern.search(data.file_path):
@@ -953,6 +1259,8 @@ class ChatController(MediaStream):
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
             self.removeFromSession()
+            self.videoContainer.hideVideo()
+            self.exitFullScreen()
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
         if window:
@@ -973,6 +1281,8 @@ class ChatController(MediaStream):
 
         self.changeStatus(STREAM_FAILED, data.reason)
         self.removeFromSession()
+        self.videoContainer.hideVideo()
+        self.exitFullScreen()
 
         if window:
             self.handler.setDisconnected()
@@ -984,7 +1294,7 @@ class ChatController(MediaStream):
 
     def closeTab(self):
         if self.status != STREAM_DISCONNECTING:
-            SIPManager().ringer.stop_ringing(self.sessionController.session)
+            self.backend.ringer.stop_ringing(self.sessionController.session)
 
             if self.status == STREAM_PROPOSING:
                 self.sessionController.cancelProposal(self.stream)
@@ -998,6 +1308,8 @@ class ChatController(MediaStream):
 
         # remove this controller from session stream handlers list
         self.removeFromSession()
+        self.videoContainer.hideVideo()
+        self.exitFullScreen()
 
         # remove held reference needed by the GUI
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)

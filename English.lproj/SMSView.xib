@@ -542,7 +542,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">upperContainer</string>
+						<string key="label">outputContainer</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="563972716"/>
 					</object>
@@ -994,7 +994,7 @@
 							<string>chatViewController</string>
 							<string>smileyButton</string>
 							<string>splitView</string>
-							<string>upperContainer</string>
+							<string>outputContainer</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
