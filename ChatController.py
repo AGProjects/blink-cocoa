@@ -690,6 +690,10 @@ class ChatController(MediaStream):
         view_height = self.splitView.frame().size.height
 
         if not self.video_frame_visible:
+            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+            if window:
+                window.drawer.close()
+
             splitter_height = 5
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
 
@@ -713,6 +717,9 @@ class ChatController(MediaStream):
             self.video_frame_visible = True
 
         else:
+            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+            if window:
+                window.drawer.open()
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
             splitter_height = 10
             self.videoContainer.hideVideo()
