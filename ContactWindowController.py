@@ -43,6 +43,7 @@ from FileTransferWindowController import FileTransferWindowController, openFileT
 from ServerConferenceWindowController import JoinConferenceWindow, AddParticipantsWindow
 from SessionController import SessionController
 from SIPManager import MWIData
+from VideoMirrorWindowController import VideoMirrorWindowController
 
 from resources import Resources
 from util import *
@@ -97,6 +98,7 @@ class ContactWindowController(NSWindowController):
     fileTranfersWindow = objc.IBOutlet()
 
     debugWindow = None
+    mirrorWindow = None
 
     loaded = False
     collapsedState = False
@@ -293,6 +295,9 @@ class ContactWindowController(NSWindowController):
 
         # initialize debug window
         self.debugWindow = DebugWindow.alloc().init()
+
+        # video mirror window
+        self.mirrorWindow = VideoMirrorWindowController.alloc().init()
 
         # instantiate the SMS handler
         SMSWindowManager.SMSWindowManager().setOwner_(self)

@@ -3,7 +3,6 @@
 
 from Foundation import *
 from AppKit import *
-import QTKit
 
 import datetime
 import hashlib
@@ -326,7 +325,6 @@ class ChatController(MediaStream):
     splitView = objc.IBOutlet()
     splitViewFrame = None
     video_frame_visible = False
-    video_view_is_full_screen = False
 
     videoContainer = objc.IBOutlet()
     inputContainer = objc.IBOutlet()
@@ -334,9 +332,6 @@ class ChatController(MediaStream):
 
     fullScreenVideoPanel = objc.IBOutlet()
     fullScreenVideoPanelToobar = objc.IBOutlet()
-    mirrorView = objc.IBOutlet()
-    mirrorSession = None
-    mirror_visible = False 
     
     document = None
     fail_reason = None
@@ -572,6 +567,14 @@ class ChatController(MediaStream):
         if not self.fullScreenVideoPanel:
             NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
 
+            userdef = NSUserDefaults.standardUserDefaults()
+            savedFrame = userdef.stringForKey_("NSWindow Frame FullScreenVideoPanel")
+
+            if savedFrame:
+                x, y, w, h = str(savedFrame).split()[:4]
+                frame = NSMakeRect(int(x), int(y), int(w), int(h))
+                self.fullScreenVideoPanel.setFrame_display_(frame, True)
+
         self.saveSplitterPosition()
 
         self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
@@ -600,21 +603,13 @@ class ChatController(MediaStream):
        
         self.fullScreenVideoPanel.orderFront_(None)
         self.fullScreenVideoPanelToobar.validateVisibleItems()
-
         self.updateToolbarMuteIcon()
-        content_frame=self.fullScreenVideoPanel.contentView().frame()
 
-        if content_frame.size.height > 1:
-            self.showMirror()
+        self.showMirror()
 
         window.window().setInitialFirstResponder_(self.videoContainer)
 
-        self.video_view_is_full_screen = True
-
     def exitFullScreen(self):
-        if not self.video_view_is_full_screen:
-            return
-
         self.hideMirror()
 
         if self.splitViewFrame:
@@ -634,80 +629,19 @@ class ChatController(MediaStream):
 
         self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self)
 
-        self.video_view_is_full_screen = False
-
     def showMirror(self):
-        if self.fullScreenVideoPanel:
-            window_frame=self.fullScreenVideoPanel.frame()
-            content_frame=self.fullScreenVideoPanel.contentView().frame()
+        NSApp.delegate().windowController.mirrorWindow.show()
 
-            if content_frame.size.height == 1:
-                content_frame.size.height = 245
-                self.fullScreenVideoPanel.setContentSize_(content_frame.size)
-                window_frame.origin.y -= 245 if window_frame.origin.y >= 245 else 0
-                window_frame.size.height += 245
-                self.fullScreenVideoPanel.setFrame_display_animate_(window_frame, True, True)
-
-            if self.mirrorSession is None:
-                try:
-                    self.mirrorSession = QTKit.QTCaptureSession.alloc().init()
-
-                    # Find a video device
-                    device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
-                    success, error = device.open_(None)
-                    if not success:
-                        return
-
-                    # Add a device input for that device to the capture session
-                    captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
-                    success, error = self.mirrorSession.addInput_error_(captureDeviceInput, None)
-                    if not success:
-                        return
-
-                    # Add a decompressed video output that returns raw frames to the session
-                    captureDecompressedVideoOutput = QTKit.QTCaptureVideoPreviewOutput.alloc().init()
-                    captureDecompressedVideoOutput.setDelegate_(self)
-                    success, error = self.mirrorSession.addOutput_error_(captureDecompressedVideoOutput, None)
-                    if not success:
-                        return
-
-                    self.mirrorView.setCaptureSession_(self.mirrorSession)
-
-                except:
-                    pass
-
-            if self.mirrorSession:
-                self.mirrorSession.startRunning()
-
-            self.mirror_visible = True
-
-    @run_in_gui_thread
     def hideMirror(self):
-        if self.mirror_visible:
-            if self.mirrorSession:
-                self.mirrorSession.stopRunning()
+        NSApp.delegate().windowController.mirrorWindow.hide()
 
-            if self.fullScreenVideoPanel:
-                window_frame=self.fullScreenVideoPanel.frame()
-                content_frame=self.fullScreenVideoPanel.contentView().frame()
-
-                window_frame.origin.y += 245
-                window_frame.size.height -= 245 if window_frame.size.height >= 245 else 0
-                self.fullScreenVideoPanel.setFrame_display_animate_(window_frame, True, True)
-
-                content_frame.size.height = 1
-                self.fullScreenVideoPanel.setContentSize_(content_frame.size)
-
-            self.mirror_visible = False
-
-    @run_in_gui_thread
     def toggleMirror(self):
-        if self.mirror_visible:
+        if NSApp.delegate().windowController.mirrorWindow.visible:
             self.hideMirror()
         else:
             self.showMirror()
 
-    def toggleVideoFrame(self):
+    def toggleVideoFrameKeepChat(self):
         default_video_height = 400
         splitter_height = 10
         minimum_output_height = 100
@@ -749,6 +683,52 @@ class ChatController(MediaStream):
 
             # input frame
             self.inputContainer.setFrame_(input_frame)
+
+            self.video_frame_visible = False
+
+    def toggleVideoFrame(self):
+        input_frame = self.inputContainer.frame()
+        output_frame = self.outputContainer.frame()
+
+        view_height = self.splitView.frame().size.height
+
+        if not self.video_frame_visible:
+            splitter_height = 5
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
+
+            self.splitView.addSubview_positioned_relativeTo_(self.videoContainer,  NSWindowBelow, self.outputContainer)
+            self.videoContainer.setDelegate_(self)
+            self.videoContainer.showVideo()
+
+            # input frame
+            input_frame.size.height = 35
+            self.inputContainer.setFrame_(input_frame)
+
+            # video frame
+            video_height = view_height - input_frame.size.height - 2 * splitter_height
+            video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
+            self.videoContainer.setFrame_(video_frame)
+
+            # output frame
+            output_frame.size.height = 0
+            self.outputContainer.setFrame_(output_frame)
+
+            self.video_frame_visible = True
+
+        else:
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
+            splitter_height = 10
+            self.videoContainer.hideVideo()
+            self.videoContainer.removeFromSuperview()
+            self.videoContainer.setDelegate_(None)
+
+            # input frame
+            input_frame.size.height = 65
+            self.inputContainer.setFrame_(input_frame)
+
+            # output frame
+            output_frame.size.height = view_height - input_frame.size.height - splitter_height
+            self.outputContainer.setFrame_(output_frame)
 
             self.video_frame_visible = False
 

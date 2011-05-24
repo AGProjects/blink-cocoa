@@ -9,6 +9,12 @@
 /* Begin PBXBuildFile section */
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
+		1F07D766138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
+		1F07D767138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
+		1F07D768138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
+		1F07D8A3138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */; };
+		1F07D8A4138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */; };
+		1F07D8A5138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */; };
 		1F092DB412B2785E000CEE7F /* ServerConferenceWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */; };
 		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
@@ -1058,6 +1064,8 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
+		1F07D75A138BDF5900C91AD7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
+		1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoMirrorWindowController.py; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ServerConferenceWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ServerConferenceWindowController.py; sourceTree = "<group>"; };
 		1F092DB512B27864000CEE7F /* English */ = {isa = PBXFileReference; explicitFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
@@ -1456,6 +1464,9 @@
 			children = (
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
 				1F274895138930580052C384 /* VideoView.py */,
+				1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */,
+				1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */,
+				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -1727,7 +1738,6 @@
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
-				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
@@ -2122,6 +2132,8 @@
 				1F274896138930580052C384 /* VideoView.py in Resources */,
 				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
+				1F07D8A4138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
+				1F07D767138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2290,6 +2302,8 @@
 				1F274897138930580052C384 /* VideoView.py in Resources */,
 				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7632138A982E007E84C0 /* mute-white.png in Resources */,
+				1F07D8A5138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
+				1F07D768138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2460,6 +2474,8 @@
 				1F274898138930580052C384 /* VideoView.py in Resources */,
 				1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7630138A982E007E84C0 /* mute-white.png in Resources */,
+				1F07D8A3138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
+				1F07D766138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2499,6 +2515,14 @@
 				089C165DFE840E0CC02AAC07 /* English */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F07D75A138BDF5900C91AD7 /* English */,
+			);
+			name = VideoMirrowWindow.xib;
 			sourceTree = "<group>";
 		};
 		1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */ = {

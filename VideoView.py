@@ -40,6 +40,6 @@ class VideoView(NSView):
         if key == chr(27):
             if self.delegate:
                 self.delegate.fullScreenViewPressedEscape()
-            print 'Pressed escape....'
         else:
             NSView.keyDown_(self, event)
+
