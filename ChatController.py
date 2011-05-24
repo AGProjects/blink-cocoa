@@ -617,7 +617,7 @@ class ChatController(MediaStream):
             window.window().setFrame_display_(self.splitViewFrame, True)
             window.window().setMovable_(True)
 
-            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
             self.restoreSplitterPosition()
             self.splitViewFrame = None
 
@@ -641,38 +641,34 @@ class ChatController(MediaStream):
         else:
             self.showMirror()
 
-    def toggleVideoFrameKeepChat(self):
-        default_video_height = 400
-        splitter_height = 10
-        minimum_output_height = 100
-
+    def showChatViewWhileVideoActive(self):
         view_height = self.splitView.frame().size.height
-
         input_frame = self.inputContainer.frame()
         output_frame = self.outputContainer.frame()
 
-        if not self.video_frame_visible:
-            self.splitView.addSubview_positioned_relativeTo_(self.videoContainer,  NSWindowBelow, self.outputContainer)
-            self.videoContainer.setDelegate_(self)
-            self.videoContainer.showVideo()
+        if self.video_frame_visible:
+            splitter_height = 5
+            new_output_height = 200
+            new_input_height = 35
+            
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
 
             # video frame
-            available_height = view_height - input_frame.size.height - 2 * splitter_height - minimum_output_height
-            video_height = default_video_height if available_height > default_video_height else available_height
+            video_height = view_height - input_frame.size.height - 2 * splitter_height - new_output_height
             video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
             self.videoContainer.setFrame_(video_frame)
 
             # output frame
-            output_height = view_height - input_frame.size.height - video_height - 2 * splitter_height
-            output_frame.size.height = output_height if output_height > 0 else 0
+            output_frame.size.height = new_output_height
             self.outputContainer.setFrame_(output_frame)
 
             # input frame
+            input_frame.size.height = new_input_height
             self.inputContainer.setFrame_(input_frame)
 
-            self.video_frame_visible = True
-
         else:
+            splitter_height = 10
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
             self.videoContainer.hideVideo()
             self.videoContainer.removeFromSuperview()
             self.videoContainer.setDelegate_(None)
@@ -684,7 +680,8 @@ class ChatController(MediaStream):
             # input frame
             self.inputContainer.setFrame_(input_frame)
 
-            self.video_frame_visible = False
+    def isOutputFrameVisible(self):
+        return True if self.outputContainer.frame().size.height > 10 else False
 
     def toggleVideoFrame(self):
         input_frame = self.inputContainer.frame()
