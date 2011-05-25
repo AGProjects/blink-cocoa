@@ -297,7 +297,7 @@ class ChatViewController(NSObject):
             self.messageQueue.append(script)
 
     def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False):
-        if not self.delegate.isOutputFrameVisible():
+        if not history_entry and not self.delegate.isOutputFrameVisible():
             self.delegate.showChatViewWhileVideoActive()
 
         # keep track of rendered messages to toggle the smileys
