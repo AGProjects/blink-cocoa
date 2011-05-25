@@ -372,6 +372,9 @@ class ChatController(MediaStream):
             self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
             self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
+            ns_nc = NSNotificationCenter.defaultCenter()
+            ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.splitView)
+
             NSBundle.loadNibNamed_owner_("ChatView", self)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
@@ -412,6 +415,10 @@ class ChatController(MediaStream):
             item.setAttributedTitle_(atext)
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
+
+
+    def drawerSplitViewDidResize_(self, notification):
+        pass
 
     def saveSplitterPosition(self):
         self.mainViewSplitterPosition={'output_frame': self.outputContainer.frame(), 'input_frame': self.inputContainer.frame()}
@@ -564,6 +571,11 @@ class ChatController(MediaStream):
         self.exitFullScreen()
 
     def enterFullScreen(self):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window.drawer.open()
+
+        self.splitViewFrame = window.window().frame()
+
         if not self.fullScreenVideoPanel:
             NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
 
@@ -588,9 +600,6 @@ class ChatController(MediaStream):
         # Hide Dock and other desktop items
         SetSystemUIMode(kUIModeAllHidden, 0)
 
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-        self.splitViewFrame = window.window().frame()
-
         window.window().makeFirstResponder_(self.videoContainer)
 
         window.window().setMovableByWindowBackground_(True)
@@ -610,10 +619,12 @@ class ChatController(MediaStream):
         window.window().setInitialFirstResponder_(self.videoContainer)
 
     def exitFullScreen(self):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window.drawer.close()
+
         self.hideMirror()
 
         if self.splitViewFrame:
-            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
             window.window().setFrame_display_(self.splitViewFrame, True)
             window.window().setMovable_(True)
 
@@ -642,11 +653,11 @@ class ChatController(MediaStream):
             self.showMirror()
 
     def showChatViewWhileVideoActive(self):
-        view_height = self.splitView.frame().size.height
-        input_frame = self.inputContainer.frame()
-        output_frame = self.outputContainer.frame()
-
         if self.video_frame_visible:
+            view_height = self.splitView.frame().size.height
+            input_frame = self.inputContainer.frame()
+            output_frame = self.outputContainer.frame()
+
             splitter_height = 5
             new_output_height = 200
             new_input_height = 35
@@ -666,19 +677,33 @@ class ChatController(MediaStream):
             input_frame.size.height = new_input_height
             self.inputContainer.setFrame_(input_frame)
 
-        else:
-            splitter_height = 10
-            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
-            self.videoContainer.hideVideo()
-            self.videoContainer.removeFromSuperview()
-            self.videoContainer.setDelegate_(None)
+    def showChatViewWithEditorWhileVideoActive(self):
+        if self.video_frame_visible:
+
+            splitter_height = 5
+            new_input_height = 35
+
+            new_output_height = 300 if self.chatViewController.editorStatus else 0
+
+            view_height = self.splitView.frame().size.height
+            output_frame = self.outputContainer.frame()
+            input_frame = self.inputContainer.frame()
+
+            self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
+
+            # video frame
+            video_height = view_height - input_frame.size.height - 2 * splitter_height - new_output_height
+            video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
+            self.videoContainer.setFrame_(video_frame)
 
             # output frame
-            output_frame.size.height = view_height - input_frame.size.height - splitter_height
+            output_frame.size.height = new_output_height
             self.outputContainer.setFrame_(output_frame)
 
             # input frame
+            input_frame.size.height = new_input_height
             self.inputContainer.setFrame_(input_frame)
+
 
     def isOutputFrameVisible(self):
         return True if self.outputContainer.frame().size.height > 10 else False
@@ -1087,6 +1112,7 @@ class ChatController(MediaStream):
 
         elif tag == SessionController.TOOLBAR_EDITOR and self.sessionController.account is not BonjourAccount():
             self.chatViewController.editorStatus = not self.chatViewController.editorStatus
+            self.showChatViewWithEditorWhileVideoActive()
             self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
             sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
 
