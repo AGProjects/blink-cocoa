@@ -780,6 +780,11 @@ class ChatWindowController(NSWindowController):
 
         session = self.selectedSessionController()
         if session:
+            if session.account is BonjourAccount():
+                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+            else:
+                own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
+
             chat_stream = session.streamHandlerOfType("chat")
                 
             if session.hasStreamOfType("audio"):
@@ -788,7 +793,6 @@ class ChatWindowController(NSWindowController):
             if session.conference_info is None or (session.conference_info is not None and not session.conference_info.users):
                 active_media = []
 
-                # Add remote party
                 if session.hasStreamOfType("chat"):
                     if chat_stream.status == STREAM_CONNECTED:
                         active_media.append('message')
@@ -799,6 +803,12 @@ class ChatWindowController(NSWindowController):
                     else:
                         active_media.append('audio-onhold')
 
+                # Add ourselves
+                contact = Contact(own_uri, name=session.account.display_name, icon=self.own_icon)
+                contact.setActiveMedia(active_media)
+                self.participants.append(contact)
+
+                # Add remote party
                 contact = getContactMatchingURI(session.remoteSIPAddress)
                 if contact:
                     contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
@@ -819,11 +829,6 @@ class ChatWindowController(NSWindowController):
 
             # Add conference participants if any
             if session.conference_info is not None:
-
-                if session.account is BonjourAccount():
-                    own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
-                else:
-                    own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
                 for user in session.conference_info.users:
                     uri = user.entity.replace("sip:", "", 1)
