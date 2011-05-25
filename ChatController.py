@@ -496,7 +496,8 @@ class ChatController(MediaStream):
                         audio_stream.hold()
         elif sender.tag() == FULLSCREEN_TOOLBAR_PARTICIPANTS:
             window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-            window.window().performZoom_(None)
+            if window:
+                window.window().performZoom_(None)
         elif sender.tag() == FULLSCREEN_TOOLBAR_EXIT:
             self.exitFullScreen()
 
@@ -572,6 +573,9 @@ class ChatController(MediaStream):
 
     def enterFullScreen(self):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if not window:
+            return
+
         window.drawer.open()
 
         self.splitViewFrame = window.window().frame()
@@ -620,6 +624,9 @@ class ChatController(MediaStream):
 
     def exitFullScreen(self):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if not window:
+            return
+
         window.drawer.close()
 
         self.hideMirror()
@@ -709,15 +716,17 @@ class ChatController(MediaStream):
         return True if self.outputContainer.frame().size.height > 10 else False
 
     def toggleVideoFrame(self):
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if not window:
+            return
+
         input_frame = self.inputContainer.frame()
         output_frame = self.outputContainer.frame()
 
         view_height = self.splitView.frame().size.height
 
         if not self.video_frame_visible:
-            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-            if window:
-                window.drawer.close()
+            window.drawer.close()
 
             splitter_height = 5
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
@@ -742,9 +751,7 @@ class ChatController(MediaStream):
             self.video_frame_visible = True
 
         else:
-            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
-            if window:
-                window.drawer.open()
+            window.drawer.open()
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
             splitter_height = 10
             self.videoContainer.hideVideo()
@@ -1135,10 +1142,10 @@ class ChatController(MediaStream):
                 sender.setEnabled_(False)
 
     def remoteBecameIdle_(self, timer):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         self.remoteTypingTimer = None
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
@@ -1150,6 +1157,9 @@ class ChatController(MediaStream):
 
     def _NH_ChatStreamGotMessage(self, stream, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if not window:
+            return
+
         message = data.message
 
         hash = hashlib.sha1()
@@ -1217,6 +1227,9 @@ class ChatController(MediaStream):
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        if not window:
+            return
+
         if self.sessionController.remoteSIPAddress == sender.remote_identity and window and video_file_extension_pattern.search(data.file_path):
             text  = "Incoming video file transfer has finished"
             text += "<p><video src='%s' controls='controls' autoplay='autoplay'></video>" % data.file_path
@@ -1259,7 +1272,6 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         BlinkLogger().log_info(u"Chat stream ended")
 
         self.notification_center.remove_observer(self, sender=sender)
@@ -1272,6 +1284,7 @@ class ChatController(MediaStream):
             self.exitFullScreen()
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             self.handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
@@ -1280,7 +1293,6 @@ class ChatController(MediaStream):
         self.stream = None
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         BlinkLogger().log_info(u"Chat stream failed: %s" % data.reason)
         if data.reason == "Connection was closed cleanly.":
             self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
@@ -1293,6 +1305,7 @@ class ChatController(MediaStream):
         self.videoContainer.hideVideo()
         self.exitFullScreen()
 
+        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
         if window:
             self.handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
