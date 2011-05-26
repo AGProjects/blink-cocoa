@@ -84,7 +84,13 @@ class BlinkAppDelegate(NSObject):
             app_dir_name = (name for name in Resources.directory.split('/') if name.endswith('.app')).next()
             if self.applicationName == 'Blink Pro' and os.path.isdir(lite_path) and not os.path.exists(os.path.join(pro_path, '.migrated_from_lite')):
                 if os.path.exists(pro_path):
-                    shutil.move(pro_path, pro_path+'.bak')
+                    ret = NSRunAlertPanel(u"Migrate Configuration", u"Blink Lite configuration has been found on this computer. Would you like to overwrite Blink Pro configuration with Blink Lite configuration?", u"Overwrite", u"Cancel", None)
+                    if ret == NSAlertDefaultReturn:
+                        shutil.move(pro_path, pro_path+'.bak')
+                    else:
+                        # Add marker file so that settings are not migrated every time
+                        open(os.path.join(pro_path, '.migrated_from_lite'), 'w').close()
+                        return
                 try:
                     shutil.copytree(lite_path, pro_path)
                 except shutil.Error, e:
