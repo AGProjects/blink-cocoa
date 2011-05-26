@@ -1843,11 +1843,7 @@ class ContactWindowController(NSWindowController):
 
         entries = {'incoming': [], 'outgoing': [], 'missed': [], 'conferences': []}
 
-        try:
-            results = SessionHistory().get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrieve incoming session history: %s" % e)
-            return
+        results = SessionHistory().get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -1866,11 +1862,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['incoming'].append(item)
 
-        try:
-            results = SessionHistory().get_entries(direction='outgoing', count=count, remote_focus="0")
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrieve outgoing session history: %s" % e)
-            return
+        results = SessionHistory().get_entries(direction='outgoing', count=count, remote_focus="0")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -1888,11 +1880,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['outgoing'].append(item)
 
-        try:
-            results = SessionHistory().get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrieve outgoing session history: %s" % e)
-            return
+        results = SessionHistory().get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -1910,11 +1898,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['missed'].append(item)
 
-        try:
-            results = SessionHistory().get_entries(count=count, remote_focus="1")
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrieve incoming session history: %s" % e)
-            return
+        results = SessionHistory().get_entries(count=count, remote_focus="1")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -2044,13 +2028,9 @@ class ContactWindowController(NSWindowController):
             lastItem.setTag_(444)
             lastItem.setTarget_(self)
 
-    @run_in_green_thread
     @allocate_autorelease_pool
     def delete_session_history_entries(self):
-        try:
-            SessionHistory().delete_entries()
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to delete session history: %s" % e)
+        SessionHistory().delete_entries()
 
     def historyClicked_(self, sender):
         if sender.tag() == 444:
@@ -2091,14 +2071,12 @@ class ContactWindowController(NSWindowController):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_last_outgoing_session_from_history(self):
+        results = SessionHistory().get_entries(direction='outgoing', count=1)
         try:
-            results = SessionHistory().get_entries(direction='outgoing', count=1)
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrieve the last outgoing session from history: %s" % e)
-            return
-
-        if len(list(results)) == 1:
             session_info = list(results)[0]
+        except IndexError:
+            pass
+        else:
             self.redial(session_info)      
 
     @run_in_gui_thread

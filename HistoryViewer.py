@@ -128,25 +128,17 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def delete_messages(self, local_uri=None, remote_uri=None, date=None, media_type=None):
-        try:
-            self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, media_type=media_type)
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to delete messages: %s" % e)
-            return
+        self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, media_type=media_type)
         self.refreshViewer()
 
     @run_in_green_thread
     def refreshContacts(self):
         if self.history:
             self.updateBusyIndicator(True)
-            try:
-                media_type = self.search_media if self.search_media else None
-                search_text = self.search_text if self.search_text else None
-                after_date = self.after_date if self.after_date else None
-                results = self.history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date)
-            except Exception, e:
-                BlinkLogger().log_error(u"Failed to refresh contacts: %s" % e)
-                return
+            media_type = self.search_media if self.search_media else None
+            search_text = self.search_text if self.search_text else None
+            after_date = self.after_date if self.after_date else None
+            results = self.history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date)
             self.renderContacts(results)
             self.updateBusyIndicator(False)
 
@@ -201,11 +193,7 @@ class HistoryViewer(NSWindowController):
             local_uri = self.search_local if self.search_local else None
             media_type = self.search_media if self.search_media else None
             after_date = self.after_date if self.after_date else None
-            try:
-                results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date)
-            except Exception, e:
-                BlinkLogger().log_error(u"Failed to refresh daily entries: %s" % e)
-                return
+            results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date)
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
 
@@ -249,11 +237,7 @@ class HistoryViewer(NSWindowController):
             if not after_date:
                 after_date = self.after_date if self.after_date else None
 
-            try:
-                results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date)
-            except Exception, e:
-                BlinkLogger().log_error(u"Failed to refresh messages: %s" % e)
-                return
+            results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date)
 
             # cache message for pagination
             self.messages=[]

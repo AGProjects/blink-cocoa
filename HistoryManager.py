@@ -4,17 +4,32 @@
 import datetime
 import os
 
+from application.python.decorator import decorator, preserve_signature
 from application.python.util import Singleton
 from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex
 from sqlobject import connectionForURI
 from sqlobject import dberrors
 
 from eventlet.twistedutil import block_on
-from twisted.internet.threads import deferToThread
+from twisted.internet import reactor
+from twisted.internet.threads import deferToThreadPool
+from twisted.python.threadpool import ThreadPool
 
 from BlinkLogger import BlinkLogger
 from resources import ApplicationData
 from util import makedirs
+
+
+pool = ThreadPool(minthreads=1, maxthreads=1, name='db-ops')
+pool.start()
+reactor.addSystemEventTrigger('before', 'shutdown', pool.stop)
+
+@decorator
+def run_in_db_thread(func):
+    @preserve_signature(func)
+    def wrapper(*args, **kw):
+        return deferToThreadPool(reactor, pool, func, *args, **kw)
+    return wrapper
 
 
 class SessionHistoryEntry(SQLObject):
@@ -46,8 +61,11 @@ class SessionHistory(object):
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path, mode=0755)
-        db_uri="sqlite://" + os.path.join(path,"history.sqlite")
+        db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        self._initialize(db_uri)
 
+    @run_in_db_thread
+    def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
         SessionHistoryEntry._connection = self.db
 
@@ -65,7 +83,8 @@ class SessionHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
 
-    def _add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
+    @run_in_db_thread
+    def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
@@ -85,14 +104,8 @@ class SessionHistory(object):
             BlinkLogger().log_error(u"Error adding record %s to sessions table: %s" % (session_id, e))
             return False
 
-    def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
-        try:
-            return block_on(deferToThread(self._add_entry, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error adding record to %s table" % e)
-            return False
-
-    def get_entries(self, direction=None, status=None, remote_focus=None, count=12):
+    @run_in_db_thread
+    def _get_entries(self, direction, status, remote_focus, count):
         query='1=1'
         if direction:
             query += " and direction = %s" % SessionHistoryEntry.sqlrepr(direction)
@@ -101,11 +114,15 @@ class SessionHistory(object):
         if remote_focus:
             query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
         query += " order by start_time desc limit %d" % count
-        return block_on(deferToThread(SessionHistoryEntry.select, query))
+        return SessionHistoryEntry.select(query)
 
+    def get_entries(self, direction=None, status=None, remote_focus=None, count=12):
+        return block_on(self._get_entries(direction, status, remote_focus, count))
+
+    @run_in_db_thread
     def delete_entries(self):
         query = "delete from sessions"
-        return block_on(deferToThread(self.db.queryAll, query))
+        return self.db.queryAll(query)
 
 
 class ChatMessage(SQLObject):
@@ -140,8 +157,11 @@ class ChatHistory(object):
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path, mode=0755)
-        db_uri="sqlite://" + os.path.join(path,"history.sqlite")
+        db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        self._initialize(db_uri)
 
+    @run_in_db_thread
+    def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
         ChatMessage._connection = self.db
 
@@ -159,7 +179,8 @@ class ChatHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
-    def _add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status):
+    @run_in_db_thread
+    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status):
         try:
             ChatMessage(
                           msgid               = msgid,
@@ -191,14 +212,8 @@ class ChatHistory(object):
             BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (msgid, e))
             return False
 
-    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status):
-        try:
-            return block_on(deferToThread(self._add_message, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error adding record to history table: %s" % e)
-            return False
-
-    def get_contacts(self, media_type=None, search_text=None, after_date=None):
+    @run_in_db_thread
+    def _get_contacts(self, media_type, search_text, after_date):
         query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour'"
         if media_type:
             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
@@ -207,9 +222,13 @@ class ChatHistory(object):
         if after_date:
             query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         query += " order by remote_uri asc"
-        return block_on(deferToThread(self.db.queryAll, query))
+        return self.db.queryAll(query)
 
-    def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None):
+    def get_contacts(self, media_type=None, search_text=None, after_date=None):
+        return block_on(self._get_contacts(media_type, search_text, after_date))
+
+    @run_in_db_thread
+    def _get_daily_entries(self, local_uri, remote_uri, media_type, search_text, order_text, after_date):
         if remote_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri = %s" % ChatMessage.sqlrepr(remote_uri)
             if media_type:
@@ -254,9 +273,13 @@ class ChatHistory(object):
             else:
                 query += " order by date DESC"
                 
-        return block_on(deferToThread(self.db.queryAll, query))
+        return self.db.queryAll(query)
 
-    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, search_text=None, orderBy='time', orderType='desc', count=50):
+    def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None):
+        return block_on(self._get_daily_entries(local_uri, remote_uri, media_type, search_text, order_text, after_date))
+
+    @run_in_db_thread
+    def _get_messages(self, msgid, local_uri, remote_uri, media_type, date, after_date, search_text, orderBy, orderType, count):
         query='1=1'
         if msgid:
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
@@ -273,8 +296,12 @@ class ChatHistory(object):
         if after_date:
             query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         query += " order by %s %s limit %d" % (orderBy, orderType, count)
-        return block_on(deferToThread(ChatMessage.select, query))
+        return ChatMessage.select(query)
 
+    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, search_text=None, orderBy='time', orderType='desc', count=50):
+        return block_on(self._get_messages(msgid, local_uri, remote_uri, media_type, date, after_date, search_text, orderBy, orderType, count))
+
+    @run_in_db_thread
     def delete_messages(self, local_uri=None, remote_uri=None, media_type=None, date=None):
         query = "delete from chat_messages where 1=1"
         if local_uri:
@@ -286,7 +313,7 @@ class ChatHistory(object):
         if date:
              query += " and date = %s" % ChatMessage.sqlrepr(date)
 
-        return block_on(deferToThread(self.db.queryAll, query))
+        return self.db.queryAll(query)
 
 class FileTransfer(SQLObject):
     class sqlmeta:
@@ -316,8 +343,11 @@ class FileTransferHistory(object):
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path, mode=0755)
-        db_uri="sqlite://" + os.path.join(path,"history.sqlite")
+        db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        self._initialize(db_uri)
 
+    @run_in_db_thread
+    def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
         FileTransfer._connection = self.db
 
@@ -335,7 +365,8 @@ class FileTransferHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
 
-    def _add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
+    @run_in_db_thread
+    def add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
         try:
             FileTransfer(
                         transfer_id       = transfer_id,
@@ -372,17 +403,15 @@ class FileTransferHistory(object):
             BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (transfer_id, e))
             return False
 
-    def add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
-        try:
-            return block_on(deferToThread(self._add_transfer, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error adding record to history table: %s" % e)
-            return False
+    @run_in_db_thread
+    def _get_transfers(self):
+        return FileTransfer.selectBy()
 
     def get_transfers(self):
-        return block_on(deferToThread(FileTransfer.selectBy))
+        return block_on(self._get_transfers())
 
+    @run_in_db_thread
     def delete_transfers(self):
         query = "delete from file_transfers"
-        return block_on(deferToThread(self.db.queryAll, query))
+        return self.db.queryAll(query)
 
