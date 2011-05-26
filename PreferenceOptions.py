@@ -268,7 +268,7 @@ class NonNegativeIntegerOption(StringOption):
         StringOption.__init__(self, object, name, option)
 
         self.formatter = NSNumberFormatter.alloc().init()
-        self.formatter.setMinimum_(0)
+        self.formatter.setMinimum_(NSNumber.numberWithInt_(0))
 
         frame = self.text.frame()
         frame.size.width = 80
@@ -306,7 +306,7 @@ class DigitsOption(StringOption):
 class PortOption(NonNegativeIntegerOption):
     def __init__(self, object, name, option):  
         NonNegativeIntegerOption.__init__(self, object, name, option)
-        self.formatter.setMaximum_(65535)
+        self.formatter.setMaximum_(NSNumber.numberWithInt_(65535))
 
 
 class TCPPortOption(PortOption):
@@ -1270,7 +1270,7 @@ class NumberPairOption(Option):
                  
         for text in [self.first, self.second]:
             formatter = NSNumberFormatter.alloc().init()
-            formatter.setMinimum_(0)
+            formatter.setMinimum_(NSNumber.numberWithInt_(0))
             text.setAlignment_(NSRightTextAlignment)
             text.setIntegerValue_(0)
             text.setFormatter_(formatter)
