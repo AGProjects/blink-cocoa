@@ -24,14 +24,14 @@ from eventlet import api
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
 from socket import gethostbyname
-from zope.interface import implements, Interface
+from zope.interface import implements
 
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import SIPURI, PJSIPError, SIPCoreError
+from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
