@@ -43,7 +43,7 @@ def validateParticipant(uri):
         return sip_uri.user is not None and sip_uri.host is not None
 
 
-class JoinConferenceWindow(NSObject):
+class JoinConferenceWindowController(NSObject):
     window = objc.IBOutlet()
     room = objc.IBOutlet()
     addRemove = objc.IBOutlet()
@@ -368,7 +368,7 @@ class JoinConferenceWindow(NSObject):
 
         return True
 
-class AddParticipantsWindow(NSObject):
+class AddParticipantsWindowController(NSObject):
     window = objc.IBOutlet()
     addRemove = objc.IBOutlet()
     participant = objc.IBOutlet()

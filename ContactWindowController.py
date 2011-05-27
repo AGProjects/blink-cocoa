@@ -40,7 +40,7 @@ from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveC
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
-from ServerConferenceWindowController import JoinConferenceWindow, AddParticipantsWindow
+from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionController
 from SIPManager import MWIData
 from VideoMirrorWindowController import VideoMirrorWindowController
@@ -905,12 +905,12 @@ class ContactWindowController(NSWindowController):
             self.joinConference(conference.target, conference.media_types, conference.participants)
 
     def showJoinConferenceWindow(self, target=None, participants=None, media=None, default_domain=None):
-        self.joinConferenceWindow = JoinConferenceWindow(target=target, participants=participants, media=media, default_domain=default_domain)
+        self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media=media, default_domain=default_domain)
         conference = self.joinConferenceWindow.run()
         return conference
 
     def showAddParticipantsWindow(self, target=None, default_domain=None):
-        self.addParticipantsWindow = AddParticipantsWindow(target=target, default_domain=default_domain)
+        self.addParticipantsWindow = AddParticipantsWindowController(target=target, default_domain=default_domain)
         participants = self.addParticipantsWindow.run()
         return participants
 
