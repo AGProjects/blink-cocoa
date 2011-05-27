@@ -12,15 +12,15 @@ import ChatWindowController
 class ChatWindowManager(object):
     __metaclass__ = Singleton
 
-    sessionWindows = []
+    chatWindows = []
 
-    def addChatSession(self, sessionController, newWindow=False, view=None):
-        if self.sessionWindows and not newWindow:
-            window = self.sessionWindows[0]
+    def addChatWindow(self, sessionController, newWindow=False, view=None):
+        if self.chatWindows and not newWindow:
+            window = self.chatWindows[0]
             osession = window.replaceInactiveWithCompatibleSession_(sessionController)
         else:
             window = ChatWindowController.ChatWindowController.alloc().init()
-            self.sessionWindows.append(window)
+            self.chatWindows.append(window)
             osession = None
 
         if not osession:
@@ -31,33 +31,33 @@ class ChatWindowManager(object):
         window.window().makeKeyAndOrderFront_(None)
         return window
 
-    def windowForChatSession(self, sessionController):
-        for window in self.sessionWindows:
+    def getChatWindow(self, sessionController):
+        for window in self.chatWindows:
             if window.hasSession_(sessionController):
                 return window
         else:
             return None
 
-    def removeChatSession(self, sessionController):
-        for window in self.sessionWindows:
+    def removeChatWindow(self, sessionController):
+        for window in self.chatWindows:
             if window.hasSession_(sessionController):
-                window.detachSession_(sessionController)
+                window.detachWindow_(sessionController)
                 if not window.sessions:
                     window.window().orderOut_(None)
-                    self.sessionWindows.remove(window)
+                    self.chatWindows.remove(window)
                 return True
         else:
             return False
 
-    def dettachChatSession(self, sessionController):
-        for window in self.sessionWindows:
+    def dettachChatWindow(self, sessionController):
+        for window in self.chatWindows:
             if window.hasSession_(sessionController):
-                view = window.detachSession_(sessionController)
+                view = window.detachWindow_(sessionController)
                 if not window.sessions:
                     window.window().orderOut_(None)
-                    self.sessionWindows.remove(window)
+                    self.chatWindows.remove(window)
                 if view:
-                    return self.addChatSession(sessionController, True, view)
+                    return self.addChatWindow(sessionController, True, view)
                 break
         else:
             return None

@@ -452,14 +452,14 @@ class ChatController(MediaStream):
         MediaStream.changeStatus(self, newstate, fail_reason)
 
     def startOutgoing(self, is_update):
-        ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        ChatWindowManager.ChatWindowManager().addChatWindow(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         window.chat_controllers.add(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
-        ChatWindowManager.ChatWindowManager().addChatSession(self.sessionController)
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        ChatWindowManager.ChatWindowManager().addChatWindow(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         window.chat_controllers.add(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
@@ -495,7 +495,7 @@ class ChatController(MediaStream):
                         sender.setImage_(NSImage.imageNamed_("paused"))
                         audio_stream.hold()
         elif sender.tag() == FULLSCREEN_TOOLBAR_PARTICIPANTS:
-            window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+            window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
             if window:
                 window.window().performZoom_(None)
         elif sender.tag() == FULLSCREEN_TOOLBAR_EXIT:
@@ -572,7 +572,7 @@ class ChatController(MediaStream):
         self.exitFullScreen()
 
     def enterFullScreen(self):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
 
@@ -623,7 +623,7 @@ class ChatController(MediaStream):
         window.window().setInitialFirstResponder_(self.videoContainer)
 
     def exitFullScreen(self):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
 
@@ -716,7 +716,7 @@ class ChatController(MediaStream):
         return True if self.outputContainer.frame().size.height > 10 else False
 
     def toggleVideoFrame(self):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
 
@@ -832,7 +832,7 @@ class ChatController(MediaStream):
 
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             window.noteNewMessageForSession_(self.sessionController)
 
@@ -1145,7 +1145,7 @@ class ChatController(MediaStream):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         self.remoteTypingTimer = None
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
 
@@ -1156,7 +1156,7 @@ class ChatController(MediaStream):
         handler(notification.sender, notification.data)
 
     def _NH_ChatStreamGotMessage(self, stream, data):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
 
@@ -1199,7 +1199,7 @@ class ChatController(MediaStream):
             self.handler.add_to_history(message)
 
     def _NH_ChatStreamGotComposingIndication(self, stream, data):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
         flag = data.state == "active"
@@ -1226,7 +1226,7 @@ class ChatController(MediaStream):
         self.updateToolbarMuteIcon()
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
 
@@ -1284,7 +1284,7 @@ class ChatController(MediaStream):
             self.exitFullScreen()
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
@@ -1305,7 +1305,7 @@ class ChatController(MediaStream):
         self.videoContainer.hideVideo()
         self.exitFullScreen()
 
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
@@ -1334,12 +1334,12 @@ class ChatController(MediaStream):
         self.exitFullScreen()
 
         # remove held reference needed by the GUI
-        window = ChatWindowManager.ChatWindowManager().windowForChatSession(self.sessionController)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         try:
             window.chat_controllers.remove(self)
         except KeyError:
             pass
 
         # remove allocated tab/window
-        ChatWindowManager.ChatWindowManager().removeChatSession(self.sessionController)
+        ChatWindowManager.ChatWindowManager().removeChatWindow(self.sessionController)
 

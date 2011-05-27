@@ -200,7 +200,7 @@ class ChatWindowController(NSWindowController):
     def hasSession_(self, session):
         return self.sessions.has_key(session.identifier)
 
-    def detachSession_(self, session):
+    def detachWindow_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
         if index == NSNotFound:
             return None
@@ -213,7 +213,7 @@ class ChatWindowController(NSWindowController):
         return view
 
     def removeSession_(self, session):
-        if not self.detachSession_(session):
+        if not self.detachWindow_(session):
             return False
 
         chat_stream = session.streamHandlerOfType("chat")
@@ -374,7 +374,7 @@ class ChatWindowController(NSWindowController):
             if chat_stream:
                 chat_stream.closeTab()
             else:
-                self.detachSession_(selectedSession)
+                self.detachWindow_(selectedSession)
 
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
@@ -767,13 +767,12 @@ class ChatWindowController(NSWindowController):
         if len(self.sessions) > 1:
             session = self.sessions[item.identifier()]
 
-            window = ChatWindowManager.ChatWindowManager().dettachChatSession(session)
+            window = ChatWindowManager.ChatWindowManager().dettachChatWindow(session)
             if window:
                 window.window().setFrameOrigin_(pos)
                 self.refreshDrawer()
 
     def refreshDrawer(self):
-        # TODO: do not repaint the whole drawer everytime, use insert/remove -adi
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
 
         self.participants = []
