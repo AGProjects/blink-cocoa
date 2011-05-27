@@ -83,6 +83,8 @@ class ContactCell(NSTextFieldCell):
 
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
+        if not size or not size.height:
+            return
         rect = NSMakeRect(0, 0, size.width, size.height)
         trect = NSMakeRect(origin_x, origin_y, (size_y/size.height) * size.width, size_x)
         if icon.respondsToSelector_("drawInRect:fromRect:operation:fraction:respectFlipped:hints:"):
