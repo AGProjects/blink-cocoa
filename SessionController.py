@@ -87,7 +87,6 @@ class SessionController(NSObject):
     proposalOriginator = None
     waitingForITunes = False
     streamHandlers = None
-    originallyRequestedStreamTypes = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -313,8 +312,6 @@ class SessionController(NSObject):
             self.initializeSessionWithAccount(self.account)
             new_session = True
 
-        self.originallyRequestedStreamTypes = []
-
         for stype in stype_tuple:
             if type(stype) == tuple:
                 stype, kwargs = stype
@@ -335,8 +332,6 @@ class SessionController(NSObject):
                 self.streamHandlers.append(controller)
 
                 controller.startOutgoing(not new_session, **kwargs)
-
-                self.originallyRequestedStreamTypes.append(controller.stream.type)
 
                 if not new_session:
                     log_info(self, "Adding %s stream to session"%stype.capitalize())
