@@ -66,6 +66,9 @@ class JoinConferenceWindow(NSObject):
 
         self.default_domain = default_domain
 
+        if target is not None and "@" not in target and self.default_domain:
+            target = '%s@%s' % (target, self.default_domain)
+
         if target is not None and validateParticipant(target):
             self.room.setStringValue_(target)
 
