@@ -157,12 +157,6 @@ class PreferencesController(NSWindowController, object):
             self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'Sound Alerts')
             self.sectionDescription.setHidden_(False)
-        elif section == 'logging':
-            self.mainTabView.selectTabViewItemWithIdentifier_("settings")
-            self.generalTabView.selectTabViewItemWithIdentifier_("logs")
-            self.generalPop.setHidden_(True)
-            self.sectionDescription.setStringValue_(u'Logging Settings')
-            self.sectionDescription.setHidden_(False)
         elif section == 'advanced':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalPop.setHidden_(False)                        

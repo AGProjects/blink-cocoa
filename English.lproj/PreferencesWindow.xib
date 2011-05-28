@@ -3,12 +3,12 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">851</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -62,7 +62,6 @@
 							<string>3842C6BF-5A9E-47A3-BAFB-78A5081C34C5</string>
 							<string>3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B</string>
 							<string>5AD724EF-E683-47C3-ADCD-0E20F3598E83</string>
-							<string>8F25ECFD-951D-4119-AFB4-0BC36CD6FCA6</string>
 							<string>963222D1-D121-470E-9002-64936FCFFCDA</string>
 							<string>AD8D94E1-3CF8-437D-A1C6-C26E571B8712</string>
 							<string>B72F1019-EFCB-4603-88EF-079185F7F3D1</string>
@@ -127,28 +126,6 @@
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
 									<string key="NSResourceName">answering_machine</string>
-								</object>
-								<nil key="NSToolbarItemTarget"/>
-								<nil key="NSToolbarItemAction"/>
-								<string key="NSToolbarItemMinSize">{0, 0}</string>
-								<string key="NSToolbarItemMaxSize">{0, 0}</string>
-								<bool key="NSToolbarItemEnabled">YES</bool>
-								<bool key="NSToolbarItemAutovalidates">NO</bool>
-								<int key="NSToolbarItemTag">0</int>
-								<bool key="NSToolbarIsUserRemovable">YES</bool>
-								<int key="NSToolbarItemVisibilityPriority">0</int>
-							</object>
-							<object class="NSToolbarItem" id="987404995">
-								<object class="NSMutableString" key="NSToolbarItemIdentifier">
-									<characters key="NS.bytes">8F25ECFD-951D-4119-AFB4-0BC36CD6FCA6</characters>
-								</object>
-								<string key="NSToolbarItemLabel">Logging</string>
-								<string key="NSToolbarItemPaletteLabel">Logging</string>
-								<string key="NSToolbarItemToolTip"/>
-								<nil key="NSToolbarItemView"/>
-								<object class="NSCustomResource" key="NSToolbarItemImage">
-									<string key="NSClassName">NSImage</string>
-									<string key="NSResourceName">logs</string>
 								</object>
 								<nil key="NSToolbarItemTarget"/>
 								<nil key="NSToolbarItemAction"/>
@@ -315,7 +292,6 @@
 						<reference ref="280542739"/>
 						<reference ref="187126253"/>
 						<reference ref="588924829"/>
-						<reference ref="987404995"/>
 						<reference ref="678557737"/>
 					</object>
 					<object class="NSMutableArray" key="NSToolbarIBDefaultItems">
@@ -328,7 +304,6 @@
 						<reference ref="280542739"/>
 						<reference ref="187126253"/>
 						<reference ref="588924829"/>
-						<reference ref="987404995"/>
 						<reference ref="678557737"/>
 					</object>
 					<object class="NSMutableArray" key="NSToolbarIBSelectableItems">
@@ -1399,14 +1374,6 @@
 					<object class="IBActionConnection" key="connection">
 						<string key="label">userClickedToolbarButton:</string>
 						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="987404995"/>
-					</object>
-					<int key="connectionID">275</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedToolbarButton:</string>
-						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="187126253"/>
 					</object>
 					<int key="connectionID">277</int>
@@ -1853,7 +1820,6 @@
 							<reference ref="280542739"/>
 							<reference ref="588924829"/>
 							<reference ref="1013644974"/>
-							<reference ref="987404995"/>
 							<reference ref="187126253"/>
 							<reference ref="925793759"/>
 						</object>
@@ -1964,11 +1930,6 @@
 						<reference key="parent" ref="91223958"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">270</int>
-						<reference key="object" ref="987404995"/>
-						<reference key="parent" ref="91223958"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">276</int>
 						<reference key="object" ref="187126253"/>
 						<reference key="parent" ref="91223958"/>
@@ -2067,9 +2028,6 @@
 					<string>269.IBPluginDependency</string>
 					<string>269.designableToolbarItemIdentifier</string>
 					<string>269.toolbarItem.selectable</string>
-					<string>270.IBPluginDependency</string>
-					<string>270.designableToolbarItemIdentifier</string>
-					<string>270.toolbarItem.selectable</string>
 					<string>276.IBPluginDependency</string>
 					<string>276.designableToolbarItemIdentifier</string>
 					<string>276.toolbarItem.selectable</string>
@@ -2185,9 +2143,6 @@
 					<boolean value="YES"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>chat</string>
-					<boolean value="YES"/>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>logging</string>
 					<boolean value="YES"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>desktop-sharing</string>
@@ -3098,7 +3053,6 @@
 				<string>audio-preferences</string>
 				<string>chat</string>
 				<string>display</string>
-				<string>logs</string>
 				<string>upfile</string>
 			</object>
 			<object class="NSMutableArray" key="dict.values">
@@ -3116,7 +3070,6 @@
 				<string>{128, 128}</string>
 				<string>{128, 128}</string>
 				<string>{32, 32}</string>
-				<string>{128, 128}</string>
 				<string>{32, 32}</string>
 			</object>
 		</object>

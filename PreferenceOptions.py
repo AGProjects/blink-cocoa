@@ -1383,5 +1383,5 @@ DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
 DisabledPreferenceSections = ['service_provider']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'logs', 'sounds', 'answering_machine']
+StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine']
 
