@@ -12,7 +12,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, StaticPreferenceSections, HiddenOption, PreferenceOptionTypes, formatName
+from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, formatName
 from VerticalBoxView import VerticalBoxView
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
@@ -242,7 +242,13 @@ class PreferencesController(NSWindowController, object):
                 controlFactory = PreferenceOptionTypes[str.__name__]
             if controlFactory is HiddenOption:
                 continue
-            control = controlFactory(section_object, option_name, option)
+
+            description_key = '%s.%s' % (section_name, option_name)
+            try:
+                description = SettingDescription[description_key]
+            except KeyError:
+                description = None
+            control = controlFactory(section_object, option_name, option, description)
             self.settingViews[section_name+"."+option_name] = control
             vbox.addSubview_(control)
             control.delegate = self

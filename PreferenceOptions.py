@@ -27,8 +27,7 @@ from resources import ApplicationData
 from util import allocate_autorelease_pool
 
 
-LABEL_WIDTH = 120
-LABEL_WIDTH_WIDE = 140
+LABEL_WIDTH = 130
 
 
 def makeLabel(label):            
@@ -64,9 +63,7 @@ def formatName(name):
     "pstn": "PSTN",
     "plus": "+",
     "url": "URL",
-    "ice": "ICE",
-    "pidf": "PIDF",
-    "acm": "ACM"
+    "ice": "ICE"
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
@@ -82,10 +79,12 @@ class Option(HorizontalBoxView):
     object = None
     option = None
     delegate = None
+    description = None
     
-    def __init__(self, object, name, option):
+    def __init__(self, object, name, option, description=None):
         self.object = object
         self.option = name
+        self.description = description
         
         self.setSpacing_(8)
     
@@ -116,14 +115,14 @@ class Option(HorizontalBoxView):
     
 
 class BoolOption(Option):    
-    def __init__(self, object, name, option):  
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
           
         self.addSubview_(makeLabel(""))
         
-        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 20))
+        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 400, 20))
 
-        self.check.setTitle_(formatName(name))
+        self.check.setTitle_(description or formatName(name))
         self.check.setButtonType_(NSSwitchButton)
         self.addSubview_(self.check)
         
@@ -143,11 +142,11 @@ class BoolOption(Option):
 
 
 class StringOption(Option):
-    def __init__(self, object, name, option):  
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
 
         self.emptyIsNone = False
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
 
         self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         self.text.sizeToFit()
@@ -178,18 +177,18 @@ class StringOption(Option):
 
 
 class NullableStringOption(StringOption):
-    def __init__(self, object, name, option):
-        StringOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        StringOption.__init__(self, object, name, option, description)
         self.emptyIsNone = True
 
 
 class UnicodeOption(Option):
 
-    def __init__(self, object, name, option):  
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
 
         self.emptyIsNone = False
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
 
         self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         self.text.sizeToFit()
@@ -220,8 +219,8 @@ class UnicodeOption(Option):
 
 
 class NullableUnicodeOption(UnicodeOption):
-    def __init__(self, object, name, option):
-        UnicodeOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        UnicodeOption.__init__(self, object, name, option, description)
         self.emptyIsNone = True
 
 
@@ -252,8 +251,8 @@ class StringTupleOption(StringOption):
 
 
 class CountryCodeOption(StringOption):
-    def __init__(self, object, name, option):
-        StringOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        StringOption.__init__(self, object, name, option, description)
 
         self.formatter = NSNumberFormatter.alloc().init()
         self.text.setFormatter_(self.formatter)
@@ -264,8 +263,8 @@ class CountryCodeOption(StringOption):
 
 
 class NonNegativeIntegerOption(StringOption):
-    def __init__(self, object, name, option):  
-        StringOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        StringOption.__init__(self, object, name, option, description)
 
         self.formatter = NSNumberFormatter.alloc().init()
         self.formatter.setMinimum_(NSNumber.numberWithInt_(0))
@@ -304,8 +303,8 @@ class DigitsOption(StringOption):
 
 
 class PortOption(NonNegativeIntegerOption):
-    def __init__(self, object, name, option):  
-        NonNegativeIntegerOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        NonNegativeIntegerOption.__init__(self, object, name, option, description)
         self.formatter.setMaximum_(NSNumber.numberWithInt_(65535))
 
 
@@ -331,10 +330,10 @@ class MultipleSelectionOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 80))
     
-    def __init__(self, object, name, option, allowReorder=False, tableWidth=200):
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, allowReorder=False, tableWidth=200, description=None):
+        Option.__init__(self, object, name, option, description)
         
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
         self.selection = set()
         self.options = []
         self.allowReorder = allowReorder
@@ -433,8 +432,8 @@ class AudioCodecListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 105))
     
-    def __init__(self, object, name, option):
-        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=100)
+    def __init__(self, object, name, option, description=None):
+        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=100, description=description)
 
         self.selection = set()
         self.options = list(AudioCodecList.available_values)
@@ -513,8 +512,8 @@ class SIPTransportListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 15*len(SIPTransportList.available_values)+8))
     
-    def __init__(self, object, name, option):
-        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=False, tableWidth=80)
+    def __init__(self, object, name, option, description=None):
+        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=False, tableWidth=80, description=description)
         
         self.options = SIPTransportList.available_values
 
@@ -540,8 +539,8 @@ class SIPTransportListOption(MultipleSelectionOption):
 
 
 class AccountAudioCodecListOption(AudioCodecListOption):
-    def __init__(self, object, name, option):
-        AudioCodecListOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        AudioCodecListOption.__init__(self, object, name, option, description)
 
         self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 20))
         self.check.setTitle_("Customize")
@@ -594,13 +593,13 @@ class PopUpMenuOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 26))
     
-    def __init__(self, object, name, option, useRepresented=False):
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, useRepresented=False, description=None):
+        Option.__init__(self, object, name, option, description)
 
         self.useRepresentedObject = useRepresented
         self.addMissingOptions = True
 
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
         self.setSpacing_(8)
         self.addSubview_(self.caption)
         
@@ -640,42 +639,42 @@ class PopUpMenuOption(Option):
 
 
 class SRTPEncryptionOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(item)
 
 class SampleRateOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, description)
         for item in SIPSimpleSettings.audio.sample_rate.type.valid_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class ImageDepthOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class MSRPTransportOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class MSRPConnectionModelOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class AudioInputDeviceOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = False
         self.refresh()
         self.popup.sizeToFit()
@@ -695,8 +694,8 @@ class AudioInputDeviceOption(PopUpMenuOption):
     
 
 class AudioOutputDeviceOption(PopUpMenuOption):
-    def __init__(self, object, name, option):
-        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True)
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=None)
         self.addMissingOptions = False
         self.refresh()
         self.popup.sizeToFit()
@@ -716,8 +715,8 @@ class AudioOutputDeviceOption(PopUpMenuOption):
 
 
 class PathOption(NullableUnicodeOption):
-    def __init__(self, object, name, option):
-        NullableUnicodeOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        NullableUnicodeOption.__init__(self, object, name, option, description)
 
         frame = self.frame()
         frame.size.height += 4
@@ -870,11 +869,11 @@ class SoundFileOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 340, 38))
 
-    def __init__(self, object, name, option):
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
         self.oldIndex = 0
         
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
         self.setSpacing_(8)
         self.addSubview_(self.caption)
 
@@ -996,11 +995,11 @@ class AnsweringMessageOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 340, 38))
 
-    def __init__(self, object, name, option):
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
         self.oldIndex = 0
         
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
         self.setSpacing_(8)
         self.addSubview_(self.caption)
 
@@ -1064,8 +1063,8 @@ class AnsweringMessageOption(Option):
                 self.radio.selectCellWithTag_(2)
 
 class AccountSoundFileOption(SoundFileOption):    
-    def __init__(self, object, name, option):
-        SoundFileOption.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        SoundFileOption.__init__(self, object, name, option, description)
 
         self.popup.insertItemWithTitle_atIndex_("Default", 0)
         self.popup.itemAtIndex_(0).setRepresentedObject_("DEFAULT")
@@ -1122,10 +1121,10 @@ class ObjectTupleOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 80))
     
-    def __init__(self, object, name, option, columns):
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, columns, description=None):
+        Option.__init__(self, object, name, option, description)
         
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
         self.values = []
         
         self.addSubview_(self.caption)
@@ -1204,8 +1203,8 @@ class ObjectTupleOption(Option):
     
 
 class STUNServerAddressListOption(ObjectTupleOption):
-    def __init__(self, object, name, option):
-        ObjectTupleOption.__init__(self, object, name, option, [("IP Address", 142), ("Port",50)])
+    def __init__(self, object, name, option, description=None):
+        ObjectTupleOption.__init__(self, object, name, option, [("IP Address", 142), ("Port",50)], description)
 
         self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add new")
 
@@ -1260,10 +1259,10 @@ class STUNServerAddressListOption(ObjectTupleOption):
 
 
 class NumberPairOption(Option):    
-    def __init__(self, object, name, option):
-        Option.__init__(self, object, name, option)
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
         
-        self.caption = makeLabel(formatName(name))
+        self.caption = makeLabel(description or formatName(name))
 
         self.first = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 22))
         self.second = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 22))
@@ -1384,4 +1383,29 @@ DisabledPreferenceSections = ['service_provider']
 
 # These section are rendered staticaly in their own view
 StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine']
+
+SettingDescription = {
+                      'answering_machine.enabled': 'Enable Answering Machine',
+                      'answering_machine.max_recording_duration': 'Maximum Duration',
+                      'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
+                      'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
+                      'file_transfer.directory': 'Download Directory',
+                      'logs.directory': 'Logs Directory',
+                      'logs.trace_msrp': 'Trace MSRP (used for chat, file transfer and desktop sharing)',
+                      'logs.trace_xcap': 'Trace XCAP (used by presence and for storing contacts)',
+                      'logs.trace_pjsip': 'Trace Core Library',
+                      'logs.pjsip_level': 'Core Level',
+                      'pstn.idd_prefix': 'Replace Starting +',
+                      'pstn.prefix': 'External Line Prefix',
+                      'rtp.inband_dtmf': 'Send Inband DTMF',
+                      'rtp.audio_codec_list': 'Audio Codecs',
+                      'rtp.srtp_encryption': 'sRTP Encryption',
+                      'sip.invite_timeout': 'Session Timeout',
+                      'sip.transport_list': 'Protocols',
+                      'sounds.audio_inbound': 'Inbound Ringtone',
+                      'sounds.audio_outbound': 'Outbound Ringtone',
+                      'tls.certificate': 'Certificate File',
+                      'tls.ca_list': 'Certificate Authority File'
+                      }
+
 
