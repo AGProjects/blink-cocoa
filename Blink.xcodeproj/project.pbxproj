@@ -535,9 +535,6 @@
 		1FCF118F1390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCF11901390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCF11911390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
-		1FCF11931390EDEE001D1CAF /* file-transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11921390EDEE001D1CAF /* file-transfer.png */; };
-		1FCF11941390EDEE001D1CAF /* file-transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11921390EDEE001D1CAF /* file-transfer.png */; };
-		1FCF11951390EDEE001D1CAF /* file-transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11921390EDEE001D1CAF /* file-transfer.png */; };
 		1FCF11971390EDFD001D1CAF /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
 		1FCF11981390EDFD001D1CAF /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
 		1FCF11991390EDFD001D1CAF /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
@@ -1154,7 +1151,6 @@
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FCF118A1390EDDE001D1CAF /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
 		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
-		1FCF11921390EDEE001D1CAF /* file-transfer.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "file-transfer.png"; path = "icons/file-transfer.png"; sourceTree = "<group>"; };
 		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
 		1FCF119A1390EE08001D1CAF /* logs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logs.png; path = icons/logs.png; sourceTree = "<group>"; };
 		1FCF11EE13910878001D1CAF /* audio-preferences.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "audio-preferences.png"; path = "icons/audio-preferences.png"; sourceTree = "<group>"; };
@@ -1580,7 +1576,6 @@
 				1FCF11EE13910878001D1CAF /* audio-preferences.png */,
 				1FCF119A1390EE08001D1CAF /* logs.png */,
 				1FCF11961390EDFD001D1CAF /* alerts.png */,
-				1FCF11921390EDEE001D1CAF /* file-transfer.png */,
 				1FCF118E1390EDE7001D1CAF /* chat.png */,
 				1FCF118A1390EDDE001D1CAF /* audio.png */,
 				1F8A762F138A982E007E84C0 /* mute-white.png */,
@@ -2171,7 +2166,6 @@
 				1F07D767138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
 				1FCF118B1390EDDE001D1CAF /* audio.png in Resources */,
 				1FCF118F1390EDE7001D1CAF /* chat.png in Resources */,
-				1FCF11931390EDEE001D1CAF /* file-transfer.png in Resources */,
 				1FCF11971390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119B1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11EF13910878001D1CAF /* audio-preferences.png in Resources */,
@@ -2348,7 +2342,6 @@
 				1F07D768138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
 				1FCF118C1390EDDE001D1CAF /* audio.png in Resources */,
 				1FCF11901390EDE7001D1CAF /* chat.png in Resources */,
-				1FCF11941390EDEE001D1CAF /* file-transfer.png in Resources */,
 				1FCF11981390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119C1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */,
@@ -2527,7 +2520,6 @@
 				1F07D766138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
 				1FCF118D1390EDDE001D1CAF /* audio.png in Resources */,
 				1FCF11911390EDE7001D1CAF /* chat.png in Resources */,
-				1FCF11951390EDEE001D1CAF /* file-transfer.png in Resources */,
 				1FCF11991390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119D1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11F113910878001D1CAF /* audio-preferences.png in Resources */,
