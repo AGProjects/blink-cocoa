@@ -27,7 +27,7 @@ class VideoMirrorWindowController(NSObject):
                 frame = NSMakeRect(int(x), int(y), int(w), int(h))
                 self.window.setFrame_display_(frame, True)
 
-            self.window.setAlphaValue_(0.7)
+            self.window.setAlphaValue_(0.9)
 
         return self
 
