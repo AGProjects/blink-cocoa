@@ -41,7 +41,7 @@
 		1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
+		1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
 		1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
 		1F2272A412B554F50010A8B2 /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
@@ -279,7 +279,7 @@
 		1F8DC32D135084FA0034815C /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		1F8DC32E135084FA0034815C /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		1F8DC330135084FA0034815C /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
+		1F8DC330135084FA0034815C /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
 		1F8DC331135084FA0034815C /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		1F8DC332135084FA0034815C /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
 		1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
@@ -529,6 +529,27 @@
 		1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FBD0E0212EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
+		1FCF118B1390EDDE001D1CAF /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118A1390EDDE001D1CAF /* audio.png */; };
+		1FCF118C1390EDDE001D1CAF /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118A1390EDDE001D1CAF /* audio.png */; };
+		1FCF118D1390EDDE001D1CAF /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118A1390EDDE001D1CAF /* audio.png */; };
+		1FCF118F1390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
+		1FCF11901390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
+		1FCF11911390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
+		1FCF11931390EDEE001D1CAF /* file-transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11921390EDEE001D1CAF /* file-transfer.png */; };
+		1FCF11941390EDEE001D1CAF /* file-transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11921390EDEE001D1CAF /* file-transfer.png */; };
+		1FCF11951390EDEE001D1CAF /* file-transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11921390EDEE001D1CAF /* file-transfer.png */; };
+		1FCF11971390EDFD001D1CAF /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
+		1FCF11981390EDFD001D1CAF /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
+		1FCF11991390EDFD001D1CAF /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
+		1FCF119B1390EE08001D1CAF /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
+		1FCF119C1390EE08001D1CAF /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
+		1FCF119D1390EE08001D1CAF /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
+		1FCF11EF13910878001D1CAF /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
+		1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
+		1FCF11F113910878001D1CAF /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
+		1FCF129F1391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
+		1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
+		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
@@ -651,7 +672,7 @@
 		2BAF381A0FE088C70040117A /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		2BAF381E0FE088C70040117A /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* Preferences.xib */; };
+		2BAF381E0FE088C70040117A /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
 		2BAF381F0FE088C70040117A /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		2BAF38210FE088C70040117A /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
 		2BAF382A0FE088E80040117A /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
@@ -1131,6 +1152,13 @@
 		1FB9B1181095BFF500284E18 /* ring_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_tone.wav; path = sounds/ring_tone.wav; sourceTree = "<group>"; };
 		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
+		1FCF118A1390EDDE001D1CAF /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
+		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
+		1FCF11921390EDEE001D1CAF /* file-transfer.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "file-transfer.png"; path = "icons/file-transfer.png"; sourceTree = "<group>"; };
+		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
+		1FCF119A1390EE08001D1CAF /* logs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logs.png; path = icons/logs.png; sourceTree = "<group>"; };
+		1FCF11EE13910878001D1CAF /* audio-preferences.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "audio-preferences.png"; path = "icons/audio-preferences.png"; sourceTree = "<group>"; };
+		1FCF129E1391151A001D1CAF /* answering_machine.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = answering_machine.png; path = icons/answering_machine.png; sourceTree = "<group>"; };
 		1FCF160812B5639F00F71BE5 /* Info-pro.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-pro.plist"; sourceTree = "<group>"; };
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1255,7 +1283,7 @@
 		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddContact.xib; sourceTree = "<group>"; };
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainWindow.xib; sourceTree = "<group>"; };
-		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Preferences.xib; sourceTree = "<group>"; };
+		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
 		2BAF38130FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatWindow.xib; sourceTree = "<group>"; };
 		2BAF38170FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatView.xib; sourceTree = "<group>"; };
 		2BAF38250FE088E80040117A /* BlinkAppDelegate.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlinkAppDelegate.py; sourceTree = "<group>"; };
@@ -1548,6 +1576,13 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FCF129E1391151A001D1CAF /* answering_machine.png */,
+				1FCF11EE13910878001D1CAF /* audio-preferences.png */,
+				1FCF119A1390EE08001D1CAF /* logs.png */,
+				1FCF11961390EDFD001D1CAF /* alerts.png */,
+				1FCF11921390EDEE001D1CAF /* file-transfer.png */,
+				1FCF118E1390EDE7001D1CAF /* chat.png */,
+				1FCF118A1390EDDE001D1CAF /* audio.png */,
 				1F8A762F138A982E007E84C0 /* mute-white.png */,
 				1F4D4FBF1389AF7500A2CE0B /* mirror.png */,
 				1F2747D21388FC5C0052C384 /* restore.png */,
@@ -1682,7 +1717,7 @@
 				2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */,
 				2BB376411103C98300DA4577 /* SoundRecorder.xib */,
 				2B2392AD1039E69C00D9023B /* SoundSetting.xib */,
-				2BAF38100FE088C70040117A /* Preferences.xib */,
+				2BAF38100FE088C70040117A /* PreferencesWindow.xib */,
 				2B5DE51F0FFC5D0500701821 /* PreferencesController.py */,
 				2B8F17D31008318700E0775C /* PreferenceOptions.py */,
 			);
@@ -1979,7 +2014,7 @@
 				1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
-				1F2272A112B554F50010A8B2 /* Preferences.xib in Resources */,
+				1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */,
 				1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
 				1F2272A412B554F50010A8B2 /* BlinkAppDelegate.py in Resources */,
@@ -2134,6 +2169,13 @@
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
 				1F07D8A4138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
 				1F07D767138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
+				1FCF118B1390EDDE001D1CAF /* audio.png in Resources */,
+				1FCF118F1390EDE7001D1CAF /* chat.png in Resources */,
+				1FCF11931390EDEE001D1CAF /* file-transfer.png in Resources */,
+				1FCF11971390EDFD001D1CAF /* alerts.png in Resources */,
+				1FCF119B1390EE08001D1CAF /* logs.png in Resources */,
+				1FCF11EF13910878001D1CAF /* audio-preferences.png in Resources */,
+				1FCF129F1391151A001D1CAF /* answering_machine.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2151,7 +2193,7 @@
 				1F8DC32D135084FA0034815C /* AddContact.xib in Resources */,
 				1F8DC32E135084FA0034815C /* EnrollmentWindow.xib in Resources */,
 				1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */,
-				1F8DC330135084FA0034815C /* Preferences.xib in Resources */,
+				1F8DC330135084FA0034815C /* PreferencesWindow.xib in Resources */,
 				1F8DC331135084FA0034815C /* ChatWindow.xib in Resources */,
 				1F8DC332135084FA0034815C /* ChatView.xib in Resources */,
 				1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */,
@@ -2304,6 +2346,13 @@
 				1F8A7632138A982E007E84C0 /* mute-white.png in Resources */,
 				1F07D8A5138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
 				1F07D768138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
+				1FCF118C1390EDDE001D1CAF /* audio.png in Resources */,
+				1FCF11901390EDE7001D1CAF /* chat.png in Resources */,
+				1FCF11941390EDEE001D1CAF /* file-transfer.png in Resources */,
+				1FCF11981390EDFD001D1CAF /* alerts.png in Resources */,
+				1FCF119C1390EE08001D1CAF /* logs.png in Resources */,
+				1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */,
+				1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2321,7 +2370,7 @@
 				2BAF381A0FE088C70040117A /* AddContact.xib in Resources */,
 				2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */,
 				2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */,
-				2BAF381E0FE088C70040117A /* Preferences.xib in Resources */,
+				2BAF381E0FE088C70040117A /* PreferencesWindow.xib in Resources */,
 				2BAF381F0FE088C70040117A /* ChatWindow.xib in Resources */,
 				2BAF38210FE088C70040117A /* ChatView.xib in Resources */,
 				2BAF382A0FE088E80040117A /* BlinkAppDelegate.py in Resources */,
@@ -2476,6 +2525,13 @@
 				1F8A7630138A982E007E84C0 /* mute-white.png in Resources */,
 				1F07D8A3138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
 				1F07D766138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
+				1FCF118D1390EDDE001D1CAF /* audio.png in Resources */,
+				1FCF11911390EDE7001D1CAF /* chat.png in Resources */,
+				1FCF11951390EDEE001D1CAF /* file-transfer.png in Resources */,
+				1FCF11991390EDFD001D1CAF /* alerts.png in Resources */,
+				1FCF119D1390EE08001D1CAF /* logs.png in Resources */,
+				1FCF11F113910878001D1CAF /* audio-preferences.png in Resources */,
+				1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2693,12 +2749,12 @@
 			name = MainWindow.xib;
 			sourceTree = "<group>";
 		};
-		2BAF38100FE088C70040117A /* Preferences.xib */ = {
+		2BAF38100FE088C70040117A /* PreferencesWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2BAF38110FE088C70040117A /* English */,
 			);
-			name = Preferences.xib;
+			name = PreferencesWindow.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38120FE088C70040117A /* ChatWindow.xib */ = {

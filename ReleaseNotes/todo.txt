@@ -1,13 +1,7 @@
 Main tasks
 ----------
 
++ Call Transfer (waiting for SDK)
 + XCAP storage
 + Presence
 + Video
-+ Call Transfer
-
-
-Nice to have
-------------
-
-- Redesign Preferences

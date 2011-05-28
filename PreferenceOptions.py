@@ -1376,8 +1376,12 @@ PreferenceOptionTypes = {
 "xcap.enabled" : HiddenOption
 }
 
+# These acount sections are always hidden
 DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
 
+# These general sections are always hidden
 DisabledPreferenceSections = ['service_provider']
 
+# These section are rendered staticaly in their own view
+StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'logs', 'sounds', 'answering_machine']
 
