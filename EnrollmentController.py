@@ -42,7 +42,7 @@ class EnrollmentController(NSObject):
             self.selectRadio_(self.radioMatrix)
             if NSApp.delegate().applicationName == 'Blink Lite':
                 accounts = list(account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
-                if len(accounts):
+                if len(accounts) > 1:
                     self.nextButton.setEnabled_(False)
                     self.purchaseProLabel.setHidden_(False)
 
