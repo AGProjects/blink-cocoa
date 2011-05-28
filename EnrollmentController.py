@@ -38,7 +38,7 @@ class EnrollmentController(NSObject):
     
     def init(self):
         if self:
-            NSBundle.loadNibNamed_owner_("Enrollment", self)
+            NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
             self.selectRadio_(self.radioMatrix)
             if NSApp.delegate().applicationName == 'Blink Lite':
                 accounts = list(account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
