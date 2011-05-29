@@ -72,10 +72,19 @@ class HistoryViewer(NSWindowController):
     search_local = None
     search_media = None
     after_date = None
+    before_date = None
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file-transfer', 5: 'audio-recording', 6: 'video-recording', 7: 'voicemail', 8: 'missed-call'}
-    period_array = {0: None, 1: datetime.datetime.now()-datetime.timedelta(days=2), 2: datetime.datetime.now()-datetime.timedelta(days=7), 3: datetime.datetime.now()-datetime.timedelta(days=31)}
+    period_array = {0: None, 
+                    1: datetime.datetime.now()-datetime.timedelta(days=2), 
+                    2: datetime.datetime.now()-datetime.timedelta(days=7), 
+                    3: datetime.datetime.now()-datetime.timedelta(days=31),
+                    4: datetime.datetime.now()-datetime.timedelta(days=31),
+                    5: datetime.datetime.now()-datetime.timedelta(days=90),
+                    6: datetime.datetime.now()-datetime.timedelta(days=180),
+                    7: datetime.datetime.now()-datetime.timedelta(days=365)
+                    }
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -106,7 +115,10 @@ class HistoryViewer(NSWindowController):
             self.history = ChatHistory()
 
             tag = self.afterDate.selectedItem().tag()
-            self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+            if tag < 4:
+                self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+            else:
+                self.before_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
 
             self.refreshViewer()
 
@@ -124,15 +136,14 @@ class HistoryViewer(NSWindowController):
         self.search_text = None
         self.search_contact = None
         self.search_local = None
-        self.search_media = None
 
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
 
     @run_in_green_thread
-    def delete_messages(self, local_uri=None, remote_uri=None, date=None, media_type=None):
-        self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, media_type=media_type)
+    def delete_messages(self, local_uri=None, remote_uri=None, date=None, after_date=None, before_date=None, media_type=None):
+        self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type)
         self.refreshViewer()
 
     @run_in_green_thread
@@ -142,7 +153,8 @@ class HistoryViewer(NSWindowController):
             media_type = self.search_media if self.search_media else None
             search_text = self.search_text if self.search_text else None
             after_date = self.after_date if self.after_date else None
-            results = self.history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date)
+            before_date = self.before_date if self.before_date else None
+            results = self.history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date, before_date=before_date)
             self.renderContacts(results)
             self.updateBusyIndicator(False)
 
@@ -197,7 +209,8 @@ class HistoryViewer(NSWindowController):
             local_uri = self.search_local if self.search_local else None
             media_type = self.search_media if self.search_media else None
             after_date = self.after_date if self.after_date else None
-            results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date)
+            before_date = self.before_date if self.before_date else None
+            results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date, before_date=before_date)
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
 
@@ -228,7 +241,7 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     @allocate_autorelease_pool
-    def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None):
+    def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None, before_date=None):
         self.updateBusyIndicator(True)
         if self.history:
             search_text = self.search_text if self.search_text else None
@@ -240,8 +253,10 @@ class HistoryViewer(NSWindowController):
                 media_type = self.search_media if self.search_media else None
             if not after_date:
                 after_date = self.after_date if self.after_date else None
+            if not before_date:
+                before_date = self.before_date if self.before_date else None
 
-            results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date)
+            results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
 
             # cache message for pagination
             self.messages=[]
@@ -446,7 +461,13 @@ class HistoryViewer(NSWindowController):
     @objc.IBAction
     def filterByDateChanged_(self, sender):
         tag = sender.selectedItem().tag()
-        self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+        if tag < 4:
+            self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+            self.before_date = None
+        else:
+            self.before_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+            self.after_date = None
+            
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
@@ -485,27 +506,33 @@ class HistoryViewer(NSWindowController):
                     date = self.dayly_entries[row]['date']
                     media_type = self.dayly_entries[row]['type']
 
-                    ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
+                    ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
                     if ret == NSAlertDefaultReturn:
                         self.delete_messages(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date)
                 except IndexError:
                     pass
 
     def showDeleteConfirmationDialog(self, row):
+        media_print = self.search_media or 'All'
+        tag = self.afterDate.selectedItem().tag()
+        tag = self.afterDate.selectedItem().tag()
+
+        period = '%s %s' % (' newer than ' if tag < 4 else ' older than ', self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
+
         if row == 0:
-            ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of All history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries%s. This operation cannot be undone."%(media_print, period), u"Confirm", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
-                self.delete_messages()
+                self.delete_messages(media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         elif row == 1:
             remote_uri=self.contacts[row].uri
-            ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of Bonjour history entries. This operation cannot be undone.", u"Confirm", u"Cancel", None)
+            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s Bonjour history entries%s. This operation cannot be undone."%(media_print, period), u"Confirm", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
-                self.delete_messages(local_uri='bonjour')
+                self.delete_messages(local_uri='bonjour', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         else:
             remote_uri=self.contacts[row].uri
-            ret = NSRunAlertPanel(u"Purge history", u"Please confirm the deletion of history entries from %s. This operation cannot be undone."%remote_uri, u"Confirm", u"Cancel", None)
+            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s. This operation cannot be undone."%(media_print, remote_uri, period), u"Confirm", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
-                self.delete_messages(remote_uri=remote_uri)
+                self.delete_messages(remote_uri=remote_uri, media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
