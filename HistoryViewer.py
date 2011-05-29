@@ -15,7 +15,7 @@ from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
 from HistoryManager import ChatHistory
 
-SQL_LIMIT=5000
+SQL_LIMIT=2000
 MAX_MESSAGES_PER_PAGE=15
 
 class MyTableView(NSTableView):
@@ -33,6 +33,7 @@ class MyTableView(NSTableView):
         NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self)
         NSTableView.mouseDown_(self, event)
 
+
 class HistoryViewer(NSWindowController):
     implements(IObserver)
     
@@ -40,6 +41,8 @@ class HistoryViewer(NSWindowController):
     indexTable = objc.IBOutlet()
     contactTable = objc.IBOutlet()
     toolbar = objc.IBOutlet()
+
+    entriesView = objc.IBOutlet()
 
     afterDate = objc.IBOutlet()
     searchText = objc.IBOutlet()
@@ -72,6 +75,7 @@ class HistoryViewer(NSWindowController):
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file-transfer', 5: 'audio-recording', 6: 'video-recording', 7: 'voicemail', 8: 'missed-call'}
+    period_array = {0: None, 1: datetime.datetime.now()-datetime.timedelta(days=2), 2: datetime.datetime.now()-datetime.timedelta(days=7), 3: datetime.datetime.now()-datetime.timedelta(days=31)}
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -101,8 +105,8 @@ class HistoryViewer(NSWindowController):
 
             self.history = ChatHistory()
 
-            last_day=datetime.datetime.now()-datetime.timedelta(days=1)
-            self.after_date = last_day.strftime("%Y-%m-%d")
+            tag = self.afterDate.selectedItem().tag()
+            self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
 
             self.refreshViewer()
 
@@ -314,6 +318,23 @@ class HistoryViewer(NSWindowController):
         self.refreshDailyEntries(order_text=order_text)
 
     @objc.IBAction
+    def printDocument_(self, sender):
+        printInfo = NSPrintInfo.sharedPrintInfo()
+        printInfo.setTopMargin_(30)
+        printInfo.setBottomMargin_(30)
+        printInfo.setLeftMargin_(10)
+        printInfo.setRightMargin_(10)
+        printInfo.setOrientation_(NSPortraitOrientation)
+        printInfo.setHorizontallyCentered_(True)
+        printInfo.setVerticallyCentered_(False)
+        printInfo.setHorizontalPagination_(NSFitPagination)
+        printInfo.setVerticalPagination_(NSFitPagination)
+        NSPrintInfo.setSharedPrintInfo_(printInfo)
+
+        # print the content of the web view
+        self.entriesView.mainFrame().frameView().documentView().print_(self)
+
+    @objc.IBAction
     def search_(self, sender):
         if self.history:
             self.search_text = unicode(sender.stringValue()).lower()
@@ -425,19 +446,30 @@ class HistoryViewer(NSWindowController):
     @objc.IBAction
     def filterByDateChanged_(self, sender):
         tag = sender.selectedItem().tag()
-        date_type_array = {0: None, 1: datetime.datetime.now()-datetime.timedelta(days=1), 2: datetime.datetime.now()-datetime.timedelta(days=7), 3: datetime.datetime.now()-datetime.timedelta(days=31)}
-        self.after_date = date_type_array[tag].strftime("%Y-%m-%d") if date_type_array[tag] else None
+        self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
 
+    def validateToolbarItem_(self, item):
+        if item.itemIdentifier() == NSToolbarPrintItemIdentifier and not self.messages:
+            return False
+        return True
+
+    def toolbarWillAddItem_(self, notification):
+        item = notification.userInfo()["item"]
+        if item.itemIdentifier() == NSToolbarPrintItemIdentifier:
+            item.setToolTip_("Print Current Entries")
+            item.setTarget_(self)
+            item.setAutovalidates_(True)
+
     @objc.IBAction
-    def clickedToolbarItem_(self, sender):
-        if sender.tag() == 100: # smileys
+    def userClickedToolbarItem_(self, sender):
+        if sender.itemIdentifier() == 'smileys':
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
-        elif sender.tag() == 101: # purge messages
+        elif sender.itemIdentifier() == 'delete':
             if self.selectedTableView == self.contactTable:
                 try:
                     row = self.contactTable.selectedRow()
@@ -498,8 +530,10 @@ class HistoryViewer(NSWindowController):
                     self.refreshContacts()
         elif notification.name == 'BlinkContactsHaveChanged':
             self.refreshContacts()
+            self.toolbar.validateVisibleItems()
         elif notification.name == 'BlinkTableViewSelectionChaged':
             self.selectedTableView = notification.sender
+            self.toolbar.validateVisibleItems()
 
     def contactSelectionChanged_(self, notification):
         hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
