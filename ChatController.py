@@ -52,13 +52,6 @@ kUIOptionDisableHide = 1 << 6
 
 MAX_MESSAGE_LENGTH = 16*1024
 
-FULLSCREEN_TOOLBAR_HANGUP = 1
-FULLSCREEN_TOOLBAR_HOLD = 2
-FULLSCREEN_TOOLBAR_PARTICIPANTS = 3
-FULLSCREEN_TOOLBAR_EXIT = 4
-FULLSCREEN_TOOLBAR_MUTE = 5
-FULLSCREEN_TOOLBAR_MIRROR = 6
-
 bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
 
@@ -476,14 +469,14 @@ class ChatController(MediaStream):
 
     @objc.IBAction
     def userClickedFullScreenToolbarButton_(self, sender):
-        if sender.tag() == FULLSCREEN_TOOLBAR_HANGUP:
+        if sender.itemIdentifier() == 'hangup':
             self.closeTab()
-        elif sender.tag() == FULLSCREEN_TOOLBAR_MIRROR:
+        elif sender.itemIdentifier() == 'mirror':
             self.toggleMirror()
-        elif sender.tag() == FULLSCREEN_TOOLBAR_MUTE:
+        elif sender.itemIdentifier() == 'mute':
             self.backend.mute(False if self.backend.is_muted() else True)
             self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
-        elif sender.tag() == FULLSCREEN_TOOLBAR_HOLD:
+        elif sender.itemIdentifier() == 'hold':
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
                 if self.status == STREAM_CONNECTED and not self.sessionController.inProposal:
@@ -494,11 +487,11 @@ class ChatController(MediaStream):
                     else:
                         sender.setImage_(NSImage.imageNamed_("paused"))
                         audio_stream.hold()
-        elif sender.tag() == FULLSCREEN_TOOLBAR_PARTICIPANTS:
+        elif sender.itemIdentifier() == 'participants':
             window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
             if window:
                 window.window().performZoom_(None)
-        elif sender.tag() == FULLSCREEN_TOOLBAR_EXIT:
+        elif sender.itemIdentifier() == 'exit':
             self.exitFullScreen()
 
     @objc.IBAction
