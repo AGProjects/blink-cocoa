@@ -369,6 +369,10 @@ class ChatViewController(NSObject):
             script = "showDisabledCollaborationEditor()"
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
+    def scrollToBottom(self):
+        script = "scrollToBottom()"
+        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+
     def hideCollaborationEditor(self):
         if self.splitterHeight is not None:
             frame=self.inputView.frame()
