@@ -1111,10 +1111,15 @@ class ChatController(MediaStream):
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
 
         elif tag == SessionController.TOOLBAR_EDITOR and self.sessionController.account is not BonjourAccount():
+            sender.setImage_(NSImage.imageNamed_("editor"))
             self.chatViewController.editorStatus = not self.chatViewController.editorStatus
             self.showChatViewWithEditorWhileVideoActive()
             self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
             sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
+
+            window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+            if window:
+                window.noteSession_isComposing_(self.sessionController, False)
 
         elif tag == SessionController.TOOLBAR_HISTORY:
             contactWindow = self.sessionController.owner
@@ -1203,17 +1208,20 @@ class ChatController(MediaStream):
                 # message is old, discard it
                 return
 
-            if self.remoteTypingTimer:
-                # if we don't get any indications in the request refresh, then we assume remote to be idle
-                self.remoteTypingTimer.setFireDate_(NSDate.dateWithTimeIntervalSinceNow_(refresh))
-            else:
-                self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
+            self.resetIsComposingTimer(refresh)
         else:
             if self.remoteTypingTimer:
                 self.remoteTypingTimer.invalidate()
                 self.remoteTypingTimer = None
 
         window.noteSession_isComposing_(self.sessionController, flag)
+
+    def resetIsComposingTimer(self, refresh):
+        if self.remoteTypingTimer:
+            # if we don't get any indications in the request refresh, then we assume remote to be idle
+            self.remoteTypingTimer.setFireDate_(NSDate.dateWithTimeIntervalSinceNow_(refresh))
+        else:
+            self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateToolbarMuteIcon()

@@ -503,11 +503,12 @@ mobwrite.shareTextareaObj.shareHandler=function(b){if(typeof b=="string")b=docum
   collaboration_editor.innerHTML = "<h2 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Collaborative Text Editor</h2>"+
   "<p class=msgbox>Text entered in the area below can be modified simultaneously by all participants:"+
   "<TABLE STYLE='height: 85%; width: 100%'>"+
-  "<TR><TD><TEXTAREA ID='"+form_id+"' STYLE='width: 100%; height:100%'></TEXTAREA></TD></TR>"+
+  "<TR><TD><TEXTAREA ID='"+form_id+"' STYLE='width: 100%; height:100%' onchange='javascript:blink.collaborativeEditorisTyping();'></TEXTAREA></TD></TR>"+
   "</TABLE>";
  
-  chat_session.style.display = "none";
+
   collaboration_editor.style.display = "block";
+  chat_session.style.display = "none";
  
   mobwrite.syncGateway = collaboration_url;
   mobwrite.share(form_id);
@@ -520,12 +521,12 @@ function showDisabledCollaborationEditor() {
   collaboration_editor.innerHTML = "<h2 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Collaborative Text Editor is available in <a href='http://itunes.apple.com/us/app/blink-pro/id404360415?mt=12&ls=1'>Blink Pro</a></h2>"+
   "<p class=msgbox>Text entered in the area below can be modified simultaneously by all participants:"+
   "<TABLE STYLE='height: 85%; width: 100%'>"+
-  "<TR><TD><TEXTAREA disabled='disabled' STYLE='width: 100%; height:100%'></TEXTAREA></TD></TR>"+
+  "<TR><TD><TEXTAREA disabled='disabled' STYLE='width: 100%; height:100%' onchange='javascript:blink.collaborativeEditorisTyping();'></TEXTAREA></TD></TR>"+
   "</TABLE>";
  
   chat_session.style.display = "none";
   collaboration_editor.style.display = "block";
- 
+
   scrollToBottom();
 
 }
@@ -546,7 +547,7 @@ function hideCollaborationEditor() {
 
 
 <div id="chat_session"></div>
-<div id="collaboration_editor"</div>
+<div id="collaboration_editor"></div>
 </body>
 </html>
 

@@ -46,6 +46,7 @@ class ChatWindowController(NSWindowController):
     drawerScrollView = objc.IBOutlet()
     drawerSplitView = objc.IBOutlet()
     actionsButton = objc.IBOutlet()
+    editorButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
@@ -72,6 +73,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="AudioStreamDidStartRecordingAudio")
             self.notification_center.add_observer(self, name="AudioStreamDidStopRecordingAudio")
             self.notification_center.add_observer(self, name="BlinkAudioStreamChangedHoldState")
+            self.notification_center.add_observer(self, name="BlinkColaborativeEditorContentHasChanged")
             self.notification_center.add_observer(self, name="BlinkConferenceGotUpdate")
             self.notification_center.add_observer(self, name="BlinkContactsHaveChanged")
             self.notification_center.add_observer(self, name="BlinkGotProposal")
@@ -346,6 +348,14 @@ class ChatWindowController(NSWindowController):
             else:
                 self.muteButton.setState_(NSOffState)
                 self.muteButton.setImage_(NSImage.imageNamed_("mute"))
+        elif name == "BlinkColaborativeEditorContentHasChanged":
+            session = self.selectedSessionController()
+            if session and not sender.editorStatus:
+                self.editorButton.setImage_(NSImage.imageNamed_("editor-changed"))
+                chat_stream = session.streamHandlerOfType("chat")
+                if chat_stream:
+                    self.noteSession_isComposing_(session, True)
+                    chat_stream.resetIsComposingTimer(5)
 
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
@@ -363,6 +373,7 @@ class ChatWindowController(NSWindowController):
                 self.notification_center.remove_observer(self, name="AudioStreamDidStartRecordingAudio")
                 self.notification_center.remove_observer(self, name="AudioStreamDidStopRecordingAudio")
                 self.notification_center.remove_observer(self, name="BlinkAudioStreamChangedHoldState")
+                self.notification_center.remove_observer(self, name="BlinkColaborativeEditorContentHasChanged")
                 self.notification_center.remove_observer(self, name="BlinkConferenceGotUpdate")
                 self.notification_center.remove_observer(self, name="BlinkContactsHaveChanged")
                 self.notification_center.remove_observer(self, name="BlinkGotProposal")

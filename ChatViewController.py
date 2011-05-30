@@ -18,6 +18,7 @@ import re
 import time
 import urllib
 
+from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 from SmileyManager import SmileyManager
@@ -363,6 +364,7 @@ class ChatViewController(NSObject):
 
             hash.update(id)
             form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
+
             script = """showCollaborationEditor("%s", "%s")""" % (form_id, settings.server.collaboration_url)
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         else:
@@ -403,4 +405,15 @@ class ChatViewController(NSObject):
             listener.ignore()
             NSWorkspace.sharedWorkspace().openURL_(theURL)
 
+    # capture java-script funtion collaborativeEditorisTyping
+    def isSelectorExcludedFromWebScript_(self, sel):
+        if sel == "collaborativeEditorisTyping":
+            return False
+        return True
+
+    def collaborativeEditorisTyping(self):
+        NotificationCenter().post_notification("BlinkColaborativeEditorContentHasChanged", sender=self)
+
+    def webView_didClearWindowObject_forFrame_(self, sender, windowObject, frame):
+        windowObject.setValue_forKey_(self, "blink")
 
