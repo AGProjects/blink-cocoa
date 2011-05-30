@@ -842,7 +842,7 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Chat sessions are disabled in configuration")
             return False
 
-        if s.type == 'video':
+        if any(s for s in streams if s.type == 'video'):
             # TODO: enable video -adi
             return False
 
