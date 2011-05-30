@@ -166,7 +166,6 @@ class PreferencesController(NSWindowController, object):
             section = self.generalPop.selectedItem().title().lower()
             section = re.sub(" ", "_", section)
             self.generalTabView.selectTabViewItemWithIdentifier_(section)
-            
  
     @objc.IBAction
     def userClickedGeneralPopUpButton_(self, sender):
@@ -290,7 +289,6 @@ class PreferencesController(NSWindowController, object):
     def addAccount(self):        
         enroll = EnrollmentController.alloc().init()
         enroll.setupForAdditionalAccounts()
-        #enroll.setCreateAccount()
         enroll.runModal()
 
     def removeSelectedAccount(self):
@@ -460,8 +458,13 @@ class PreferencesController(NSWindowController, object):
         if account_info:
             account = account_info.account
             self.showOptionsForAccount(account)
+
+            self.passwordText.setHidden_(False)
+            self.displayNameText.setHidden_(False)
+
             self.addressText.setEditable_(False)
             self.passwordText.setEditable_(True)
+
             self.advancedToggle.setEnabled_(True)
             
             if isinstance(account, BonjourAccount):
@@ -475,14 +478,14 @@ class PreferencesController(NSWindowController, object):
                 sv.viewWithTag_(20).setHidden_(False)
                 sv.viewWithTag_(21).setHidden_(False)
         else:
-            self.displayNameText.setStringValue_("")
-            self.addressText.setStringValue_("")
+            self.addressText.setStringValue_("Please select an account")
             self.addressText.setEditable_(False)
-            self.passwordText.setStringValue_("")
-            self.passwordText.setEditable_(False)
-            self.advancedToggle.setEnabled_(False)
-            self.passwordText.setHidden_(False)
             self.addressText.setHidden_(False)
+            self.passwordText.setHidden_(True)
+            self.displayNameText.setHidden_(True)
+            self.passwordText.setEditable_(False)
+            self.advancedToggle.setState_(NSOffState)
+            self.advancedToggle.setEnabled_(False)
             sv.viewWithTag_(20).setHidden_(False)
             sv.viewWithTag_(21).setHidden_(False)
             
