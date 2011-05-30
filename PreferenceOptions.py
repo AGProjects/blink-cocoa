@@ -1383,6 +1383,7 @@ DisabledPreferenceSections = ['service_provider']
 StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine']
 
 SettingDescription = {
+                      'audio.silent': 'Silence Alerts',
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
