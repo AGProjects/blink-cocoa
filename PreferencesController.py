@@ -12,7 +12,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, formatName
+from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, formatName
 from VerticalBoxView import VerticalBoxView
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
@@ -39,7 +39,6 @@ class PreferencesController(NSWindowController, object):
     advancedTabView = objc.IBOutlet()
 
     # general settings
-    generalPop = objc.IBOutlet()
     generalTabView = objc.IBOutlet()
 
     settingViews = {}
@@ -100,7 +99,6 @@ class PreferencesController(NSWindowController, object):
           self.dots[i] = dot
 
         if self.advancedTabView is not None:
-            self.createGeneralOptionsUI()
             self.tableViewSelectionDidChange_(None)
 
         if self.accountTable:
@@ -119,62 +117,44 @@ class PreferencesController(NSWindowController, object):
     def userClickedToolbarButton_(self, sender):
         section = sender.itemIdentifier()
 
+        if section == 'advanced':
+            self.generalTabView.setTabViewType_(NSTopTabsBezelBorder)
+            self.createGeneralOptionsUI('advanced')
+        else:
+            self.createGeneralOptionsUI('basic')
+            self.generalTabView.setTabViewType_(NSNoTabsBezelBorder)
+
         if section == 'accounts':
             self.mainTabView.selectTabViewItemWithIdentifier_("accounts")
         elif section == 'audio':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
-            self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'Audio Device Settings')
-            self.sectionDescription.setHidden_(False)
         elif section == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
-            self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'Answering Machine Settings')
-            self.sectionDescription.setHidden_(False)
         elif section == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
-            self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'Chat Settings')
-            self.sectionDescription.setHidden_(False)
         elif section == 'file-transfer':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("file_transfer")
-            self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'File Transfer Settings')
-            self.sectionDescription.setHidden_(False)
         elif section == 'desktop-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("desktop_sharing")
-            self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'Desktop Sharing Settings')
-            self.sectionDescription.setHidden_(False)
         elif section == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
-            self.generalPop.setHidden_(True)
             self.sectionDescription.setStringValue_(u'Sound Alerts')
-            self.sectionDescription.setHidden_(False)
         elif section == 'advanced':
+            self.sectionDescription.setStringValue_(u'Advanced Settings')
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
-            self.generalPop.setHidden_(False)                        
-            self.sectionDescription.setHidden_(True)
-            
-            # load last section
-            section = self.generalPop.selectedItem().title().lower()
-            section = re.sub(" ", "_", section)
-            self.generalTabView.selectTabViewItemWithIdentifier_(section)
- 
-    @objc.IBAction
-    def userClickedGeneralPopUpButton_(self, sender):
-        section = str(sender.title().lower())
-        section = re.sub(" ", "_", section)
-        self.generalTabView.selectTabViewItemWithIdentifier_(section)
- 
-    def createGeneralOptionsUI(self):
-        self.generalPop.removeAllItems()
+
+    def createGeneralOptionsUI(self, type='basic'):
         for i in range(self.generalTabView.numberOfTabViewItems()):
             self.generalTabView.removeTabViewItem_(self.generalTabView.tabViewItemAtIndex_(0))
 
@@ -184,14 +164,22 @@ class PreferencesController(NSWindowController, object):
         frame = self.generalTabView.frame()
         frame.origin.x = 0
         frame.origin.y = 0
+
         for section in (section for section in sections if section not in DisabledPreferenceSections):
             view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
-            tabItem.setLabel_(section)
+
+            try:
+                label = GeneralSectionNames[section]
+            except KeyError:
+                label = formatName(section)
+
+            tabItem.setLabel_(label)
             tabItem.setView_(view)
-            self.generalTabView.addTabViewItem_(tabItem)
-            if section not in StaticPreferenceSections:
-                self.generalPop.addItemWithTitle_(formatName(section))
+            if type == 'advanced' and section not in StaticPreferenceSections:
+                self.generalTabView.addTabViewItem_(tabItem)
+            elif type == 'basic' and section in StaticPreferenceSections:
+                self.generalTabView.addTabViewItem_(tabItem)
 
     def createAccountOptionsUI(self, account):
         self.advancedPop.removeAllItems()
@@ -203,10 +191,16 @@ class PreferencesController(NSWindowController, object):
         for section in (section for section in sections if section not in DisabledAccountPreferenceSections):
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
             
-            self.advancedPop.addItemWithTitle_(formatName(section))
-            self.advancedPop.lastItem().setRepresentedObject_(section)
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
-            tabItem.setLabel_(section)
+            try:
+                label = GeneralSectionNames[section]
+            except KeyError:
+                label = formatName(section)
+
+            self.advancedPop.addItemWithTitle_(label)
+            self.advancedPop.lastItem().setRepresentedObject_(section)
+
+            tabItem.setLabel_(label)
             tabItem.setView_(view)
             self.advancedTabView.addTabViewItem_(tabItem)
 
@@ -459,13 +453,14 @@ class PreferencesController(NSWindowController, object):
             account = account_info.account
             self.showOptionsForAccount(account)
 
-            self.passwordText.setHidden_(False)
-            self.displayNameText.setHidden_(False)
-
             self.addressText.setEditable_(False)
             self.passwordText.setEditable_(True)
+            self.displayNameText.setHidden_(False)
 
             self.advancedToggle.setEnabled_(True)
+            self.advancedToggle.setState_(NSOnState)
+            self.advancedPop.setHidden_(False)
+            self.advancedTabView.setHidden_(False)
             
             if isinstance(account, BonjourAccount):
                 self.passwordText.setHidden_(True)
@@ -482,10 +477,14 @@ class PreferencesController(NSWindowController, object):
             self.addressText.setEditable_(False)
             self.addressText.setHidden_(False)
             self.passwordText.setHidden_(True)
-            self.displayNameText.setHidden_(True)
             self.passwordText.setEditable_(False)
-            self.advancedToggle.setState_(NSOffState)
+            self.displayNameText.setHidden_(True)
+
             self.advancedToggle.setEnabled_(False)
+            self.advancedToggle.setState_(NSOffState)
+            self.advancedPop.setHidden_(True)
+            self.advancedTabView.setHidden_(True)
+
             sv.viewWithTag_(20).setHidden_(False)
             sv.viewWithTag_(21).setHidden_(False)
             

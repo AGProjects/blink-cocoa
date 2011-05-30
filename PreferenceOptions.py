@@ -635,39 +635,37 @@ class PopUpMenuOption(Option):
             if self.popup.indexOfItemWithTitle_(value) < 0:
               self.popup.addItemWithTitle_(value)
             self.popup.selectItemWithTitle_(value)
-        
-
 
 class SRTPEncryptionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description)
+        PopUpMenuOption.__init__(self, object, name, option, description=description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(item)
 
 class SampleRateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description)
+        PopUpMenuOption.__init__(self, object, name, option, description=description)
         for item in SIPSimpleSettings.audio.sample_rate.type.valid_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class ImageDepthOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description)
+        PopUpMenuOption.__init__(self, object, name, option, description=description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class MSRPTransportOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description)
+        PopUpMenuOption.__init__(self, object, name, option, description=description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
 
 class MSRPConnectionModelOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description)
+        PopUpMenuOption.__init__(self, object, name, option, description=description)
         for item in option.type.available_values:
             self.popup.addItemWithTitle_(str(item))
         self.popup.sizeToFit()
@@ -1390,6 +1388,7 @@ SettingDescription = {
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
                       'file_transfer.directory': 'Download Directory',
+                      'message_summary.voicemail_uri': 'Mailbox URI',
                       'logs.directory': 'Logs Directory',
                       'logs.trace_msrp': 'Trace MSRP (used for chat, file transfer and desktop sharing)',
                       'logs.trace_xcap': 'Trace XCAP (used by presence and for storing contacts)',
@@ -1408,4 +1407,17 @@ SettingDescription = {
                       'tls.ca_list': 'Certificate Authority File'
                       }
 
+GeneralSectionNames = {
+                       'auth': 'Authentication',
+                       'logs': 'File Logging',
+                       'message_summary': 'Voicemail Notifications',
+                       'msrp': 'MSRP Protocol',
+                       'nat_traversal': 'NAT Traversal',
+                       'pstn': 'Phone Numbers', 
+                       'rtp': 'Codecs',
+                       'sip': 'SIP Settings',
+                       'sounds': 'Alerts',
+                       'server': 'Server Settings',
+                       'tls': 'TLS Settings'
+                       }
 
