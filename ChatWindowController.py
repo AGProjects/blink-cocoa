@@ -915,7 +915,7 @@ class ChatWindowController(NSWindowController):
             remote_uri = format_identity_address(session.remotePartyObject)
             self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
-            column_header_title = u'Remote Party'
+            column_header_title = u'Participants'
             if session.conference_info is not None:
                 column_header_title = u'%d Participants' % len(self.participants) if len(self.participants) > 1 else u'Participants'
 
