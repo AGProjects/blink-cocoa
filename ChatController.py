@@ -1184,10 +1184,7 @@ class ChatController(MediaStream):
                     # notify growl
                     growl_data = TimestampedNotificationData()
                     growl_data.sender = format_identity_simple(sender)
-                    if message.content_type == 'text/html':
-                        growl_data.content = html2txt(message.body[0:400])
-                    else:
-                        growl_data.content = message.body[0:400]
+                    growl_data.content = html2txt(message.body[0:400]) if message.content_type == 'text/html' else message.body[0:400]
                     NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
                 NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
