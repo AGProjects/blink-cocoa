@@ -349,13 +349,9 @@ class ChatWindowController(NSWindowController):
                 self.muteButton.setState_(NSOffState)
                 self.muteButton.setImage_(NSImage.imageNamed_("mute"))
         elif name == "BlinkColaborativeEditorContentHasChanged":
-            session = self.selectedSessionController()
-            if session and not sender.editorStatus:
-                self.editorButton.setImage_(NSImage.imageNamed_("editor-changed"))
-                chat_stream = session.streamHandlerOfType("chat")
-                if chat_stream:
-                    self.noteSession_isComposing_(session, True)
-                    chat_stream.resetIsComposingTimer(5)
+            if not sender.editorStatus:
+                self.noteSession_isComposing_(sender.delegate.sessionController, True)
+            self.revalidateToolbar()
 
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
