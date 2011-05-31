@@ -140,6 +140,9 @@ class SMSViewController(NSObject):
             item.setAttributedTitle_(atext)
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
+
+    def isOutputFrameVisible(self):
+        return True
     
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
