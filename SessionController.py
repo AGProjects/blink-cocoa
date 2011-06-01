@@ -245,11 +245,12 @@ class SessionController(NSObject):
             return False
 
     def cancelProposal(self, stream):
-        self.cancelledStream = stream
-        try:
-            self.session.cancel_proposal()
-        except IllegalStateError, e:
-            log_error(self, "IllegalStateError: %s" % e)
+        if self.session:
+            self.cancelledStream = stream
+            try:
+                self.session.cancel_proposal()
+            except IllegalStateError, e:
+                log_error(self, "IllegalStateError: %s" % e)
 
     @property
     def ended(self):
