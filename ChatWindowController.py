@@ -31,6 +31,19 @@ import os
 import re
 import time
 
+PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
+PARTICIPANTS_MENU_ADD_CONTACT = 301
+PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
+PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE = 311
+PARTICIPANTS_MENU_MUTE = 315
+PARTICIPANTS_MENU_INVITE_TO_CONFERENCE = 312
+PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE = 313
+PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
+PARTICIPANTS_MENU_START_CHAT_SESSION = 321
+PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
+PARTICIPANTS_MENU_SEND_FILES = 323
+
+
 class ChatWindowController(NSWindowController):
     implements(IObserver)
 
@@ -454,31 +467,31 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
 
         if not session or contact is None:
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_MUTE).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_MUTE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
             remote_uri = format_identity_address(session.remotePartyObject)
 
             hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
-                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed else False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed else False)
             else:
-                self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)          
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)          
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
 
     def sharedFileSelectionChanged_(self, notification):
         # TODO: When/if more items are added to this menu, save item tags as module level variables
@@ -609,7 +622,7 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
-        if sender.tag() == SessionController.TOOLBAR_DESKTOP_SHARING_BUTTON:
+        if sender.tag() == 200: # desktop sharing menu button
             for item in self.desktopShareMenu.itemArray():
                 item.setEnabled_(self.validateToolbarItem_(item))
 
@@ -653,32 +666,32 @@ class ChatWindowController(NSWindowController):
             uri = object.uri
             display_name = object.display_name
 
-            if tag == SessionController.PARTICIPANTS_MENU_ADD_CONTACT:
+            if tag == PARTICIPANTS_MENU_ADD_CONTACT:
                 NSApp.delegate().windowController.addContact(uri, display_name)
-            elif tag == SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
+            elif tag == PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
                 remote_uri = format_identity_address(session.remotePartyObject)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
                     display_name = unicode(conf_desc.display_text)
                 NSApp.delegate().windowController.addContact(remote_uri, display_name)
-            elif tag == SessionController.PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
+            elif tag == PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
                 ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?" % display_name, u"Remove", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
-            elif tag == SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
+            elif tag == PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
                 self.addParticipants()
-            elif tag == SessionController.PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
+            elif tag == PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
                 self.sendPrivateMessage()
-            elif tag == SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
+            elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
-            elif tag == SessionController.PARTICIPANTS_MENU_START_AUDIO_SESSION:
+            elif tag == PARTICIPANTS_MENU_START_AUDIO_SESSION:
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "audio")
-            elif tag == SessionController.PARTICIPANTS_MENU_START_VIDEO_SESSION:
+            elif tag == PARTICIPANTS_MENU_START_VIDEO_SESSION:
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "video")
-            elif tag == SessionController.PARTICIPANTS_MENU_START_CHAT_SESSION:
+            elif tag == PARTICIPANTS_MENU_START_CHAT_SESSION:
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "chat")
-            elif tag == SessionController.PARTICIPANTS_MENU_SEND_FILES:
+            elif tag == PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
 
     @objc.IBAction
@@ -904,12 +917,12 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setHidden_(True)
                 self.audioStatus.setStringValue_('')
 
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
             hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
             remote_uri = format_identity_address(session.remotePartyObject)
-            self.participantMenu.itemWithTag_(SessionController.PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
             column_header_title = u'Participants'
             if session.conference_info is not None:

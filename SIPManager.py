@@ -844,7 +844,7 @@ class SIPManager(object):
 
         if any(s for s in streams if s.type == 'video'):
             # TODO: enable video -adi
-            return False
+            return True
 
         return True
 
@@ -865,7 +865,7 @@ class SIPManager(object):
 
         if type == 'video':
             # TODO: enable video -adi
-            return False
+            return True
 
         return True
 
