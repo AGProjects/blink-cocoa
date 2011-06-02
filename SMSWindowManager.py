@@ -139,12 +139,12 @@ class SMSWindowController(NSWindowController):
 
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):
-        if sender.tag() == 100: # smileys
+        if sender.itemIdentifier() == 'smileys':
             chatViewController = self.selectedSessionController().chatViewController
             chatViewController.expandSmileys = not chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
-        elif sender.tag() == 101: # history
+        elif sender.itemIdentifier() == 'history':
             contactWindow = self._owner._owner
             contactWindow.showChatTranscripts_(None)
             session = self.selectedSessionController()
