@@ -150,6 +150,23 @@ class SMSWindowController(NSWindowController):
             session = self.selectedSessionController()
             contactWindow.historyViewer.filterByContact(format_identity(session.target_uri), media_type='sms')
 
+    @objc.IBAction
+    def printDocument_(self, sender):
+        printInfo = NSPrintInfo.sharedPrintInfo()
+        printInfo.setTopMargin_(30)
+        printInfo.setBottomMargin_(30)
+        printInfo.setLeftMargin_(10)
+        printInfo.setRightMargin_(10)
+        printInfo.setOrientation_(NSPortraitOrientation)
+        printInfo.setHorizontallyCentered_(True)
+        printInfo.setVerticallyCentered_(False)
+        printInfo.setHorizontalPagination_(NSFitPagination)
+        printInfo.setVerticalPagination_(NSFitPagination)
+        NSPrintInfo.setSharedPrintInfo_(printInfo)
+
+        # print the content of the web view
+        print_view = self.selectedSessionController().chatViewController.outputView
+        print_view.mainFrame().frameView().documentView().print_(self)
 
 SMSWindowManagerInstance = None
 
