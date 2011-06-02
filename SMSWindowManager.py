@@ -146,7 +146,7 @@ class SMSWindowController(NSWindowController):
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
         elif sender.itemIdentifier() == 'history':
             contactWindow = self._owner._owner
-            contactWindow.showChatTranscripts_(None)
+            contactWindow.showHistoryViewer_(None)
             session = self.selectedSessionController()
             contactWindow.historyViewer.filterByContact(format_identity(session.target_uri), media_type='sms')
 

@@ -3708,7 +3708,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">showChatTranscripts:</string>
+						<string key="label">showHistoryViewer:</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="1048520813"/>
 					</object>
@@ -3732,7 +3732,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">showChatTranscripts:</string>
+						<string key="label">showHistoryViewer:</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="257090110"/>
 					</object>
@@ -6983,7 +6983,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
 							<string>showChatHistory:</string>
-							<string>showChatTranscripts:</string>
+							<string>showHistoryViewer:</string>
 							<string>showDebugWindow:</string>
 							<string>showHelp:</string>
 							<string>showPSTNAccess:</string>
@@ -7080,7 +7080,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
 							<string>showChatHistory:</string>
-							<string>showChatTranscripts:</string>
+							<string>showHistoryViewer:</string>
 							<string>showDebugWindow:</string>
 							<string>showHelp:</string>
 							<string>showPSTNAccess:</string>
@@ -7212,7 +7212,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">showChatTranscripts:</string>
+								<string key="name">showHistoryViewer:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">

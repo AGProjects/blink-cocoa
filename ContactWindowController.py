@@ -1441,7 +1441,7 @@ class ContactWindowController(NSWindowController):
             self.disbandConference()
 
     @objc.IBAction
-    def showChatTranscripts_(self, sender):
+    def showHistoryViewer_(self, sender):
         if not self.historyViewer:
             self.historyViewer = HistoryViewer()
         self.historyViewer.showWindow_(None)
@@ -1605,12 +1605,6 @@ class ContactWindowController(NSWindowController):
         if self.collapsedState:
             self.window().zoom_(None)
             self.setCollapsed(True)
-
-    @objc.IBAction
-    def showChatHistory_(self, sender):
-        if not self.chatHistory:
-            self.chatHistory = ChatHistoryWindowController.alloc().init()
-        self.chatHistory.showWindow_(None)
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
@@ -2122,13 +2116,13 @@ class ContactWindowController(NSWindowController):
             openFileTransferSelectionDialog(account, contact.uri)
 
     @objc.IBAction
-    def viewChatHistory_(self, sender):
+    def viewHistory_(self, sender):
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
             pass
         else:
-            self.showChatTranscripts_(None)
+            self.showHistoryViewer_(None)
             self.historyViewer.filterByContact(contact.uri)
 
     def updateRecordingsMenu(self):
@@ -2336,7 +2330,7 @@ class ContactWindowController(NSWindowController):
             sf_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('file-transfer'))
             if item not in self.model.bonjourgroup.contacts:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View Chat History...", "viewChatHistory:", "")
+                sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History...", "viewHistory:", "")
                 sf_item.setEnabled_(has_full_sip_uri  and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name

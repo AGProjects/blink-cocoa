@@ -70,7 +70,7 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
         sessionController.startChatSession()
     elif identifier == 'history':
         contactWindow = sessionController.owner
-        contactWindow.showChatTranscripts_(None)
+        contactWindow.showHistoryViewer_(None)
         if sessionController.account is BonjourAccount():
             contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
         else:
@@ -1131,7 +1131,7 @@ class ChatController(MediaStream):
 
             elif identifier == 'history':
                 contactWindow = self.sessionController.owner
-                contactWindow.showChatTranscripts_(None)
+                contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
                     contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
                 else:
