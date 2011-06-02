@@ -649,6 +649,8 @@ class SessionController(NSObject):
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
         if data.action == 'remove' and not sender.streams:
             self.log_info( "There are no streams anymore, ending the session")
+            log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
+            self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
             self.end()
 
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
