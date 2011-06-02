@@ -405,7 +405,7 @@ class ContactWindowController(NSWindowController):
             session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
         except StopIteration:
             session.reject_proposal()
-            log_error("Cannot find session controller for session: %s" % session)
+            session.log_info("Cannot find session controller for session: %s" % session)
         else:
             session_controller.handleIncomingStreams(streams, True)
             session.accept_proposal(streams)

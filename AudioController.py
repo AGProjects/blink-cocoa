@@ -137,7 +137,7 @@ class AudioController(MediaStream):
         self.sessionManager.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
         if is_answering_machine:
-            log_info(self, "Sending session to answering machine")
+            self.sessionController.log_info( "Sending session to answering machine")
             self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.audioSegmented.setEnabled_forSegment_(False, 1)
             self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
@@ -188,7 +188,7 @@ class AudioController(MediaStream):
         else:
             if not self.sessionController.endStream(self):
                 if self.stream is None:
-                    log_info(self, "Cannot end audio stream in current state")
+                    self.sessionController.log_info( "Cannot end audio stream in current state")
                     return
             self.audioEndTime = time.time()
             self.changeStatus(STREAM_DISCONNECTING)
@@ -212,7 +212,7 @@ class AudioController(MediaStream):
         return self.status in (STREAM_CONNECTED)
 
     def answerCall(self):
-        log_info(self, "Taking over call on answering machine...")
+        self.sessionController.log_info( "Taking over call on answering machine...")
         self.audioSegmented.cell().setToolTip_forSegment_("Put the call on hold", 0)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
         self.audioSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 1)
@@ -270,7 +270,7 @@ class AudioController(MediaStream):
         except RuntimeError:
             pass
         else:
-            log_info(self, u"Sent DTMF code %s" % key)
+            self.sessionController.log_info( u"Sent DTMF code %s" % key)
             filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
             wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
             if self.session.account.rtp.inband_dtmf:
@@ -300,7 +300,7 @@ class AudioController(MediaStream):
             return
         
         if type(peer) == str:
-            log_info(self, u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
+            self.sessionController.log_info( u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
                   peer))
             # start audio session to peer and add it to conference
             self.view.setConferencing_(True)
@@ -315,7 +315,7 @@ class AudioController(MediaStream):
                 
             return False
         else:
-            log_info(self, u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.getTitle(),
+            self.sessionController.log_info( u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.getTitle(),
                   peer.sessionController.getTitle()))
             # if conference already exists and neither self nor peer are part of it:
             #     return False
@@ -331,7 +331,7 @@ class AudioController(MediaStream):
             return True
 
     def sessionBoxDidRemoveFromConference(self, sender):
-        log_info(self, u"Removed %s from conference through drag&drop" % self.sessionController.getTitle())
+        self.sessionController.log_info( u"Removed %s from conference through drag&drop" % self.sessionController.getTitle())
         self.removeFromConference()
 
     def addToConference(self):
@@ -376,7 +376,7 @@ class AudioController(MediaStream):
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
             if duration >= SIPSimpleSettings().answering_machine.max_recording_duration:
-                log_info(self, "Answering machine recording time limit reached, hanging up...")
+                self.sessionController.log_info( "Answering machine recording time limit reached, hanging up...")
                 self.end()
                 return
 
@@ -699,7 +699,7 @@ class AudioController(MediaStream):
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
         transfer_session = sender.representedObject()
-        log_info(self, u'Initiating call transfer from %s to %s' % (transfer_session['from'].getTitleFull(), transfer_session['to'].getTitleFull()))
+        self.sessionController.log_info( u'Initiating call transfer from %s to %s' % (transfer_session['from'].getTitleFull(), transfer_session['to'].getTitleFull()))
         # TODO: add call transfer -adi
 
     @objc.IBAction
@@ -807,10 +807,10 @@ class AudioController(MediaStream):
             self.hold()
 
     def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
-        log_info(self, u'Recording audio to %s\n' % data.filename)
+        self.sessionController.log_info( u'Recording audio to %s\n' % data.filename)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
-        log_info(self, u'Stopped recording audio to %s\n' % data.filename)
+        self.sessionController.log_info( u'Stopped recording audio to %s\n' % data.filename)
         self.addRecordingToHistory(data.filename)
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
@@ -819,7 +819,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_AudioStreamDidChangeHoldState(self, sender, data):
-        log_info(self, u"%s requested %s"%(data.originator,(data.on_hold and "hold" or "unhold")))
+        self.sessionController.log_info( u"%s requested %s"%(data.originator,(data.on_hold and "hold" or "unhold")))
         if data.originator != "local":
             self.holdByRemote = data.on_hold
             self.changeStatus(self.status)
@@ -834,7 +834,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
-        log_info(self, "Audio stream started")
+        self.sessionController.log_info( "Audio stream started")
         self.setStatusText(u"Audio %s" % self.stream.codec)
 
         self.changeStatus(STREAM_CONNECTED)
@@ -849,7 +849,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
-        log_info(self, "Audio stream ended")
+        self.sessionController.log_info( "Audio stream ended")
         if self.sessionController.endingBy:
             pass # the session is being ended
         else:

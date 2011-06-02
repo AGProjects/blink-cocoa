@@ -108,10 +108,10 @@ class DesktopSharingController(MediaStream):
     def startIncoming(self, is_update):
         if self.direction == "active": # viewer
             # open viewer
-            log_info(self, "Preparing to view remote desktop")
+            self.sessionController.log_info("Preparing to view remote desktop")
             self.stream.handler = ExternalVNCViewerHandler()
         else:
-            log_info(self, "Preparing to offer desktop for viewing")
+            self.sessionController.log_info("Preparing to offer desktop for viewing")
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)            
             self.statusProgress.startAnimation_(None)
@@ -124,9 +124,9 @@ class DesktopSharingController(MediaStream):
     def startOutgoing(self, is_update):
         if self.direction == "active": # viewer
             # open viewer
-            log_info(self, "Requesting to view remote desktop")
+            self.sessionController.log_info("Requesting to view remote desktop")
         else:
-            log_info(self, "Offering desktop for viewing")
+            self.sessionController.log_info("Offering desktop for viewing")
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_("Desktop Sharing")
@@ -141,15 +141,15 @@ class DesktopSharingController(MediaStream):
                 self.statusWindow.close()
                 self.statusWindow = None
         elif self.status == STREAM_PROPOSING:
-            log_info(self, "Cancelling desktop sharing session as per user request")
+            self.sessionController.log_info("Cancelling desktop sharing session as per user request")
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
         elif self.status in (STREAM_CONNECTED, STREAM_INCOMING):
-            log_info(self, "Removing Desktop Stream from Session")                    
+            self.sessionController.log_info("Removing Desktop Stream from Session")                    
             self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
         else:
-            log_info(self, "Cancelling desktop sharing session as per user request")
+            self.sessionController.log_info("Cancelling desktop sharing session as per user request")
             self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
 
@@ -182,10 +182,10 @@ class DesktopSharingController(MediaStream):
 
     def changeStatus(self, newstate, fail_reason=None):
         if newstate == STREAM_CONNECTED:
-            log_info(self, "Desktop stream started")
+            self.sessionController.log_info("Desktop stream started")
             if self.direction == "active":
                 ip, port = self.stream.handler.address
-                log_info(self, "Desktop sharing stream started, initiating external viewer on port %s" % port)
+                self.sessionController.log_info("Desktop sharing stream started, initiating external viewer on port %s" % port)
                 url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
                 NSWorkspace.sharedWorkspace().openURL_(url)
             else:
@@ -245,22 +245,22 @@ class DesktopSharingController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
             self.changeStatus(STREAM_IDLE)
-            log_info(self, "Desktop stream ended by closed VNC viewer")
+            self.sessionController.log_info("Desktop stream ended by closed VNC viewer")
         else:
-            log_error(self, "Desktop stream failed: %s" % data.reason)
+            self.sessionController.log_info("Desktop stream failed: %s" % data.reason)
             data.failure.printTraceback()
             self.changeStatus(STREAM_FAILED)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        log_info(self, "Desktop stream ended")
+        self.sessionController.log_info("Desktop stream ended")
         self.changeStatus(STREAM_IDLE)
 
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
-            log_info(self, "Desktop sharing: %s" % data.reason)
+            self.sessionController.log_info("Desktop sharing: %s" % data.reason)
             # middleware is supposed to end the session now
         else:
-            log_error(self, "Desktop sharing error: %s" % data.reason)
+            self.sessionController.log_info("Desktop sharing error: %s" % data.reason)
 
 
 class DesktopSharingViewerController(DesktopSharingController):

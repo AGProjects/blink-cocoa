@@ -775,7 +775,7 @@ class ChatController(MediaStream):
         try:
             results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
         except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))            
+            self.sessionController.log_info(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))            
             return
 
         # build a list of previously failed messages
@@ -1109,7 +1109,7 @@ class ChatController(MediaStream):
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.session.remote_identity.uri)
 
             elif identifier == 'reconnect' and self.status in (STREAM_IDLE, STREAM_FAILED):
-                BlinkLogger().log_info(u"Re-establishing session to %s" % self.remoteParty)
+                self.sessionController.log_info(u"Re-establishing session to %s" % self.remoteParty)
                 self.sessionController.mustShowDrawer = True
                 self.sessionController.startChatSession()
 
@@ -1265,7 +1265,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         endpoint = str(self.stream.msrp.full_remote_path[0])
-        BlinkLogger().log_info(u"Chat stream established to %s (%s)" % (endpoint, self.remoteParty))
+        self.sessionController.log_info(u"Chat stream established to %s (%s)" % (endpoint, self.remoteParty))
         self.chatViewController.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
 
         self.handler.setConnected(self.stream)
@@ -1276,7 +1276,7 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        BlinkLogger().log_info(u"Chat stream ended")
+        self.sessionController.log_info(u"Chat stream ended")
 
         self.notification_center.remove_observer(self, sender=sender)
 
@@ -1297,7 +1297,7 @@ class ChatController(MediaStream):
         self.stream = None
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        BlinkLogger().log_info(u"Chat stream failed: %s" % data.reason)
+        self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
         if data.reason == "Connection was closed cleanly.":
             self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
         else:

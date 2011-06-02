@@ -1,15 +1,13 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
-__all__ = ['MediaStream', 'log_debug', 'log_error', 'log_info', 'STATE_IDLE', 'STATE_DNS_LOOKUP', 'STATE_DNS_FAILED', 'STATE_CONNECTING',
+__all__ = ['MediaStream', 'STATE_IDLE', 'STATE_DNS_LOOKUP', 'STATE_DNS_FAILED', 'STATE_CONNECTING',
            'STATE_CONNECTED', 'STATE_FAILED', 'STATE_FINISHED', 'STREAM_IDLE', 'STREAM_WAITING_DNS_LOOKUP', 'STREAM_RINGING', 'STREAM_ADDING',
            'STREAM_CONNECTING', 'STREAM_PROPOSING', 'STREAM_CONNECTED', 'STREAM_DISCONNECTING', 'STREAM_CANCELLING', 'STREAM_FAILED', 'STREAM_INCOMING']
 
 from application.notification import NotificationCenter
 
 from Foundation import NSObject
-
-from BlinkLogger import BlinkLogger
 
 
 STATE_IDLE = "IDLE"
@@ -31,19 +29,6 @@ STREAM_DISCONNECTING = "DISCONNECTING"
 STREAM_CANCELLING = "CANCELLING"
 STREAM_FAILED = "FAILED"
 STREAM_INCOMING = "INCOMING"
-
-
-
-def log_info(session, text):
-    BlinkLogger().log_info(u"[session to %s] %s" % (session.remoteParty, text))
-
-
-def log_debug(session, text):
-    BlinkLogger().log_debug(u"[session to %s] %s" % (session.remoteParty, text))
-
-
-def log_error(session, text):
-    BlinkLogger().log_error(u"[session to %s] %s" % (session.remoteParty, text))
 
 
 class MediaStream(NSObject):
