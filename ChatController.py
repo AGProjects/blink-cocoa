@@ -472,7 +472,7 @@ class ChatController(MediaStream):
         if sender.itemIdentifier() == 'hangup':
             self.closeTab()
         elif sender.itemIdentifier() == 'mirror':
-            self.toggleMirror()
+            self.toggleVideoMirror()
         elif sender.itemIdentifier() == 'mute':
             self.backend.mute(False if self.backend.is_muted() else True)
             self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
@@ -552,7 +552,7 @@ class ChatController(MediaStream):
     def updateToolbarMuteIcon(self):
         if self.fullScreenVideoPanel:
             try:
-                mute_item = (item for item in self.fullScreenVideoPanelToobar.visibleItems() if item.tag()==FULLSCREEN_TOOLBAR_MUTE).next()
+                mute_item = (item for item in self.fullScreenVideoPanelToobar.visibleItems() if item.itemIdentifier()=='mute').next()
             except StopIteration:
                 pass
             else:
@@ -572,17 +572,6 @@ class ChatController(MediaStream):
         window.drawer.open()
 
         self.splitViewFrame = window.window().frame()
-
-        if not self.fullScreenVideoPanel:
-            NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
-
-            userdef = NSUserDefaults.standardUserDefaults()
-            savedFrame = userdef.stringForKey_("NSWindow Frame FullScreenVideoPanel")
-
-            if savedFrame:
-                x, y, w, h = str(savedFrame).split()[:4]
-                frame = NSMakeRect(int(x), int(y), int(w), int(h))
-                self.fullScreenVideoPanel.setFrame_display_(frame, True)
 
         self.saveSplitterPosition()
 
@@ -607,11 +596,8 @@ class ChatController(MediaStream):
 
         self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
        
-        self.fullScreenVideoPanel.orderFront_(None)
-        self.fullScreenVideoPanelToobar.validateVisibleItems()
-        self.updateToolbarMuteIcon()
-
-        self.showMirror()
+        self.showFullScreenVideoPanel()
+        self.showVideoMirror()
 
         window.window().setInitialFirstResponder_(self.videoContainer)
 
@@ -622,7 +608,7 @@ class ChatController(MediaStream):
 
         window.drawer.close()
 
-        self.hideMirror()
+        self.hideVideoMirror()
 
         if self.splitViewFrame:
             window.window().setFrame_display_(self.splitViewFrame, True)
@@ -640,17 +626,33 @@ class ChatController(MediaStream):
 
         self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self)
 
-    def showMirror(self):
+    def showFullScreenVideoPanel(self):
+        if not self.fullScreenVideoPanel:
+            NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)            
+
+            userdef = NSUserDefaults.standardUserDefaults()
+            savedFrame = userdef.stringForKey_("NSWindow Frame FullScreenVideoPanel")
+
+            if savedFrame:
+                x, y, w, h = str(savedFrame).split()[:4]
+                frame = NSMakeRect(int(x), int(y), int(w), int(h))
+                self.fullScreenVideoPanel.setFrame_display_(frame, True)
+
+        self.fullScreenVideoPanel.orderFront_(None)
+        self.fullScreenVideoPanelToobar.validateVisibleItems()
+        self.updateToolbarMuteIcon()
+
+    def showVideoMirror(self):
         NSApp.delegate().windowController.mirrorWindow.show()
 
-    def hideMirror(self):
+    def hideVideoMirror(self):
         NSApp.delegate().windowController.mirrorWindow.hide()
 
-    def toggleMirror(self):
+    def toggleVideoMirror(self):
         if NSApp.delegate().windowController.mirrorWindow.visible:
-            self.hideMirror()
+            self.hideVideoMirror()
         else:
-            self.showMirror()
+            self.showVideoMirror()
 
     def showChatViewWhileVideoActive(self):
         if self.video_frame_visible:
