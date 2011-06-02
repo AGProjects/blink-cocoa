@@ -1492,7 +1492,6 @@
 				1F274895138930580052C384 /* VideoView.py */,
 				1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */,
 				1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */,
-				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -1771,6 +1770,7 @@
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
+				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
