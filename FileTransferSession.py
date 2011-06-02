@@ -233,7 +233,7 @@ class IncomingFileTransferHandler(FileTransfer):
         notification_center.add_observer(self, sender=self.session)
         notification_center.add_observer(self, sender=self.stream)
 
-        BlinkLogger().log_info("Initiating incoming File Transfer, waiting for data...")
+        BlinkLogger().log_info("Initiating Incoming File Transfer")
         notification_center.post_notification("BlinkFileTransferInitializing", self)
         notification_center.post_notification("BlinkFileTransferInitiated", self)
 
@@ -497,7 +497,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
 
     def _NH_MediaStreamDidStart(self, sender, data):
-        self.log_info("File Transfer started")
+        self.log_info("Outgoing Push File Transfer started")
         self.status = "%s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
         self.ft_info.status = "transfering"
         self.started = True
@@ -648,12 +648,12 @@ class OutgoingPullFileTransferHandler(FileTransfer):
                 self.file_path = name + '.download'
                 break
 
-        BlinkLogger().log_info(u"Will write file to %s" % self.file_path)
+        BlinkLogger().log_info(u"File will be written to %s" % self.file_path)
         self.file_selector.fd = open(self.file_path, "w+")
 
         self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
 
-        BlinkLogger().log_info("Initiating outgoing File Transfer request, waiting for data...")
+        BlinkLogger().self.log_info("Pull File Transfer Request started %s" % self.file_path)
 
         self.stream = FileTransferStream(self.account, self.file_selector, 'recvonly')
         self.session = Session(self.account)
