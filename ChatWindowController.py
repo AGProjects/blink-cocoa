@@ -1068,7 +1068,6 @@ class ChatWindowController(NSWindowController):
             if row < len(self.conference_shared_files):
                 return self.conference_shared_files[row].name
         return None
-
         
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
         if tableView == self.participantsTableView:
@@ -1084,7 +1083,28 @@ class ChatWindowController(NSWindowController):
             if row < len(self.conference_shared_files):
                 cell.conference_file = self.conference_shared_files[row]
 
+    @objc.IBAction
+    def printDocument_(self, sender):
+        session = self.selectedSessionController()
+        chat_stream = session.streamHandlerOfType("chat")
+        if session:
+            print_view = chat_stream.chatViewController.outputView if chat_stream else session.lastChatOutputView
+            if print_view:
+                printInfo = NSPrintInfo.sharedPrintInfo()
+                printInfo.setTopMargin_(30)
+                printInfo.setBottomMargin_(30)
+                printInfo.setLeftMargin_(10)
+                printInfo.setRightMargin_(10)
+                printInfo.setOrientation_(NSPortraitOrientation)
+                printInfo.setHorizontallyCentered_(True)
+                printInfo.setVerticallyCentered_(False)
+                printInfo.setHorizontalPagination_(NSFitPagination)
+                printInfo.setVerticalPagination_(NSFitPagination)
+                NSPrintInfo.setSharedPrintInfo_(printInfo)
 
+                # print the content of the web view
+                print_view.mainFrame().frameView().documentView().print_(self)
+        
 class ConferenceFile(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()

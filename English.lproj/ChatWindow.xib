@@ -3,12 +3,12 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">851</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -40,7 +40,7 @@
 			<object class="NSWindowTemplate" id="1005">
 				<int key="NSWindowStyleMask">4111</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{605, 115}, {621, 521}}</string>
+				<string key="NSWindowRect">{{605, 115}, {650, 521}}</string>
 				<int key="NSWTFlags">536879104</int>
 				<string key="NSWindowTitle">Chat Session</string>
 				<string key="NSWindowClass">NSWindow</string>
@@ -72,6 +72,7 @@
 							<string>DF25641C-2845-4BEF-AD31-C7BAD51ABFC1</string>
 							<string>F3F27C08-83DC-4837-8C62-FE767578E229</string>
 							<string>NSToolbarFlexibleSpaceItem</string>
+							<string>NSToolbarPrintItem</string>
 							<string>NSToolbarSeparatorItem</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -399,6 +400,26 @@
 									</object>
 								</object>
 							</object>
+							<object class="NSToolbarItem" id="392179486">
+								<string key="NSToolbarItemIdentifier">NSToolbarPrintItem</string>
+								<string key="NSToolbarItemLabel">Print</string>
+								<string key="NSToolbarItemPaletteLabel">Print</string>
+								<string key="NSToolbarItemToolTip">Print</string>
+								<nil key="NSToolbarItemView"/>
+								<object class="NSCustomResource" key="NSToolbarItemImage">
+									<string key="NSClassName">NSImage</string>
+									<string key="NSResourceName">NSToolbarPrint</string>
+								</object>
+								<nil key="NSToolbarItemTarget"/>
+								<string key="NSToolbarItemAction">printDocument:</string>
+								<string key="NSToolbarItemMinSize">{0, 0}</string>
+								<string key="NSToolbarItemMaxSize">{0, 0}</string>
+								<bool key="NSToolbarItemEnabled">YES</bool>
+								<bool key="NSToolbarItemAutovalidates">YES</bool>
+								<int key="NSToolbarItemTag">-1</int>
+								<bool key="NSToolbarIsUserRemovable">YES</bool>
+								<int key="NSToolbarItemVisibilityPriority">0</int>
+							</object>
 							<object class="NSToolbarSeparatorItem" id="161783912">
 								<string key="NSToolbarItemIdentifier">NSToolbarSeparatorItem</string>
 								<string key="NSToolbarItemLabel"/>
@@ -444,6 +465,7 @@
 						<reference ref="418299293"/>
 						<reference ref="944666825"/>
 						<reference ref="438616861"/>
+						<reference ref="392179486"/>
 					</object>
 					<object class="NSMutableArray" key="NSToolbarIBDefaultItems">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -461,6 +483,7 @@
 						<reference ref="63630264"/>
 						<reference ref="418299293"/>
 						<reference ref="944666825"/>
+						<reference ref="392179486"/>
 						<reference ref="438616861"/>
 					</object>
 					<object class="NSMutableArray" key="NSToolbarIBSelectableItems">
@@ -468,7 +491,7 @@
 					</object>
 				</object>
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
-				<string key="NSWindowContentMinSize">{621, 521}</string>
+				<string key="NSWindowContentMinSize">{650, 521}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -477,7 +500,7 @@
 						<object class="NSCustomView" id="229285116">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">290</int>
-							<string key="NSFrame">{{0, -1}, {621, 22}}</string>
+							<string key="NSFrame">{{0, -1}, {650, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
@@ -485,7 +508,7 @@
 						<object class="NSTabView" id="31287118">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">18</int>
-							<string key="NSFrame">{{0, 21}, {621, 500}}</string>
+							<string key="NSFrame">{{0, 21}, {650, 500}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<object class="NSMutableArray" key="NSTabViewItems">
@@ -497,12 +520,12 @@
 							<bool key="NSDrawsBackground">YES</bool>
 						</object>
 					</object>
-					<string key="NSFrameSize">{621, 521}</string>
+					<string key="NSFrameSize">{650, 521}</string>
 					<reference key="NSSuperview"/>
 					<reference key="NSWindow"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
-				<string key="NSMinSize">{621, 597}</string>
+				<string key="NSMinSize">{650, 597}</string>
 				<string key="NSMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSFrameAutosaveName">chat_window</string>
 			</object>
@@ -1743,6 +1766,7 @@
 							<reference ref="371190645"/>
 							<reference ref="786517751"/>
 							<reference ref="418299293"/>
+							<reference ref="392179486"/>
 						</object>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -2096,6 +2120,11 @@
 						<reference key="object" ref="418299293"/>
 						<reference key="parent" ref="567731717"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">449</int>
+						<reference key="object" ref="392179486"/>
+						<reference key="parent" ref="567731717"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -2204,6 +2233,7 @@
 					<string>441.designableToolbarItemIdentifier</string>
 					<string>443.IBPluginDependency</string>
 					<string>443.designableToolbarItemIdentifier</string>
+					<string>449.IBPluginDependency</string>
 					<string>72.IBEditorWindowLastContentRect</string>
 					<string>72.IBPluginDependency</string>
 					<string>78.IBPluginDependency</string>
@@ -2218,15 +2248,15 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{580, 0}, {621, 521}}</string>
+					<string>{{307, 79}, {650, 521}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<boolean value="NO"/>
-					<string>{{580, 0}, {621, 521}}</string>
+					<string>{{307, 79}, {650, 521}}</string>
 					<boolean value="YES"/>
 					<string>{196, 240}</string>
 					<string>{{357, 418}, {480, 270}}</string>
 					<boolean value="YES"/>
-					<string>{621, 521}</string>
+					<string>{650, 521}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>audio</string>
@@ -2391,7 +2421,8 @@
 					<string>editor</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>smileys</string>
-					<string>{{582, 521}, {617, 0}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{324, 600}, {616, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2417,7 +2448,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">448</int>
+			<int key="maxID">449</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -2432,6 +2463,7 @@
 							<string>close:</string>
 							<string>doubleClickReceived:</string>
 							<string>muteClicked:</string>
+							<string>printDocument:</string>
 							<string>useClickedRemoveFromConference:</string>
 							<string>userClickedActionsButton:</string>
 							<string>userClickedParticipantMenu:</string>
@@ -2440,6 +2472,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -2457,6 +2490,7 @@
 							<string>close:</string>
 							<string>doubleClickReceived:</string>
 							<string>muteClicked:</string>
+							<string>printDocument:</string>
 							<string>useClickedRemoveFromConference:</string>
 							<string>userClickedActionsButton:</string>
 							<string>userClickedParticipantMenu:</string>
@@ -2475,6 +2509,10 @@
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">muteClicked:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">printDocument:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -3334,6 +3372,7 @@
 				<string>NSMenuCheckmark</string>
 				<string>NSMenuMixedState</string>
 				<string>NSMultipleDocuments</string>
+				<string>NSToolbarPrint</string>
 				<string>NSUserAccounts</string>
 				<string>audio</string>
 				<string>display</string>
@@ -3353,6 +3392,7 @@
 				<string>{15, 15}</string>
 				<string>{9, 8}</string>
 				<string>{7, 2}</string>
+				<string>{32, 32}</string>
 				<string>{32, 32}</string>
 				<string>{32, 32}</string>
 				<string>{239.114, 239.114}</string>

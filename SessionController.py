@@ -59,6 +59,7 @@ class SessionController(NSObject):
     proposalOriginator = None
     waitingForITunes = False
     streamHandlers = None
+    lastChatOutputView = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial

@@ -77,7 +77,7 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
             contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
-    return item.itemIdentifier() in ('reconnect', 'history')
+    return item.itemIdentifier() in ('reconnect', 'history', NSToolbarPrintItemIdentifier)
 
 def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
     for item in toolbar.visibleItems():
@@ -106,6 +106,8 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
             item.setEnabled_(False)
         elif identifier == 'editor' and sessionController.account is not BonjourAccount():
             item.setEnabled_(True)
+        elif identifier == NSToolbarPrintItemIdentifier:
+            item.setEnabled_(True)        
 
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
@@ -389,8 +391,6 @@ class ChatController(MediaStream):
         return self
 
     def awakeFromNib(self):
-        #self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
-
         # setup smiley popup 
         smileys = SmileyManager().get_smiley_list()
         menu = self.smileyButton.menu()
@@ -948,6 +948,9 @@ class ChatController(MediaStream):
 
         if hasattr(item, 'itemIdentifier'):
             identifier = item.itemIdentifier()
+            if identifier == NSToolbarPrintItemIdentifier:
+                return True
+            
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
 
@@ -1283,6 +1286,8 @@ class ChatController(MediaStream):
         if self.status == STREAM_CONNECTED:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
+            # save the view so we can print it
+            self.sessionController.lastChatOutputView = self.chatViewController.outputView
             self.removeFromSession()
             self.videoContainer.hideVideo()
             self.exitFullScreen()
@@ -1305,6 +1310,8 @@ class ChatController(MediaStream):
             self.chatViewController.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
+        # save the view so we can print it
+        self.sessionController.lastChatOutputView = self.chatViewController.outputView
         self.removeFromSession()
         self.videoContainer.hideVideo()
         self.exitFullScreen()
@@ -1333,6 +1340,7 @@ class ChatController(MediaStream):
                 self.changeStatus(STREAM_DISCONNECTING)
 
         # remove this controller from session stream handlers list
+        self.sessionController.lastChatOutputView = None
         self.removeFromSession()
         self.videoContainer.hideVideo()
         self.exitFullScreen()
