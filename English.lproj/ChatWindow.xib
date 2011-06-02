@@ -3,12 +3,12 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">823</string>
+		<string key="IBDocument.InterfaceBuilderVersion">851</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">823</string>
+			<string key="NS.object.0">851</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2116,7 +2116,9 @@
 					<string>1.windowTemplate.minSize</string>
 					<string>106.IBPluginDependency</string>
 					<string>113.IBPluginDependency</string>
+					<string>113.designableToolbarItemIdentifier</string>
 					<string>119.IBPluginDependency</string>
+					<string>119.designableToolbarItemIdentifier</string>
 					<string>123.IBEditorWindowLastContentRect</string>
 					<string>123.IBPluginDependency</string>
 					<string>125.IBPluginDependency</string>
@@ -2126,6 +2128,7 @@
 					<string>136.IBPluginDependency</string>
 					<string>2.IBPluginDependency</string>
 					<string>208.IBPluginDependency</string>
+					<string>208.designableToolbarItemIdentifier</string>
 					<string>216.IBAttributePlaceholdersKey</string>
 					<string>216.IBPluginDependency</string>
 					<string>216.IBViewBoundsToFrameTransform</string>
@@ -2139,6 +2142,7 @@
 					<string>220.IBViewBoundsToFrameTransform</string>
 					<string>221.IBPluginDependency</string>
 					<string>224.IBPluginDependency</string>
+					<string>224.designableToolbarItemIdentifier</string>
 					<string>226.IBEditorWindowLastContentRect</string>
 					<string>226.IBPluginDependency</string>
 					<string>241.IBAttributePlaceholdersKey</string>
@@ -2146,8 +2150,12 @@
 					<string>241.IBViewBoundsToFrameTransform</string>
 					<string>242.IBPluginDependency</string>
 					<string>244.IBPluginDependency</string>
+					<string>244.designableToolbarItemIdentifier</string>
 					<string>251.IBPluginDependency</string>
+					<string>251.designableToolbarItemIdentifier</string>
 					<string>253.IBPluginDependency</string>
+					<string>253.designableToolbarItemIdentifier</string>
+					<string>255.designableToolbarItemIdentifier</string>
 					<string>256.IBPluginDependency</string>
 					<string>257.IBPluginDependency</string>
 					<string>261.IBPluginDependency</string>
@@ -2193,12 +2201,16 @@
 					<string>417.IBPluginDependency</string>
 					<string>43.IBPluginDependency</string>
 					<string>441.IBPluginDependency</string>
+					<string>441.designableToolbarItemIdentifier</string>
 					<string>443.IBPluginDependency</string>
+					<string>443.designableToolbarItemIdentifier</string>
 					<string>72.IBEditorWindowLastContentRect</string>
 					<string>72.IBPluginDependency</string>
 					<string>78.IBPluginDependency</string>
 					<string>81.IBPluginDependency</string>
+					<string>81.designableToolbarItemIdentifier</string>
 					<string>92.IBPluginDependency</string>
+					<string>92.designableToolbarItemIdentifier</string>
 					<string>99.IBPluginDependency</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
@@ -2206,10 +2218,10 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{580, -96}, {621, 521}}</string>
+					<string>{{580, 0}, {621, 521}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<boolean value="NO"/>
-					<string>{{580, -96}, {621, 521}}</string>
+					<string>{{580, 0}, {621, 521}}</string>
 					<boolean value="YES"/>
 					<string>{196, 240}</string>
 					<string>{{357, 418}, {480, 270}}</string>
@@ -2217,7 +2229,9 @@
 					<string>{621, 521}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>audio</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>maximize</string>
 					<string>{{403, 681}, {264, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2227,6 +2241,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>participants</string>
 					<object class="NSMutableDictionary">
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
@@ -2287,6 +2302,7 @@
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>hold</string>
 					<string>{{277, 733}, {238, 273}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSMutableDictionary">
@@ -2303,8 +2319,12 @@
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>record</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>video</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>history</string>
+					<string>desktop</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2368,12 +2388,16 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>editor</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{582, 425}, {617, 0}}</string>
+					<string>smileys</string>
+					<string>{{582, 521}, {617, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>reconnect</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>sendfile</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 				</object>
 			</object>
