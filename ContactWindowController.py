@@ -469,7 +469,7 @@ class ContactWindowController(NSWindowController):
             return
         self.accounts[position].registration_state = 'failed'
         self.refreshAccountList()
-        if notification.data.error == 'Authentication failed':
+        if isinstance(notification.sender, Account) and notification.data.error == 'Authentication failed':
             if not self.authFailPopupShown:
                 self.authFailPopupShown = True
                 NSRunAlertPanel(u"Registration Error",
