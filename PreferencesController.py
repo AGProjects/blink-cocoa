@@ -113,6 +113,12 @@ class PreferencesController(NSWindowController, object):
 
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            for item in self.toolbar.visibleItems():
+                if item.itemIdentifier() in ('answering_machine', 'chat', 'file-transfer', 'desktop-sharing'):
+                    item.setEnabled_(False)
+
+
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
         section = sender.itemIdentifier()
