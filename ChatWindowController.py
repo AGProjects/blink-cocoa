@@ -1104,7 +1104,7 @@ class ChatWindowController(NSWindowController):
 
                 # print the content of the web view
                 print_view.mainFrame().frameView().documentView().print_(self)
-        
+
 class ConferenceFile(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()

@@ -107,7 +107,7 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif identifier == 'editor' and sessionController.account is not BonjourAccount():
             item.setEnabled_(True)
         elif identifier == NSToolbarPrintItemIdentifier:
-            item.setEnabled_(True)        
+            item.setEnabled_(True)
 
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
@@ -950,7 +950,7 @@ class ChatController(MediaStream):
             identifier = item.itemIdentifier()
             if identifier == NSToolbarPrintItemIdentifier:
                 return True
-            
+
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
 
