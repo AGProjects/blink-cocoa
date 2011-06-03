@@ -1412,7 +1412,7 @@ GeneralSectionNames = {
                        'auth': 'Authentication',
                        'logs': 'File Logging',
                        'message_summary': 'Voicemail Notifications',
-                       'msrp': 'MSRP Protocol',
+                       'msrp': 'MSRP Settings',
                        'nat_traversal': 'NAT Traversal',
                        'pstn': 'Phone Numbers', 
                        'rtp': 'Codecs',
