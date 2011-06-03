@@ -1,14 +1,13 @@
 # Copyright (C) 2010-2011 AG Projects. See LICENSE for details.
 #
 
-import os
 import re
 import cPickle
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
-from zope.interface import implements, Interface
+from zope.interface import implements
 
 from Foundation import *
 from AppKit import *

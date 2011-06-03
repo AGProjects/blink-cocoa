@@ -6,7 +6,7 @@ from Foundation import *
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from sipsimple.account import AccountManager, Account, BonjourAccount
+from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
@@ -16,7 +16,6 @@ from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSect
 from VerticalBoxView import VerticalBoxView
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
-import re
 
 class PreferencesController(NSWindowController, object):
     implements(IObserver)

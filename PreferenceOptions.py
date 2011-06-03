@@ -6,7 +6,6 @@ from Foundation import *
 
 import os
 import re
-import sys
 import unicodedata
 
 from application.notification import NotificationCenter, IObserver

@@ -6,8 +6,6 @@ __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_add
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit',
            'AccountInfo']
 
-import errno
-import os
 import re
 import shlex
 

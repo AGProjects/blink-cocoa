@@ -5,12 +5,11 @@ from AppKit import *
 from Foundation import *
 
 import cPickle
-import os
 import random
 import re
 import string
 
-from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account import AccountManager
 from sipsimple.core import SIPCoreError, SIPURI
 
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel

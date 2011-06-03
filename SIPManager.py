@@ -7,7 +7,6 @@ from Foundation import *
 from AppKit import *
 
 import cjson
-import codecs
 import datetime
 import os
 import re

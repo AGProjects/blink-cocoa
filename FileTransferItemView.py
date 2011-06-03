@@ -10,7 +10,6 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from zope.interface import implements
 
-from BlinkLogger import BlinkLogger
 from FileTransferSession import OutgoingPushFileTransferHandler
 from util import allocate_autorelease_pool, format_size, run_in_gui_thread
 

@@ -11,7 +11,6 @@ from sipsimple.util import Timestamp
 from util import *
 from zope.interface import implements
 
-from BlinkLogger import BlinkLogger
 from ContactListModel import Contact
 from HistoryManager import ChatHistory
 

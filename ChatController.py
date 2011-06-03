@@ -7,7 +7,6 @@ from AppKit import *
 import datetime
 import hashlib
 import os
-import re
 import time
 import unicodedata
 import uuid

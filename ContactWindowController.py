@@ -24,7 +24,6 @@ from zope.interface import implements
 
 import ContactOutlineView
 import ListView
-import SIPManager
 import SMSWindowManager
 
 import PresencePolicy
