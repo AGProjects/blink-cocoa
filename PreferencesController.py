@@ -12,7 +12,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, formatName
+from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, formatName
 from VerticalBoxView import VerticalBoxView
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
@@ -216,8 +216,15 @@ class PreferencesController(NSWindowController, object):
         vbox.setAutoresizingMask_(NSViewWidthSizable|NSViewHeightSizable)
         vbox.setSpacing_(8)
         vbox.setBorderWidth_(8)
-        options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
+        unordered_options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
         assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
+        try:
+            options = AccountSectionOrder[section_name] if forAccount else GeneralSectionOrder[section_name]
+            remaining_options = [opt for opt in unordered_options if opt not in options]
+            options.extend(remaining_options)
+        except KeyError:
+            options = unordered_options
+
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
                 continue

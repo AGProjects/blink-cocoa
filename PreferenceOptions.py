@@ -1422,3 +1422,14 @@ GeneralSectionNames = {
                        'tls': 'TLS Settings'
                        }
 
+GeneralSectionOrder = {
+                       'answering_machine': ['enabled'],
+                       'chat': ['disabled'],
+                       'file_transfer': ['disabled'],
+                       'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
+                       'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
+                       }
+
+AccountSectionOrder = {
+                       'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
+                       }
