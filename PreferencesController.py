@@ -367,13 +367,15 @@ class PreferencesController(NSWindowController, object):
         account = notification.data.account
         self.accounts.insert(account.order, AccountInfo(account))
         self.refresh_account_table()
-        self.tableViewSelectionDidChange_(None)
+        if self.accountTable:
+            self.tableViewSelectionDidChange_(None)
 
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
         self.refresh_account_table()
-        self.tableViewSelectionDidChange_(None)
+        if self.accountTable:
+            self.tableViewSelectionDidChange_(None)
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
