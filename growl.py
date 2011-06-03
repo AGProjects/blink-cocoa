@@ -5,7 +5,8 @@ import os
 import Growl
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Singleton, Null
+from application.python import Null
+from application.python.types import Singleton
 from zope.interface import implements
 
 

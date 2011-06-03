@@ -5,7 +5,7 @@ import re
 import time
 
 from application.notification import IObserver, NotificationCenter
-from application.python.util import Null
+from application.python import Null
 
 from datetime import datetime
 

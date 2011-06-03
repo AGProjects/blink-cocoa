@@ -11,6 +11,7 @@ from Foundation import *
 from AppKit import *
 
 from application.notification import NotificationCenter
+from application.system import makedirs
 from sipsimple.core import FrozenSIPURI, SIPURI
 from sipsimple.account import AccountManager, BonjourAccount
 
@@ -18,7 +19,6 @@ from SIPManager import SIPManager, strip_addressbook_special_characters
 from AddContactController import AddContactController, EditContactController
 from AddGroupController import AddGroupController
 from resources import ApplicationData
-from util import makedirs
 
 
 def contactIconPathForURI(uri):

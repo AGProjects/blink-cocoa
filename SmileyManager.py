@@ -2,7 +2,7 @@
 #
 
 import os
-from application.python.util import Singleton
+from application.python.types import Singleton
 
 from util import escape_html
 

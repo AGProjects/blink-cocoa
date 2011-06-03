@@ -6,7 +6,7 @@ import re
 import cPickle
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null
+from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from zope.interface import implements, Interface
 

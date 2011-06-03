@@ -5,7 +5,7 @@ from AppKit import *
 from Foundation import *
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null
+from application.python import Null
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings

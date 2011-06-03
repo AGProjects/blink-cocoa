@@ -7,7 +7,7 @@ from Foundation import *
 import unicodedata
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null
+from application.python import Null
 from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
 

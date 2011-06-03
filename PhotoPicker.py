@@ -10,8 +10,8 @@ from AppKit import *
 import QTKit
 from Quartz import CoreVideo
 
+from application.system import makedirs
 from resources import ApplicationData
-from util import makedirs
 
 
 class IconViewBox(NSBox):

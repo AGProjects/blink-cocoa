@@ -5,7 +5,8 @@ import datetime
 import os
 
 from application.python.decorator import decorator, preserve_signature
-from application.python.util import Singleton
+from application.python.types import Singleton
+from application.system import makedirs
 from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex
 from sqlobject import connectionForURI
 from sqlobject import dberrors
@@ -17,7 +18,6 @@ from twisted.python.threadpool import ThreadPool
 
 from BlinkLogger import BlinkLogger
 from resources import ApplicationData
-from util import makedirs
 
 
 pool = ThreadPool(minthreads=1, maxthreads=1, name='db-ops')
@@ -60,7 +60,7 @@ class SessionHistory(object):
 
     def __init__(self):
         path = ApplicationData.get('history')
-        makedirs(path, mode=0755)
+        makedirs(path)
         db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
         self._initialize(db_uri)
 
@@ -156,7 +156,7 @@ class ChatHistory(object):
 
     def __init__(self):
         path = ApplicationData.get('history')
-        makedirs(path, mode=0755)
+        makedirs(path)
         db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
         self._initialize(db_uri)
 
@@ -356,7 +356,7 @@ class FileTransferHistory(object):
 
     def __init__(self):
         path = ApplicationData.get('history')
-        makedirs(path, mode=0755)
+        makedirs(path)
         db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
         self._initialize(db_uri)
 

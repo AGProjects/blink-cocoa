@@ -5,7 +5,7 @@ __all__ = ['ITunesInterface']
 
 
 from application.notification import NotificationCenter
-from application.python.util import Singleton
+from application.python.types import Singleton
 
 from Foundation import NSAppleScript
 

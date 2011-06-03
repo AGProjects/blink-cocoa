@@ -7,7 +7,7 @@ from AppKit import *
 from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null
+from application.python import Null
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger

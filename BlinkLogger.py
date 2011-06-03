@@ -10,12 +10,13 @@ import sys
 from application import log
 from application.notification import IObserver, NotificationCenter
 from application.python.queue import EventQueue
-from application.python.util import Singleton
+from application.python.types import Singleton
+from application.system import makedirs
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 from pprint import pformat
 
-from util import allocate_autorelease_pool, makedirs
+from util import allocate_autorelease_pool
 
 
 class BlinkLogger(object):

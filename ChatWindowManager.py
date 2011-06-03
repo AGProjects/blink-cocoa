@@ -4,7 +4,7 @@
 from Foundation import *
 from AppKit import *
 
-from application.python.util import Singleton
+from application.python.types import Singleton
 
 import ChatWindowController
 

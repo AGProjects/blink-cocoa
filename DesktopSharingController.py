@@ -5,7 +5,7 @@ from Foundation import *
 from AppKit import *
 
 from application.notification import IObserver, NotificationCenter
-from application.python.util import Null
+from application.python import Null
 from zope.interface import implements
 
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError

@@ -10,7 +10,8 @@ import time
 import uuid
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null
+from application.python import Null
+from application.system import makedirs
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import ToHeader, SIPURI

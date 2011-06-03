@@ -2,7 +2,7 @@
 #
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
-           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt', 'makedirs',
+           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt',
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'video_file_extension_pattern', 'translate_alpha2digit',
            'AccountInfo']
 
@@ -245,15 +245,6 @@ def html2txt(s):
     s = tags.sub('', s) # remove all remaining tags
     s = re.sub(' +', ' ', s) # remove running spaces this remove the \n and \t
     return s
-
-
-def makedirs(path, mode=0777):
-    try:
-        os.makedirs(path, mode)
-    except OSError, e:
-        if e.errno == errno.EEXIST and os.path.isdir(path): # directory exists
-            return
-        raise
 
 
 def call_in_gui_thread(func, *args, **kwargs):

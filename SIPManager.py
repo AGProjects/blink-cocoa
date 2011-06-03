@@ -16,7 +16,8 @@ import urllib2
 import uuid
 
 from application.notification import NotificationCenter, IObserver
-from application.python.util import Null, Singleton
+from application.python import Null
+from application.python.types import Singleton
 from application.system import host, unlink
 from collections import defaultdict
 from dateutil.tz import tzlocal

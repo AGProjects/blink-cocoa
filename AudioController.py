@@ -12,7 +12,7 @@ import uuid
 import urllib
 
 from application.notification import IObserver, NotificationCenter
-from application.python.util import Null
+from application.python import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
 

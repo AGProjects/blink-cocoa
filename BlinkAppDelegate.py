@@ -17,7 +17,7 @@ import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application import log
-from application.python.util import Null
+from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
