@@ -77,8 +77,8 @@ class HistoryViewer(NSWindowController):
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file-transfer', 5: 'audio-recording', 6: 'video-recording', 7: 'voicemail', 8: 'missed-call'}
     period_array = {0: None, 
-                    1: datetime.datetime.now()-datetime.timedelta(days=2), 
-                    2: datetime.datetime.now()-datetime.timedelta(days=7), 
+                    1: datetime.datetime.now()-datetime.timedelta(days=1),
+                    2: datetime.datetime.now()-datetime.timedelta(days=7),
                     3: datetime.datetime.now()-datetime.timedelta(days=31),
                     4: datetime.datetime.now()-datetime.timedelta(days=31),
                     5: datetime.datetime.now()-datetime.timedelta(days=90),
