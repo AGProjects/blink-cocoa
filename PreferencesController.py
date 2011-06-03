@@ -318,8 +318,6 @@ class PreferencesController(NSWindowController, object):
 
             account.delete()
 
-            self.tableViewSelectionDidChange_(None)
-
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if not self.updating:
             account_info = self.selectedAccount()
@@ -369,11 +367,13 @@ class PreferencesController(NSWindowController, object):
         account = notification.data.account
         self.accounts.insert(account.order, AccountInfo(account))
         self.refresh_account_table()
+        self.tableViewSelectionDidChange_(None)
 
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
         self.refresh_account_table()
+        self.tableViewSelectionDidChange_(None)
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
