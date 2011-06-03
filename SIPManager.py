@@ -468,6 +468,7 @@ class SIPManager(object):
         if session.start_time is None and session.end_time is not None:
             # Session could have ended before it was completely started
             session.start_time = session.end_time
+
         duration = session.end_time - session.start_time
 
         self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
@@ -871,7 +872,7 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
-        BlinkLogger().log_info(u"Incoming session request from %s with proposed streams %s" % (session.remote_identity, ", ".join(s.type for s in data.streams)))
+        BlinkLogger().log_info(u"Incoming session request from %s with %s streams" % (format_identity_address(session.remote_identity), ", ".join(s.type for s in data.streams)))
         if not self.isProposedMediaTypeSupported(data.streams):
             BlinkLogger().log_info(u"Unsupported media type, session rejected")
             session.reject(488, 'Incompatible media')

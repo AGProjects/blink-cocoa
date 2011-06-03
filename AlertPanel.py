@@ -527,7 +527,6 @@ class AlertPanel(NSObject, object):
     def respondProposal(self, resp, session, streams):
         if resp == 0: # Accept All
             try:
-                BlinkLogger().log_info(u"Accepting all proposed streams for session to %s" % session.remote_identity)
                 self.acceptProposedStreams(session)
             except Exception, exc:
                 # possibly the session was cancelled in the meantime
@@ -633,10 +632,10 @@ class AlertPanel(NSObject, object):
             is_proposal = self.proposals.has_key(s)
             try:
                 if is_proposal:
-                    BlinkLogger().log_info(u"Rejecting proposal for streams %s of session to %s"%([str(type(stream)) for stream in s.proposed_streams], s.remote_identity))
+                    BlinkLogger().log_info(u"Rejecting %s proposal from %s"%([stream.type for stream in s.proposed_streams], format_identity_address(s.remote_identity)))
                     s.reject_proposal()
                 else:
-                    BlinkLogger().log_info(u"Rejecting session %s" % s.remote_identity)
+                    BlinkLogger().log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_address(s.remote_identity))
                     self.reject_incoming_session(s, 603, "Busy Everywhere")
             except Exception, exc:
                 import traceback
@@ -663,10 +662,10 @@ class AlertPanel(NSObject, object):
                 is_proposal = self.proposals.has_key(s)
                 try:
                     if is_proposal:
-                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % s.remote_identity)
+                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_address(s.remote_identity))
                         self.acceptProposedStreams(s)
                     else:
-                        BlinkLogger().log_info(u"Accepting session to %s" % s.remote_identity)
+                        BlinkLogger().log_info(u"Accepting session to %s" % format_identity_address(s.remote_identity))
                         self.acceptStreams(s)
                 except Exception, exc:
                     import traceback
@@ -679,7 +678,7 @@ class AlertPanel(NSObject, object):
             NSApp.activateIgnoringOtherApps_(True)
             for s in self.sessions.keys():
                 try:
-                    BlinkLogger().log_info(u"Accepting only chat streams from %s" % s.remote_identity)
+                    BlinkLogger().log_info(u"Accepting chat stream to session with %s" % format_identity_address(s.remote_identity))
                     self.acceptChatStream(s)
                 except Exception, exc:
                     import traceback
@@ -693,7 +692,7 @@ class AlertPanel(NSObject, object):
         elif resp == 3: # Reject (busy)
             for s in self.sessions.keys():
                 try:
-                    BlinkLogger().log_info(u"Rejecting session (busy) to %s" % s.remote_identity)
+                    BlinkLogger().log_info(u"Rejecting session from %s with Busy " % format_identity_address(s.remote_identity))
                     self.reject_incoming_session(s, 486)
                 except Exception, exc:
                     import traceback

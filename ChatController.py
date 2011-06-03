@@ -1268,7 +1268,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         endpoint = str(self.stream.msrp.full_remote_path[0])
-        self.sessionController.log_info(u"Chat stream established to %s (%s)" % (endpoint, self.remoteParty))
+        self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
         self.chatViewController.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
 
         self.handler.setConnected(self.stream)
