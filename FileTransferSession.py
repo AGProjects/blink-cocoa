@@ -147,8 +147,6 @@ class FileTransfer(object):
 
         message  = "<h3>%s File Transfer</h3>" % self.ft_info.direction.capitalize()
         message += "<p>%s (%s)" % (self.ft_info.file_path, format_size(self.ft_info.file_size or 0))
-        if video_file_extension_pattern.search(self.ft_info.file_path):
-            message += "<p><video src='%s' controls='controls'></video>" % self.ft_info.file_path
         media_type = 'file-transfer'
         local_uri = self.ft_info.local_uri
         remote_uri = self.ft_info.remote_uri
