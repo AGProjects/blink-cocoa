@@ -275,20 +275,5 @@ class FileTransferItemView(NSView):
         self.checksumProgressBar.setDoubleValue_(progress)
         self.sizeText.setStringValue_('Calculating checksum: %s%%' % progress)
 
-    def setFileInfo(self, info):
-        assert type(info) == dict
-        assert set(info.keys()) == set(["upload", "size", "total", "peer", "path"])
-
-        self.transfer = None
-        self.fileInfo = info
-
-        NSBundle.loadNibNamed_owner_("FileTransferItemDone", self)
-
-        filename = os.path.basename(info["path"])
-        if filename.endswith(".download"):
-            filename = filename[:-len(".download")]
-        self.nameText.setStringValue_(filename)
-        self.fromText.setStringValue_("%s  %s"%("From: " if info["upload"] else "To: ", info["peer"]))
-        self.sizeText.setStringValue_(format_size(info["size"]))
 
 
