@@ -1232,18 +1232,28 @@ class ChatController(MediaStream):
         self.updateToolbarMuteIcon()
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
-        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
-        if not window:
+        settings = SIPSimpleSettings()
+        if not settings.file_transfer.render_incoming_image_in_chat_window and not settings.file_transfer.render_incoming_video_in_chat_window:
             return
 
-        if self.sessionController.remoteSIPAddress == sender.remote_identity and window and video_file_extension_pattern.search(data.file_path):
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if not window or self.sessionController.remoteSIPAddress != sender.remote_identity:
+            return
+
+        if  video_file_extension_pattern.search(data.file_path):
             text  = "Incoming video file transfer has finished"
             text += "<p><video src='%s' controls='controls' autoplay='autoplay'></video>" % data.file_path
-            name = format_identity(self.sessionController.session.remote_identity)
-            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(self.sessionController.session.remote_identity))
-            now = datetime.datetime.now(tzlocal())
-            timestamp = Timestamp(now)
-            self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
+        elif image_file_extension_pattern.search(data.file_path):
+            text  = "Incoming image file transfer has finished"
+            text += "<p><img src='%s' border='0' width='%s'>" % (data.file_path, '100%')
+        else:
+            return
+
+        name = format_identity(self.sessionController.session.remote_identity)
+        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(self.sessionController.session.remote_identity))
+        now = datetime.datetime.now(tzlocal())
+        timestamp = Timestamp(now)
+        self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         if not self.mediastream_failed:
