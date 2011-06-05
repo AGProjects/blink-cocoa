@@ -201,6 +201,8 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
+        self.dayly_entries = []
+        self.indexTable.reloadData()
         if self.history:
             self.updateBusyIndicator(True)
             search_text = self.search_text if self.search_text else None
