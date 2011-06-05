@@ -488,6 +488,8 @@ class SessionController(NSObject):
         for contact in self.invited_participants:
             self.session.conference.add_participant(contact.uri)
 
+        self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
+
     def _NH_SIPSessionWillEnd(self, sender, data):
         self.log_info("Session will end (%s)"%data.originator)
         self.endingBy = data.originator

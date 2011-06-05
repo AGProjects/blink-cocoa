@@ -354,32 +354,11 @@ class ChatViewController(NSObject):
         self.inputView.setFrame_(frame)
 
         if NSApp.delegate().applicationName == 'Blink Pro':
-            form_id = self.getCollaborationEditorSessionId()
-            script = """showCollaborationEditor("%s", "%s")""" % (form_id, settings.server.collaboration_url)
+            script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.collaboration_form_id, settings.server.collaboration_url)
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         else:
             script = "showDisabledCollaborationEditor()"
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
-
-    def getCollaborationEditorSessionId(self):
-        hash = hashlib.sha1()
-
-        if self.delegate.sessionController.remote_focus:
-            id = '%s' % (self.delegate.sessionController.remoteSIPAddress)
-        else:
-            if self.delegate.sessionController.session.direction == "incoming":
-                id = '%s_%s' % (self.delegate.sessionController.remoteSIPAddress, self.delegate.sessionController.account.id)
-            else:
-                id = '%s_%s' % (self.delegate.sessionController.account.id, self.delegate.sessionController.remoteSIPAddress)
-
-        hash.update(id)
-        form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
-
-        return form_id
-
-    def scrollToBottom(self):
-        script = "scrollToBottom()"
-        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def hideCollaborationEditor(self):
         if self.splitterHeight is not None:
@@ -388,6 +367,10 @@ class ChatViewController(NSObject):
             self.inputView.setFrame_(frame)
 
         script = "hideCollaborationEditor()"
+        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+
+    def scrollToBottom(self):
+        script = "scrollToBottom()"
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def webviewFinishedLoading_(self, notification):

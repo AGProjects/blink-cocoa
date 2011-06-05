@@ -7,6 +7,7 @@ from AppKit import *
 import datetime
 import hashlib
 import os
+import re
 import time
 import unicodedata
 import uuid
@@ -350,6 +351,8 @@ class ChatController(MediaStream):
     drawerSplitterPosition = None
     mainViewSplitterPosition = None
 
+    collaboration_form_id = None
+
     @classmethod
     def createStream(self, account):
         return ChatStream(account)
@@ -370,9 +373,6 @@ class ChatController(MediaStream):
             self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
             self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
-            ns_nc = NSNotificationCenter.defaultCenter()
-            ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.splitView)
-
             NSBundle.loadNibNamed_owner_("ChatView", self)
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
@@ -384,7 +384,6 @@ class ChatController(MediaStream):
             self.handler.setDelegate(self.chatViewController)
 
             self.history=ChatHistory()
-
             self.backend = SIPManager()
 
         return self
@@ -412,9 +411,6 @@ class ChatController(MediaStream):
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
 
-
-    def drawerSplitViewDidResize_(self, notification):
-        pass
 
     def saveSplitterPosition(self):
         self.mainViewSplitterPosition={'output_frame': self.outputContainer.frame(), 'input_frame': self.inputContainer.frame()}
@@ -1123,14 +1119,7 @@ class ChatController(MediaStream):
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
                 sender.setImage_(NSImage.imageNamed_("editor"))
                 sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
-                self.chatViewController.editor_has_changed = False
-                self.chatViewController.editorStatus = not self.chatViewController.editorStatus
-                self.showChatViewWithEditorWhileVideoActive()
-                self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
-                window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
-                if window:
-                    window.noteSession_isComposing_(self.sessionController, False)
-
+                self.toggleEditor()
             elif identifier == 'history':
                 contactWindow = self.sessionController.owner
                 contactWindow.showHistoryViewer_(None)
@@ -1146,6 +1135,15 @@ class ChatController(MediaStream):
         elif sender.tag() == TOOLBAR_REQUEST_DESKTOP_MENU and self.status == STREAM_CONNECTED:
             self.sessionController.addRemoteDesktopToSession()
             sender.setEnabled_(False)
+
+    def toggleEditor(self):
+        self.chatViewController.editor_has_changed = False
+        self.chatViewController.editorStatus = not self.chatViewController.editorStatus
+        self.showChatViewWithEditorWhileVideoActive()
+        self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
+            window.noteSession_isComposing_(self.sessionController, False)
 
     def remoteBecameIdle_(self, timer):
         if self.remoteTypingTimer:
@@ -1340,6 +1338,17 @@ class ChatController(MediaStream):
             self.handler = None
         self.stream = None
         self.mediastream_failed = True
+
+    def _NH_BlinkSessionDidStart(self, sender, data):
+        hash = hashlib.sha1()
+        # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path
+        # TODO: a better and persistent way would be to generate the collaboration_form_id based on the actual From headers of both parties -adi
+        id = '%s' % (self.sessionController.remoteSIPAddress) if self.sessionController.remote_focus else self.sessionController.session._invitation.call_id
+        hash.update(id)
+        self.collaboration_form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
+        self.sessionController.log_info(u"Allocated collaboration editor id: %s" % self.collaboration_form_id)
+        self.toggleEditor()
+        self.toggleEditor()
 
     def closeTab(self):
         if self.status != STREAM_DISCONNECTING:
