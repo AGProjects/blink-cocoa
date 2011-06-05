@@ -1464,14 +1464,15 @@ UnitOptions = {
 
 ToolTips = {
              'auth.username': 'Enter authentication username if different than the SIP Address username',
-             'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for MWI',
-             'nat_traversal.use_ice' : 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate media relays',
-             'nat_traversal.msrp_relay' : 'Overwrite the address of the MSRP relay, which is normally obtained from the DNS',
-             'nat_traversal.use_msrp_relay_for_outbound' : 'Normally, MSRP relay is used only for incoming sessions, this setting also forces the outbound session through the MSRP relay',
-             'pstn.idd_prefix': 'You may replace the starting + of the phone numbers with 00 or other prefix required by your SIP service provider',
-             'pstn.prefix': 'Always add a prefix when dialing out phone numbers, typically required by a PBX to obtain an outside line',
-             'server.conference_server': 'Address of the SIP conference server able to mix audio, video, chat, file transfers and provide participants information, must be given by the service provider',
-             'server.settings_url': 'Web page address that provides access to the SIP account information on the server, must be given by the service provider',
+             'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
+             'nat_traversal.msrp_relay': 'Overwrite the address of the MSRP relay, which is normally obtained from the DNS, must be given by the service provider',
+             'nat_traversal.use_ice': 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays',
+             'nat_traversal.use_msrp_relay_for_outbound': 'Normally, the MSRP relay is used only for incoming sessions, this setting also forces the outbound sessions through the MSRP relay',
+             'pstn.idd_prefix': 'You may replace the starting + of the phone numbers with 00 or other numeric prefix required by your SIP service provider',
+             'pstn.prefix': 'Always add a numeric prefix when dialing phone numbers, typically required by a PBX to obtain an outside line',
              'server.alert_url': 'Web page that is opened when an incoming call is received. $caller_party and $called_party are replaced with the SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party',
+             'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If not given conference.sip2sip.info will be used by default',
+             'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',
+             'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
              'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061'
            }
