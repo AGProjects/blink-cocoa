@@ -1423,6 +1423,7 @@ SettingDescription = {
                       'sip.transport_list': 'Protocols',
                       'sounds.audio_inbound': 'Inbound Ringtone',
                       'sounds.audio_outbound': 'Outbound Ringtone',
+                      'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'Certificate File',
                       'tls.ca_list': 'Certificate Authority File'
                       }
