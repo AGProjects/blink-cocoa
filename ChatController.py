@@ -1245,7 +1245,14 @@ class ChatController(MediaStream):
             text += "<p><video src='%s' controls='controls' autoplay='autoplay'></video>" % data.file_path
         elif image_file_extension_pattern.search(data.file_path):
             text  = "Incoming image file transfer has finished"
-            text += "<p><img src='%s' border='0' width='%s'>" % (data.file_path, '100%')
+            try:
+                image = NSImage.alloc().initWithContentsOfFile_(data.file_path)
+                w = image.size().width
+                width = w if w and w < 600 else '100%'
+            except:
+                width = '100%'
+
+            text += "<p><img src='%s' border='0' width='%s'>" % (data.file_path, width)
         else:
             return
 
