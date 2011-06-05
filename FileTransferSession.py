@@ -652,7 +652,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
         self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
 
-        BlinkLogger().self.log_info("Pull File Transfer Request started %s" % self.file_path)
+        BlinkLogger().log_info("Pull File Transfer Request started %s" % self.file_path)
 
         self.stream = FileTransferStream(self.account, self.file_selector, 'recvonly')
         self.session = Session(self.account)
