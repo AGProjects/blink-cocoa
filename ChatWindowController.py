@@ -13,7 +13,6 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.streams.applications.chat import CPIMIdentity
 
 from MediaStream import *
-from BlinkLogger import BlinkLogger
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import Contact
 from FileTransferSession import OutgoingPullFileTransferHandler
@@ -572,7 +571,7 @@ class ChatWindowController(NSWindowController):
                    pass
 
             if session.remote_focus and self.isConferenceParticipant(uri):
-                BlinkLogger().log_info(u"Request server for removal of %s from conference" % uri)
+                session.log_info(u"Request server for removal of %s from conference" % uri)
                 session.pending_removal_participants.add(uri)
                 session.session.conference.remove_participant(uri)
 
@@ -602,7 +601,7 @@ class ChatWindowController(NSWindowController):
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
                             session.participants_log.add(uri)
-                            BlinkLogger().log_info(u"Invite %s to conference" % uri)
+                            session.log_info(u"Invite %s to conference" % uri)
                             session.session.conference.add_participant(uri)
 
                 self.refreshDrawer()
@@ -714,7 +713,7 @@ class ChatWindowController(NSWindowController):
                 file = conference_file.file
                 if file.status != 'OK':
                     return
-                BlinkLogger().log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
+                session.log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
                 transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
                 transfer_handler.start()
         else:
@@ -1019,7 +1018,7 @@ class ChatWindowController(NSWindowController):
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
                         self.refreshDrawer()
-                        BlinkLogger().log_info(u"Invite %s to conference" % uri)
+                        session.log_info(u"Invite %s to conference" % uri)
                         session.session.conference.add_participant(uri)
                 except:
                     return False
