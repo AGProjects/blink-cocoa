@@ -12,7 +12,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, formatName
+from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
 from VerticalBoxView import VerticalBoxView
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
@@ -254,6 +254,13 @@ class PreferencesController(NSWindowController, object):
             except KeyError:
                 description = None
             control = controlFactory(section_object, option_name, option, description)
+
+            try:
+                tooltip = ToolTips[description_key]
+                control.setTooltip(tooltip)
+            except KeyError:
+                pass
+
             self.settingViews[section_name+"."+option_name] = control
             vbox.addSubview_(control)
             control.delegate = self

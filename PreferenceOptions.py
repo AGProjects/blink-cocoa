@@ -111,7 +111,10 @@ class Option(HorizontalBoxView):
     
     def _store(self):
         print "Store not implemented for "+self.option
-    
+
+    def setTooltip(self, text):
+        pass
+
 
 class BoolOption(Option):    
     def __init__(self, object, name, option, description=None):
@@ -128,6 +131,7 @@ class BoolOption(Option):
         self.check.setTarget_(self)
         self.check.setAction_("toggled:")
 
+
     def toggled_(self, sender):
         self.store()
 
@@ -138,6 +142,9 @@ class BoolOption(Option):
     def restore(self):
         value = self.get()
         self.check.setState_(value and NSOnState or NSOffState)
+
+    def setTooltip(self, text):
+        self.check.setToolTip_(text)
 
 
 class StringOption(Option):
@@ -156,6 +163,13 @@ class StringOption(Option):
 
         self.addSubview_(self.caption)
         self.addSubview_(self.text)
+        try:
+            unit = UnitOptions[name]
+            self.units = makeLabel(unit)
+            self.units.sizeToFit()
+            self.addSubview_(self.units)
+        except KeyError:
+            pass
 
         self.text.setDelegate_(self)
 
@@ -173,6 +187,9 @@ class StringOption(Option):
     def restore(self):
         value = self.get()
         self.text.setStringValue_(value and str(value) or "")
+
+    def setTooltip(self, text):
+        self.text.setToolTip_(text)
 
 
 class NullableStringOption(StringOption):
@@ -215,6 +232,9 @@ class UnicodeOption(Option):
     def restore(self):
         value = self.get()
         self.text.setStringValue_(value and unicode(value) or u'')
+
+    def setTooltip(self, text):
+        self.text.setToolTip_(text)
 
 
 class NullableUnicodeOption(UnicodeOption):
@@ -1432,3 +1452,26 @@ GeneralSectionOrder = {
 AccountSectionOrder = {
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
                        }
+
+UnitOptions = {
+               'answer_delay': 'seconds',
+               'invite_timeout': 'seconds',
+               'max_recording_duration': 'seconds',
+               'publish_interval': 'seconds',
+               'register_interval': 'seconds',
+               'subscribe_interval': 'seconds'
+               }
+
+ToolTips = {
+             'auth.username': 'Enter authentication username if different than the SIP Address username',
+             'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for MWI',
+             'nat_traversal.use_ice' : 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate media relays',
+             'nat_traversal.msrp_relay' : 'Overwrite the address of the MSRP relay, which is normally obtained from the DNS',
+             'nat_traversal.use_msrp_relay_for_outbound' : 'Normally, MSRP relay is used only for incoming sessions, this setting also forces the outbound session through the MSRP relay',
+             'pstn.idd_prefix': 'You may replace the starting + of the phone numbers with 00 or other prefix required by your SIP service provider',
+             'pstn.prefix': 'Always add a prefix when dialing out phone numbers, typically required by a PBX to obtain an outside line',
+             'server.conference_server': 'Address of the SIP conference server able to mix audio, video, chat, file transfers and provide participants information, must be given by the service provider',
+             'server.settings_url': 'Web page address that provides access to the SIP account information on the server, must be given by the service provider',
+             'server.alert_url': 'Web page that is opened when an incoming call is received. $caller_party and $called_party are replaced with the SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party',
+             'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061'
+           }
