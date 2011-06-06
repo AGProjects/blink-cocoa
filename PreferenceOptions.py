@@ -696,7 +696,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
         self.refresh()
         self.popup.sizeToFit()
         frame = self.popup.frame()
-        frame.size.width = 200
+        frame.size.width = 300
         self.popup.setFrame_(frame)      
     
     def refresh(self):
@@ -717,7 +717,7 @@ class AudioOutputDeviceOption(PopUpMenuOption):
         self.refresh()
         self.popup.sizeToFit()
         frame = self.popup.frame()
-        frame.size.width = 200
+        frame.size.width = 300
         self.popup.setFrame_(frame)
 
     def refresh(self):
