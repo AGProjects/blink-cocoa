@@ -351,8 +351,6 @@ class ChatController(MediaStream):
     drawerSplitterPosition = None
     mainViewSplitterPosition = None
 
-    collaboration_form_id = None
-
     @classmethod
     def createStream(self, account):
         return ChatStream(account)
@@ -1338,17 +1336,6 @@ class ChatController(MediaStream):
             self.handler = None
         self.stream = None
         self.mediastream_failed = True
-
-    def _NH_BlinkSessionDidStart(self, sender, data):
-        hash = hashlib.sha1()
-        # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path
-        # TODO: a better and persistent way would be to generate the collaboration_form_id based on the actual From headers of both parties -adi
-        id = '%s' % (self.sessionController.remoteSIPAddress) if self.sessionController.remote_focus else self.sessionController.session._invitation.call_id
-        hash.update(id)
-        self.collaboration_form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
-        self.sessionController.log_info(u"Allocated collaboration editor id: %s" % self.collaboration_form_id)
-        self.toggleEditor()
-        self.toggleEditor()
 
     def closeTab(self):
         if self.status != STREAM_DISCONNECTING:

@@ -354,7 +354,7 @@ class ChatViewController(NSObject):
         self.inputView.setFrame_(frame)
 
         if NSApp.delegate().applicationName == 'Blink Pro':
-            script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.collaboration_form_id, settings.server.collaboration_url)
+            script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         else:
             script = "showDisabledCollaborationEditor()"
@@ -381,6 +381,11 @@ class ChatViewController(NSObject):
         for script in self.messageQueue:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         self.messageQueue = []
+
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            # toggle collaborative editor to initialize the java script to be able to receive is-composing
+            self.delegate.toggleEditor()
+            self.delegate.toggleEditor()
 
     def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, element, defaultItems):
         return None
