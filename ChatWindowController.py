@@ -999,6 +999,9 @@ class ChatWindowController(NSWindowController):
         pboard = info.draggingPasteboard()
         session = self.selectedSessionController()
 
+        if not session:
+            return False
+
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
@@ -1007,24 +1010,18 @@ class ChatWindowController(NSWindowController):
                     uri = '%s@%s' % (uri, session.account.id.domain)
 
             if session.remote_focus:
-                try:
-                    session = self.selectedSessionController()
-                    if session:
-
-                        getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
-                        contact = getContactMatchingURI(uri)
-                        if contact:
-                            contact = Contact(uri, name=contact.name, icon=contact.icon)
-                        else:
-                            contact = Contact(uri, name=uri)
-                        contact.setDetail('Invitation sent...')
-                        session.invited_participants.append(contact)
-                        session.participants_log.add(uri)
-                        self.refreshDrawer()
-                        session.log_info(u"Invite %s to conference" % uri)
-                        session.session.conference.add_participant(uri)
-                except:
-                    return False
+                getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+                contact = getContactMatchingURI(uri)
+                if contact:
+                    contact = Contact(uri, name=contact.name, icon=contact.icon)
+                else:
+                    contact = Contact(uri, name=uri)
+                contact.setDetail('Invitation sent...')
+                session.invited_participants.append(contact)
+                session.participants_log.add(uri)
+                self.refreshDrawer()
+                session.log_info(u"Invite %s to conference" % uri)
+                session.session.conference.add_participant(uri)
             elif not isinstance(session.account, BonjourAccount):
                 self.joinConferenceWindow(session, [uri])
             return True

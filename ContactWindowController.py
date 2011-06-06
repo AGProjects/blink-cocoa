@@ -7,6 +7,7 @@ import objc
 
 import datetime
 import os
+import re
 import string
 
 from application.notification import NotificationCenter, IObserver
@@ -43,11 +44,21 @@ from ConferenceController import JoinConferenceWindowController, AddParticipants
 from SessionController import SessionController
 from SIPManager import MWIData
 from VideoMirrorWindowController import VideoMirrorWindowController
-
 from resources import Resources
 from util import *
 
 SearchContactToolbarIdentifier= u"SearchContact"
+
+PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
+PARTICIPANTS_MENU_ADD_CONTACT = 301
+PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
+PARTICIPANTS_MENU_MUTE = 315
+PARTICIPANTS_MENU_INVITE_TO_CONFERENCE = 312
+PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE = 313
+PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
+PARTICIPANTS_MENU_START_CHAT_SESSION = 321
+PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
+PARTICIPANTS_MENU_SEND_FILES = 323
 
 
 class PhotoView(NSImageView):
@@ -93,6 +104,8 @@ class ContactWindowController(NSWindowController):
     backend = None
     loggerModel = None
     sessionControllers = []
+    participants = []
+
     searchResultsModel = objc.IBOutlet()
     fileTranfersWindow = objc.IBOutlet()
 
@@ -112,7 +125,15 @@ class ContactWindowController(NSWindowController):
     disbandingConference = False
 
     drawer = objc.IBOutlet()
+    mainTabView = objc.IBOutlet()
+    drawerSplitView = objc.IBOutlet()
+    participantsView = objc.IBOutlet()
+    participantsTableView = objc.IBOutlet()
+    participantMenu = objc.IBOutlet()
+    sessionsView = objc.IBOutlet()
     sessionListView = objc.IBOutlet()
+    drawerSplitterPosition = None
+
     searchBox = objc.IBOutlet()
     accountPopUp = objc.IBOutlet()
     contactOutline = objc.IBOutlet()
@@ -120,7 +141,6 @@ class ContactWindowController(NSWindowController):
     addContactButton = objc.IBOutlet()
     addContactButtonSearch = objc.IBOutlet()
     addContactButtonDialPad = objc.IBOutlet()
-    mainTabView = objc.IBOutlet()
     conferenceButton = objc.IBOutlet()
 
     contactContextMenu = objc.IBOutlet()
@@ -202,9 +222,15 @@ class ContactWindowController(NSWindowController):
 
         self.sessionListView.setSpacing_(0)
 
+        self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
+        self.participantsTableView.setTarget_(self)
+        self.participantsTableView.setDoubleAction_("doubleClickReceived:")
+
         nc = NotificationCenter()
         nc.add_observer(self, name="AudioDevicesDidChange")
+        nc.add_observer(self, name="ActiveAudioSessionChanged")
         nc.add_observer(self, name="BlinkChatWindowClosed")
+        nc.add_observer(self, name="BlinkConferenceGotUpdate")
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
         nc.add_observer(self, name="BlinkMuteChangedState")
@@ -231,6 +257,8 @@ class ContactWindowController(NSWindowController):
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
+        ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
+        ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
 
         self.model.loadContacts()
         self.refreshContactsList()
@@ -598,6 +626,12 @@ class ContactWindowController(NSWindowController):
             if sender not in self.sessionControllers:
                 self.sessionControllers.append(sender)
         self.updatePresenceStatus()
+
+    def _NH_BlinkConferenceGotUpdate(self, notification):
+        self.updateParticipantsView()
+
+    def _NH_ActiveAudioSessionChanged(self, notification):
+        self.updateParticipantsView()
 
     def _NH_BlinkStreamHandlersChanged(self, notification):
         self.updatePresenceStatus()
@@ -1552,6 +1586,7 @@ class ContactWindowController(NSWindowController):
     def setCollapsed(self, flag):
         if self.loaded:
             self.collapsedState = flag
+            self.updateParticipantsView()
 
     def windowWillUseStandardFrame_defaultFrame_(self, window, nframe):
         if self.originalSize:
@@ -2522,3 +2557,364 @@ class ContactWindowController(NSWindowController):
             NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
         self.picker = None
+        
+    def getSelectedParticipant(self):
+        row = self.participantsTableView.selectedRow()
+        if not self.participantsTableView.isRowSelected_(row):
+            return None
+
+        try:
+            return self.participants[row]
+        except IndexError:
+            return None
+
+    def participantSelectionChanged_(self, notification):
+        contact = self.getSelectedParticipant()
+        session = self.getSelectedAudioSession()
+
+        if not session or contact is None:
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_MUTE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
+        else:
+            own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
+            remote_uri = format_identity_address(session.remotePartyObject)
+
+            hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+
+    # TableView dataSource
+    def numberOfRowsInTableView_(self, tableView):
+        if tableView == self.participantsTableView:
+            try:
+                return len(self.participants)
+            except:
+                pass
+ 
+        return 0
+
+    def tableView_objectValueForTableColumn_row_(self, tableView, tableColumn, row):
+        if tableView == self.participantsTableView:
+            try:
+                if row < len(self.participants):
+                    if type(self.participants[row]) in (str, unicode):
+                        return self.participants[row]
+                    else:
+                        return self.participants[row].name
+            except:
+                pass
+        return None
+        
+    def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
+        if tableView == self.participantsTableView:
+            try:
+                if row < len(self.participants):
+                    if type(self.participants[row]) in (str, unicode):
+                        cell.setContact_(None)
+                    else:
+                        cell.setContact_(self.participants[row])
+            except:
+                pass
+
+    def getSelectedAudioSession(self):
+        session = None
+        try:
+            selected_audio_view = (view for view in self.sessionListView.subviews() if view.selected is True).next()
+        except StopIteration:
+            pass
+        else:
+            session = selected_audio_view.delegate.sessionController if hasattr(selected_audio_view.delegate, 'sessionController') else None
+
+        return session
+           
+
+    @allocate_autorelease_pool
+    def updateParticipantsView(self):
+        self.participants = []
+        session = self.getSelectedAudioSession()
+        
+        if session and session.conference_info is not None:
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
+
+            if session.account is BonjourAccount():
+                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+            else:
+                own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
+
+            path = self.iconPathForSelf()
+            own_icon = NSImage.alloc().initWithContentsOfFile_(path) if path else None
+
+            for user in session.conference_info.users:
+                uri = user.entity.replace("sip:", "", 1)
+                uri = uri.replace("sips:", "", 1)
+
+                active_media = []
+
+                chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
+                if chat_endpoints:
+                    active_media.append('message')
+
+                audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
+                user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
+                if audio_endpoints and not user_on_hold:
+                    active_media.append('audio')
+                elif audio_endpoints and user_on_hold:
+                    active_media.append('audio-onhold')
+
+                contact = self.getContactMatchingURI(uri)
+                if contact:
+                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
+                    contact = Contact(uri, name=display_name, icon=contact.icon)
+                else:
+                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
+                    contact = Contact(uri, name=display_name)
+
+                contact.setActiveMedia(active_media)
+
+                # detail will be reset on receival of next conference-info update
+                if uri in session.pending_removal_participants:
+                    contact.setDetail('Removal requested...')
+
+                if own_uri and own_icon and contact.uri == own_uri:
+                    contact.setIcon(own_icon)
+
+                if contact not in self.participants:
+                    self.participants.append(contact)
+
+            self.participants.sort(key=attrgetter('name'))
+
+            # Add invited participants if any
+            if session.invited_participants:
+                for contact in session.invited_participants:
+                    self.participants.append(contact)
+ 
+        self.participantsTableView.reloadData()
+        sessions_frame = self.sessionsView.frame()
+
+        # adjust splitter
+        if len(self.participants) and self.drawerSplitterPosition is None and sessions_frame.size.height > 130:
+            participants_frame = self.participantsView.frame()
+            participants_frame.size.height = 130
+            sessions_frame.size.height -= 130
+            self.drawerSplitterPosition = {'topFrame': sessions_frame, 'bottomFrame': participants_frame}
+
+        self.resizeDrawerSplitter()
+            
+    @objc.IBAction
+    def userClickedParticipantMenu_(self, sender):
+        session = self.getSelectedAudioSession()
+        if session:
+            tag = sender.tag()
+
+            row = self.participantsTableView.selectedRow()
+            try:
+                object = self.participants[row]
+            except IndexError:
+                return
+
+            uri = object.uri
+            display_name = object.display_name
+
+            if tag == PARTICIPANTS_MENU_ADD_CONTACT:
+                self.addContact(uri, display_name)
+            elif tag == PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
+                remote_uri = format_identity_address(session.remotePartyObject)
+                display_name = None
+                if session.conference_info is not None:
+                    conf_desc = session.conference_info.conference_description
+                    display_name = unicode(conf_desc.display_text)
+                self.addContact(remote_uri, display_name)
+            elif tag == PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
+                ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?" % display_name, u"Remove", u"Cancel", None)
+                if ret == NSAlertDefaultReturn:
+                    self.removeParticipant(uri)
+            elif tag == PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
+                self.addParticipants()
+            elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
+            elif tag == PARTICIPANTS_MENU_START_AUDIO_SESSION:
+                self.startSessionWithAccount(session.account, uri, "audio")
+            elif tag == PARTICIPANTS_MENU_START_VIDEO_SESSION:
+                self.startSessionWithAccount(session.account, uri, "video")
+            elif tag == PARTICIPANTS_MENU_START_CHAT_SESSION:
+                self.startSessionWithAccount(session.account, uri, "chat")
+            elif tag == PARTICIPANTS_MENU_SEND_FILES:
+                openFileTransferSelectionDialog(session.account, uri)
+
+    def removeParticipant(self, uri):
+        session = self.getSelectedAudioSession()
+        if session:
+            # remove uri from invited participants
+            try:
+               contact = (contact for contact in session.invited_participants if contact.uri == uri).next()
+            except StopIteration:
+               pass
+            else:
+               try:
+                   session.invited_participants.remove(contact)
+               except ValueError:
+                   pass
+
+            if session.remote_focus and self.isConferenceParticipant(uri):
+                session.log_info(u"Request server for removal of %s from conference" % uri)
+                session.pending_removal_participants.add(uri)
+                session.session.conference.remove_participant(uri)
+
+            self.participantsTableView.deselectAll_(self)
+
+    def isConferenceParticipant(self, uri):
+        session = self.getSelectedAudioSession()
+        if session and hasattr(session.conference_info, "users"):
+            for user in session.conference_info.users:
+                participant = user.entity.replace("sip:", "", 1)
+                participant = participant.replace("sips:", "", 1)
+                if participant == uri:
+                    return True
+
+        return False
+
+    def isInvitedParticipant(self, uri):
+        session = self.getSelectedAudioSession()
+        try:
+           return uri in (contact.uri for contact in session.invited_participants)
+        except AttributeError:
+           return False
+
+    def canGoToConferenceWebsite(self):
+        session = self.getSelectedAudioSession()
+        if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
+            return True
+        return False
+
+    def canBeRemovedFromConference(self, uri):
+        session = self.getSelectedAudioSession()
+        own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
+        return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
+
+    def resizeDrawerSplitter(self):
+        session = self.getSelectedAudioSession()
+        if session and session.conference_info is not None and not self.collapsedState:
+            if self.drawerSplitterPosition is not None:
+                self.sessionsView.setFrame_(self.drawerSplitterPosition['topFrame'])
+                self.participantsView.setFrame_(self.drawerSplitterPosition['bottomFrame'])
+            else:
+                frame = self.participantsView.frame()
+                frame.size.height = 0
+                self.participantsView.setFrame_(frame)
+        else:
+            frame = self.participantsView.frame()
+            frame.size.height = 0
+            self.participantsView.setFrame_(frame)
+
+    def drawerSplitViewDidResize_(self, notification):
+        if notification.userInfo() is not None:
+            self.drawerSplitterPosition = {'topFrame': self.sessionsView.frame(), 'bottomFrame': self.participantsView.frame() }
+
+    def addParticipants(self):
+        session = self.getSelectedAudioSession()
+        if session:
+            if session.remote_focus:
+                participants = self.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
+                if participants is not None:
+                    remote_uri = format_identity_address(session.remotePartyObject)
+                    # prevent loops
+                    if remote_uri in participants:
+                        participants.remove(remote_uri)
+                    for uri in participants:
+                        if uri and "@" not in uri:
+                            uri='%s@%s' % (uri, session.account.id.domain)
+                        contact = self.getContactMatchingURI(uri)
+                        if contact:
+                            contact = Contact(uri, name=contact.name, icon=contact.icon)
+                        else:
+                            contact = Contact(uri, name=uri)
+                        contact.setDetail('Invitation sent...')
+                        if contact not in session.invited_participants:
+                            session.invited_participants.append(contact)
+                            session.participants_log.add(uri)
+                            session.log_info(u"Invite %s to conference" % uri)
+                            session.session.conference.add_participant(uri)
+
+    def getConferenceTitle(self):
+        title = None
+        session = self.getSelectedAudioSession()
+        if session:
+            if session.conference_info is not None:
+                conf_desc = session.conference_info.conference_description
+                title = u"%s <%s>" % (conf_desc.display_text, format_identity_address(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+            else:
+                title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
+        return title
+
+    # drag/drop
+    def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
+        session = self.getSelectedAudioSession()
+        if session:
+            if session.remote_focus:
+                # do not allow drag if remote party is not conference focus
+                pboard = info.draggingPasteboard()
+                if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+                    uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                    if uri:
+                        uri = re.sub("^(sip:|sips:)", "", str(uri))
+                    try:
+                        table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
+                        
+                        # do not invite remote party itself
+                        remote_uri = format_identity_address(session.remotePartyObject)
+                        if uri == remote_uri:
+                            return NSDragOperationNone
+                        # do not invite users already invited
+                        for contact in session.invited_participants:
+                            if uri == contact.uri:
+                                return NSDragOperationNone
+                        # do not invite users already present in the conference
+                        if session.conference_info is not None:
+                            for user in session.conference_info.users:
+                                if uri == re.sub("^(sip:|sips:)", "", user.entity):
+                                    return NSDragOperationNone
+                    except:
+                        return NSDragOperationNone
+                    return NSDragOperationAll
+                elif pboard.types().containsObject_(NSFilenamesPboardType):
+                    return NSDragOperationAll
+            elif not isinstance(session.account, BonjourAccount):
+                return NSDragOperationAll
+
+        return NSDragOperationNone
+
+    def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
+        pboard = info.draggingPasteboard()
+        session = self.getSelectedAudioSession()
+
+        if not session:
+            return False
+
+        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            uri = str(pboard.stringForType_("x-blink-sip-uri"))
+            if uri:
+                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                if "@" not in uri:
+                    uri = '%s@%s' % (uri, session.account.id.domain)
+
+            if session.remote_focus:
+                contact = self.getContactMatchingURI(uri)
+                if contact:
+                    contact = Contact(uri, name=contact.name, icon=contact.icon)
+                else:
+                    contact = Contact(uri, name=uri)
+                contact.setDetail('Invitation sent...')
+                session.invited_participants.append(contact)
+                session.participants_log.add(uri)
+                session.log_info(u"Invite %s to conference" % uri)
+                session.session.conference.add_participant(uri)
+            return True

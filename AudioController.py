@@ -287,6 +287,9 @@ class AudioController(MediaStream):
             self.sessionManager.holdConference()
             self.unhold()
 
+        self.notification_center.post_notification("ActiveAudioSessionChanged", sender=self)
+
+
     def sessionBoxDidDeactivate(self, sender):
         if self.isConferencing:
             if not sender.conferencing: # only hold if the sender is a non-conference session
