@@ -484,12 +484,13 @@ class PreferencesController(NSWindowController, object):
             self.advancedTabView.setHidden_(False)
             
             if isinstance(account, BonjourAccount):
-                self.addressText.setStringValue_("Self-generated")
-                sv.viewWithTag_(21).setHidden_(True)
                 self.passwordText.setHidden_(True)
+                self.addressText.setHidden_(True)
+                sv.viewWithTag_(20).setHidden_(True)
+                sv.viewWithTag_(21).setHidden_(True)
             else:
-                self.passwordText.setEnabled_("True")
                 self.passwordText.setHidden_(False)
+                self.addressText.setHidden_(False)
                 sv.viewWithTag_(20).setHidden_(False)
                 sv.viewWithTag_(21).setHidden_(False)
         else:
