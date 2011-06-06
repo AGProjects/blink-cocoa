@@ -684,8 +684,10 @@ class AudioController(MediaStream):
     def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 10: # add chat
+            NSApp.delegate().windowController.drawer.close()
             self.sessionController.addChatToSession()
         elif tag == 13: # add video
+            NSApp.delegate().windowController.drawer.close()
             self.sessionController.addVideoToSession()
         elif tag == 11: # request remote desktop
             self.sessionController.addRemoteDesktopToSession()

@@ -580,6 +580,7 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkChatWindowClosed(self, notification):
+        # TODO: avoid opening drawer if no audio session is connected -adi
         self.showAudioDrawer()
 
     def newAudioDeviceTimeout_(self, timer):
