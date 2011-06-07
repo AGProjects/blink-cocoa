@@ -1326,7 +1326,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
-        if data.reason == "Connection was closed cleanly.":
+        if data.reason in ('Connection was closed cleanly.', 'A TLS packet with unexpected length was received.'):
             self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
         else:
             reason = 'Timeout' if data.reason == 'MSRPConnectTimeout' else data.reason
