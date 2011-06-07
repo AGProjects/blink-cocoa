@@ -364,7 +364,8 @@ class ChatWindowController(NSWindowController):
             session = self.selectedSessionController()
             if session:
                 session.log_info(u'Colaborative editor content has changed')
-            self.noteSession_isComposing_(sender.delegate.sessionController, True)
+            if not sender.editorStatus:
+                self.noteSession_isComposing_(sender.delegate.sessionController, True)
             self.revalidateToolbar()
 
     def validateToolbarItem_(self, item):
