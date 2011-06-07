@@ -24,11 +24,7 @@ class ApplicationData(object):
         if cls._cached_directory is None:
             application_name = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
             path = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0])
-            if application_name == 'Blink Lite':
-                app_config_dir = 'Blink Lite'
-            else:
-                app_config_dir = 'Blink'
-            cls._cached_directory = os.path.join(path, app_config_dir)
+            cls._cached_directory = os.path.join(path, application_name)
         return cls._cached_directory
 
     @classmethod

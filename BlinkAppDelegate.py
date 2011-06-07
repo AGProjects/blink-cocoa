@@ -78,33 +78,35 @@ class BlinkAppDelegate(NSObject):
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
 
             # Migrate configuration from Blink Lite to Blink Pro
+            app_dir_name = (name for name in Resources.directory.split('/') if name.endswith('.app')).next()
             path = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0])
             lite_path = os.path.join(path, 'Blink Lite')
-            pro_path = os.path.join(path, 'Blink')
-            app_dir_name = (name for name in Resources.directory.split('/') if name.endswith('.app')).next()
-            if self.applicationName == 'Blink Pro' and os.path.isdir(lite_path) and not os.path.exists(os.path.join(pro_path, '.migrated_from_lite')):
-                if os.path.exists(pro_path):
-                    ret = NSRunAlertPanel(u"Migrate Configuration", u"Blink Lite configuration has been found on this computer. Would you like to overwrite Blink Pro configuration with Blink Lite configuration?", u"Overwrite", u"Cancel", None)
-                    if ret == NSAlertDefaultReturn:
-                        shutil.move(pro_path, pro_path+'.bak')
-                    else:
-                        # Add marker file so that settings are not migrated every time
-                        open(os.path.join(pro_path, '.migrated_from_lite'), 'w').close()
-                        return
+            pro_path = os.path.join(path, 'Blink Pro')
+            classic_path = os.path.join(path, 'Blink')
+            if os.path.isdir(classic_path):
+                migration_path = classic_path
+                migration_source = 'Blink'
+            elif os.path.isdir(lite_path):
+                migration_path = lite_path
+                migration_source = 'Blink Lite'
+            else:
+                migration_path = None
+            if self.applicationName == 'Blink Pro' and not os.path.exists(pro_path) and migration_path:
                 try:
-                    shutil.copytree(lite_path, pro_path)
+                    shutil.copytree(migration_path, pro_path)
                 except shutil.Error, e:
-                    BlinkLogger().log_info(u"Could not migrate configuration from Blink Lite: %s" % e) 
+                    BlinkLogger().log_info(u"Could not migrate configuration from %s: %s" % (migration_source, e))
                 else:
                     with open(os.path.join(pro_path, 'config'), 'r+') as f:
                         data = ''.join(f.readlines())
                         f.seek(0, 0)
                         f.truncate()
-                        data = re.sub('Library/Application Support/Blink Lite', 'Library/Application Support/Blink', data)
-                        data = re.sub('Blink Lite.app/Contents/Resources', '%s/Contents/Resources' % app_dir_name, data)
+                        data = re.sub('Library/Application Support/%s' % migration_source, 'Library/Application Support/Blink Pro', data)
+                        m = re.search('\/(?P<name>Blink[\w ]*)\.app', data)
+                        if m:
+                            name = m.groupdict()['name']
+                            data = re.sub('%s.app/Contents/Resources' % name, '%s/Contents/Resources' % app_dir_name, data)
                         f.write(data)
-                    # Add marker file so that settings are not migrated every time
-                    open(os.path.join(pro_path, '.migrated_from_lite'), 'w').close()
 
         return self
 
