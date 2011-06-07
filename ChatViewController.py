@@ -382,11 +382,6 @@ class ChatViewController(NSObject):
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         self.messageQueue = []
 
-        if NSApp.delegate().applicationName == 'Blink Pro':
-            # toggle collaborative editor to initialize the java script to be able to receive is-composing
-            self.delegate.toggleEditor()
-            self.delegate.toggleEditor()
-
     def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, element, defaultItems):
         return None
         

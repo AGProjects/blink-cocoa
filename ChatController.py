@@ -1271,6 +1271,12 @@ class ChatController(MediaStream):
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
 
+    def _NH_BlinkSessionDidStart(self, sender, data):
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            # toggle collaborative editor to initialize the java script to be able to receive is-composing
+            self.toggleEditor()
+            self.toggleEditor()
+
     def _NH_BlinkProposalDidFail(self, sender, data):
         message = "Proposal failed: %s" % data.failure_reason
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
