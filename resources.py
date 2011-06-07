@@ -11,7 +11,7 @@ import unicodedata
 from AppKit import NSBundle
 from Foundation import NSApplicationSupportDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
 
-from sipsimple.util import classproperty
+from application.python.descriptor import classproperty
 
 
 class ApplicationData(object):

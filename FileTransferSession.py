@@ -10,7 +10,7 @@ import time
 import uuid
 
 from application.notification import NotificationCenter, IObserver
-from application.python import Null
+from application.python import Null, limit
 from application.system import makedirs
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -20,7 +20,7 @@ from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData, Timestamp, limit
+from sipsimple.util import TimestampedNotificationData, Timestamp
 from threading import Event
 from twisted.internet import reactor
 from twisted.internet.error import ConnectionLost
