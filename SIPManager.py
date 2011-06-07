@@ -753,12 +753,8 @@ class SIPManager(object):
             BlinkLogger().log_info(u"DNS Lookup of STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
         elif lookup.type == 'sip_proxies':
             session_controller = lookup.owner
-            result_text = ''
-            i = 1
-            for result in data.result:
-                result_text += ' %s:%s (%s)%s' % (result.address, result.port, result.transport.upper(), ',' if i < len(data.result) else '')
-                i += 1
-            BlinkLogger().log_info(u"DNS Lookup for %s succeeded:%s" % (session_controller.target_uri, result_text))
+            result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
+            BlinkLogger().log_info(u"DNS Lookup for %s succeeded: %s" % (session_controller.target_uri, result_text))
             routes = data.result
             if not routes:
                 call_in_gui_thread(session_controller.setRoutesFailed, "No routes found to SIP Proxy")
