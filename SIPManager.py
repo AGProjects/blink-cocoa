@@ -774,10 +774,10 @@ class SIPManager(object):
         MWIData.remove(account)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = u'%s Registered Contact Address "%s" for sip:%s at %s:%d;transport=%s (expires in %d seconds).\n' % (datetime.datetime.now().replace(microsecond=0), data.contact_header.uri, account.id, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
-        contact_header_list = data.contact_header_list
-        if len(contact_header_list) > 1:
-            message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
+        message = u'Registered Contact "%s" for sip:%s at %s:%d;transport=%s for %d seconds\n' % (data.contact_header.uri, account.id, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+        #contact_header_list = data.contact_header_list
+        #if len(contact_header_list) > 1:
+        #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         BlinkLogger().log_info(message)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
