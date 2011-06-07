@@ -533,6 +533,9 @@
 		1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FBD0E0212EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
+		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
+		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
+		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FCF118F1390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCF11901390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCF11911390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
@@ -1152,6 +1155,7 @@
 		1FB9B1181095BFF500284E18 /* ring_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_tone.wav; path = sounds/ring_tone.wav; sourceTree = "<group>"; };
 		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
+		1FC66DE7139E17D600D03D71 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
 		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
 		1FCF119A1390EE08001D1CAF /* logs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logs.png; path = icons/logs.png; sourceTree = "<group>"; };
@@ -1849,6 +1853,7 @@
 				2BE7632910732DC000A1DF24 /* About.xib */,
 				8547A6C5114EB6E200AD84BF /* interfaces */,
 				85E8550210F643350083D346 /* configuration */,
+				1FC66E0C139E208700D03D71 /* MigrationPanel.xib */,
 			);
 			name = Common;
 			sourceTree = "<group>";
@@ -2173,6 +2178,7 @@
 				1FCF11EF13910878001D1CAF /* audio-preferences.png in Resources */,
 				1FCF129F1391151A001D1CAF /* answering_machine.png in Resources */,
 				1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */,
+				1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2349,6 +2355,7 @@
 				1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */,
 				1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */,
 				1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */,
+				1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2528,6 +2535,7 @@
 				1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */,
 				1F1E26DC1393AD1A00AC2BE7 /* audio.png in Resources */,
 				1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */,
+				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2607,6 +2615,14 @@
 				1F092DB512B27864000CEE7F /* English */,
 			);
 			name = JoinConferenceWindow.xib;
+			sourceTree = "<group>";
+		};
+		1FC66E0C139E208700D03D71 /* MigrationPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FC66DE7139E17D600D03D71 /* English */,
+			);
+			name = MigrationPanel.xib;
 			sourceTree = "<group>";
 		};
 		1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */ = {

@@ -46,6 +46,8 @@ class BlinkAppDelegate(NSObject):
 
     windowController = objc.IBOutlet()
     aboutPanel = objc.IBOutlet()
+    migrationPanel = objc.IBOutlet()
+    migrationProgressWheel = objc.IBOutlet()
     aboutVersion = objc.IBOutlet()
     aboutBundle = objc.IBOutlet()
     blinkMenu = objc.IBOutlet()
@@ -92,6 +94,11 @@ class BlinkAppDelegate(NSObject):
             else:
                 migration_path = None
             if self.applicationName == 'Blink Pro' and not os.path.exists(pro_path) and migration_path:
+
+                NSBundle.loadNibNamed_owner_("MigrationPanel", self)
+                self.migrationPanel.orderFront_(None)
+                self.migrationProgressWheel.startAnimation_(None)
+        
                 try:
                     shutil.copytree(migration_path, pro_path)
                 except shutil.Error, e:
@@ -107,6 +114,8 @@ class BlinkAppDelegate(NSObject):
                             name = m.groupdict()['name']
                             data = re.sub('%s.app/Contents/Resources' % name, '%s/Contents/Resources' % app_dir_name, data)
                         f.write(data)
+
+                self.migrationPanel.close()
 
         return self
 
