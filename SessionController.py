@@ -434,7 +434,6 @@ class SessionController(NSObject):
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         if self.routes != routes:
-            self.log_info("DNS Lookup returned %s"%routes)
             self.routes = routes
 
         if len(routes) == 0:

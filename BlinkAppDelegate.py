@@ -98,7 +98,7 @@ class BlinkAppDelegate(NSObject):
                 NSBundle.loadNibNamed_owner_("MigrationPanel", self)
                 self.migrationPanel.orderFront_(None)
                 self.migrationProgressWheel.startAnimation_(None)
-        
+
                 try:
                     shutil.copytree(migration_path, pro_path)
                 except shutil.Error, e:
