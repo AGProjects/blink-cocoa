@@ -491,14 +491,20 @@ class SessionController(NSObject):
             self.session.conference.add_participant(contact.uri)
 
         if NSApp.delegate().applicationName == 'Blink Pro':
-            # generate a unique id for the collaboration editor
-            # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path
-            # TODO: a better and persistent way would be to generate the collaboration_form_id based on the actual From headers of both parties -adi
+            def numerify(num):
+                try:
+                    int(num)
+                except ValueError:
+                    return num
+                else:
+                    return chr(65+int(num))
+
+            # generate a unique id for the collaboration editor without digits, they don't work for some cloudy reason
+            # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path -adi
             hash = hashlib.sha1()
             id = '%s' % (self.remoteSIPAddress) if self.remote_focus else self.session._invitation.call_id
             hash.update(id)
-            self.collaboration_form_id = re.sub("[0-9]","", hash.hexdigest()) # replace digits of collaboration formid, they don't work for some reason
-            self.log_info(u"Allocated collaboration editor id: %s" % self.collaboration_form_id)
+            self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
@@ -753,4 +759,3 @@ class SessionController(NSObject):
             chatStream.userClickedToolbarButton(sender)
         else:
             userClickedToolbarButtonWhileDisconnected(self, sender)
-
