@@ -1,6 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+import os
+
 from AppKit import *
 from Foundation import *
 
@@ -14,6 +16,7 @@ from zope.interface import implements
 from EnrollmentController import EnrollmentController
 from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
 from VerticalBoxView import VerticalBoxView
+from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
 
 
@@ -574,4 +577,19 @@ class PreferencesController(NSWindowController, object):
             self.addAccount()
         elif sender == self.removeButton:
             self.removeSelectedAccount()
+
+    def get_logs_size(self):
+        logs_size = 0
+        for path, dirs, files in os.walk(os.path.join(ApplicationData.directory, 'logs')):
+            for name in dirs:
+                try:
+                    logs_size += os.stat(os.path.join(path, name)).st_size
+                except (OSError, IOError):
+                    pass
+            for name in files:
+                try:
+                    logs_size += os.stat(os.path.join(path, name)).st_size
+                except (OSError, IOError):
+                    pass
+        return logs_size
 
