@@ -4,6 +4,7 @@
 import hashlib
 import re
 import time
+from itertools import chain
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
@@ -62,6 +63,7 @@ class SessionController(NSObject):
     streamHandlers = None
     lastChatOutputView = None
     collaboration_form_id = None
+    remote_conference_has_audio = False
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -273,6 +275,8 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.participants_log = set()
         self.streams_log = []
+        self.remote_conference_has_audio = False
+
 
     def initializeSessionWithAccount(self, account):
         if self.session is None:
@@ -543,6 +547,7 @@ class SessionController(NSObject):
         self.conference_shared_files = []
         self.participants_log = set()
         self.streams_log = []
+        self.remote_conference_has_audio = False
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
@@ -582,7 +587,7 @@ class SessionController(NSObject):
         self.conference_shared_files = []
         self.participants_log = set()
         self.streams_log = []
-        self.mustShowDrawer = False
+        self.remote_conference_has_audio = False
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
@@ -679,6 +684,13 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.conference_shared_files = []
         self.conference_info = data.conference_info
+
+        remote_conference_has_audio = any(media.media_type == 'audio' for media in chain(*chain(*(user for user in self.conference_info.users))))
+
+        if remote_conference_has_audio and not self.remote_conference_has_audio:
+            self.notification_center.post_notification("ConferenceHasAddedAudio", sender=self)
+        self.remote_conference_has_audio = remote_conference_has_audio
+         
         for user in data.conference_info.users:
             uri = re.sub("^(sip:|sips:)", "", str(user.entity))
             # save uri for accounting pusposes

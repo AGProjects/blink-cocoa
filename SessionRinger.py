@@ -68,6 +68,8 @@ class Ringer(object):
         notification_center.add_observer(self, name="AudioStreamDidChangeHoldState")
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
+        notification_center.add_observer(self, name="ConferenceHasAddedAudio")
+
 
     def stop(self):
         notification_center = NotificationCenter()
@@ -75,6 +77,7 @@ class Ringer(object):
         notification_center.remove_observer(self, name="AudioStreamDidChangeHoldState")
         notification_center.remove_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.remove_observer(self, name="ChatViewControllerDidDisplayMessage")
+        notification_center.remove_observer(self, name="ConferenceHasAddedAudio")
 
     def update_playing_ringtones(self):
         should_play_incoming = False
@@ -320,6 +323,9 @@ class Ringer(object):
                     self.hold_tone.stop()
             if data.on_hold and data.originator == 'remote' and self.initial_hold_tone and not self.initial_hold_tone.is_active:
                 self.initial_hold_tone.start()
+        elif name == "ConferenceHasAddedAudio":
+            # TODO: play-resume iTunes after adding audio to conference tone has been played -adi
+            self.initial_hold_tone.start()
         elif name == "ChatViewControllerDidDisplayMessage":
             now = time.time()
             if not settings.audio.silent and self.msg_out_sound and now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
