@@ -448,8 +448,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session and hasattr(session.conference_info, "users"):
             for user in session.conference_info.users:
-                participant = user.entity.replace("sip:", "", 1)
-                participant = participant.replace("sips:", "", 1)
+                participant = re.sub("^(sip:|sips:)", "", user.entity)
                 if participant == uri:
                     return True
 
@@ -850,9 +849,7 @@ class ChatWindowController(NSWindowController):
             if session.conference_info is not None:
 
                 for user in session.conference_info.users:
-                    uri = user.entity.replace("sip:", "", 1)
-                    uri = uri.replace("sips:", "", 1)
-
+                    uri = re.sub("^(sip:|sips:)", "", user.entity)
                     active_media = []
 
                     chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
