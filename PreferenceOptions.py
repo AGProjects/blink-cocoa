@@ -1419,6 +1419,7 @@ SettingDescription = {
                       'pstn.prefix': 'External Line Prefix',
                       'rtp.inband_dtmf': 'Send Inband DTMF',
                       'rtp.audio_codec_list': 'Audio Codecs',
+                      'rtp.port_range': 'UDP Port Range',
                       'rtp.srtp_encryption': 'sRTP Encryption',
                       'sip.invite_timeout': 'Session Timeout',
                       'sip.transport_list': 'Protocols',
@@ -1461,7 +1462,8 @@ UnitOptions = {
                'max_recording_duration': 'seconds',
                'publish_interval': 'seconds',
                'register_interval': 'seconds',
-               'subscribe_interval': 'seconds'
+               'subscribe_interval': 'seconds',
+               'udp_port': 'set port to 0 for automatic allocation'
                }
 
 ToolTips = {
