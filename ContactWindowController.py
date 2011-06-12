@@ -1124,7 +1124,9 @@ class ContactWindowController(NSWindowController):
         self.updateActionButtons()
         self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList for contact in group.contacts if text in contact]
 
-        input_contact = Contact(text, name=unicode(text))
+        active_account = self.activeAccount()
+        input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
+        input_contact = Contact(input_text, name=unicode(input_text))
         exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
 
         if not exists:
