@@ -693,7 +693,7 @@ class SessionController(NSObject):
          
         for user in data.conference_info.users:
             uri = re.sub("^(sip:|sips:)", "", str(user.entity))
-            # save uri for accounting pusposes
+            # save uri for accounting purposes
             if uri != self.account.id:
                 self.participants_log.add(uri)
 
