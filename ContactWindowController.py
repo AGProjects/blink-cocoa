@@ -158,7 +158,6 @@ class ContactWindowController(NSWindowController):
     notFoundTextOffset = None
     searchOutlineTopOffset = None
 
-    addContactToConference = objc.IBOutlet()
     addContactToConferenceDialPad = objc.IBOutlet()
 
     blinkMenu = objc.IBOutlet()
@@ -822,7 +821,6 @@ class ContactWindowController(NSWindowController):
         self.actionButtons.setEnabled_forSegment_(desktopOk and self.backend.isMediaTypeSupported('desktop-sharing'), 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
-        self.addContactToConference.setEnabled_(True if (self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) else False)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
 
     def isJoinConferenceWindowOpen(self):
@@ -1126,15 +1124,13 @@ class ContactWindowController(NSWindowController):
         self.updateActionButtons()
         self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList for contact in group.contacts if text in contact]
 
-        if not self.searchResultsModel.contactGroupsList:
-            self.searchOutline.enclosingScrollView().setHidden_(True)
-            self.notFoundText.setStringValue_(u"No matching contacts found.\nPress Return to start a call to\n'%s'\nor use the buttons below\nto start a session."%text)
-            #self.notFoundText.sizeToFit()
-            self.addContactButtonSearch.setHidden_(False)
-        else:
-            self.searchOutline.enclosingScrollView().setHidden_(False)
-            exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
-            self.addContactButtonSearch.setHidden_(exists)
+        input_contact = Contact(text, name=unicode(text))
+        exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
+
+        if not exists:
+            self.searchResultsModel.contactGroupsList.append(input_contact)
+
+        self.addContactButtonSearch.setEnabled_(not exists)
         self.searchOutline.reloadData()
 
 
@@ -1384,7 +1380,6 @@ class ContactWindowController(NSWindowController):
 
             self.startSessionWithSIPURI(target)
             self.searchBox.setStringValue_(u"")
-            self.addContactToConferenceDialPad.setEnabled_(False)
             self.addContactToConferenceDialPad.setEnabled_(False)
         else:
             media = None

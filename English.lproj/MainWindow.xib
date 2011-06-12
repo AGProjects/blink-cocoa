@@ -3,17 +3,17 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">823</string>
+		<string key="IBDocument.InterfaceBuilderVersion">851</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">823</string>
+			<string key="NS.object.0">851</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
+			<integer value="371"/>
 			<integer value="474"/>
-			<integer value="501"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1472,7 +1472,7 @@
 								<object class="NSTabViewItem" id="1016005450">
 									<string key="NSIdentifier">search</string>
 									<object class="NSView" key="NSView" id="411259017">
-										<reference key="NSNextResponder" ref="1053838733"/>
+										<nil key="NSNextResponder"/>
 										<int key="NSvFlags">274</int>
 										<object class="NSMutableArray" key="NSSubviews">
 											<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1533,27 +1533,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 													<int key="NSPeriodicInterval">75</int>
 												</object>
 											</object>
-											<object class="NSButton" id="321039356">
-												<reference key="NSNextResponder" ref="411259017"/>
-												<int key="NSvFlags">269</int>
-												<string key="NSFrame">{{55, 279}, {154, 17}}</string>
-												<reference key="NSSuperview" ref="411259017"/>
-												<int key="NSTag">40</int>
-												<bool key="NSEnabled">YES</bool>
-												<object class="NSButtonCell" key="NSCell" id="309778643">
-													<int key="NSCellFlags">-1543373312</int>
-													<int key="NSCellFlags2">134348800</int>
-													<string key="NSContents">Add to Conference</string>
-													<reference key="NSSupport" ref="26"/>
-													<reference key="NSControlView" ref="321039356"/>
-													<int key="NSButtonFlags">-2038152961</int>
-													<int key="NSButtonFlags2">164</int>
-													<string key="NSAlternateContents"/>
-													<string key="NSKeyEquivalent"/>
-													<int key="NSPeriodicDelay">400</int>
-													<int key="NSPeriodicInterval">75</int>
-												</object>
-											</object>
 											<object class="NSScrollView" id="867903941">
 												<reference key="NSNextResponder" ref="411259017"/>
 												<int key="NSvFlags">274</int>
@@ -1567,7 +1546,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 															<object class="NSTableView" id="1055624403">
 																<reference key="NSNextResponder" ref="172417404"/>
 																<int key="NSvFlags">274</int>
-																<string key="NSFrameSize">{271, 274}</string>
+																<string key="NSFrameSize">{271, 297}</string>
 																<reference key="NSSuperview" ref="172417404"/>
 																<bool key="NSEnabled">YES</bool>
 																<object class="_NSCornerView" key="NSCornerView">
@@ -1626,7 +1605,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 																<int key="NSTableViewDraggingDestinationStyle">0</int>
 															</object>
 														</object>
-														<string key="NSFrame">{{1, 1}, {271, 274}}</string>
+														<string key="NSFrame">{{1, 1}, {271, 297}}</string>
 														<reference key="NSSuperview" ref="867903941"/>
 														<reference key="NSNextKeyView" ref="1055624403"/>
 														<reference key="NSDocView" ref="1055624403"/>
@@ -1653,7 +1632,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 														<double key="NSPercent">0.92619929999999995</double>
 													</object>
 												</object>
-												<string key="NSFrame">{{1, -3}, {273, 276}}</string>
+												<string key="NSFrame">{{1, -3}, {273, 299}}</string>
 												<reference key="NSSuperview" ref="411259017"/>
 												<reference key="NSNextKeyView" ref="172417404"/>
 												<int key="NSsFlags">562</int>
@@ -1664,7 +1643,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 											</object>
 										</object>
 										<string key="NSFrameSize">{274, 345}</string>
-										<reference key="NSSuperview" ref="1053838733"/>
 									</object>
 									<string key="NSLabel">Search</string>
 									<reference key="NSColor" ref="247086700"/>
@@ -1673,7 +1651,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<object class="NSTabViewItem" id="857008963">
 									<string key="NSIdentifier">dialpad</string>
 									<object class="NSView" key="NSView" id="977201501">
-										<nil key="NSNextResponder"/>
+										<reference key="NSNextResponder" ref="1053838733"/>
 										<int key="NSvFlags">274</int>
 										<object class="NSMutableArray" key="NSSubviews">
 											<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2026,20 +2004,21 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 											</object>
 										</object>
 										<string key="NSFrameSize">{274, 345}</string>
+										<reference key="NSSuperview" ref="1053838733"/>
 									</object>
 									<string key="NSLabel">Dialpad</string>
 									<reference key="NSColor" ref="247086700"/>
 									<reference key="NSTabView" ref="1053838733"/>
 								</object>
 							</object>
-							<reference key="NSSelectedTabViewItem" ref="1016005450"/>
+							<reference key="NSSelectedTabViewItem" ref="857008963"/>
 							<reference key="NSFont" ref="357332417"/>
 							<int key="NSTvFlags">6</int>
 							<bool key="NSAllowTruncatedLabels">YES</bool>
 							<bool key="NSDrawsBackground">YES</bool>
 							<object class="NSMutableArray" key="NSSubviews">
 								<bool key="EncodedWithXMLCoder">YES</bool>
-								<reference ref="411259017"/>
+								<reference ref="977201501"/>
 							</object>
 						</object>
 						<object class="NSPopUpButton" id="954942554">
@@ -3817,22 +3796,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">998</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">addContactToConference:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="309778643"/>
-					</object>
-					<int key="connectionID">1001</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
-						<string key="label">addContactToConference</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="321039356"/>
-					</object>
-					<int key="connectionID">1002</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">delegate</string>
 						<reference key="source" ref="427015895"/>
@@ -4841,7 +4804,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="867903941"/>
 							<reference ref="895788342"/>
 							<reference ref="167015669"/>
-							<reference ref="321039356"/>
 						</object>
 						<reference key="parent" ref="1016005450"/>
 					</object>
@@ -5398,20 +5360,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<int key="objectID">996</int>
 						<reference key="object" ref="1021973200"/>
 						<reference key="parent" ref="633631115"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">999</int>
-						<reference key="object" ref="321039356"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="309778643"/>
-						</object>
-						<reference key="parent" ref="411259017"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1000</int>
-						<reference key="object" ref="309778643"/>
-						<reference key="parent" ref="321039356"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">1004</int>
@@ -6191,7 +6139,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<object class="NSArray" key="dict.sortedKeys">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>-3.IBPluginDependency</string>
-					<string>1000.IBPluginDependency</string>
 					<string>1004.IBPluginDependency</string>
 					<string>1005.IBEditorWindowLastContentRect</string>
 					<string>1005.IBPluginDependency</string>
@@ -6571,12 +6518,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>994.IBPluginDependency</string>
 					<string>995.IBPluginDependency</string>
 					<string>996.IBPluginDependency</string>
-					<string>999.IBPluginDependency</string>
-					<string>999.IBViewBoundsToFrameTransform</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{711, 665}, {211, 83}}</string>
@@ -6824,9 +6768,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
 					<string>{{539, 906}, {519, 20}}</string>
-					<string>{{687, 526}, {274, 480}}</string>
+					<string>{{174, 622}, {274, 480}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{687, 526}, {274, 480}}</string>
+					<string>{{174, 622}, {274, 480}}</string>
 					<integer value="0"/>
 					<string>{{238, 285}, {274, 439}}</string>
 					<boolean value="NO"/>
@@ -7252,10 +7196,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABCXAAAw4CAAA</bytes>
-					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="unlocalizedProperties">
@@ -7653,7 +7593,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>accountSelectionChanged:</string>
 							<string>actionButtonClicked:</string>
 							<string>addContact:</string>
-							<string>addContactToConference:</string>
 							<string>addGroup:</string>
 							<string>backToContacts:</string>
 							<string>clearSearchField:</string>
@@ -7740,7 +7679,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
-							<string>id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="actionInfosByName">
@@ -7750,7 +7688,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>accountSelectionChanged:</string>
 							<string>actionButtonClicked:</string>
 							<string>addContact:</string>
-							<string>addContactToConference:</string>
 							<string>addGroup:</string>
 							<string>backToContacts:</string>
 							<string>clearSearchField:</string>
@@ -7804,10 +7741,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">addContact:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">addContactToConference:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -7981,8 +7914,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>addContactButton</string>
 							<string>addContactButtonDialPad</string>
 							<string>addContactButtonSearch</string>
-							<string>addContactToConference</string>
-							<string>addContactToConferenceDialPad</string>
 							<string>blinkMenu</string>
 							<string>callMenu</string>
 							<string>chatMenu</string>
@@ -8061,8 +7992,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
-							<string>id</string>
-							<string>id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
@@ -8074,8 +8003,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>addContactButton</string>
 							<string>addContactButtonDialPad</string>
 							<string>addContactButtonSearch</string>
-							<string>addContactToConference</string>
-							<string>addContactToConferenceDialPad</string>
 							<string>blinkMenu</string>
 							<string>callMenu</string>
 							<string>chatMenu</string>
@@ -8132,14 +8059,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">addContactButtonSearch</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">addContactToConference</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">addContactToConferenceDialPad</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
