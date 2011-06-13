@@ -484,7 +484,7 @@ class ChatWindowController(NSWindowController):
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
-                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed else False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
             else:
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)          
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
