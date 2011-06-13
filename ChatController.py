@@ -412,8 +412,7 @@ class ChatController(MediaStream):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.splitView)
 
     def drawerSplitViewDidResize_(self, notification):
-        if notification.userInfo() is None:
-            self.chatViewController.scrollToBottom()
+        self.chatViewController.scrollToBottom()
 
     def saveSplitterPosition(self):
         self.mainViewSplitterPosition={'output_frame': self.outputContainer.frame(), 'input_frame': self.inputContainer.frame()}
