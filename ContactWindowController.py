@@ -1754,6 +1754,7 @@ class ContactWindowController(NSWindowController):
 
         item = self.statusMenu.itemWithTag_(54) # my video
         item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
+        item.setEnabled_(False) # TODO: enable video -adi
 
     def updateToolsMenu(self):
         account = self.activeAccount()
