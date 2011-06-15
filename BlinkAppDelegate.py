@@ -112,7 +112,7 @@ class BlinkAppDelegate(NSObject):
                         m = re.search('\/(?P<name>Blink[\w ]*)\.app', data)
                         if m:
                             name = m.groupdict()['name']
-                            data = re.sub('%s.app/Contents/Resources' % name, '%s/Contents/Resources' % app_dir_name, data)
+                            data = re.sub('%s.app/Contents/Resources' % name, '%s/Contents/Resources' % str(app_dir_name), data)
                         f.write(data)
 
                 self.migrationPanel.close()
