@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile','SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL']
+__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL']
 
 import os
 import urlparse
@@ -181,6 +181,50 @@ class UserSoundFile(SoundFile):
         self.__dict__['path'] = path
     path = property(_get_path, _set_path)
     del _get_path, _set_path
+
+
+class AccountTLSCertificate(object):
+    class DefaultTLSCertificate(unicode): pass
+
+    def __init__(self, path):
+        if not path or path.lower() == u'default':
+            path = self.DefaultTLSCertificate()
+        self.path = path
+
+    def __getstate__(self):
+        if isinstance(self.__dict__['path'], self.DefaultTLSCertificate):
+            return u'default'
+        else:
+            return self.path
+
+    def __setstate__(self, state):
+        self.__init__(state)
+
+    def __unicode__(self):
+        if isinstance(self.__dict__['path'], self.DefaultTLSCertificate):
+            return u'Default'
+        else:
+            return self.__dict__['path']
+
+    def _get_path(self):
+        if isinstance(self.__dict__['path'], self.DefaultTLSCertificate):
+            return Resources.get(self.__dict__['path'])
+        else:
+            return ApplicationData.get(self.__dict__['path'])
+    def _set_path(self, path):
+        if not path or path.lower() == u'default':
+            path = self.DefaultTLSCertificate()
+        if not isinstance(path, self.DefaultTLSCertificate):
+            path = os.path.normpath(path)
+            if path.startswith(ApplicationData.directory+os.path.sep):
+                path = path[len(ApplicationData.directory+os.path.sep):]
+        self.__dict__['path'] = path
+    path = property(_get_path, _set_path)
+    del _get_path, _set_path
+
+    @property
+    def normalized(self):
+        return self.path
 
 
 ## Miscellaneous datatypes

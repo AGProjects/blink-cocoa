@@ -775,14 +775,16 @@ class TLSCAListPathOption(PathOption):
 class TLSCertificatePathOption(PathOption):
     def _store(self):
         cert_path = unicode(self.text.stringValue()) or None
-        if cert_path is not None:
+        if cert_path is not None and cert_path.lower() != u'default':
             if os.path.isabs(cert_path) or cert_path.startswith('~/'):
                 contents = open(os.path.expanduser(cert_path)).read()
             else:
                 contents = open(ApplicationData.get(cert_path)).read()
             X509Certificate(contents) # validate the certificate
             X509PrivateKey(contents)  # validate the private key
-        PathOption._store(self)
+            self.set(cert_path)
+        else:
+            self.set(DefaultValue)
 
 
 class MessageRecorder(NSObject):

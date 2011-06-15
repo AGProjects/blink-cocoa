@@ -11,7 +11,7 @@ from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPS
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger
 
-from configuration.datatypes import AccountSoundFile, Digits, HTTPURL, UserDataPath
+from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL
 
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
@@ -56,7 +56,7 @@ class SoundsSettings(SettingsGroup):
 
 
 class TLSSettingsExtension(TLSSettings):
-    certificate = Setting(type=UserDataPath, default=None, nillable=True)
+    certificate = Setting(type=AccountTLSCertificate, default=AccountTLSCertificate(AccountTLSCertificate.DefaultTLSCertificate('default.crt')))
 
 
 class XCAPSettingsExtension(XCAPSettings):
@@ -84,4 +84,5 @@ class BonjourAccountExtension(SettingsObjectExtension):
     msrp = BonjourMSRPSettingsExtension
     rtp = RTPSettingsExtension
     sounds = SoundsSettings
+    tls = TLSSettingsExtension
 
