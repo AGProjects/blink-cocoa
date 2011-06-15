@@ -250,6 +250,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
         nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
+        nc.add_observer(self, name="BlinkContactsHaveChanged")
         nc.add_observer(self, sender=AccountManager())
 
         ns_nc = NSNotificationCenter.defaultCenter()
@@ -581,6 +582,9 @@ class ContactWindowController(NSWindowController):
     def _NH_BlinkChatWindowClosed(self, notification):
         # TODO: avoid opening drawer if no audio session is connected -adi
         self.showAudioDrawer()
+
+    def _NH_BlinkContactsHaveChanged(self, notification):
+        self.refreshContactsList()
 
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)

@@ -10,16 +10,19 @@ import unicodedata
 from Foundation import *
 from AppKit import *
 
-from application.notification import NotificationCenter
+from application.notification import NotificationCenter, IObserver
 from application.system import makedirs
 from sipsimple.core import FrozenSIPURI, SIPURI
 from sipsimple.account import AccountManager, BonjourAccount
+from zope.interface import implements
 
-from SIPManager import SIPManager, strip_addressbook_special_characters
 from AddContactController import AddContactController, EditContactController
 from AddGroupController import AddGroupController
-from resources import ApplicationData
+from BlinkLogger import BlinkLogger
+from SIPManager import SIPManager, strip_addressbook_special_characters
 
+from resources import ApplicationData
+from util import *
 
 def contactIconPathForURI(uri):
     return ApplicationData.get('photos/%s.tiff' % uri)
@@ -359,10 +362,257 @@ class ContactGroup(NSObject):
         self.contacts.sort(lambda a,b:cmp(unicode(a.name), unicode(b.name)))
         return result
 
-
-class ContactListModel(NSObject):
-    owner= None
+class CustomListModel(NSObject):
     contactGroupsList = []
+
+    # data source methods
+    def outlineView_numberOfChildrenOfItem_(self, outline, item):
+        if item is None:
+            return len(self.contactGroupsList)
+        elif isinstance(item, ContactGroup):
+            return len(item.contacts)
+        else:
+            return 0
+
+    def outlineView_shouldEditTableColumn_item_(self, outline, column, item):
+        return isinstance(item, ContactGroup)
+
+    def outlineView_isItemExpandable_(self, outline, item):
+        return item is None or isinstance(item, ContactGroup)
+
+    def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
+        return item and item.name
+
+    def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
+        if isinstance(item, ContactGroup) and object != item.name:
+            item.name = object
+            self.saveContacts()
+
+    def outlineView_itemForPersistentObject_(self, outline, object):
+        try:
+            return (group for group in self.contactGroupsList if group.name == object).next()
+        except StopIteration:
+            return None
+
+    def outlineView_persistentObjectForItem_(self, outline, item):
+        return item and item.name
+
+    def outlineView_child_ofItem_(self, outline, index, item):
+        if item is None:
+            return self.contactGroupsList[index]
+        elif isinstance(item, ContactGroup):
+            try:
+                return item.contacts[index]
+            except IndexError:
+                return None
+        else:
+            return None
+
+    def outlineView_heightOfRowByItem_(self, outline, item):
+        return 18 if isinstance(item, ContactGroup) else 34
+
+    # delegate methods
+    def outlineView_isGroupItem_(self, outline, item):
+        return isinstance(item, ContactGroup)
+
+    def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
+        cell.setMessageIcon_(None) 
+
+        if isinstance(item, Contact):
+            cell.setContact_(item)
+        else:
+            cell.setContact_(None)
+
+    def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
+        if isinstance(item, Contact):
+            return (item.uri, rect)
+        else:
+            return (None, rect)
+
+    # drag drop
+    def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, item, oper):
+        if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
+            if oper != NSOutlineViewDropOnItemIndex or type(item) != Contact:
+                return NSDragOperationNone
+
+            ws = NSWorkspace.sharedWorkspace()
+
+            fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f):
+                    return NSDragOperationNone
+            return NSDragOperationCopy
+        else:
+            if info.draggingSource() != table:
+                return NSDragOperationNone
+
+            group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
+            if contact is None:
+                if type(item) == Contact:
+                    item = table.parentForItem_(item)
+
+                if item == self.contactGroupsList[group]:
+                    return NSDragOperationNone
+
+                try:
+                    i = self.contactGroupsList.index(item)
+                except:
+                    i = len(self.contactGroupsList)
+                    if group == i-1:
+                        return NSDragOperationNone
+
+                table.setDropItem_dropChildIndex_(None, i)
+            else:
+                if item is None:
+                    return NSDragOperationNone
+
+                if isinstance(item, ContactGroup):
+                    if oper == NSOutlineViewDropOnItemIndex:
+                        c = len(item.contacts)
+                    else:
+                        c = oper
+                    i = self.contactGroupsList.index(item)
+                    table.setDropItem_dropChildIndex_(self.contactGroupsList[i], c)
+                else:
+                    targetGroup = table.parentForItem_(item)
+
+                    if oper == NSOutlineViewDropOnItemIndex:
+                        oper = targetGroup.contacts.index(item)
+
+                    draggedContact = self.contactGroupsList[group].contacts[contact]
+
+                    table.setDropItem_dropChildIndex_(targetGroup, oper)
+            return NSDragOperationMove
+
+    def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
+        if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
+            if index != NSOutlineViewDropOnItemIndex or type(item) != Contact:
+                return False
+
+            ws = NSWorkspace.sharedWorkspace()
+            filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
+            account = BonjourAccount() if item.bonjour_neighbour is not None else AccountManager().default_account
+            if filenames and account and SIPManager().isMediaTypeSupported('file-transfer'):
+                SIPManager().send_files_to_contact(account, item.uri, filenames)
+                return True
+            return False
+        else:
+            if info.draggingSource() != table:
+                return False
+            pboard = info.draggingPasteboard()
+            group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
+            if contact is None:
+                g = self.contactGroupsList[group]
+                del self.contactGroupsList[group]
+                if group > index:
+                    self.contactGroupsList.insert(index, g)
+                    g.previous_position = index
+                else:
+                    self.contactGroupsList.insert(index-1, g)
+                    g.previous_position = index-1
+                table.reloadData()
+                if table.selectedRow() >= 0:
+                    table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(g)), False)
+                return True
+            else:
+                sourceGroup = self.contactGroupsList[group]
+                targetGroup = item
+                contactObject = sourceGroup.contacts[contact]
+
+                if sourceGroup == targetGroup:
+                    del sourceGroup.contacts[contact]
+                    if contact > index:
+                        sourceGroup.contacts.insert(index, contactObject)
+                    else:
+                        sourceGroup.contacts.insert(index-1, contactObject)
+                else:
+                    del sourceGroup.contacts[contact]
+                    targetGroup.contacts.insert(index, contactObject)
+                table.reloadData()
+                if table.selectedRow() >= 0:
+                    table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(contactObject)), False)
+                return True
+
+    def outlineView_writeItems_toPasteboard_(self, table, items, pboard):
+        if type(items[0]) == ContactGroup:
+            try:
+                group = self.contactGroupsList.index(items[0])
+            except:
+                group = None
+            if group is not None:
+                pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-contact"), self)
+                pboard.setString_forType_(str((group, None)), "dragged-contact")
+                return True
+        else:
+            contact_index = None
+            for g in range(len(self.contactGroupsList)):
+                group = self.contactGroupsList[g]
+                if isinstance(group, ContactGroup) and items[0] in group.contacts:
+                    contact_index = group.contacts.index(items[0])
+                    break
+            if contact_index is not None:
+                pboard.declareTypes_owner_(["dragged-contact", "x-blink-sip-uri"], self)
+                pboard.setString_forType_(str((g, contact_index)), "dragged-contact")
+                pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
+                return True
+            else:
+                pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
+                pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
+                return True
+
+        return False
+
+
+class ContactListModel(CustomListModel):
+    implements(IObserver)
+    owner = None
+
+    def awakeFromNib(self):
+        nc = NotificationCenter()
+        nc.add_observer(self, name="ContactWasCreated")
+        nc.add_observer(self, name="ContactWasDeleted")
+        nc.add_observer(self, name="ContactDidChange")
+        nc.add_observer(self, name="ContactGroupDidChange")
+        nc.add_observer(self, name="ContactGroupWasDeleted")
+        nc.add_observer(self, name="ContactGroupManagerDidAddGroup")
+        nc.add_observer(self, name="ContactGroupManagerDidRemoveGroup")
+
+        self._migrateContacts()
+
+    def _migrateContacts(self):
+        path = ApplicationData.get('contacts_')
+        if not os.path.exists(path):
+            return
+
+        BlinkLogger().log_info(u"Migrating contacts to the new model...")
+        #TODO: migrate contacts from pickle to the new model -adi        
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_ContactWasCreated(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactWasDeleted(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactDidChange(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactGroupDidChange(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactGroupWasDeleted(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactGroupManagerDidAddGroup(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactGroupManagerDidRemoveGroup(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def saveContacts(self):
         path = ApplicationData.get('contacts_')
@@ -384,46 +634,47 @@ class ContactListModel(NSObject):
         f.close()
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
-
     def loadContacts(self):
         path = ApplicationData.get('contacts_')
+        if not os.path.exists(path):
+            return
 
         self.abgroup = None
         self.bonjourgroup = None
         contactGroups = []
-        if os.path.exists(path):
-            try:
-                f = open(path, "r")
-                data = cPickle.load(f)
-                f.close()
 
-                for group_item in data:
-                    if type(group_item) == tuple:
-                        if len(group_item) == 3:
-                            group_item = (group_item[0], group_item[-1])
-                        group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
-                    # skip the saved dynamic groups (addressbook and bonjour) from previous versions
-                    if group_item.get("dynamic", False):
-                        continue
-                    # workaround because the special attribute wasn't saved
-                    if "special" not in group_item:
-                        group_item["special"] = None
+        try:
+            f = open(path, "r")
+            data = cPickle.load(f)
+            f.close()
 
-                    clist = []
-                    for contact in group_item["contacts"]:
-                        obj = Contact.from_dict(contact)
-                        clist.append(obj)
+            for group_item in data:
+                if type(group_item) == tuple:
+                    if len(group_item) == 3:
+                        group_item = (group_item[0], group_item[-1])
+                    group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
+                # skip the saved dynamic groups (addressbook and bonjour) from previous versions
+                if group_item.get("dynamic", False):
+                    continue
+                # workaround because the special attribute wasn't saved
+                if "special" not in group_item:
+                    group_item["special"] = None
 
-                    group = ContactGroup(group_item["name"], clist, expanded=group_item["expanded"], special=group_item["special"], previous_position=len(contactGroups))
-                    contactGroups.append(group)
-                    if group.special == "addressbook":
-                        self.abgroup = group
-                    elif group.special == "bonjour":
-                        self.bonjourgroup = group
-            except:
-                import traceback
-                traceback.print_exc()
-                contactGroups = []
+                clist = []
+                for contact in group_item["contacts"]:
+                    obj = Contact.from_dict(contact)
+                    clist.append(obj)
+
+                group = ContactGroup(group_item["name"], clist, expanded=group_item["expanded"], special=group_item["special"], previous_position=len(contactGroups))
+                contactGroups.append(group)
+                if group.special == "addressbook":
+                    self.abgroup = group
+                elif group.special == "bonjour":
+                    self.bonjourgroup = group
+        except:
+            import traceback
+            traceback.print_exc()
+            contactGroups = []
 
         if not contactGroups:
             # copy default icons for test contacts to photos folder
@@ -629,201 +880,8 @@ class ContactListModel(NSObject):
                     self.contactGroupsList.remove(contact)
         self.saveContacts()
 
-    # data source methods
-    def outlineView_numberOfChildrenOfItem_(self, outline, item):
-        if item is None:
-            return len(self.contactGroupsList)
-        elif isinstance(item, ContactGroup):
-            return len(item.contacts)
-        else:
-            return 0
 
-    def outlineView_shouldEditTableColumn_item_(self, outline, column, item):
-        return isinstance(item, ContactGroup)
-
-    def outlineView_isItemExpandable_(self, outline, item):
-        return item is None or isinstance(item, ContactGroup)
-
-    def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
-        return item and item.name
-
-    def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
-        if isinstance(item, ContactGroup) and object != item.name:
-            item.name = object
-            self.saveContacts()
-
-    def outlineView_itemForPersistentObject_(self, outline, object):
-        try:
-            return (group for group in self.contactGroupsList if group.name == object).next()
-        except StopIteration:
-            return None
-
-    def outlineView_persistentObjectForItem_(self, outline, item):
-        return item and item.name
-
-    def outlineView_child_ofItem_(self, outline, index, item):
-        if item is None:
-            return self.contactGroupsList[index]
-        elif isinstance(item, ContactGroup):
-            try:
-                return item.contacts[index]
-            except IndexError:
-                return None
-        else:
-            return None
-
-    def outlineView_heightOfRowByItem_(self, outline, item):
-        return 18 if isinstance(item, ContactGroup) else 34
-
-    # delegate methods
-    def outlineView_isGroupItem_(self, outline, item):
-        return isinstance(item, ContactGroup)
-
-    def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
-        cell.setMessageIcon_(None) 
-
-        if isinstance(item, Contact):
-            cell.setContact_(item)
-        else:
-            cell.setContact_(None)
-
-    def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
-        if isinstance(item, Contact):
-            return (item.uri, rect)
-        else:
-            return (None, rect)
-
-    # drag drop
-    def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, item, oper):
-        if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if oper != NSOutlineViewDropOnItemIndex or type(item) != Contact:
-                return NSDragOperationNone
-
-            ws = NSWorkspace.sharedWorkspace()
-
-            fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
-            for f in fnames:
-                if not os.path.isfile(f):
-                    return NSDragOperationNone
-            return NSDragOperationCopy
-        else:
-            if info.draggingSource() != table:
-                return NSDragOperationNone
-
-            group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
-            if contact is None:
-                if type(item) == Contact:
-                    item = table.parentForItem_(item)
-
-                if item == self.contactGroupsList[group]:
-                    return NSDragOperationNone
-
-                try:
-                    i = self.contactGroupsList.index(item)
-                except:
-                    i = len(self.contactGroupsList)
-                    if group == i-1:
-                        return NSDragOperationNone
-
-                table.setDropItem_dropChildIndex_(None, i)
-            else:
-                if item is None:
-                    return NSDragOperationNone
-
-                if isinstance(item, ContactGroup):
-                    if oper == NSOutlineViewDropOnItemIndex:
-                        c = len(item.contacts)
-                    else:
-                        c = oper
-                    i = self.contactGroupsList.index(item)
-                    table.setDropItem_dropChildIndex_(self.contactGroupsList[i], c)
-                else:
-                    targetGroup = table.parentForItem_(item)
-
-                    if oper == NSOutlineViewDropOnItemIndex:
-                        oper = targetGroup.contacts.index(item)
-
-                    draggedContact = self.contactGroupsList[group].contacts[contact]
-
-                    table.setDropItem_dropChildIndex_(targetGroup, oper)
-            return NSDragOperationMove
-
-    def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
-        if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or type(item) != Contact:
-                return False
-
-            ws = NSWorkspace.sharedWorkspace()
-            filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
-            account = BonjourAccount() if item.bonjour_neighbour is not None else AccountManager().default_account
-            if filenames and account and SIPManager().isMediaTypeSupported('file-transfer'):
-                SIPManager().send_files_to_contact(account, item.uri, filenames)
-                return True
-            return False
-        else:
-            if info.draggingSource() != table:
-                return False
-            pboard = info.draggingPasteboard()
-            group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
-            if contact is None:
-                g = self.contactGroupsList[group]
-                del self.contactGroupsList[group]
-                if group > index:
-                    self.contactGroupsList.insert(index, g)
-                    g.previous_position = index
-                else:
-                    self.contactGroupsList.insert(index-1, g)
-                    g.previous_position = index-1
-                table.reloadData()
-                if table.selectedRow() >= 0:
-                    table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(g)), False)
-                return True
-            else:
-                sourceGroup = self.contactGroupsList[group]
-                targetGroup = item
-                contactObject = sourceGroup.contacts[contact]
-
-                if sourceGroup == targetGroup:
-                    del sourceGroup.contacts[contact]
-                    if contact > index:
-                        sourceGroup.contacts.insert(index, contactObject)
-                    else:
-                        sourceGroup.contacts.insert(index-1, contactObject)
-                else:
-                    del sourceGroup.contacts[contact]
-                    targetGroup.contacts.insert(index, contactObject)
-                table.reloadData()
-                if table.selectedRow() >= 0:
-                    table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(contactObject)), False)
-                return True
-
-    def outlineView_writeItems_toPasteboard_(self, table, items, pboard):
-        if type(items[0]) == ContactGroup:
-            try:
-                group = self.contactGroupsList.index(items[0])
-            except:
-                group = None
-            if group is not None:
-                pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-contact"), self)
-                pboard.setString_forType_(str((group, None)), "dragged-contact")
-                return True
-        else:
-            contact_index = None
-            for g in range(len(self.contactGroupsList)):
-                group = self.contactGroupsList[g]
-                if isinstance(group, ContactGroup) and items[0] in group.contacts:
-                    contact_index = group.contacts.index(items[0])
-                    break
-            if contact_index is not None:
-                pboard.declareTypes_owner_(["dragged-contact", "x-blink-sip-uri"], self)
-                pboard.setString_forType_(str((g, contact_index)), "dragged-contact")
-                pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
-                return True
-            else:
-                pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
-                pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
-                return True
-
-        return False
+class SearchContactListModel(CustomListModel):
+    pass
 
 
