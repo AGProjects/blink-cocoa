@@ -15,7 +15,7 @@ from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Dig
 
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
-    transport = Setting(type=MSRPTransport, default='tcp')
+    transport = Setting(type=MSRPTransport, default='tls')
 
 
 class BonjourAudioSettingsExtension(SettingsGroup):
