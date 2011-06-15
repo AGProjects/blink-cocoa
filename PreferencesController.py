@@ -283,7 +283,7 @@ class PreferencesController(NSWindowController, object):
         else:
             self.displayNameText.setStringValue_(u"")
 
-        if not isinstance(account, BonjourAccount):
+        if account is not BonjourAccount():
             self.addressText.setStringValue_(unicode(account.id))
             self.passwordText.setStringValue_(account.auth.password)
 
@@ -335,7 +335,7 @@ class PreferencesController(NSWindowController, object):
             userdef = NSUserDefaults.standardUserDefaults()
             section = self.advancedPop.indexOfSelectedItem()
 
-            if account and not isinstance(account, BonjourAccount):
+            if account is not BonjourAccount():
                 userdef.setInteger_forKey_(section, "SelectedAdvancedSection")
             else:
                 userdef.setInteger_forKey_(section, "SelectedAdvancedBonjourSection")
@@ -485,8 +485,8 @@ class PreferencesController(NSWindowController, object):
             self.advancedToggle.setState_(NSOnState)
             self.advancedPop.setHidden_(False)
             self.advancedTabView.setHidden_(False)
-            
-            if isinstance(account, BonjourAccount):
+
+            if account is BonjourAccount():
                 self.passwordText.setHidden_(True)
                 self.addressText.setHidden_(True)
                 sv.viewWithTag_(20).setHidden_(True)
