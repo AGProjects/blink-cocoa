@@ -1430,7 +1430,7 @@ SettingDescription = {
                       'tls.ca_list': 'Certificate Authority File'
                       }
 
-GeneralSectionNames = {
+SectionNames = {
                        'auth': 'Authentication',
                        'logs': 'File Logging',
                        'message_summary': 'Voicemail Notifications',

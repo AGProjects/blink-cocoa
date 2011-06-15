@@ -14,7 +14,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
+from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
@@ -178,7 +178,7 @@ class PreferencesController(NSWindowController, object):
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
 
             try:
-                label = GeneralSectionNames[section]
+                label = SectionNames[section]
             except KeyError:
                 label = formatName(section)
 
@@ -201,7 +201,7 @@ class PreferencesController(NSWindowController, object):
             
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
             try:
-                label = GeneralSectionNames[section]
+                label = SectionNames[section]
             except KeyError:
                 label = formatName(section)
 
