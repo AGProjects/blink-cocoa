@@ -937,7 +937,7 @@ class ChatWindowController(NSWindowController):
             self.conferenceFilesTableView.reloadData()
 
             if session.conference_shared_files:
-                column_header_title = u'%d Shared Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Shared Files'
+                column_header_title = u'%d Remote Conference Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Remote Conference Files'
                 if chat_stream and chat_stream.drawerSplitterPosition is None:
                     top_frame = self.conferenceFilesView.frame()
                     top_frame.size.height = 130
@@ -945,7 +945,7 @@ class ChatWindowController(NSWindowController):
                     bottom_frame.size.height = bottom_frame.size.height - 130
                     chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
             else:
-                column_header_title = u'Shared Files'
+                column_header_title = u'Remote Conference Files'
                 if chat_stream:
                     chat_stream.drawerSplitterPosition = None
 
