@@ -1477,9 +1477,10 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showHistoryViewer_(self, sender):
-        if not self.historyViewer:
-            self.historyViewer = HistoryViewer()
-        self.historyViewer.showWindow_(None)
+        if NSApp.delegate().applicationName != 'Blink Lite':
+            if not self.historyViewer:
+                self.historyViewer = HistoryViewer()
+            self.historyViewer.showWindow_(None)
 
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
