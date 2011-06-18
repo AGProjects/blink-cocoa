@@ -174,6 +174,8 @@ class PreferencesController(NSWindowController, object):
         frame.origin.y = 0
 
         for section in (section for section in sections if section not in DisabledPreferenceSections):
+            if NSApp.delegate().applicationName == 'Blink Lite' and section in ('server'):
+                continue
             view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
 
