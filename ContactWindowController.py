@@ -1788,7 +1788,7 @@ class ContactWindowController(NSWindowController):
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.backend.isMediaTypeSupported('chat')))
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            item.setTitle_(u'Join Conference... (Available in Blink Pro)')
+            item.setTitle_(u'Join Conference...')
 
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
@@ -2369,7 +2369,7 @@ class ContactWindowController(NSWindowController):
             if item not in self.model.bonjourgroup.contacts:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History...", "viewHistory:", "")
-                sf_item.setEnabled_(has_full_sip_uri  and self.backend.isMediaTypeSupported('chat'))
+                sf_item.setEnabled_(has_full_sip_uri and NSApp.delegate().applicationName != 'Blink Lite')
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")

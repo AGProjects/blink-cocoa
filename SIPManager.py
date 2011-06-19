@@ -827,16 +827,13 @@ class SIPManager(object):
 
     def isProposedMediaTypeSupported(self, streams):
         stream_type_list = list(set(stream.type for stream in streams))
-        if NSApp.delegate().applicationName == 'Blink Lite' and stream_type_list != ['audio']:
-            return False
-
         settings = SIPSimpleSettings()
 
-        if settings.desktop_sharing.disabled and any(s for s in streams if s.type == 'desktop-sharing'):
+        if (settings.desktop_sharing.disabled or NSApp.delegate().applicationName == 'Blink Lite') and any(s for s in streams if s.type == 'desktop-sharing'):
             BlinkLogger().log_info(u"Desktop Sharing is disabled in configuration")
             return False
 
-        if settings.file_transfer.disabled and any(s for s in streams if s.type == 'file-transfer'):
+        if (settings.file_transfer.disabled or NSApp.delegate().applicationName == 'Blink Lite') and any(s for s in streams if s.type == 'file-transfer'):
             BlinkLogger().log_info(u"File Transfer is disabled in configuration")
             return False
 
@@ -851,7 +848,7 @@ class SIPManager(object):
         return True
 
     def isMediaTypeSupported(self, type):
-        if NSApp.delegate().applicationName == 'Blink Lite' and type != 'audio':
+        if NSApp.delegate().applicationName == 'Blink Lite' and type not in ('audio', 'chat'):
             return False
 
         settings = SIPSimpleSettings()

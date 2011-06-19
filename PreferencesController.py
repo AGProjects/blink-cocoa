@@ -117,9 +117,8 @@ class PreferencesController(NSWindowController, object):
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             for item in self.toolbar.visibleItems():
-                if item.itemIdentifier() in ('answering_machine', 'chat', 'file-transfer', 'desktop-sharing'):
+                if item.itemIdentifier() in ('answering_machine', 'file-transfer', 'desktop-sharing'):
                     item.setEnabled_(False)
-
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
@@ -199,6 +198,9 @@ class PreferencesController(NSWindowController, object):
         sections = [section for section in dir(account.__class__) if isinstance(getattr(account.__class__, section, None), SettingsGroupMeta)]
         frame = self.advancedTabView.frame()
         for section in (section for section in sections if section not in DisabledAccountPreferenceSections):
+            if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn'):
+                continue
+
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
             
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)

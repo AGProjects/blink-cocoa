@@ -144,7 +144,7 @@ class SMSWindowController(NSWindowController):
             chatViewController.expandSmileys = not chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
-        elif sender.itemIdentifier() == 'history':
+        elif sender.itemIdentifier() == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
             contactWindow = self._owner._owner
             contactWindow.showHistoryViewer_(None)
             session = self.selectedSessionController()
@@ -152,6 +152,9 @@ class SMSWindowController(NSWindowController):
 
     @objc.IBAction
     def printDocument_(self, sender):
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+
         printInfo = NSPrintInfo.sharedPrintInfo()
         printInfo.setTopMargin_(30)
         printInfo.setBottomMargin_(30)

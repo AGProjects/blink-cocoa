@@ -68,7 +68,7 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
     if identifier == 'reconnect':
         BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
         sessionController.startChatSession()
-    elif identifier == 'history':
+    elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
         contactWindow = sessionController.owner
         contactWindow.showHistoryViewer_(None)
         if sessionController.account is BonjourAccount():
@@ -865,6 +865,9 @@ class ChatController(MediaStream):
                 else:
                     item.setEnabled_(False)
             elif identifier == 'record':
+                if NSApp.delegate().applicationName == 'Blink Lite':
+                    item.setEnabled_(False)
+                    continue
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
                         if audio_stream.stream.recording_active:
@@ -945,7 +948,7 @@ class ChatController(MediaStream):
 
         if hasattr(item, 'itemIdentifier'):
             identifier = item.itemIdentifier()
-            if identifier == NSToolbarPrintItemIdentifier:
+            if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
 
             if self.sessionController.hasStreamOfType("audio"):
@@ -972,6 +975,8 @@ class ChatController(MediaStream):
                     return False
                 return True
             elif identifier == 'record':
+                if NSApp.delegate().applicationName == 'Blink Lite':
+                    return False
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
                         if audio_stream.stream.recording_active:
@@ -1017,7 +1022,7 @@ class ChatController(MediaStream):
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
                 return True
-            elif identifier == 'history':
+            elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
 
         elif item.tag() in (TOOLBAR_DESKTOP_SHARING_BUTTON, TOOLBAR_SHARE_DESKTOP_MENU, TOOLBAR_REQUEST_DESKTOP_MENU) and self.status==STREAM_CONNECTED:
@@ -1058,7 +1063,7 @@ class ChatController(MediaStream):
                     sender.setImage_(NSImage.imageNamed_("hangup"))
                     self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session, data=TimestampedNotificationData())
 
-            elif identifier == 'record':
+            elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
                 if audio_stream.stream.recording_active:
                     audio_stream.stream.stop_recording()
                     sender.setImage_(NSImage.imageNamed_("record"))
@@ -1122,7 +1127,7 @@ class ChatController(MediaStream):
                 sender.setImage_(NSImage.imageNamed_("editor"))
                 sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
                 self.toggleEditor()
-            elif identifier == 'history':
+            elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
                 contactWindow = self.sessionController.owner
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
