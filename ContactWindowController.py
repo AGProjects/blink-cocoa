@@ -36,7 +36,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import Contact, ContactGroup, contactIconPathForURI, saveContactIcon
+from ContactListModel import BlinkContact, BlinkContactGroup, contactIconPathForURI, saveContactIcon
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -400,7 +400,7 @@ class ContactWindowController(NSWindowController):
 
                 if not text:
                     return []
-                contact = Contact(text, name=text)
+                contact = BlinkContact(text, name=text)
                 return [contact]
         else:
            return []
@@ -409,9 +409,9 @@ class ContactWindowController(NSWindowController):
         item= selection.firstIndex()
         while item != NSNotFound:
             object= outline.itemAtRow_(item)
-            if isinstance(object, Contact):
+            if isinstance(object, BlinkContact):
                 contacts.append(object)
-            elif includeGroups and isinstance(object, ContactGroup):
+            elif includeGroups and isinstance(object, BlinkContactGroup):
                 contacts.append(object)
             item = selection.indexGreaterThanIndex_(item)
 
@@ -967,7 +967,7 @@ class ContactWindowController(NSWindowController):
                     self.window().makeFirstResponder_(self.contactOutline)
         else:
             item = self.contactOutline.itemAtRow_(self.contactOutline.selectedRow())
-            if type(item) == Contact:
+            if type(item) == BlinkContact:
                 group = self.contactOutline.parentForItem_(item)
             else:
                 group = item
@@ -1005,7 +1005,7 @@ class ContactWindowController(NSWindowController):
         row = self.contactOutline.selectedRow()
         if row >= 0:
             item = self.contactOutline.itemAtRow_(row)
-            if isinstance(item, Contact):
+            if isinstance(item, BlinkContact):
                 group = self.contactOutline.parentForItem(item)
             else:
                 group = item
@@ -1024,7 +1024,7 @@ class ContactWindowController(NSWindowController):
         row = self.contactOutline.selectedRow()
         if row >= 0:
             item = self.contactOutline.itemAtRow_(row)
-            if isinstance(item, Contact):
+            if isinstance(item, BlinkContact):
                 group = self.contactOutline.parentForItem(item)
             else:
                 group = item
@@ -1130,7 +1130,7 @@ class ContactWindowController(NSWindowController):
 
         active_account = self.activeAccount()
         input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
-        input_contact = Contact(input_text, name=unicode(input_text))
+        input_contact = BlinkContact(input_text, name=unicode(input_text))
         exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
 
         if not exists:
@@ -1299,9 +1299,9 @@ class ContactWindowController(NSWindowController):
             for uri in participants:
                 contact = self.getContactMatchingURI(uri)
                 if contact:
-                    contact = Contact(uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
                 else:
-                    contact = Contact(uri=uri, name=uri)
+                    contact = BlinkContact(uri=uri, name=uri)
                 contact.setDetail('Invitation sent...')
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)
@@ -2350,7 +2350,7 @@ class ContactWindowController(NSWindowController):
         while self.contactContextMenu.numberOfItems() > 0:
             self.contactContextMenu.removeItemAtIndex_(0)
 
-        if type(item) == Contact:
+        if type(item) == BlinkContact:
             has_full_sip_uri = is_full_sip_uri(item.uri)
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
@@ -2673,10 +2673,10 @@ class ContactWindowController(NSWindowController):
                 contact = self.getContactMatchingURI(uri)
                 if contact:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                    contact = Contact(uri, name=display_name, icon=contact.icon)
+                    contact = BlinkContact(uri, name=display_name, icon=contact.icon)
                 else:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
-                    contact = Contact(uri, name=display_name)
+                    contact = BlinkContact(uri, name=display_name)
 
                 contact.setActiveMedia(active_media)
 
@@ -2834,9 +2834,9 @@ class ContactWindowController(NSWindowController):
                             uri='%s@%s' % (uri, session.account.id.domain)
                         contact = self.getContactMatchingURI(uri)
                         if contact:
-                            contact = Contact(uri, name=contact.name, icon=contact.icon)
+                            contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
                         else:
-                            contact = Contact(uri, name=uri)
+                            contact = BlinkContact(uri, name=uri)
                         contact.setDetail('Invitation sent...')
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
@@ -2909,9 +2909,9 @@ class ContactWindowController(NSWindowController):
             if session.remote_focus:
                 contact = self.getContactMatchingURI(uri)
                 if contact:
-                    contact = Contact(uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
                 else:
-                    contact = Contact(uri, name=uri)
+                    contact = BlinkContact(uri, name=uri)
                 contact.setDetail('Invitation sent...')
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)

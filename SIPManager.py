@@ -28,6 +28,7 @@ from zope.interface import implements
 
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
+#from sipsimple.contact import Contact
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -45,6 +46,7 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
+#from configuration.contact import BlinkContactExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
@@ -176,6 +178,8 @@ class SIPManager(object):
 
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
+        # TODO: extend contacts
+        #Contact.register_extension(BlinkContactExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         self._app.start(FileStorage(ApplicationData.directory))

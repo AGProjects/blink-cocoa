@@ -11,7 +11,7 @@ from sipsimple.util import Timestamp
 from util import *
 from zope.interface import implements
 
-from ContactListModel import Contact
+from ContactListModel import BlinkContact
 from HistoryManager import ChatHistory
 
 SQL_LIMIT=2000
@@ -92,8 +92,8 @@ class HistoryViewer(NSWindowController):
         if self:
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
-            self.all_contacts = Contact('Any Address', name=u'All Contacts')
-            self.bonjour_contact = Contact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+            self.all_contacts = BlinkContact('Any Address', name=u'All Contacts')
+            self.bonjour_contact = BlinkContact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
@@ -168,10 +168,10 @@ class HistoryViewer(NSWindowController):
             contact = getContactMatchingURI(row[0])
             if contact:
                 detail = contact.uri
-                contact = Contact(unicode(row[0]), name=contact.name, icon=contact.icon)
+                contact = BlinkContact(unicode(row[0]), name=contact.name, icon=contact.icon)
             else:
                 detail = unicode(row[0])
-                contact = Contact(unicode(row[0]), name=unicode(row[0]))
+                contact = BlinkContact(unicode(row[0]), name=unicode(row[0]))
 
             contact.setDetail(detail)
             self.contacts.append(contact)

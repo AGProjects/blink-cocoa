@@ -557,6 +557,12 @@
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1FF2F5B213AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1FF2F5B313AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1FF2F5B413AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1FF2F5C713AB419900502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1FF2F5C813AB41AB00502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1FF2F5C913AB41BF00502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
 		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
@@ -809,6 +815,7 @@
 			files = (
 				1F22735912B554F50010A8B2 /* __init__.py in Copy Configuration Package */,
 				1F22735A12B554F50010A8B2 /* account.py in Copy Configuration Package */,
+				1FF2F5C713AB419900502BDB /* contact.py in Copy Configuration Package */,
 				1F22735B12B554F50010A8B2 /* datatypes.py in Copy Configuration Package */,
 				1F22735C12B554F50010A8B2 /* settings.py in Copy Configuration Package */,
 			);
@@ -936,6 +943,7 @@
 			files = (
 				1F8DC3FC135084FA0034815C /* __init__.py in Copy Configuration Package */,
 				1F8DC3FD135084FA0034815C /* account.py in Copy Configuration Package */,
+				1FF2F5C913AB41BF00502BDB /* contact.py in Copy Configuration Package */,
 				1F8DC3FE135084FA0034815C /* datatypes.py in Copy Configuration Package */,
 				1F8DC3FF135084FA0034815C /* settings.py in Copy Configuration Package */,
 			);
@@ -1076,6 +1084,7 @@
 			files = (
 				85E8550710F643350083D346 /* __init__.py in Copy Configuration Package */,
 				85E8550810F643350083D346 /* account.py in Copy Configuration Package */,
+				1FF2F5C813AB41AB00502BDB /* contact.py in Copy Configuration Package */,
 				85E8550910F643350083D346 /* datatypes.py in Copy Configuration Package */,
 				85E8550A10F643350083D346 /* settings.py in Copy Configuration Package */,
 			);
@@ -1170,6 +1179,7 @@
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -1899,6 +1909,7 @@
 			children = (
 				85E8550310F643350083D346 /* __init__.py */,
 				85E8550410F643350083D346 /* account.py */,
+				1FF2F5B113AB406A00502BDB /* contact.py */,
 				85E8550510F643350083D346 /* datatypes.py */,
 				85E8550610F643350083D346 /* settings.py */,
 			);
@@ -2195,6 +2206,7 @@
 				1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673013A8A987006EEB0F /* default.crt in Resources */,
+				1FF2F5B413AB406A00502BDB /* contact.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2373,6 +2385,7 @@
 				1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673213A8A987006EEB0F /* default.crt in Resources */,
+				1FF2F5B213AB406A00502BDB /* contact.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2554,6 +2567,7 @@
 				1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673113A8A987006EEB0F /* default.crt in Resources */,
+				1FF2F5B313AB406A00502BDB /* contact.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

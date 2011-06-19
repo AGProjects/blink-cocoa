@@ -4,7 +4,9 @@
 from AppKit import *
 from Foundation import *
 
+from application.notification import NotificationCenter
 from sipsimple.account import AccountManager, BonjourAccount
+
 
 class MyImageThing(NSImageView):
     def mouseDown_(self, event):
@@ -13,6 +15,7 @@ class MyImageThing(NSImageView):
 
 
 class AddContactController(NSObject):
+
     window = objc.IBOutlet()
     addButton = objc.IBOutlet()
     addressText = objc.IBOutlet()
@@ -20,7 +23,7 @@ class AddContactController(NSObject):
     groupCombo = objc.IBOutlet()
     photoImage = objc.IBOutlet()
     preferredMedia = objc.IBOutlet()
-    presencePopUp = objc.IBOutlet()
+    storagePlacePopUp = objc.IBOutlet()
     aliasText = objc.IBOutlet()
 
     defaultPhotoImage = NSImage.imageNamed_("NSUser")
@@ -30,11 +33,14 @@ class AddContactController(NSObject):
 
     def __init__(self, contact, group):
         NSBundle.loadNibNamed_owner_("AddContact", self)
-        self.presencePopUp.removeAllItems()
-        self.presencePopUp.addItemWithTitle_("Local")
-        for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount) and acct.enabled and acct.xcap.enabled and acct.xcap.xcap_root is not None):
-            self.presencePopUp.addItemWithTitle_(account.id)
-            item = self.presencePopUp.lastItem()
+        self.storagePlacePopUp.removeAllItems()
+        self.storagePlacePopUp.addItemWithTitle_("Local")
+        item = self.storagePlacePopUp.lastItem()
+        item.setRepresentedObject_('local')
+
+        for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount)):
+            self.storagePlacePopUp.addItemWithTitle_(u'Account %s'%account.id)
+            item = self.storagePlacePopUp.lastItem()
             item.setRepresentedObject_(account.id)
         
         # display the contact data
@@ -43,10 +49,10 @@ class AddContactController(NSObject):
         self.groupCombo.setStringValue_(group or "")
         self.photoImage.setImage_(contact.icon or self.defaultPhotoImage)
         self.aliasText.setStringValue_("; ".join(contact.aliases))
-        index = self.presencePopUp.indexOfItemWithRepresentedObject_(contact.stored_in_account) if contact.stored_in_account else 0
+        index = self.storagePlacePopUp.indexOfItemWithRepresentedObject_(contact.stored_in_account) if contact.stored_in_account else 0
         if index < 0:
             index = 0
-        self.presencePopUp.selectItemAtIndex_(index)        
+        self.storagePlacePopUp.selectItemAtIndex_(index)
         
         if contact.preferred_media == "chat":
             self.preferredMedia.selectCellWithTag_(2)
@@ -87,14 +93,13 @@ class AddContactController(NSObject):
             else:
                 media = "chat"
             self.contact.setPreferredMedia(media)
-            if self.presencePopUp.selectedItem():
-                self.contact.stored_in_account = str(self.presencePopUp.selectedItem().representedObject())
+            if self.storagePlacePopUp.selectedItem():
+                self.contact.stored_in_account = str(self.storagePlacePopUp.selectedItem().representedObject())
             return True, group
         return False, None
     
     def comboBoxWillDismiss_(self, notification):
         self.controlTextDidChange_(notification)
-        
     
     def controlTextDidChange_(self, notification):
         try:

@@ -14,7 +14,7 @@ from sipsimple.streams.applications.chat import CPIMIdentity
 
 from MediaStream import *
 from ConferenceFileCell import ConferenceFileCell
-from ContactListModel import Contact
+from ContactListModel import BlinkContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
@@ -594,9 +594,9 @@ class ChatWindowController(NSWindowController):
                             uri='%s@%s' % (uri, session.account.id.domain)
                         contact = getContactMatchingURI(uri)
                         if contact:
-                            contact = Contact(uri, name=contact.name, icon=contact.icon)
+                            contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
                         else:
-                            contact = Contact(uri, name=uri)
+                            contact = BlinkContact(uri, name=uri)
                         contact.setDetail('Invitation sent...')
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
@@ -822,18 +822,18 @@ class ChatWindowController(NSWindowController):
                         active_media.append('audio-onhold')
 
                 # Add ourselves
-                contact = Contact(own_uri, name=session.account.display_name, icon=self.own_icon)
+                contact = BlinkContact(own_uri, name=session.account.display_name, icon=self.own_icon)
                 contact.setActiveMedia(active_media)
                 self.participants.append(contact)
 
                 # Add remote party
                 contact = getContactMatchingURI(session.remoteSIPAddress)
                 if contact:
-                    contact = Contact(contact.uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkContact(contact.uri, name=contact.name, icon=contact.icon)
                 else:
                     uri = format_identity_address(session.remotePartyObject)
                     display_name = session.getTitleShort()
-                    contact = Contact(uri, name=display_name)
+                    contact = BlinkContact(uri, name=display_name)
 
                 if session.state == STATE_DNS_LOOKUP:
                     contact.setDetail("Finding Destination...")
@@ -866,10 +866,10 @@ class ChatWindowController(NSWindowController):
                     contact = getContactMatchingURI(uri)
                     if contact:
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                        contact = Contact(uri, name=display_name, icon=contact.icon)
+                        contact = BlinkContact(uri, name=display_name, icon=contact.icon)
                     else:
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
-                        contact = Contact(uri, name=display_name)
+                        contact = BlinkContact(uri, name=display_name)
 
                     contact.setActiveMedia(active_media)
 
@@ -1008,9 +1008,9 @@ class ChatWindowController(NSWindowController):
                 getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
                 contact = getContactMatchingURI(uri)
                 if contact:
-                    contact = Contact(uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
                 else:
-                    contact = Contact(uri, name=uri)
+                    contact = BlinkContact(uri, name=uri)
                 contact.setDetail('Invitation sent...')
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)

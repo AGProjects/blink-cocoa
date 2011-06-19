@@ -1,7 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
-__all__ = ['Contact', 'ContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIcon', 'saveContactIcon']
+__all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIcon', 'saveContactIcon']
 
 import os
 import cPickle
@@ -11,8 +11,11 @@ from Foundation import *
 from AppKit import *
 
 from application.notification import NotificationCenter, IObserver
+from application.python import Null
 from application.system import makedirs
+from sipsimple.configuration import Setting, DuplicateIDError
 from sipsimple.core import FrozenSIPURI, SIPURI
+#from sipsimple.contact import Contact, ContactGroup
 from sipsimple.account import AccountManager, BonjourAccount
 from zope.interface import implements
 
@@ -23,6 +26,7 @@ from SIPManager import SIPManager, strip_addressbook_special_characters
 
 from resources import ApplicationData
 from util import *
+
 
 def contactIconPathForURI(uri):
     return ApplicationData.get('photos/%s.tiff' % uri)
@@ -45,7 +49,7 @@ def loadContactIcon(uri):
         return NSImage.alloc().initWithContentsOfFile_(path)
     return None
 
-class Contact(NSObject):
+class BlinkContact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -104,7 +108,7 @@ class Contact(NSObject):
 
     @classmethod
     def from_dict(cls, contact):
-        obj = Contact(uri=contact["uri"], name=contact["name"], 
+        obj = BlinkContact(uri=contact["uri"], name=contact["name"],
                             display_name=contact.get("display_name"),
                             preferred_media=contact["preferred_media"],
                             icon=loadContactIcon(contact["uri"]), 
@@ -197,7 +201,7 @@ class Contact(NSObject):
         saveContactIcon(self.icon, str(self.uri))
 
 
-class ContactGroup(NSObject):
+class BlinkContactGroup(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -218,17 +222,17 @@ class ContactGroup(NSObject):
         return self
 
     def setBonjourNeighbours(self, contact_list):
-        self.contacts = [Contact(uri, None, name=display_name) for display_name, uri in contact_list]
+        self.contacts = [BlinkContact(uri, None, name=display_name) for display_name, uri in contact_list]
 
     def addBonjourNeighbour(self, neighbour, uri, display_name=None):
         if neighbour not in (contact.bonjour_neighbour for contact in self.contacts):
-            self.contacts.append(Contact(uri, None, name=display_name, bonjour_neighbour=neighbour, editable=False))
+            self.contacts.append(BlinkContact(uri, None, name=display_name, bonjour_neighbour=neighbour, editable=False))
 
     def updateBonjourNeighbour(self, neighbour, uri, display_name=None):
         try:
             contact = (contact for contact in self.contacts if contact.bonjour_neighbour==neighbour).next()
         except StopIteration:
-            self.contacts.append(Contact(uri, None, name=display_name, bonjour_neighbour=neighbour, editable=False))
+            self.contacts.append(BlinkContact(uri, None, name=display_name, bonjour_neighbour=neighbour, editable=False))
         else:
             contact.setName(display_name)
             contact.setURI(uri)
@@ -356,11 +360,12 @@ class ContactGroup(NSObject):
                 else:
                     contact_uri = sip_address
 
-                contact = Contact(name=name, display_name=display_name, uri=contact_uri, icon=photo or default_icon, preferred_media="audio", detail=detail, editable=False, addressbook_id=person_id)
+                contact = BlinkContact(name=name, display_name=display_name, uri=contact_uri, icon=photo or default_icon, preferred_media="audio", detail=detail, editable=False, addressbook_id=person_id)
                 self.contacts.append(contact)
 
         self.contacts.sort(lambda a,b:cmp(unicode(a.name), unicode(b.name)))
         return result
+
 
 class CustomListModel(NSObject):
     contactGroupsList = []
@@ -369,22 +374,22 @@ class CustomListModel(NSObject):
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
         if item is None:
             return len(self.contactGroupsList)
-        elif isinstance(item, ContactGroup):
+        elif isinstance(item, BlinkContactGroup):
             return len(item.contacts)
         else:
             return 0
 
     def outlineView_shouldEditTableColumn_item_(self, outline, column, item):
-        return isinstance(item, ContactGroup)
+        return isinstance(item, BlinkContactGroup)
 
     def outlineView_isItemExpandable_(self, outline, item):
-        return item is None or isinstance(item, ContactGroup)
+        return item is None or isinstance(item, BlinkContactGroup)
 
     def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
         return item and item.name
 
     def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
-        if isinstance(item, ContactGroup) and object != item.name:
+        if isinstance(item, BlinkContactGroup) and object != item.name:
             item.name = object
             self.saveContacts()
 
@@ -400,7 +405,7 @@ class CustomListModel(NSObject):
     def outlineView_child_ofItem_(self, outline, index, item):
         if item is None:
             return self.contactGroupsList[index]
-        elif isinstance(item, ContactGroup):
+        elif isinstance(item, BlinkContactGroup):
             try:
                 return item.contacts[index]
             except IndexError:
@@ -409,22 +414,22 @@ class CustomListModel(NSObject):
             return None
 
     def outlineView_heightOfRowByItem_(self, outline, item):
-        return 18 if isinstance(item, ContactGroup) else 34
+        return 18 if isinstance(item, BlinkContactGroup) else 34
 
     # delegate methods
     def outlineView_isGroupItem_(self, outline, item):
-        return isinstance(item, ContactGroup)
+        return isinstance(item, BlinkContactGroup)
 
     def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
         cell.setMessageIcon_(None) 
 
-        if isinstance(item, Contact):
+        if isinstance(item, BlinkContact):
             cell.setContact_(item)
         else:
             cell.setContact_(None)
 
     def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
-        if isinstance(item, Contact):
+        if isinstance(item, BlinkContact):
             return (item.uri, rect)
         else:
             return (None, rect)
@@ -432,7 +437,7 @@ class CustomListModel(NSObject):
     # drag drop
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, item, oper):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if oper != NSOutlineViewDropOnItemIndex or type(item) != Contact:
+            if oper != NSOutlineViewDropOnItemIndex or type(item) != BlinkContact:
                 return NSDragOperationNone
 
             ws = NSWorkspace.sharedWorkspace()
@@ -448,7 +453,7 @@ class CustomListModel(NSObject):
 
             group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
             if contact is None:
-                if type(item) == Contact:
+                if type(item) == BlinkContact:
                     item = table.parentForItem_(item)
 
                 if item == self.contactGroupsList[group]:
@@ -466,7 +471,7 @@ class CustomListModel(NSObject):
                 if item is None:
                     return NSDragOperationNone
 
-                if isinstance(item, ContactGroup):
+                if isinstance(item, BlinkContactGroup):
                     if oper == NSOutlineViewDropOnItemIndex:
                         c = len(item.contacts)
                     else:
@@ -486,7 +491,7 @@ class CustomListModel(NSObject):
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or type(item) != Contact:
+            if index != NSOutlineViewDropOnItemIndex or type(item) != BlinkContact:
                 return False
 
             ws = NSWorkspace.sharedWorkspace()
@@ -534,7 +539,7 @@ class CustomListModel(NSObject):
                 return True
 
     def outlineView_writeItems_toPasteboard_(self, table, items, pboard):
-        if type(items[0]) == ContactGroup:
+        if type(items[0]) == BlinkContactGroup:
             try:
                 group = self.contactGroupsList.index(items[0])
             except:
@@ -547,7 +552,7 @@ class CustomListModel(NSObject):
             contact_index = None
             for g in range(len(self.contactGroupsList)):
                 group = self.contactGroupsList[g]
-                if isinstance(group, ContactGroup) and items[0] in group.contacts:
+                if isinstance(group, BlinkContactGroup) and items[0] in group.contacts:
                     contact_index = group.contacts.index(items[0])
                     break
             if contact_index is not None:
@@ -565,27 +570,6 @@ class CustomListModel(NSObject):
 
 class ContactListModel(CustomListModel):
     implements(IObserver)
-    owner = None
-
-    def awakeFromNib(self):
-        nc = NotificationCenter()
-        nc.add_observer(self, name="ContactWasCreated")
-        nc.add_observer(self, name="ContactWasDeleted")
-        nc.add_observer(self, name="ContactDidChange")
-        nc.add_observer(self, name="ContactGroupDidChange")
-        nc.add_observer(self, name="ContactGroupWasDeleted")
-        nc.add_observer(self, name="ContactGroupManagerDidAddGroup")
-        nc.add_observer(self, name="ContactGroupManagerDidRemoveGroup")
-
-        self._migrateContacts()
-
-    def _migrateContacts(self):
-        path = ApplicationData.get('contacts_')
-        if not os.path.exists(path):
-            return
-
-        BlinkLogger().log_info(u"Migrating contacts to the new model...")
-        #TODO: migrate contacts from pickle to the new model -adi        
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -593,20 +577,103 @@ class ContactListModel(CustomListModel):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    def awakeFromNib(self):
+        # TODO: refactor contacts based on middleware notifications -adi
+        return
+        nc = NotificationCenter()
+        nc.add_observer(self, name="ContactManagerDidAddContact")
+        nc.add_observer(self, name="ContactManagerDidRemoveContact")
+        nc.add_observer(self, name="ContactWasCreated")
+        nc.add_observer(self, name="ContactWasDeleted")
+        nc.add_observer(self, name="ContactDidChange")
+        nc.add_observer(self, name="ContactGroupDidChange")
+        nc.add_observer(self, name="ContactGroupWasDeleted")
+        nc.add_observer(self, name="ContactGroupManagerDidAddGroup")
+        nc.add_observer(self, name="ContactGroupManagerDidRemoveGroup")
+        nc.add_observer(self, name="SIPApplicationDidStart")
+
+    def _NH_SIPApplicationDidStart(self, notification):
+        self._migrateContacts()
+
+    def _migrateContacts(self):
+        # TODO: migrate contacts -adi
+        return
+
+        path = ApplicationData.get('contacts_')
+        if not os.path.exists(path):
+            return
+
+        BlinkLogger().log_info(u"Migrating old contacts to the new model...")
+
+        f = open(path, "r")
+        data = cPickle.load(f)
+        f.close()
+
+        for group_item in data:
+            if type(group_item) == tuple:
+                if len(group_item) == 3:
+                    group_item = (group_item[0], group_item[-1])
+                group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
+
+            # skip the saved dynamic groups (addressbook and bonjour) from previous versions
+            if group_item.get("dynamic", False):
+                continue
+            # workaround because the special attribute wasn't saved
+            if "special" not in group_item:
+                group_item["special"] = None
+
+            if group_item["special"] not in ("addressbook", "bonjour"):
+                has_group = any(grp for grp in self.contact_group_manager.iter_groups() if grp.name == group_item["name"])
+                if not has_group:
+                    try:
+                        xgroup = BlinkGroup(group_item["name"])
+                        BlinkLogger().log_info(u'Migrating group %s' % xgroup.name)
+                        xgroup.save()
+                    except DuplicateIDError:
+                        pass
+                else:
+                    try:
+                        xgroup = (grp for grp in self.contact_group_manager.iter_groups() if grp.name == group_item["name"]).next()
+                    except StopIteration:
+                        pass
+
+                if xgroup:
+                    for contact in group_item["contacts"]:
+                        uri = unicode(contact["uri"].strip())
+                        try:
+                            xcontact = BlinkContact(uri, group=xgroup)
+                            xcontact.display_name = contact["display_name"]
+                            xcontact.preferred_media = contact["preferred_media"]
+                            BlinkLogger().log_info(u'Migrating contact %s' % uri)
+                            xcontact.save()
+                        except DuplicateIDError:
+                            pass
+
     def _NH_ContactWasCreated(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_info(u'Contact %s was created' % notification.sender.uri)
 
     def _NH_ContactWasDeleted(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_info(u'Contact %s was deleted' % notification.sender.uri)
 
     def _NH_ContactDidChange(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_info(u'Contact %s was changed' % notification.sender.uri)
+
+    def _NH_ContactManagerDidAddContact(self, notification):
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_ContactManagerDidRemoveContact(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactGroupDidChange(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_info(u'Contact group %s was changed' % notification.sender.name)
 
     def _NH_ContactGroupWasDeleted(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_info(u'Contact group was deleted')
 
     def _NH_ContactGroupManagerDidAddGroup(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
@@ -662,10 +729,10 @@ class ContactListModel(CustomListModel):
 
                 clist = []
                 for contact in group_item["contacts"]:
-                    obj = Contact.from_dict(contact)
+                    obj = BlinkContact.from_dict(contact)
                     clist.append(obj)
 
-                group = ContactGroup(group_item["name"], clist, expanded=group_item["expanded"], special=group_item["special"], previous_position=len(contactGroups))
+                group = BlinkContactGroup(group_item["name"], clist, expanded=group_item["expanded"], special=group_item["special"], previous_position=len(contactGroups))
                 contactGroups.append(group)
                 if group.special == "addressbook":
                     self.abgroup = group
@@ -684,20 +751,18 @@ class ContactListModel(CustomListModel):
                 NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
             # create test contacts
             contactsT = [
-                Contact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
-                Contact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Call Test"),
-                Contact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
+                BlinkContact("200901@login.zipdx.com", loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
+                BlinkContact("3333@sip2sip.info", loadContactIcon("3333@sip2sip.info"), name="Call Test"),
+                BlinkContact("4444@sip2sip.info", loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
+                BlinkContact("test@conference.sip2sip.info", loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat")
             ]
-            # don't create test conference contact if version is Lite
-            if NSApp.delegate().applicationName != 'Blink Lite':
-                contactsT.append(Contact("test@conference.sip2sip.info", loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat"))
-            contactGroups = [ContactGroup(u"Test", contactsT)]
+            contactGroups = [BlinkContactGroup(u"Test", contactsT)]
 
         if self.bonjourgroup is None:
-            self.bonjourgroup = ContactGroup(u"Bonjour Neighbours", special="bonjour", expanded=False, previous_position=len(contactGroups))
+            self.bonjourgroup = BlinkContactGroup(u"Bonjour Neighbours", special="bonjour", expanded=False, previous_position=len(contactGroups))
             contactGroups.append(self.bonjourgroup)
         if self.abgroup is None:
-            self.abgroup = ContactGroup(u"Address Book", special="addressbook", expanded=False, previous_position=len(contactGroups))
+            self.abgroup = BlinkContactGroup(u"Address Book", special="addressbook", expanded=False, previous_position=len(contactGroups))
             contactGroups.append(self.abgroup)
 
         self.contactGroupsList = contactGroups
@@ -728,7 +793,7 @@ class ContactListModel(CustomListModel):
         name = controller.runModal()
         if not name or name in (group.name for group in self.contactGroupsList):
             return
-        group = ContactGroup(name, [])
+        group = BlinkContactGroup(name, [])
         self.contactGroupsList.insert(-1, group)
 
     def getContactMatchingURI(self, uri):
@@ -745,8 +810,8 @@ class ContactListModel(CustomListModel):
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
-        new_contact = Contact(uri=address, name=display_name)
-        # When Add Contact, the XCAP storage must have by default selected the current account if xcap is enabled or Local otherwise
+        new_contact = BlinkContact(uri=address, name=display_name)
+        # When Add BlinkContact, the XCAP storage must have by default selected the current account if xcap is enabled or Local otherwise
         acct = AccountManager().default_account
         if hasattr(acct, "xcap") and acct.xcap.enabled:
             new_contact.stored_in_account = str(acct.id)
@@ -783,7 +848,7 @@ class ContactListModel(CustomListModel):
                     new_contact.uri += "." + account.id.domain
 
             if not group:
-                group = ContactGroup(groupName, [])
+                group = BlinkContactGroup(groupName, [])
                 # insert after last non-dynamic group
                 index = 0
                 for g in self.contactGroupsList:
@@ -813,7 +878,7 @@ class ContactListModel(CustomListModel):
 
 
     def editContact(self, contact):
-        if type(contact) == ContactGroup:
+        if type(contact) == BlinkContactGroup:
             self.editGroup(contact)
             return
 
@@ -855,7 +920,7 @@ class ContactListModel(CustomListModel):
             else:
                 if oldGroup:
                     oldGroup.contacts.remove(contact)
-                group = ContactGroup(groupName, [contact])
+                group = BlinkContactGroup(groupName, [contact])
                 # insert after last non-dynamic group
                 index = 0
                 for g in self.contactGroupsList:
@@ -866,7 +931,7 @@ class ContactListModel(CustomListModel):
             self.saveContacts()
 
     def deleteContact(self, contact):
-        if isinstance(contact, Contact):
+        if isinstance(contact, BlinkContact):
             ret = NSRunAlertPanel(u"Delete Contact", u"Delete '%s' from contacts list?"%contact.name, u"Delete", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
                 for group in self.contactGroupsList:
