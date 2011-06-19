@@ -1401,11 +1401,11 @@ DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider']
 
-
 # These section are rendered staticaly in their own view
 StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine']
 
 SettingDescription = {
+                      'audio.auto_accept': 'Automatic Answer',
                       'audio.silent': 'Silence Alerts',
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
@@ -1434,6 +1434,7 @@ SettingDescription = {
                       }
 
 SectionNames = {
+                       'audio': 'Audio Calls',
                        'auth': 'Authentication',
                        'logs': 'File Logging',
                        'message_summary': 'Voicemail Notifications',
@@ -1456,6 +1457,7 @@ GeneralSectionOrder = {
                        }
 
 AccountSectionOrder = {
+                       'audio': ['auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
                        }
 

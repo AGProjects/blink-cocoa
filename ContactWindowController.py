@@ -371,7 +371,7 @@ class ContactWindowController(NSWindowController):
         self.accountPopUp.addItemWithTitle_(u"Add Account...")
 
         if account_manager.default_account:
-            self.nameText.setStringValue_(account_manager.default_account.display_name)
+            self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)
         else:
             self.nameText.setStringValue_(u'')
 
@@ -1752,10 +1752,6 @@ class ContactWindowController(NSWindowController):
         item = self.statusMenu.itemWithTag_(52) # file
         item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
         item.setEnabled_(self.backend.isMediaTypeSupported('file-transfer'))
-
-        item = self.statusMenu.itemWithTag_(53) # bonjour audio
-        account = BonjourAccount()
-        item.setState_(account.audio.auto_accept and NSOnState or NSOffState)
 
         item = self.statusMenu.itemWithTag_(54) # my video
         item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)

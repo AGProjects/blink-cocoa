@@ -18,7 +18,7 @@ class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
     transport = Setting(type=MSRPTransport, default='tls')
 
 
-class BonjourAudioSettingsExtension(SettingsGroup):
+class AudioSettingsExtension(SettingsGroup):
     auto_accept = Setting(type=bool, default=False)
     answer_delay = Setting(type=NonNegativeInteger, default=6)
 
@@ -66,6 +66,7 @@ class XCAPSettingsExtension(XCAPSettings):
 class AccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
+    audio = AudioSettingsExtension
     message_summary = MessageSummarySettingsExtension
     msrp = MSRPSettingsExtension
     pstn = PSTNSettings
@@ -80,7 +81,7 @@ class AccountExtension(SettingsObjectExtension):
 class BonjourAccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
-    audio = BonjourAudioSettingsExtension
+    audio = AudioSettingsExtension
     msrp = BonjourMSRPSettingsExtension
     rtp = RTPSettingsExtension
     sounds = SoundsSettings

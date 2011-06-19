@@ -3,20 +3,20 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10J869</string>
-		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.35</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">851</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="1563"/>
-			<integer value="29"/>
-			<integer value="372"/>
 			<integer value="1524"/>
 			<integer value="928"/>
+			<integer value="902"/>
+			<integer value="372"/>
+			<integer value="1563"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -427,15 +427,6 @@
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">52</int>
-								</object>
-								<object class="NSMenuItem" id="1027780467">
-									<reference key="NSMenu" ref="633631115"/>
-									<string key="NSTitle">Auto Accept Audio from Bonjour Neighbours</string>
-									<string key="NSKeyEquiv"/>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<reference key="NSOnImage" ref="660791971"/>
-									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">53</int>
 								</object>
 								<object class="NSMenuItem" id="1025809552">
 									<reference key="NSMenu" ref="633631115"/>
@@ -3839,14 +3830,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1034</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">toggleAutoAccept:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="1027780467"/>
-					</object>
-					<int key="connectionID">1038</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">blinkMenu</string>
 						<reference key="source" ref="900429702"/>
@@ -5227,7 +5210,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="487933114"/>
 							<reference ref="29179348"/>
 							<reference ref="1021973200"/>
-							<reference ref="1027780467"/>
 							<reference ref="397529527"/>
 							<reference ref="197272145"/>
 							<reference ref="271856751"/>
@@ -5418,11 +5400,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<int key="objectID">1032</int>
 						<reference key="object" ref="745628434"/>
 						<reference key="parent" ref="427015895"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1037</int>
-						<reference key="object" ref="1027780467"/>
-						<reference key="parent" ref="633631115"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">1048</int>
@@ -6174,7 +6151,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>103.IBPluginDependency</string>
 					<string>103.ImportedFromIB2</string>
 					<string>1032.IBPluginDependency</string>
-					<string>1037.IBPluginDependency</string>
 					<string>1044.IBPluginDependency</string>
 					<string>1044.ImportedFromIB2</string>
 					<string>1048.IBPluginDependency</string>
@@ -6568,7 +6544,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
@@ -6807,7 +6782,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
-					<string>{{119, 986}, {617, 20}}</string>
+					<string>{{119, 985}, {617, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
@@ -7238,7 +7213,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{350, 722}, {393, 203}}</string>
+					<string>{{229, 802}, {359, 183}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7643,7 +7618,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">ContactListModel</string>
-					<string key="superclassName">NSObject</string>
+					<string key="superclassName">CustomListModel</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier" id="562591206">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">ContactListModel.py</string>
@@ -8305,6 +8280,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
+					<string key="className">CustomListModel</string>
+					<string key="superclassName">NSObject</string>
+					<reference key="sourceIdentifier" ref="562591206"/>
+				</object>
+				<object class="IBPartialClassDescription">
 					<string key="className">FileTransferWindowController</string>
 					<string key="superclassName">NSObject</string>
 					<object class="NSMutableDictionary" key="actions">
@@ -8718,7 +8698,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">SearchContactListModel</string>
-					<string key="superclassName">NSObject</string>
+					<string key="superclassName">CustomListModel</string>
 					<reference key="sourceIdentifier" ref="562591206"/>
 				</object>
 				<object class="IBPartialClassDescription">

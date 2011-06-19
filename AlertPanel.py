@@ -27,7 +27,7 @@ class AlertPanel(NSObject, object):
     sessions = {}
     proposals = {}
     answeringMachineTimers = {}
-    bonjourAutoAnswerTimers = {}
+    autoAnswerTimers = {}
     attention = None
 
     def initWithOwner_(self, owner):
@@ -125,12 +125,11 @@ class AlertPanel(NSObject, object):
                 frame = view.frame()
                 frame.size.height += 20 # give extra space for the counter label
                 view.setFrame_(frame)
-                bonjour_account = BonjourAccount()
-                if session.account is bonjour_account and bonjour_account.audio.auto_accept:
+                if session.account.audio.auto_accept:
                     session_manager = SessionManager()
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
-                        self.enableBonjourAutoAnswer(view, session)
+                        self.enableAutoAnswer(view, session)
                 elif SIPSimpleSettings().answering_machine.enabled:
                     self.enableAnsweringMachine(view, session)
 
@@ -377,9 +376,9 @@ class AlertPanel(NSObject, object):
             self.answeringMachineTimers[session].invalidate()
             del self.answeringMachineTimers[session]
 
-        if self.bonjourAutoAnswerTimers.has_key(session):
-            self.bonjourAutoAnswerTimers[session].invalidate()
-            del self.bonjourAutoAnswerTimers[session]
+        if self.autoAnswerTimers.has_key(session):
+            self.autoAnswerTimers[session].invalidate()
+            del self.autoAnswerTimers[session]
 
         if len(self.sessions) <= 1:
             self.close()
@@ -432,26 +431,25 @@ class AlertPanel(NSObject, object):
             self.timerTick_(timer)
             amLabel.setHidden_(False)
 
-    def disableBonjourAutoAnswer(self, view, session):
-        if session in self.bonjourAutoAnswerTimers:
-            bonjourLabel = view.viewWithTag_(15)
-            bonjourLabel.setHidden_(True)
-            bonjourLabel.superview().display()
-            timer = self.bonjourAutoAnswerTimers[session]
+    def disableAutoAnswer(self, view, session):
+        if session in self.autoAnswerTimers:
+            label = view.viewWithTag_(15)
+            label.setHidden_(True)
+            label.superview().display()
+            timer = self.autoAnswerTimers[session]
             timer.invalidate()
-            del self.bonjourAutoAnswerTimers[session]
+            del self.autoAnswerTimers[session]
 
-    def enableBonjourAutoAnswer(self, view, session):
-        if session not in self.bonjourAutoAnswerTimers:
-            bonjour_account = BonjourAccount()
-            bonjourLabel = view.viewWithTag_(15)
-            info = dict(delay = bonjour_account.audio.answer_delay, session = session, label = bonjourLabel, time = time.time())
-            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTickBonjour:", info, True)
+    def enableAutoAnswer(self, view, session):
+        if session not in self.autoAnswerTimers:
+            label = view.viewWithTag_(15)
+            info = dict(delay = session.account.audio.answer_delay, session = session, label = label, time = time.time())
+            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTickAutoAnswer:", info, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
-            self.bonjourAutoAnswerTimers[session] = timer
-            self.timerTickBonjour_(timer)
-            bonjourLabel.setHidden_(False)
+            self.autoAnswerTimers[session] = timer
+            self.timerTickAutoAnswer_(timer)
+            label.setHidden_(False)
 
     def timerTick_(self, timer):
         info = timer.userInfo()
@@ -462,13 +460,13 @@ class AlertPanel(NSObject, object):
         text = "Answering Machine will auto-answer in %i seconds..." % remaining
         info["label"].setStringValue_(text)
 
-    def timerTickBonjour_(self, timer):
+    def timerTickAutoAnswer_(self, timer):
         info = timer.userInfo()
         if time.time() - info["time"] >= info["delay"]:
-            self.acceptAudioStreamBonjour(info["session"])
+            self.acceptAudioStream(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Automatically answering Bonjour call in %i seconds..." % remaining
+        text = "Automatically answering call in %i seconds..." % remaining
         info["label"].setStringValue_(text)
 
     @allocate_autorelease_pool
@@ -500,9 +498,9 @@ class AlertPanel(NSObject, object):
                     pass
                 else:
                     if bonjour_account.audio.auto_accept:
-                        self.enableBonjourAutoAnswer(view, session)
+                        self.enableAutoAnswer(view, session)
                     else:
-                        self.disableBonjourAutoAnswer(view, session)
+                        self.disableAutoAnswer(view, session)
 
     @objc.IBAction
     def buttonClicked_(self, sender):
@@ -562,7 +560,7 @@ class AlertPanel(NSObject, object):
         self.owner.startIncomingSession(session, streams, answeringMachine=True)
         self.removeSession(session)
 
-    def acceptAudioStreamBonjour(self, session):
+    def acceptAudioStream(self, session):
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
         if self.proposals.has_key(session):
