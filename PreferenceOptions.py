@@ -26,17 +26,15 @@ from resources import ApplicationData
 from util import allocate_autorelease_pool
 
 
-LABEL_WIDTH = 130
-
-
 def makeLabel(label):            
-    text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, LABEL_WIDTH, 17))
+    text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 130, 17))
     text.setStringValue_(label)
     text.setBordered_(False)
     text.setDrawsBackground_(False)
     text.setEditable_(False)
     text.setAlignment_(NSRightTextAlignment)
     return text
+
 
 def formatName(name):
     d = {
