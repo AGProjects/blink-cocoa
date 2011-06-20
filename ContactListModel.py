@@ -752,6 +752,7 @@ class ContactListModel(CustomListModel):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def saveContacts(self):
+        path = ApplicationData.get('contacts_')
         dump = []
         contactGroupsList = self.contactGroupsList[:]
         if self.bonjourgroup in self.contactGroupsList:
