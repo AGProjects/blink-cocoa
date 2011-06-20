@@ -233,9 +233,6 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
         nc.add_observer(self, name="BlinkMuteChangedState")
-        nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
-        nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
-        nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
@@ -463,15 +460,9 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPAccountDidActivate(self, notification):
         self.refreshAccountList()
-        if notification.sender is BonjourAccount():
-            self.model.setShowBonjourGroup(True)
-            self.contactOutline.reloadData()
 
     def _NH_SIPAccountDidDeactivate(self, notification):
         self.refreshAccountList()
-        if notification.sender is BonjourAccount():
-            self.model.setShowBonjourGroup(False)
-            self.contactOutline.reloadData()
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
@@ -530,32 +521,6 @@ class ContactWindowController(NSWindowController):
 
     def _NH_DefaultAudioDeviceDidChange(self, notification):
         self.menuWillOpen_(self.devicesMenu)
-
-    def _NH_BonjourAccountDidAddNeighbour(self, notification):
-        neighbour = notification.data.neighbour
-        display_name = notification.data.display_name
-        host = notification.data.host
-        uri = notification.data.uri
-        BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
-        self.model.bonjourgroup.addBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
-        self.contactOutline.reloadData()
-        self.searchContacts()
-
-    def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
-        neighbour = notification.data.neighbour
-        display_name = notification.data.display_name
-        host = notification.data.host
-        uri = notification.data.uri
-        BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
-        self.model.bonjourgroup.updateBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
-        self.refreshContactsList()
-        self.searchContacts()
-
-    def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
-        BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
-        self.model.bonjourgroup.removeBonjourNeighbour(notification.data.neighbour)
-        self.contactOutline.reloadData()
-        self.searchContacts()
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":

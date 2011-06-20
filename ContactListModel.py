@@ -584,6 +584,9 @@ class ContactListModel(CustomListModel):
         self.loadGroupsLayout()
 
         nc = NotificationCenter()
+        nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
+        nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
+        nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
         nc.add_observer(self, name="ContactManagerDidAddContact")
         nc.add_observer(self, name="ContactManagerDidRemoveContact")
         nc.add_observer(self, name="ContactWasCreated")
@@ -593,6 +596,8 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="ContactGroupWasDeleted")
         nc.add_observer(self, name="ContactGroupManagerDidAddGroup")
         nc.add_observer(self, name="ContactGroupManagerDidRemoveGroup")
+        nc.add_observer(self, name="SIPAccountDidActivate")
+        nc.add_observer(self, name="SIPAccountDidDeactivate")
         nc.add_observer(self, name="SIPApplicationDidStart")
 
     def _NH_SIPApplicationDidStart(self, notification):
@@ -680,6 +685,39 @@ class ContactListModel(CustomListModel):
                             xcontact.save()
                         except DuplicateIDError:
                             pass
+
+    def _NH_SIPAccountDidActivate(self, notification):
+        if notification.sender is BonjourAccount():
+            self.setShowBonjourGroup(True)
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_SIPAccountDidDeactivate(self, notification):
+        if notification.sender is BonjourAccount():
+            self.setShowBonjourGroup(False)
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_BonjourAccountDidAddNeighbour(self, notification):
+        neighbour = notification.data.neighbour
+        display_name = notification.data.display_name
+        host = notification.data.host
+        uri = notification.data.uri
+        BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
+        self.bonjourgroup.addBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
+        neighbour = notification.data.neighbour
+        display_name = notification.data.display_name
+        host = notification.data.host
+        uri = notification.data.uri
+        BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
+        self.bonjourgroup.updateBonjourNeighbour(neighbour, str(uri), '%s (%s)' % (display_name or 'Unknown', host))
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
+        BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
+        self.bonjourgroup.removeBonjourNeighbour(notification.data.neighbour)
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactWasCreated(self, notification):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
