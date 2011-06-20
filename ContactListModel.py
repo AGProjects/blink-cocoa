@@ -687,13 +687,15 @@ class ContactListModel(CustomListModel):
                             pass
 
     def _NH_SIPAccountDidActivate(self, notification):
-        if notification.sender is BonjourAccount():
-            self.setShowBonjourGroup(True)
+        if notification.sender is BonjourAccount() and self.bonjourgroup not in self.contactGroupsList:
+            self.contactGroupsList.insert(self.bonjourgroup.previous_position, self.bonjourgroup)
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_SIPAccountDidDeactivate(self, notification):
-        if notification.sender is BonjourAccount():
-            self.setShowBonjourGroup(False)
+        if notification.sender is BonjourAccount() and self.bonjourgroup in self.contactGroupsList:
+            self.bonjourgroup.setBonjourNeighbours([])
+            self.bonjourgroup.previous_position = self.contactGroupsList.index(self.bonjourgroup)
+            self.contactGroupsList.remove(self.bonjourgroup)
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
@@ -836,16 +838,6 @@ class ContactListModel(CustomListModel):
 
         self.contactGroupsList = contactGroups
 
-    def setShowBonjourGroup(self, flag):
-        if flag:
-            if self.bonjourgroup not in self.contactGroupsList:
-                self.contactGroupsList.insert(self.bonjourgroup.previous_position, self.bonjourgroup)
-        else:
-            if self.bonjourgroup in self.contactGroupsList:
-                self.bonjourgroup.setBonjourNeighbours([])
-                self.bonjourgroup.previous_position = self.contactGroupsList.index(self.bonjourgroup)
-                self.contactGroupsList.remove(self.bonjourgroup)
-
     def moveBonjourGroupFirst(self):
         if self.bonjourgroup in self.contactGroupsList:
             self.bonjourgroup.previous_position = self.contactGroupsList.index(self.bonjourgroup)
@@ -874,38 +866,26 @@ class ContactListModel(CustomListModel):
     def hasContactMatchingURI(self, uri):
         return any(contact.matchesURI(uri) for group in self.contactGroupsList for contact in group.contacts)
 
+    def contactExists(self, uri, account=None):
+        return any(contact for group in self.contactGroupsList for contact in group.contacts if contact.uri == uri and contact.stored_in_account == account)
+
     def addNewContact(self, address="", group=None, display_name=None):
-      try:
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
         new_contact = BlinkContact(uri=address, name=display_name)
-        # When Add BlinkContact, the XCAP storage must have by default selected the current account if xcap is enabled or Local otherwise
         acct = AccountManager().default_account
-        if hasattr(acct, "xcap") and acct.xcap.enabled:
-            new_contact.stored_in_account = str(acct.id)
-        else:
-            new_contact.stored_in_account = None
+        new_contact.stored_in_account = str(acct.id)
 
         groups = [g.name for g in self.contactGroupsList if not g.dynamic]
         first_group = groups and groups[0] or None
+
         controller = AddContactController(new_contact, group or first_group)
         controller.setGroupNames(groups)
 
         result, groupName = controller.runModal()
-        if result:     
-            group = None
-            for g in self.contactGroupsList:
-                if g.name == groupName and not g.dynamic:
-                    group = g
 
-                if not g.dynamic:
-                    for c in g.contacts:
-                        if c.uri == address:
-                            NSRunAlertPanel("Add Contact",
-                                "Contact %s already exists (%s)"%(address, c.name), "OK", None, None)
-                            return None
-
+        if result:
             if "@" not in new_contact.uri:
                 account = AccountManager().default_account
                 if account:
@@ -916,12 +896,18 @@ class ContactListModel(CustomListModel):
                 if account:
                     new_contact.uri += "." + account.id.domain
 
-            if not group:
-                group = BlinkContactGroup(groupName, [])
+            if self.contactExists(new_contact.uri, new_contact.stored_in_account):
+                NSRunAlertPanel("Add Contact", "Contact %s already exists"% new_contact.uri, "OK", None, None)
+                return None
+
+            try:
+                group = (g for g in self.contactGroupsList if g.name == groupName and not g.dynamic).next()
+            except StopIteration:
                 # insert after last non-dynamic group
+                group = BlinkContactGroup(groupName, [])
                 index = 0
                 for g in self.contactGroupsList:
-                    if g.dynamic:                      
+                    if g.dynamic:
                         break
                     index += 1
                 self.contactGroupsList.insert(index, group)
@@ -931,20 +917,21 @@ class ContactListModel(CustomListModel):
 
             return new_contact
         return None
-      except:
-        import traceback
-        traceback.print_exc()
 
     def editGroup(self, group):
         controller = AddGroupController()
         name = controller.runModalForRename_(group.name)
         if not name or name == group.name:
             return
-        for g in self.contactGroupsList:
-            if g.name == name and g != group:
-                return
-        group.name = name
 
+        try:
+            g = (g for g in self.contactGroupsList if g.name == name and g != group).next()
+        except StopIteration:
+            pass
+        else:
+            return
+
+        group.name = name
 
     def editContact(self, contact):
         if type(contact) == BlinkContactGroup:
@@ -959,21 +946,20 @@ class ContactListModel(CustomListModel):
         if not contact.editable:
             return
 
-        oldGroup = None
-        for g in self.contactGroupsList:
-            if contact in g.contacts:
-                oldGroup = g
-                break
+        try:
+            oldGroup = (g for g in self.contactGroupsList if contact in g.contacts).next()
+        except StopIteration:
+            oldGroup = None
 
         controller = EditContactController(contact, unicode(oldGroup.name) if oldGroup else "")
         controller.setGroupNames([g.name for g in self.contactGroupsList if not g.dynamic])
         result, groupName = controller.runModal()
 
         if result:
-            group = None
-            for g in self.contactGroupsList:
-                if g.name == groupName and not g.dynamic:
-                    group = g
+            try:
+                group = (g for g in self.contactGroupsList if g.name == groupName and not g.dynamic).next()
+            except StopIteration:
+                group = None
 
             if "@" not in contact.uri:
                 account = self.activeAccount()
@@ -1001,17 +987,22 @@ class ContactListModel(CustomListModel):
 
     def deleteContact(self, contact):
         if isinstance(contact, BlinkContact):
-            ret = NSRunAlertPanel(u"Delete Contact", u"Delete '%s' from contacts list?"%contact.name, u"Delete", u"Cancel", None)
+            name = contact.name if len(contact.name) else unicode(contact.uri)
+
+            ret = NSRunAlertPanel(u"Delete Contact", u"Delete '%s' from the Contacts list?"%name, u"Delete", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
-                for group in self.contactGroupsList:
-                    if contact in group.contacts:
-                        group.contacts.remove(contact)
-                        break
+                try:
+                    group = (group for group in self.contactGroupsList if contact in group.contacts).next()
+                except StopIteration:
+                    pass
+                else:
+                    group.contacts.remove(contact)
+
         else:
             ret = NSRunAlertPanel(u"Delete Contact Group", u"Delete group '%s' and its contents from contacts list?"%contact.name, u"Delete", u"Cancel", None)
-            if ret == NSAlertDefaultReturn:
-                if contact in self.contactGroupsList:
-                    self.contactGroupsList.remove(contact)
+            if ret == NSAlertDefaultReturn and contact in self.contactGroupsList:
+                self.contactGroupsList.remove(contact)
+
         self.saveContacts()
 
 
