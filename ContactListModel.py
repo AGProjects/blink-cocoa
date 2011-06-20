@@ -571,6 +571,9 @@ class CustomListModel(NSObject):
 class ContactListModel(CustomListModel):
     implements(IObserver)
 
+    # stores persistently the group position in the list and the expansion state
+    groups_layout = {}
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -578,8 +581,8 @@ class ContactListModel(CustomListModel):
         handler(notification)
 
     def awakeFromNib(self):
-        # TODO: refactor contacts based on middleware notifications -adi
-        return
+        self.loadGroupsLayout()
+
         nc = NotificationCenter()
         nc.add_observer(self, name="ContactManagerDidAddContact")
         nc.add_observer(self, name="ContactManagerDidRemoveContact")
@@ -595,15 +598,44 @@ class ContactListModel(CustomListModel):
     def _NH_SIPApplicationDidStart(self, notification):
         self._migrateContacts()
 
+    def saveGroupsLayout(self):
+        groups_layout = {}
+
+        contactGroupsList = self.contactGroupsList[:]
+        for group in contactGroupsList:
+            groups_layout[group.name]= {"possition": contactGroupsList.index(group), "expanded": group.expanded }
+
+        path = ApplicationData.get('groups_layout_')
+        try:
+            f = open(path, "w+")
+            cPickle.dump(groups_layout, f)
+            f.close()
+        except:
+            import traceback
+            traceback.print_exc()
+
+    def loadGroupsLayout(self):
+        path = ApplicationData.get('groups_layout_')
+        if not os.path.exists(path):
+            return
+
+        try:
+            f = open(path, "r")
+            self.groups_layout = cPickle.load(f)
+            f.close()
+        except:
+            import traceback
+            traceback.print_exc()
+
     def _migrateContacts(self):
         # TODO: migrate contacts -adi
         return
 
+        BlinkLogger().log_info(u"Migrating old contacts to the new model...")
+
         path = ApplicationData.get('contacts_')
         if not os.path.exists(path):
             return
-
-        BlinkLogger().log_info(u"Migrating old contacts to the new model...")
 
         f = open(path, "r")
         data = cPickle.load(f)
@@ -682,8 +714,6 @@ class ContactListModel(CustomListModel):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def saveContacts(self):
-        path = ApplicationData.get('contacts_')
-
         dump = []
         contactGroupsList = self.contactGroupsList[:]
         if self.bonjourgroup in self.contactGroupsList:

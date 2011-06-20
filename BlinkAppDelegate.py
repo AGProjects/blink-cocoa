@@ -242,6 +242,7 @@ You might need to Replace it and re-enter your account information. Your old fil
 
     def applicationShouldTerminate_(self, sender):
         self.windowController.model.saveContacts()
+        self.windowController.model.saveGroupsLayout()
         self.windowController.closeAllSessions()
         self.stopLocalVNCServer()
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
