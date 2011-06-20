@@ -34,12 +34,12 @@ class AddContactController(NSObject):
     def __init__(self, contact, group):
         NSBundle.loadNibNamed_owner_("AddContact", self)
         self.storagePlacePopUp.removeAllItems()
-        self.storagePlacePopUp.addItemWithTitle_("Local")
+        self.storagePlacePopUp.addItemWithTitle_("None")
         item = self.storagePlacePopUp.lastItem()
         item.setRepresentedObject_('local')
 
         for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount)):
-            self.storagePlacePopUp.addItemWithTitle_(u'Account %s'%account.id)
+            self.storagePlacePopUp.addItemWithTitle_(u'%s'%account.id)
             item = self.storagePlacePopUp.lastItem()
             item.setRepresentedObject_(account.id)
         

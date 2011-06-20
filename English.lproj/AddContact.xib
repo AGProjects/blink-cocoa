@@ -42,7 +42,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 229}, {509, 281}}</string>
 				<int key="NSWTFlags">-1543502848</int>
-				<string key="NSWindowTitle">Add Contact</string>
+				<string key="NSWindowTitle">Add Blink Contact</string>
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
@@ -54,14 +54,14 @@
 						<object class="NSTextField" id="785564323">
 							<reference key="NSNextResponder" ref="921081791"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{57, 240}, {82, 17}}</string>
+							<string key="NSFrame">{{80, 240}, {60, 17}}</string>
 							<reference key="NSSuperview" ref="921081791"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="260358617">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">SIP Address:</string>
+								<string key="NSContents">Address:</string>
 								<object class="NSFont" key="NSSupport" id="756971317">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
@@ -342,14 +342,14 @@
 						<object class="NSTextField" id="780829541">
 							<reference key="NSNextResponder" ref="921081791"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{65, 124}, {75, 17}}</string>
+							<string key="NSFrame">{{87, 124}, {53, 17}}</string>
 							<reference key="NSSuperview" ref="921081791"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="756143189">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">SIP Aliases:</string>
+								<string key="NSContents">Aliases:</string>
 								<reference key="NSSupport" ref="756971317"/>
 								<reference key="NSControlView" ref="780829541"/>
 								<reference key="NSBackgroundColor" ref="660602252"/>
@@ -686,7 +686,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<object class="NSTextFieldCell" key="NSCell" id="167269627">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">71304192</int>
-								<string key="NSContents">Storage Place:</string>
+								<string key="NSContents">Account:</string>
 								<reference key="NSSupport" ref="756971317"/>
 								<reference key="NSControlView" ref="180760251"/>
 								<reference key="NSBackgroundColor" ref="660602252"/>
@@ -905,19 +905,19 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<reference ref="215405587"/>
 							<reference ref="557295826"/>
 							<reference ref="244898210"/>
-							<reference ref="785564323"/>
 							<reference ref="620889746"/>
 							<reference ref="895964238"/>
 							<reference ref="767719300"/>
 							<reference ref="577449456"/>
 							<reference ref="35706404"/>
 							<reference ref="745738533"/>
-							<reference ref="780829541"/>
 							<reference ref="180760251"/>
 							<reference ref="649453017"/>
 							<reference ref="975612710"/>
 							<reference ref="199240188"/>
 							<reference ref="917737642"/>
+							<reference ref="780829541"/>
+							<reference ref="785564323"/>
 						</object>
 						<reference key="parent" ref="595080466"/>
 					</object>
@@ -1226,12 +1226,14 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<string>40.IBPluginDependency</string>
 					<string>42.IBPluginDependency</string>
 					<string>5.IBPluginDependency</string>
+					<string>5.IBViewBoundsToFrameTransform</string>
 					<string>6.IBPluginDependency</string>
 					<string>61.CustomClassName</string>
 					<string>61.IBAttributePlaceholdersKey</string>
 					<string>61.IBPluginDependency</string>
 					<string>62.IBPluginDependency</string>
 					<string>66.IBPluginDependency</string>
+					<string>66.IBViewBoundsToFrameTransform</string>
 					<string>67.IBAttributePlaceholdersKey</string>
 					<string>67.IBPluginDependency</string>
 					<string>68.IBPluginDependency</string>
@@ -1318,6 +1320,9 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABCZAAAw38AAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>MyImageThing</string>
 					<object class="NSMutableDictionary">
@@ -1344,6 +1349,9 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABCggAAwwsAAA</bytes>
+					</object>
 					<object class="NSMutableDictionary">
 						<string key="NS.key.0">AccessibilityDescription</string>
 						<object class="IBAccessibilityAttribute" key="NS.object.0">
