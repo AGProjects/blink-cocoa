@@ -77,13 +77,16 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
             contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
-    return item.itemIdentifier() in ('reconnect', 'history', NSToolbarPrintItemIdentifier)
+    if sessionController.account is not BonjourAccount():
+        return item.itemIdentifier() in ('reconnect', 'history', NSToolbarPrintItemIdentifier)
+    else:
+        return item.itemIdentifier() in (NSToolbarPrintItemIdentifier)
 
 def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
     for item in toolbar.visibleItems():
         identifier = item.itemIdentifier()
         if identifier == 'reconnect':
-            item.setEnabled_(True)
+            item.setEnabled_(True if sessionController.account is not BonjourAccount() else False)
         elif identifier == 'audio':
             item.setToolTip_('Click to add audio to this session')
             item.setImage_(NSImage.imageNamed_("audio"))
