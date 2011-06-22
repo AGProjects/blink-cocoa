@@ -13,3 +13,4 @@ from sipsimple.configuration import Setting
 
 #class BlinkContactExtension(ContactExtension):
 #    preferred_media = Setting(type=str, default='audio')
+#    icon = Setting(type=str, , default=None, nillable=True)

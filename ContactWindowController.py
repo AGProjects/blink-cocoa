@@ -36,7 +36,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkContactGroup, contactIconPathForURI, saveContactIcon
+from ContactListModel import BlinkContact, AddressBookBlinkContact, BlinkContactGroup, contactIconPathForURI, saveContactIcon
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -47,7 +47,6 @@ from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import Resources
 from util import *
 
-SearchContactToolbarIdentifier= u"SearchContact"
 
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
 PARTICIPANTS_MENU_ADD_CONTACT = 301
@@ -257,7 +256,7 @@ class ContactWindowController(NSWindowController):
         ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
         ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
 
-        self.model.loadContacts()
+        self.model.loadGroupsAndContacts()
         self.refreshContactsList()
         self.updateActionButtons()
 
@@ -402,10 +401,10 @@ class ContactWindowController(NSWindowController):
         else:
            return []
 
-        selection= outline.selectedRowIndexes()
-        item= selection.firstIndex()
+        selection = outline.selectedRowIndexes()
+        item = selection.firstIndex()
         while item != NSNotFound:
-            object= outline.itemAtRow_(item)
+            object = outline.itemAtRow_(item)
             if isinstance(object, BlinkContact):
                 contacts.append(object)
             elif includeGroups and isinstance(object, BlinkContactGroup):
@@ -835,20 +834,13 @@ class ContactWindowController(NSWindowController):
             if account is BonjourAccount():
                 self.model.moveBonjourGroupFirst()
                 self.contactOutline.reloadData()
-                # select the Bonjour stuff group and expand it
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
-                if not self.model.bonjourgroup.expanded:
-                    self.contactOutline.expandItem_(self.model.bonjourgroup)
-                    self.model.bonjourgroup.expanded = False
-                # guess how many rows fit in the outline
-                maxRows = NSHeight(self.contactOutline.frame()) / 30
-                # scroll 1st row of bonjour group to visible
                 self.contactOutline.scrollRowToVisible_(0)
-            elif self.model.bonjourgroup in self.model.contactGroupsList and self.model.contactGroupsList.index(self.model.bonjourgroup) == 0:
+            elif self.model.bonjour_group in self.model.contactGroupsList and self.model.contactGroupsList.index(self.model.bonjour_group) == 0:
                 self.model.restoreBonjourGroupPosition()
                 self.contactOutline.reloadData()
-                if not self.model.bonjourgroup.expanded:
-                    self.contactOutline.collapseItem_(self.model.bonjourgroup)
+                if not self.model.bonjour_group.expanded:
+                    self.contactOutline.collapseItem_(self.model.bonjour_group)
         else:
             # select back the account and open the new account wizard
             i = sender.indexOfItemWithRepresentedObject_(AccountManager().default_account)
@@ -860,7 +852,7 @@ class ContactWindowController(NSWindowController):
 
     def contactSelectionChanged_(self, notification):
         self.updateActionButtons()
-        readonly = any((getattr(c, "editable", None) is False or getattr(c, "dynamic", None) is True) for c in self.getSelectedContacts(True))
+        readonly = any((getattr(c, "editable", None) is False) for c in self.getSelectedContacts(True))
 
         self.contactsMenu.itemWithTag_(31).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=False)) > 0)
         self.contactsMenu.itemWithTag_(32).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=True)) > 0)
@@ -874,7 +866,7 @@ class ContactWindowController(NSWindowController):
     def contactGroupExpanded_(self, notification):
         group = notification.userInfo()["NSObject"]
         group.expanded = True
-        if group.special == "addressbook":
+        if group.type == "addressbook":
             group.loadAddressBook()
 
     @objc.IBAction
@@ -936,7 +928,7 @@ class ContactWindowController(NSWindowController):
                 group = self.contactOutline.parentForItem_(item)
             else:
                 group = item
-            contact = self.model.addNewContact(group=group.name if group and not group.dynamic else None)
+            contact = self.model.addNewContact(group=group.name if group and group.editable else None)
             if contact:
                 self.refreshContactsList()
                 self.searchContacts()
@@ -970,29 +962,17 @@ class ContactWindowController(NSWindowController):
         row = self.contactOutline.selectedRow()
         if row >= 0:
             item = self.contactOutline.itemAtRow_(row)
-            if isinstance(item, BlinkContact):
-                group = self.contactOutline.parentForItem(item)
-            else:
-                group = item
+            group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
             self.model.editGroup(group)
             self.refreshContactsList()
             self.searchContacts()
-
-        #row = self.contactOutline.selectedRow()
-        #if row < 0:
-        #    return
-        #row = self.contactOutline.rowForItem_(self.contactOutline.parentForItem_(self.contactOutline.itemAtRow_(row)))
-        #self.contactOutline.editColumn_row_withEvent_select_(0, row, None, True)
 
     @objc.IBAction
     def deleteGroup_(self, sender):
         row = self.contactOutline.selectedRow()
         if row >= 0:
             item = self.contactOutline.itemAtRow_(row)
-            if isinstance(item, BlinkContact):
-                group = self.contactOutline.parentForItem(item)
-            else:
-                group = item
+            group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
             self.model.deleteContact(group)
             self.refreshContactsList()
 
@@ -1171,7 +1151,7 @@ class ContactWindowController(NSWindowController):
         if not target:
             return
 
-        if contact in self.model.bonjourgroup.contacts:
+        if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
 
         session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(display_name))
@@ -1308,7 +1288,7 @@ class ContactWindowController(NSWindowController):
             target = contact.uri
             display_name = contact.display_name
 
-        if contact in self.model.bonjourgroup.contacts:
+        if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
 
         target = self.backend.parse_sip_uri(target, account)
@@ -1813,7 +1793,7 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_((is_full_sip_uri(contact.uri) or no_contact_selected) and self.backend.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
-            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjourgroup.contacts) and self.backend.isMediaTypeSupported('chat'))
+            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.backend.isMediaTypeSupported('chat'))
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -2110,7 +2090,7 @@ class ContactWindowController(NSWindowController):
         except IndexError:
             pass
         else:
-            if contact in self.model.bonjourgroup.contacts:
+            if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
             openFileTransferSelectionDialog(account, contact.uri)
 
@@ -2315,7 +2295,7 @@ class ContactWindowController(NSWindowController):
         while self.contactContextMenu.numberOfItems() > 0:
             self.contactContextMenu.removeItemAtIndex_(0)
 
-        if type(item) == BlinkContact:
+        if isinstance(item, BlinkContact):
             has_full_sip_uri = is_full_sip_uri(item.uri)
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
@@ -2323,11 +2303,11 @@ class ContactWindowController(NSWindowController):
             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
             video_item.setEnabled_(False)
             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
-            sms_item.setEnabled_(item not in self.model.bonjourgroup.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
+            sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
             sf_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('file-transfer'))
-            if item not in self.model.bonjourgroup.contacts:
+            if item not in self.model.bonjour_group.contacts:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History...", "viewHistory:", "")
                 sf_item.setEnabled_(has_full_sip_uri and NSApp.delegate().applicationName != 'Blink Lite')
@@ -2340,18 +2320,18 @@ class ContactWindowController(NSWindowController):
             mitem.setTag_(2)
             mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-            if item.addressbook_id:
+            if type(item) == AddressBookBlinkContact:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
             else:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-                lastItem.setEnabled_(item.editable)
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
             lastItem.setEnabled_(item.editable)
-        else:
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
+            lastItem.setEnabled_(item.deletable)
+        elif isinstance(item, BlinkContactGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")
-            lastItem.setEnabled_(not item.dynamic)
+            lastItem.setEnabled_(item.editable)
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
-            lastItem.setEnabled_(not item.dynamic)
+            lastItem.setEnabled_(item.deletable)
 
     def menuWillOpen_(self, menu):
         def setupAudioDeviceMenu(menu, tag, devices, option_name, selector):
@@ -2465,22 +2445,36 @@ class ContactWindowController(NSWindowController):
                 item.setTitle_("Share My Desktop with %s" % contact.display_name)
                 item.setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
         elif menu == self.contactsMenu:
+            row = self.contactOutline.selectedRow()
+            selected_contact = None
+            selected_group = None
+            selected = self.contactOutline.itemAtRow_(row) if row >=0 else None
+            if selected:
+                if isinstance(selected, BlinkContact):
+                    selected_contact = selected
+                    selected_group = self.contactOutline.parentForItem_(selected)
+                elif isinstance(selected, BlinkContactGroup):
+                    selected_contact = None
+                    selected_group = selected
+
             item = self.contactsMenu.itemWithTag_(31) # Edit Contact
-            item.setEnabled_(NSApp.keyWindow() == self.window())
+            item.setEnabled_(selected_contact and selected_contact.editable)
             item = self.contactsMenu.itemWithTag_(32) # Delete Contact
-            item.setEnabled_(NSApp.keyWindow() == self.window())
-            item = self.contactsMenu.itemWithTag_(33) # Edit Group
-            item.setEnabled_(NSApp.keyWindow() == self.window())
-            item = self.contactsMenu.itemWithTag_(34) # Delete Group
-            item.setEnabled_(NSApp.keyWindow() == self.window())
+            item.setEnabled_(selected_contact and selected_contact.deletable)
+            item = self.contactsMenu.itemWithTag_(33) # Add Group
+            item.setEnabled_(True)
+            item = self.contactsMenu.itemWithTag_(34) # Edit Group
+            item.setEnabled_(selected_group and selected_group.editable)
+            item = self.contactsMenu.itemWithTag_(35) # Delete Group
+            item.setEnabled_(selected_group and selected_group.deletable)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             if NSApp.delegate().applicationName == 'Blink Pro':
                 item.setEnabled_(True)
-                item.setTitle_('Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else 'Hide Dialpad')
+                item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
             else:
                 item.setEnabled_(False)
-                item.setTitle_('Show Dialpad (Available in Blink Pro)')
+                item.setTitle_(u'Show Dialpad (Available in Blink Pro)')
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
