@@ -9,7 +9,7 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
 from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger
+from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption
 
 from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL
 
@@ -39,6 +39,12 @@ class PSTNSettings(SettingsGroup):
 class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
     use_srtp_without_tls = Setting(type=bool, default=True)
+
+
+class BonjourRTPSettingsExtension(RTPSettings):
+    inband_dtmf = Setting(type=bool, default=True)
+    use_srtp_without_tls = Setting(type=bool, default=True)
+    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
 
 
 class SIPSettingsExtension(SIPSettings):
@@ -83,7 +89,7 @@ class BonjourAccountExtension(SettingsObjectExtension):
 
     audio = AudioSettingsExtension
     msrp = BonjourMSRPSettingsExtension
-    rtp = RTPSettingsExtension
+    rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
     tls = TLSSettingsExtension
 
