@@ -539,7 +539,6 @@ class AudioController(MediaStream):
                 else:
                     self.audioStatus.setStringValue_(fail_reason)
             self.audioStatus.sizeToFit()
-            self.srtpIcon.setHidden_(True)
         elif status == STREAM_FAILED:
             self.audioEndTime = time.time()
             if self.hangedUp and oldstatus in (STREAM_CONNECTING, STREAM_PROPOSING):
