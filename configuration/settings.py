@@ -84,6 +84,10 @@ class TLSSettingsExtension(TLSSettings):
     ca_list = Setting(type=UserDataPath, default=None, nillable=True)
 
 
+class ContactsSettings(SettingsGroup):
+    enable_address_book = Setting(type=bool, default=True)
+
+
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
@@ -95,5 +99,6 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     service_provider = ServiceProviderSettings
     sounds = SoundsSettings
     tls = TLSSettingsExtension
+    contacts = ContactsSettings
 
 

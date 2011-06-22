@@ -500,6 +500,9 @@
 		1F8DC9131351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F9A8DA612BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
 		1F9A8DA712BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
+		1FA47A3013B246FF0081F90B /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
+		1FA47A3113B246FF0081F90B /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
+		1FA47A3213B246FF0081F90B /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
 		1FA6252013828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
 		1FA6252113828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
 		1FA6252213828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
@@ -1141,6 +1144,7 @@
 		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
+		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
 		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
@@ -1592,6 +1596,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FA47A2F13B246FF0081F90B /* contacts.png */,
 				1F37D7CD1393F6B4007210E9 /* editor-changed.png */,
 				1F1E26D91393AD1A00AC2BE7 /* audio.png */,
 				1FCF129E1391151A001D1CAF /* answering_machine.png */,
@@ -2207,6 +2212,7 @@
 				1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673013A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B413AB406A00502BDB /* contact.py in Resources */,
+				1FA47A3213B246FF0081F90B /* contacts.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2386,6 +2392,7 @@
 				1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673213A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B213AB406A00502BDB /* contact.py in Resources */,
+				1FA47A3013B246FF0081F90B /* contacts.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2568,6 +2575,7 @@
 				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673113A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B313AB406A00502BDB /* contact.py in Resources */,
+				1FA47A3113B246FF0081F90B /* contacts.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

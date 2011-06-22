@@ -1400,7 +1400,7 @@ DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
 DisabledPreferenceSections = ['service_provider']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine']
+StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
@@ -1408,6 +1408,7 @@ SettingDescription = {
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
+                      'contacts.enable_address_book': 'Show Contacts from Address Book',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
                       'file_transfer.directory': 'Download Directory',
                       'message_summary.voicemail_uri': 'Mailbox URI',

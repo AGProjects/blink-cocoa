@@ -157,6 +157,10 @@ class PreferencesController(NSWindowController, object):
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
             self.sectionDescription.setStringValue_(u'Sound Alerts')
+        elif section == 'contacts':
+            self.mainTabView.selectTabViewItemWithIdentifier_("settings")
+            self.generalTabView.selectTabViewItemWithIdentifier_("contacts")
+            self.sectionDescription.setStringValue_(u'Contacts Settings')
         elif section == 'advanced':
             self.sectionDescription.setStringValue_(u'Advanced Settings')
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
