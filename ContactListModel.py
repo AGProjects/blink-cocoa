@@ -15,6 +15,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.system import makedirs
 from sipsimple.configuration import Setting, DuplicateIDError
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI
 #from sipsimple.contact import Contact, ContactGroup
 from sipsimple.account import AccountManager, BonjourAccount
@@ -271,7 +272,6 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
     def __init__(self, name=u'Address Book', expanded=True, previous_position=0):
         self.name = NSString.stringWithString_(name)
         self.expanded = expanded
-        self.loadAddressBook()
         self.previous_position = previous_position
 
     def loadAddressBook(self):
@@ -603,11 +603,17 @@ class CustomListModel(NSObject):
 
 
 class SearchContactListModel(CustomListModel):
-    pass
+    def init(self):
+        return self
 
 
 class ContactListModel(CustomListModel):
     implements(IObserver)
+
+    def init(self):
+        self.bonjour_group = BonjourBlinkContactGroup()
+        self.addressbook_group = AddressBookBlinkContactGroup()
+        return self
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -620,6 +626,7 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
         nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
+        nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="ContactManagerDidAddContact")
         nc.add_observer(self, name="ContactManagerDidRemoveContact")
         nc.add_observer(self, name="ContactWasCreated")
@@ -634,7 +641,24 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="SIPApplicationDidStart")
 
     def _NH_SIPApplicationDidStart(self, notification):
+        settings = SIPSimpleSettings()
+        if settings.contacts.enable_address_book:
+            self.addressbook_group.loadAddressBook()
+            self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
         self._migrateContacts()
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        settings = SIPSimpleSettings()
+        if notification.data.modified.has_key("contacts.enable_address_book"):
+            if settings.contacts.enable_address_book and self.addressbook_group not in self.contactGroupsList:
+                self.addressbook_group.loadAddressBook()
+                self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            elif not settings.contacts.enable_address_book and self.addressbook_group in self.contactGroupsList:
+                self.contactGroupsList.remove(self.addressbook_group)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _migrateContacts(self):
         # TODO: migrate contacts -adi
@@ -682,6 +706,8 @@ class ContactListModel(CustomListModel):
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount() and self.bonjour_group not in self.contactGroupsList:
             self.contactGroupsList.insert(self.bonjour_group.previous_position, self.bonjour_group)
+            if self.addressbook_group not in self.contactGroupsList:
+                self.addressbook_group.previous_position += 1
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_SIPAccountDidDeactivate(self, notification):
@@ -802,9 +828,6 @@ class ContactListModel(CustomListModel):
         f.close()
 
     def loadGroupsAndContacts(self):
-        self.bonjour_group = BonjourBlinkContactGroup()
-        self.addressbook_group = AddressBookBlinkContactGroup()
-
         contactGroups = []
 
         path = ApplicationData.get('contacts_')
@@ -826,12 +849,10 @@ class ContactListModel(CustomListModel):
                         self.addressbook_group.name = group_item["name"]
                         self.addressbook_group.expanded = group_item["expanded"]
                         self.addressbook_group.previous_position=len(contactGroups)
-                        contactGroups.append(self.addressbook_group)
                     elif group_item["special"] == "bonjour":
                         self.bonjour_group.name=group_item["name"]
                         self.bonjour_group.expanded=group_item["expanded"]
                         self.bonjour_group.previous_position=len(contactGroups)
-                        contactGroups.append(self.bonjour_group)
                     else:
                         contacts = [BlinkContact.from_dict(contact) for contact in group_item["contacts"]]
                         group = BlinkContactGroup(name=group_item["name"], expanded=group_item["expanded"], previous_position=len(contactGroups), contacts=contacts)
@@ -845,14 +866,6 @@ class ContactListModel(CustomListModel):
         if not contactGroups:
             first_group = self.createInitialGroupAndContacts()
             contactGroups.append(first_group)
-
-        if self.bonjour_group not in contactGroups:
-            self.bonjour_group.previous_position=len(contactGroups)
-            contactGroups.append(self.bonjour_group)
-
-        if self.addressbook_group not in contactGroups:
-            self.addressbook_group.previous_position=len(contactGroups)
-            contactGroups.append(self.addressbook_group)
 
         self.contactGroupsList = contactGroups
 
