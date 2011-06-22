@@ -219,14 +219,14 @@ class AddressBookBlinkContact(BlinkContact):
     editable = True
     deletable = False
 
-    def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, addressbook_id=None):
+    def __init__(self, uri, addressbook_id, name=None, display_name=None, icon=None, detail=None):
         self.uri = uri
+        self.addressbook_id = addressbook_id
         self.name = NSString.stringWithString_(name or uri)
         self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or uri)
         self.icon = icon
-        self.addressbook_id = addressbook_id
-
+ 
 
 class BlinkContactGroup(NSObject):
     type = None
@@ -387,7 +387,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                 else:
                     contact_uri = sip_address
 
-                contact = AddressBookBlinkContact(contact_uri, name=name, display_name=display_name, icon=photo or default_icon, detail=detail, addressbook_id=person_id)
+                contact = AddressBookBlinkContact(contact_uri, person_id, name=name, display_name=display_name, icon=photo or default_icon, detail=detail)
                 self.contacts.append(contact)
 
         self.sortContacts()
