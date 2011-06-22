@@ -226,7 +226,7 @@ class AddressBookBlinkContact(BlinkContact):
         self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or uri)
         self.icon = icon
- 
+
 
 class BlinkContactGroup(NSObject):
     type = None
@@ -609,8 +609,6 @@ class SearchContactListModel(CustomListModel):
 class ContactListModel(CustomListModel):
     implements(IObserver)
 
-    groups_layout = {}
-
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -637,30 +635,6 @@ class ContactListModel(CustomListModel):
 
     def _NH_SIPApplicationDidStart(self, notification):
         self._migrateContacts()
-
-    def saveGroupsLayout(self):
-        path = ApplicationData.get('groups_layout_')
-        try:
-            groups_layout = dict([(group.name, {"position": index, "expanded": group.expanded }) for index, group in enumerate(self.contactGroupsList)])
-            f = open(path, "w+")
-            cPickle.dump(groups_layout, f)
-            f.close()
-        except:
-            import traceback
-            traceback.print_exc()
-
-    def loadGroupsLayout(self):
-        path = ApplicationData.get('groups_layout_')
-        if not os.path.exists(path):
-            return
-
-        try:
-            f = open(path, "r")
-            self.groups_layout = cPickle.load(f)
-            f.close()
-        except:
-            import traceback
-            traceback.print_exc()
 
     def _migrateContacts(self):
         # TODO: migrate contacts -adi
@@ -828,7 +802,6 @@ class ContactListModel(CustomListModel):
         f.close()
 
     def loadGroupsAndContacts(self):
-        self.loadGroupsLayout()
         self.bonjour_group = BonjourBlinkContactGroup()
         self.addressbook_group = AddressBookBlinkContactGroup()
 
