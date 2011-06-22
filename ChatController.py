@@ -77,10 +77,15 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
             contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
+    valid_items = [NSToolbarPrintItemIdentifier]
+
+    if NSApp.delegate().applicationName != 'Blink Lite':
+        valid_items.append('history')
+
     if sessionController.account is not BonjourAccount():
-        return item.itemIdentifier() in ('reconnect', 'history', NSToolbarPrintItemIdentifier)
-    else:
-        return item.itemIdentifier() in (NSToolbarPrintItemIdentifier)
+        valid_items.append('reconnect')
+
+    return item.itemIdentifier() in valid_items
 
 def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
     for item in toolbar.visibleItems():
@@ -109,6 +114,8 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
             item.setEnabled_(False)
         elif identifier == 'editor' and sessionController.account is not BonjourAccount():
             item.setEnabled_(True)
+        elif identifier == 'history' and NSApp.delegate().applicationName == 'Blink Lite':
+            item.setEnabled_(False)
         elif identifier == NSToolbarPrintItemIdentifier:
             item.setEnabled_(True)
 
