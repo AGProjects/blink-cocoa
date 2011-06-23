@@ -837,7 +837,7 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Desktop Sharing is disabled in configuration")
             return False
 
-        if (settings.file_transfer.disabled or NSApp.delegate().applicationName == 'Blink Lite') and any(s for s in streams if s.type == 'file-transfer'):
+        if (settings.file_transfer.disabled and any(s for s in streams if s.type == 'file-transfer')):
             BlinkLogger().log_info(u"File Transfer is disabled in configuration")
             return False
 
@@ -852,7 +852,7 @@ class SIPManager(object):
         return True
 
     def isMediaTypeSupported(self, type):
-        if NSApp.delegate().applicationName == 'Blink Lite' and type not in ('audio', 'chat'):
+        if NSApp.delegate().applicationName == 'Blink Lite' and type not in ('audio', 'chat', 'file-transfer'):
             return False
 
         settings = SIPSimpleSettings()

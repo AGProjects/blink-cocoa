@@ -293,6 +293,11 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
         for match in book.people():
             person_id = match.uniqueId()
 
+            if NSApp.delegate().applicationName == 'Blink Lite' and len(self.contacts) > 10:
+                contact = AddressBookBlinkContact('0000000', person_id, name='More Contacts in Blink Pro', display_name='More Contacts in Blink Pro', icon=default_icon, detail='More Contacts in Blink Pro')
+                self.contacts.append(contact)
+                break
+
             first = match.valueForProperty_(AddressBook.kABFirstNameProperty)
             last = match.valueForProperty_(AddressBook.kABLastNameProperty)
             middle = match.valueForProperty_(AddressBook.kABMiddleNameProperty)

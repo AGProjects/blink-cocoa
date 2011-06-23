@@ -117,7 +117,7 @@ class PreferencesController(NSWindowController, object):
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             for item in self.toolbar.visibleItems():
-                if item.itemIdentifier() in ('answering_machine', 'file-transfer', 'desktop-sharing'):
+                if item.itemIdentifier() in ('answering_machine', 'file-transfer', 'desktop-sharing', 'contacts', 'alerts', 'chat', 'advanced'):
                     item.setEnabled_(False)
 
     @objc.IBAction

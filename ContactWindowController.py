@@ -1728,9 +1728,6 @@ class ContactWindowController(NSWindowController):
         item = menu.itemWithTag_(44) # Join Conference
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.backend.isMediaTypeSupported('chat')))
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            item.setTitle_(u'Join Conference...')
-
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
             normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
