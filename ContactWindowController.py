@@ -513,7 +513,7 @@ class ContactWindowController(NSWindowController):
         diff = set(new_devices).difference(set(old_devices))
         if diff:
             new_device = diff.pop()
-            BlinkLogger().log_info(u"New device %s detected, checking if we should switch to it..." % new_device)
+            BlinkLogger().log_info(u"New audio device %s detected" % new_device.strip())
             self.switchAudioDevice(new_device)
         else:
             self.menuWillOpen_(self.devicesMenu)
@@ -555,15 +555,15 @@ class ContactWindowController(NSWindowController):
 
     def switchAudioDevice(self, device):
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
-        if hasAudio:
-            BlinkLogger().log_info(u"We have active sessions, switching input/output devices to %s" % device)
-            settings = SIPSimpleSettings()
+        settings = SIPSimpleSettings()
+        if hasAudio or settings.audio.automatic_device_switch:
+            BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
             settings.audio.input_device = unicode(device)
             settings.audio.output_device = unicode(device)
             settings.save()
         else:
             panel = NSGetInformationalAlertPanel("New Audio Device",
-                    "Audio device %s has been plugged-in. Would you like to switch to it?" % device,
+                    "A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(),
                     "Switch", "Ignore", None)
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(7, self, "newAudioDeviceTimeout:", panel, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
@@ -578,7 +578,7 @@ class ContactWindowController(NSWindowController):
             NSReleaseAlertPanel(panel)
 
             if ret == NSAlertDefaultReturn:
-                BlinkLogger().log_info(u"Switching input/output devices to %s" % device)
+                BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
                 settings = SIPSimpleSettings()
                 settings.audio.input_device = unicode(device)
                 settings.audio.output_device = unicode(device)

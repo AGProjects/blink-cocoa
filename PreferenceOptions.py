@@ -1405,6 +1405,7 @@ StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing',
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
                       'audio.silent': 'Silence Alerts',
+                      'audio.automatic_device_switch': 'Switch Automatically to New Devices when Plugged-in',
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
@@ -1448,6 +1449,7 @@ SectionNames = {
                        }
 
 GeneralSectionOrder = {
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled'],

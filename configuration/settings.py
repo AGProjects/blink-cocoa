@@ -29,6 +29,7 @@ class AudioSettingsExtension(AudioSettings):
     input_device = Setting(type=unicode, default=u'system_default', nillable=True)
     output_device = Setting(type=unicode, default=u'system_default', nillable=True)
     sample_rate = Setting(type=SampleRate, default=44100)
+    automatic_device_switch = Setting(type=bool, default=True)
 
 
 class ChatSettingsExtension(ChatSettings):
