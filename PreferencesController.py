@@ -14,7 +14,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
+from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
@@ -200,7 +200,7 @@ class PreferencesController(NSWindowController, object):
             self.advancedTabView.removeTabViewItem_(self.advancedTabView.tabViewItemAtIndex_(0))
 
         #sections = [section for section in dir(account.__class__) if isinstance(getattr(account.__class__, section, None), SettingsGroupMeta)]
-        sections = AccountSectionOrder
+        sections = BonjourAccountSectionOrder if account is BonjourAccount() else AccountSectionOrder
 
         frame = self.advancedTabView.frame()
         for section in (section for section in sections if section not in DisabledAccountPreferenceSections):

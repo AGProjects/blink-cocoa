@@ -1460,6 +1460,8 @@ GeneralSettingsOrder = {
 
 AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'dialog_event', 'message_summary', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'nat_traversal', 'presence','server')
 
+BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
+
 AccountSettingsOrder = {
                        'audio': ['auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
