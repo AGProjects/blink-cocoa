@@ -289,7 +289,6 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
             AddressBook.kABOtherLabel:       "other"
         }
 
-        result = []
         for match in book.people():
             person_id = match.uniqueId()
 
