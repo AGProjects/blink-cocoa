@@ -1487,5 +1487,6 @@ ToolTips = {
              'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If not given conference.sip2sip.info will be used by default',
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
-             'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061'
+             'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
+             'xcap.xcap_root': 'If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain'
            }
