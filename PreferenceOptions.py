@@ -1389,12 +1389,11 @@ PreferenceOptionTypes = {
 "tls.ca_list": TLSCAListPathOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.protocol" : HiddenOption,
-"tls.timeout" : HiddenOption,
-"xcap.enabled" : HiddenOption
+"tls.timeout" : HiddenOption
 }
 
 # These acount sections are always hidden
-DisabledAccountPreferenceSections = ['dialog_event', 'presence', 'xcap']
+DisabledAccountPreferenceSections = ['dialog_event', 'presence']
 
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider']
@@ -1445,7 +1444,8 @@ SectionNames = {
                        'sip': 'SIP Settings',
                        'sounds': 'Alerts',
                        'server': 'Server Settings',
-                       'tls': 'TLS Settings'
+                       'tls': 'TLS Settings',
+                       'xcap': 'XCAP Settings'
                        }
 
 GeneralSectionOrder = {
