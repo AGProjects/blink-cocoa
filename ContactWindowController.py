@@ -2731,11 +2731,9 @@ class ContactWindowController(NSWindowController):
         session = self.getSelectedAudioSession()
         if session and hasattr(session.conference_info, "users"):
             for user in session.conference_info.users:
-                participant = user.entity.replace("sip:", "", 1)
-                participant = participant.replace("sips:", "", 1)
+                participant = re.sub("^(sip:|sips:)", "", user.entity)
                 if participant == uri:
                     return True
-
         return False
 
     def isInvitedParticipant(self, uri):
