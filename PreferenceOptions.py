@@ -1389,7 +1389,8 @@ PreferenceOptionTypes = {
 "tls.ca_list": TLSCAListPathOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.protocol" : HiddenOption,
-"tls.timeout" : HiddenOption
+"tls.timeout" : HiddenOption,
+"xcap.discovered": HiddenOption
 }
 
 # These acount sections are always hidden
