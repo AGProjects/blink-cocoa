@@ -1320,10 +1320,10 @@ class ChatController(MediaStream):
 
         self.notification_center.remove_observer(self, sender=sender)
 
+        close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
+        self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
+        # save the view so we can print it
         if self.status == STREAM_CONNECTED:
-            close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-            self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
-            # save the view so we can print it
             self.sessionController.lastChatOutputView = self.chatViewController.outputView
             self.removeFromSession()
             self.videoContainer.hideVideo()
