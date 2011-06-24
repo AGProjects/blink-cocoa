@@ -17,13 +17,13 @@ class ChatWindowManager(object):
     def addChatWindow(self, sessionController, newWindow=False, view=None):
         if self.chatWindows and not newWindow:
             window = self.chatWindows[0]
-            osession = window.replaceInactiveWithCompatibleSession_(sessionController)
+            old_session = window.replaceInactiveWithCompatibleSession_(sessionController)
         else:
             window = ChatWindowController.ChatWindowController.alloc().init()
             self.chatWindows.append(window)
-            osession = None
+            old_session = None
 
-        if not osession:
+        if not old_session:
             view = view or sessionController.streamHandlerOfType("chat").getContentView()
             window.addSession_withView_(sessionController, view)
         else:
