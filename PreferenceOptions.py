@@ -1437,15 +1437,15 @@ SectionNames = {
                        'auth': 'Authentication',
                        'logs': 'File Logging',
                        'message_summary': 'Voicemail Notifications',
-                       'msrp': 'MSRP Settings',
+                       'msrp': 'MSRP Media',
                        'nat_traversal': 'NAT Traversal',
                        'pstn': 'Phone Numbers',
-                       'rtp': 'Media Settings',
-                       'sip': 'SIP Settings',
+                       'rtp': 'RTP Media',
+                       'sip': 'SIP Signaling',
                        'sounds': 'Alerts',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
-                       'xcap': 'XCAP Settings'
+                       'xcap': 'XCAP Storage'
                        }
 
 GeneralSettingsOrder = {
