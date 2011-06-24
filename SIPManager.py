@@ -593,6 +593,10 @@ class SIPManager(object):
         direction = 'incoming'
         status = 'delivered'
         failure_reason = ''
+        if session.start_time is None and session.end_time is not None:
+            # Session could have ended before it was completely started
+            session.start_time = session.end_time
+
         duration = session.end_time - session.start_time
 
         self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
