@@ -14,7 +14,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSectionOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
+from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
@@ -199,7 +199,9 @@ class PreferencesController(NSWindowController, object):
         for i in range(self.advancedTabView.numberOfTabViewItems()):
             self.advancedTabView.removeTabViewItem_(self.advancedTabView.tabViewItemAtIndex_(0))
 
-        sections = [section for section in dir(account.__class__) if isinstance(getattr(account.__class__, section, None), SettingsGroupMeta)]
+        #sections = [section for section in dir(account.__class__) if isinstance(getattr(account.__class__, section, None), SettingsGroupMeta)]
+        sections = AccountSectionOrder
+
         frame = self.advancedTabView.frame()
         for section in (section for section in sections if section not in DisabledAccountPreferenceSections):
             if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn'):
@@ -235,7 +237,7 @@ class PreferencesController(NSWindowController, object):
         unordered_options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
         assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
         try:
-            options = AccountSectionOrder[section_name] if forAccount else GeneralSectionOrder[section_name]
+            options = AccountSettingsOrder[section_name] if forAccount else GeneralSettingsOrder[section_name]
             remaining_options = [opt for opt in unordered_options if opt not in options]
             options.extend(remaining_options)
         except KeyError:

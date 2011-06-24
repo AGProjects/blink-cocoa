@@ -1448,7 +1448,7 @@ SectionNames = {
                        'xcap': 'XCAP Settings'
                        }
 
-GeneralSectionOrder = {
+GeneralSettingsOrder = {
                        'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
@@ -1457,7 +1457,9 @@ GeneralSectionOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = {
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'dialog_event', 'message_summary', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'nat_traversal', 'presence','server')
+
+AccountSettingsOrder = {
                        'audio': ['auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
                        }
