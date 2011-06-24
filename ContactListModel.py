@@ -4,6 +4,7 @@
 __all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIcon', 'saveContactIcon']
 
 import os
+import re
 import cPickle
 import unicodedata
 
@@ -323,13 +324,8 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                 for n in range(value.count()):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
-                    if uri.startswith("sip:"):
-                        uri = uri[4:]
-                    try:
-                        if labelNames.get(label) != 'fax':
-                            sip_addresses.append((labelNames.get(label, None), uri))
-                    except:
-                        pass
+                    if labelNames.get(label, None) != 'fax':
+                        sip_addresses.append((labelNames.get(label, None), re.sub("^(sip:|sips:)", "", uri)))
 
             # get SIP addresses from the Email section
             value = match.valueForProperty_(AddressBook.kABEmailProperty)
@@ -337,32 +333,20 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                 for n in range(value.count()):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
-                    if label == 'sip' or uri.startswith("sip:") or uri.startswith("sips:"):
-                        if uri.startswith("sip:"):
-                            uri = uri[4:]
-                        try:
-                            sip_addresses.append(('sip', uri))
-                        except:
-                            pass
-                    else:
-                        pass
+                    if label == 'sip' or uri.startswith(("sip:", "sips:")):
+                        sip_addresses.append(('sip', re.sub("^(sip:|sips:)", "", uri)))
+
             # get SIP addresses from the URLs section
             value = match.valueForProperty_(AddressBook.kABURLsProperty)
             if value:
                 for n in range(value.count()):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
-                    if label == 'sip' or uri.startswith("sip:") or uri.startswith("sips:"):
-                        if uri.startswith("sip:"):
-                            uri = uri[4:]
-                        try:
-                            sip_addresses.append(('sip', uri))
-                        except:
-                            pass
-                    else:
-                        pass
+                    if label == 'sip' or uri.startswith(("sip:", "sips:")):
+                        sip_addresses.append(('sip', re.sub("^(sip:|sips:)", "", uri)))
 
-            if not sip_addresses: continue
+            if not sip_addresses:
+                continue
 
             idata = match.imageData()
             if idata:
