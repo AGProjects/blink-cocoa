@@ -592,9 +592,9 @@ class SIPManager(object):
         remote_uri = format_identity_address(controller.target_uri)
         direction = 'incoming'
         status = 'delivered'
-        failure_reason = ''                  
+        failure_reason = ''
         duration = session.end_time - session.start_time
-        
+
         self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
@@ -604,7 +604,7 @@ class SIPManager(object):
             media_type = 'audio'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))                       
+            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
