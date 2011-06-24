@@ -645,6 +645,7 @@ class ContactListModel(CustomListModel):
                 self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.contactGroupsList:
+                self.addressbook_group.previous_position=self.contactGroupsList.index(self.addressbook_group)
                 self.contactGroupsList.remove(self.addressbook_group)
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
