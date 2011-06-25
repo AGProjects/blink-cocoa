@@ -1431,14 +1431,15 @@ SettingDescription = {
                       'sounds.audio_outbound': 'Outbound Ringtone',
                       'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'Certificate File',
-                      'tls.ca_list': 'Certificate Authority File'
+                      'tls.ca_list': 'Certificate Authority File',
+                      'xcap.enabled': 'Store Contacts on XCAP Server'
                       }
 
 SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
                        'logs': 'File Logging',
-                       'message_summary': 'Voicemail Notifications',
+                       'message_summary': 'Voicemail',
                        'msrp': 'MSRP Media',
                        'nat_traversal': 'NAT Traversal',
                        'pstn': 'Phone Numbers',
@@ -1447,7 +1448,7 @@ SectionNames = {
                        'sounds': 'Alerts',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
-                       'xcap': 'XCAP Storage'
+                       'xcap': 'Contacts'
                        }
 
 GeneralSettingsOrder = {
