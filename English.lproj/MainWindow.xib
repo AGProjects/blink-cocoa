@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10J869</string>
+		<string key="IBDocument.SystemVersion">10K540</string>
 		<string key="IBDocument.InterfaceBuilderVersion">851</string>
-		<string key="IBDocument.AppKitVersion">1038.35</string>
+		<string key="IBDocument.AppKitVersion">1038.36</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -12,10 +12,10 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="371"/>
-			<integer value="1524"/>
-			<integer value="928"/>
 			<integer value="29"/>
+			<integer value="1524"/>
+			<integer value="371"/>
+			<integer value="928"/>
 			<integer value="1563"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -362,7 +362,6 @@
 								</object>
 								<object class="NSMenuItem" id="487933114">
 									<reference key="NSMenu" ref="633631115"/>
-									<bool key="NSIsDisabled">YES</bool>
 									<string key="NSTitle">Presence Offline Status...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -372,7 +371,6 @@
 								</object>
 								<object class="NSMenuItem" id="29179348">
 									<reference key="NSMenu" ref="633631115"/>
-									<bool key="NSIsDisabled">YES</bool>
 									<string key="NSTitle">Enable Presence Offline Status</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -544,7 +542,6 @@
 								</object>
 								<object class="NSMenuItem" id="88240595">
 									<reference key="NSMenu" ref="728662662"/>
-									<bool key="NSIsDisabled">YES</bool>
 									<string key="NSTitle">Presence Policy...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
