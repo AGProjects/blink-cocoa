@@ -1394,7 +1394,7 @@ PreferenceOptionTypes = {
 }
 
 # These acount sections are always hidden
-DisabledAccountPreferenceSections = ['dialog_event', 'presence']
+DisabledAccountPreferenceSections = ['dialog_event']
 
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider']
@@ -1418,6 +1418,7 @@ SettingDescription = {
                       'logs.trace_xcap': 'Trace XCAP (used by presence and for storing contacts)',
                       'logs.trace_pjsip': 'Trace Core Library',
                       'logs.pjsip_level': 'Core Level',
+                      'presence.use_rls': 'Use Resource List Server',
                       'pstn.idd_prefix': 'Replace Starting +',
                       'pstn.prefix': 'External Line Prefix',
                       'rtp.inband_dtmf': 'Send Inband DTMF',
@@ -1458,7 +1459,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'dialog_event', 'message_summary', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'nat_traversal', 'presence','server')
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'xcap', 'presence', 'dialog_event', 'message_summary', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal','server')
 
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
 
