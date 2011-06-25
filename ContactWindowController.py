@@ -59,6 +59,7 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
+ENABLE_PRESENCE=True
 
 class PhotoView(NSImageView):
     entered = False
@@ -1690,6 +1691,12 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(False)
             item.setTitle_(u'Enable Answering Machine (Available in Blink Pro)')
 
+        item = self.statusMenu.itemWithTag_(3) # presence
+        item.setEnabled_(ENABLE_PRESENCE)
+
+        item = self.statusMenu.itemWithTag_(4) # presence
+        item.setEnabled_(ENABLE_PRESENCE)
+
         item = self.statusMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
         item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
@@ -2464,6 +2471,9 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(selected_group and selected_group.editable)
             item = self.contactsMenu.itemWithTag_(35) # Delete Group
             item.setEnabled_(selected_group and selected_group.deletable)
+
+            item = self.contactsMenu.itemWithTag_(2) # presence policy
+            item.setEnabled_(ENABLE_PRESENCE)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             if NSApp.delegate().applicationName == 'Blink Pro':
