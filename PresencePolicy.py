@@ -52,10 +52,11 @@ class PresencePolicy(NSWindowController):
     policyTable = objc.IBOutlet()
     addButton = objc.IBOutlet()
     delButton = objc.IBOutlet()
-    
+
     newWatcherWindow = objc.IBOutlet()
     newWatcherLabel = objc.IBOutlet()
     newWatcherPop = objc.IBOutlet()
+    newWatchers = objc.IBOutlet()    
     
     offlineWindowShown = False
     offlineWindow = objc.IBOutlet()
@@ -235,7 +236,7 @@ class PresencePolicy(NSWindowController):
     def checkPending(self):
         for account, policies in self.tmpPolicyData.iteritems():
             for address, policy in policies:
-                if policy.lower() == "confirm":
+                if policy.lower() == "confirm" and '@' in address:
                     self.pendingWatchers.append((account, address, True))
 
         if self.pendingWatchers:
@@ -279,7 +280,8 @@ class PresencePolicy(NSWindowController):
         while self.pendingWatchers:
             account, sipuri, reconfirm = self.pendingWatchers.pop(0)
             if reconfirm or not self.getPolicyForWatcher(account, sipuri):
-                self.newWatcherLabel.setStringValue_("%s wants to subscribe to your presence information for account %s." % (sipuri, account))
+                self.newWatcherLabel.setStringValue_(u"%s has subscribed to the presence information of account %s. Please select a policy:" % (sipuri, account))
+                self.newWatchers.setStringValue_(u"%d new subscribers" % len(self.pendingWatchers) if len(self.pendingWatchers) else '')
                 self.newWatcherPolicy = "Confirm"
                 self.newWatcherInfo = (account, sipuri)
                 self.newWatcherWindow.makeKeyAndOrderFront_(None)
