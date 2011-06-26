@@ -180,13 +180,18 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.startLocalVNCServer()
 
+       if notification.data.modified.has_key("desktop_sharing.vnc_client_encryption_warning"):
+            if settings.desktop_sharing.vnc_client_encryption_warning:
+                os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool YES")
+            else:
+                os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool NO")
+
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationName)
 
         config_file = ApplicationData.get('config')
         self.backend = SIPManager()
 
-        os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool YES")
 
         self.windowController.setup(self.backend)
 

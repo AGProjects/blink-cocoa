@@ -40,6 +40,7 @@ class ChatSettingsExtension(ChatSettings):
 
 class DesktopSharingSettingsExtension(DesktopSharingSettings):
     disabled = Setting(type=bool, default=False)
+    vnc_client_encryption_warning = Setting(type=bool, default=False)
 
 
 class FileTransferSettingsExtension(FileTransferSettings):

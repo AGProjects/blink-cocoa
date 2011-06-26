@@ -1410,6 +1410,7 @@ SettingDescription = {
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
                       'contacts.enable_address_book': 'Show Contacts from Address Book',
+                      'desktop_sharing.vnc_client_encryption_warning': 'Turn Off VNC Viewer Encryption Warning',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
                       'file_transfer.directory': 'Download Directory',
                       'message_summary.voicemail_uri': 'Mailbox URI',
