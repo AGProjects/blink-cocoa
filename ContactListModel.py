@@ -293,11 +293,6 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
         for match in book.people():
             person_id = match.uniqueId()
 
-            if NSApp.delegate().applicationName == 'Blink Lite' and len(self.contacts) > 10:
-                contact = AddressBookBlinkContact('0000000', person_id, name='More Contacts in Blink Pro', display_name='More Contacts in Blink Pro', icon=default_icon, detail='More Contacts in Blink Pro')
-                self.contacts.append(contact)
-                break
-
             first = match.valueForProperty_(AddressBook.kABFirstNameProperty)
             last = match.valueForProperty_(AddressBook.kABLastNameProperty)
             middle = match.valueForProperty_(AddressBook.kABMiddleNameProperty)
@@ -630,7 +625,7 @@ class ContactListModel(CustomListModel):
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
-        if settings.contacts.enable_address_book:
+        if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_address_book:
             self.addressbook_group.loadAddressBook()
             self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
