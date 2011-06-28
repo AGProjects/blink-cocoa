@@ -941,8 +941,14 @@ class ChatController(MediaStream):
                 menu = toolbar.delegate().desktopShareMenu
                 menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Desktop from %s" % title)
                 menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
-                menu.itemWithTag_(TOOLBAR_SHARE_DESKTOP_MENU).setTitle_("Share My Desktop with %s" % title)
-                menu.itemWithTag_(TOOLBAR_SHARE_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
+
+                item = menu.itemWithTag_(TOOLBAR_SHARE_DESKTOP_MENU)
+                if not self.backend.isMediaTypeSupported('desktop-server'):
+                    item.setHidden_(True)
+                else:
+                    item.setHidden_(False)
+                    item.setTitle_("Share My Desktop with %s" % title)
+
             elif identifier == 'smileys':
                 if self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
@@ -1036,7 +1042,7 @@ class ChatController(MediaStream):
                 return True
 
         elif item.tag() in (TOOLBAR_DESKTOP_SHARING_BUTTON, TOOLBAR_SHARE_DESKTOP_MENU, TOOLBAR_REQUEST_DESKTOP_MENU) and self.status==STREAM_CONNECTED:
-            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus or not self.backend.isMediaTypeSupported('desktop-sharing'):
+            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
                 return False
             return True
 

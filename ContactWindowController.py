@@ -2320,9 +2320,11 @@ class ContactWindowController(NSWindowController):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(1)
             mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
-            mitem.setTag_(2)
-            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
+            if self.backend.isMediaTypeSupported('desktop-server'):
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
+                mitem.setTag_(2)
+                mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
+
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             if type(item) == AddressBookBlinkContact:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
@@ -2445,9 +2447,14 @@ class ContactWindowController(NSWindowController):
                 item = self.desktopShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Desktop from %s" % contact.display_name)
                 item.setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
+
                 item = self.desktopShareMenu.itemWithTag_(2)
-                item.setTitle_("Share My Desktop with %s" % contact.display_name)
-                item.setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
+                if not self.backend.isMediaTypeSupported('desktop-server'):
+                    item.setHidden_(True)
+                else:
+                    item.setHidden_(False)
+                    item.setTitle_("Share My Desktop with %s" % contact.display_name)
+
         elif menu == self.contactsMenu:
             row = self.contactOutline.selectedRow()
             selected_contact = None

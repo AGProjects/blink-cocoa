@@ -271,7 +271,7 @@ You might need to Replace it and re-enter your account information. Your old fil
         self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
 
     def startLocalVNCServer(self):
-        if not SIPManager().isMediaTypeSupported('desktop-sharing'):
+        if not SIPManager().isMediaTypeSupported('desktop-server'):
             return
 
         if self.vncServerTask is None:
