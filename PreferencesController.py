@@ -116,7 +116,9 @@ class PreferencesController(NSWindowController, object):
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            for i in ('answering_machine', 'desktop-sharing', 'contacts', 'advanced'):
+            PreferenceOptionTypes['desktop_sharing.disabled'] = HiddenOption
+
+            for i in ('answering_machine', 'contacts', 'advanced'):
                 j = 0
                 for item in self.toolbar.visibleItems():
                     if item.itemIdentifier() == i:
