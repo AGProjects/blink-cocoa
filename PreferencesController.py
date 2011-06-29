@@ -116,9 +116,13 @@ class PreferencesController(NSWindowController, object):
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            for item in self.toolbar.visibleItems():
-                if item.itemIdentifier() in ('answering_machine', 'desktop-sharing', 'contacts', 'advanced'):
-                    item.setEnabled_(False)
+            for i in ('answering_machine', 'desktop-sharing', 'contacts', 'advanced'):
+                j = 0
+                for item in self.toolbar.visibleItems():
+                    if item.itemIdentifier() == i:
+                        self.toolbar.removeItemAtIndex_(j)
+                    else:
+                        j += 1
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
