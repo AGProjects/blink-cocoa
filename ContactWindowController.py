@@ -162,6 +162,7 @@ class ContactWindowController(NSWindowController):
 
     blinkMenu = objc.IBOutlet()
     historyMenu = objc.IBOutlet()
+    recordingsSubMenu = objc.IBOutlet()
     recordingsMenu = objc.IBOutlet()
     contactsMenu = objc.IBOutlet()
     devicesMenu = objc.IBOutlet()
@@ -787,7 +788,7 @@ class ContactWindowController(NSWindowController):
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
-        self.actionButtons.setEnabled_forSegment_(desktopOk and self.backend.isMediaTypeSupported('desktop-sharing'), 2)
+        self.actionButtons.setEnabled_forSegment_(desktopOk and (self.backend.isMediaTypeSupported('desktop-sharing') or self.backend.isMediaTypeSupported('desktop-client')), 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
@@ -1644,14 +1645,11 @@ class ContactWindowController(NSWindowController):
 
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationName)
 
-        if NSApp.delegate().applicationName == 'Blink Pro':
+        if NSApp.delegate().applicationName in ('Blink Pro', 'Blink Lite'):
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
-        elif NSApp.delegate().applicationName == 'Blink Lite':
-            self.blinkMenu.itemWithTag_(2).setHidden_(True)
-            self.blinkMenu.itemWithTag_(3).setHidden_(True)
         else:
             self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(False)
@@ -1685,11 +1683,13 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
 
         item = self.statusMenu.itemWithTag_(50) # Answering machine
-        item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            item.setEnabled_(False)
-            item.setTitle_(u'Enable Answering Machine (Available in Blink Pro)')
+             item.setHidden_(True)
+             item = self.statusMenu.itemWithTag_(55)
+             item.setHidden_(True)
+        else:
+             item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
 
         item = self.statusMenu.itemWithTag_(3) # presence
         item.setEnabled_(ENABLE_PRESENCE)
@@ -1896,14 +1896,21 @@ class ContactWindowController(NSWindowController):
         self.renderHistoryMenu(entries)
 
     def updateHistoryMenu(self):
-        self.get_session_history_entries()
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            item = self.historyMenu.itemWithTag_(1)
+            item.setHidden_(True)
+        else:
+            if self.historyMenu.numberOfItems() < 3:
+                self.historyMenu.addItem_(self.recordingsSubMenu)
+                self.historyMenu.addItem_(NSMenuItem.separatorItem())
+            self.get_session_history_entries()
 
     @run_in_gui_thread
     def renderHistoryMenu(self, entries):
         menu = self.historyMenu
 
-        item = menu.itemWithTag_(100) # file transfer
-        item.setEnabled_(self.backend.isMediaTypeSupported('file-transfer'))
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
 
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
@@ -1939,71 +1946,50 @@ class ContactWindowController(NSWindowController):
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
         lastItem.setEnabled_(False)
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Available in Blink Pro", "", "")
-            lastItem.setEnabled_(False)
+        for item in entries['missed']:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
+            lastItem.setAttributedTitle_(format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
-        else:
-            for item in entries['missed']:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
-                lastItem.setAttributedTitle_(format_history_menu_item(item))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
+            lastItem.setTarget_(self)
+            lastItem.setRepresentedObject_(item)
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming", "", "")
         lastItem.setEnabled_(False)
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Available in Blink Pro", "", "")
-            lastItem.setEnabled_(False)
+        for item in entries['incoming']:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
+            lastItem.setAttributedTitle_(format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
-        else:
-            for item in entries['incoming']:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
-                lastItem.setAttributedTitle_(format_history_menu_item(item))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
+            lastItem.setTarget_(self)
+            lastItem.setRepresentedObject_(item)
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing", "", "")
         lastItem.setEnabled_(False)
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Available in Blink Pro", "", "")
-            lastItem.setEnabled_(False)
+        for item in entries['outgoing']:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
+            lastItem.setAttributedTitle_(format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
-        else:
-            for item in entries['outgoing']:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
-                lastItem.setAttributedTitle_(format_history_menu_item(item))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
+            lastItem.setTarget_(self)
+            lastItem.setRepresentedObject_(item)
 
         if entries['conferences']:
             menu.addItem_(NSMenuItem.separatorItem())
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("Conferences", "", "")
             lastItem.setEnabled_(False)
 
-            if NSApp.delegate().applicationName == 'Blink Lite':
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("Available in Blink Pro", "", "")
-                lastItem.setEnabled_(False)
+            for item in entries['conferences']:
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
+                lastItem.setAttributedTitle_(format_history_menu_item(item))
                 lastItem.setIndentationLevel_(1)
-            else:
-                for item in entries['conferences']:
-                    lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
-                    lastItem.setAttributedTitle_(format_history_menu_item(item))
-                    lastItem.setIndentationLevel_(1)
-                    lastItem.setTarget_(self)
-                    lastItem.setRepresentedObject_(item)
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(item)
 
-        if NSApp.delegate().applicationName != 'Blink Lite':
-            menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
-            lastItem.setEnabled_(True if entries['conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
-            lastItem.setTag_(444)
-            lastItem.setTarget_(self)
+        menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
+        lastItem.setEnabled_(True if entries['conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
+        lastItem.setTag_(444)
+        lastItem.setTarget_(self)
 
     @allocate_autorelease_pool
     def delete_session_history_entries(self):
@@ -2109,6 +2095,9 @@ class ContactWindowController(NSWindowController):
             self.historyViewer.filterByContact(contact.uri)
 
     def updateRecordingsMenu(self):
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+
         def format_item(name, when):
             a = NSMutableAttributedString.alloc().init()
             normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -2125,15 +2114,16 @@ class ContactWindowController(NSWindowController):
         self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_audio_recordings_directory())
 
         recordings = self.backend.get_audio_recordings()[-10:]
+        if not recordings:
+            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
+            item.setEnabled_(False)
+
         for dt, name, f in recordings:
             title = name + "  " + dt
             item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
             item.setTarget_(self)
             item.setRepresentedObject_(f)
             item.setAttributedTitle_(format_item(name,dt))
-        else:
-            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
-            item.setEnabled_(False)
 
     @objc.IBAction
     def recordingClicked_(self, sender):
@@ -2446,10 +2436,10 @@ class ContactWindowController(NSWindowController):
             else:
                 item = self.desktopShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Desktop from %s" % contact.display_name)
-                item.setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
+                item.setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
 
                 item = self.desktopShareMenu.itemWithTag_(2)
-                if not self.backend.isMediaTypeSupported('desktop-server'):
+                if not self.backend.isMediaTypeSupported('desktop-sharing'):
                     item.setHidden_(True)
                 else:
                     item.setHidden_(False)
@@ -2487,8 +2477,9 @@ class ContactWindowController(NSWindowController):
                 item.setEnabled_(True)
                 item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
             else:
-                item.setEnabled_(False)
-                item.setTitle_(u'Show Dialpad (Available in Blink Pro)')
+                item.setHidden_(True)
+                item = self.contactsMenu.itemWithTag_(41)
+                item.setHidden_(True)
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
