@@ -668,10 +668,10 @@ class AudioController(MediaStream):
             have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
             item = menu.itemWithTag_(11)
             item.setTitle_("Request Desktop from %s" % title)
-            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-sharing'))
+            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-client'))
             item = menu.itemWithTag_(12)
             item.setTitle_("Share My Desktop with %s" % title)
-            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-sharing'))
+            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-server'))
 
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):

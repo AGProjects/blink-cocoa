@@ -940,7 +940,7 @@ class ChatController(MediaStream):
                 title = self.sessionController.getTitleShort()
                 menu = toolbar.delegate().desktopShareMenu
                 menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Desktop from %s" % title)
-                menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-sharing'))
+                menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
 
                 item = menu.itemWithTag_(TOOLBAR_SHARE_DESKTOP_MENU)
                 if not self.backend.isMediaTypeSupported('desktop-server'):

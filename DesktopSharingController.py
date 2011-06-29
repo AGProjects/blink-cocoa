@@ -83,21 +83,6 @@ class DesktopSharingController(MediaStream):
     statusLabel = objc.IBOutlet()
     statusProgress = objc.IBOutlet()
 
-    @classmethod
-    def createStream(cls, account):
-        handler = None
-
-        ret = NSRunAlertPanel("Desktop Sharing", 
-                "Please select whether you'd like the to request the remote party to view and control your desktop or whether you'd like to request permission to view the remote desktop?",
-                "Request Remote Desktop", "Cancel", "Offer My Desktop")
-        if ret == NSAlertDefaultReturn:
-            handler = ExternalVNCViewerHandler()
-        elif ret == NSAlertOtherReturn:
-            handler = ExternalVNCServerHandler(("localhost", cls.vncServerPort))
-        else:
-            return None
-        return DesktopSharingStream(account, handler)
-
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(DesktopSharingController, self).initWithOwner_stream_(scontroller, stream)
         if self:

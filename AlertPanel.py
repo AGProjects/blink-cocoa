@@ -88,7 +88,7 @@ class AlertPanel(NSObject, object):
         self._addIncomingSession(session, streams, True)
 
     def addIncomingSession(self, session):
-        self._addIncomingSession(session, session.proposed_streams, False)
+        self._addIncomingSession(session, session.blink_supported_streams, False)
 
     def _addIncomingSession(self, session, streams, is_update_proposal):
         view = self.getItemView()
@@ -542,7 +542,7 @@ class AlertPanel(NSObject, object):
             self.removeSession(session)
 
     def acceptStreams(self, session):
-        self.owner.startIncomingSession(session, session.proposed_streams)
+        self.owner.startIncomingSession(session, session.blink_supported_streams)
         self.removeSession(session)
 
     def acceptProposedStreams(self, session):

@@ -834,37 +834,40 @@ class SIPManager(object):
                     MWIData.remove(account)
 
     def isProposedMediaTypeSupported(self, streams):
-        stream_type_list = list(set(stream.type for stream in streams))
         settings = SIPSimpleSettings()
 
-        if (settings.desktop_sharing.disabled or NSApp.delegate().applicationName == 'Blink Lite') and any(s for s in streams if s.type == 'desktop-sharing'):
-            BlinkLogger().log_info(u"Desktop Sharing is not available")
+        stream_type_list = list(set(stream.type for stream in streams))
+
+        if 'desktop-sharing' in stream_type_list:
+            ds = [s for s in streams if s.type == "desktop-sharing"]
+            if ds and ds[0].handler.type != "active" and settings.desktop_sharing.disabled:
+                BlinkLogger().log_info(u"Desktop Sharing is disabled")
+                return False
+            if ds and ds[0].handler.type != "active" and NSApp.delegate().applicationName == 'Blink Lite':
+                BlinkLogger().log_info(u"Desktop Sharing is not available")
+                return False
+
+        if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
+            BlinkLogger().log_info(u"File Transfers are disabled")
             return False
 
-        if (settings.file_transfer.disabled and any(s for s in streams if s.type == 'file-transfer')):
-            BlinkLogger().log_info(u"File Transfer is disabled in configuration")
+        if settings.chat.disabled and 'chat' in stream_type_list:
+            BlinkLogger().log_info(u"Chat sessions are disabled")
             return False
 
-        if settings.chat.disabled and any(s for s in streams if s.type == 'chat'):
-            BlinkLogger().log_info(u"Chat sessions are disabled in configuration")
-            return False
-
-        if any(s for s in streams if s.type == 'video'):
+        if 'video' in stream_type_list:
             # TODO: enable video -adi
             return False
 
         return True
 
     def isMediaTypeSupported(self, type):
-        if NSApp.delegate().applicationName == 'Blink Lite' and type not in ('audio', 'chat', 'file-transfer', 'desktop-client'):
-            return False
-
         settings = SIPSimpleSettings()
 
-        if settings.desktop_sharing.disabled and type in ('desktop-server'):
+        if NSApp.delegate().applicationName == 'Blink Lite' and type == 'desktop-server':
             return False
 
-        if NSApp.delegate().applicationName == 'Blink Lite' and type in ('desktop-server'):
+        if settings.desktop_sharing.disabled and type == 'desktop-server':
             return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
@@ -882,13 +885,14 @@ class SIPManager(object):
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
         BlinkLogger().log_info(u"Incoming session request from %s with %s streams" % (format_identity_address(session.remote_identity), ", ".join(s.type for s in data.streams)))
-        if not self.isProposedMediaTypeSupported(data.streams):
+        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
+        if not streams:
             BlinkLogger().log_info(u"Unsupported media type, session rejected")
             session.reject(488, 'Incompatible media')
             return
-
-        self.ringer.add_incoming(session, data.streams)
-        self._delegate.handle_incoming_session(session, data.streams)
+        self.ringer.add_incoming(session, streams)
+        session.blink_supported_streams = streams 
+        self._delegate.handle_incoming_session(session, streams)
 
         if NSApp.delegate().applicationName == 'Blink Pro':
             settings = SIPSimpleSettings()

@@ -788,7 +788,7 @@ class ContactWindowController(NSWindowController):
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
-        self.actionButtons.setEnabled_forSegment_(desktopOk and (self.backend.isMediaTypeSupported('desktop-sharing') or self.backend.isMediaTypeSupported('desktop-client')), 2)
+        self.actionButtons.setEnabled_forSegment_(desktopOk and (self.backend.isMediaTypeSupported('desktop-server') or self.backend.isMediaTypeSupported('desktop-client')), 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
@@ -1160,9 +1160,6 @@ class ContactWindowController(NSWindowController):
         session.setOwner_(self)
         self.sessionControllers.append(session)
 
-        if media == "desktop-sharing":
-            media = ("desktop-sharing", "audio")
-
         if media == "video":
             media = ("video", "audio")
 
@@ -1306,18 +1303,11 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startDesktopToSelected_(self, sender):
-        if sender:
-            tag = sender.tag()
-            if tag == 1:
-                self.startSessionToSelectedContact(("desktop-viewer", "audio"))
-            elif tag == 2:
-                self.startSessionToSelectedContact(("desktop-server", "audio"))
-            elif tag == 5:
-                self.startSessionToSelectedContact("desktop-viewer")
-            elif tag == 6:
-                self.startSessionToSelectedContact("desktop-server")
-        else:
-            self.startSessionToSelectedContact("desktop-sharing")
+        tag = sender.tag()
+        if tag == 1:
+            self.startSessionToSelectedContact(("desktop-viewer", "audio"))
+        elif tag == 2:
+            self.startSessionToSelectedContact(("desktop-server", "audio"))
 
     @objc.IBAction
     def actionButtonClicked_(self, sender):
@@ -2309,11 +2299,11 @@ class ContactWindowController(NSWindowController):
             contact = item.display_name
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(1)
-            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
+            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-client'))
             if self.backend.isMediaTypeSupported('desktop-server'):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
                 mitem.setTag_(2)
-                mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-sharing'))
+                mitem.setEnabled_(has_full_sip_uri)
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             if type(item) == AddressBookBlinkContact:
@@ -2439,7 +2429,7 @@ class ContactWindowController(NSWindowController):
                 item.setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
 
                 item = self.desktopShareMenu.itemWithTag_(2)
-                if not self.backend.isMediaTypeSupported('desktop-sharing'):
+                if not self.backend.isMediaTypeSupported('desktop-server'):
                     item.setHidden_(True)
                 else:
                     item.setHidden_(False)
