@@ -109,12 +109,6 @@ class AudioController(MediaStream):
             #self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
             self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
 
-            if NSApp.delegate().applicationName == 'Blink Lite':
-                rec_label = u'Record the Audio Session to file (available in Blink Pro)'
-                self.audioSegmented.cell().setToolTip_forSegment_(rec_label, 1)
-                self.transferSegmented.cell().setToolTip_forSegment_(rec_label, 2)
-                self.conferenceSegmented.cell().setToolTip_forSegment_(rec_label, 2)
-
             if self.transferEnabled:
                 self.transferSegmented.setHidden_(False)
                 self.audioSegmented.setHidden_(True)
