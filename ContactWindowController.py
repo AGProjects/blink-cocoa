@@ -2296,7 +2296,7 @@ class ContactWindowController(NSWindowController):
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
             chat_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('chat'))
             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
-            video_item.setEnabled_(False)
+            video_item.setHidden_(True)
             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
             sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
