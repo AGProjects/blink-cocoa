@@ -621,17 +621,17 @@ class AudioController(MediaStream):
             stats = self.stream.statistics
             if stats is not None:
                 rtt = stats['rtt']['avg'] / 1000
-                pktloss = 100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
+                pktloss = 100 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
                 # pjsip reports wrong values sometime, which leads to more than 100% loss
-                if pktloss > 100.0:
-                    pktloss = 100.0
+                if pktloss > 100:
+                    pktloss = 100
                 text = []
                 if rtt > 1000:
                     text.append('Latency %.1fs' % (float(rtt)/1000.0))
                 elif rtt > 100:
                     text.append('Latency %dms' % rtt)
                 if pktloss > 3:
-                    text.append('Packet Loss %.1f%%' % pktloss)
+                    text.append('Packet Loss %d%%' % pktloss)
                 self.info.setStringValue_(", ".join(text))
             else:
                 self.info.setStringValue_("")
