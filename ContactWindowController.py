@@ -170,6 +170,7 @@ class ContactWindowController(NSWindowController):
     toolsMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
+    windowMenu = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
@@ -292,6 +293,11 @@ class ContactWindowController(NSWindowController):
 
         # dialpad
         self.contactsMenu.itemWithTag_(42).setEnabled_(NSApp.delegate().applicationName == 'Blink Pro')
+
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            self.callMenu.removeItemAtIndex_(0)
+            self.callMenu.removeItemAtIndex_(0)
+            self.windowMenu.itemWithTag_(3).setHidden_(True)
 
         self.loaded = True
 
@@ -1717,8 +1723,13 @@ class ContactWindowController(NSWindowController):
     def updateCallMenu(self):
         menu = self.callMenu
 
-        while menu.numberOfItems() > 6:
-            menu.removeItemAtIndex_(6)
+
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            while menu.numberOfItems() > 4:
+                menu.removeItemAtIndex_(4)
+        else:
+            while menu.numberOfItems() > 6:
+                menu.removeItemAtIndex_(6)
 
         account = self.activeAccount()
 
