@@ -368,6 +368,7 @@ class ChatController(MediaStream):
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
         self.mediastream_failed = False
+        self.session_failed = False
 
         if self:
             self.history_msgid_list=set()
@@ -1284,6 +1285,7 @@ class ChatController(MediaStream):
         self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
+        self.session_failed = True
         if not self.mediastream_failed:
             message = "Session failed (%s): %s" % (data.originator, data.failure_reason or data.reason)
             self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
@@ -1325,8 +1327,9 @@ class ChatController(MediaStream):
 
         self.notification_center.remove_observer(self, sender=sender)
 
-        close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-        self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
+        if not self.session_failed:
+            close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
+            self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
         # save the view so we can print it
         if self.status == STREAM_CONNECTED:
             self.sessionController.lastChatOutputView = self.chatViewController.outputView
