@@ -353,12 +353,8 @@ class ChatViewController(NSObject):
         frame.size.height = 0
         self.inputView.setFrame_(frame)
 
-        if NSApp.delegate().applicationName == 'Blink Pro':
-            script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
-        else:
-            script = "showDisabledCollaborationEditor()"
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+        script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
+        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def hideCollaborationEditor(self):
         if self.splitterHeight is not None:
