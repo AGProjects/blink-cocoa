@@ -55,6 +55,8 @@ class PreferencesController(NSWindowController, object):
         if self:
             notification_center = NotificationCenter()
             notification_center.add_observer(self, name="SIPAccountWillRegister")
+            notification_center.add_observer(self, name="SIPAccountManagerDidAddAccount")
+            notification_center.add_observer(self, name="SIPAccountManagerDidRemoveAccount")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidFail")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidEnd")
@@ -82,7 +84,13 @@ class PreferencesController(NSWindowController, object):
         for view in self.settingViews.values():
             view.restore()
 
+        self.validateAddAccountButton()
         NSWindowController.showWindow_(self, sender)
+
+    def validateAddAccountButton(self):
+        if self.addButton:
+            accounts = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
+            self.addButton.setEnabled_(False if len(list(accounts)) > 1 else True)
 
     def close_(self, sender):
         self.window().close()
@@ -394,6 +402,7 @@ class PreferencesController(NSWindowController, object):
         self.refresh_account_table()
         if self.accountTable:
             self.tableViewSelectionDidChange_(None)
+        self.validateAddAccountButton()
 
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
@@ -401,6 +410,7 @@ class PreferencesController(NSWindowController, object):
         self.refresh_account_table()
         if self.accountTable:
             self.tableViewSelectionDidChange_(None)
+        self.validateAddAccountButton()
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
