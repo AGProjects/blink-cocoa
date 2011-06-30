@@ -626,8 +626,10 @@ class AudioController(MediaStream):
                 if pktloss > 100.0:
                     pktloss = 100.0
                 text = []
-                if rtt > 100:
-                    text.append('Latency %d ms' % rtt)
+                if rtt > 1000:
+                    text.append('Latency %.1fs' % (float(rtt)/1000.0))
+                elif rtt > 100:
+                    text.append('Latency %dms' % rtt)
                 if pktloss > 3:
                     text.append('Packet Loss %.1f%%' % pktloss)
                 self.info.setStringValue_(", ".join(text))
