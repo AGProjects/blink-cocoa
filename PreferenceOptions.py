@@ -1405,6 +1405,7 @@ StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing',
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
                       'audio.silent': 'Silence Alerts',
+                      'audio.pause_itunes': 'Pause and Resume iTunes Before and After Audio Calls',
                       'audio.automatic_device_switch': 'Switch Automatically to New Devices when Plugged-in',
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',

@@ -13,6 +13,7 @@ from datetime import datetime
 
 from sipsimple.session import Session, IllegalStateError
 from sipsimple.core import SIPURI, ToHeader
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
@@ -329,14 +330,15 @@ class SessionController(NSObject):
             self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
             self.changeSessionState(STATE_DNS_LOOKUP)
             SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
-              
-            if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
-                self.waitingForITunes = True
-                itunes_interface = ITunesInterface()
-                self.notification_center.add_observer(self, sender=itunes_interface)
-                itunes_interface.pause()
-            else:
-                self.waitingForITunes = False
+
+            if NSApp.delegate().pause_itunes:
+                if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
+                    self.waitingForITunes = True
+                    itunes_interface = ITunesInterface()
+                    self.notification_center.add_observer(self, sender=itunes_interface)
+                    itunes_interface.pause()
+                else:
+                    self.waitingForITunes = False
     
         else:
             for stream in add_streams:

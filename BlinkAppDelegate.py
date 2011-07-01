@@ -58,6 +58,7 @@ class BlinkAppDelegate(NSObject):
     missedChats = 0
     vncServerTask = None
     urisToOpen = []
+    pause_itunes = True
     
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -180,6 +181,9 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.startLocalVNCServer()
 
+       if notification.data.modified.has_key("audio.pause_itunes"):
+            self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
+
        if notification.data.modified.has_key("desktop_sharing.vnc_client_encryption_warning"):
             if settings.desktop_sharing.vnc_client_encryption_warning:
                 os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool YES")
@@ -288,56 +292,65 @@ You might need to Replace it and re-enter your account information. Your old fil
 
     def _NH_SIPApplicationDidStart(self, notification):
         self.startLocalVNCServer()
+        settings = SIPSimpleSettings()
+        self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
 
     def _NH_SIPSessionNewIncoming(self, notification):
         self.incomingSessions.add(notification.sender)
-        itunes_interface = ITunesInterface()
-        itunes_interface.pause()
-
-    def _NH_SIPSessionGotProposal(self, notification):
-        if any(stream.type == 'audio' for stream in notification.data.streams):
+        if self.pause_itunes:
             itunes_interface = ITunesInterface()
             itunes_interface.pause()
 
-    def _NH_SIPSessionGotRejectProposal(self, notification):
-        if any(stream.type == 'audio' for stream in notification.data.streams):
-            if not self.activeAudioStreams and not self.incomingSessions:
+    def _NH_SIPSessionGotProposal(self, notification):
+        if self.pause_itunes:
+            if any(stream.type == 'audio' for stream in notification.data.streams):
                 itunes_interface = ITunesInterface()
-                itunes_interface.resume()
+                itunes_interface.pause()
+
+    def _NH_SIPSessionGotRejectProposal(self, notification):
+        if self.pause_itunes:
+            if any(stream.type == 'audio' for stream in notification.data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface = ITunesInterface()
+                    itunes_interface.resume()
 
     def _NH_SIPSessionDidStart(self, notification):
         self.incomingSessions.discard(notification.sender)
-        if all(stream.type != 'audio' for stream in notification.data.streams):
-            if not self.activeAudioStreams and not self.incomingSessions:
-                itunes_interface = ITunesInterface()
-                itunes_interface.resume()
+        if self.pause_itunes:
+            if all(stream.type != 'audio' for stream in notification.data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface = ITunesInterface()
+                    itunes_interface.resume()
 
     def _NH_SIPSessionDidFail(self, notification):
-        itunes_interface = ITunesInterface()
-        self.incomingSessions.discard(notification.sender)
-        if not self.activeAudioStreams and not self.incomingSessions:
-            itunes_interface.resume()
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            self.incomingSessions.discard(notification.sender)
+            if not self.activeAudioStreams and not self.incomingSessions:
+                itunes_interface.resume()
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == 'audio':
             self.activeAudioStreams.add(notification.sender)
 
     def _NH_MediaStreamDidEnd(self, notification):
-        itunes_interface = ITunesInterface()
-        if notification.sender.type == "audio":
-            self.activeAudioStreams.discard(notification.sender)
-            if not self.activeAudioStreams and not self.incomingSessions:
-                itunes_interface.resume()
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            if notification.sender.type == "audio":
+                self.activeAudioStreams.discard(notification.sender)
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface.resume()
 
     def _NH_MediaStreamDidFail(self, notification):
-        itunes_interface = ITunesInterface()
-        if notification.sender.type == "audio":
-            self.activeAudioStreams.discard(notification.sender)
-            if not self.activeAudioStreams and not self.incomingSessions:
-                itunes_interface.resume()
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            if notification.sender.type == "audio":
+                self.activeAudioStreams.discard(notification.sender)
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface.resume()
 
     def applicationWillTerminate_(self, notification):
         pass

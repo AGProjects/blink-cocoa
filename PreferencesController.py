@@ -125,6 +125,7 @@ class PreferencesController(NSWindowController, object):
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             PreferenceOptionTypes['desktop_sharing.disabled'] = HiddenOption
+            PreferenceOptionTypes['audio.pause_itunes'] = HiddenOption
 
             for i in ('answering_machine', 'contacts', 'advanced', 'alerts'):
                 j = 0
