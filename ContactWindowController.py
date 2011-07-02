@@ -1641,11 +1641,14 @@ class ContactWindowController(NSWindowController):
 
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationName)
 
-        if NSApp.delegate().applicationName in ('Blink Pro', 'Blink Lite'):
+        if NSApp.delegate().applicationName == 'Blink Pro':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
+        elif NSApp.delegate().applicationName == 'Blink Lite':
+            self.blinkMenu.itemWithTag_(2).setHidden_(True)
+            self.blinkMenu.itemWithTag_(3).setHidden_(True)
         else:
             self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(False)
