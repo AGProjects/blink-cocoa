@@ -1369,13 +1369,11 @@ PreferenceOptionTypes = {
 "HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
 "audio.alert_device" : AudioOutputDeviceOption,
-"audio.directory": HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.sample_rate": HiddenOption,
 "audio.tail_length": HiddenOption,
 "chat.sms_replication": HiddenOption,
-"logs.directory": HiddenOption,
 "message_summary.enabled" : HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : HiddenOption,
@@ -1404,6 +1402,7 @@ StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing',
 
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
+                      'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Alerts',
                       'audio.pause_itunes': 'Pause and Resume iTunes Before and After Audio Calls',
                       'audio.automatic_device_switch': 'Switch Automatically to New Devices when Plugged-in',
@@ -1415,7 +1414,7 @@ SettingDescription = {
                       'desktop_sharing.disabled': 'Disable built-in VNC server for Incoming Connections',
                       'desktop_sharing.vnc_client_encryption_warning': 'Turn Off Encryption Warning for Outgoing Connections',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
-                      'file_transfer.directory': 'Download Directory',
+                      'file_transfer.directory': 'Save Files in',
                       'message_summary.voicemail_uri': 'Mailbox URI',
                       'logs.directory': 'Logs Directory',
                       'logs.trace_msrp': 'Trace MSRP (used for chat, file transfer and desktop sharing)',
@@ -1456,7 +1455,7 @@ SectionNames = {
                        }
 
 GeneralSettingsOrder = {
-                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch'],
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'pause_itunes', 'directory'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],

@@ -124,8 +124,11 @@ class PreferencesController(NSWindowController, object):
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            PreferenceOptionTypes['desktop_sharing.disabled'] = HiddenOption
             PreferenceOptionTypes['audio.pause_itunes'] = HiddenOption
+            PreferenceOptionTypes['audio.directory'] = HiddenOption
+            PreferenceOptionTypes['desktop_sharing.disabled'] = HiddenOption
+            PreferenceOptionTypes['file_transfer.directory'] = HiddenOption
+            PreferenceOptionTypes['logs.directory'] = HiddenOption
 
             for i in ('answering_machine', 'contacts', 'advanced', 'alerts'):
                 j = 0
