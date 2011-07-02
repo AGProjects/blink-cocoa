@@ -89,6 +89,7 @@ def validateToolbarButtonWhileDisconnected(sessionController, item):
     return item.itemIdentifier() in valid_items
 
 def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
+    settings = SIPSimpleSettings()
     for item in toolbar.visibleItems():
         identifier = item.itemIdentifier()
         if identifier == 'reconnect':
@@ -113,7 +114,7 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif identifier == 'smileys':
             item.setImage_(NSImage.imageNamed_("smiley_on"))
             item.setEnabled_(False)
-        elif identifier == 'editor' and sessionController.account is not BonjourAccount():
+        elif identifier == 'editor' and sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
             item.setEnabled_(True)
         elif identifier == 'history' and NSApp.delegate().applicationName == 'Blink Lite':
             item.setEnabled_(False)
@@ -845,6 +846,8 @@ class ChatController(MediaStream):
             window.noteNewMessageForSession_(self.sessionController)
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
+        settings = SIPSimpleSettings()
+
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
 
@@ -957,7 +960,7 @@ class ChatController(MediaStream):
                 else:
                     item.setEnabled_(False)
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
-            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
+            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
                 item.setEnabled_(True)
 
@@ -965,6 +968,8 @@ class ChatController(MediaStream):
         """Called automatically by Cocoa in ChatWindowController"""
 
         if hasattr(item, 'itemIdentifier'):
+            settings = SIPSimpleSettings()
+
             identifier = item.itemIdentifier()
             if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
@@ -1037,7 +1042,7 @@ class ChatController(MediaStream):
                 return True
             elif identifier == 'smileys' and self.status == STREAM_CONNECTED:
                 return True
-            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
+            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
                 return True
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
@@ -1055,7 +1060,10 @@ class ChatController(MediaStream):
         Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab
         """
         if hasattr(sender, 'itemIdentifier'):
+            settings = SIPSimpleSettings()
+
             identifier = sender.itemIdentifier()
+            settings = SIPSimpleSettings()
 
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -1086,7 +1094,6 @@ class ChatController(MediaStream):
                     audio_stream.stream.stop_recording()
                     sender.setImage_(NSImage.imageNamed_("record"))
                 else:
-                    settings = SIPSimpleSettings()
                     session = self.sessionController.session
                     direction = session.direction
                     remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
@@ -1141,7 +1148,7 @@ class ChatController(MediaStream):
                 sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
                 self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
 
-            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
+            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 sender.setImage_(NSImage.imageNamed_("editor"))
                 sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
                 self.toggleEditor()
@@ -1296,8 +1303,10 @@ class ChatController(MediaStream):
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         # toggle collaborative editor to initialize the java script to be able to receive is-composing
-        self.toggleEditor()
-        self.toggleEditor()
+        settings = SIPSimpleSettings()
+        if self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
+            self.toggleEditor()
+            self.toggleEditor()
 
     def _NH_BlinkProposalDidFail(self, sender, data):
         message = "Proposal failed: %s" % data.failure_reason

@@ -1410,6 +1410,7 @@ SettingDescription = {
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
+                      'chat.disable_collaboration_editor': 'Disable Collaboration Editor',
                       'contacts.enable_address_book': 'Show Contacts from Address Book',
                       'desktop_sharing.disabled': 'Disable built-in VNC server for Incoming Connections',
                       'desktop_sharing.vnc_client_encryption_warning': 'Turn Off Encryption Warning for Outgoing Connections',

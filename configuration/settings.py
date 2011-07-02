@@ -37,6 +37,7 @@ class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
     sms_replication = Setting(type=bool, default=True)
     disabled = Setting(type=bool, default=False)
+    disable_collaboration_editor = Setting(type=bool, default=False)
 
 
 class DesktopSharingSettingsExtension(DesktopSharingSettings):
