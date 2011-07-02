@@ -77,10 +77,11 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
             contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
-    valid_items = [NSToolbarPrintItemIdentifier]
+    valid_items = []
 
     if NSApp.delegate().applicationName != 'Blink Lite':
         valid_items.append('history')
+        valid_items.append(NSToolbarPrintItemIdentifier)
 
     if sessionController.account is not BonjourAccount():
         valid_items.append('reconnect')
