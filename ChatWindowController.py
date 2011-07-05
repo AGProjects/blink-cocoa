@@ -608,6 +608,27 @@ class ChatWindowController(NSWindowController):
             else:
                 self.joinConferenceWindow(session)
 
+    @objc.IBAction
+    def printDocument_(self, sender):
+        session = self.selectedSessionController()
+        chat_stream = session.streamHandlerOfType("chat")
+        if session:
+            print_view = chat_stream.chatViewController.outputView if chat_stream else session.lastChatOutputView
+            if print_view:
+                printInfo = NSPrintInfo.sharedPrintInfo()
+                printInfo.setTopMargin_(30)
+                printInfo.setBottomMargin_(30)
+                printInfo.setLeftMargin_(10)
+                printInfo.setRightMargin_(10)
+                printInfo.setOrientation_(NSPortraitOrientation)
+                printInfo.setHorizontallyCentered_(True)
+                printInfo.setVerticallyCentered_(False)
+                printInfo.setHorizontalPagination_(NSFitPagination)
+                printInfo.setVerticalPagination_(NSFitPagination)
+                NSPrintInfo.setSharedPrintInfo_(printInfo)
+
+                # print the content of the web view
+                print_view.mainFrame().frameView().documentView().print_(self)
  
     @objc.IBAction
     def userClickedActionsButton_(self, sender):
@@ -745,51 +766,6 @@ class ChatWindowController(NSWindowController):
             except KeyError:
                 pass
             self.toolbar.validateVisibleItems()
-
-    def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
-        if tabView.numberOfTabViewItems() == 0:
-            self.window().performClose_(None)
-
-    def tabView_didSelectTabViewItem_(self, tabView, item):
-        if self.sessions.has_key(item.identifier()):
-            self.revalidateToolbar()
-            self.updateTitle()
-            session = self.sessions[item.identifier()]
-            if session.mustShowDrawer:
-                self.refreshDrawer()
-                self.drawer.open()
-                self.participantsTableView.deselectAll_(self)
-                self.conferenceFilesTableView.deselectAll_(self)
-            else:
-                self.drawer.close()
-
-            if session.hasStreamOfType("audio") and not session.inProposal:
-                audio_stream = session.streamHandlerOfType("audio")
-                if audio_stream.holdByLocal:
-                    audio_stream.unhold()
-                    audio_stream.view.setSelected_(True)
-
-        self.unreadMessageCounts[item.identifier()] = 0
-        sitem = self.tabSwitcher.itemForTabViewItem_(item)
-        if sitem:
-            sitem.setBadgeLabel_("")
-
-    def tabView_shouldCloseTabViewItem_(self, tabView, item):
-        if self.sessions.has_key(item.identifier()):
-            chat_stream = self.sessions[item.identifier()].streamHandlerOfType("chat")
-            if chat_stream:
-                chat_stream.closeTab()
-                return False
-        return True
-
-    def tabView_didDettachTabViewItem_atPosition_(self, tabView, item, pos):
-        if len(self.sessions) > 1:
-            session = self.sessions[item.identifier()]
-
-            window = ChatWindowManager.ChatWindowManager().dettachChatWindow(session)
-            if window:
-                window.window().setFrameOrigin_(pos)
-                self.refreshDrawer()
 
     def refreshDrawer(self):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
@@ -953,6 +929,102 @@ class ChatWindowController(NSWindowController):
 
             self.resizeDrawerSplitter()
 
+    def drawerDidOpen_(self, notification):
+        session = self.selectedSessionController()
+        if session:
+            session.mustShowDrawer = True
+
+    def drawerDidClose_(self, notification):
+        session = self.selectedSessionController()
+        if session:
+            session.mustShowDrawer = False
+
+    def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
+        if tabView.numberOfTabViewItems() == 0:
+            self.window().performClose_(None)
+
+    def tabView_didSelectTabViewItem_(self, tabView, item):
+        if self.sessions.has_key(item.identifier()):
+            self.revalidateToolbar()
+            self.updateTitle()
+            session = self.sessions[item.identifier()]
+            if session.mustShowDrawer:
+                self.refreshDrawer()
+                self.drawer.open()
+                self.participantsTableView.deselectAll_(self)
+                self.conferenceFilesTableView.deselectAll_(self)
+            else:
+                self.drawer.close()
+
+            if session.hasStreamOfType("audio") and not session.inProposal:
+                audio_stream = session.streamHandlerOfType("audio")
+                if audio_stream.holdByLocal:
+                    audio_stream.unhold()
+                    audio_stream.view.setSelected_(True)
+
+        self.unreadMessageCounts[item.identifier()] = 0
+        sitem = self.tabSwitcher.itemForTabViewItem_(item)
+        if sitem:
+            sitem.setBadgeLabel_("")
+
+    def tabView_shouldCloseTabViewItem_(self, tabView, item):
+        if self.sessions.has_key(item.identifier()):
+            chat_stream = self.sessions[item.identifier()].streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.closeTab()
+                return False
+        return True
+
+    def tabView_didDettachTabViewItem_atPosition_(self, tabView, item, pos):
+        if len(self.sessions) > 1:
+            session = self.sessions[item.identifier()]
+
+            window = ChatWindowManager.ChatWindowManager().dettachChatWindow(session)
+            if window:
+                window.window().setFrameOrigin_(pos)
+                self.refreshDrawer()
+
+    # TableView dataSource
+    def numberOfRowsInTableView_(self, tableView):
+        if tableView == self.participantsTableView:
+            try:
+                return len(self.participants)
+            except:
+                pass
+        elif tableView == self.conferenceFilesTableView:
+            return len(self.conference_shared_files)
+
+        return 0
+
+    def tableView_objectValueForTableColumn_row_(self, tableView, tableColumn, row):
+        if tableView == self.participantsTableView:
+            try:
+                if row < len(self.participants):
+                    if type(self.participants[row]) in (str, unicode):
+                        return self.participants[row]
+                    else:
+                        return self.participants[row].name
+            except:
+                pass
+        elif tableView == self.conferenceFilesTableView:
+            if row < len(self.conference_shared_files):
+                return self.conference_shared_files[row].name
+        return None
+        
+    def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
+        if tableView == self.participantsTableView:
+            try:
+                if row < len(self.participants):
+                    if type(self.participants[row]) in (str, unicode):
+                        cell.setContact_(None)
+                    else:
+                        cell.setContact_(self.participants[row])
+            except:
+                pass
+        elif tableView == self.conferenceFilesTableView:
+            if row < len(self.conference_shared_files):
+                cell.conference_file = self.conference_shared_files[row]
+
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         session = self.selectedSessionController()
@@ -1026,78 +1098,6 @@ class ChatWindowController(NSWindowController):
             fnames = pboard.propertyListForType_(NSFilenamesPboardType)
             return chat_controller.sendFiles(fnames)
 
-    def drawerDidOpen_(self, notification):
-        session = self.selectedSessionController()
-        if session:
-            session.mustShowDrawer = True
-
-    def drawerDidClose_(self, notification):
-        session = self.selectedSessionController()
-        if session:
-            session.mustShowDrawer = False
-
-    # TableView dataSource
-    def numberOfRowsInTableView_(self, tableView):
-        if tableView == self.participantsTableView:
-            try:
-                return len(self.participants)
-            except:
-                pass
-        elif tableView == self.conferenceFilesTableView:
-            return len(self.conference_shared_files)
-
-        return 0
-
-    def tableView_objectValueForTableColumn_row_(self, tableView, tableColumn, row):
-        if tableView == self.participantsTableView:
-            try:
-                if row < len(self.participants):
-                    if type(self.participants[row]) in (str, unicode):
-                        return self.participants[row]
-                    else:
-                        return self.participants[row].name
-            except:
-                pass
-        elif tableView == self.conferenceFilesTableView:
-            if row < len(self.conference_shared_files):
-                return self.conference_shared_files[row].name
-        return None
-        
-    def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
-        if tableView == self.participantsTableView:
-            try:
-                if row < len(self.participants):
-                    if type(self.participants[row]) in (str, unicode):
-                        cell.setContact_(None)
-                    else:
-                        cell.setContact_(self.participants[row])
-            except:
-                pass
-        elif tableView == self.conferenceFilesTableView:
-            if row < len(self.conference_shared_files):
-                cell.conference_file = self.conference_shared_files[row]
-
-    @objc.IBAction
-    def printDocument_(self, sender):
-        session = self.selectedSessionController()
-        chat_stream = session.streamHandlerOfType("chat")
-        if session:
-            print_view = chat_stream.chatViewController.outputView if chat_stream else session.lastChatOutputView
-            if print_view:
-                printInfo = NSPrintInfo.sharedPrintInfo()
-                printInfo.setTopMargin_(30)
-                printInfo.setBottomMargin_(30)
-                printInfo.setLeftMargin_(10)
-                printInfo.setRightMargin_(10)
-                printInfo.setOrientation_(NSPortraitOrientation)
-                printInfo.setHorizontallyCentered_(True)
-                printInfo.setVerticallyCentered_(False)
-                printInfo.setHorizontalPagination_(NSFitPagination)
-                printInfo.setVerticalPagination_(NSFitPagination)
-                NSPrintInfo.setSharedPrintInfo_(printInfo)
-
-                # print the content of the web view
-                print_view.mainFrame().frameView().documentView().print_(self)
 
 class ConferenceFile(NSObject):
     def __new__(cls, *args, **kwargs):
