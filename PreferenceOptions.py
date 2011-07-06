@@ -1392,7 +1392,8 @@ PreferenceOptionTypes = {
 }
 
 # These acount sections are always hidden
-DisabledAccountPreferenceSections = ['dialog_event']
+#DisabledAccountPreferenceSections = ['dialog_event']
+DisabledAccountPreferenceSections = []
 
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider']

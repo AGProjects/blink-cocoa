@@ -154,7 +154,7 @@
 		1F22731212B554F50010A8B2 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		1F22731412B554F50010A8B2 /* 3333@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */; };
-		1F22731512B554F50010A8B2 /* PresenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresenceWindow.xib */; };
+		1F22731512B554F50010A8B2 /* PresencePolicyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */; };
 		1F22731612B554F50010A8B2 /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		1F22731712B554F50010A8B2 /* NewWatcherDialog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */; };
 		1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
@@ -395,7 +395,7 @@
 		1F8DC39D135084FA0034815C /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1F8DC39E135084FA0034815C /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		1F8DC39F135084FA0034815C /* 3333@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */; };
-		1F8DC3A0135084FA0034815C /* PresenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresenceWindow.xib */; };
+		1F8DC3A0135084FA0034815C /* PresencePolicyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */; };
 		1F8DC3A1135084FA0034815C /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		1F8DC3A2135084FA0034815C /* NewWatcherDialog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */; };
 		1F8DC3A3135084FA0034815C /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
@@ -671,7 +671,7 @@
 		2B6328850FE422AE00446655 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
 		2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		2B7B9C661008D67500BFDAF7 /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
-		2B7FC8251132D409008C07BF /* PresenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresenceWindow.xib */; };
+		2B7FC8251132D409008C07BF /* PresencePolicyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */; };
 		2B7FC8271132D415008C07BF /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		2B7FCC971134DA9E008C07BF /* NewWatcherDialog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */; };
 		2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
@@ -1291,7 +1291,7 @@
 		2B6328840FE422AE00446655 /* ChatController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatController.py; sourceTree = "<group>"; };
 		2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactWindowController.py; sourceTree = "<group>"; };
 		2B7B9C651008D67500BFDAF7 /* TableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = TableView.py; sourceTree = "<group>"; };
-		2B7FC8241132D409008C07BF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresenceWindow.xib; sourceTree = "<group>"; };
+		2B7FC8241132D409008C07BF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresencePolicyWindow.xib; sourceTree = "<group>"; };
 		2B7FC8261132D415008C07BF /* PresencePolicy.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePolicy.py; sourceTree = "<group>"; };
 		2B7FCC961134DA9E008C07BF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NewWatcherDialog.xib; sourceTree = "<group>"; };
 		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DesktopServerWindow.xib; sourceTree = "<group>"; };
@@ -1804,7 +1804,7 @@
 			children = (
 				2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */,
 				2B7FC8261132D415008C07BF /* PresencePolicy.py */,
-				2B7FC8231132D409008C07BF /* PresenceWindow.xib */,
+				2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */,
 				2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */,
 			);
 			name = Presence;
@@ -2160,7 +2160,7 @@
 				1F22731212B554F50010A8B2 /* audio_small.png in Resources */,
 				1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */,
 				1F22731412B554F50010A8B2 /* 3333@sip2sip.info.tiff in Resources */,
-				1F22731512B554F50010A8B2 /* PresenceWindow.xib in Resources */,
+				1F22731512B554F50010A8B2 /* PresencePolicyWindow.xib in Resources */,
 				1F22731612B554F50010A8B2 /* PresencePolicy.py in Resources */,
 				1F22731712B554F50010A8B2 /* NewWatcherDialog.xib in Resources */,
 				1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */,
@@ -2342,7 +2342,7 @@
 				1F8DC39D135084FA0034815C /* audio_small.png in Resources */,
 				1F8DC39E135084FA0034815C /* SMSViewController.py in Resources */,
 				1F8DC39F135084FA0034815C /* 3333@sip2sip.info.tiff in Resources */,
-				1F8DC3A0135084FA0034815C /* PresenceWindow.xib in Resources */,
+				1F8DC3A0135084FA0034815C /* PresencePolicyWindow.xib in Resources */,
 				1F8DC3A1135084FA0034815C /* PresencePolicy.py in Resources */,
 				1F8DC3A2135084FA0034815C /* NewWatcherDialog.xib in Resources */,
 				1F8DC3A3135084FA0034815C /* PresenceOfflineWindow.xib in Resources */,
@@ -2522,7 +2522,7 @@
 				2BDAE17311113B8200AC1D7A /* audio_small.png in Resources */,
 				2B06A42A111CFE74001D41E5 /* SMSViewController.py in Resources */,
 				2BD66FD3112850DD003F32B9 /* 3333@sip2sip.info.tiff in Resources */,
-				2B7FC8251132D409008C07BF /* PresenceWindow.xib in Resources */,
+				2B7FC8251132D409008C07BF /* PresencePolicyWindow.xib in Resources */,
 				2B7FC8271132D415008C07BF /* PresencePolicy.py in Resources */,
 				2B7FCC971134DA9E008C07BF /* NewWatcherDialog.xib in Resources */,
 				2B29EF3811382F65009DA9B0 /* PresenceOfflineWindow.xib in Resources */,
@@ -2745,12 +2745,12 @@
 			name = AddGroup.xib;
 			sourceTree = "<group>";
 		};
-		2B7FC8231132D409008C07BF /* PresenceWindow.xib */ = {
+		2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2B7FC8241132D409008C07BF /* English */,
 			);
-			name = PresenceWindow.xib;
+			name = PresencePolicyWindow.xib;
 			sourceTree = "<group>";
 		};
 		2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */ = {

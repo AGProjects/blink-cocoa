@@ -225,6 +225,10 @@ class PreferencesController(NSWindowController, object):
             if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn'):
                 continue
 
+            #if section in ('presence', 'xcap'):
+                # TODO: enable presence -adi
+                #continue
+
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
             
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
