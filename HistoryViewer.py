@@ -125,6 +125,7 @@ class HistoryViewer(NSWindowController):
  
     def awakeFromNib(self):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
+        self.contactTable.setDoubleAction_("doubleClick:")
 
     def close_(self, sender):
         self.window().close()
@@ -576,6 +577,23 @@ class HistoryViewer(NSWindowController):
     def menuWillOpen_(self, menu):
         if menu == self.contactMenu:
             pass
+
+    @objc.IBAction
+    def doubleClick_(self, sender):
+        try:
+            row = self.contactTable.selectedRow()
+        except:
+            return
+
+        if row < 2:
+            return
+
+        try:
+            contact = self.contacts[row]
+        except IndexError:
+            return
+
+        NSApp.delegate().windowController.startSessionWithSIPURI(contact.uri)
 
     @objc.IBAction
     def userClickedContactMenu_(self, sender):
