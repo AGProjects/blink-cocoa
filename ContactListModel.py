@@ -3,6 +3,7 @@
 
 __all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIcon', 'saveContactIcon']
 
+import datetime
 import os
 import re
 import cPickle
@@ -20,11 +21,13 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI
 #from sipsimple.contact import Contact, ContactGroup
 from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
 
 from AddContactController import AddContactController, EditContactController
 from AddGroupController import AddGroupController
 from BlinkLogger import BlinkLogger
+from HistoryManager import SessionHistory
 from SIPManager import SIPManager, strip_addressbook_special_characters
 
 from resources import ApplicationData
@@ -203,6 +206,11 @@ class BlinkContact(NSObject):
         saveContactIcon(self.icon, str(self.uri))
 
 
+class HistoryBlinkContact(BlinkContact):
+    editable = False
+    deletable = False
+
+
 class BonjourBlinkContact(BlinkContact):
     editable = False
     deletable = False
@@ -263,6 +271,95 @@ class BonjourBlinkContactGroup(BlinkContactGroup):
         self.name = NSString.stringWithString_(name)
         self.expanded = expanded
         self.previous_position = previous_position
+
+
+class HistoryBlinkContactGroup(BlinkContactGroup):
+    editable = False
+    deletable = False
+    type = 'previous'
+
+    def format_date(self, dt):
+        if not dt:
+            return "unknown"
+        now = datetime.datetime.now()
+        delta = now - dt
+        if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
+            return dt.strftime("at %H:%M")
+        elif delta.days <= 1:
+            return "Yesterday at %s" % dt.strftime("%H:%M")
+        elif delta.days < 7:
+            return dt.strftime("on %A")
+        elif delta.days < 300:
+            return dt.strftime("on %B %d")
+        else:
+            return dt.strftime("on %Y-%m-%d")
+
+    @run_in_green_thread
+    @allocate_autorelease_pool
+    def load_history(self):
+        self.contacts = []
+        seen = {}
+        contacts = []
+
+        settings = SIPSimpleSettings()
+        count = settings.contacts.maximum_calls
+        results = self.get_history_entries()
+
+        for result in list(results):
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            if seen.has_key(target_uri):
+                seen[target_uri] += 1
+            else:
+                seen[target_uri] = 1
+                contact = HistoryBlinkContact(target_uri, icon=loadContactIcon(target_uri), name=display_name)
+                contact.setDetail(u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time)))
+                contacts.append(contact)
+
+            if len(seen) >= count:
+                break
+
+        for contact in contacts:
+            if seen[contact.uri] > 1:
+                new_detail = contact.detail + u' and other %d times' % seen[contact.uri]
+                contact.setDetail(new_detail)
+            self.contacts.append(contact)
+
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+
+class MissedCallsBlinkContactGroup(HistoryBlinkContactGroup):
+    type = 'missed'
+
+    def __init__(self, name=u'Missed Calls', expanded=True, previous_position=0):
+        self.name = NSString.stringWithString_(name)
+        self.expanded = expanded
+        self.previous_position = previous_position
+
+    def get_history_entries(self):
+        return SessionHistory().get_entries(direction='incoming', status='missed', count=100, remote_focus="0")
+
+
+class OutgoingCallsBlinkContactGroup(HistoryBlinkContactGroup):
+    type = 'outgoing'
+
+    def __init__(self, name=u'Outgoing Calls', expanded=True, previous_position=0):
+        self.name = NSString.stringWithString_(name)
+        self.expanded = expanded
+        self.previous_position = previous_position
+
+    def get_history_entries(self):
+        return SessionHistory().get_entries(direction='outgoing', status='completed', count=100, remote_focus="0")
+
+class IncomingCallsBlinkContactGroup(HistoryBlinkContactGroup):
+    type = 'incoming'
+
+    def __init__(self, name=u'Incoming Calls', expanded=True, previous_position=0):
+        self.name = NSString.stringWithString_(name)
+        self.expanded = expanded
+        self.previous_position = previous_position
+
+    def get_history_entries(self):
+        return SessionHistory().get_entries(direction='incoming', status='completed', count=100, remote_focus="0")
 
 
 class AddressBookBlinkContactGroup(BlinkContactGroup):
@@ -374,6 +471,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                 self.contacts.append(contact)
 
         self.sortContacts()
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
 
 class CustomListModel(NSObject):
@@ -596,6 +694,9 @@ class ContactListModel(CustomListModel):
     def init(self):
         self.bonjour_group = BonjourBlinkContactGroup()
         self.addressbook_group = AddressBookBlinkContactGroup()
+        self.missed_calls_group = MissedCallsBlinkContactGroup()
+        self.outgoing_calls_group = OutgoingCallsBlinkContactGroup()
+        self.incoming_calls_group = IncomingCallsBlinkContactGroup()
         return self
 
     @allocate_autorelease_pool
@@ -622,6 +723,7 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="SIPAccountDidActivate")
         nc.add_observer(self, name="SIPAccountDidDeactivate")
         nc.add_observer(self, name="SIPApplicationDidStart")
+        nc.add_observer(self, name="AudioCallLoggedToHistory")
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
@@ -630,7 +732,32 @@ class ContactListModel(CustomListModel):
             self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
+        if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_missed_calls_group:
+            self.missed_calls_group.load_history()
+            self.contactGroupsList.insert(self.missed_calls_group.previous_position, self.missed_calls_group)
+
+        if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_outgoing_calls_group:
+            self.outgoing_calls_group.load_history()
+            self.contactGroupsList.insert(self.outgoing_calls_group.previous_position, self.outgoing_calls_group)
+
+        if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_incoming_calls_group:
+            self.incoming_calls_group.load_history()
+            self.contactGroupsList.insert(self.incoming_calls_group.previous_position, self.incoming_calls_group)
+
         self._migrateContacts()
+
+    def _NH_AudioCallLoggedToHistory(self, notification):
+        if NSApp.delegate().applicationName != 'Blink Lite':
+            settings = SIPSimpleSettings()
+
+            if settings.contacts.enable_missed_calls_group:
+                self.missed_calls_group.load_history()
+
+            if settings.contacts.enable_outgoing_calls_group:
+                self.outgoing_calls_group.load_history()
+
+            if settings.contacts.enable_incoming_calls_group:
+                self.incoming_calls_group.load_history()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
@@ -638,11 +765,47 @@ class ContactListModel(CustomListModel):
             if settings.contacts.enable_address_book and self.addressbook_group not in self.contactGroupsList:
                 self.addressbook_group.loadAddressBook()
                 self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.contactGroupsList:
                 self.addressbook_group.previous_position=self.contactGroupsList.index(self.addressbook_group)
                 self.contactGroupsList.remove(self.addressbook_group)
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if notification.data.modified.has_key("contacts.enable_incoming_calls_group"):
+            if settings.contacts.enable_incoming_calls_group and self.incoming_calls_group not in self.contactGroupsList:
+                self.incoming_calls_group.load_history()
+                self.contactGroupsList.insert(self.incoming_calls_group.previous_position, self.incoming_calls_group)
+            elif not settings.contacts.enable_incoming_calls_group and self.incoming_calls_group in self.contactGroupsList:
+                self.incoming_calls_group.previous_position=self.contactGroupsList.index(self.incoming_calls_group)
+                self.contactGroupsList.remove(self.incoming_calls_group)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if notification.data.modified.has_key("contacts.enable_outgoing_calls_group"):
+            if settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group not in self.contactGroupsList:
+                self.outgoing_calls_group.load_history()
+                self.contactGroupsList.insert(self.outgoing_calls_group.previous_position, self.outgoing_calls_group)
+            elif not settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group in self.contactGroupsList:
+                self.outgoing_calls_group.previous_position=self.contactGroupsList.index(self.outgoing_calls_group)
+                self.contactGroupsList.remove(self.outgoing_calls_group)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if notification.data.modified.has_key("contacts.enable_missed_calls_group"):
+            if settings.contacts.enable_missed_calls_group and self.missed_calls_group not in self.contactGroupsList:
+                self.missed_calls_group.load_history()
+                self.contactGroupsList.insert(self.missed_calls_group.previous_position, self.missed_calls_group)
+            elif not settings.contacts.enable_missed_calls_group and self.missed_calls_group in self.contactGroupsList:
+                self.missed_calls_group.previous_position=self.contactGroupsList.index(self.missed_calls_group)
+                self.contactGroupsList.remove(self.missed_calls_group)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if notification.data.modified.has_key("contacts.maximum_calls"):
+            if settings.contacts.enable_missed_calls_group:
+                self.missed_calls_group.load_history()
+
+            if settings.contacts.enable_outgoing_calls_group:
+                self.outgoing_calls_group.load_history()
+
+            if settings.contacts.enable_incoming_calls_group:
+                self.incoming_calls_group.load_history()
 
     def _migrateContacts(self):
         # TODO: migrate contacts -adi
@@ -692,6 +855,13 @@ class ContactListModel(CustomListModel):
             self.contactGroupsList.insert(self.bonjour_group.previous_position, self.bonjour_group)
             if self.addressbook_group not in self.contactGroupsList:
                 self.addressbook_group.previous_position += 1
+            if self.missed_calls_group  not in self.contactGroupsList:
+                self.missed_calls_group.previous_position += 1
+            if self.outgoing_calls_group  not in self.contactGroupsList:
+                self.outgoing_calls_group.previous_position += 1
+            if self.incoming_calls_group  not in self.contactGroupsList:
+                self.incoming_calls_group.previous_position += 1
+
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_SIPAccountDidDeactivate(self, notification):
@@ -837,6 +1007,18 @@ class ContactListModel(CustomListModel):
                         self.bonjour_group.name=group_item["name"]
                         self.bonjour_group.expanded=group_item["expanded"]
                         self.bonjour_group.previous_position=len(contactGroups)
+                    elif group_item["special"] == "missed":
+                        self.missed_calls_group.name=group_item["name"]
+                        self.missed_calls_group.expanded=group_item["expanded"]
+                        self.missed_calls_group.previous_position=len(contactGroups)
+                    elif group_item["special"] == "outgoing":
+                        self.outgoing_calls_group.name=group_item["name"]
+                        self.outgoing_calls_group.expanded=group_item["expanded"]
+                        self.outgoing_calls_group.previous_position=len(contactGroups)
+                    elif group_item["special"] == "incoming":
+                        self.incoming_calls_group.name=group_item["name"]
+                        self.incoming_calls_group.expanded=group_item["expanded"]
+                        self.incoming_calls_group.previous_position=len(contactGroups)
                     else:
                         contacts = [BlinkContact.from_dict(contact) for contact in group_item["contacts"]]
                         group = BlinkContactGroup(name=group_item["name"], expanded=group_item["expanded"], previous_position=len(contactGroups), contacts=contacts)
