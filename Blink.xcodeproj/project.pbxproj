@@ -1404,17 +1404,15 @@
 			isa = PBXGroup;
 			children = (
 				2BEFC1BD0FD1C93F00447EFB /* Common */,
-				2B4CA92C10AA5F0500D5F19E /* Contacts */,
-				2BAF387A0FE0962B0040117A /* Enrollment */,
-				2BEFC19E0FD1C2B500447EFB /* Sessions */,
-				2BFB34B110178A43002D79FB /* AlertPanel */,
-				1F2615A712BD8FFA00B402E1 /* ServerConference */,
-				2B01283F109391FF009B2112 /* ServerSettings */,
 				2B11B0B10FF55C3A007FC176 /* Logging */,
 				2B5DE51D0FFC5C5D00701821 /* Preferences */,
-				2B7FC8221132D3EF008C07BF /* Presence */,
+				2BAF387A0FE0962B0040117A /* Enrollment */,
+				2B4CA92C10AA5F0500D5F19E /* Contacts */,
 				2B240B751023AF8200079580 /* PhotoPicker */,
-				2BEFC1A00FD1C2DE00447EFB /* CustomWidgets */,
+				2BEFC19E0FD1C2B500447EFB /* Sessions */,
+				2B7FC8221132D3EF008C07BF /* Presence */,
+				2B01283F109391FF009B2112 /* ServerTools */,
+				2BEFC1A00FD1C2DE00447EFB /* Widgets */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -1485,7 +1483,7 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		1F2615A712BD8FFA00B402E1 /* ServerConference */ = {
+		1F2615A712BD8FFA00B402E1 /* Conference */ = {
 			isa = PBXGroup;
 			children = (
 				1F092DB312B2785E000CEE7F /* ConferenceController.py */,
@@ -1494,7 +1492,7 @@
 				1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */,
 				1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */,
 			);
-			name = ServerConference;
+			name = Conference;
 			sourceTree = "<group>";
 		};
 		1F89844212FCC78900490C6C /* History */ = {
@@ -1554,13 +1552,13 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		2B01283F109391FF009B2112 /* ServerSettings */ = {
+		2B01283F109391FF009B2112 /* ServerTools */ = {
 			isa = PBXGroup;
 			children = (
 				2B01284C10939236009B2112 /* AccountSettings.xib */,
 				2B0128481093922A009B2112 /* AccountSettings.py */,
 			);
-			name = ServerSettings;
+			name = ServerTools;
 			sourceTree = "<group>";
 		};
 		2B0CE72710CD822100325F30 /* SMS */ = {
@@ -1834,18 +1832,20 @@
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2B240839102117F200079580 /* SessionRinger.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
+				2BFB34B110178A43002D79FB /* AlertPanel */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				1FAF8D2E12DA1F5F0029857C /* Video */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
 				2BC09104106884CE0069AB9A /* DesktopSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
+				1F2615A712BD8FFA00B402E1 /* Conference */,
 				1F89844212FCC78900490C6C /* History */,
 			);
 			name = Sessions;
 			sourceTree = "<group>";
 		};
-		2BEFC1A00FD1C2DE00447EFB /* CustomWidgets */ = {
+		2BEFC1A00FD1C2DE00447EFB /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
 				DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */,
@@ -1857,7 +1857,7 @@
 				2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */,
 				1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */,
 			);
-			name = CustomWidgets;
+			name = Widgets;
 			sourceTree = "<group>";
 		};
 		2BEFC1BD0FD1C93F00447EFB /* Common */ = {
