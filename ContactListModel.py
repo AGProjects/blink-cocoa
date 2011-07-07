@@ -348,7 +348,7 @@ class OutgoingCallsBlinkContactGroup(HistoryBlinkContactGroup):
         self.previous_position = previous_position
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='outgoing', status='completed', count=100, remote_focus="0")
+        return SessionHistory().get_entries(direction='outgoing', count=100, remote_focus="0")
 
 class IncomingCallsBlinkContactGroup(HistoryBlinkContactGroup):
     type = 'incoming'
