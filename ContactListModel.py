@@ -630,19 +630,24 @@ class CustomListModel(NSObject):
                 targetGroup = item
                 contactObject = sourceGroup.contacts[contact]
 
-                if not item.editable or not sourceGroup.editable or not targetGroup.editable or sourceGroup == targetGroup:
+                if not targetGroup.editable or sourceGroup == targetGroup or type(sourceGroup) == BonjourBlinkContactGroup:
                     return False
 
-                if sourceGroup == targetGroup:
+                if sourceGroup.editable:
                     del sourceGroup.contacts[contact]
-                    if contact > index:
-                        sourceGroup.contacts.insert(index, contactObject)
-                    else:
-                        sourceGroup.contacts.insert(index-1, contactObject)
-                else:
-                    del sourceGroup.contacts[contact]
-                    targetGroup.contacts.insert(index, contactObject)
-                    targetGroup.sortContacts()
+
+                contact = None
+                if type(sourceGroup) != type(targetGroup) and type(targetGroup) == BlinkContactGroup:
+                    uri = None
+                    if '@' not in contactObject.uri:
+                        account = NSApp.delegate().windowController.activeAccount()
+                        if account:
+                            uri = contactObject.uri + "@" + account.id.domain
+
+                    contact = BlinkContact(uri if uri is not None else contactObject.uri, name=contactObject.name, icon=contactObject.icon)
+
+                targetGroup.contacts.insert(index, contactObject if contact is None else contact)
+                targetGroup.sortContacts()
 
                 table.reloadData()
                 row = table.rowForItem_(contactObject)
@@ -1176,10 +1181,9 @@ class ContactListModel(CustomListModel):
                 group = None
 
             if "@" not in contact.uri:
-                account = self.activeAccount()
+                account = NSApp.delegate().windowController.activeAccount()
                 if account:
-                    user, domain = account.id.split("@", 1)
-                    contact.uri = contact.uri + "@" + domain
+                    contact.uri = contact.uri + "@" + account.id.domain
 
             if group:
                 if group != oldGroup:
