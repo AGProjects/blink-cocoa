@@ -295,18 +295,21 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
             return dt.strftime("on %Y-%m-%d")
 
     @run_in_green_thread
-    @allocate_autorelease_pool
     def load_history(self):
+        results = self.get_history_entries()
+        self.refresh_contacts(results)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def refresh_contacts(self, results):
         self.contacts = []
         seen = {}
         contacts = []
-
         settings = SIPSimpleSettings()
         count = settings.contacts.maximum_calls
-        results = self.get_history_entries()
-
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+
             if seen.has_key(target_uri):
                 seen[target_uri] += 1
             else:
