@@ -12,11 +12,12 @@ from zope.interface import implements
 from Foundation import *
 from AppKit import *
 
+
 import SIPManager
 from resources import ApplicationData
 from util import allocate_autorelease_pool
 
-from ContactListModel import BlinkContact
+from ContactListModel import BlinkContact, BlinkContactGroup
 
 def fillPresenceMenu(presenceMenu, target, action, attributes=None):
     if not attributes:
@@ -153,12 +154,12 @@ class PresencePolicy(NSWindowController):
         self.presencePolicyTableView.setRowHeight_(40)
         self.presencePolicyTableView.setTarget_(self)   
         self.presencePolicyTableView.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
-        self.presencePolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
+        self.presencePolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri", "dragged-contact"))
 
         self.dialogPolicyTableView.setRowHeight_(40)
         self.dialogPolicyTableView.setTarget_(self)   
         self.dialogPolicyTableView.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
-        self.dialogPolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
+        self.dialogPolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri", "dragged-contact"))
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -475,6 +476,10 @@ class PresencePolicy(NSWindowController):
         if not self.management_enabled:
             return NSDragOperationNone
 
+        group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
+        if contact is None:
+            return NSDragOperationAll
+
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
@@ -488,11 +493,30 @@ class PresencePolicy(NSWindowController):
         if not self.management_enabled:
             return False
 
-        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
-            uri = str(pboard.stringForType_("x-blink-sip-uri"))
-            if uri:
-                uri = re.sub("^(sip:|sips:)", "", str(uri))
-            self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
-            self.refreshPolicyTable()
-            self.presencePolicyTableView.reloadData()
-            return True
+        group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
+        if contact is None:
+            try:
+                g = NSApp.delegate().windowController.model.contactGroupsList[group]
+                if type(g) == BlinkContactGroup:
+                    for contact in g.contacts:
+                        uri = contact.uri
+                        if uri:
+                            uri = re.sub("^(sip:|sips:)", "", str(uri))
+                        self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
+                    self.refreshPolicyTable()
+                    self.presencePolicyTableView.reloadData()
+                    return True
+            except KeyError:
+                return False
+
+        else:
+            if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+                uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                if uri:
+                    uri = re.sub("^(sip:|sips:)", "", str(uri))
+                self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
+                self.refreshPolicyTable()
+                self.presencePolicyTableView.reloadData()
+                return True
+
+        return False
