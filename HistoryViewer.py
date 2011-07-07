@@ -202,9 +202,8 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
-        self.dayly_entries = []
-        self.indexTable.reloadData()
         if self.history:
+            self.resetDailyEntries()
             self.updateBusyIndicator(True)
             search_text = self.search_text if self.search_text else None
             remote_uri = self.search_contact if self.search_contact else None
@@ -215,6 +214,12 @@ class HistoryViewer(NSWindowController):
             results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date, before_date=before_date)
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def resetDailyEntries(self):
+        self.dayly_entries = []
+        self.indexTable.reloadData()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
