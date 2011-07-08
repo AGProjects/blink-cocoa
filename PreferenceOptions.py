@@ -1444,17 +1444,19 @@ SettingDescription = {
 SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
+                       'dialog_event': 'Dialog Notifications',
                        'logs': 'File Logging',
-                       'message_summary': 'Voicemail',
+                       'message_summary': 'Voicemail Notifications',
                        'msrp': 'MSRP Media',
                        'nat_traversal': 'NAT Traversal',
-                       'pstn': 'Phone Numbers',
+                       'pstn': 'Phone Number Dialing',
                        'rtp': 'RTP Media',
+                       'presence': 'Presence Notifications',
                        'sip': 'SIP Signaling',
-                       'sounds': 'Alerts',
+                       'sounds': 'Alert Tones',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
-                       'xcap': 'Contacts'
+                       'xcap': 'Contacts Management'
                        }
 
 GeneralSettingsOrder = {
