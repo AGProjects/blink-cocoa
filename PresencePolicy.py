@@ -56,6 +56,7 @@ class PresencePolicy(NSWindowController):
     delButton = objc.IBOutlet()
     enableButtons = True
     searchSubscriberBox = objc.IBOutlet()
+    disabled_label = objc.IBOutlet()
 
     presencePolicyTableView = objc.IBOutlet()
     dialogPolicyTableView = objc.IBOutlet()
@@ -142,12 +143,17 @@ class PresencePolicy(NSWindowController):
 
     def validateButtons(self):
         if self.eventPolicyManagementIsEnabled():
-            self.addButton.setEnabled_(True)
-            self.delButton.setEnabled_(True)
+            self.addButton.setHidden_(False)
+            self.delButton.setHidden_(False)
+            self.searchSubscriberBox.setHidden_(False)
+            self.disabled_label.setHidden_(True)
             self.management_enabled = True
         else:
-            self.addButton.setEnabled_(False)
-            self.delButton.setEnabled_(False)
+            self.addButton.setHidden_(True)
+            self.delButton.setHidden_(True)
+            self.searchSubscriberBox.setHidden_(True)
+            self.disabled_label.setHidden_(False)
+            self.disabled_label.setStringValue_(u'%s is disabled in account configuration' % self.event.capitalize())
             self.management_enabled = False
 
     def awakeFromNib(self):
