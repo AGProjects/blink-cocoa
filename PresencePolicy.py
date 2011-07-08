@@ -157,12 +157,12 @@ class PresencePolicy(NSWindowController):
             self.management_enabled = False
 
     def awakeFromNib(self):
-        self.presencePolicyTableView.setRowHeight_(40)
+        self.presencePolicyTableView.setRowHeight_(35)
         self.presencePolicyTableView.setTarget_(self)   
         self.presencePolicyTableView.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
         self.presencePolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri", "dragged-contact"))
 
-        self.dialogPolicyTableView.setRowHeight_(40)
+        self.dialogPolicyTableView.setRowHeight_(35)
         self.dialogPolicyTableView.setTarget_(self)   
         self.dialogPolicyTableView.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
         self.dialogPolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri", "dragged-contact"))
