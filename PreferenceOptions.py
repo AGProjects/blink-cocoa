@@ -1374,7 +1374,6 @@ PreferenceOptionTypes = {
 "audio.sample_rate": HiddenOption,
 "audio.tail_length": HiddenOption,
 "chat.sms_replication": HiddenOption,
-"message_summary.enabled" : HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : HiddenOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
