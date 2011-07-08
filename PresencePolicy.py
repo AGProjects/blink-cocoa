@@ -67,7 +67,10 @@ class PresencePolicy(NSWindowController):
     applyToAll = objc.IBOutlet()
     newWatcherLabel = objc.IBOutlet()
     newWatcherPop = objc.IBOutlet()
-    newWatchers = objc.IBOutlet()    
+    newWatchers = objc.IBOutlet()
+    groupCombo = objc.IBOutlet()
+    createContact = objc.IBOutlet()  
+    contactExists = objc.IBOutlet()  
     
     offlineWindowShown = False
     offlineWindow = objc.IBOutlet()
@@ -84,7 +87,7 @@ class PresencePolicy(NSWindowController):
     newWatcherInfo = None
     lastWatcherPolicy = None
 
-    policyTypes = ["Allow", "Block", "Polite-block", "Confirm"]
+    policyTypes = ["Allow", "Block", "Ignore", "Undecided"]
     defaultPolicy = "Allow"
 
     def init(self):
@@ -119,6 +122,14 @@ class PresencePolicy(NSWindowController):
 
         return self
 
+    def setGroupNames(self, groups):
+        current = self.groupCombo.stringValue()
+        self.groupCombo.removeAllItems()
+        self.groupCombo.addItemsWithObjectValues_(NSArray.arrayWithObjects_(*groups))
+        self.groupCombo.selectItemAtIndex_(0)
+        if current:
+            self.groupCombo.setStringValue_(current)
+        
     def loadPolicy(self):
         self.storage_path = ApplicationData.get('presence_policy_')
         try:
@@ -292,8 +303,11 @@ class PresencePolicy(NSWindowController):
                 self.lastWatcherPolicy = self.newWatcherPolicy
                 self.newWatcherPolicy = None
                 self.newWatcherInfo = None
+
+                NSUserDefaults.standardUserDefaults().setValue_forKey_(self.groupCombo.stringValue(), "LastGroupForWatcher")
+
                 if self.pendingWatchers:
-                    self.performSelector_withObject_afterDelay_("showPendingWatchers", None, 0.1)
+                    self.performSelector_withObject_afterDelay_("showPendingWatchers", None, 0.05)
         else: # PresenceOffline
             self.offlineWindowShown = False
 
@@ -307,7 +321,7 @@ class PresencePolicy(NSWindowController):
         for account in self.policy_data.keys():
             for event in self.policy_data[account].keys():
                 for address, policy in self.policy_data[account][event]:
-                    if policy.lower() == "confirm":
+                    if policy.lower() == "undecided":
                         self.pendingWatchers.append((account, event, address, True))
 
         if self.pendingWatchers:
@@ -327,7 +341,22 @@ class PresencePolicy(NSWindowController):
                     self.applyToAll.setTitle_(u"Apply Policy to All Other %d Pending Subscribers" % len(self.pendingWatchers))
                     self.applyToAll.setHidden_(False if len(self.pendingWatchers) else True)
                     self.applyToAll.setState_(NSOffState)
-                    self.newWatcherPolicy = "Confirm"
+
+                    if not NSApp.delegate().windowController.model.hasContactMatchingURI(sipuri):
+                        self.groupCombo.setHidden_(False)     
+                        self.createContact.setHidden_(False)
+                        self.contactExists.setHidden_(True)
+                        groups = [g.name for g in NSApp.delegate().windowController.model.contactGroupsList if g.editable]
+                        first_group = groups and groups[0] or None
+                        group = NSUserDefaults.standardUserDefaults().stringForKey_("LastGroupForWatcher")
+                        self.groupCombo.setStringValue_(group or "")      
+                        self.setGroupNames(groups)
+                    else:
+                        self.groupCombo.setHidden_(True)
+                        self.createContact.setHidden_(True)
+                        self.contactExists.setHidden_(False)
+
+                    self.newWatcherPolicy = "Undecided"
                     self.newWatcherInfo = (account, event, sipuri)
                     self.newWatcherWindow.makeKeyAndOrderFront_(None)
                     break
