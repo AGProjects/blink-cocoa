@@ -1091,23 +1091,27 @@ class ContactListModel(CustomListModel):
     def contactExists(self, uri, account=None):
         return any(contact for group in self.contactGroupsList for contact in group.contacts if contact.uri == uri and contact.stored_in_account == account)
 
-    def addNewContact(self, address="", group=None, display_name=None):
+    def addNewContact(self, address="", group=None, display_name=None, account=None, skip_dialog=False):
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
         new_contact = BlinkContact(address, name=display_name)
-        acct = AccountManager().default_account
-        new_contact.stored_in_account = str(acct.id)
 
-        groups = [g.name for g in self.contactGroupsList if g.editable]
-        first_group = groups and groups[0] or None
+        acct = AccountManager().default_account.id if not account else account
+        new_contact.stored_in_account = str(acct)
 
-        controller = AddContactController(new_contact, group or first_group)
-        controller.setGroupNames(groups)
+        if not skip_dialog:
+            groups = [g.name for g in self.contactGroupsList if g.editable]
+            first_group = groups and groups[0] or None
 
-        result, groupName = controller.runModal()
+            controller = AddContactController(new_contact, group or first_group)
+            controller.setGroupNames(groups)
 
-        if result:
+            result, groupName = controller.runModal()
+        else:
+             groupName = group
+
+        if skip_dialog or result:
             if "@" not in new_contact.uri:
                 account = AccountManager().default_account
                 if account:
