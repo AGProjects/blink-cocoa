@@ -474,7 +474,6 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                 self.contacts.append(contact)
 
         self.sortContacts()
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
 
 class CustomListModel(NSObject):
@@ -773,6 +772,7 @@ class ContactListModel(CustomListModel):
             if settings.contacts.enable_address_book and self.addressbook_group not in self.contactGroupsList:
                 self.addressbook_group.loadAddressBook()
                 self.contactGroupsList.insert(self.addressbook_group.previous_position, self.addressbook_group)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.contactGroupsList:
                 self.addressbook_group.previous_position=self.contactGroupsList.index(self.addressbook_group)
                 self.contactGroupsList.remove(self.addressbook_group)
