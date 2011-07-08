@@ -482,9 +482,10 @@ class PresencePolicy(NSWindowController):
         if not self.management_enabled:
             return NSDragOperationNone
 
-        group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
-        if contact is None:
-            return NSDragOperationAll
+        if pboard.availableTypeFromArray_(["dragged-contact"]):
+            group, contact = eval(pboard.stringForType_("dragged-contact"))
+            if contact is None:
+                return NSDragOperationAll
 
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
@@ -499,30 +500,30 @@ class PresencePolicy(NSWindowController):
         if not self.management_enabled:
             return False
 
-        group, contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
-        if contact is None:
-            try:
-                g = NSApp.delegate().windowController.model.contactGroupsList[group]
-                if type(g) == BlinkContactGroup:
-                    for contact in g.contacts:
-                        uri = contact.uri
-                        if uri:
-                            uri = re.sub("^(sip:|sips:)", "", str(uri))
-                        self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
-                    self.refreshPolicyTable()
-                    self.presencePolicyTableView.reloadData()
-                    return True
-            except KeyError:
-                return False
+        if pboard.availableTypeFromArray_(["dragged-contact"]):
+            group, contact = eval(pboard.stringForType_("dragged-contact"))
+            if contact is None and group is not None:
+                try:
+                    g = NSApp.delegate().windowController.model.contactGroupsList[group]
+                    if type(g) == BlinkContactGroup:
+                        for contact in g.contacts:
+                            uri = contact.uri
+                            if uri:
+                                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                            self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
+                        self.refreshPolicyTable()
+                        self.presencePolicyTableView.reloadData()
+                        return True
+                except KeyError:
+                    return False
 
-        else:
-            if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
-                uri = str(pboard.stringForType_("x-blink-sip-uri"))
-                if uri:
-                    uri = re.sub("^(sip:|sips:)", "", str(uri))
-                self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
-                self.refreshPolicyTable()
-                self.presencePolicyTableView.reloadData()
-                return True
+        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            uri = str(pboard.stringForType_("x-blink-sip-uri"))
+            if uri:
+                uri = re.sub("^(sip:|sips:)", "", str(uri))
+            self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
+            self.refreshPolicyTable()
+            self.presencePolicyTableView.reloadData()
+            return True
 
         return False
