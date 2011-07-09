@@ -7,26 +7,18 @@ from AppKit import *
 
 class ContactCell(NSTextFieldCell):
     contact = None
-
-    nameAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
-      NSFont.systemFontOfSize_(12.0), NSFontAttributeName)
-
-    nameAttrs_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(
-      NSFont.systemFontOfSize_(12.0), NSFontAttributeName,
-      NSColor.whiteColor(), NSForegroundColorAttributeName)
-
-    infoAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
-      NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
-      NSColor.grayColor(), NSForegroundColorAttributeName)
-
-    infoAttrs_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(
-      NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
-      NSColor.whiteColor(), NSForegroundColorAttributeName)
+    view = None
+    frame = None
 
     defaultIcon = None
     audioIcon = NSImage.imageNamed_("audio_16")
     audioHoldIcon = NSImage.imageNamed_("paused_16")
     chatIcon = NSImage.imageNamed_("pencil")
+
+    firstLineFontAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName)
+    firstLineFontAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName)
+    secondLineFontAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.grayColor(), NSForegroundColorAttributeName)
+    secondLineFontAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName)
 
     def setContact_(self, contact):
         self.contact = contact
@@ -43,64 +35,66 @@ class ContactCell(NSTextFieldCell):
         return NSMakeSize(100, 30)
 
     def drawWithFrame_inView_(self, frame, view):
-        presence_indicator_frame = frame
-
         if self.contact is None:
-            tmp = frame
-            return super(ContactCell, self).drawWithFrame_inView_(tmp, view)
+            return super(ContactCell, self).drawWithFrame_inView_(frame, view)
 
         if self.defaultIcon is None:
             self.defaultIcon = NSImage.imageNamed_("NSUser")
 
+        self.frame = frame
+        self.view = view
+
         icon = self.contact.icon or self.defaultIcon
-        if icon:
-            self.drawIcon(icon, 2, frame.origin.y+3, 28, 28)
+        self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
 
-        self.drawActiveMedia(frame)
+        self.drawActiveMedia()
+        self.drawFirstLine()
+        self.drawSecondLine()
+        self.drawPresenceIndicator()
 
-        # Print Display Name 1st line
+    def drawFirstLine(self):
+        frame = self.frame
         frame.origin.x = 35
         frame.origin.y += 2
-        attrs = self.nameAttrs if not self.isHighlighted() else self.nameAttrs_highlighted
+
+        attrs = self.firstLineFontAttributes if not self.isHighlighted() else self.firstLineFontAttributes_highlighted
         self.stringValue().drawAtPoint_withAttributes_(frame.origin, attrs)
 
-        # Print Detail 2nd line
+    def drawSecondLine(self):
         if self.contact.detail:
-            point = frame.origin
+            point = self.frame.origin
             point.y += 15
-            attrs = self.infoAttrs if not self.isHighlighted() else self.infoAttrs_highlighted
+            attrs = self.secondLineFontAttributes if not self.isHighlighted() else self.secondLineFontAttributes_highlighted
             self.contact.detail.drawAtPoint_withAttributes_(point, attrs)
 
-        self.drawPresenceIndicator(presence_indicator_frame, view)
-
-    def drawActiveMedia(self, frame):
+    def drawActiveMedia(self):
         if not hasattr(self.contact, "active_media"):
             return
-        # Align media icons to the right of the frame
-        if 'message' in self.contact.active_media and ('audio' in self.contact.active_media or 'audio-onhold' in self.contact.active_media):
-            self.drawIcon(self.chatIcon,  frame.size.width-32, frame.origin.y +14, 16, 16)
-            if 'audio-onhold' in self.contact.active_media:
-                self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
-            else:
-                self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
-        elif 'message' in self.contact.active_media:
-            self.drawIcon(self.chatIcon,  frame.size.width-16, frame.origin.y +14, 16, 16)
-        elif 'audio' in self.contact.active_media:
-            self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
-        elif 'audio-onhold' in self.contact.active_media:
-            self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
 
-    def drawPresenceIndicator(self, presence_indicator_frame, view):
+        if 'message' in self.contact.active_media and ('audio' in self.contact.active_media or 'audio-onhold' in self.contact.active_media):
+            self.drawIcon(self.chatIcon,  self.frame.size.width-32, self.frame.origin.y +14, 16, 16)
+            if 'audio-onhold' in self.contact.active_media:
+                self.drawIcon(self.audioHoldIcon, self.frame.size.width-16, self.frame.origin.y +14, 16, 16)
+            else:
+                self.drawIcon(self.audioIcon, self.frame.size.width-16, self.frame.origin.y +14, 16, 16)
+        elif 'message' in self.contact.active_media:
+            self.drawIcon(self.chatIcon,  self.frame.size.width-16, self.frame.origin.y +14, 16, 16)
+        elif 'audio' in self.contact.active_media:
+            self.drawIcon(self.audioIcon, self.frame.size.width-16, self.frame.origin.y +14, 16, 16)
+        elif 'audio-onhold' in self.contact.active_media:
+            self.drawIcon(self.audioHoldIcon, self.frame.size.width-16, self.frame.origin.y +14, 16, 16)
+
+    def drawPresenceIndicator(self):
         if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
 
-        presence_indicator_width=6
+        indicator_width = 6
+        frame = self.frame
+        frame.size.width = indicator_width
+        frame.origin.x = self.view.frame().size.width - indicator_width - 2
+        frame.origin.y -= 17
 
-        presence_indicator_frame.size.width=presence_indicator_width
-        presence_indicator_frame.origin.x=view.frame().size.width-presence_indicator_width -2
-        presence_indicator_frame.origin.y-=17
-
-        rect = NSInsetRect(presence_indicator_frame, 0, 0)
+        rect = NSInsetRect(frame, 0, 0)
 
         if self.contact.presence_indicator == 'available':
             NSColor.greenColor().set()
@@ -131,3 +125,4 @@ class ContactCell(NSTextFieldCell):
             icon_flipped = icon.copy()
             icon_flipped.setFlipped_(True)
             icon_flipped.drawInRect_fromRect_operation_fraction_(trect, rect, NSCompositeSourceOver, 1.0)
+
