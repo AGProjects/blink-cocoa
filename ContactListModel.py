@@ -63,11 +63,14 @@ class BlinkContact(NSObject):
     _preferred_media = 'audio'
     supported_media = []
     active_media = []
+    presence_indicator = None
+    presence_note = None
+    presence_activity = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, supported_media=None, active_media=None, aliases=None, stored_in_account=None):
+    def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, supported_media=None, active_media=None, aliases=None, stored_in_account=None, presence_indicator=None):
         self.uri = uri
         self.name = NSString.stringWithString_(name or uri)
         self.display_name = display_name or unicode(self.name)
@@ -78,6 +81,7 @@ class BlinkContact(NSObject):
         self._preferred_media = preferred_media or 'audio'
         self.supported_media = supported_media or []
         self.active_media = active_media or []
+        self.presence_indicator = presence_indicator
 
     def copyWithZone_(self, zone):
         return self
@@ -110,7 +114,8 @@ class BlinkContact(NSObject):
                 "display_name":unicode(self.display_name), 
                 "preferred_media":self._preferred_media, 
                 "aliases":self.aliases,
-                "stored_in_account":self.stored_in_account}
+                "stored_in_account":self.stored_in_account
+                }
 
     @classmethod
     def from_dict(cls, contact):
@@ -184,6 +189,15 @@ class BlinkContact(NSObject):
 
     def setDetail(self, detail):
         self.detail = NSString.stringWithString_(detail)
+
+    def setPresenceIndicator(self, indicator):
+        self.presence_indicator = indicator
+
+    def setPresenceNote(self, note):
+        self.presence_note = note
+
+    def setPresenceActivity(self, activity):
+        self.presence_activity = activity
 
     def setSupportedMedia(self, media):
         self.supported_media = media
@@ -815,6 +829,10 @@ class ContactListModel(CustomListModel):
             if settings.contacts.enable_incoming_calls_group:
                 self.incoming_calls_group.load_history()
 
+        if notification.data.modified.has_key("presence.enabled"):
+            self.updatePresenceIndicator()
+
+
     def _migrateContacts(self):
         # TODO: migrate contacts -adi
         return
@@ -870,6 +888,34 @@ class ContactListModel(CustomListModel):
             if self.incoming_calls_group  not in self.contactGroupsList:
                 self.incoming_calls_group.previous_position += 1
 
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+        else:
+            self.updatePresenceIndicator()
+
+    def updatePresenceIndicator(self):
+        groups_with_presence = (group for group in self.contactGroupsList if type(group) == BlinkContactGroup)
+        change = False
+        for group in groups_with_presence:
+            for contact in group.contacts:
+                if contact.stored_in_account == 'local' and contact.presence_indicator is not None:
+                    contact.setPresenceIndicator(None)
+                    change = True
+                    continue
+
+                try:
+                    account = AccountManager().get_account(contact.stored_in_account)
+                except KeyError:
+                    pass
+                else:
+                    if account.presence.enabled and contact.presence_indicator is None:
+                        contact.setPresenceIndicator('unknown')
+                        change = True
+                    elif not account.presence.enabled and contact.presence_indicator is not None:
+                        contact.setPresenceIndicator(None)
+                        change = True
+
+        if change:
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_SIPAccountDidDeactivate(self, notification):
@@ -1177,6 +1223,7 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             oldGroup = None
 
+        oldAccount=contact.stored_in_account
         controller = EditContactController(contact, unicode(oldGroup.name) if oldGroup else "")
         controller.setGroupNames([g.name for g in self.contactGroupsList if g.editable])
         result, groupName = controller.runModal()
@@ -1209,6 +1256,9 @@ class ContactListModel(CustomListModel):
                         break
                     index += 1
                 self.contactGroupsList.insert(index, group)
+
+            if oldAccount != contact.stored_in_account:
+                self.updatePresenceIndicator()
 
     def deleteContact(self, contact):
         if isinstance(contact, BlinkContact):

@@ -43,6 +43,8 @@ class ContactCell(NSTextFieldCell):
         return NSMakeSize(100, 30)
 
     def drawWithFrame_inView_(self, frame, view):
+        presence_indicator_frame = frame
+
         if self.contact is None:
             tmp = frame
             return super(ContactCell, self).drawWithFrame_inView_(tmp, view)
@@ -80,6 +82,36 @@ class ContactCell(NSTextFieldCell):
             point.y += 15
             attrs = self.infoAttrs if not self.isHighlighted() else self.infoAttrs_highlighted
             self.contact.detail.drawAtPoint_withAttributes_(point, attrs)
+
+        self.drawPresenceIndicator(presence_indicator_frame, view)
+
+
+    def drawPresenceIndicator(self, presence_indicator_frame, view):
+        if self.contact.presence_indicator is None:
+            return
+
+        presence_indicator_width=6
+
+        presence_indicator_frame.size.width=presence_indicator_width
+        presence_indicator_frame.origin.x=view.frame().size.width-presence_indicator_width -2
+        presence_indicator_frame.origin.y-=17
+
+        rect = NSInsetRect(presence_indicator_frame, 0, 0)
+
+        if self.contact.presence_indicator == 'available':
+            NSColor.greenColor().set()
+        elif self.contact.presence_indicator == 'activity':  
+            NSColor.yellowColor().set()
+        elif self.contact.presence_indicator == 'busy':  
+            NSColor.redColor().set()
+        else:
+            NSColor.whiteColor().set()
+
+        border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 0.0, 0.0)
+        border.setLineWidth_(0.1)
+        border.fill()
+        NSColor.blackColor().set()
+        border.stroke()
 
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
