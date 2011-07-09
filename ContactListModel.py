@@ -292,9 +292,9 @@ class BonjourBlinkContactGroup(BlinkContactGroup):
 
 
 class HistoryBlinkContactGroup(BlinkContactGroup):
+    type = 'history'
     editable = False
     deletable = False
-    type = 'previous'
 
     def format_date(self, dt):
         if not dt:
