@@ -88,7 +88,7 @@ class ContactCell(NSTextFieldCell):
         if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
 
-        indicator_width = 6
+        indicator_width = 4
         frame = self.frame
         frame.size.width = indicator_width
         frame.origin.x = self.view.frame().size.width - indicator_width - 2
@@ -105,7 +105,7 @@ class ContactCell(NSTextFieldCell):
         else:
             NSColor.whiteColor().set()
 
-        border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 0.0, 0.0)
+        border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 2.0, 2.0)
         border.setLineWidth_(0.1)
         border.fill()
         NSColor.blackColor().set()
