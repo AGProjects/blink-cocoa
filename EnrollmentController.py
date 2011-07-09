@@ -216,7 +216,8 @@ class EnrollmentController(NSObject):
         account.sip.outbound_proxy = outbound_proxy
         account.nat_traversal.msrp_relay = msrp_relay
         account.xcap.xcap_root = xcap_root
-        account.tls.certificate = tls_path
+        if tls_path:
+            account.tls.certificate = tls_path
         account.server.settings_url = settings_url
         account.display_name = display_name
         account.auth.password = password

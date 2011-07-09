@@ -213,32 +213,18 @@ class SIPManager(object):
         passport = response["passport"]
         address = response["sip_address"]
 
-        crt = passport["crt"].strip() + os.linesep
-        key = passport["key"].strip() + os.linesep
-        ca = passport["ca"].strip() + os.linesep
-
-        try:
-            X509Certificate(crt)
-            X509Certificate(ca)
-            X509PrivateKey(key)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid certificate data: %s" % e)
-            return None
-
         tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
             os.mkdir(tls_folder, 0700)
 
-        crt_path = os.path.join(tls_folder, address + ".crt")
-        f = open(crt_path, "w")
-        os.chmod(crt_path, 0600)
-        f.write(crt)
-        f.write(key)
-        f.close()
-        BlinkLogger().log_info(u"Saved new TLS Certificate and Private Key to %s" % crt_path)
+        ca = passport["ca"].strip() + os.linesep
+        try:
+            X509Certificate(ca)
+        except GNUTLSError, e:
+            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
+            return None
 
         ca_path = os.path.join(tls_folder, 'ca.crt')
-
         try:
             existing_cas = open(ca_path, "r").read().strip() + os.linesep
         except:
@@ -252,12 +238,35 @@ class SIPManager(object):
             os.chmod(ca_path, 0600)
             f.write(ca_list)
             f.close()
-            BlinkLogger().log_info(u"Added new CA to %s" % ca_path)
+            BlinkLogger().log_info(u"Added new Certificate Authority to %s" % ca_path)
             settings = SIPSimpleSettings()
             settings.tls.ca_list = ca_path
             settings.save()
         else:
-            BlinkLogger().log_info(u"CA already present in %s" % ca_path)
+            BlinkLogger().log_info(u"Certificate Authority already present in %s" % ca_path)
+
+
+        crt = passport["crt"].strip() + os.linesep
+        try:
+            X509Certificate(crt)
+        except GNUTLSError, e:
+            BlinkLogger().log_error(u"Invalid TLS certificate: %s" % e)
+            return None
+
+        key = passport["key"].strip() + os.linesep
+        try:
+            X509PrivateKey(key)
+        except GNUTLSError, e:
+            BlinkLogger().log_error(u"Invalid Private Key: %s" % e)
+            return None
+
+        crt_path = os.path.join(tls_folder, address + ".crt")
+        f = open(crt_path, "w")
+        os.chmod(crt_path, 0600)
+        f.write(crt)
+        f.write(key)
+        f.close()
+        BlinkLogger().log_info(u"Saved new TLS Certificate and Private Key to %s" % crt_path)
 
         return crt_path
 
@@ -299,7 +308,8 @@ class SIPManager(object):
         account.server.settings_url = data['settings_url']
         if data['passport'] is not None:
             cert_path = self.save_certificates(data)
-            account.tls.certificate = cert_path
+            if cert_path:
+                account.tls.certificate = cert_path
         account.enabled = True
         account.save()
         account_manager.default_account = default_account
