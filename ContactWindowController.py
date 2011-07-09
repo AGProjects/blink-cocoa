@@ -36,7 +36,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, AddressBookBlinkContact, BlinkContactGroup, contactIconPathForURI, saveContactIcon
+from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, contactIconPathForURI, saveContactIcon
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -1250,9 +1250,9 @@ class ContactWindowController(NSWindowController):
             for uri in participants:
                 contact = self.getContactMatchingURI(uri)
                 if contact:
-                    contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                 else:
-                    contact = BlinkContact(uri=uri, name=uri)
+                    contact = BlinkConferenceContact(uri=uri, name=uri)
                 contact.setDetail('Invitation sent...')
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)
@@ -2642,10 +2642,10 @@ class ContactWindowController(NSWindowController):
                 contact = self.getContactMatchingURI(uri)
                 if contact:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                    contact = BlinkContact(uri, name=display_name, icon=contact.icon)
+                    contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
                 else:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
-                    contact = BlinkContact(uri, name=display_name)
+                    contact = BlinkConferenceContact(uri, name=display_name)
 
                 contact.setActiveMedia(active_media)
 
@@ -2801,9 +2801,9 @@ class ContactWindowController(NSWindowController):
                             uri='%s@%s' % (uri, session.account.id.domain)
                         contact = self.getContactMatchingURI(uri)
                         if contact:
-                            contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
+                            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                         else:
-                            contact = BlinkContact(uri, name=uri)
+                            contact = BlinkConferenceContact(uri, name=uri)
                         contact.setDetail('Invitation sent...')
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
@@ -2876,9 +2876,9 @@ class ContactWindowController(NSWindowController):
             if session.remote_focus:
                 contact = self.getContactMatchingURI(uri)
                 if contact:
-                    contact = BlinkContact(uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                 else:
-                    contact = BlinkContact(uri, name=uri)
+                    contact = BlinkConferenceContact(uri, name=uri)
                 contact.setDetail('Invitation sent...')
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)

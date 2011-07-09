@@ -56,19 +56,7 @@ class ContactCell(NSTextFieldCell):
         if icon:
             self.drawIcon(icon, 2, frame.origin.y+3, 28, 28)
 
-        # Align media icons to the right of the frame
-        if 'message' in self.contact.active_media and ('audio' in self.contact.active_media or 'audio-onhold' in self.contact.active_media):
-            self.drawIcon(self.chatIcon,  frame.size.width-32, frame.origin.y +14, 16, 16)
-            if 'audio-onhold' in self.contact.active_media:
-                self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
-            else:
-                self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
-        elif 'message' in self.contact.active_media:
-            self.drawIcon(self.chatIcon,  frame.size.width-16, frame.origin.y +14, 16, 16)
-        elif 'audio' in self.contact.active_media:
-            self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
-        elif 'audio-onhold' in self.contact.active_media:
-            self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+        self.drawActiveMedia(frame)
 
         # Print Display Name 1st line
         frame.origin.x = 35
@@ -85,9 +73,25 @@ class ContactCell(NSTextFieldCell):
 
         self.drawPresenceIndicator(presence_indicator_frame, view)
 
+    def drawActiveMedia(self, frame):
+        if not hasattr(self.contact, "active_media"):
+            return
+        # Align media icons to the right of the frame
+        if 'message' in self.contact.active_media and ('audio' in self.contact.active_media or 'audio-onhold' in self.contact.active_media):
+            self.drawIcon(self.chatIcon,  frame.size.width-32, frame.origin.y +14, 16, 16)
+            if 'audio-onhold' in self.contact.active_media:
+                self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+            else:
+                self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+        elif 'message' in self.contact.active_media:
+            self.drawIcon(self.chatIcon,  frame.size.width-16, frame.origin.y +14, 16, 16)
+        elif 'audio' in self.contact.active_media:
+            self.drawIcon(self.audioIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
+        elif 'audio-onhold' in self.contact.active_media:
+            self.drawIcon(self.audioHoldIcon, frame.size.width-16, frame.origin.y +14, 16, 16)
 
     def drawPresenceIndicator(self, presence_indicator_frame, view):
-        if self.contact.presence_indicator is None:
+        if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
 
         presence_indicator_width=6

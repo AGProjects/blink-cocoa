@@ -55,22 +55,18 @@ def loadContactIcon(uri):
         return NSImage.alloc().initWithContentsOfFile_(path)
     return None
 
+
 class BlinkContact(NSObject):
     editable = True
     deletable = True
     stored_in_account = None
     aliases = []
     _preferred_media = 'audio'
-    supported_media = []
-    active_media = []
-    presence_indicator = None
-    presence_note = None
-    presence_activity = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, supported_media=None, active_media=None, aliases=None, stored_in_account=None, presence_indicator=None):
+    def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, aliases=None, stored_in_account=None):
         self.uri = uri
         self.name = NSString.stringWithString_(name or uri)
         self.display_name = display_name or unicode(self.name)
@@ -79,9 +75,6 @@ class BlinkContact(NSObject):
         self.stored_in_account = stored_in_account
         self.aliases = aliases or []
         self._preferred_media = preferred_media or 'audio'
-        self.supported_media = supported_media or []
-        self.active_media = active_media or []
-        self.presence_indicator = presence_indicator
 
     def copyWithZone_(self, zone):
         return self
@@ -116,16 +109,6 @@ class BlinkContact(NSObject):
                 "aliases":self.aliases,
                 "stored_in_account":self.stored_in_account
                 }
-
-    @classmethod
-    def from_dict(cls, contact):
-        obj = BlinkContact(uri=contact["uri"], name=contact["name"],
-                            display_name=contact.get("display_name"),
-                            preferred_media=contact["preferred_media"],
-                            icon=loadContactIcon(contact["uri"]), 
-                            aliases=contact.get("aliases"),
-                            stored_in_account=contact.get("stored_in_account"))
-        return obj
 
     def matchesURI(self, uri):
         def split_uri(uri):
@@ -190,21 +173,6 @@ class BlinkContact(NSObject):
     def setDetail(self, detail):
         self.detail = NSString.stringWithString_(detail)
 
-    def setPresenceIndicator(self, indicator):
-        self.presence_indicator = indicator
-
-    def setPresenceNote(self, note):
-        self.presence_note = note
-
-    def setPresenceActivity(self, activity):
-        self.presence_activity = activity
-
-    def setSupportedMedia(self, media):
-        self.supported_media = media
-
-    def setActiveMedia(self, media):
-        self.active_media = media
-
     def setPreferredMedia(self, media):
         self._preferred_media = media
 
@@ -218,6 +186,42 @@ class BlinkContact(NSObject):
     def setIcon(self, icon):
         self.icon = icon
         saveContactIcon(self.icon, str(self.uri))
+
+
+class BlinkConferenceContact(BlinkContact):
+    active_media = []
+
+    def setActiveMedia(self, media):
+        self.active_media = media
+
+
+class BlinkPresenceContact(BlinkContact):
+    presence_indicator = None
+    presence_note = None
+    presence_activity = None
+    supported_media = []
+
+    def setPresenceIndicator(self, indicator):
+        self.presence_indicator = indicator
+
+    def setPresenceNote(self, note):
+        self.presence_note = note
+
+    def setPresenceActivity(self, activity):
+        self.presence_activity = activity
+
+    def setSupportedMedia(self, media):
+        self.supported_media = media
+
+    @classmethod
+    def from_dict(cls, contact):
+        obj = BlinkPresenceContact(uri=contact["uri"], name=contact["name"],
+                            display_name=contact.get("display_name"),
+                            preferred_media=contact["preferred_media"],
+                            icon=loadContactIcon(contact["uri"]), 
+                            aliases=contact.get("aliases"),
+                            stored_in_account=contact.get("stored_in_account"))
+        return obj
 
 
 class HistoryBlinkContact(BlinkContact):
@@ -660,7 +664,7 @@ class CustomListModel(NSObject):
                         if account:
                             uri = contactObject.uri + "@" + account.id.domain
 
-                    contact = BlinkContact(uri if uri is not None else contactObject.uri, name=contactObject.name, icon=contactObject.icon)
+                    contact = BlinkPresenceContact(uri if uri is not None else contactObject.uri, name=contactObject.name, icon=contactObject.icon)
 
                 targetGroup.contacts.insert(index, contactObject if contact is None else contact)
                 targetGroup.sortContacts()
@@ -1074,7 +1078,7 @@ class ContactListModel(CustomListModel):
                         self.incoming_calls_group.expanded=group_item["expanded"]
                         self.incoming_calls_group.previous_position=len(contactGroups)
                     else:
-                        contacts = [BlinkContact.from_dict(contact) for contact in group_item["contacts"]]
+                        contacts = [BlinkPresenceContact.from_dict(contact) for contact in group_item["contacts"]]
                         group = BlinkContactGroup(name=group_item["name"], expanded=group_item["expanded"], previous_position=len(contactGroups), contacts=contacts)
                         contactGroups.append(group)
 
@@ -1098,10 +1102,10 @@ class ContactListModel(CustomListModel):
             NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
 
         test_contacts = [
-            BlinkContact("200901@login.zipdx.com", icon=loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
-            BlinkContact("3333@sip2sip.info", icon=loadContactIcon("3333@sip2sip.info"), name="Call Test"),
-            BlinkContact("4444@sip2sip.info", icon=loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
-            BlinkContact("test@conference.sip2sip.info", icon=loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat")
+            BlinkPresenceContact("200901@login.zipdx.com", icon=loadContactIcon("200901@login.zipdx.com"), name="VUC http://vuc.me"),
+            BlinkPresenceContact("3333@sip2sip.info", icon=loadContactIcon("3333@sip2sip.info"), name="Call Test"),
+            BlinkPresenceContact("4444@sip2sip.info", icon=loadContactIcon("4444@sip2sip.info"), name="Echo Test"),
+            BlinkPresenceContact("test@conference.sip2sip.info", icon=loadContactIcon("test@conference.sip2sip.info"), name="Conference Test", preferred_media="chat")
         ]
 
         return BlinkContactGroup(u"Test", contacts=test_contacts)
@@ -1141,7 +1145,7 @@ class ContactListModel(CustomListModel):
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
-        new_contact = BlinkContact(address, name=display_name)
+        new_contact = BlinkPresenceContact(address, name=display_name)
 
         acct = AccountManager().default_account.id if not account else account
         new_contact.stored_in_account = str(acct)
