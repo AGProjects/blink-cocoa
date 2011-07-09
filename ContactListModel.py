@@ -900,6 +900,8 @@ class ContactListModel(CustomListModel):
     def updatePresenceIndicator(self):
         groups_with_presence = (group for group in self.contactGroupsList if type(group) == BlinkContactGroup)
         change = False
+        # TODO: enable presence -adi
+        import random
         for group in groups_with_presence:
             for contact in group.contacts:
                 if contact.stored_in_account == 'local' and contact.presence_indicator is not None:
@@ -913,7 +915,10 @@ class ContactListModel(CustomListModel):
                     pass
                 else:
                     if account.presence.enabled and contact.presence_indicator is None:
-                        contact.setPresenceIndicator('unknown')
+                        # TODO: enable presence -adi
+                        indicator = random.choice(('available','busy', 'activity', 'unknown'))
+                        #indicator = 'unknown'
+                        contact.setPresenceIndicator(indicator)
                         change = True
                     elif not account.presence.enabled and contact.presence_indicator is not None:
                         contact.setPresenceIndicator(None)
