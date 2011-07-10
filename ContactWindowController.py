@@ -1225,7 +1225,7 @@ class ContactWindowController(NSWindowController):
                 session.startAudioSession()
             return session
         else:
-            print "Error parsing URI %s"%text
+            BlinkLogger().log_error(u"Error parsing URI %s"%text)
             return None
 
     def joinConference(self, target, media, participants=[]):
