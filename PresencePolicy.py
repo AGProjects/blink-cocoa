@@ -99,6 +99,10 @@ class PresencePolicy(NSWindowController):
 
     policyTypes = ["Allow", "Block", "Ignore", "Undecided"]
     defaultPolicy = "Allow"
+    allowPolicy = "Allow"
+    denyPolicy = "Block"
+    ignorePolicy = "Ignore"
+    undecidedPolicy = "Undecided"
 
     initial_checked_pending = False
 
@@ -133,6 +137,19 @@ class PresencePolicy(NSWindowController):
             self.performSelector_withObject_afterDelay_("checkPending", None, 10.0)
 
         return self
+
+    def policyForContact(self, uri, account, event='presence'):
+        try:
+            policies = self.policy_data[account][event]
+        except KeyError:
+            return False
+
+        try:
+            policy = (item for item in policies if item[0] == uri).next()
+        except StopIteration:
+            return False
+        else:
+            return policy[1]
 
     def setGroupNames(self, groups):
         current = self.groupCombo.stringValue()
@@ -274,6 +291,7 @@ class PresencePolicy(NSWindowController):
             d = NSDictionary.dictionaryWithObjectsAndKeys_(item[0], "address", item[1], "policy")
             self.policyDatasource.addObject_(d)
         self.policyDatasource.sortUsingDescriptors_(self.presencePolicyTableView.sortDescriptors())
+
         view = self.tabViewForEvent[self.event]
         view.reloadData()
 
@@ -289,9 +307,15 @@ class PresencePolicy(NSWindowController):
     def deletePolicy(self, account, event, entry):
         policy = self.policy_data[account][event]
         policy.remove(entry)
+        view = self.tabViewForEvent[self.event]
+        view.reloadData()
         cPickle.dump(self.policy_data, open(self.storage_path, "w"))
     
-    def updatePolicy(self, account, event, old_address, address, value):
+    def addOrUpdatePolicy(self, account, event, old_address, address, value):
+        if value not in self.policyTypes:
+            BlinkLogger().log_info(u"Invalid Policy Type: %s" %value)
+            return
+
         policy = self.policy_data[account][event]
         found = False
         if not old_address:
@@ -304,13 +328,14 @@ class PresencePolicy(NSWindowController):
                 break
         if not found:
             policy.append((address, value))
+
+        self.refreshPolicyTable()
         cPickle.dump(self.policy_data, open(self.storage_path, "w"))
 
     def windowWillClose_(self, notification):
         if notification.object() == self.newWatcherWindow:
             if self.newWatcherInfo and self.newWatcherPolicy:
-                self.updatePolicy(self.newWatcherInfo.account, self.newWatcherInfo.event, None, self.newWatcherInfo.address, self.newWatcherPolicy)
-                self.presencePolicyTableView.reloadData()
+                self.addOrUpdatePolicy(self.newWatcherInfo.account, self.newWatcherInfo.event, None, self.newWatcherInfo.address, self.newWatcherPolicy)
                 self.lastWatcherPolicy = self.newWatcherPolicy
                 self.newWatcherPolicy = None
 
@@ -338,7 +363,7 @@ class PresencePolicy(NSWindowController):
         for account in self.policy_data.keys():
             for event in self.policy_data[account].keys():
                 for address, policy in self.policy_data[account][event]:
-                    if policy.lower() == "undecided":
+                    if policy == self.undecidedPolicy:
                         pendingWatcher = PendingWatcher(address=address, account=account, event=event, confirm=True)
                         hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.account == pendingWatcher.account and watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
                         if not hasWatcher:
@@ -356,7 +381,7 @@ class PresencePolicy(NSWindowController):
         while self.pendingWatchers:
             self.newWatcherInfo = self.pendingWatchers.pop(0)
             if self.applyToAll.state() == NSOnState and self.lastWatcherPolicy:
-                self.updatePolicy(self.newWatcherInfo.account, self.newWatcherInfo.event, None, self.newWatcherInfo.address, self.lastWatcherPolicy)
+                self.addOrUpdatePolicy(self.newWatcherInfo.account, self.newWatcherInfo.event, None, self.newWatcherInfo.address, self.lastWatcherPolicy)
             else:
                 if self.newWatcherInfo.confirm or not self.getPolicy(self.newWatcherInfo.account, self.newWatcherInfo.event, self.newWatcherInfo.address):
                     self.newWatcherLabel.setStringValue_(u"%s has subscribed to the %s information published by account %s" % (self.newWatcherInfo.address, self.newWatcherInfo.event, self.newWatcherInfo.account))
@@ -378,12 +403,9 @@ class PresencePolicy(NSWindowController):
                         self.createContact.setHidden_(True)
                         self.contactExists.setHidden_(False)
 
-                    self.newWatcherPolicy = "Undecided"
+                    self.newWatcherPolicy = self.undecidedPolicy
                     self.newWatcherWindow.makeKeyAndOrderFront_(None)
                     break
-
-        self.refreshPolicyTable()
-        self.presencePolicyTableView.reloadData()
 
     @objc.IBAction
     def userButtonClicked_(self, sender):
@@ -449,7 +471,6 @@ class PresencePolicy(NSWindowController):
     @objc.IBAction
     def searchContacts_(self, sender):
         self.refreshPolicyTable()
-        self.presencePolicyTableView.reloadData()
         self.presencePolicyTableView.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
         self.presencePolicyTableView.scrollRowToVisible_(0)
 
@@ -463,7 +484,8 @@ class PresencePolicy(NSWindowController):
 
     def tableView_sortDescriptorsDidChange_(self, table, odescr):
         self.policyDatasource.sortUsingDescriptors_(self.presencePolicyTableView.sortDescriptors())
-        self.presencePolicyTableView.reloadData()
+        view = self.tabViewForEvent[self.event]
+        view.reloadData()
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if row >=0 and row < len(self.policyDatasource):
@@ -518,13 +540,13 @@ class PresencePolicy(NSWindowController):
                 a, v = self.policy_data[self.account][self.event][i]
                 if i != row and a == address:
                     NSRunAlertPanel("Duplicate Entry", "Address %s already has an entry, please change the existing entry instead of creating a new one."%address, "OK", "", "")
-                    self.presencePolicyTableView.setNeedsDisplay_(True)
+                    view = self.tabViewForEvent[self.event]
+                    view.setNeedsDisplay_(True)
                     return
         else:
             value = self.policyTypes[int(object)]
 
-        self.updatePolicy(self.account, self.event, old_address, address, value)
-        self.refreshPolicyTable()
+        self.addOrUpdatePolicy(self.account, self.event, old_address, address, value)
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
@@ -560,9 +582,7 @@ class PresencePolicy(NSWindowController):
                             uri = contact.uri
                             if uri:
                                 uri = re.sub("^(sip:|sips:)", "", str(uri))
-                            self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
-                        self.refreshPolicyTable()
-                        self.presencePolicyTableView.reloadData()
+                            self.addOrUpdatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
                         return True
                 except KeyError:
                     return False
@@ -571,9 +591,7 @@ class PresencePolicy(NSWindowController):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
                 uri = re.sub("^(sip:|sips:)", "", str(uri))
-            self.updatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
-            self.refreshPolicyTable()
-            self.presencePolicyTableView.reloadData()
+            self.addOrUpdatePolicy(self.account, self.event, None, uri, self.defaultPolicy)
             return True
 
         return False

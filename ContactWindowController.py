@@ -128,6 +128,7 @@ class ContactWindowController(NSWindowController):
     drawer = objc.IBOutlet()
     mainTabView = objc.IBOutlet()
     drawerSplitView = objc.IBOutlet()
+    dialPadView = objc.IBOutlet()
     participantsView = objc.IBOutlet()
     participantsTableView = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
@@ -145,6 +146,8 @@ class ContactWindowController(NSWindowController):
     conferenceButton = objc.IBOutlet()
 
     contactContextMenu = objc.IBOutlet()
+
+    presencePolicy = objc.IBOutlet()
 
     photoImage = objc.IBOutlet()
     statusPopUp = objc.IBOutlet()
@@ -189,7 +192,6 @@ class ContactWindowController(NSWindowController):
     addParticipantsWindow = None
 
     silence_player = None
-    dialPadView = objc.IBOutlet()
 
 
     def awakeFromNib(self):
@@ -1317,6 +1319,15 @@ class ContactWindowController(NSWindowController):
             self.startSessionToSelectedContact(("desktop-server", "audio"))
 
     @objc.IBAction
+    def setPresencePolicyForContact_(self, sender):
+        new_policy = None
+        event = 'presence'
+        item = sender.representedObject()
+        policy = self.presencePolicy.policyForContact(item.uri, item.stored_in_account, event)
+        new_policy = self.presencePolicy.allowPolicy if policy != self.presencePolicy.allowPolicy else self.presencePolicy.denyPolicy
+        self.presencePolicy.addOrUpdatePolicy(item.stored_in_account, event, None, item.uri, new_policy)
+
+    @objc.IBAction
     def actionButtonClicked_(self, sender):
         account = self.activeAccount()
         if not account:
@@ -2319,6 +2330,19 @@ class ContactWindowController(NSWindowController):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
                 mitem.setTag_(2)
                 mitem.setEnabled_(has_full_sip_uri)
+
+            if item.stored_in_account != 'local':
+                try:
+                    account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.enabled and account.presence.enabled and account.id == item.stored_in_account).next()
+                except StopIteration:
+                    pass
+                else:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show My Presence to %s" % item.display_name, "setPresencePolicyForContact:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
+                    policy = self.presencePolicy.policyForContact(item.uri, item.stored_in_account, 'presence')
+                    mitem.setState_(NSOnState if policy and policy == self.presencePolicy.allowPolicy else NSOffState)
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             if type(item) == AddressBookBlinkContact:

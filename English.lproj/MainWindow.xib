@@ -12,8 +12,8 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="1054"/>
 			<integer value="371"/>
+			<integer value="29"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -4351,6 +4351,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 					<int key="connectionID">1595</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">presencePolicy</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="160575707"/>
+					</object>
+					<int key="connectionID">1596</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -7264,7 +7272,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1595</int>
+			<int key="maxID">1596</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7665,6 +7673,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>sendFile:</string>
 							<string>sendSMSToSelected:</string>
 							<string>sessionButtonClicked:</string>
+							<string>setPresecePolicyForContact:</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
 							<string>showDebugWindow:</string>
@@ -7687,6 +7696,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -7762,6 +7772,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>sendFile:</string>
 							<string>sendSMSToSelected:</string>
 							<string>sessionButtonClicked:</string>
+							<string>setPresecePolicyForContact:</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
 							<string>showDebugWindow:</string>
@@ -7885,6 +7896,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
+								<string key="name">setPresecePolicyForContact:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
 								<string key="name">showAccountDirectory:</string>
 								<string key="candidateClassName">id</string>
 							</object>
@@ -7996,6 +8011,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>participantsView</string>
 							<string>photoImage</string>
 							<string>presenceMenu</string>
+							<string>presencePolicy</string>
 							<string>recordingsMenu</string>
 							<string>recordingsSubMenu</string>
 							<string>searchBox</string>
@@ -8012,6 +8028,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8091,6 +8108,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>participantsView</string>
 							<string>photoImage</string>
 							<string>presenceMenu</string>
+							<string>presencePolicy</string>
 							<string>recordingsMenu</string>
 							<string>recordingsSubMenu</string>
 							<string>searchBox</string>
@@ -8225,6 +8243,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">presenceMenu</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">presencePolicy</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
@@ -8571,12 +8593,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>offlineWindowConfirm:</string>
 							<string>saveNewWatcher:</string>
+							<string>searchContacts:</string>
 							<string>showPresenceOfflineStatus:</string>
 							<string>togglePresenceOfflineStatus:</string>
 							<string>userButtonClicked:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8590,6 +8614,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>offlineWindowConfirm:</string>
 							<string>saveNewWatcher:</string>
+							<string>searchContacts:</string>
 							<string>showPresenceOfflineStatus:</string>
 							<string>togglePresenceOfflineStatus:</string>
 							<string>userButtonClicked:</string>
@@ -8602,6 +8627,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">saveNewWatcher:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">searchContacts:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -8624,7 +8653,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accountPop</string>
 							<string>addButton</string>
+							<string>applyToAll</string>
+							<string>contactExists</string>
+							<string>createContact</string>
 							<string>delButton</string>
+							<string>dialogPolicyTableView</string>
+							<string>disabled_label</string>
+							<string>eventTabView</string>
+							<string>groupCombo</string>
 							<string>newWatcherLabel</string>
 							<string>newWatcherPop</string>
 							<string>newWatcherWindow</string>
@@ -8632,10 +8668,19 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>offlineActivity</string>
 							<string>offlineNote</string>
 							<string>offlineWindow</string>
-							<string>policyTable</string>
+							<string>presencePolicyTableView</string>
+							<string>searchSubscriberBox</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8655,7 +8700,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accountPop</string>
 							<string>addButton</string>
+							<string>applyToAll</string>
+							<string>contactExists</string>
+							<string>createContact</string>
 							<string>delButton</string>
+							<string>dialogPolicyTableView</string>
+							<string>disabled_label</string>
+							<string>eventTabView</string>
+							<string>groupCombo</string>
 							<string>newWatcherLabel</string>
 							<string>newWatcherPop</string>
 							<string>newWatcherWindow</string>
@@ -8663,7 +8715,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>offlineActivity</string>
 							<string>offlineNote</string>
 							<string>offlineWindow</string>
-							<string>policyTable</string>
+							<string>presencePolicyTableView</string>
+							<string>searchSubscriberBox</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -8676,7 +8729,35 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
+								<string key="name">applyToAll</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">contactExists</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">createContact</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
 								<string key="name">delButton</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">dialogPolicyTableView</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">disabled_label</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">eventTabView</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">groupCombo</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
@@ -8708,7 +8789,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">policyTable</string>
+								<string key="name">presencePolicyTableView</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">searchSubscriberBox</string>
 								<string key="candidateClassName">id</string>
 							</object>
 						</object>
