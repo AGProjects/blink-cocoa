@@ -28,14 +28,39 @@ from AddContactController import AddContactController, EditContactController
 from AddGroupController import AddGroupController
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
-from SIPManager import SIPManager, strip_addressbook_special_characters
+from SIPManager import SIPManager, strip_addressbook_special_characters, PresenceStatusList
 
 from resources import ApplicationData
 from util import *
 
 
+PresenceActivityPrefix = {
+    "Available": "is",
+    "Working": "is",
+    "Appointment": "has an",
+    "Busy": "is",
+    "Breakfast": "is having",
+    "Lunch": "is having",
+    "Dinner": "is having",
+    "Travel": "is in",
+    "Driving": "is",
+    "Playing": "is",
+    "Spectator": "is a",
+    "TV": "is watching",
+    "Away": "is",
+    "Invisible": "is",
+    "Meeting": "is in a",
+    "On the phone": "is",
+    "Presentation": "watches a",
+    "Performance": "gives a",
+    "Sleeping": "is",
+    "Vacation": "is in",
+    "Holiday": "is"
+    }
+
 def contactIconPathForURI(uri):
     return ApplicationData.get('photos/%s.tiff' % uri)
+
 
 def saveContactIcon(image, uri):
     path = contactIconPathForURI(uri)
@@ -48,6 +73,7 @@ def saveContactIcon(image, uri):
             os.remove(path)
         except OSError:
             pass
+
 
 def loadContactIcon(uri):
     path = contactIconPathForURI(uri)
@@ -924,6 +950,10 @@ class ContactListModel(CustomListModel):
                         # TODO: set indicator to unknown when enable presence -adi
                         indicator = random.choice(('available','busy', 'activity', 'unknown'))
                         contact.setPresenceIndicator(indicator)
+                        activity = random.choice(PresenceStatusList)
+                        if PresenceActivityPrefix.has_key(activity[1]):
+                            detail = '%s %s %s' % (contact.uri, PresenceActivityPrefix[activity[1]], activity[1])
+                            contact.setDetail(detail)
                         change = True
                     else:
                         contact.setPresenceIndicator(None)
