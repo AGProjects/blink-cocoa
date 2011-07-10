@@ -749,6 +749,12 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="SIPAccountDidDeactivate")
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="AudioCallLoggedToHistory")
+        nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
+
+    def _NH_SIPAccountRegistrationDidSucceed(self, notification):
+        # TODO: remove when enable presence -adi
+        # simulate some random presence activity when accounts register
+        self.updatePresenceIndicator()
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
@@ -900,7 +906,7 @@ class ContactListModel(CustomListModel):
     def updatePresenceIndicator(self):
         groups_with_presence = (group for group in self.contactGroupsList if type(group) == BlinkContactGroup)
         change = False
-        # TODO: enable presence -adi
+        # TODO: remove random import enable presence -adi
         import random
         for group in groups_with_presence:
             for contact in group.contacts:
@@ -914,13 +920,12 @@ class ContactListModel(CustomListModel):
                 except KeyError:
                     pass
                 else:
-                    if account.presence.enabled and contact.presence_indicator is None:
-                        # TODO: enable presence -adi
+                    if account.presence.enabled:
+                        # TODO: set indicator to unknown when enable presence -adi
                         indicator = random.choice(('available','busy', 'activity', 'unknown'))
-                        #indicator = 'unknown'
                         contact.setPresenceIndicator(indicator)
                         change = True
-                    elif not account.presence.enabled and contact.presence_indicator is not None:
+                    else:
                         contact.setPresenceIndicator(None)
                         change = True
 
