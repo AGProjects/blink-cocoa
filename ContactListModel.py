@@ -258,6 +258,10 @@ class HistoryBlinkContact(BlinkContact):
 class BonjourBlinkContact(BlinkContact):
     editable = False
     deletable = False
+    presence_indicator = None
+    presence_note = None
+    presence_activity = None
+    supported_media = []
 
     def __init__(self, uri, bonjour_neighbour, name=None, display_name=None, icon=None, detail=None):
         self.uri = str(uri)
@@ -267,6 +271,18 @@ class BonjourBlinkContact(BlinkContact):
         self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or self.uri)
         self.icon = icon
+
+    def setPresenceIndicator(self, indicator):
+        self.presence_indicator = indicator
+
+    def setPresenceNote(self, note):
+        self.presence_note = note
+
+    def setPresenceActivity(self, activity):
+        self.presence_activity = activity
+
+    def setSupportedMedia(self, media):
+        self.supported_media = media
 
 
 class AddressBookBlinkContact(BlinkContact):
@@ -979,15 +995,21 @@ class ContactListModel(CustomListModel):
         BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
 
         if neighbour not in (contact.bonjour_neighbour for contact in self.bonjour_group.not_filtered_contacts):
-            self.bonjour_group.not_filtered_contacts.append(BonjourBlinkContact(uri, neighbour, icon=None, name='%s (%s)' % (display_name or 'Unknown', host)))
+            contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+            contact.setPresenceIndicator("unknown")
+            self.bonjour_group.not_filtered_contacts.append(contact)
 
         if neighbour not in (contact.bonjour_neighbour for contact in self.bonjour_group.contacts):
             if uri.transport != 'tls':
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
                 if not tls_neighbours:
-                    self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, icon=None, name='%s (%s)' % (display_name or 'Unknown', host)))
+                    contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+                    contact.setPresenceIndicator("unknown")
+                    self.bonjour_group.contacts.append(contact)
             else:
-                self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, icon=None, name='%s (%s)' % (display_name or 'Unknown', host)))
+                contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+                contact.setPresenceIndicator("unknown")
+                self.bonjour_group.contacts.append(contact)
             non_tls_neighbours = [n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport != 'tls']
 
             if uri.transport == 'tls':
@@ -1006,7 +1028,7 @@ class ContactListModel(CustomListModel):
         try:
             contact = (contact for contact in self.bonjour_group.contacts if contact.bonjour_neighbour==neighbour).next()
         except StopIteration:
-            self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, icon=None, name=(display_name or 'Unknown', host)))
+            self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, name=(display_name or 'Unknown', host)))
         else:
             contact.setName(display_name)
             contact.setURI(str(uri))
