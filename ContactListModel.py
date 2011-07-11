@@ -621,24 +621,25 @@ class CustomListModel(NSObject):
 
                 table.setDropItem_dropChildIndex_(None, i)
             else:
-                if proposed_parent is None:
-                    return NSDragOperationNone
-
-                if isinstance(proposed_parent, BlinkContactGroup) and not proposed_parent.editable:
-                    return NSDragOperationNone
-
                 if isinstance(proposed_parent, BlinkContactGroup):
+                    if not proposed_parent.editable:
+                        return NSDragOperationNone
+
                     c = len(proposed_parent.contacts) if index == NSOutlineViewDropOnItemIndex else index
                     i = self.contactGroupsList.index(proposed_parent)
                     table.setDropItem_dropChildIndex_(self.contactGroupsList[i], c)
                 else:
                     targetGroup = table.parentForItem_(proposed_parent)
+                    if not targetGroup.editable:
+                        return NSDragOperationNone
+
                     if index == NSOutlineViewDropOnItemIndex:
                         index = targetGroup.contacts.index(proposed_parent)
 
                     draggedContact = self.contactGroupsList[group].contacts[contact]
 
                     table.setDropItem_dropChildIndex_(targetGroup, index)
+
             return NSDragOperationMove
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
@@ -673,6 +674,7 @@ class CustomListModel(NSObject):
                 return True
             else:
                 sourceGroup = self.contactGroupsList[group]
+
                 targetGroup = item
                 contactObject = sourceGroup.contacts[contact]
 
