@@ -16,7 +16,7 @@ from AppKit import *
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.system import makedirs
-from sipsimple.configuration import Setting, DuplicateIDError
+from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI
 #from sipsimple.contact import Contact, ContactGroup
