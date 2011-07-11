@@ -787,15 +787,11 @@ class ChatWindowController(NSWindowController):
             if session.conference_info is None or (session.conference_info is not None and not session.conference_info.users):
                 active_media = []
 
-                if session.hasStreamOfType("chat"):
-                    if chat_stream.status == STREAM_CONNECTED:
+                if session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
                         active_media.append('message')
 
                 if session.hasStreamOfType("audio"):
-                    if not audio_stream.holdByRemote and not audio_stream.holdByLocal:
-                        active_media.append('audio')
-                    else:
-                        active_media.append('audio-onhold')
+                    active_media.append('audio' if not audio_stream.holdByLocal else 'audio-onhold')
 
                 # Add ourselves
                 contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
@@ -817,6 +813,14 @@ class ChatWindowController(NSWindowController):
                     contact.setDetail("Connecting...")
                 else:
                     contact.setDetail(contact.uri)
+
+                active_media = []
+
+                if session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
+                    active_media.append('message')
+
+                if session.hasStreamOfType("audio"):
+                    active_media.append('audio' if not audio_stream.holdByRemote else 'audio-onhold')
 
                 contact.setActiveMedia(active_media)
                 self.participants.append(contact)
