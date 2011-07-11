@@ -15,10 +15,10 @@ from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
 from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
+from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
-
 
 class PreferencesController(NSWindowController, object):
     implements(IObserver)
@@ -89,8 +89,7 @@ class PreferencesController(NSWindowController, object):
 
     def validateAddAccountButton(self):
         if self.addButton:
-            accounts = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
-            self.addButton.setEnabled_(False if len(list(accounts)) > 1 else True)
+            self.addButton.setEnabled_(SIPManager().validateAddAccountAction())
 
     def close_(self, sender):
         self.window().close()

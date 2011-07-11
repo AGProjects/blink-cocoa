@@ -374,8 +374,9 @@ class ContactWindowController(NSWindowController):
             self.accountPopUp.addItemWithTitle_(u"No Accounts")
             self.accountPopUp.lastItem().setEnabled_(False)
 
-        self.accountPopUp.menu().addItem_(NSMenuItem.separatorItem())
-        self.accountPopUp.addItemWithTitle_(u"Add Account...")
+        if self.backend.validateAddAccountAction():
+            self.accountPopUp.menu().addItem_(NSMenuItem.separatorItem())
+            self.accountPopUp.addItemWithTitle_(u"Add Account...")
 
         if account_manager.default_account:
             self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)

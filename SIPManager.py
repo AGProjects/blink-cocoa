@@ -971,6 +971,14 @@ class SIPManager(object):
     def _NH_WavePlayerDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
 
+    def validateAddAccountAction(self):
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            accounts = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
+            if len(list(accounts)) > 1:
+               return False
+
+        return True
+
 
 class MWIData(object):
     """Saves Message-Summary information in memory"""
