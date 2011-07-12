@@ -606,7 +606,7 @@ class CustomListModel(NSObject):
     # drag and drop
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_parent, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or type(proposed_parent) != BlinkContact:
+            if index != NSOutlineViewDropOnItemIndex or not hasattr(proposed_parent, "supported_media"):
                 return NSDragOperationNone
 
             ws = NSWorkspace.sharedWorkspace()
@@ -660,7 +660,7 @@ class CustomListModel(NSObject):
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or type(item) != BlinkContact:
+            if index != NSOutlineViewDropOnItemIndex or not hasattr(item, "supported_media"):
                 return False
 
             ws = NSWorkspace.sharedWorkspace()
