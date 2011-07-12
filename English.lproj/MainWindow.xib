@@ -3,12 +3,12 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10K540</string>
-		<string key="IBDocument.InterfaceBuilderVersion">823</string>
+		<string key="IBDocument.InterfaceBuilderVersion">851</string>
 		<string key="IBDocument.AppKitVersion">1038.36</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">823</string>
+			<string key="NS.object.0">851</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -810,7 +810,7 @@
 								</object>
 								<object class="NSMenuItem" id="43955222">
 									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Search for people...</string>
+									<string key="NSTitle">Search for People...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -819,7 +819,7 @@
 								</object>
 								<object class="NSMenuItem" id="745628434">
 									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Call history on server...</string>
+									<string key="NSTitle">Call History on Server...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -828,7 +828,7 @@
 								</object>
 								<object class="NSMenuItem" id="624394804">
 									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Buy prepaid credit...</string>
+									<string key="NSTitle">Call to Phone Numbers...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -6545,7 +6545,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{516, 611}, {211, 83}}</string>
+					<string>{{513, 615}, {221, 83}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7673,7 +7673,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>sendFile:</string>
 							<string>sendSMSToSelected:</string>
 							<string>sessionButtonClicked:</string>
-							<string>setPresecePolicyForContact:</string>
+							<string>setPresencePolicyForContact:</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
 							<string>showDebugWindow:</string>
@@ -7772,7 +7772,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>sendFile:</string>
 							<string>sendSMSToSelected:</string>
 							<string>sessionButtonClicked:</string>
-							<string>setPresecePolicyForContact:</string>
+							<string>setPresencePolicyForContact:</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
 							<string>showDebugWindow:</string>
@@ -7896,7 +7896,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
-								<string key="name">setPresecePolicyForContact:</string>
+								<string key="name">setPresencePolicyForContact:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
