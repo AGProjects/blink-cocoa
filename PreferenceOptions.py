@@ -1443,19 +1443,19 @@ SettingDescription = {
 SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
-                       'dialog_event': 'Dialog Notifications',
+                       'dialog_event': 'Dialog',
                        'logs': 'File Logging',
-                       'message_summary': 'Voicemail Notifications',
+                       'message_summary': 'Message Summary',
                        'msrp': 'MSRP Media',
                        'nat_traversal': 'NAT Traversal',
-                       'pstn': 'Phone Number Dialing',
+                       'pstn': 'Phone Numbers',
                        'rtp': 'RTP Media',
                        'presence': 'Presence',
                        'sip': 'SIP Signaling',
                        'sounds': 'Alert Tones',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
-                       'xcap': 'XCAP'
+                       'xcap': 'XCAP Storage'
                        }
 
 GeneralSettingsOrder = {
@@ -1467,7 +1467,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'xcap', 'presence', 'dialog_event', 'message_summary', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal','server')
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server')
 
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
 
