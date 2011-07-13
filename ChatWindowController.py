@@ -62,6 +62,7 @@ class ChatWindowController(NSWindowController):
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
+    srtpIcon = objc.IBOutlet()
 
     conferenceFilesView = objc.IBOutlet()
     participantsView = objc.IBOutlet()
@@ -901,12 +902,16 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     self.audioStatus.setStringValue_(u"%s (%s)" % ("HD Audio" if audio_stream.stream.sample_rate > 8000 else "Audio", audio_stream.stream.codec))
                     self.audioStatus.setHidden_(False)
+                    self.srtpIcon.setHidden_(False if audio_stream.stream.srtp_active else True)
+
             elif session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setStringValue_(u"Connected")
                 self.audioStatus.setHidden_(False)
+                self.srtpIcon.setHidden_(True)
             else:
                 self.audioStatus.setHidden_(True)
+                self.srtpIcon.setHidden_(True)
                 self.audioStatus.setStringValue_('')
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
