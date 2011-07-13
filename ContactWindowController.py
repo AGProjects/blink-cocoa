@@ -215,6 +215,10 @@ class ContactWindowController(NSWindowController):
         self.contactOutline.setDraggingSourceOperationMask_forLocal_(NSDragOperationCopy, True)
         self.searchOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", NSFilenamesPboardType))
 
+        # work around for Lion that resizes the contact cell width bigger than its parent view
+        self.contactOutline.setAutoresizesOutlineColumn_(False)
+        self.searchOutline.setAutoresizesOutlineColumn_(False)
+
         self.chatMenu.setAutoenablesItems_(False)
 
         # save the position of this view, because when the window is collapsed

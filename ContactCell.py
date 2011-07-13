@@ -88,10 +88,10 @@ class ContactCell(NSTextFieldCell):
         if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
 
-        indicator_width = 4
+        indicator_width = 5
         frame = self.frame
         frame.size.width = indicator_width
-        frame.origin.x = self.view.frame().size.width - indicator_width - 2
+        frame.origin.x = self.view.frame().size.width - indicator_width
         frame.origin.y -= 17
 
         rect = NSInsetRect(frame, 0, 0)
