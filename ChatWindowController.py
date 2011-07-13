@@ -158,6 +158,9 @@ class ChatWindowController(NSWindowController):
             return False
         return True
 
+    def shouldPopUpDocumentPathMenu_(self, menu):
+        return False
+
     def _findInactiveSessionCompatibleWith_(self, session):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
         session_contact = getContactMatchingURI(session.remoteSIPAddress)
@@ -246,8 +249,20 @@ class ChatWindowController(NSWindowController):
 
     def updateTitle(self):
         title = self.getConferenceTitle()
+        icon = None
         if title:
             self.window().setTitle_(title)
+            self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
+            session = self.selectedSessionController()
+            if session:
+                try:
+                    if session.session.transport == "tls":
+                        icon = NSImage.imageNamed_("bluelock")
+                        icon.setSize_(NSMakeSize(12, 12))
+                except AttributeError:
+                    pass
+
+        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(icon)
 
     def getConferenceTitle(self):
         title = None
@@ -347,11 +362,9 @@ class ChatWindowController(NSWindowController):
             self.revalidateToolbar()
             self.refreshDrawer()
         elif name == "BlinkConferenceGotUpdate":
-            self.updateTitle()
             self.refreshDrawer()
         elif name == "BlinkContactsHaveChanged":
             self.setOwnIcon()
-            self.updateTitle()
             self.refreshDrawer()
         elif name == "BlinkMuteChangedState":
             if self.backend.is_muted():
@@ -771,6 +784,8 @@ class ChatWindowController(NSWindowController):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
 
         self.participants = []
+
+        self.updateTitle()
 
         session = self.selectedSessionController()
         if session:
