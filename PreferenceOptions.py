@@ -1437,8 +1437,7 @@ SettingDescription = {
                       'sounds.audio_outbound': 'Outbound Ringtone',
                       'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'Certificate File',
-                      'tls.ca_list': 'Certificate Authority File',
-                      'xcap.enabled': 'Store Contacts on XCAP Server'
+                      'tls.ca_list': 'Certificate Authority File'
                       }
 
 SectionNames = {
@@ -1451,12 +1450,12 @@ SectionNames = {
                        'nat_traversal': 'NAT Traversal',
                        'pstn': 'Phone Number Dialing',
                        'rtp': 'RTP Media',
-                       'presence': 'Presence Notifications',
+                       'presence': 'Presence',
                        'sip': 'SIP Signaling',
                        'sounds': 'Alert Tones',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
-                       'xcap': 'Contacts Management'
+                       'xcap': 'XCAP'
                        }
 
 GeneralSettingsOrder = {
