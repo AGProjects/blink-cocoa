@@ -51,11 +51,11 @@ PresenceActivityPrefix = {
     "Invisible": "is",
     "Meeting": "is in a",
     "On the phone": "is",
-    "Presentation": "watches a",
+    "Presentation": "is at a",
     "Performance": "gives a",
     "Sleeping": "is",
     "Vacation": "is in",
-    "Holiday": "is"
+    "Holiday": "is in"
     }
 
 def contactIconPathForURI(uri):
