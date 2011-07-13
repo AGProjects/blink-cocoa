@@ -147,13 +147,13 @@ class AudioController(MediaStream):
         self.label.setStringValue_(display_name if display_name else format_identity_simple(self.sessionController.remotePartyObject))
         self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
-        self.updateTLSIcon()
         self.sessionManager.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def sessionStateChanged(self, state, detail):
         if state == STATE_CONNECTING:
             self.setStatusText(u"Connecting...")
+            self.updateTLSIcon()
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
             if detail.startswith("DNS Lookup"):
