@@ -61,6 +61,7 @@ class Ringer(object):
 
     def __init__(self, owner):
         self.owner = owner
+        self.started = False
 
     def start(self):
         notification_center = NotificationCenter()
@@ -69,9 +70,11 @@ class Ringer(object):
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.add_observer(self, name="ConferenceHasAddedAudio")
-
+        self.started = True
 
     def stop(self):
+        if not self.started:
+            return
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, name="BlinkFileTransferDidEnd")
         notification_center.remove_observer(self, name="AudioStreamDidChangeHoldState")

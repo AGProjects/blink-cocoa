@@ -727,9 +727,9 @@ class SIPManager(object):
         logger = FileLogger()
         logger.start()
         self.ip_address_monitor.start()
-        self.ringer.start()
 
     def _NH_SIPApplicationDidStart(self, sender, data):
+        self.ringer.start()
         self.ringer.update_ringtones()
 
         bonjour_account = BonjourAccount()
