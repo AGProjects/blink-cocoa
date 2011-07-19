@@ -416,7 +416,7 @@ class AudioController(MediaStream):
                 self.label.setTextColor_(NSColor.blackColor())
 
     def updateTLSIcon(self):
-        if self.session.transport == "tls":
+        if self.session and self.session.transport == "tls":
             frame = self.label.frame()
             frame.origin.x = NSMaxX(self.tlsIcon.frame())
             self.label.setFrame_(frame)
@@ -428,7 +428,7 @@ class AudioController(MediaStream):
             self.tlsIcon.setHidden_(True)
 
     def updateSRTPIcon(self):
-        if self.stream.srtp_active:
+        if self.stream and self.stream.srtp_active:
             frame = self.audioStatus.frame()
             frame.origin.x = NSMaxX(self.srtpIcon.frame())
             self.audioStatus.setFrame_(frame)
