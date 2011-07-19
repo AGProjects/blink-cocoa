@@ -853,7 +853,7 @@ class AudioController(MediaStream):
         if self.sessionController.endingBy:
             pass # the session is being ended
         else:
-            if self.status != STREAM_DISCONNECTING and self.status != STREAM_CANCELLING:
+            if self.status not in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_FAILED):
                 # stream was negotiated away
                 self.audioEndTime = time.time()
                 self.changeStatus(STREAM_IDLE, "Audio removed")
