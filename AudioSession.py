@@ -168,19 +168,22 @@ class AudioSession(NSView):
             self.foreachConferenceSession(highlight)
             return NSDragOperationAll
         else:
-            if (info.draggingSource() == self and not self.conferencing) or not info.draggingSource():
+            source = info.draggingSource()
+            if (source == self and not self.conferencing) or not source:
                 return NSDragOperationNone
             # drop over a session that's not in a conference while there is 1 ongoing 
             if not self.conferencing and self.superview().subviews().objectAtIndex_(0).conferencing:
                 return NSDragOperationNone
-            if not info.draggingSource().delegate.canConference and not self.delegate.canConference:
+            if source.delegate is None:
+                return NSDragOperationNone
+            if not source.delegate.canConference and not self.delegate.canConference:
                 return NSDragOperationNone
 
             highlight(self)
             self.foreachConferenceSession(highlight)
             
-            info.draggingSource().draggedOut = False
-            info.draggingSource().makeDragImage()
+            source.draggedOut = False
+            source.makeDragImage()
 
             return NSDragOperationAll
     
