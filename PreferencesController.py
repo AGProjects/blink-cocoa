@@ -153,7 +153,7 @@ class PreferencesController(NSWindowController, object):
         elif section == 'audio':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
-            self.sectionDescription.setStringValue_(u'Audio Device Settings')
+            self.sectionDescription.setStringValue_(u'Audio Settings')
         elif section == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
