@@ -1188,7 +1188,7 @@ class ContactListModel(CustomListModel):
             gui_contact.setPreferredMedia(contact.preferred_media)
             gui_contact.setAccount(contact.account)
             if gui_contact.display_name != contact.name:
-                gui_contact.setName(contact.name)
+                gui_contact.setName(contact.name or contact.uri)
                 gui_group.sortContacts()
 
             try:
