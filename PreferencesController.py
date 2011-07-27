@@ -19,6 +19,7 @@ from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
+from ContactWindowController import ENABLE_PRESENCE
 
 class PreferencesController(NSWindowController, object):
     implements(IObserver)
@@ -224,9 +225,8 @@ class PreferencesController(NSWindowController, object):
             if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn'):
                 continue
 
-            #if section in ('presence', 'xcap'):
-                # TODO: enable presence -adi
-                #continue
+            if section in ('presence', 'dialog_event') and not ENABLE_PRESENCE:
+                continue
 
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
             
@@ -263,6 +263,9 @@ class PreferencesController(NSWindowController, object):
             options.extend(remaining_options)
         except KeyError:
             options = unordered_options
+
+        if not ENABLE_PRESENCE:
+            PreferenceOptionTypes['sip.publish_interval'] = HiddenOption
 
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':

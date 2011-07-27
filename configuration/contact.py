@@ -5,12 +5,23 @@
 Blink contact extensions
 """
 
-__all__ = ['BlinkContactExtension']
+__all__ = ['BlinkContactExtension', 'BlinkContactGroupExtension']
 
-# TODO: extend contacts -adi
 from sipsimple.configuration import Setting
-#from sipsimple.contact import ContactExtension
+from sipsimple.contact import ContactExtension, ContactGroupExtension, SharedSetting
 
-#class BlinkContactExtension(ContactExtension):
-#    preferred_media = Setting(type=str, default='audio')
-#    icon = Setting(type=str, , default=None, nillable=True)
+SharedSetting.set_namespace('ag-project:blink')
+
+class BlinkContactExtension(ContactExtension):
+    aliases = SharedSetting(type=str, nillable=True)
+    preferred_media = SharedSetting(type=str, default='audio', nillable=True)
+    icon = Setting(type=str, default=None, nillable=True)
+    presence_policy = Setting(type=str, default=None, nillable=True)
+    dialog_policy = Setting(type=str, default=None, nillable=True)
+
+
+class BlinkContactGroupExtension(ContactGroupExtension):
+    position = Setting(type=int, nillable=True)
+    expanded = Setting(type=bool, default=True)
+    type = Setting(type=str, nillable=True)
+

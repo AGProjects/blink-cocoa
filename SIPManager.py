@@ -28,7 +28,7 @@ from zope.interface import implements
 
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
-#from sipsimple.contact import Contact
+from sipsimple.contact import Contact, ContactGroup
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -46,7 +46,7 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
-#from configuration.contact import BlinkContactExtension
+from configuration.contact import BlinkContactExtension, BlinkContactGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
@@ -167,6 +167,7 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
+        self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
 
     def set_delegate(self, delegate):
         self._delegate= delegate
@@ -178,8 +179,8 @@ class SIPManager(object):
 
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
-        # TODO: extend contacts
-        #Contact.register_extension(BlinkContactExtension)
+        Contact.register_extension(BlinkContactExtension)
+        ContactGroup.register_extension(BlinkContactGroupExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         self._app.start(FileStorage(ApplicationData.directory))
@@ -842,6 +843,20 @@ class SIPManager(object):
             if 'message_summary.enabled' in data.modified:
                 if not account.message_summary.enabled:
                     MWIData.remove(account)
+
+    def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
+        account = sender.account
+        if account.xcap.discovered:
+            BlinkLogger().log_info(u"Discovered XCAP root %s for account %s" % (sender.client.root, account.id))
+        else:
+            BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (sender.client.root, account.id))
+
+        supported_features=(   'contactlist_supported',
+                               'presence_policies_supported',
+                               'dialoginfo_policies_supported',
+                               'status_icon_supported',
+                               'offline_status_supported')
+        BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported) is True))
 
     def isProposedMediaTypeSupported(self, streams):
         settings = SIPSimpleSettings()

@@ -41,6 +41,8 @@ class EngineLogger(NSObject, object):
 
     sipTextView = None
     pjsipTextView = None
+    xcapTextView = None
+
     fullTrace = False
 
     receivedText = None
@@ -122,6 +124,9 @@ class EngineLogger(NSObject, object):
     def printPJSIP_(self, text):
         append_line(self.pjsipTextView, text)
 
+    def printXCAP_(self, text):
+        append_line(self.xcapTextView, text)
+
     def printDNS_(self, text):
         self.lastSIPMessageWasDNS = True
         append_line(self.sipTextView, text)
@@ -139,6 +144,16 @@ class EngineLogger(NSObject, object):
         else:
             NotificationCenter().discard_observer(self, name="SIPEngineSIPTrace")
             NotificationCenter().discard_observer(self, name="DNSLookupTrace")
+
+    def enableXCAPTrace(self, flag):
+        if flag:
+            NotificationCenter().add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            NotificationCenter().add_observer(self, name="XCAPSubscriptionGotNotify")
+            NotificationCenter().add_observer(self, name="XCAPManagerDidChangeState")
+        else:
+            NotificationCenter().discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            NotificationCenter().discard_observer(self, name="XCAPSubscriptionGotNotify")
+            NotificationCenter().discard_observer(self, name="XCAPManagerDidChangeState")
 
     def enableFullSIPTrace(self, flag):
         self.fullTrace = flag
@@ -164,6 +179,9 @@ class EngineLogger(NSObject, object):
             message += ' succeeded, ttl=%d: ' % data.answer.ttl
             if data.query_type == 'A':
                 message += ", ".join(record.address for record in data.answer)
+            elif data.query_type == 'TXT':
+                for record in data.answer:
+                    message += ", ".join(s for s in record.strings)
             elif data.query_type == 'SRV':
                 message += ", ".join('%d %d %d %s' % (record.priority, record.weight, record.port, record.target) for record in data.answer)
             elif data.query_type == 'NAPTR':
@@ -176,6 +194,34 @@ class EngineLogger(NSObject, object):
                            dns.resolver.Timeout: 'no response received, the query has timed out'}
             message += ' failed: %s' % message_map.get(data.error.__class__, '')
         self.printDNS_(message)
+
+        if data.query_type == 'TXT':
+            self.printXCAP_('\n')
+            self.printXCAP_(message)
+
+    def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
+        account = notification.sender.account
+        self.printXCAP_("\n")
+        if account.xcap.discovered:
+            self.printXCAP_(u"%s Discovered XCAP root %s for account %s" % (notification.data.timestamp, notification.sender.client.root, account.id))
+        else:
+            self.printXCAP_(u"%s Using configured XCAP root %s for account %s" % (notification.data.timestamp, notification.sender.client.root, account.id))
+
+        supported_features=(   'contactlist_supported',
+                               'presence_policies_supported',
+                               'dialoginfo_policies_supported',
+                               'status_icon_supported',
+                               'offline_status_supported')
+        message = (u"%s XCAP server capabilities: %s" % (notification.data.timestamp, ", ".join(supported[0:-10] for supported in supported_features if getattr(notification.data, supported) is True)))
+        self.printXCAP_(message)
+
+    def _NH_XCAPSubscriptionGotNotify(self, notification):
+        message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.data.timestamp, notification.sender.account.id, notification.data.body))
+        self.printXCAP_(message)
+
+    def _NH_XCAPManagerDidChangeState(self, notification):
+        message = (u"%s XCAP manager of account %s changed state from %s to %s" % (notification.data.timestamp, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
+        self.printXCAP_(message)
 
 
 # User choices for debug: Disabled, Simplified, Full
@@ -266,6 +312,7 @@ class DebugWindow(NSObject):
         self.engineLogger = EngineLogger.alloc().init()
         self.engineLogger.sipTextView = self.sipLog
         self.engineLogger.pjsipTextView = self.pjsipLog
+        self.engineLogger.xcapTextView = self.xcapLog
                 
         BlinkLogger().set_gui_logger(self.log_general)
 
@@ -276,6 +323,8 @@ class DebugWindow(NSObject):
         userdef = NSUserDefaults.standardUserDefaults()
         self.sipRadio.selectCellWithTag_(userdef.integerForKey_("SIPTrace") or Disabled)
         self.msrpRadio.selectCellWithTag_(userdef.integerForKey_("MSRPTrace") or Disabled)
+        self.xcapRadio.selectCellWithTag_(userdef.integerForKey_("XCAPTrace") or Disabled)
+
         self.userDefaultsDidChange_(None)
         
         rtpTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(10.0,
@@ -488,6 +537,8 @@ class DebugWindow(NSObject):
             NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "SIPTrace") 
         elif sender == self.msrpRadio:
             NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "MSRPTrace") 
+        elif sender == self.xcapRadio:
+            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "XCAPTrace") 
 
     def userDefaultsDidChange_(self, notification):
         userdef = NSUserDefaults.standardUserDefaults()
@@ -514,6 +565,14 @@ class DebugWindow(NSObject):
             NotificationCenter().add_observer(self, name="MSRPLibraryLog")
             NotificationCenter().add_observer(self, name="MSRPTransportTrace")
             self.msrpTrace = "full"
+
+        trace = userdef.integerForKey_("XCAPTrace")
+        if trace == Disabled:
+            self.engineLogger.enableXCAPTrace(False)
+        elif trace == Simplified:
+            self.engineLogger.enableXCAPTrace(True)
+        elif trace == Full:
+            self.engineLogger.enableXCAPTrace(True)
 
     def numberOfRowsInTableView_(self, table):
         return len(self.notifications)

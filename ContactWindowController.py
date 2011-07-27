@@ -36,7 +36,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, contactIconPathForURI, saveContactIcon
+from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, SearchResultContact, contactIconPathForURI, saveContactIcon
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -60,7 +60,7 @@ PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
 # TODO: enable presence -adi
-ENABLE_PRESENCE=True
+ENABLE_PRESENCE=False
 
 class PhotoView(NSImageView):
     entered = False
@@ -193,6 +193,8 @@ class ContactWindowController(NSWindowController):
 
     silence_player = None
 
+    first_run = False
+
 
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
@@ -261,12 +263,9 @@ class ContactWindowController(NSWindowController):
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
-        ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
-        ns_nc.addObserver_selector_name_object_(self, "contactGroupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
         ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
 
-        self.model.loadGroupsAndContacts()
         self.refreshContactsList()
         self.updateActionButtons()
 
@@ -298,16 +297,25 @@ class ContactWindowController(NSWindowController):
 
         self.window().makeFirstResponder_(self.contactOutline)
 
-        # dialpad
-        self.contactsMenu.itemWithTag_(42).setEnabled_(NSApp.delegate().applicationName == 'Blink Pro')
+        self.contactsMenu.itemWithTag_(42).setEnabled_(NSApp.delegate().applicationName == 'Blink Pro') # Dialpad
+
+        # Presence policy
+        item = self.contactsMenu.itemWithTag_(21)
+        item.setEnabled_(ENABLE_PRESENCE)
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             self.callMenu.removeItemAtIndex_(0)
             self.callMenu.removeItemAtIndex_(0)
             self.windowMenu.itemWithTag_(3).setHidden_(True)
 
-        self.loaded = True
+            # Answering machine
+            item = self.statusMenu.itemWithTag_(50)
+            item.setEnabled_(False)
+            item.setHidden_(True)
+            item = self.statusMenu.itemWithTag_(55)
+            item.setHidden_(True)
 
+        self.loaded = True
 
     def setup(self, sipManager):
         self.backend = sipManager
@@ -393,7 +401,7 @@ class ContactWindowController(NSWindowController):
     def refreshContactsList(self):
         self.contactOutline.reloadData()
         for group in self.model.contactGroupsList:
-            if group.expanded:
+            if group.reference is not None and group.reference.expanded:
                 self.contactOutline.expandItem_expandChildren_(group, False)
 
     def getSelectedContacts(self, includeGroups=False):
@@ -836,7 +844,7 @@ class ContactWindowController(NSWindowController):
         return unicode(icon)
 
     def addContact(self, uri, display_name=None):
-        self.model.addNewContact(uri, display_name=display_name)
+        self.model.addContact(uri, display_name=display_name)
         self.contactOutline.reloadData()
 
     @objc.IBAction
@@ -855,7 +863,7 @@ class ContactWindowController(NSWindowController):
             elif self.model.bonjour_group in self.model.contactGroupsList and self.model.contactGroupsList.index(self.model.bonjour_group) == 0:
                 self.model.restoreBonjourGroupPosition()
                 self.contactOutline.reloadData()
-                if not self.model.bonjour_group.expanded:
+                if not self.model.bonjour_group.reference.expanded:
                     self.contactOutline.collapseItem_(self.model.bonjour_group)
         else:
             # select back the account and open the new account wizard
@@ -875,16 +883,6 @@ class ContactWindowController(NSWindowController):
         self.contactsMenu.itemWithTag_(33).setEnabled_(not readonly)
         self.contactsMenu.itemWithTag_(34).setEnabled_(not readonly)
 
-    def contactGroupCollapsed_(self, notification):
-        group = notification.userInfo()["NSObject"]
-        group.expanded = False
-
-    def contactGroupExpanded_(self, notification):
-        group = notification.userInfo()["NSObject"]
-        group.expanded = True
-        if group.type == "addressbook":
-            group.loadAddressBook()
-
     @objc.IBAction
     def backToContacts_(self, sender):
         self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
@@ -902,7 +900,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def addGroup_(self, sender):
-        self.model.addNewGroup()
+        self.model.addGroup()
         self.refreshContactsList()
         self.searchContacts()
 
@@ -926,7 +924,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def addContact_(self, sender):
         if sender != self.addContactButton:
-            contact = self.model.addNewContact(self.searchBox.stringValue())
+            contact = self.model.addContact(self.searchBox.stringValue())
 
             if contact:
                 self.resetWidgets()
@@ -944,7 +942,7 @@ class ContactWindowController(NSWindowController):
                 group = self.contactOutline.parentForItem_(item)
             else:
                 group = item
-            contact = self.model.addNewContact(group=group.name if group and group.editable else None)
+            contact = self.model.addContact(group=group.name if group and group.editable else None)
             if contact:
                 self.refreshContactsList()
                 self.searchContacts()
@@ -1090,15 +1088,16 @@ class ContactWindowController(NSWindowController):
         self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList for contact in group.contacts if text in contact]
 
         active_account = self.activeAccount()
-        input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
-        input_contact = BlinkContact(input_text, name=unicode(input_text))
-        exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
+        if active_account:
+            input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
+            input_contact = SearchResultContact(input_text, name=unicode(input_text))
+            exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
 
-        if not exists:
-            self.searchResultsModel.contactGroupsList.append(input_contact)
+            if not exists:
+                self.searchResultsModel.contactGroupsList.append(input_contact)
 
-        self.addContactButtonSearch.setEnabled_(not exists)
-        self.searchOutline.reloadData()
+            self.addContactButtonSearch.setEnabled_(not exists)
+            self.searchOutline.reloadData()
 
 
     @objc.IBAction
@@ -1328,9 +1327,9 @@ class ContactWindowController(NSWindowController):
         new_policy = None
         event = 'presence'
         item = sender.representedObject()
-        policy = self.presencePolicy.policyForContact(item.uri, item.stored_in_account, event)
+        policy = self.presencePolicy.getPolicyForUri(item.uri, item.stored_in_account.id, event)
         new_policy = self.presencePolicy.allowPolicy if policy != self.presencePolicy.allowPolicy else self.presencePolicy.denyPolicy
-        self.presencePolicy.addOrUpdatePolicy(item.stored_in_account, event, None, item.uri, new_policy)
+        self.presencePolicy.updatePolicyAction(item.stored_in_account.id, event, item.uri, new_policy)
 
     @objc.IBAction
     def actionButtonClicked_(self, sender):
@@ -1698,20 +1697,17 @@ class ContactWindowController(NSWindowController):
     def updateStatusMenu(self):
         settings = SIPSimpleSettings()
 
-        item = self.statusMenu.itemWithTag_(50) # Answering machine
+        item = self.statusMenu.itemWithTag_(30) # presence
+        item.setHidden_(not ENABLE_PRESENCE)
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
-             item.setHidden_(True)
-             item = self.statusMenu.itemWithTag_(55)
-             item.setHidden_(True)
-        else:
-             item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
+        item = self.statusMenu.itemWithTag_(31) # presence
+        item.setHidden_(not ENABLE_PRESENCE)
 
-        item = self.statusMenu.itemWithTag_(3) # presence
-        item.setEnabled_(ENABLE_PRESENCE)
+        item = self.statusMenu.itemWithTag_(32) # presence
+        item.setHidden_(not ENABLE_PRESENCE)
 
-        item = self.statusMenu.itemWithTag_(4) # presence
-        item.setEnabled_(ENABLE_PRESENCE)
+        item = self.statusMenu.itemWithTag_(50) # answering machine
+        item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
 
         item = self.statusMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
@@ -1724,6 +1720,7 @@ class ContactWindowController(NSWindowController):
         item = self.statusMenu.itemWithTag_(54) # my video
         item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
         item.setEnabled_(False) # TODO: enable video -adi
+
 
     def updateToolsMenu(self):
         account = self.activeAccount()
@@ -1742,7 +1739,6 @@ class ContactWindowController(NSWindowController):
 
     def updateCallMenu(self):
         menu = self.callMenu
-
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             while menu.numberOfItems() > 4:
@@ -2336,18 +2332,19 @@ class ContactWindowController(NSWindowController):
                 mitem.setTag_(2)
                 mitem.setEnabled_(has_full_sip_uri)
 
-            if item.stored_in_account != 'local':
-                try:
-                    account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.enabled and account.presence.enabled and account.id == item.stored_in_account).next()
-                except StopIteration:
-                    pass
-                else:
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show My Presence to %s" % item.display_name, "setPresencePolicyForContact:", "")
-                    mitem.setEnabled_(True)
-                    mitem.setRepresentedObject_(item)
-                    policy = self.presencePolicy.policyForContact(item.uri, item.stored_in_account, 'presence')
-                    mitem.setState_(NSOnState if policy and policy == self.presencePolicy.allowPolicy else NSOffState)
+            if ENABLE_PRESENCE:
+                if item.stored_in_account is not None:
+                    try:
+                        account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.enabled and account.presence.enabled and account == item.stored_in_account).next()
+                    except StopIteration:
+                        pass
+                    else:
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show My Presence to %s" % item.display_name, "setPresencePolicyForContact:", "")
+                        mitem.setEnabled_(True)
+                        mitem.setRepresentedObject_(item)
+                        policy = self.presencePolicy.getPolicyForUri(item.uri, item.stored_in_account.id, 'presence')
+                        mitem.setState_(NSOnState if policy and policy == self.presencePolicy.allowPolicy else NSOffState)
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             if type(item) == AddressBookBlinkContact:
@@ -2492,6 +2489,11 @@ class ContactWindowController(NSWindowController):
                     selected_contact = None
                     selected_group = selected
 
+            item = self.contactsMenu.itemWithTag_(20) # presence policy
+            item.setHidden_(not ENABLE_PRESENCE)
+            item = self.contactsMenu.itemWithTag_(21) # presence policy
+            item.setHidden_(not ENABLE_PRESENCE)
+
             item = self.contactsMenu.itemWithTag_(31) # Edit Contact
             item.setEnabled_(selected_contact and selected_contact.editable)
             item = self.contactsMenu.itemWithTag_(32) # Delete Contact
@@ -2503,9 +2505,6 @@ class ContactWindowController(NSWindowController):
             item = self.contactsMenu.itemWithTag_(35) # Delete Group
             item.setEnabled_(selected_group and selected_group.deletable)
 
-            item = self.contactsMenu.itemWithTag_(2) # presence policy
-            item.setEnabled_(ENABLE_PRESENCE)
-
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             if NSApp.delegate().applicationName == 'Blink Pro':
                 item.setEnabled_(True)
@@ -2514,6 +2513,7 @@ class ContactWindowController(NSWindowController):
                 item.setHidden_(True)
                 item = self.contactsMenu.itemWithTag_(41)
                 item.setHidden_(True)
+
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
@@ -2652,9 +2652,7 @@ class ContactWindowController(NSWindowController):
             own_icon = NSImage.alloc().initWithContentsOfFile_(path) if path else None
 
             for user in session.conference_info.users:
-                uri = user.entity.replace("sip:", "", 1)
-                uri = uri.replace("sips:", "", 1)
-
+                uri = re.sub("^(sip:|sips:)", "", user.entity)
                 active_media = []
 
                 chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]

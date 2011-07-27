@@ -36,12 +36,12 @@ class AddContactController(NSObject):
         self.storagePlacePopUp.removeAllItems()
         self.storagePlacePopUp.addItemWithTitle_("None")
         item = self.storagePlacePopUp.lastItem()
-        item.setRepresentedObject_('local')
+        item.setRepresentedObject_(None)
 
         for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount)):
             self.storagePlacePopUp.addItemWithTitle_(u'%s'%account.id)
             item = self.storagePlacePopUp.lastItem()
-            item.setRepresentedObject_(account.id)
+            item.setRepresentedObject_(account)
         
         # display the contact data
         self.addressText.setStringValue_(contact.uri or "")
@@ -60,16 +60,15 @@ class AddContactController(NSObject):
             self.preferredMedia.selectCellWithTag_(1)
 
         application_name = NSApp.delegate().applicationName
-        if application_name == 'Blink Lite':
-            self.preferredMedia.cellWithTag_(2).setEnabled_(False)
         
         self.contact = contact
 
     def setGroupNames(self, groups):
         current = self.groupCombo.stringValue()
         self.groupCombo.removeAllItems()
-        self.groupCombo.addItemsWithObjectValues_(NSArray.arrayWithObjects_(*groups))
-        self.groupCombo.selectItemAtIndex_(0)
+        if groups:
+            self.groupCombo.addItemsWithObjectValues_(NSArray.arrayWithObjects_(*groups))
+            self.groupCombo.selectItemAtIndex_(0)
         if current:
             self.groupCombo.setStringValue_(current)
     
@@ -94,7 +93,7 @@ class AddContactController(NSObject):
                 media = "chat"
             self.contact.setPreferredMedia(media)
             if self.storagePlacePopUp.selectedItem():
-                self.contact.stored_in_account = str(self.storagePlacePopUp.selectedItem().representedObject())
+                self.contact.stored_in_account = self.storagePlacePopUp.selectedItem().representedObject()
             return True, group
         return False, None
     

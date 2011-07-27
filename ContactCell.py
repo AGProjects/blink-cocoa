@@ -126,3 +126,8 @@ class ContactCell(NSTextFieldCell):
             icon_flipped.setFlipped_(True)
             icon_flipped.drawInRect_fromRect_operation_fraction_(trect, rect, NSCompositeSourceOver, 1.0)
 
+
+class WatcherContactCell(ContactCell):
+    pass
+
+

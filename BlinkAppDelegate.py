@@ -196,18 +196,20 @@ class BlinkAppDelegate(NSObject):
         config_file = ApplicationData.get('config')
         self.backend = SIPManager()
 
-
         self.windowController.setup(self.backend)
 
         while True:
             try:
                 first_run = not os.path.exists(config_file)
+                self.windowController.first_run = first_run
+
                 self.backend.init()
                 self.backend.fetch_account()
                 accounts = AccountManager().get_accounts()
                 if not accounts or (first_run and accounts == [BonjourAccount()]):
                     self.enroll()
                 break
+
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
                 if NSRunAlertPanel("Error Reading Configurations", 
@@ -250,7 +252,6 @@ You might need to Replace it and re-enter your account information. Your old fil
         os.kill(os.getpid(), signal.SIGTERM)
 
     def applicationShouldTerminate_(self, sender):
-        self.windowController.model.saveContacts()
         self.windowController.closeAllSessions()
         self.stopLocalVNCServer()
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)

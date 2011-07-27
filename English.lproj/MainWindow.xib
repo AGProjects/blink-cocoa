@@ -3,17 +3,17 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">10K540</string>
-		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.InterfaceBuilderVersion">823</string>
 		<string key="IBDocument.AppKitVersion">1038.36</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">851</string>
+			<string key="NS.object.0">823</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="371"/>
-			<integer value="29"/>
+			<integer value="902"/>
+			<integer value="503"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -356,6 +356,7 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">30</int>
 								</object>
 								<object class="NSMenuItem" id="487933114">
 									<reference key="NSMenu" ref="633631115"/>
@@ -364,7 +365,7 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">3</int>
+									<int key="NSTag">31</int>
 								</object>
 								<object class="NSMenuItem" id="29179348">
 									<reference key="NSMenu" ref="633631115"/>
@@ -373,7 +374,7 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">4</int>
+									<int key="NSTag">32</int>
 								</object>
 								<object class="NSMenuItem" id="911218652">
 									<reference key="NSMenu" ref="633631115"/>
@@ -539,6 +540,7 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">20</int>
 								</object>
 								<object class="NSMenuItem" id="88240595">
 									<reference key="NSMenu" ref="728662662"/>
@@ -548,7 +550,7 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">2</int>
+									<int key="NSTag">21</int>
 								</object>
 								<object class="NSMenuItem" id="89780523">
 									<reference key="NSMenu" ref="728662662"/>
@@ -4359,6 +4361,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 					<int key="connectionID">1596</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">contactOutline</string>
+						<reference key="source" ref="471496792"/>
+						<reference key="destination" ref="788885680"/>
+					</object>
+					<int key="connectionID">1597</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -7222,7 +7232,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{197, 511}, {359, 183}}</string>
+					<string>{{194, 515}, {359, 183}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7248,7 +7258,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{759, 681}, {83, 23}}</string>
+					<string>{{553, 675}, {83, 23}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7272,7 +7282,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1596</int>
+			<int key="maxID">1597</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7487,12 +7497,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>participantsView</string>
 							<string>recordButton</string>
 							<string>sharedFileMenu</string>
+							<string>srtpIcon</string>
 							<string>tabSwitcher</string>
 							<string>tabView</string>
 							<string>toolbar</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -7532,6 +7544,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>participantsView</string>
 							<string>recordButton</string>
 							<string>sharedFileMenu</string>
+							<string>srtpIcon</string>
 							<string>tabSwitcher</string>
 							<string>tabView</string>
 							<string>toolbar</string>
@@ -7599,6 +7612,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
+								<string key="name">srtpIcon</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
 								<string key="name">tabSwitcher</string>
 								<string key="candidateClassName">id</string>
 							</object>
@@ -7628,6 +7645,17 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<object class="IBPartialClassDescription">
 					<string key="className">ContactListModel</string>
 					<string key="superclassName">CustomListModel</string>
+					<object class="NSMutableDictionary" key="outlets">
+						<string key="NS.key.0">contactOutline</string>
+						<string key="NS.object.0">id</string>
+					</object>
+					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<string key="NS.key.0">contactOutline</string>
+						<object class="IBToOneOutletInfo" key="NS.object.0">
+							<string key="name">contactOutline</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</object>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier" id="562591206">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">ContactListModel.py</string>
@@ -8591,15 +8619,19 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>decideLater:</string>
 							<string>offlineWindowConfirm:</string>
 							<string>saveNewWatcher:</string>
 							<string>searchContacts:</string>
 							<string>showPresenceOfflineStatus:</string>
 							<string>togglePresenceOfflineStatus:</string>
 							<string>userButtonClicked:</string>
+							<string>userClickedApplyAllCheckBox:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8612,15 +8644,21 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>decideLater:</string>
 							<string>offlineWindowConfirm:</string>
 							<string>saveNewWatcher:</string>
 							<string>searchContacts:</string>
 							<string>showPresenceOfflineStatus:</string>
 							<string>togglePresenceOfflineStatus:</string>
 							<string>userButtonClicked:</string>
+							<string>userClickedApplyAllCheckBox:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">decideLater:</string>
+								<string key="candidateClassName">id</string>
+							</object>
 							<object class="IBActionInfo">
 								<string key="name">offlineWindowConfirm:</string>
 								<string key="candidateClassName">id</string>
@@ -8643,6 +8681,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">userButtonClicked:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">userClickedApplyAllCheckBox:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 						</object>
@@ -8668,11 +8710,15 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>offlineActivity</string>
 							<string>offlineNote</string>
 							<string>offlineWindow</string>
+							<string>pendingWatchersList</string>
+							<string>pendingWatchersView</string>
 							<string>presencePolicyTableView</string>
 							<string>searchSubscriberBox</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8715,6 +8761,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>offlineActivity</string>
 							<string>offlineNote</string>
 							<string>offlineWindow</string>
+							<string>pendingWatchersList</string>
+							<string>pendingWatchersView</string>
 							<string>presencePolicyTableView</string>
 							<string>searchSubscriberBox</string>
 						</object>
@@ -8786,6 +8834,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">offlineWindow</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">pendingWatchersList</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">pendingWatchersView</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
