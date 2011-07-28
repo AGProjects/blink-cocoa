@@ -36,7 +36,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, SearchResultContact, contactIconPathForURI, saveContactIcon
+from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, SearchResultContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -204,7 +204,7 @@ class ContactWindowController(NSWindowController):
         # save the NSUser icon to disk so that it can be used from html
         icon = NSImage.imageNamed_("NSUser")
         icon.setSize_(NSMakeSize(32, 32))
-        saveContactIcon(icon, "default_user_icon")
+        saveContactIconToFile(icon, "default_user_icon")
 
         self.contactOutline.setRowHeight_(40)
         self.contactOutline.setTarget_(self)

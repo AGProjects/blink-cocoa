@@ -80,18 +80,23 @@ class AddContactController(NSObject):
             self.contact.setURI(str(self.addressText.stringValue()))
             self.contact.setDetail(str(self.addressText.stringValue()))
             self.contact.setName(unicode(self.nameText.stringValue()))
+
             group = unicode(self.groupCombo.stringValue())
+
             text_items = (item.strip() for item in str(self.aliasText.stringValue()).split(";"))
             self.contact.setAliases((alias for alias in text_items if alias))
+
             if self.photoImage.image() == self.defaultPhotoImage:
                 self.contact.setIcon(None)
             else:
                 self.contact.setIcon(self.photoImage.image())
-            if self.preferredMedia.selectedCell().tag() == 1:
-                media = "audio"
-            else:
-                media = "chat"
+
+            self.contact.saveIcon()
+
+            media = "audio" if self.preferredMedia.selectedCell().tag() == 1 else "chat"
+
             self.contact.setPreferredMedia(media)
+
             if self.storagePlacePopUp.selectedItem():
                 self.contact.stored_in_account = self.storagePlacePopUp.selectedItem().representedObject()
             return True, group
@@ -128,6 +133,10 @@ class AddContactController(NSObject):
             if panel.runModalForTypes_(NSArray.arrayWithObjects_("tiff", "png", "jpeg", "jpg")) == NSFileHandlingPanelOKButton:
                 path = panel.filename()
                 image = NSImage.alloc().initWithContentsOfFile_(path)
+                size = image.size()
+                if size.width > 128 or size.height > 128:
+                    image.setScalesWhenResized_(True)
+                    image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
                 self.photoImage.setImage_(image)
             
         elif sender.tag() == 21: # clear icon

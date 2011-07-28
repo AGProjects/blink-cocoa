@@ -1,9 +1,10 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
-__all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIcon', 'saveContactIcon']
+__all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIconFromFile', 'saveContactIconToFile']
 
 import bisect
+import base64
 import datetime
 import os
 import re
@@ -63,7 +64,7 @@ def contactIconPathForURI(uri):
     return ApplicationData.get('photos/%s.tiff' % uri)
 
 
-def saveContactIcon(image, uri):
+def saveContactIconToFile(image, uri):
     path = contactIconPathForURI(uri)
     makedirs(os.path.dirname(path))
     if image is not None:
@@ -76,11 +77,22 @@ def saveContactIcon(image, uri):
             pass
 
 
-def loadContactIcon(uri):
+def loadContactIconFromFile(uri):
     path = contactIconPathForURI(uri)
     if os.path.exists(path):
         return NSImage.alloc().initWithContentsOfFile_(path)
     return None
+
+
+def loadContactIcon(contact):
+    if contact.icon is not None:
+        try:
+            data = base64.b64decode(contact.icon)
+            return NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
+        except:
+            return None
+    else:
+        return loadContactIconFromFile(contact.uri)
 
 
 class BlinkContact(NSObject):
@@ -212,9 +224,18 @@ class BlinkContact(NSObject):
     def iconPath(self):
         return contactIconPathForURI(str(self.uri))
 
-    def setIcon(self, icon):
-        self.icon = icon
-        saveContactIcon(self.icon, str(self.uri))
+    def setIcon(self, image):
+        if image:
+            size = image.size()
+            if size.width > 128 or size.height > 128:
+                image.setScalesWhenResized_(True)
+                image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
+
+        self.icon = image
+        self.saveIcon()
+
+    def saveIcon(self):
+        saveContactIconToFile(self.icon, str(self.uri))
 
 
 class BlinkConferenceContact(BlinkContact):
@@ -261,6 +282,21 @@ class BlinkPresenceContact(BlinkContact):
 
     def setSupportedMedia(self, media):
         self.supported_media = media
+
+    def setIcon(self, image):
+        if image:
+            size = image.size()
+            if size.width > 128 or size.height > 128:
+                image.setScalesWhenResized_(True)
+                image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
+
+        self.icon = image
+
+    def saveIcon(self):
+        saveContactIconToFile(self.icon, str(self.uri))
+        if self.reference:
+            self.reference.icon = base64.b64encode(self.icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)) if self.icon else None
+            self.reference.save()
 
 
 class HistoryBlinkContact(BlinkContact):
@@ -422,7 +458,7 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
                 seen[target_uri] += 1
             else:
                 seen[target_uri] = 1
-                contact = HistoryBlinkContact(target_uri, icon=loadContactIcon(target_uri), name=display_name)
+                contact = HistoryBlinkContact(target_uri, icon=loadContactIconFromFile(target_uri), name=display_name)
                 contact.setDetail(u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time)))
                 contacts.append(contact)
 
@@ -1145,7 +1181,7 @@ class ContactListModel(CustomListModel):
                 aliases = contact.aliases.split(";")
             except AttributeError:
                 aliases = []
-            gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=loadContactIcon(contact.uri), aliases=aliases, stored_in_account=contact.account)
+            gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=loadContactIcon(contact), aliases=aliases, stored_in_account=contact.account)
             group.contacts.append(gui_contact)
             group.sortContacts()
 
@@ -1187,6 +1223,10 @@ class ContactListModel(CustomListModel):
 
             gui_contact.setPreferredMedia(contact.preferred_media)
             gui_contact.setAccount(contact.account)
+
+            if gui_contact.reference.icon != contact.icon:
+                gui_contact.setIcon(loadContactIcon(contact))
+
             if gui_contact.display_name != contact.name:
                 gui_contact.setName(contact.name or contact.uri)
                 gui_group.sortContacts()
@@ -1205,7 +1245,7 @@ class ContactListModel(CustomListModel):
                     aliases = contact.aliases.split(";")
                 except AttributeError:
                     aliases = []
-                gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=loadContactIcon(contact.uri), aliases=aliases, stored_in_account=contact.account)
+                gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=loadContactIcon(contact), aliases=aliases, stored_in_account=contact.account)
                 target_group.contacts.append(gui_contact)
                 target_group.sortContacts()
 
