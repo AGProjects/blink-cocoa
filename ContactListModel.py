@@ -295,7 +295,13 @@ class BlinkPresenceContact(BlinkContact):
     def saveIcon(self):
         saveContactIconToFile(self.icon, str(self.uri))
         if self.reference:
-            self.reference.icon = base64.b64encode(self.icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)) if self.icon else None
+            if self.icon:
+                tiff_data = self.icon.TIFFRepresentation()
+                bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+                png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+                self.reference.icon = base64.b64encode(png_data)
+            else:
+                self.reference.icon = None
             self.reference.save()
 
 
@@ -1224,10 +1230,10 @@ class ContactListModel(CustomListModel):
             gui_contact.setPreferredMedia(contact.preferred_media)
             gui_contact.setAccount(contact.account)
 
-            if gui_contact.reference.icon != contact.icon:
+            if 'icon' in notification.data.modified:
                 gui_contact.setIcon(loadContactIcon(contact))
 
-            if gui_contact.display_name != contact.name:
+            if 'name' in notification.data.modified:
                 gui_contact.setName(contact.name or contact.uri)
                 gui_group.sortContacts()
 
