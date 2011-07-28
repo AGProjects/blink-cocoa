@@ -218,8 +218,7 @@ class BlinkContact(NSObject):
         self.stored_in_account = account
 
     def setAliases(self, aliases):
-        domain = str(self.uri).partition("@")[-1]
-        self.aliases = [alias if '@' in alias else '@'.join((alias, domain)) for alias in aliases]
+        self.aliases = aliases
 
     def iconPath(self):
         return contactIconPathForURI(str(self.uri))
@@ -1241,6 +1240,8 @@ class ContactListModel(CustomListModel):
                 aliases = contact.aliases.split(";")
             except AttributeError:
                 aliases = []
+            gui_contact.setAliases(aliases)
+
         else:
             try:
                 target_group = (group for group in self.contactGroupsList if group.name == contact.group.name).next()
