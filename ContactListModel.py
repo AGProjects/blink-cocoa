@@ -92,7 +92,7 @@ def loadContactIcon(contact):
         except:
             return None
     else:
-        return loadContactIconFromFile(contact.uri)
+        return None
 
 
 class BlinkContact(NSObject):
@@ -1183,7 +1183,8 @@ class ContactListModel(CustomListModel):
                 aliases = contact.aliases.split(";")
             except AttributeError:
                 aliases = []
-            gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=loadContactIcon(contact), aliases=aliases, stored_in_account=contact.account)
+            icon=loadContactIcon(contact) if contact.account is not None else loadContactIconFromFile(contact.uri)
+            gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=icon, aliases=aliases, stored_in_account=contact.account)
             group.contacts.append(gui_contact)
             group.sortContacts()
 
@@ -1249,7 +1250,8 @@ class ContactListModel(CustomListModel):
                     aliases = contact.aliases.split(";")
                 except AttributeError:
                     aliases = []
-                gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=loadContactIcon(contact), aliases=aliases, stored_in_account=contact.account)
+                icon=loadContactIcon(contact) if contact.account is not None else loadContactIconFromFile(contact.uri)
+                gui_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=icon, aliases=aliases, stored_in_account=contact.account)
                 target_group.contacts.append(gui_contact)
                 target_group.sortContacts()
 
