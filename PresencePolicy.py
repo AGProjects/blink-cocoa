@@ -408,7 +408,7 @@ class PresencePolicy(NSWindowController):
                 if policy is None:
                     try:
                         self.policy_data[contact.account.id][event].remove(contact)
-                    except ValueError:
+                    except ValueError, KeyError:
                         pass
                 self.refreshPolicyTable()
         view.setNeedsDisplay_(True)
@@ -421,7 +421,7 @@ class PresencePolicy(NSWindowController):
         for event in self.tabViewForEvent.keys():
             try:
                 self.policy_data[contact.account.id][event].remove(contact)    
-            except ValueError:
+            except ValueError, KeyError:
                 pass
         self.refreshPolicyTable()
 
