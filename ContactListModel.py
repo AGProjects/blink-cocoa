@@ -786,11 +786,15 @@ class CustomListModel(NSObject):
                 if sourceGroup.editable:
                     del sourceGroup.contacts[contact]
 
-                targetGroup.contacts.insert(index, contactObject)
-                contactObject.reference.group = targetGroup.reference
-                contactObject.reference.save()
-                targetGroup.sortContacts()
+                try:
+                    contactObject.reference.group = targetGroup.reference
+                except AttributeError:
+                    self.addContact(address=contactObject.uri, group=targetGroup.reference.name, display_name=contactObject.display_name)
+                    return True
 
+                contactObject.reference.save()
+                targetGroup.contacts.insert(index, contactObject)
+                targetGroup.sortContacts()
                 table.reloadData()
                 row = table.rowForItem_(contactObject)
                 if row>=0:
