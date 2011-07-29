@@ -1042,13 +1042,6 @@ class ContactListModel(CustomListModel):
                             xcontact.name = contact["display_name"]
                             xcontact.preferred_media = contact["preferred_media"]
                             xcontact.aliases = ";".join(contact["aliases"])
-                            try:
-                                account = AccountManager().get_account(contact["stored_in_account"])
-                            except KeyError:
-                                pass
-                            else:
-                                xcontact.account = account
-
                             xcontact.save()
                         except DuplicateIDError:
                             pass
