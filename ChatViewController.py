@@ -12,7 +12,6 @@ from WebKit import WebViewProgressFinishedNotification, WebActionOriginalURLKey
 import calendar
 import cgi
 import datetime
-import hashlib
 import os
 import re
 import time

@@ -4,7 +4,6 @@
 from AppKit import *
 from Foundation import *
 
-from application.notification import NotificationCenter
 from sipsimple.account import AccountManager, BonjourAccount
 
 

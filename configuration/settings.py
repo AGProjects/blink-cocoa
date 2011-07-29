@@ -7,8 +7,6 @@ Blink settings extensions.
 
 __all__ = ['SIPSimpleSettingsExtension']
 
-import os
-
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings, TLSSettings

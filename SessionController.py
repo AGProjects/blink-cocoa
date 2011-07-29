@@ -13,7 +13,6 @@ from datetime import datetime
 
 from sipsimple.session import Session, IllegalStateError
 from sipsimple.core import SIPURI, ToHeader
-from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
