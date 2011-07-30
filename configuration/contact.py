@@ -10,7 +10,7 @@ __all__ = ['BlinkContactExtension', 'BlinkContactGroupExtension']
 from sipsimple.configuration import Setting
 from sipsimple.contact import ContactExtension, ContactGroupExtension, SharedSetting
 
-SharedSetting.set_namespace('ag-project:blink')
+SharedSetting.set_namespace('ag-projects:blink')
 
 class BlinkContactExtension(ContactExtension):
     aliases = SharedSetting(type=str, nillable=True)
