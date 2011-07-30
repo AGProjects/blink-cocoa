@@ -283,26 +283,35 @@ class BlinkPresenceContact(BlinkContact):
     def setSupportedMedia(self, media):
         self.supported_media = media
 
-    def setIcon(self, image):
-        if image:
-            size = image.size()
-            if size.width > ICON_SIZE or size.height > ICON_SIZE:
-                image.setScalesWhenResized_(True)
-                image.setSize_(NSMakeSize(ICON_SIZE, ICON_SIZE * size.height/size.width))
-
-        self.icon = image
+    def setIcon(self, icon=None):
+        self.icon = icon
 
     def saveIcon(self):
-        saveContactIconToFile(self.icon, str(self.uri))
         if self.reference:
             if self.icon:
-                tiff_data = self.icon.TIFFRepresentation()
+                originalSize = self.icon.size()
+                if originalSize.width > ICON_SIZE or originalSize.height > ICON_SIZE:
+                    resizeWidth = ICON_SIZE
+                    resizeHeight = ICON_SIZE * originalSize.height/originalSize.width
+                    scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
+                    scaled_icon.lockFocus()
+                    self.icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
+                    scaled_icon.unlockFocus()
+                    tiff_data = scaled_icon.TIFFRepresentation()
+                    saveContactIconToFile(scaled_icon, str(self.uri))
+                else:
+                    tiff_data = self.icon.TIFFRepresentation()
+                    saveContactIconToFile(self.icon, str(self.uri))
+
                 bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
                 png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
                 self.reference.icon = base64.b64encode(png_data)
             else:
                 self.reference.icon = None
+                saveContactIconToFile(None, str(self.uri))
             self.reference.save()
+        else:
+            saveContactIconToFile(None, str(self.uri))
 
 
 class HistoryBlinkContact(BlinkContact):

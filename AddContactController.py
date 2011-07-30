@@ -6,6 +6,7 @@ from Foundation import *
 
 from sipsimple.account import AccountManager, BonjourAccount
 
+ICON_SIZE=48
 
 class MyImageThing(NSImageView):
     def mouseDown_(self, event):
@@ -132,10 +133,6 @@ class AddContactController(NSObject):
             if panel.runModalForTypes_(NSArray.arrayWithObjects_("tiff", "png", "jpeg", "jpg")) == NSFileHandlingPanelOKButton:
                 path = panel.filename()
                 image = NSImage.alloc().initWithContentsOfFile_(path)
-                size = image.size()
-                if size.width > 128 or size.height > 128:
-                    image.setScalesWhenResized_(True)
-                    image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
                 self.photoImage.setImage_(image)
             
         elif sender.tag() == 21: # clear icon
