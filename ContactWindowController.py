@@ -175,6 +175,7 @@ class ContactWindowController(NSWindowController):
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
     windowMenu = objc.IBOutlet()
+    restoreContactsMenu = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
@@ -846,6 +847,10 @@ class ContactWindowController(NSWindowController):
     def addContact(self, uri, display_name=None):
         self.model.addContact(uri, display_name=display_name)
         self.contactOutline.reloadData()
+
+    @objc.IBAction
+    def backupContacts_(self, sender):
+        self.model.backup_contacts()
 
     @objc.IBAction
     def accountSelectionChanged_(self, sender):
@@ -2142,8 +2147,32 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_(f)
             item.setAttributedTitle_(format_item(name,dt))
 
+    def updateRestoreContactsMenu(self):
+        while not self.restoreContactsMenu.itemAtIndex_(0).isSeparatorItem():
+            self.restoreContactsMenu.removeItemAtIndex_(0)
+        self.restoreContactsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_contacts_backup_directory())
+
+        contact_backups = self.backend.get_contact_backups()[-10:]
+        if not contact_backups:
+            item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No backups available", "", "", 0)
+            item.setEnabled_(False)
+
+        for timestamp, file in contact_backups:
+            title = u'From Backup Taken at %s...' % timestamp
+            item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "restoreContactsClicked:", "", 0)
+            item.setTarget_(self)
+            item.setRepresentedObject_((file, timestamp))
+
     @objc.IBAction
     def recordingClicked_(self, sender):
+        NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
+
+    @objc.IBAction
+    def restoreContactsClicked_(self, sender):
+        self.model.restore_contacts(sender.representedObject())
+
+    @objc.IBAction
+    def goToBackupContactsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
     @objc.IBAction
@@ -2459,6 +2488,8 @@ class ContactWindowController(NSWindowController):
             self.updateToolsMenu()
         elif menu == self.chatMenu:
             self.updateChatMenu()
+        elif menu == self.restoreContactsMenu:
+            self.updateRestoreContactsMenu()
         elif menu == self.desktopShareMenu:
             try:
                 contact = self.getSelectedContacts()[0]

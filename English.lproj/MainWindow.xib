@@ -12,7 +12,7 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="902"/>
+			<integer value="751"/>
 			<integer value="371"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -463,7 +463,7 @@
 							<string key="NSTitle">Contacts</string>
 							<object class="NSMutableArray" key="NSMenuItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
-								<object class="NSMenuItem" id="209324156">
+								<object class="NSMenuItem" id="960581010">
 									<reference key="NSMenu" ref="728662662"/>
 									<string key="NSTitle">Add Contact...</string>
 									<string key="NSKeyEquiv">n</string>
@@ -572,6 +572,60 @@
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">42</int>
+								</object>
+								<object class="NSMenuItem" id="548434855">
+									<reference key="NSMenu" ref="728662662"/>
+									<bool key="NSIsDisabled">YES</bool>
+									<bool key="NSIsSeparator">YES</bool>
+									<string key="NSTitle"/>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+								</object>
+								<object class="NSMenuItem" id="209324156">
+									<reference key="NSMenu" ref="728662662"/>
+									<string key="NSTitle">Backup</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">60</int>
+								</object>
+								<object class="NSMenuItem" id="450393502">
+									<reference key="NSMenu" ref="728662662"/>
+									<string key="NSTitle">Restore</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<string key="NSAction">submenuAction:</string>
+									<int key="NSTag">61</int>
+									<object class="NSMenu" key="NSSubmenu" id="1014145011">
+										<string key="NSTitle">Restore</string>
+										<object class="NSMutableArray" key="NSMenuItems">
+											<bool key="EncodedWithXMLCoder">YES</bool>
+											<object class="NSMenuItem" id="378466624">
+												<reference key="NSMenu" ref="1014145011"/>
+												<bool key="NSIsDisabled">YES</bool>
+												<bool key="NSIsSeparator">YES</bool>
+												<string key="NSTitle"/>
+												<string key="NSKeyEquiv"/>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="660791971"/>
+												<reference key="NSMixedImage" ref="600792618"/>
+											</object>
+											<object class="NSMenuItem" id="378512869">
+												<reference key="NSMenu" ref="1014145011"/>
+												<string key="NSTitle">Open Backup Folder</string>
+												<string key="NSKeyEquiv"/>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="660791971"/>
+												<reference key="NSMixedImage" ref="600792618"/>
+											</object>
+										</object>
+										<bool key="NSNoAutoenable">YES</bool>
+									</object>
 								</object>
 							</object>
 							<bool key="NSNoAutoenable">YES</bool>
@@ -3555,14 +3609,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">913</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">addContact:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="209324156"/>
-					</object>
-					<int key="connectionID">914</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">menu</string>
 						<reference key="source" ref="1055624403"/>
@@ -4369,6 +4415,46 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="788885680"/>
 					</object>
 					<int key="connectionID">1597</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">addContact:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="960581010"/>
+					</object>
+					<int key="connectionID">1599</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">backupContacts:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="209324156"/>
+					</object>
+					<int key="connectionID">1600</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="1014145011"/>
+						<reference key="destination" ref="900429702"/>
+					</object>
+					<int key="connectionID">1607</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">restoreContactsMenu</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="1014145011"/>
+					</object>
+					<int key="connectionID">1610</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">goToBackupContactsFolderClicked:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="378512869"/>
+					</object>
+					<int key="connectionID">1614</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -5177,12 +5263,15 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="968085631"/>
 							<reference ref="67186759"/>
 							<reference ref="212412478"/>
-							<reference ref="209324156"/>
 							<reference ref="774495447"/>
 							<reference ref="88240595"/>
 							<reference ref="344507074"/>
 							<reference ref="341430315"/>
 							<reference ref="89780523"/>
+							<reference ref="960581010"/>
+							<reference ref="209324156"/>
+							<reference ref="548434855"/>
+							<reference ref="450393502"/>
 						</object>
 						<reference key="parent" ref="556337794"/>
 					</object>
@@ -6157,6 +6246,46 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="917205071"/>
 						<reference key="parent" ref="454267465"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1598</int>
+						<reference key="object" ref="960581010"/>
+						<reference key="parent" ref="728662662"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1601</int>
+						<reference key="object" ref="548434855"/>
+						<reference key="parent" ref="728662662"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1602</int>
+						<reference key="object" ref="450393502"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="1014145011"/>
+						</object>
+						<reference key="parent" ref="728662662"/>
+						<string key="objectName">Menu Item (Restore Contacts)</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1603</int>
+						<reference key="object" ref="1014145011"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="378466624"/>
+							<reference ref="378512869"/>
+						</object>
+						<reference key="parent" ref="450393502"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1611</int>
+						<reference key="object" ref="378466624"/>
+						<reference key="parent" ref="1014145011"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1612</int>
+						<reference key="object" ref="378512869"/>
+						<reference key="parent" ref="1014145011"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -6332,6 +6461,13 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>1575.IBPluginDependency</string>
 					<string>1576.IBPluginDependency</string>
 					<string>1577.IBPluginDependency</string>
+					<string>1598.IBPluginDependency</string>
+					<string>1601.IBPluginDependency</string>
+					<string>1602.IBPluginDependency</string>
+					<string>1603.IBEditorWindowLastContentRect</string>
+					<string>1603.IBPluginDependency</string>
+					<string>1611.IBPluginDependency</string>
+					<string>1612.IBPluginDependency</string>
 					<string>19.IBPluginDependency</string>
 					<string>19.ImportedFromIB2</string>
 					<string>197.IBPluginDependency</string>
@@ -6557,7 +6693,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{513, 615}, {221, 83}}</string>
+					<string>{{783, 903}, {221, 83}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6574,7 +6710,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{332, 595}, {213, 103}}</string>
+					<string>{{399, 808}, {213, 103}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6778,6 +6914,13 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{737, 760}, {64, 6}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
@@ -6803,7 +6946,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
-					<string>{{348, 698}, {617, 20}}</string>
+					<string>{{354, 986}, {617, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
@@ -7180,12 +7323,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{376, 584}, {354, 114}}</string>
+					<string>{{646, 872}, {354, 114}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{868, 743}, {192, 163}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{449, 651}, {166, 43}}</string>
+					<string>{{716, 943}, {166, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{801, 873}, {119, 33}}</string>
 					<string>{{598, 442}, {96, 43}}</string>
@@ -7227,7 +7370,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<bytes key="NSTransformStruct">P4AAAL+AAABCXAAAw5eAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{254, 505}, {213, 193}}</string>
+					<string>{{524, 743}, {213, 243}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{649, 793}, {185, 113}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7287,7 +7430,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1597</int>
+			<int key="maxID">1614</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7687,6 +7830,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>addContactToConference:</string>
 							<string>addGroup:</string>
 							<string>backToContacts:</string>
+							<string>backupContacts:</string>
 							<string>clearSearchField:</string>
 							<string>close:</string>
 							<string>conferenceClicked:</string>
@@ -7694,6 +7838,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>deleteGroup:</string>
 							<string>dialPadButtonClicked:</string>
 							<string>editContact:</string>
+							<string>goToBackupContactsFolderClicked:</string>
 							<string>hangupAllClicked:</string>
 							<string>joinConferenceClicked:</string>
 							<string>muteClicked:</string>
@@ -7702,6 +7847,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>recordingClicked:</string>
 							<string>redialLast:</string>
 							<string>renameGroup:</string>
+							<string>restoreContactsClicked:</string>
 							<string>searchContacts:</string>
 							<string>sendFile:</string>
 							<string>sendSMSToSelected:</string>
@@ -7729,6 +7875,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -7786,6 +7935,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>addContactToConference:</string>
 							<string>addGroup:</string>
 							<string>backToContacts:</string>
+							<string>backupContacts:</string>
 							<string>clearSearchField:</string>
 							<string>close:</string>
 							<string>conferenceClicked:</string>
@@ -7793,6 +7943,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>deleteGroup:</string>
 							<string>dialPadButtonClicked:</string>
 							<string>editContact:</string>
+							<string>goToBackupContactsFolderClicked:</string>
 							<string>hangupAllClicked:</string>
 							<string>joinConferenceClicked:</string>
 							<string>muteClicked:</string>
@@ -7801,6 +7952,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>recordingClicked:</string>
 							<string>redialLast:</string>
 							<string>renameGroup:</string>
+							<string>restoreContactsClicked:</string>
 							<string>searchContacts:</string>
 							<string>sendFile:</string>
 							<string>sendSMSToSelected:</string>
@@ -7853,6 +8005,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
+								<string key="name">backupContacts:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
 								<string key="name">clearSearchField:</string>
 								<string key="candidateClassName">id</string>
 							</object>
@@ -7878,6 +8034,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">editContact:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">goToBackupContactsFolderClicked:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -7910,6 +8070,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">renameGroup:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">restoreContactsClicked:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -8047,6 +8211,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>presencePolicy</string>
 							<string>recordingsMenu</string>
 							<string>recordingsSubMenu</string>
+							<string>restoreContactsMenu</string>
 							<string>searchBox</string>
 							<string>searchOutline</string>
 							<string>searchResultsModel</string>
@@ -8061,6 +8226,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8144,6 +8310,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>presencePolicy</string>
 							<string>recordingsMenu</string>
 							<string>recordingsSubMenu</string>
+							<string>restoreContactsMenu</string>
 							<string>searchBox</string>
 							<string>searchOutline</string>
 							<string>searchResultsModel</string>
@@ -8288,6 +8455,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">recordingsSubMenu</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">restoreContactsMenu</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">

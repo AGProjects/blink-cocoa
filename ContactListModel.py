@@ -925,6 +925,106 @@ class ContactListModel(CustomListModel):
     def contactExistsInAccount(self, uri, account=None):
         return any(blink_contact for group in self.contactGroupsList for blink_contact in group.contacts if blink_contact.uri == uri and blink_contact.stored_in_account == account)
 
+    def backup_contacts(self):
+        backup_contacts = []
+
+        for contact in ContactManager().get_contacts():
+            backup_contact={'uri': contact.uri,
+                            'name': contact.name,
+                            'aliases': contact.aliases,
+                            'preferred_media': contact.preferred_media,
+                            'group': contact.group.name if contact.group is not None else None,
+                            'account': contact.account.id if contact.account is not None else None
+                            }
+            backup_contacts.append(backup_contact)
+
+        for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount)):
+            for contact in account.contact_manager.get_contacts():
+                backup_contact={'uri': contact.uri,
+                                'name': contact.name,
+                                'aliases': contact.aliases,
+                                'preferred_media': contact.preferred_media,
+                                'group': contact.group.name if contact.group is not None else None,
+                                'account': contact.account.id if contact.account is not None else None
+                                }
+                backup_contacts.append(backup_contact)
+
+        filename = "contacts_backup/%s.pickle" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+        storage_path = ApplicationData.get(filename)
+        makedirs(os.path.dirname(storage_path))
+
+        if len(backup_contacts):
+            try:
+                cPickle.dump({"contacts":backup_contacts}, open(storage_path, "w+"))
+                NSRunAlertPanel("Contacts Backup Successful", "%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu."%len(backup_contacts), "OK", None, None)
+            except:
+                import traceback
+                traceback.print_exc()
+        else:
+            NSRunAlertPanel("Contacts Backup Unnecessary", "There are no contacts available for backup.", "OK", None, None)
+
+    def restore_contacts(self, backup):
+        restored = 0
+        filename = backup[0]
+
+        try:
+            f = open(filename, "r")
+            data = cPickle.load(f)
+            f.close()
+        except:
+            import traceback
+            traceback.print_exc()
+            return
+
+        try:
+            if len(data['contacts']):
+                ret = NSRunAlertPanel(u"Restore Contacts", u"Are you sure you want to replace your contacts with %d contacts present in backup taken at %s? "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
+                if ret == NSAlertDefaultReturn:
+                    new_groups = {}
+                    new_group = None
+                    for backup_contact in data['contacts']:
+                        if backup_contact['group'] is not None: 
+                            try:
+                                new_group = ContactGroupManager().get_group_byname(backup_contact['group'])
+                            except KeyError:
+                                if backup_contact['group'] not in new_groups:
+                                    group = ContactGroup(backup_contact['group'])
+                                    group.expanded = True
+                                    group.position = None
+                                    group.save()
+                                    new_groups[backup_contact['group']]=group
+                        else:
+                            new_group = None
+
+                        if backup_contact['account'] is not None:
+                            try:
+                                account = AccountManager().get_account(backup_contact['account'])
+                            except KeyError:
+                                account = None
+                        else:
+                            account = None
+
+                        try:
+                            try:
+                                new_group = new_groups[backup_contact['group']]
+                            except KeyError:
+                                pass
+
+                            contact = Contact(backup_contact['uri'], group=new_group, account=account)
+                            contact.name = backup_contact['name']
+                            contact.preferred_media = backup_contact['preferred_media']
+                            contact.aliases = backup_contact['aliases']
+                            contact.save()
+                            restored += 1
+                        except DuplicateIDError:
+                            pass
+
+            if restored:
+                ret = NSRunAlertPanel(u"Restore Completed", u"%d contacts have been restored"%restored, u"OK", None, None)
+
+        except KeyError:
+            pass
+
     def _NH_SIPApplicationDidStart(self, notification):
         self.addressbook_group.setReference()
         self.missed_calls_group.setReference()

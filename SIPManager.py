@@ -17,7 +17,8 @@ import uuid
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.python.types import Singleton
-from application.system import host, unlink
+from application.system import host, makedirs, unlink
+
 from collections import defaultdict
 from dateutil.tz import tzlocal
 from eventlet import api
@@ -633,6 +634,11 @@ class SIPManager(object):
     def get_audio_recordings_directory(self):
         return ApplicationData.get('history')
 
+    def get_contacts_backup_directory(self):
+        storage_path = ApplicationData.get('contacts_backup/dummy')
+        makedirs(os.path.dirname(storage_path))
+        return ApplicationData.get('contacts_backup')
+
     def get_audio_recordings(self):
         result = []
         historydir = self.get_audio_recordings_directory()
@@ -677,6 +683,28 @@ class SIPManager(object):
                     traceback.print_exc()
                     pass
 
+        result.sort(lambda a,b: cmp(a[0],b[0]))
+        return result
+
+    def get_contact_backups(self):
+        result = []
+        dirname = self.get_contacts_backup_directory()
+        if not os.path.isdir(dirname):
+            return
+
+        files = [dirname+"/"+f for f in os.listdir(dirname) if f.endswith(".pickle")]
+
+        for file in files:
+            try:
+                date = file.split("/")[-1].split('-')[0]
+                time = file.split("/")[-1].split('-')[1].split('.')[0]
+                timestamp = date[:4]+"/"+date[4:6]+"/"+date[6:8]+" "+time[:2]+":"+time[2:4]
+                stat = os.stat(file)
+                result.append((timestamp, file))
+            except:
+                import traceback
+                traceback.print_exc()
+                pass
         result.sort(lambda a,b: cmp(a[0],b[0]))
         return result
 
