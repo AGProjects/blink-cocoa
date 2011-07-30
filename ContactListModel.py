@@ -35,6 +35,7 @@ from SIPManager import SIPManager, strip_addressbook_special_characters, Presenc
 from resources import ApplicationData
 from util import *
 
+ICON_SIZE=48
 
 PresenceActivityPrefix = {
     "Available": "is",
@@ -226,9 +227,9 @@ class BlinkContact(NSObject):
     def setIcon(self, image):
         if image:
             size = image.size()
-            if size.width > 128 or size.height > 128:
+            if size.width > ICON_SIZE or size.height > ICON_SIZE:
                 image.setScalesWhenResized_(True)
-                image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
+                image.setSize_(NSMakeSize(ICON_SIZE, ICON_SIZE * size.height/size.width))
 
         self.icon = image
         self.saveIcon()
@@ -285,9 +286,9 @@ class BlinkPresenceContact(BlinkContact):
     def setIcon(self, image):
         if image:
             size = image.size()
-            if size.width > 128 or size.height > 128:
+            if size.width > ICON_SIZE or size.height > ICON_SIZE:
                 image.setScalesWhenResized_(True)
-                image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
+                image.setSize_(NSMakeSize(ICON_SIZE, ICON_SIZE * size.height/size.width))
 
         self.icon = image
 
