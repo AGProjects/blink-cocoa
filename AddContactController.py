@@ -57,15 +57,11 @@ class AddContactController(NSObject):
         self.groupCombo.setStringValue_(group or "")
         self.photoImage.setImage_(contact.icon or self.defaultPhotoImage)
         self.aliasText.setStringValue_("; ".join(contact.aliases))
+
         index = self.storagePlacePopUp.indexOfItemWithRepresentedObject_(contact.stored_in_account) if contact.stored_in_account else 0
-        if index < 0:
-            index = 0
-        self.storagePlacePopUp.selectItemAtIndex_(index)
-        
-        if contact.preferred_media == "chat":
-            self.preferredMedia.selectCellWithTag_(2)
-        else:
-            self.preferredMedia.selectCellWithTag_(1)
+        self.storagePlacePopUp.selectItemAtIndex_(index if index >0 else 0)
+
+        self.preferredMedia.selectCellWithTag_(2 if contact.preferred_media == "chat" else 1)
 
         application_name = NSApp.delegate().applicationName
         
