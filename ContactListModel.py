@@ -978,7 +978,7 @@ class ContactListModel(CustomListModel):
 
         try:
             if len(data['contacts']):
-                ret = NSRunAlertPanel(u"Restore Contacts", u"Are you sure you want to replace your contacts with %d contacts present in backup taken at %s? "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
+                ret = NSRunAlertPanel(u"Restore Contacts", u"This operation will restore %d contacts present in the backup taken at %s. Newer contacts will be preserved. "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:
                     new_groups = {}
                     new_group = None
