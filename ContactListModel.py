@@ -1178,7 +1178,6 @@ class ContactListModel(CustomListModel):
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def updatePresenceIndicator(self):
-        return
         groups_with_presence = (group for group in self.contactGroupsList if type(group) == BlinkContactGroup)
         change = False
         # TODO: remove random import enable presence -adi
@@ -1194,6 +1193,8 @@ class ContactListModel(CustomListModel):
                 if account:
                     if account.presence.enabled:
                         # TODO: set indicator to unknown when enable presence -adi
+                        blink_contact.setPresenceIndicator("unknown")
+                        continue
                         indicator = random.choice(('available','busy', 'activity', 'unknown'))
                         blink_contact.setPresenceIndicator(indicator)
                         activity = random.choice(PresenceStatusList)
@@ -1343,6 +1344,12 @@ class ContactListModel(CustomListModel):
             if 'name' in notification.data.modified:
                 blink_contact.setName(contact.name or contact.uri)
                 blink_group.sortContacts()
+
+            if 'account' in notification.data.modified:
+                if contact.account is not None and contact.account.presence.enabled:
+                    blink_contact.setPresenceIndicator("unknown")
+                else:
+                    blink_contact.setPresenceIndicator(None)
 
             try:
                 aliases = contact.aliases.split(";")
