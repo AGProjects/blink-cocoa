@@ -57,8 +57,6 @@ class AddContactController(NSObject):
 
         self.preferredMedia.selectCellWithTag_(2 if contact.preferred_media == "chat" else 1)
 
-        application_name = NSApp.delegate().applicationName
-        
         self.contact = contact
 
     def setGroupNames(self, groups):
