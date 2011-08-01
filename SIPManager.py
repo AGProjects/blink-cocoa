@@ -9,6 +9,7 @@ from AppKit import *
 import cjson
 import datetime
 import os
+import platform
 import re
 import urllib
 import urllib2
@@ -893,6 +894,9 @@ class SIPManager(object):
 
         if 'desktop-sharing' in stream_type_list:
             ds = [s for s in streams if s.type == "desktop-sharing"]
+            if ds and ds[0].handler.type != "active" and platform.mac_ver()[0].startswith('10.7'):
+                BlinkLogger().log_info(u"Desktop Sharing is temporarily disabled on Lion")
+                return False
             if ds and ds[0].handler.type != "active" and settings.desktop_sharing.disabled:
                 BlinkLogger().log_info(u"Desktop Sharing is disabled")
                 return False
@@ -916,6 +920,10 @@ class SIPManager(object):
 
     def isMediaTypeSupported(self, type):
         settings = SIPSimpleSettings()
+
+        if platform.mac_ver()[0].startswith('10.7') and type == 'desktop-server':
+            BlinkLogger().log_info(u"Desktop sharing server is temporarily disabled in Lion")
+            return False
 
         if NSApp.delegate().applicationName == 'Blink Lite' and type == 'desktop-server':
             return False
