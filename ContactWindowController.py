@@ -2359,10 +2359,9 @@ class ContactWindowController(NSWindowController):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(1)
             mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-client'))
-            if self.backend.isMediaTypeSupported('desktop-server'):
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
-                mitem.setTag_(2)
-                mitem.setEnabled_(has_full_sip_uri)
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
+            mitem.setTag_(2)
+            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-server'))
 
             if ENABLE_PRESENCE:
                 if item.stored_in_account is not None:

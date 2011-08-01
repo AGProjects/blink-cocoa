@@ -894,7 +894,7 @@ class SIPManager(object):
 
         if 'desktop-sharing' in stream_type_list:
             ds = [s for s in streams if s.type == "desktop-sharing"]
-            if ds and ds[0].handler.type != "active" and platform.mac_ver()[0].startswith('10.7'):
+            if ds and platform.mac_ver()[0].startswith('10.7'):
                 BlinkLogger().log_info(u"Desktop Sharing is temporarily disabled on Lion")
                 return False
             if ds and ds[0].handler.type != "active" and settings.desktop_sharing.disabled:
@@ -923,6 +923,10 @@ class SIPManager(object):
 
         if platform.mac_ver()[0].startswith('10.7') and type == 'desktop-server':
             BlinkLogger().log_info(u"Desktop sharing server is temporarily disabled in Lion")
+            return False
+
+        if platform.mac_ver()[0].startswith('10.7') and type == 'desktop-client':
+            BlinkLogger().log_info(u"Desktop sharing client is temporarily disabled in Lion")
             return False
 
         if NSApp.delegate().applicationName == 'Blink Lite' and type == 'desktop-server':

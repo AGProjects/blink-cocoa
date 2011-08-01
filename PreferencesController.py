@@ -2,6 +2,7 @@
 #
 
 import os
+import platform
 
 from AppKit import *
 from Foundation import *
@@ -137,6 +138,16 @@ class PreferencesController(NSWindowController, object):
                         self.toolbar.removeItemAtIndex_(j)
                     else:
                         j += 1
+
+        if platform.mac_ver()[0].startswith('10.7'):
+            j = 0
+            for item in self.toolbar.visibleItems():
+                print item.itemIdentifier()
+                if item.itemIdentifier() == 'desktop-sharing':
+                    self.toolbar.removeItemAtIndex_(j)
+                else:
+                    j += 1
+
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
