@@ -937,7 +937,7 @@ class ContactListModel(CustomListModel):
             diff = now - datetime.datetime.strptime(backup_date, "%Y%m%d-%H%M%S")
             if diff.days <= 7:
                 break
-            elif diff.days > 30:
+            elif diff.days > 120:
                 unlink(file)
         else:
             self.backup_contacts(silent=True)
