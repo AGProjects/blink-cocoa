@@ -592,6 +592,7 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
             call_in_thread('device-io', switch_device, device)
         else:
+            NSApp.activateIgnoringOtherApps_(True)
             panel = NSGetInformationalAlertPanel("New Audio Device",
                     "A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(),
                     "Switch", "Ignore", None)
