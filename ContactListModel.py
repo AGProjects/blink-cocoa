@@ -1038,7 +1038,15 @@ class ContactListModel(CustomListModel):
                 except DuplicateIDError:
                     pass
 
-        ret = NSRunAlertPanel(u"Restore Completed", u"%d contacts have been restored" % restored, u"OK", None, None)
+        if not restored:
+            panel_text = u"All contacts from the backup were already present and none has been restored"
+        elif restored == 1:
+            panel_text = u"One contact has been restored"
+        else:
+            panel_text = u"%d contacts have been restored" % restored
+
+        NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
+
 
     def _NH_SIPApplicationDidStart(self, notification):
         self.addressbook_group.setReference()
