@@ -1252,7 +1252,7 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, name=(display_name or 'Unknown', host)))
         else:
-            blink_contact.setName(display_name)
+            blink_contact.setName(display_name or 'Unknown')
             blink_contact.setURI(str(uri))
             blink_contact.setDetail(str(uri))
             self.bonjour_group.sortContacts()
