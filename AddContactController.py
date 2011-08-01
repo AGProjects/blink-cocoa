@@ -4,7 +4,7 @@
 from AppKit import *
 from Foundation import *
 
-import bisect
+from operator import attrgetter
 from sipsimple.account import AccountManager, BonjourAccount
 
 ICON_SIZE=48
@@ -39,14 +39,8 @@ class AddContactController(NSObject):
         item = self.storagePlacePopUp.lastItem()
         item.setRepresentedObject_(None)
 
-        positions = [acct.order for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount) and acct.order is not None]
-        positions.sort()
-        ordered_accounts=[]
-        for account in (acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount)):
-            index = bisect.bisect_left(positions, account.order if account.order is not None else 0)
-            ordered_accounts.insert(index, account)
-
-        for account in ordered_accounts:
+        accounts = [acct for acct in AccountManager().get_accounts() if not isinstance(acct, BonjourAccount)]
+        for account in sorted(accounts, key=attrgetter('order')):
             self.storagePlacePopUp.addItemWithTitle_(u'%s'%account.id)
             item = self.storagePlacePopUp.lastItem()
             item.setRepresentedObject_(account)
