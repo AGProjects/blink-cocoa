@@ -1,6 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
+from __future__ import with_statement
+
 __all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIconFromFile', 'saveContactIconToFile']
 
 import bisect
@@ -933,8 +935,9 @@ class ContactListModel(CustomListModel):
                             'name': contact.name,
                             'aliases': contact.aliases,
                             'preferred_media': contact.preferred_media,
+                            'icon': contact.icon,
                             'group': contact.group.name if contact.group is not None else None,
-                            'account': contact.account.id if contact.account is not None else None
+                            'account': None
                             }
             backup_contacts.append(backup_contact)
 
@@ -944,6 +947,7 @@ class ContactListModel(CustomListModel):
                                 'name': contact.name,
                                 'aliases': contact.aliases,
                                 'preferred_media': contact.preferred_media,
+                                'icon': contact.icon,
                                 'group': contact.group.name if contact.group is not None else None,
                                 'account': contact.account.id if contact.account is not None else None
                                 }
@@ -953,13 +957,12 @@ class ContactListModel(CustomListModel):
         storage_path = ApplicationData.get(filename)
         makedirs(os.path.dirname(storage_path))
 
-        if len(backup_contacts):
+        if backup_contacts:
             try:
                 cPickle.dump({"contacts":backup_contacts}, open(storage_path, "w+"))
-                NSRunAlertPanel("Contacts Backup Successful", "%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu."%len(backup_contacts), "OK", None, None)
-            except:
-                import traceback
-                traceback.print_exc()
+                NSRunAlertPanel("Contacts Backup Successful", "%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % len(backup_contacts), "OK", None, None)
+            except (IOError, cPickle.PicklingError):
+                pass
         else:
             NSRunAlertPanel("Contacts Backup Unnecessary", "There are no contacts available for backup.", "OK", None, None)
 
@@ -968,62 +971,57 @@ class ContactListModel(CustomListModel):
         filename = backup[0]
 
         try:
-            f = open(filename, "r")
-            data = cPickle.load(f)
-            f.close()
-        except:
-            import traceback
-            traceback.print_exc()
+            with open(filename, 'r') as f:
+                data = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
             return
 
         try:
-            if len(data['contacts']):
-                ret = NSRunAlertPanel(u"Restore Contacts", u"This operation will restore %d contacts present in the backup taken at %s. Newer contacts will be preserved. "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
-                if ret == NSAlertDefaultReturn:
-                    new_groups = {}
-                    new_group = None
-                    for backup_contact in data['contacts']:
-                        if backup_contact['group'] is not None:
-                            try:
-                                new_group = ContactGroupManager().get_group_byname(backup_contact['group'])
-                            except KeyError:
-                                if backup_contact['group'] not in new_groups:
-                                    group = ContactGroup(backup_contact['group'])
-                                    group.expanded = True
-                                    group.position = None
-                                    group.save()
-                                    new_groups[backup_contact['group']]=group
-                        else:
-                            new_group = None
+            contacts = data['contacts']
+        except (TypeError, KeyError):
+            return
 
-                        if backup_contact['account'] is not None:
-                            try:
-                                account = AccountManager().get_account(backup_contact['account'])
-                            except KeyError:
-                                account = None
-                        else:
-                            account = None
-
+        if contacts:
+            ret = NSRunAlertPanel(u"Restore Contacts", u"This operation will restore %d contacts present in the backup taken at %s. Newer contacts will be preserved. "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
+            if ret != NSAlertDefaultReturn:
+                return
+            new_groups = {}
+            for backup_contact in contacts:
+                if backup_contact['group'] is not None: 
+                    try:
+                        group = ContactGroupManager().get_group_byname(backup_contact['group'])
+                    except KeyError:
                         try:
-                            try:
-                                new_group = new_groups[backup_contact['group']]
-                            except KeyError:
-                                pass
+                            group = new_groups[backup_contact['group']]
+                        except KeyError:
+                            group = ContactGroup(backup_contact['group'])
+                            group.expanded = True
+                            group.position = None
+                            group.save()
+                            new_groups[backup_contact['group']] = group
+                else:
+                    group = None
 
-                            contact = Contact(backup_contact['uri'], group=new_group, account=account)
-                            contact.name = backup_contact['name']
-                            contact.preferred_media = backup_contact['preferred_media']
-                            contact.aliases = backup_contact['aliases']
-                            contact.save()
-                            restored += 1
-                        except DuplicateIDError:
-                            pass
+                if backup_contact['account'] is not None:
+                    try:
+                        account = AccountManager().get_account(backup_contact['account'])
+                    except KeyError:
+                        account = None
+                else:
+                    account = None
 
-            if restored:
-                ret = NSRunAlertPanel(u"Restore Completed", u"%d contacts have been restored"%restored, u"OK", None, None)
+                try:
+                    contact = Contact(backup_contact['uri'], group=group, account=account)
+                    contact.name = backup_contact['name']
+                    contact.preferred_media = backup_contact['preferred_media']
+                    contact.aliases = backup_contact['aliases']
+                    contact.icon = backup_contact['icon']
+                    contact.save()
+                    restored += 1
+                except DuplicateIDError:
+                    pass
 
-        except KeyError:
-            pass
+        ret = NSRunAlertPanel(u"Restore Completed", u"%d contacts have been restored" % restored, u"OK", None, None)
 
     def _NH_SIPApplicationDidStart(self, notification):
         self.addressbook_group.setReference()
