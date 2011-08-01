@@ -8,6 +8,7 @@ __all__ = ['BlinkContact', 'BlinkContactGroup', 'ContactListModel', 'contactIcon
 import bisect
 import base64
 import datetime
+import glob
 import os
 import re
 import cPickle
@@ -19,7 +20,7 @@ from AppKit import *
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from application.system import makedirs
+from application.system import makedirs, unlink
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI
@@ -862,6 +863,7 @@ class ContactListModel(CustomListModel):
         self.missed_calls_group = MissedCallsBlinkContactGroup()
         self.outgoing_calls_group = OutgoingCallsBlinkContactGroup()
         self.incoming_calls_group = IncomingCallsBlinkContactGroup()
+        self.contact_backup_timer = None
         return self
 
     @allocate_autorelease_pool
@@ -886,12 +888,13 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="SIPAccountDidActivate")
         nc.add_observer(self, name="SIPAccountDidDeactivate")
         nc.add_observer(self, name="SIPApplicationDidStart")
+        nc.add_observer(self, name="SIPApplicationWillEnd")
         nc.add_observer(self, name="AudioCallLoggedToHistory")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
- 
+
     def contactGroupCollapsed_(self, notification):
         group = notification.userInfo()["NSObject"]
         if group.reference:
@@ -927,7 +930,19 @@ class ContactListModel(CustomListModel):
     def contactExistsInAccount(self, uri, account=None):
         return any(blink_contact for group in self.contactGroupsList for blink_contact in group.contacts if blink_contact.uri == uri and blink_contact.stored_in_account == account)
 
-    def backup_contacts(self):
+    def checkContactBackup_(self, timer):
+        now = datetime.datetime.now()
+        for file in glob.glob('%s/*.pickle' % ApplicationData.get('contacts_backup')):
+            backup_date, _ = os.path.splitext(os.path.basename(file))
+            diff = now - datetime.datetime.strptime(backup_date, "%Y%m%d-%H%M%S")
+            if diff.days <= 7:
+                break
+            elif diff.days > 30:
+                unlink(file)
+        else:
+            self.backup_contacts(silent=True)
+
+    def backup_contacts(self, silent=False):
         backup_contacts = []
 
         for contact in ContactManager().get_contacts():
@@ -960,11 +975,13 @@ class ContactListModel(CustomListModel):
         if backup_contacts:
             try:
                 cPickle.dump({"contacts":backup_contacts}, open(storage_path, "w+"))
-                NSRunAlertPanel("Contacts Backup Successful", "%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % len(backup_contacts), "OK", None, None)
+                if not silent:
+                    NSRunAlertPanel("Contacts Backup Successful", "%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % len(backup_contacts), "OK", None, None)
             except (IOError, cPickle.PicklingError):
                 pass
         else:
-            NSRunAlertPanel("Contacts Backup Unnecessary", "There are no contacts available for backup.", "OK", None, None)
+            if not silent:
+                NSRunAlertPanel("Contacts Backup Unnecessary", "There are no contacts available for backup.", "OK", None, None)
 
     def restore_contacts(self, backup):
         restored = 0
@@ -1035,6 +1052,12 @@ class ContactListModel(CustomListModel):
             self.createInitialGroupAndContacts()
         else:
             self._migrateContacts()
+        self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
+
+    def _NH_SIPApplicationWillEnd(self, notification):
+        if self.contact_backup_timer is not None and self.contact_backup_timer.isValid():
+            self.contact_backup_timer.invalidate()
+        self.contact_backup_timer = None
 
     def _NH_AudioCallLoggedToHistory(self, notification):
         if NSApp.delegate().applicationName != 'Blink Lite':
