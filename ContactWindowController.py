@@ -19,6 +19,7 @@ from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
+from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
 from zope.interface import implements
@@ -579,13 +580,17 @@ class ContactWindowController(NSWindowController):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
 
     def switchAudioDevice(self, device):
+        def switch_device(device):
+            settings = SIPSimpleSettings()
+            settings.audio.input_device = unicode(device)
+            settings.audio.output_device = unicode(device)
+            settings.save()
+
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
         settings = SIPSimpleSettings()
         if hasAudio or settings.audio.automatic_device_switch:
             BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
-            settings.audio.input_device = unicode(device)
-            settings.audio.output_device = unicode(device)
-            settings.save()
+            call_in_thread('device-io', switch_device, device)
         else:
             panel = NSGetInformationalAlertPanel("New Audio Device",
                     "A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(),
@@ -604,10 +609,7 @@ class ContactWindowController(NSWindowController):
 
             if ret == NSAlertDefaultReturn:
                 BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
-                settings = SIPSimpleSettings()
-                settings.audio.input_device = unicode(device)
-                settings.audio.output_device = unicode(device)
-                settings.save()
+                call_in_thread('device-io', switch_device, device)
 
         self.menuWillOpen_(self.devicesMenu)
 
