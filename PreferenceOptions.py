@@ -1402,6 +1402,7 @@ StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing',
 
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
+                      'audio.auto_transfer': 'Automatic Transfer',
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
                       'audio.pause_itunes': 'Pause and Resume iTunes Before and After Audio Calls',
@@ -1472,7 +1473,7 @@ AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', '
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
 
 AccountSettingsOrder = {
-                       'audio': ['auto_accept', 'answer_delay'],
+                       'audio': ['auto_transfer', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
                        }
 
@@ -1487,6 +1488,7 @@ UnitOptions = {
                }
 
 ToolTips = {
+             'audio.auto_transfer' : 'Automatically accept transfer requests from remote party',
              'auth.username': 'Enter authentication username if different than the SIP Address username',
              'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
              'nat_traversal.msrp_relay': 'If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain',

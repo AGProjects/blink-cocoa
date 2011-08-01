@@ -12,12 +12,12 @@ from application.python import Null
 from datetime import datetime
 
 from sipsimple.session import Session, IllegalStateError
-from sipsimple.core import SIPURI, ToHeader
+from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 
-from AppKit import NSApp, NSRunAlertPanel, NSAlertDefaultReturn
+from AppKit import objc, NSApp, NSBundle, NSRunAlertPanel, NSAlertDefaultReturn
 from Foundation import NSObject
 from AudioController import AudioController
 from VideoController import VideoController
@@ -64,6 +64,7 @@ class SessionController(NSObject):
     lastChatOutputView = None
     collaboration_form_id = None
     remote_conference_has_audio = False
+    transfer_window = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -124,6 +125,17 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
+        return self
+
+    def initWithSessionTransfer_owner_(self, session, owner):
+        self = SessionController.alloc().initWithSession_(session)
+        self.owner = owner
+        for stream in session.proposed_streams:
+            if SIPManager().isMediaTypeSupported(stream.type) and not self.hasStreamOfType(stream.type):
+                handlerClass = StreamHandlerForType[stream.type]
+                stream_controller = handlerClass(self, stream)
+                self.streamHandlers.append(stream_controller)
+                stream_controller.startOutgoing(False)
         return self
 
     def log_info(self, text):
@@ -458,6 +470,29 @@ class SessionController(NSObject):
             self.changeSessionState(STATE_CONNECTING)
             self.log_info("Connecting Session...")
 
+    def transferSession(self, target, replaced_session_controller=None):
+        if self.session:
+            target_uri = str(target)
+            if '@' not in target_uri:
+                target_uri = target_uri + '@' + self.account.id.domain
+            if not target_uri.startswith(('sip:', 'sips:')):
+                target_uri = 'sip:' + target_uri
+            try:
+                target_uri = SIPURI.parse(target_uri)
+            except SIPCoreError:
+                self.log_info("Bogus SIP URI for transfer" % target_uri)
+            else:
+                self.session.transfer(target_uri, replaced_session_controller.session if replaced_session_controller is not None else None)
+                self.log_info("Transferring Session to: %s" % target_uri)
+
+    def _acceptTransfer(self):
+        self.session.accept_transfer()
+        self.transfer_window = None
+
+    def _rejectTransfer(self):
+        self.session.reject_transfer()
+        self.transfer_window = None
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -515,6 +550,9 @@ class SessionController(NSObject):
     def _NH_SIPSessionWillEnd(self, sender, data):
         self.log_info("Session will end (%s)"%data.originator)
         self.endingBy = data.originator
+        if self.transfer_window is not None:
+            self.transfer_window.close()
+            self.transfer_window = None
 
     def _NH_SIPSessionDidFail(self, sender, data):
         if data.failure_reason == 'Unknown error 61':
@@ -748,6 +786,30 @@ class SessionController(NSObject):
                 self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
                 break
 
+    def _NH_SIPSessionTransferNewIncoming(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionTransferNewIncoming", sender=self, data=data)
+        if self.account.audio.auto_transfer:
+            sender.accept_transfer()
+        else:
+            target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
+            self.transfer_window = CallTransferWindowController(self, target)
+            self.transfer_window.show()
+
+    def _NH_SIPSessionTransferNewOutgoing(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionTransferNewOutgoing", sender=self, data=data)
+
+    def _NH_SIPSessionTransferDidStart(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionTransferDidStart", sender=self, data=data)
+
+    def _NH_SIPSessionTransferDidEnd(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionTransferDidEnd", sender=self, data=data)
+
+    def _NH_SIPSessionTransferDidFail(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionTransferDidFail", sender=self, data=data)
+
+    def _NH_SIPSessionTransferGotProgress(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionTransferGotProgress", sender=self, data=data)
+
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         # update Chat Window toolbar buttons depending on session and stream state
         chatStream = self.streamHandlerOfType("chat")
@@ -771,3 +833,34 @@ class SessionController(NSObject):
             chatStream.userClickedToolbarButton(sender)
         else:
             userClickedToolbarButtonWhileDisconnected(self, sender)
+
+
+class CallTransferWindowController(NSObject):
+    window = objc.IBOutlet()
+    label = objc.IBOutlet()
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self, session_controller, target):
+        NSBundle.loadNibNamed_owner_("CallTransferWindow", self)
+        self.session_controller = session_controller
+        self.label.setStringValue_("Remote party would like to transfer you to %s\nWould you like to proceed and call this address?" % target)
+
+    @objc.IBAction
+    def callButtonClicked_(self, sender):
+        self.session_controller._acceptTransfer()
+        self.close()
+
+    @objc.IBAction
+    def cancelButtonClicked_(self, sender):
+        self.session_controller._rejectTransfer()
+        self.close()
+
+    def show(self):
+        self.window.makeKeyAndOrderFront_(None)
+
+    def close(self):
+        self.session_controller = None
+        self.window.close()
+

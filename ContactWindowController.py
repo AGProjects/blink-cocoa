@@ -212,12 +212,12 @@ class ContactWindowController(NSWindowController):
         self.contactOutline.setTarget_(self)
         self.contactOutline.setDoubleAction_("actionButtonClicked:")
         self.contactOutline.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
-        self.contactOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", NSFilenamesPboardType))
+        self.contactOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", "x-blink-audio-session", NSFilenamesPboardType))
 
         self.searchOutline.setTarget_(self)
         self.searchOutline.setDoubleAction_("actionButtonClicked:")
         self.contactOutline.setDraggingSourceOperationMask_forLocal_(NSDragOperationCopy, True)
-        self.searchOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", NSFilenamesPboardType))
+        self.searchOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", "x-blink-audio-session", NSFilenamesPboardType))
 
         # work around for Lion that resizes the contact cell width bigger than its parent view
         self.contactOutline.setAutoresizesOutlineColumn_(False)
@@ -1544,6 +1544,12 @@ class ContactWindowController(NSWindowController):
                 self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
             self.alertPanel.addIncomingStreamProposal(session, streams)
             self.alertPanel.show()
+
+    def handle_outgoing_session(self, session):
+        if session.transfer_info is not None:
+            # This Session was created as a result of a transfer
+            controller = SessionController.alloc().initWithSessionTransfer_owner_(session, self)
+            self.sessionControllers.append(controller)
 
     def sip_session_missed(self, session, stream_types):
         BlinkLogger().log_info(u"Missed incoming session from %s" % session.remote_identity)

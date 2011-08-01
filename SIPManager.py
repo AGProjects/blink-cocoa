@@ -971,9 +971,11 @@ class SIPManager(object):
                 BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
 
+    @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):
         BlinkLogger().log_info(u"Starting Outgoing Session to %s with %s" % (format_identity_address(session.remote_identity), [s.type for s in data.streams]))
         self.ringer.add_outgoing(session, data.streams)
+        self._delegate.handle_outgoing_session(session)
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:

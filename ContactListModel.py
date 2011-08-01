@@ -31,6 +31,7 @@ from zope.interface import implements
 
 from AddContactController import AddContactController, EditContactController
 from AddGroupController import AddGroupController
+from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from SIPManager import SIPManager, strip_addressbook_special_characters, PresenceStatusList
@@ -717,6 +718,8 @@ class CustomListModel(NSObject):
                 if not os.path.isfile(f):
                     return NSDragOperationNone
             return NSDragOperationCopy
+        elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
+            return NSDragOperationGeneric
         else:
             if info.draggingSource() != table:
                 return NSDragOperationNone
@@ -771,6 +774,16 @@ class CustomListModel(NSObject):
                 SIPManager().send_files_to_contact(account, item.uri, filenames)
                 return True
             return False
+        elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
+            source = info.draggingSource()
+            if index != NSOutlineViewDropOnItemIndex or not isinstance(item, BlinkContact) or not isinstance(source, AudioSession):
+                return False
+            if source.delegate is None:
+                return False
+            if not source.delegate.canTransfer:
+                return False
+            source.delegate.transferSession(item.uri)
+            return True
         else:
             if info.draggingSource() != table:
                 return False

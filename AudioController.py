@@ -42,6 +42,7 @@ def loadImages():
         RecordingImages.append(NSImage.imageNamed_("recording3"))
 
 AUDIO_CLEANUP_DELAY = 4.0
+TRANSFERRED_CLEANUP_DELAY = 6.0
 
 
 class AudioController(MediaStream):
@@ -64,7 +65,10 @@ class AudioController(MediaStream):
     recordingImage = 0
     audioEndTime = None
     timer = None
+    transfer_timer = None
     hangedUp = False
+    transferred = False
+    transfer_in_progress = False
     answeringMachine = None
     outbound_ringtone = None
 
@@ -87,6 +91,7 @@ class AudioController(MediaStream):
         if self:
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
+            self.notification_center.add_observer(self, sender=self.sessionController)
 
             NSBundle.loadNibNamed_owner_("AudioSession", self)
 
@@ -104,9 +109,8 @@ class AudioController(MediaStream):
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
 
             loadImages()
-            
-            # TODO: add call transfer -adi
-            #self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
+
+            self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
             self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
 
             if self.transferEnabled:
@@ -367,6 +371,9 @@ class AudioController(MediaStream):
             else:
                 self.hold()
 
+    def transferSession(self, target):
+        self.sessionController.transferSession(target)
+
     def updateTimer_(self, timer):
         self.updateTimeElapsed()
         
@@ -378,7 +385,8 @@ class AudioController(MediaStream):
                 return
 
         if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING] or self.hangedUp:
-            if self.audioEndTime and (time.time() - self.audioEndTime > AUDIO_CLEANUP_DELAY):
+            cleanup_delay = TRANSFERRED_CLEANUP_DELAY if self.transferred else AUDIO_CLEANUP_DELAY
+            if self.audioEndTime and (time.time() - self.audioEndTime > cleanup_delay):
                 self.removeFromSession()
                 self.sessionManager.finalizeSession(self)
                 timer.invalidate()
@@ -393,6 +401,9 @@ class AudioController(MediaStream):
             self.recordingImage += 1
             if self.recordingImage >= len(RecordingImages):
                 self.recordingImage = 0
+
+    def transferFailed_(self, timer):
+        self.changeStatus(STREAM_CONNECTED)
 
     def setStatusText(self, text, error=False):
         if error:
@@ -490,22 +501,23 @@ class AudioController(MediaStream):
                 self.transferSegmented.setSelected_forSegment_(True, 2)
                 self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
 
-            if self.holdByLocal:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                self.audioStatus.setStringValue_(u"On Hold")
-            elif self.holdByRemote:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                self.audioStatus.setStringValue_(u"Hold by Remote")
-            else:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
-                if self.answeringMachine:
-                    self.audioStatus.setStringValue_(u"Answering machine active")
-                elif self.stream.sample_rate and self.stream.codec:
-                    if self.stream.sample_rate > 8000:
-                        hd_label = 'HD Audio'
-                    else:
-                        hd_label = 'Audio'
-                    self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, self.stream.codec, self.stream.sample_rate/1000))
+            if not self.transfer_in_progress:
+                if self.holdByLocal:
+                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                    self.audioStatus.setStringValue_(u"On Hold")
+                elif self.holdByRemote:
+                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                    self.audioStatus.setStringValue_(u"Hold by Remote")
+                else:
+                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
+                    if self.answeringMachine:
+                        self.audioStatus.setStringValue_(u"Answering machine active")
+                    elif self.stream.sample_rate and self.stream.codec:
+                        if self.stream.sample_rate > 8000:
+                            hd_label = 'HD Audio'
+                        else:
+                            hd_label = 'Audio'
+                        self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, self.stream.codec, self.stream.sample_rate/1000))
             self.updateLabelColor()
 
             self.audioStatus.sizeToFit()
@@ -525,7 +537,7 @@ class AudioController(MediaStream):
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(126/256.0, 0/256.0, 0/256.0, 1.0))
             if self.hangedUp and oldstatus in (STREAM_INCOMING, STREAM_CONNECTING, STREAM_PROPOSING):
                 self.audioStatus.setStringValue_(u"Session Cancelled")
-            else:
+            elif not self.transferred:
                 if fail_reason == "remote":
                     self.audioStatus.setStringValue_(u"Session Ended by remote")
                 elif fail_reason == "local":
@@ -642,21 +654,14 @@ class AudioController(MediaStream):
         if menu == self.transferMenu:
             while menu.numberOfItems() > 1:
                 menu.removeItemAtIndex_(1)
-
-            transferable_sessions = [s for s in NSApp.delegate().windowController.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer and s.streamHandlerOfType("audio") != self] or []
-
-            if not transferable_sessions:
-                item = menu.addItemWithTitle_action_keyEquivalent_(u'No session available', "", "")
+            for session_controller in (s for s in NSApp.delegate().windowController.sessionControllers if s is not self.sessionController and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
+                item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.getTitleFull(), "userClickedTransferMenuItem:", "")
                 item.setIndentationLevel_(1)
-                item.setEnabled_(False)
-            else:
-                for session in transferable_sessions:
-                    item = menu.addItemWithTitle_action_keyEquivalent_(session.getTitleFull(), "userClickedTransferMenuItem:", "")
-                    item.setIndentationLevel_(1)
-                    item.setTarget_(self)
-                    transfer_entities={'from': self.sessionController, 'to': session}
-                    item.setRepresentedObject_(transfer_entities)
-
+                item.setTarget_(self)
+                item.setRepresentedObject_(session_controller)
+            item = menu.addItemWithTitle_action_keyEquivalent_(u'A Contact by Dragging this Session over it', "", "")
+            item.setIndentationLevel_(1)
+            item.setEnabled_(False)
         else:
             can_propose = self.status == STREAM_CONNECTED and not self.sessionController.inProposal
             item = menu.itemWithTag_(10) # Add Chat
@@ -698,9 +703,9 @@ class AudioController(MediaStream):
 
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
-        transfer_session = sender.representedObject()
-        self.sessionController.log_info( u'Initiating call transfer from %s to %s' % (transfer_session['from'].getTitleFull(), transfer_session['to'].getTitleFull()))
-        # TODO: add call transfer -adi
+        target_session_controller = sender.representedObject()
+        self.sessionController.log_info( u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
+        self.sessionController.transferSession(target_session_controller.target_uri, target_session_controller)
 
     @objc.IBAction
     def userClickedAudioButton_(self, sender):
@@ -789,6 +794,11 @@ class AudioController(MediaStream):
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
+    def updateTransferProgress(self, msg):
+        self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+        self.audioStatus.setStringValue_(msg)
+        self.audioStatus.sizeToFit()
+
     @run_in_green_thread
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
@@ -831,6 +841,8 @@ class AudioController(MediaStream):
                 tip = "Hold"
             self.audioSegmented.cell().setToolTip_forSegment_(tip, 0)
             self.transferSegmented.cell().setToolTip_forSegment_(tip, 1)
+            if data.on_hold and not self.holdByLocal:
+                self.hold()
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
@@ -850,6 +862,9 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info( "Audio stream ended")
+        if self.transfer_timer is not None and self.transfer_timer.isValid():
+            self.transfer_timer.invalidate()
+        self.transfer_timer = None
         if self.sessionController.endingBy:
             pass # the session is being ended
         else:
@@ -858,6 +873,7 @@ class AudioController(MediaStream):
                 self.audioEndTime = time.time()
                 self.changeStatus(STREAM_IDLE, "Audio removed")
         self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.remove_observer(self, sender=self.sessionController)
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
@@ -868,4 +884,31 @@ class AudioController(MediaStream):
         elif data.state == 'ICE Negotiation In Progress':
             self.audioStatus.setStringValue_("Negotiating ICE...")
         self.audioStatus.sizeToFit()
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
+        self.transfer_in_progress = True
+
+    _NH_BlinkSessionTransferNewOutgoing = _NH_BlinkSessionTransferNewIncoming
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionTransferDidStart(self, sender, data):
+        self.updateTransferProgress("Transferring...")
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionTransferDidEnd(self, sender, data):
+        self.updateTransferProgress("Transfer Succeeded")
+        self.transferred = True
+        self.transfer_in_progress = False
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionTransferDidFail(self, sender, data):
+        self.updateTransferProgress("Transfer Failed")
+        self.transfer_in_progress = False
+        self.transfer_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "transferFailed:", None, False)
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionTransferGotProgress(self, sender, data):
+        self.updateTransferProgress("Transfer: %s" % data.reason.capitalize())
+
 
