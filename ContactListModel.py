@@ -1169,10 +1169,11 @@ class ContactListModel(CustomListModel):
                     for pickled_contact in group_item["contacts"]:
                         uri = unicode(pickled_contact["uri"].strip())
                         try:
+                            new_aliases = ";".join(pickled_contact["aliases"])
                             contact = Contact(uri, group=group)
                             contact.name = pickled_contact["display_name"]
-                            contact.preferred_media = pickled_contact["preferred_media"]
-                            contact.aliases = ";".join(pickled_contact["aliases"])
+                            contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
+                            contact.aliases =  new_aliases if new_aliases else None
                             contact.save()
                         except DuplicateIDError:
                             pass
@@ -1596,6 +1597,8 @@ class ContactListModel(CustomListModel):
                 group.position = index
                 group.save()
 
+            new_aliases = ';'.join(blink_contact.aliases)
+
             try:
                 if blink_contact.stored_in_account is None:
                     contact = ContactManager().get_contact(blink_contact.uri)
@@ -1603,14 +1606,14 @@ class ContactListModel(CustomListModel):
                     contact = blink_contact.stored_in_account.contact_manager.get_contact(blink_contact.uri)
             except KeyError:
                 contact = Contact(blink_contact.uri, group=group, account=blink_contact.stored_in_account)
-                contact.aliases = ';'.join(blink_contact.aliases)
-                contact.preferred_media = blink_contact.preferred_media
+                contact.aliases = new_aliases if new_aliases else None
+                contact.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
                 contact.name = blink_contact.display_name
                 contact.save()
             else:
                 contact.group = group
-                contact.aliases = ';'.join(blink_contact.aliases)
-                contact.preferred_media = blink_contact.preferred_media
+                contact.aliases = new_aliases if new_aliases else None
+                contact.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
                 contact.name = blink_contact.display_name
                 contact.save()
 
@@ -1667,11 +1670,12 @@ class ContactListModel(CustomListModel):
                 group.save()
                 blink_contact.reference.group = group
 
+            new_aliases = ';'.join(blink_contact.aliases)
             blink_contact.reference.uri = blink_contact.uri
             blink_contact.reference.account = blink_contact.stored_in_account
             blink_contact.reference.name = blink_contact.display_name
-            blink_contact.reference.aliases = ';'.join(blink_contact.aliases)
-            blink_contact.reference.preferred_media = blink_contact.preferred_media
+            blink_contact.reference.aliases = new_aliases if new_aliases else None
+            blink_contact.reference.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
             blink_contact.reference.save()
 
     def deleteContact(self, blink_contact):
