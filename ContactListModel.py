@@ -983,7 +983,7 @@ class ContactListModel(CustomListModel):
                     new_groups = {}
                     new_group = None
                     for backup_contact in data['contacts']:
-                        if backup_contact['group'] is not None: 
+                        if backup_contact['group'] is not None:
                             try:
                                 new_group = ContactGroupManager().get_group_byname(backup_contact['group'])
                             except KeyError:
