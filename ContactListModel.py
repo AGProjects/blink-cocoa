@@ -1295,7 +1295,17 @@ class ContactListModel(CustomListModel):
         try:
             blink_contact = (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==neighbour).next()
         except StopIteration:
-            self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, name=name))
+            blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+            self.bonjour_group.not_filtered_contacts.append(blink_contact)
+            if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
+                if uri.transport != 'tls':
+                    tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
+                    if not tls_neighbours:
+                        blink_contact.setPresenceIndicator("unknown")
+                        self.bonjour_group.contacts.append(blink_contact)
+                else:
+                    blink_contact.setPresenceIndicator("unknown")
+                    self.bonjour_group.contacts.append(blink_contact)
         else:
             blink_contact.setName(name)
             blink_contact.setURI(str(uri))
