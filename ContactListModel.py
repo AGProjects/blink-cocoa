@@ -1289,13 +1289,15 @@ class ContactListModel(CustomListModel):
         display_name = notification.data.display_name
         host = notification.data.host
         uri = notification.data.uri
+        name = '%s (%s)' % (display_name or 'Unknown', host)
+
         BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
         try:
             blink_contact = (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==neighbour).next()
         except StopIteration:
-            self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, name=(display_name or 'Unknown', host)))
+            self.bonjour_group.contacts.append(BonjourBlinkContact(uri, neighbour, name=name))
         else:
-            blink_contact.setName(display_name or 'Unknown')
+            blink_contact.setName(name)
             blink_contact.setURI(str(uri))
             blink_contact.setDetail(str(uri))
             self.bonjour_group.sortContacts()
