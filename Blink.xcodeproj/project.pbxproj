@@ -23,6 +23,10 @@
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F17C25E137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F17C25F137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
+		1F1A902A13E8187100EB690F /* TightVncViewer.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1A902913E8187100EB690F /* TightVncViewer.jar */; };
+		1F1A902B13E8187100EB690F /* TightVncViewer.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1A902913E8187100EB690F /* TightVncViewer.jar */; };
+		1F1A902C13E8187100EB690F /* TightVncViewer.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1A902913E8187100EB690F /* TightVncViewer.jar */; };
+		1F1A905813E81A3800EB690F /* TightVncViewer.jar in Resources */ = {isa = PBXBuildFile; fileRef = 1F1A902913E8187100EB690F /* TightVncViewer.jar */; };
 		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
@@ -1112,6 +1116,7 @@
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
+		1F1A902913E8187100EB690F /* TightVncViewer.jar */ = {isa = PBXFileReference; lastKnownFileType = archive.jar; path = TightVncViewer.jar; sourceTree = "<group>"; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
@@ -1370,6 +1375,7 @@
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F22732512B554F50010A8B2 /* Python.framework in Frameworks */,
 				1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */,
+				1F1A902C13E8187100EB690F /* TightVncViewer.jar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1388,6 +1394,7 @@
 				1F8DC3C9135084FA0034815C /* libz.1.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */,
+				1F1A902A13E8187100EB690F /* TightVncViewer.jar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1398,6 +1405,7 @@
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				77631A270C06C501005415CB /* Python.framework in Frameworks */,
 				2B0CD87510BD6F0500325F30 /* Sparkle.framework in Frameworks */,
+				1F1A902B13E8187100EB690F /* TightVncViewer.jar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1459,6 +1467,7 @@
 				1F2271F112B551B40010A8B2 /* Resources */,
 				1F2271F012B551AC0010A8B2 /* Frameworks */,
 				1F226DE412B54FBE0010A8B2 /* Vine Server.app */,
+				1F1A902913E8187100EB690F /* TightVncViewer.jar */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -2219,6 +2228,7 @@
 				1FF2F5B413AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3213B246FF0081F90B /* contacts.png in Resources */,
 				C71785FC13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1F1A905813E81A3800EB690F /* TightVncViewer.jar in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

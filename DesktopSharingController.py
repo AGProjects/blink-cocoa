@@ -1,13 +1,19 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
+import errno
+import os
+import signal
+import sys
+import subprocess
+
 from Foundation import *
 from AppKit import *
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
-
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
 from MediaStream import *
@@ -88,6 +94,8 @@ class DesktopSharingController(MediaStream):
         if self:
             self.stream = stream
             self.direction = stream.handler.type
+            self.vncViewerTask = None
+
         return self
 
     def startIncoming(self, is_update):
@@ -167,12 +175,21 @@ class DesktopSharingController(MediaStream):
 
     def changeStatus(self, newstate, fail_reason=None):
         if newstate == STREAM_CONNECTED:
-            self.sessionController.log_info("Desktop stream started")
+            self.sessionController.log_info("Desktop Stream Started")
             if self.direction == "active":
                 ip, port = self.stream.handler.address
                 self.sessionController.log_info("Desktop sharing stream started, initiating external viewer on port %s" % port)
-                url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
-                NSWorkspace.sharedWorkspace().openURL_(url)
+
+                vnc_viewer_path = unicode(NSBundle.mainBundle().pathForResource_ofType_("TightVncViewer", "jar")).encode(sys.getfilesystemencoding())
+                args = ['java',
+                        '-jar', vnc_viewer_path,
+                        'HOST', '127.0.0.1',
+                        'PORT', str(port),
+                        'ENCODING', 'Tight',
+                        'Show controls', 'No']
+
+                self.vncViewerTask = subprocess.Popen(args)
+
             else:
                 self.statusWindow.makeKeyAndOrderFront_(None)
                 self.statusProgress.stopAnimation_(None)
@@ -233,12 +250,41 @@ class DesktopSharingController(MediaStream):
             self.sessionController.log_info("Desktop stream ended by closed VNC viewer")
         else:
             self.sessionController.log_info("Desktop stream failed: %s" % data.reason)
-            data.failure.printTraceback()
             self.changeStatus(STREAM_FAILED)
+
+        if self.vncViewerTask is not None:
+            os.kill(self.vncViewerTask.pid, signal.SIGTERM)
+
+            while True:
+              try:
+                self.vncViewerTask.wait()
+              except OSError, e:
+                if e.errno == errno.EINTR:
+                  continue
+                else:
+                  raise
+              else:
+                 break
+            self.vncViewerTask = None
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Desktop stream ended")
         self.changeStatus(STREAM_IDLE)
+
+        if self.vncViewerTask is not None:
+            os.kill(self.vncViewerTask.pid, signal.SIGTERM)
+
+            while True:
+              try:
+                self.vncViewerTask.wait()
+              except OSError, e:
+                if e.errno == errno.EINTR:
+                  continue
+                else:
+                  raise
+              else:
+                 break
+            self.vncViewerTask = None
 
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:

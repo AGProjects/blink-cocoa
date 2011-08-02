@@ -10,6 +10,7 @@ import objc
 
 from random import randint
 import os
+import platform
 import re
 import shutil
 import struct
@@ -184,12 +185,6 @@ class BlinkAppDelegate(NSObject):
        if notification.data.modified.has_key("audio.pause_itunes"):
             self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
 
-       if notification.data.modified.has_key("desktop_sharing.vnc_client_encryption_warning"):
-            if settings.desktop_sharing.vnc_client_encryption_warning:
-                os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool YES")
-            else:
-                os.system("defaults write com.apple.ScreenSharing dontWarnOnVNCEncryption -bool NO")
-
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationName)
 
@@ -267,11 +262,14 @@ You might need to Replace it and re-enter your account information. Your old fil
         handler(notification)
 
     def startLocalVNCServer_(self, port):
+        if platform.mac_ver()[0].startswith('10.7'):
+           return
 
         path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
         args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
-        args += ["-protocol", "3.3"]
+        args += ["-protocol", "3.8"]
         args += ["-rendezvous", "N"]
+        args += ["-maxdepth", "32"]
 
         self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
 
