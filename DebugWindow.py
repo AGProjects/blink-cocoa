@@ -217,7 +217,8 @@ class EngineLogger(NSObject, object):
 
     def _NH_XCAPSubscriptionGotNotify(self, notification):
         message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.data.timestamp, notification.sender.account.id, notification.data.body))
-        self.printXCAP_(message)
+        if notification.data.body is not None:
+            self.printXCAP_(message)
 
     def _NH_XCAPManagerDidChangeState(self, notification):
         message = (u"%s XCAP manager of account %s changed state from %s to %s" % (notification.data.timestamp, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
