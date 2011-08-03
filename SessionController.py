@@ -251,10 +251,9 @@ class SessionController(NSObject):
 
     def removeStreamHandler(self, streamHandler):
         if streamHandler not in self.streamHandlers:
-            self.log_info("Internal inconsistency: attempt to remove invalid stream handler")
-            import traceback
-            traceback.print_stack()
+            self.log_info("Error: Attempt to remove an invalid stream handler")
             return
+
         self.streamHandlers.remove(streamHandler)
 
         # notify Chat Window controller to update the toolbar buttons
