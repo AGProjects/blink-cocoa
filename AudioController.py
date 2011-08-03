@@ -861,6 +861,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
+        self.transfer_in_progress = False
         self.sessionController.log_info( "Audio stream ended")
         if self.transfer_timer is not None and self.transfer_timer.isValid():
             self.transfer_timer.invalidate()
