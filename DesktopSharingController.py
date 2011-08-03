@@ -186,7 +186,9 @@ class DesktopSharingController(MediaStream):
                         'HOST', '127.0.0.1',
                         'PORT', str(port),
                         'ENCODING', 'Tight',
-                        'Show controls', 'No']
+                        'Show controls', 'No',
+                        'Compression level', '9',
+                        'JPEG image quality', '3']
 
                 self.vncViewerTask = subprocess.Popen(args)
 
