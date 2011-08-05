@@ -786,24 +786,31 @@ class SessionController(NSObject):
                 break
 
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
+        target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
+        self.log_info(u'Incoming transfer request to %s' % target)
         self.notification_center.post_notification("BlinkSessionTransferNewIncoming", sender=self, data=data)
         if self.account.audio.auto_transfer:
+            self.log_info(u'Auto-accepting transfer request')
             sender.accept_transfer()
         else:
-            target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
             self.transfer_window = CallTransferWindowController(self, target)
             self.transfer_window.show()
 
     def _NH_SIPSessionTransferNewOutgoing(self, sender, data):
+        target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
+        self.log_info(u'Outgoing transfer request to %s' % target)
         self.notification_center.post_notification("BlinkSessionTransferNewOutgoing", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidStart(self, sender, data):
+        self.log_info(u'Transfer started')
         self.notification_center.post_notification("BlinkSessionTransferDidStart", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidEnd(self, sender, data):
+        self.log_info(u'Transfer ended')
         self.notification_center.post_notification("BlinkSessionTransferDidEnd", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidFail(self, sender, data):
+        self.log_info(u'Transfer failed: %s' % data.reason)
         self.notification_center.post_notification("BlinkSessionTransferDidFail", sender=self, data=data)
 
     def _NH_SIPSessionTransferGotProgress(self, sender, data):
