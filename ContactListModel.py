@@ -325,6 +325,12 @@ class HistoryBlinkContact(BlinkContact):
     stored_in_account = None
 
 
+class FavoriteBlinkContact(BlinkPresenceContact):
+    """Contact representation for a Favorite contact"""
+    editable = False
+    stored_in_account = None
+
+
 class BonjourBlinkContact(BlinkContact):
     """Contact representation for a Bonjour contact"""
     editable = False
@@ -390,6 +396,8 @@ class BlinkContactGroup(NSObject):
     type = None
     editable = True
     deletable = True
+    ignore_search = False
+    only_copy = False      # shall source contact be moved or copied when dragged to this group
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -430,6 +438,21 @@ class BonjourBlinkContactGroup(BlinkContactGroup):
     not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
 
     def __init__(self, name=u'Bonjour Neighbours'):
+        self.name = NSString.stringWithString_(name)
+        self.reference = None
+
+
+class FavoritesBlinkContactGroup(BlinkContactGroup):
+    """Group representation for Favorites"""
+    type = 'favorites'
+    deletable = False
+    editable = False
+    contacts = []
+    ignore_search = True
+    only_copy = True
+    favorites = []
+
+    def __init__(self, name=u'Favorites'):
         self.name = NSString.stringWithString_(name)
         self.reference = None
 
@@ -741,7 +764,14 @@ class CustomListModel(NSObject):
 
                 table.setDropItem_dropChildIndex_(None, i)
             else:
+                sourceGroup = self.contactGroupsList[group]
+                if sourceGroup.type == 'favorites':
+                    return NSDragOperationNone
+
                 if isinstance(proposed_parent, BlinkContactGroup):
+                    if proposed_parent.type == 'favorites':
+                        return NSDragOperationCopy
+
                     if not proposed_parent.editable:
                         return NSDragOperationNone
 
@@ -806,10 +836,16 @@ class CustomListModel(NSObject):
                 targetGroup = item
                 contactObject = sourceGroup.contacts[blink_contact]
 
+                if targetGroup.type == 'favorites':
+                    if contactObject.reference is not None:
+                        contactObject.reference.favorite = True
+                        contactObject.reference.save()
+                        return
+
                 if not targetGroup.editable or sourceGroup == targetGroup or type(sourceGroup) == BonjourBlinkContactGroup:
                     return False
 
-                if sourceGroup.editable:
+                if sourceGroup.editable and not targetGroup.only_copy:
                     del sourceGroup.contacts[blink_contact]
 
                 try:
@@ -876,6 +912,7 @@ class ContactListModel(CustomListModel):
         self.missed_calls_group = MissedCallsBlinkContactGroup()
         self.outgoing_calls_group = OutgoingCallsBlinkContactGroup()
         self.incoming_calls_group = IncomingCallsBlinkContactGroup()
+        self.favorites_group = FavoritesBlinkContactGroup()
         self.contact_backup_timer = None
         return self
 
@@ -923,25 +960,25 @@ class ContactListModel(CustomListModel):
                 group.loadAddressBook()
 
     def hasContactMatchingURI(self, uri):
-        return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList for blink_contact in group.contacts)
+        return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts)
 
     def getContactMatchingURI(self, uri):
         try:
-            return (blink_contact for group in self.contactGroupsList for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
+            return (blink_contact for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
         except StopIteration:
             return None
 
-    def getContactAndGroupWithReference(self, reference):
+    def getContactAndGroupForReference(self, reference):
         try:
-            return ((blink_contact, group) for group in self.contactGroupsList for blink_contact in group.contacts if hasattr(blink_contact, "reference") and blink_contact.reference==reference).next()
+            return ((blink_contact, blink_group) for blink_group in self.contactGroupsList if blink_group.ignore_search is False for blink_contact in blink_group.contacts if hasattr(blink_contact, "reference") and blink_contact.reference==reference).next()
         except StopIteration:
             return (None, None)
 
     def hasContactInEditableGroupWithURI(self, uri):
-        return any(blink_contact.uri == uri for group in self.contactGroupsList if group.editable == True for blink_contact in group.contacts)
+        return any(blink_contact.uri == uri for group in self.contactGroupsList if group.editable == True and group.ignore_search is False for blink_contact in group.contacts)
 
     def contactExistsInAccount(self, uri, account=None):
-        return any(blink_contact for group in self.contactGroupsList for blink_contact in group.contacts if blink_contact.uri == uri and blink_contact.stored_in_account == account)
+        return any(blink_contact for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts if blink_contact.uri == uri and blink_contact.stored_in_account == account)
 
     def checkContactBackup_(self, timer):
         now = datetime.datetime.now()
@@ -1066,6 +1103,7 @@ class ContactListModel(CustomListModel):
         self.missed_calls_group.setReference()
         self.outgoing_calls_group.setReference()
         self.incoming_calls_group.setReference()
+        self.favorites_group.setReference()
 
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
@@ -1138,6 +1176,17 @@ class ContactListModel(CustomListModel):
                 self.saveGroupPosition()
             elif not settings.contacts.enable_missed_calls_group and self.missed_calls_group in self.contactGroupsList:
                 self.contactGroupsList.remove(self.missed_calls_group)
+                self.saveGroupPosition()
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if notification.data.modified.has_key("contacts.enable_favorites_group"):
+            if settings.contacts.enable_favorites_group and self.favorites_group not in self.contactGroupsList:
+                position = 0
+                self.contactGroupsList.insert(position, self.favorites_group)
+                self.saveGroupPosition()
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            elif not settings.contacts.enable_favorites_group and self.favorites_group in self.contactGroupsList:
+                self.contactGroupsList.remove(self.favorites_group)
                 self.saveGroupPosition()
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
@@ -1355,6 +1404,14 @@ class ContactListModel(CustomListModel):
             group.contacts.append(blink_contact)
             group.sortContacts()
 
+            if contact.favorite is True:
+                blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, preferred_media=contact.preferred_media, icon=icon, reference=contact)
+                if contact.account is not None and contact.account.presence.enabled:
+                    blink_contact.setPresenceIndicator("unknown")
+                else:
+                    blink_contact.setPresenceIndicator(None)
+                self.favorites_group.contacts.append(blink_contact)
+
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactWasDeleted(self, notification):
@@ -1364,6 +1421,17 @@ class ContactListModel(CustomListModel):
             pass
         else:
             try:
+                group = (g for g in self.contactGroupsList if g.type == 'favorites').next()
+            except StopIteration:
+                pass
+            else:
+                try:
+                    group.contacts.remove(blink_contact)
+                    NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                except KeyError:
+                    pass
+
+            try:
                 group = (g for g in self.contactGroupsList if g.name == blink_contact.reference.group.name).next()
             except StopIteration:
                 pass
@@ -1372,14 +1440,14 @@ class ContactListModel(CustomListModel):
                     group.contacts.remove(blink_contact)
                     blink_contact.reference = None
                     NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
-                except KeyError:
+                except ValueError:
                     pass
 
     def _NH_ContactDidChange(self, notification):
         contact = notification.sender
         if contact.group is None:
             return
-        (blink_contact, blink_group) = self.getContactAndGroupWithReference(contact)
+        (blink_contact, blink_group) = self.getContactAndGroupForReference(contact)
         if blink_contact:
             if blink_group.name != contact.group.name:
                 try:
@@ -1396,16 +1464,61 @@ class ContactListModel(CustomListModel):
 
             if 'icon' in notification.data.modified:
                 blink_contact.setIcon(loadContactIcon(contact))
+                if contact.favorite:
+                    try:
+                        favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.reference == contact).next()    
+                    except StopIteration:
+                        pass
+                    else:
+                        favorite_contact.setIcon(loadContactIcon(contact))
 
             if 'name' in notification.data.modified:
                 blink_contact.setName(contact.name or contact.uri)
                 blink_group.sortContacts()
+                if contact.favorite:
+                    try:
+                        favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.reference == contact).next()    
+                    except StopIteration:
+                        pass
+                    else:  
+                        favorite_contact.setName(contact.name or contact.uri)
+                        self.favorites_group.sortContacts()
+
+            if 'preferred_media' in notification.data.modified:
+                if contact.favorite:
+                    try:
+                        favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.reference == contact).next()    
+                    except StopIteration:
+                        pass
+                    else:
+                        favorite_contact.setPreferredMedia(contact.preferred_media)
 
             if 'account' in notification.data.modified:
                 if contact.account is not None and contact.account.presence.enabled:
                     blink_contact.setPresenceIndicator("unknown")
                 else:
                     blink_contact.setPresenceIndicator(None)
+
+            if 'favorite' in notification.data.modified:
+                if contact.favorite is True:
+                    try:
+                        blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact).next()    
+                    except StopIteration:
+                        icon=loadContactIcon(contact) if contact.account is not None else loadContactIconFromFile(contact.uri)
+                        blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, preferred_media=contact.preferred_media, icon=icon, reference=contact)
+                        if contact.account is not None and contact.account.presence.enabled:
+                            blink_contact.setPresenceIndicator("unknown")
+                        else:
+                            blink_contact.setPresenceIndicator(None)
+                        self.favorites_group.contacts.append(blink_contact)
+                        self.favorites_group.sortContacts()
+                else:
+                    try:
+                        blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact).next()    
+                    except StopIteration:
+                        pass
+                    else:
+                        self.favorites_group.contacts.remove(blink_contact)
 
             try:
                 aliases = contact.aliases.split(";")
@@ -1424,7 +1537,7 @@ class ContactListModel(CustomListModel):
                 except AttributeError:
                     aliases = []
                 icon=loadContactIcon(contact) if contact.account is not None else loadContactIconFromFile(contact.uri)
-                blink_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=icon, aliases=aliases, stored_in_account=contact.account)
+                blink_contact = BlinkPresenceContact(contact.uri, reference=contact, name=contact.name, preferred_media=contact.preferred_media, icon=contact.icon, aliases=aliases, stored_in_account=contact.account)
                 target_group.contacts.append(blink_contact)
                 target_group.sortContacts()
 
@@ -1478,9 +1591,18 @@ class ContactListModel(CustomListModel):
                 self.incoming_calls_group.load_history()
                 self.contactGroupsList.insert(index, self.incoming_calls_group)
 
+        elif group.type == "favorites":
+            self.favorites_group.name = group.name
+            if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_favorites_group:
+                if not group.position:
+                    position = len(self.contactGroupsList) - 1 if self.contactGroupsList else 0
+                    group.position = position
+                    group.save()
+                self.contactGroupsList.insert(index, self.favorites_group)
+
         elif group.type is None:
             if not group.position:
-                position = len(self.contactGroupsList) - 1 if self.contactGroupsList else 0
+                position = 0
                 group.position = position
                 group.save()
             blink_group = BlinkContactGroup(name=group.name, reference=group)
@@ -1714,6 +1836,12 @@ class ContactListModel(CustomListModel):
 
     def deleteContact(self, blink_contact):
         if isinstance(blink_contact, BlinkContact):
+
+            if type(blink_contact) is FavoriteBlinkContact:
+                blink_contact.reference.favorite = False
+                blink_contact.reference.save()
+                return
+
             if not blink_contact.editable:
                 return
 

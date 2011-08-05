@@ -37,7 +37,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, SearchResultContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, FavoriteBlinkContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -1093,7 +1093,7 @@ class ContactWindowController(NSWindowController):
             self.contactOutline.deselectAll_(None)
             self.mainTabView.selectTabViewItemWithIdentifier_("search")
         self.updateActionButtons()
-        self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList for contact in group.contacts if text in contact]
+        self.searchResultsModel.contactGroupsList = [contact for group in self.model.contactGroupsList if group.ignore_search is False for contact in group.contacts if text in contact]
 
         active_account = self.activeAccount()
         if active_account:
@@ -2389,7 +2389,8 @@ class ContactWindowController(NSWindowController):
             else:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
             lastItem.setEnabled_(item.editable)
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
+            label = "Remove From Favorites" if type(item) == FavoriteBlinkContact else "Delete"
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(label, "deleteContact:", "")
             lastItem.setEnabled_(item.deletable)
         elif isinstance(item, BlinkContactGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")
