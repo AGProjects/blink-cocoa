@@ -37,7 +37,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, AddressBookBlinkContact, BlinkContactGroup, FavoriteBlinkContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
@@ -2181,6 +2181,11 @@ class ContactWindowController(NSWindowController):
         self.model.restore_contacts(sender.representedObject())
 
     @objc.IBAction
+    def showInFavoritesGroup_(self, sender):
+        contact = sender.representedObject()
+        contact.setFavorite(True if not contact.favorite else False)
+
+    @objc.IBAction
     def goToBackupContactsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
@@ -2384,13 +2389,27 @@ class ContactWindowController(NSWindowController):
                         mitem.setState_(NSOnState if policy and policy == self.presencePolicy.allowPolicy else NSOffState)
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            settings = SIPSimpleSettings()
+            if settings.contacts.enable_favorites_group:
+                if type(item) in (BlinkPresenceContact, AddressBookBlinkContact):
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
+                    mitem.setState_(NSOnState if item.favorite else NSOffState)
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                elif type(item) == FavoriteBlinkContact:
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "deleteContact:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
+                    mitem.setState_(NSOnState)
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
             if type(item) == AddressBookBlinkContact:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
             else:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
             lastItem.setEnabled_(item.editable)
-            label = "Remove From Favorites" if type(item) == FavoriteBlinkContact else "Delete"
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(label, "deleteContact:", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
             lastItem.setEnabled_(item.deletable)
         elif isinstance(item, BlinkContactGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")

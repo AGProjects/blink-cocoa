@@ -27,6 +27,7 @@ from sipsimple.core import FrozenSIPURI, SIPURI
 from sipsimple.contact import Contact, ContactGroup, ContactManager, ContactGroupManager
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
 from AddContactController import AddContactController, EditContactController
@@ -104,11 +105,13 @@ class BlinkContact(NSObject):
     """Basic Contact representation in Blink UI"""
     editable = True
     deletable = True
+    favorite = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
     def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, aliases=None, stored_in_account=None):
+        self.type = None
         self.uri = uri
         self.name = NSString.stringWithString_(name or uri)
         self.display_name = display_name or unicode(self.name)
@@ -225,6 +228,9 @@ class BlinkContact(NSObject):
     def setAliases(self, aliases):
         self.aliases = aliases
 
+    def setFavorite(self, favorite):
+        self.favorite = favorite
+
     def iconPath(self):
         return contactIconPathForURI(str(self.uri))
 
@@ -244,7 +250,9 @@ class BlinkContact(NSObject):
 
 class BlinkConferenceContact(BlinkContact):
     """Contact representation for conference drawer UI"""
+
     def __init__(self, *args, **kw):
+        self.type = 'conference'
     	BlinkContact.__init__(self, *args, **kw)
         self.active_media = []
 
@@ -254,7 +262,9 @@ class BlinkConferenceContact(BlinkContact):
 
 class BlinkPresenceContact(BlinkContact):
     """Contact representation with Presence Enabled"""
+
     def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, aliases=None, stored_in_account=None, reference=None):
+        self.type = 'presence'
         self.uri = uri
         self.reference = reference
         self.name = NSString.stringWithString_(name or uri)
@@ -289,6 +299,12 @@ class BlinkPresenceContact(BlinkContact):
 
     def setIcon(self, icon=None):
         self.icon = icon
+
+    def setFavorite(self, favorite):
+        self.favorite = favorite
+        if self.reference is not None:
+            self.reference.favorite = favorite
+            self.reference.save()
 
     def saveIcon(self):
         if self.reference:
@@ -328,7 +344,20 @@ class HistoryBlinkContact(BlinkContact):
 class FavoriteBlinkContact(BlinkPresenceContact):
     """Contact representation for a Favorite contact"""
     editable = False
+    deletable = False
     stored_in_account = None
+
+    def setFavorite(self, favorite):
+        self.favorite = favorite
+        if self.type == 'presence':
+            if self.reference is not None:
+                self.reference.favorite = favorite
+                self.reference.save()
+        elif self.type == 'addressbook':
+            NotificationCenter().post_notification("AddressBookFavoriteWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
+
+    def setType(self, type):
+        self.type = type
 
 
 class BonjourBlinkContact(BlinkContact):
@@ -338,6 +367,7 @@ class BonjourBlinkContact(BlinkContact):
     stored_in_account = None
 
     def __init__(self, uri, bonjour_neighbour, name=None, display_name=None, icon=None, detail=None):
+        self.type = 'bonjour'
         self.uri = str(uri)
         self.bonjour_neighbour = bonjour_neighbour
         self.aor = uri
@@ -381,6 +411,7 @@ class AddressBookBlinkContact(BlinkContact):
     stored_in_account = None
 
     def __init__(self, uri, addressbook_id, name=None, display_name=None, icon=None, detail=None):
+        self.type = 'addressbook'
         self.uri = uri
         self.addressbook_id = addressbook_id
         self.name = NSString.stringWithString_(name or uri)
@@ -389,6 +420,10 @@ class AddressBookBlinkContact(BlinkContact):
         self.icon = icon
         self._preferred_media = 'audio'
         self.setUsernameAndDomain()
+
+    def setFavorite(self, favorite):
+        self.favorite = favorite
+        NotificationCenter().post_notification("AddressBookFavoriteWasChanged", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now(), favorite=favorite))
 
 
 class BlinkContactGroup(NSObject):
@@ -551,15 +586,65 @@ class IncomingCallsBlinkContactGroup(HistoryBlinkContactGroup):
 
 class AddressBookBlinkContactGroup(BlinkContactGroup):
     """Address Book Group representation in Blink UI"""
+    implements(IObserver)
     type = 'addressbook'
     editable = False
     deletable = False
+    favorites = []
 
     def __init__(self, name=u'Address Book'):
         self.name = NSString.stringWithString_(name)
         self.reference = None
 
+        self.favorites_storage_path = ApplicationData.get('addressbook_favorite_contacts_')
+        makedirs(os.path.dirname(self.favorites_storage_path))
+        nc = NotificationCenter()
+        nc.add_observer(self, name="AddressBookFavoriteWasChanged")
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_AddressBookFavoriteWasChanged(self, notification):
+        if notification.data.favorite:
+            self.add_favorite(notification.sender.uri)
+        else:
+            self.remove_favorite(notification.sender.uri)
+
+    def load_favorites(self):
+        try:
+            with open(self.favorites_storage_path, 'r') as f:
+                data = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            return
+
+        try:
+            self.favorites = data['favorites']
+        except (TypeError, KeyError):
+            pass
+
+    def add_favorite(self, uri):
+        if uri not in self.favorites:
+            self.favorites.append(uri)
+            try:
+                cPickle.dump({"favorites": self.favorites}, open(self.favorites_storage_path, "w+"))
+            except (IOError, cPickle.PicklingError):
+                pass
+
+    def remove_favorite(self, uri):
+        if uri  in self.favorites:
+            self.favorites.remove(uri)
+            try:
+                cPickle.dump({"favorites": self.favorites}, open(self.favorites_storage_path, "w+"))
+            except (IOError, cPickle.PicklingError):
+                pass
+
+
     def loadAddressBook(self):
+        self.load_favorites()
+
         self.contacts = []
 
         book = AddressBook.ABAddressBook.sharedAddressBook()
@@ -655,6 +740,8 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                     contact_uri = sip_address
 
                 blink_contact = AddressBookBlinkContact(contact_uri, person_id, name=name, display_name=display_name, icon=photo or default_icon, detail=detail)
+                if contact_uri in self.favorites:
+                    blink_contact.setFavorite(True)
                 self.contacts.append(blink_contact)
 
         self.sortContacts()
@@ -838,8 +925,7 @@ class CustomListModel(NSObject):
 
                 if targetGroup.type == 'favorites':
                     if contactObject.reference is not None:
-                        contactObject.reference.favorite = True
-                        contactObject.reference.save()
+                        contactObject.setFavorite(True)
                         return
 
                 if not targetGroup.editable or sourceGroup == targetGroup or type(sourceGroup) == BonjourBlinkContactGroup:
@@ -940,6 +1026,8 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SIPApplicationWillEnd")
         nc.add_observer(self, name="AudioCallLoggedToHistory")
+        nc.add_observer(self, name="AddressBookFavoriteWasChanged")
+        nc.add_observer(self, name="AddressBookFavoriteWasRemoved")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -1000,6 +1088,7 @@ class ContactListModel(CustomListModel):
                             'name': contact.name,
                             'aliases': contact.aliases,
                             'preferred_media': contact.preferred_media,
+                            'favorite': contact.favorite,
                             'icon': contact.icon,
                             'group': contact.group.name if contact.group is not None else None,
                             'account': None
@@ -1011,6 +1100,7 @@ class ContactListModel(CustomListModel):
                 backup_contact={'uri': contact.uri,
                                 'name': contact.name,
                                 'aliases': contact.aliases,
+                                'favorite': contact.favorite,
                                 'preferred_media': contact.preferred_media,
                                 'icon': contact.icon,
                                 'group': contact.group.name if contact.group is not None else None,
@@ -1083,6 +1173,7 @@ class ContactListModel(CustomListModel):
                     contact.preferred_media = backup_contact['preferred_media']
                     contact.aliases = backup_contact['aliases']
                     contact.icon = backup_contact['icon']
+                    contact.favorite = backup_contact['favorite']
                     contact.save()
                     restored += 1
                 except DuplicateIDError:
@@ -1406,6 +1497,7 @@ class ContactListModel(CustomListModel):
 
             if contact.favorite is True:
                 blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, preferred_media=contact.preferred_media, icon=icon, reference=contact)
+                blink_contact.setType('presence')
                 if contact.account is not None and contact.account.presence.enabled:
                     blink_contact.setPresenceIndicator("unknown")
                 else:
@@ -1414,22 +1506,49 @@ class ContactListModel(CustomListModel):
 
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
+    def _NH_AddressBookFavoriteWasChanged(self, notification):
+        contact = notification.sender
+        if notification.data.favorite:
+            try:
+                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
+            except StopIteration:
+                blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, icon=contact.icon, reference=contact.addressbook_id)
+                blink_contact.setType('addressbook')
+                self.favorites_group.contacts.append(blink_contact)
+                self.favorites_group.sortContacts()
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        else:
+            try:
+                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
+            except StopIteration:
+                pass
+            else:
+                self.favorites_group.contacts.remove(blink_contact)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_AddressBookFavoriteWasRemoved(self, notification):
+        contact = self.getContactMatchingURI(notification.sender.uri)
+        if contact:
+            contact.setFavorite(False)
+
     def _NH_ContactWasDeleted(self, notification):
+        contact = notification.sender
         try:
             blink_contact = (blink_contact for group in self.contactGroupsList for blink_contact in group.contacts if hasattr(blink_contact, "reference") and blink_contact.reference == notification.sender).next()
         except StopIteration:
             pass
         else:
-            try:
-                group = (g for g in self.contactGroupsList if g.type == 'favorites').next()
-            except StopIteration:
-                pass
-            else:
+            if contact.favorite:
                 try:
-                    group.contacts.remove(blink_contact)
-                    NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
-                except KeyError:
+                    group = (g for g in self.contactGroupsList if g.type == 'favorites').next()
+                except StopIteration:
                     pass
+                else:
+                    try:
+                        group.contacts.remove(blink_contact)
+                        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                    except KeyError:
+                        pass
 
             try:
                 group = (g for g in self.contactGroupsList if g.name == blink_contact.reference.group.name).next()
@@ -1506,6 +1625,7 @@ class ContactListModel(CustomListModel):
                     except StopIteration:
                         icon=loadContactIcon(contact) if contact.account is not None else loadContactIconFromFile(contact.uri)
                         blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, preferred_media=contact.preferred_media, icon=icon, reference=contact)
+                        blink_contact.setType('presence')
                         if contact.account is not None and contact.account.presence.enabled:
                             blink_contact.setPresenceIndicator("unknown")
                         else:
@@ -1838,8 +1958,7 @@ class ContactListModel(CustomListModel):
         if isinstance(blink_contact, BlinkContact):
 
             if type(blink_contact) is FavoriteBlinkContact:
-                blink_contact.reference.favorite = False
-                blink_contact.reference.save()
+                blink_contact.setFavorite(False)
                 return
 
             if not blink_contact.editable:
