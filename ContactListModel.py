@@ -920,9 +920,8 @@ class CustomListModel(NSObject):
                 contactObject = sourceGroup.contacts[blink_contact]
 
                 if targetGroup.type == 'favorites':
-                    if contactObject.reference is not None:
-                        contactObject.setFavorite(True)
-                        return
+                    contactObject.setFavorite(True)
+                    return
 
                 if not targetGroup.editable or sourceGroup == targetGroup or type(sourceGroup) == BonjourBlinkContactGroup:
                     return False
