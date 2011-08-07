@@ -349,11 +349,7 @@ class FavoriteBlinkContact(BlinkPresenceContact):
 
     def setFavorite(self, favorite):
         self.favorite = favorite
-        if self.type == 'presence':
-            if self.reference is not None:
-                self.reference.favorite = favorite
-                self.reference.save()
-        elif self.type == 'addressbook':
+        if favorite is False:
             NotificationCenter().post_notification("AddressBookFavoriteWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
 
     def setType(self, type):
@@ -609,9 +605,9 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
 
     def _NH_AddressBookFavoriteWasChanged(self, notification):
         if notification.data.favorite:
-            self.add_favorite(notification.sender.uri)
+            self.add_favorite(notification.sender.addressbook_id)
         else:
-            self.remove_favorite(notification.sender.uri)
+            self.remove_favorite(notification.sender.addressbook_id)
 
     def load_favorites(self):
         try:
@@ -625,17 +621,17 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
         except (TypeError, KeyError):
             pass
 
-    def add_favorite(self, uri):
-        if uri not in self.favorites:
-            self.favorites.append(uri)
+    def add_favorite(self, addressbook_id):
+        if addressbook_id not in self.favorites:
+            self.favorites.append(addressbook_id)
             try:
                 cPickle.dump({"favorites": self.favorites}, open(self.favorites_storage_path, "w+"))
             except (IOError, cPickle.PicklingError):
                 pass
 
-    def remove_favorite(self, uri):
-        if uri  in self.favorites:
-            self.favorites.remove(uri)
+    def remove_favorite(self, addressbook_id):
+        if addressbook_id in self.favorites:
+            self.favorites.remove(addressbook_id)
             try:
                 cPickle.dump({"favorites": self.favorites}, open(self.favorites_storage_path, "w+"))
             except (IOError, cPickle.PicklingError):
@@ -740,7 +736,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                     contact_uri = sip_address
 
                 blink_contact = AddressBookBlinkContact(contact_uri, person_id, name=name, display_name=display_name, icon=photo or default_icon, detail=detail)
-                if contact_uri in self.favorites:
+                if person_id in self.favorites:
                     blink_contact.setFavorite(True)
                 self.contacts.append(blink_contact)
 
@@ -1527,9 +1523,17 @@ class ContactListModel(CustomListModel):
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressBookFavoriteWasRemoved(self, notification):
-        contact = self.getContactMatchingURI(notification.sender.uri)
-        if contact:
-            contact.setFavorite(False)
+        contact = notification.sender
+        if contact.type == 'addressbook':
+            try:
+                ab_contact = (ab_contact for ab_contact in self.addressbook_group.contacts if ab_contact.addressbook_id == contact.reference).next()
+            except StopIteration:
+                pass
+            else:
+                ab_contact.setFavorite(False)
+        elif contact.type == 'presence':
+            contact.reference.favorite = False
+            contact.reference.save()
 
     def _NH_ContactWasDeleted(self, notification):
         contact = notification.sender
