@@ -946,7 +946,7 @@ class ContactWindowController(NSWindowController):
                     self.window().makeFirstResponder_(self.contactOutline)
         else:
             item = self.contactOutline.itemAtRow_(self.contactOutline.selectedRow())
-            if type(item) == BlinkContact:
+            if isinstance(item, BlinkContact):
                 group = self.contactOutline.parentForItem_(item)
             else:
                 group = item
