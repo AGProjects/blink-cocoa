@@ -1022,7 +1022,7 @@ class ContactListModel(CustomListModel):
             group.reference.save()
             if group.type == "addressbook":
                 group.loadAddressBook()
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def hasContactMatchingURI(self, uri):
         return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts)
