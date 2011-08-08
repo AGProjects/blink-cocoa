@@ -672,10 +672,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
             display_name = name
             company = match.valueForProperty_(AddressBook.kABOrganizationProperty)
             if company:
-                if name:
-                    name += " ("+unicode(company)+")"
-                else:
-                    name = unicode(company)
+                name += " ("+unicode(company)+")" if name else unicode(company)
             sip_addresses = []
             # get phone numbers from the Phone section
             value = match.valueForProperty_(AddressBook.kABPhoneProperty)
@@ -708,28 +705,19 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                 continue
 
             idata = match.imageData()
-            if idata:
-                photo = NSImage.alloc().initWithData_(idata)
-            else:
-                photo = None
+            photo = NSImage.alloc().initWithData_(idata) if idata else None
 
             for address_type, sip_address in sip_addresses:
                 if not sip_address:
                     continue
 
-                if address_type:
-                    detail = "%s (%s)"%(sip_address, address_type)
-                else:
-                    detail = sip_address
+                detail = "%s (%s)"%(sip_address, address_type) if address_type else sip_address
 
                 # strip everything that's not numbers from the URIs if they are not SIP URIs
                 if "@" not in sip_address:
                     if sip_address.startswith("sip:"):
                         sip_address = sip_address[4:]
-                    if sip_address[0] == "+":
-                        contact_uri = "+"
-                    else:
-                        contact_uri = ""
+                    contact_uri = "+" if sip_address[0] == "+" else ""
                     contact_uri += "".join(c for c in sip_address if c in "0123456789#*")
                 else:
                     contact_uri = sip_address
