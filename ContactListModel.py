@@ -940,9 +940,9 @@ class CustomListModel(NSObject):
         if isinstance(items[0], BlinkContactGroup):
             try:
                 group = self.contactGroupsList.index(items[0])
-            except:
-                group = None
-            if group is not None:
+            except ValueError:
+                return False
+            else:
                 pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-contact"), self)
                 pboard.setString_forType_(str((group, None)), "dragged-contact")
                 return True
