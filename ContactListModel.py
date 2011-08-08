@@ -920,7 +920,7 @@ class CustomListModel(NSObject):
 
                 if targetGroup.type == 'favorites':
                     contactObject.setFavorite(True)
-                    return
+                    return True
 
                 if not targetGroup.editable or sourceGroup == targetGroup or type(sourceGroup) == BonjourBlinkContactGroup:
                     return False
@@ -1040,6 +1040,7 @@ class ContactListModel(CustomListModel):
             group.reference.save()
             if group.type == "addressbook":
                 group.loadAddressBook()
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def hasContactMatchingURI(self, uri):
         return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts)
