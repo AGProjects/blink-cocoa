@@ -349,7 +349,7 @@ class FavoriteBlinkContact(BlinkPresenceContact):
     def setFavorite(self, favorite):
         self.favorite = favorite
         if favorite is False:
-            NotificationCenter().post_notification("AddressBookFavoriteWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
+            NotificationCenter().post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
 
     def setType(self, type):
         self.type = type
@@ -1015,7 +1015,7 @@ class ContactListModel(CustomListModel):
         nc.add_observer(self, name="SIPApplicationWillEnd")
         nc.add_observer(self, name="AudioCallLoggedToHistory")
         nc.add_observer(self, name="AddressBookFavoriteWasChanged")
-        nc.add_observer(self, name="AddressBookFavoriteWasRemoved")
+        nc.add_observer(self, name="FavoriteContactWasRemoved")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -1515,7 +1515,7 @@ class ContactListModel(CustomListModel):
                 self.favorites_group.contacts.remove(blink_contact)
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
-    def _NH_AddressBookFavoriteWasRemoved(self, notification):
+    def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
         if contact.type == 'addressbook':
             try:
