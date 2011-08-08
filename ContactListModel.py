@@ -138,10 +138,9 @@ class BlinkContact(NSObject):
         return self
 
     def __str__(self):
-        return "<Contact: %s>" % self.uri
+        return "<%s: %s>" % (self.__class__.__name__, self.uri)
 
-    def __repr__(self):
-        return "<Contact: %s>" % self.uri
+    __repr__ = __str__
 
     def __contains__(self, text):
         text = text.lower()
