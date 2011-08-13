@@ -489,6 +489,7 @@ class FavoritesBlinkContactGroup(BlinkContactGroup):
 
 class HistoryBlinkContactGroup(BlinkContactGroup):
     """Group representation for missed, incoming and outgoing calls dynamic groups"""
+    ignore_search = True
     type = 'history'
     editable = False
     deletable = False
