@@ -57,7 +57,6 @@ class BlinkAppDelegate(NSObject):
     ready = False
     missedCalls = 0
     missedChats = 0
-    vncServerTask = None
     urisToOpen = []
     pause_itunes = True
     
@@ -176,12 +175,6 @@ class BlinkAppDelegate(NSObject):
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
        settings = SIPSimpleSettings()
-       if notification.data.modified.has_key("desktop_sharing.disabled"):
-            if settings.desktop_sharing.disabled:
-                self.stopLocalVNCServer()
-            else:
-                self.startLocalVNCServer()
-
        if notification.data.modified.has_key("audio.pause_itunes"):
             self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
 
@@ -248,7 +241,6 @@ You might need to Replace it and re-enter your account information. Your old fil
 
     def applicationShouldTerminate_(self, sender):
         self.windowController.closeAllSessions()
-        self.stopLocalVNCServer()
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
 
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
@@ -261,36 +253,9 @@ You might need to Replace it and re-enter your account information. Your old fil
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def startLocalVNCServer_(self, port):
-        if platform.mac_ver()[0].startswith('10.7'):
-           return
-
-        path = unicode(NSBundle.mainBundle().pathForResource_ofType_("Vine Server", "app")) + "/OSXvnc-server"
-        args = ["-rfbport", str(port), "-rfbnoauth", "-alwaysshared", "-localhost", "-ipv4"]
-        args += ["-protocol", "3.8"]
-        args += ["-rendezvous", "N"]
-        args += ["-maxdepth", "32"]
-
-        self.vncServerTask = NSTask.launchedTaskWithLaunchPath_arguments_(path, args)
-
-    def startLocalVNCServer(self):
-        if not SIPManager().isMediaTypeSupported('desktop-server'):
-            return
-
-        if self.vncServerTask is None:
-            self.vncServerPort = randint(5950, 5990)
-            BlinkLogger().log_info(u"Starting VNC server at port %i..." % self.vncServerPort)
-            self.startLocalVNCServer_(self.vncServerPort)
-            DesktopSharingController.vncServerPort = self.vncServerPort
-
-    def stopLocalVNCServer(self):
-        if self.vncServerTask:
-            BlinkLogger().log_info(u"Stopping VNC server at port %i..." % self.vncServerPort)
-            self.vncServerTask.terminate()
-            self.vncServerTask = None
-
     def _NH_SIPApplicationDidStart(self, notification):
-        self.startLocalVNCServer()
+        self.vncServerPort = 5900
+        DesktopSharingController.vncServerPort = self.vncServerPort
         settings = SIPSimpleSettings()
         self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
 

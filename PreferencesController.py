@@ -127,7 +127,6 @@ class PreferencesController(NSWindowController, object):
         if NSApp.delegate().applicationName == 'Blink Lite':
             PreferenceOptionTypes['audio.pause_itunes'] = HiddenOption
             PreferenceOptionTypes['audio.directory'] = HiddenOption
-            PreferenceOptionTypes['desktop_sharing.disabled'] = HiddenOption
             PreferenceOptionTypes['file_transfer.directory'] = HiddenOption
             PreferenceOptionTypes['logs.directory'] = HiddenOption
 
@@ -138,15 +137,6 @@ class PreferencesController(NSWindowController, object):
                         self.toolbar.removeItemAtIndex_(j)
                     else:
                         j += 1
-
-        if platform.mac_ver()[0].startswith('10.7'):
-            j = 0
-            for item in self.toolbar.visibleItems():
-                if item.itemIdentifier() == 'desktop-sharing':
-                    self.toolbar.removeItemAtIndex_(j)
-                else:
-                    j += 1
-
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):

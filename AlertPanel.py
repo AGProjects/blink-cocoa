@@ -298,9 +298,9 @@ class AlertPanel(NSObject, object):
             alt_action = None
         elif type(streams[0]) is DesktopSharingStream:
             if streams[0].handler.type == "active":
-                subject = u"Remote Desktop offered by"
+                subject = u"Remote Screen offered by"
             else:
-                subject = u"Access to my Desktop requested by"
+                subject = u"Access to my Screen requested by"
             alt_action = None
         else:
             subject = u"Addition of unknown Stream to existing Session requested by"
@@ -328,9 +328,9 @@ class AlertPanel(NSObject, object):
                     if ds:
                         type_names.remove("Desktop sharing")
                         if ds[0].handler.type == "active":
-                            type_names.append("Remote Desktop offered by")
+                            type_names.append("Remote Screen offered by")
                         else:
-                            type_names.append("Access to my Desktop requested by")
+                            type_names.append("Access to my Screen requested by")
                     subject = u"%s" % " and ".join(type_names)
                 else:
                     subject = u"%s session requested by" % " and ".join(type_names)
@@ -339,7 +339,7 @@ class AlertPanel(NSObject, object):
             elif type(streams[0]) is ChatStream:
                 subject = u"Chat Session requested by"
             elif type(streams[0]) is DesktopSharingStream:
-                subject = u"Remote Desktop offered by" if streams[0].handler.type == "active" else u"Access to my Desktop requested by"
+                subject = u"Remote Screen offered by" if streams[0].handler.type == "active" else u"Access to my Screen requested by"
             elif type(streams[0]) is FileTransferStream:
                 subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
             else:

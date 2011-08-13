@@ -943,7 +943,7 @@ class ChatController(MediaStream):
                     item.setEnabled_(False)
                 title = self.sessionController.getTitleShort()
                 menu = toolbar.delegate().desktopShareMenu
-                menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Desktop from %s" % title)
+                menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Screen from %s" % title)
                 menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
 
                 item = menu.itemWithTag_(TOOLBAR_SHARE_DESKTOP_MENU)
@@ -951,7 +951,7 @@ class ChatController(MediaStream):
                     item.setHidden_(True)
                 else:
                     item.setHidden_(False)
-                    item.setTitle_("Share My Desktop with %s" % title)
+                    item.setTitle_("Share My Screen with %s" % title)
 
             elif identifier == 'smileys':
                 if self.status == STREAM_CONNECTED:

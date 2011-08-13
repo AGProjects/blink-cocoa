@@ -2367,10 +2367,10 @@ class ContactWindowController(NSWindowController):
                 sf_item.setEnabled_(has_full_sip_uri and NSApp.delegate().applicationName != 'Blink Lite')
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Desktop from %s" % contact, "startDesktopToSelected:", "")
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(1)
             mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-client'))
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Desktop with %s" % contact, "startDesktopToSelected:", "")
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(2)
             mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-server'))
 
@@ -2525,7 +2525,7 @@ class ContactWindowController(NSWindowController):
                 pass
             else:
                 item = self.desktopShareMenu.itemWithTag_(1)
-                item.setTitle_("Request Desktop from %s" % contact.display_name)
+                item.setTitle_("Request Screen from %s" % contact.display_name)
                 item.setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
 
                 item = self.desktopShareMenu.itemWithTag_(2)
@@ -2533,7 +2533,7 @@ class ContactWindowController(NSWindowController):
                     item.setHidden_(True)
                 else:
                     item.setHidden_(False)
-                    item.setTitle_("Share My Desktop with %s" % contact.display_name)
+                    item.setTitle_("Share My Screen with %s" % contact.display_name)
 
         elif menu == self.contactsMenu:
             row = self.contactOutline.selectedRow()
