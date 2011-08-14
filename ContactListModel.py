@@ -106,6 +106,7 @@ class BlinkContact(NSObject):
     editable = True
     deletable = True
     favorite = False
+    nc = NotificationCenter()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -349,7 +350,7 @@ class FavoriteBlinkContact(BlinkPresenceContact):
     def setFavorite(self, favorite):
         self.favorite = favorite
         if favorite is False:
-            NotificationCenter().post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
+            self.nc.post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
 
     def setType(self, type):
         self.type = type
@@ -418,11 +419,14 @@ class AddressBookBlinkContact(BlinkContact):
 
     def setFavorite(self, favorite):
         self.favorite = favorite
-        NotificationCenter().post_notification("AddressBookFavoriteWasChanged", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now(), favorite=favorite))
+        self.nc.post_notification("AddressBookFavoriteWasChanged", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now(), favorite=favorite))
 
 
 class BlinkContactGroup(NSObject):
     """Basic Group representation in Blink UI"""
+    implements(IObserver)
+    nc = NotificationCenter()
+
     type = None
     editable = True
     deletable = True
@@ -440,6 +444,12 @@ class BlinkContactGroup(NSObject):
 
     def copyWithZone_(self, zone):
         return self
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
 
     def sortContacts(self):
         self.contacts.sort(lambda a,b:cmp(unicode(a.name).lower(), unicode(b.name).lower()))
@@ -544,7 +554,7 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
                 blink_contact.setDetail(new_detail)
             self.contacts.append(blink_contact)
 
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
 
 class MissedCallsBlinkContactGroup(HistoryBlinkContactGroup):
@@ -582,7 +592,6 @@ class IncomingCallsBlinkContactGroup(HistoryBlinkContactGroup):
 
 class AddressBookBlinkContactGroup(BlinkContactGroup):
     """Address Book Group representation in Blink UI"""
-    implements(IObserver)
     type = 'addressbook'
     editable = False
     deletable = False
@@ -594,14 +603,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
 
         self.favorites_storage_path = ApplicationData.get('addressbook_favorite_contacts_')
         makedirs(os.path.dirname(self.favorites_storage_path))
-        nc = NotificationCenter()
-        nc.add_observer(self, name="AddressBookFavoriteWasChanged")
-
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
+        self.nc.add_observer(self, name="AddressBookFavoriteWasChanged")
 
     def _NH_AddressBookFavoriteWasChanged(self, notification):
         if notification.data.favorite:
@@ -968,6 +970,7 @@ class ContactListModel(CustomListModel):
     """Blink Contacts List Model main implementation"""
     implements(IObserver)
     contactOutline = objc.IBOutlet()
+    nc = NotificationCenter()
 
     def init(self):
         self.bonjour_group = BonjourBlinkContactGroup()
@@ -986,25 +989,24 @@ class ContactListModel(CustomListModel):
         handler(notification)
 
     def awakeFromNib(self):
-        nc = NotificationCenter()
-        nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
-        nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
-        nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
-        nc.add_observer(self, name="CFGSettingsObjectDidChange")
-        nc.add_observer(self, name="ContactWasActivated")
-        nc.add_observer(self, name="ContactWasDeleted")
-        nc.add_observer(self, name="ContactDidChange")
-        nc.add_observer(self, name="ContactGroupWasCreated")
-        nc.add_observer(self, name="ContactGroupWasActivated")
-        nc.add_observer(self, name="ContactGroupWasDeleted")
-        nc.add_observer(self, name="ContactGroupDidChange")
-        nc.add_observer(self, name="SIPAccountDidActivate")
-        nc.add_observer(self, name="SIPAccountDidDeactivate")
-        nc.add_observer(self, name="SIPApplicationDidStart")
-        nc.add_observer(self, name="SIPApplicationWillEnd")
-        nc.add_observer(self, name="AudioCallLoggedToHistory")
-        nc.add_observer(self, name="AddressBookFavoriteWasChanged")
-        nc.add_observer(self, name="FavoriteContactWasRemoved")
+        self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
+        self.nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
+        self.nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
+        self.nc.add_observer(self, name="CFGSettingsObjectDidChange")
+        self.nc.add_observer(self, name="ContactWasActivated")
+        self.nc.add_observer(self, name="ContactWasDeleted")
+        self.nc.add_observer(self, name="ContactDidChange")
+        self.nc.add_observer(self, name="ContactGroupWasCreated")
+        self.nc.add_observer(self, name="ContactGroupWasActivated")
+        self.nc.add_observer(self, name="ContactGroupWasDeleted")
+        self.nc.add_observer(self, name="ContactGroupDidChange")
+        self.nc.add_observer(self, name="SIPAccountDidActivate")
+        self.nc.add_observer(self, name="SIPAccountDidDeactivate")
+        self.nc.add_observer(self, name="SIPApplicationDidStart")
+        self.nc.add_observer(self, name="SIPApplicationWillEnd")
+        self.nc.add_observer(self, name="AudioCallLoggedToHistory")
+        self.nc.add_observer(self, name="AddressBookFavoriteWasChanged")
+        self.nc.add_observer(self, name="FavoriteContactWasRemoved")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -1023,7 +1025,7 @@ class ContactListModel(CustomListModel):
             group.reference.save()
             if group.type == "addressbook":
                 group.loadAddressBook()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def hasContactMatchingURI(self, uri):
         return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts)
@@ -1174,7 +1176,7 @@ class ContactListModel(CustomListModel):
         self.incoming_calls_group.setReference()
         self.favorites_group.setReference()
 
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if NSApp.delegate().windowController.first_run:
             self.createInitialGroupAndContacts()
@@ -1209,11 +1211,11 @@ class ContactListModel(CustomListModel):
                 position = len(self.contactGroupsList) if self.contactGroupsList else 0
                 self.contactGroupsList.insert(position, self.addressbook_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.contactGroupsList:
                 self.contactGroupsList.remove(self.addressbook_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_incoming_calls_group"):
             if settings.contacts.enable_incoming_calls_group and self.incoming_calls_group not in self.contactGroupsList:
@@ -1224,7 +1226,7 @@ class ContactListModel(CustomListModel):
             elif not settings.contacts.enable_incoming_calls_group and self.incoming_calls_group in self.contactGroupsList:
                 self.contactGroupsList.remove(self.incoming_calls_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_outgoing_calls_group"):
             if settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group not in self.contactGroupsList:
@@ -1235,7 +1237,7 @@ class ContactListModel(CustomListModel):
             elif not settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group in self.contactGroupsList:
                 self.contactGroupsList.remove(self.outgoing_calls_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_missed_calls_group"):
             if settings.contacts.enable_missed_calls_group and self.missed_calls_group not in self.contactGroupsList:
@@ -1246,18 +1248,18 @@ class ContactListModel(CustomListModel):
             elif not settings.contacts.enable_missed_calls_group and self.missed_calls_group in self.contactGroupsList:
                 self.contactGroupsList.remove(self.missed_calls_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_favorites_group"):
             if settings.contacts.enable_favorites_group and self.favorites_group not in self.contactGroupsList:
                 position = 0
                 self.contactGroupsList.insert(position, self.favorites_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_favorites_group and self.favorites_group in self.contactGroupsList:
                 self.contactGroupsList.remove(self.favorites_group)
                 self.saveGroupPosition()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.maximum_calls"):
             if settings.contacts.enable_missed_calls_group:
@@ -1329,7 +1331,7 @@ class ContactListModel(CustomListModel):
                 self.bonjour_group.setReference()
                 positions = [g.position for g in ContactGroupManager().get_groups() if g.position is not None]
                 self.contactGroupsList.insert(bisect.bisect_left(positions, self.bonjour_group.reference.position), self.bonjour_group)
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         else:
             self.updatePresenceIndicator()
 
@@ -1337,7 +1339,7 @@ class ContactListModel(CustomListModel):
         if notification.sender is BonjourAccount() and self.bonjour_group in self.contactGroupsList:
             self.bonjour_group.contacts = []
             self.contactGroupsList.remove(self.bonjour_group)
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def updatePresenceIndicator(self):
         groups_with_presence = (group for group in self.contactGroupsList if type(group) == BlinkContactGroup)
@@ -1369,7 +1371,7 @@ class ContactListModel(CustomListModel):
                         change = True
 
         if change:
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -1401,7 +1403,7 @@ class ContactListModel(CustomListModel):
                     self.bonjour_group.contacts.remove(n)
 
             self.bonjour_group.sortContacts()
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -1430,7 +1432,7 @@ class ContactListModel(CustomListModel):
             blink_contact.setURI(str(uri))
             blink_contact.setDetail(str(uri))
             self.bonjour_group.sortContacts()
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
@@ -1453,7 +1455,7 @@ class ContactListModel(CustomListModel):
                     self.bonjour_group.contacts.append(n)
 
             self.bonjour_group.sortContacts()
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactWasActivated(self, notification):
         contact = notification.sender
@@ -1482,7 +1484,7 @@ class ContactListModel(CustomListModel):
                     blink_contact.setPresenceIndicator(None)
                 self.favorites_group.contacts.append(blink_contact)
 
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressBookFavoriteWasChanged(self, notification):
         contact = notification.sender
@@ -1494,7 +1496,7 @@ class ContactListModel(CustomListModel):
                 blink_contact.setType('addressbook')
                 self.favorites_group.contacts.append(blink_contact)
                 self.favorites_group.sortContacts()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         else:
             try:
                 blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
@@ -1502,7 +1504,7 @@ class ContactListModel(CustomListModel):
                 pass
             else:
                 self.favorites_group.contacts.remove(blink_contact)
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
@@ -1532,7 +1534,7 @@ class ContactListModel(CustomListModel):
                 else:
                     try:
                         group.contacts.remove(blink_contact)
-                        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
                     except KeyError:
                         pass
 
@@ -1544,7 +1546,7 @@ class ContactListModel(CustomListModel):
                 try:
                     group.contacts.remove(blink_contact)
                     blink_contact.reference = None
-                    NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                    self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
                 except ValueError:
                     pass
 
@@ -1647,7 +1649,7 @@ class ContactListModel(CustomListModel):
                 target_group.contacts.append(blink_contact)
                 target_group.sortContacts()
 
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactGroupWasActivated(self, notification):
         group = notification.sender
@@ -1714,7 +1716,7 @@ class ContactListModel(CustomListModel):
             blink_group = BlinkContactGroup(name=group.name, reference=group)
             self.contactGroupsList.insert(index, blink_group)
 
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactGroupWasDeleted(self, notification):
         group = notification.sender
@@ -1725,7 +1727,7 @@ class ContactListModel(CustomListModel):
         else:
             self.contactGroupsList.remove(blink_group)
             blink_group.reference = None
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             self.saveGroupPosition()
 
     def _NH_ContactGroupDidChange(self, notification):
@@ -1737,7 +1739,7 @@ class ContactListModel(CustomListModel):
         else:
             if blink_group.name != group.name:
                 blink_group.name = group.name
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_ContactGroupWasCreated(self, notification):
         self.saveGroupPosition()
