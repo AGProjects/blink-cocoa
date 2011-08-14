@@ -1961,7 +1961,7 @@ class ContactListModel(CustomListModel):
                 else:
                     blink_contact.reference.delete()
 
-        elif isinstance(blink_contact, BlinkContactGroup) and blink_contact.editable:
+        elif isinstance(blink_contact, BlinkContactGroup) and blink_contact.deletable:
             ret = NSRunAlertPanel(u"Delete Contact Group", u"Delete group '%s' and its contents from the Contacts list?"%blink_contact.name, u"Delete", u"Cancel", None)
             if ret == NSAlertDefaultReturn and blink_contact in self.contactGroupsList:
                 blink_contact.reference.delete()
