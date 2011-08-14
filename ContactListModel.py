@@ -639,7 +639,6 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
             except (IOError, cPickle.PicklingError):
                 pass
 
-
     def loadAddressBook(self):
         self.load_favorites()
 
@@ -1182,6 +1181,7 @@ class ContactListModel(CustomListModel):
             self.createInitialGroupAndContacts()
         else:
             self._migrateContacts()
+
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30.0, self, "checkContactBackup:", None, False)
 
@@ -1273,7 +1273,6 @@ class ContactListModel(CustomListModel):
 
         if notification.data.modified.has_key("presence.enabled"):
             self.updatePresenceIndicator()
-
 
     def _migrateContacts(self):
         """Used in version 1.2.0 when switched over to new contacts model in sip simple sdk 0.18.3"""
