@@ -461,7 +461,7 @@ class BlinkContactGroup(NSObject):
             except StopIteration:
                 group = ContactGroup(self.name)
                 group.type  = self.type
-                group.expanded = False if self.type == 'addressbook' else True
+                group.expanded = False if type(self) == AddressBookBlinkContactGroup else True
                 group.position = None
                 group.save()
                 self.reference = group
@@ -837,11 +837,11 @@ class CustomListModel(NSObject):
                 table.setDropItem_dropChildIndex_(None, i)
             else:
                 sourceGroup = self.contactGroupsList[group]
-                if sourceGroup.type == 'favorites':
+                if type(sourceGroup) == FavoritesBlinkContactGroup:
                     return NSDragOperationNone
 
                 if isinstance(proposed_parent, BlinkContactGroup):
-                    if proposed_parent.type == 'favorites':
+                    if type(proposed_parent) == FavoritesBlinkContactGroup:
                         return NSDragOperationCopy
 
                     if not proposed_parent.editable:
@@ -908,7 +908,7 @@ class CustomListModel(NSObject):
                 targetGroup = item
                 contactObject = sourceGroup.contacts[blink_contact]
 
-                if targetGroup.type == 'favorites':
+                if type(targetGroup) == FavoritesBlinkContactGroup:
                     contactObject.setFavorite(True)
                     return True
 
@@ -1022,7 +1022,7 @@ class ContactListModel(CustomListModel):
         if group.reference:
             group.reference.expanded = True
             group.reference.save()
-            if group.type == "addressbook":
+            if type(group) == AddressBookBlinkContactGroup:
                 group.loadAddressBook()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
@@ -1507,14 +1507,14 @@ class ContactListModel(CustomListModel):
 
     def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
-        if contact.type == 'addressbook':
+        if type(contact) == AddressBookBlinkContact:
             try:
                 ab_contact = (ab_contact for ab_contact in self.addressbook_group.contacts if ab_contact.addressbook_id == contact.reference).next()
             except StopIteration:
                 pass
             else:
                 ab_contact.setFavorite(False)
-        elif contact.type == 'presence':
+        elif type(contact) == BlinkPresenceContact:
             contact.reference.favorite = False
             contact.reference.save()
 
@@ -1527,7 +1527,7 @@ class ContactListModel(CustomListModel):
         else:
             if contact.favorite:
                 try:
-                    group = (g for g in self.contactGroupsList if g.type == 'favorites').next()
+                    group = (g for g in self.contactGroupsList if type(g) == FavoritesBlinkContactGroup).next()
                 except StopIteration:
                     pass
                 else:
