@@ -11,6 +11,7 @@ import datetime
 import os
 import platform
 import re
+import socket
 import urllib
 import urllib2
 import uuid
@@ -887,6 +888,22 @@ class SIPManager(object):
                                'offline_status_supported')
         BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported) is True))
 
+
+    def isRemoteDesktopSharingActive(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('127.0.0.1', 5900))
+            s.close()
+            return True
+        except socket.error, msg:
+            s.close()
+            return False
+
+    def activateRemoteDesktopSharing(self):
+        # TODO: automatic check if VNC server is running with the right options, if not relaunch it -adi
+        # http://docs.info.apple.com/article.html?path=RemoteDesktop/3.0/en/ARDC882.html
+        BlinkLogger().log_info("Enable Sharing in System Preferences -> Remote Management -> Computer Settings -> Anyone may request permission to control screen")
+
     def isProposedMediaTypeSupported(self, streams):
         settings = SIPSimpleSettings()
 
@@ -894,9 +911,14 @@ class SIPManager(object):
 
         if 'desktop-sharing' in stream_type_list:
             ds = [s for s in streams if s.type == "desktop-sharing"]
-            if ds and ds[0].handler.type != "active" and settings.desktop_sharing.disabled:
-                BlinkLogger().log_info(u"Desktop Sharing is disabled")
-                return False
+            if ds and ds[0].handler.type != "active":
+                if settings.desktop_sharing.disabled:
+                    BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
+                    return False
+                if not self.isRemoteDesktopSharingActive():
+                    BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
+                    self.activateRemoteDesktopSharing()
+                    return False
 
         if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
             BlinkLogger().log_info(u"File Transfers are disabled")
@@ -915,13 +937,21 @@ class SIPManager(object):
     def isMediaTypeSupported(self, type):
         settings = SIPSimpleSettings()
 
-        if settings.desktop_sharing.disabled and type == 'desktop-server':
-            return False
+        if type == 'desktop-server':
+            if settings.desktop_sharing.disabled:
+                BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
+                return False
+            if not self.isRemoteDesktopSharingActive():
+                BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
+                self.activateRemoteDesktopSharing()
+                return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
+            BlinkLogger().log_info(u"File Transfers are disabled")
             return False
 
         if settings.chat.disabled and type == 'chat':
+            BlinkLogger().log_info(u"Chat sessions are disabled")
             return False
 
         if type == 'video':

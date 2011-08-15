@@ -1,12 +1,6 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
-import errno
-import os
-import signal
-import sys
-import subprocess
-
 from Foundation import *
 from AppKit import *
 
@@ -20,7 +14,7 @@ from MediaStream import *
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 
-DS_CLEANUP_DELAY = 4.0 
+DS_CLEANUP_DELAY = 4.0
 
 
 class StatusItem(NSObject):
@@ -105,7 +99,6 @@ class DesktopSharingController(MediaStream):
             self.stream.handler = ExternalVNCViewerHandler()
         else:
             self.sessionController.log_info("Sharing local screen...")
-            self.sessionController.log_info("Sharing must be enabled in System Preferences -> Sharing -> Screen Sharing -> Computer Settings -> Anyone may request permission to control screen")
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)            
             self.statusProgress.startAnimation_(None)
@@ -121,7 +114,6 @@ class DesktopSharingController(MediaStream):
             self.sessionController.log_info("Requesting access to remote screen")
         else:
             self.sessionController.log_info("Sharing local screen...")
-            self.sessionController.log_info("Sharing must be enabled in System Preferences -> Sharing -> Screen Sharing -> Computer Settings -> Anyone may request permission to control screen")
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_("Screen Sharing")
