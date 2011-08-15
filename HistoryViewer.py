@@ -58,7 +58,7 @@ class HistoryViewer(NSWindowController):
     # viewer sections
     allContacts = []
     contacts = []
-    dayly_entries = []
+    dayly_entries = NSMutableArray.array()
     messages = []
 
     # database handler
@@ -218,14 +218,14 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def resetDailyEntries(self):
-        self.dayly_entries = []
+        self.dayly_entries = NSMutableArray.array()
         self.indexTable.reloadData()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderDailyEntries(self, results):
         getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
-        self.dayly_entries = []
+        self.dayly_entries = NSMutableArray.array()
         for result in results:
             contact = getContactMatchingURI(result[2])
             if contact:
@@ -233,14 +233,10 @@ class HistoryViewer(NSWindowController):
             else:
                 remote_uri = result[2]
 
-            entry = {
-                'local_uri'  : result[1],
-                'remote_uri' : remote_uri,
-                'remote_uri_sql' : result[2],
-                'date'       : result[0],
-                'type'       : result[3]
-            }
-            self.dayly_entries.append(entry)
+            entry = NSDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', result[3], 'type')
+            self.dayly_entries.addObject_(entry)
+
+        self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
         self.indexTable.reloadData()
 
         if self.search_contact and not self.dayly_entries:
@@ -333,11 +329,8 @@ class HistoryViewer(NSWindowController):
         pass
 
     def tableView_sortDescriptorsDidChange_(self, table, odescr):
-        for item in (item for item in odescr if item.key() in self.daily_order_fields.keys()):
-            self.daily_order_fields[item.key()] = 'DESC' if item.ascending() else 'ASC'
-
-        order_text = ', '.join([('%s %s' % (k,v)) for k,v in self.daily_order_fields.iteritems()])
-        self.refreshDailyEntries(order_text=order_text)
+        self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
+        self.indexTable.reloadData()
 
     @objc.IBAction
     def printDocument_(self, sender):
@@ -364,7 +357,7 @@ class HistoryViewer(NSWindowController):
             row = self.indexTable.selectedRow()
             if row > 0:
                 self.refreshDailyEntries()
-                self.refreshMessages(local_uri=self.dayly_entries[row]['local_uri'], date=self.dayly_entries[row]['date'], media_type=self.dayly_entries[row]['type'])
+                self.refreshMessages(local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
             else: 
                 row = self.contactTable.selectedRow()
                 if row > 0:
@@ -402,11 +395,11 @@ class HistoryViewer(NSWindowController):
             else:
                 row = self.indexTable.selectedRow()
                 if row >= 0:
-                    self.refreshMessages(remote_uri=self.dayly_entries[row]['remote_uri_sql'], local_uri=self.dayly_entries[row]['local_uri'], date=self.dayly_entries[row]['date'], media_type=self.dayly_entries[row]['type'])
+                    self.refreshMessages(remote_uri=self.dayly_entries[row].objectForKey_("remote_uri_sql"), local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
 
     def numberOfRowsInTableView_(self, table):
         if table == self.indexTable:
-            return len(self.dayly_entries)
+            return self.dayly_entries.count()
         elif table == self.contactTable:    
             return len(self.contacts)
         return 0
@@ -415,7 +408,7 @@ class HistoryViewer(NSWindowController):
         if table == self.indexTable:
             ident = column.identifier()
             try:
-                return unicode(self.dayly_entries[row][ident])
+                return unicode(self.dayly_entries[row].objectForKey_(ident))
             except IndexError:
                 return None    
         elif table == self.contactTable:
@@ -508,10 +501,10 @@ class HistoryViewer(NSWindowController):
             elif self.selectedTableView == self.indexTable:
                 try:
                     row = self.indexTable.selectedRow()
-                    local_uri = self.dayly_entries[row]['local_uri']
-                    remote_uri = self.dayly_entries[row]['remote_uri_sql']
-                    date = self.dayly_entries[row]['date']
-                    media_type = self.dayly_entries[row]['type']
+                    local_uri = self.dayly_entries[row].objectForKey_("local_uri")
+                    remote_uri = self.dayly_entries[row].objectForKey_("remote_uri")
+                    date = self.dayly_entries[row].objectForKey_("date")
+                    media_type = self.dayly_entries[row].objectForKey_("type")
 
                     ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
                     if ret == NSAlertDefaultReturn:
