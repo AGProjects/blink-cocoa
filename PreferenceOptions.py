@@ -64,6 +64,7 @@ def formatName(name):
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
+SECURE_OPTIONS=('web_password')
 
 class HiddenOption(object):
     """Marker class to hide options in the preferences panel"""
@@ -152,7 +153,10 @@ class StringOption(Option):
         self.emptyIsNone = False
         self.caption = makeLabel(description or formatName(name))
 
-        self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+        if name in SECURE_OPTIONS:
+            self.text = NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+        else:
+            self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         self.text.sizeToFit()
         self.setViewExpands(self.text)
         self.text.cell().setScrollable_(True)

@@ -310,6 +310,7 @@ class SIPManager(object):
         account.nat_traversal.msrp_relay = data['msrp_relay']
         account.server.conference_server = data['conference_server']
         account.server.settings_url = data['settings_url']
+        account.server.web_password = data['web_password']
         if data['passport'] is not None:
             cert_path = self.save_certificates(data)
             if cert_path:
