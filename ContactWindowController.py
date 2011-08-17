@@ -515,8 +515,8 @@ class ContactWindowController(NSWindowController):
         if isinstance(notification.sender, Account) and notification.data.error == 'Authentication failed':
             if not self.authFailPopupShown:
                 self.authFailPopupShown = True
-                NSRunAlertPanel(u"Registration Error",
-                    u"The account %s could not be registered because of an authentication error" % notification.sender.id,
+                NSRunAlertPanel(u"SIP Registration Error",
+                    u"The account %s could not be registered because of an authentication error. Either your account credentials are incorrectly entered or the SIP service is not available at this moment. \n\nFor help on this matter please contact your SIP service provider." % notification.sender.id,
                     u"OK", None, None)
                 self.authFailPopupShown = False
 
