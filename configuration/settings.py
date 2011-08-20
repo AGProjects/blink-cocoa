@@ -26,9 +26,11 @@ class AudioSettingsExtension(AudioSettings):
     alert_device = Setting(type=unicode, default=u'system_default', nillable=True)
     input_device = Setting(type=unicode, default=u'system_default', nillable=True)
     output_device = Setting(type=unicode, default=u'system_default', nillable=True)
-    sample_rate = Setting(type=SampleRate, default=44100)
+    sample_rate = Setting(type=SampleRate, default=16000)
+    tail_length = Setting(type=NonNegativeInteger, default=20)
     automatic_device_switch = Setting(type=bool, default=True)
     pause_itunes = Setting(type=bool, default=True)
+    enable_aec = Setting(type=bool, default=True)
 
 
 class ChatSettingsExtension(ChatSettings):

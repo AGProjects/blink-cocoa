@@ -749,7 +749,14 @@ class SIPManager(object):
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
+        BlinkLogger().log_info(u"Starting SIP User Agent %s" % settings.user_agent)
+
+        # Set audio settings compatible with AEC and Noise Supressor
+        settings.audio.sample_rate = 16000
+        settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
         settings.save()
+        BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % 'enabled' if settings.audio.enable_aec else 'disabled')
+
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
@@ -874,6 +881,11 @@ class SIPManager(object):
             if 'message_summary.enabled' in data.modified:
                 if not account.message_summary.enabled:
                     MWIData.remove(account)
+        if 'audio.enable_aec' in data.modified:
+            settings = SIPSimpleSettings()
+            BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
+            settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
+            settings.save()
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
         account = sender.account
