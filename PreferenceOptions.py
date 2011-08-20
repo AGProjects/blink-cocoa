@@ -1410,7 +1410,7 @@ SettingDescription = {
                       'audio.auto_transfer': 'Automatic Transfer',
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
-                      'audio.pause_itunes': 'Pause and Resume iTunes Before and After Audio Calls',
+                      'audio.pause_itunes': 'Pause iTunes During Audio Calls',
                       'audio.automatic_device_switch': 'Switch Automatically to New Devices when Plugged-in',
                       'audio.enable_aec': 'Enable Acoustic Echo Canceller',
                       'answering_machine.enabled': 'Enable Answering Machine',
