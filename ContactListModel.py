@@ -1934,16 +1934,20 @@ class ContactListModel(CustomListModel):
                 blink_contact.reference.group = group
 
             new_aliases = ';'.join(blink_contact.aliases)
-            blink_contact.reference.uri = blink_contact.uri
-            blink_contact.reference.account = blink_contact.stored_in_account
-            blink_contact.reference.name = blink_contact.display_name
-            blink_contact.reference.aliases = new_aliases if new_aliases else None
-            blink_contact.reference.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
-            blink_contact.reference.save()
+
+            try:
+                blink_contact.reference.uri = blink_contact.uri
+                blink_contact.reference.account = blink_contact.stored_in_account
+                blink_contact.reference.name = blink_contact.display_name
+                blink_contact.reference.aliases = new_aliases if new_aliases else None
+                blink_contact.reference.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
+                blink_contact.reference.save()
+            except DuplicateIDError:
+                NSRunAlertPanel("Edit Contact", "Contact %s already exists in account %s"% (blink_contact.uri, blink_contact.stored_in_account.id), "OK", None, None)
+                return None
 
     def deleteContact(self, blink_contact):
         if isinstance(blink_contact, BlinkContact):
-
             if type(blink_contact) is FavoriteBlinkContact:
                 blink_contact.setFavorite(False)
                 return
