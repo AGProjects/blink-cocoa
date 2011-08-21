@@ -1490,7 +1490,7 @@ class ContactListModel(CustomListModel):
             try:
                 blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
             except StopIteration:
-                blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, icon=contact.icon, reference=contact.addressbook_id)
+                blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, detail=contact.detail, icon=contact.icon, reference=contact.addressbook_id)
                 blink_contact.setType('addressbook')
                 self.favorites_group.contacts.append(blink_contact)
                 self.favorites_group.sortContacts()
@@ -1506,16 +1506,16 @@ class ContactListModel(CustomListModel):
 
     def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
-        if type(contact) == AddressBookBlinkContact:
+        if contact.type == 'presence':
+            contact.reference.favorite = False
+            contact.reference.save()
+        elif contact.type == 'addressbook':
             try:
                 ab_contact = (ab_contact for ab_contact in self.addressbook_group.contacts if ab_contact.addressbook_id == contact.reference).next()
             except StopIteration:
                 pass
             else:
                 ab_contact.setFavorite(False)
-        elif type(contact) == BlinkPresenceContact:
-            contact.reference.favorite = False
-            contact.reference.save()
 
     def _NH_ContactWasDeleted(self, notification):
         contact = notification.sender
@@ -1605,6 +1605,7 @@ class ContactListModel(CustomListModel):
                     blink_contact.setPresenceIndicator(None)
 
             if 'favorite' in notification.data.modified:
+                blink_contact.favorite = contact.favorite
                 if contact.favorite is True:
                     try:
                         blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact).next()    
