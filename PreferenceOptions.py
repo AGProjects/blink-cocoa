@@ -1420,7 +1420,7 @@ SettingDescription = {
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
                       'audio.pause_itunes': 'Pause iTunes During Audio Calls',
-                      'audio.automatic_device_switch': 'Switch Automatically to New Devices when Plugged-in',
+                      'audio.automatic_device_switch': 'Switch to New Devices when Plugged-in',
                       'audio.enable_aec': 'Enable Acoustic Echo Canceller',
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
