@@ -157,6 +157,9 @@ class StringOption(Option):
             self.text = NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         else:
             self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+            if Placeholders.has_key(name):
+                self.text.cell().setPlaceholderString_(Placeholders[name])
+
         self.text.sizeToFit()
         self.setViewExpands(self.text)
         self.text.cell().setScrollable_(True)
@@ -208,7 +211,13 @@ class UnicodeOption(Option):
         self.emptyIsNone = False
         self.caption = makeLabel(description or formatName(name))
 
-        self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+        if name in SECURE_OPTIONS:
+            self.text = NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+        else:
+            self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+        if Placeholders.has_key(name):
+            self.text.cell().setPlaceholderString_(Placeholders[name])
+
         self.text.sizeToFit()
         self.setViewExpands(self.text)
         self.text.cell().setScrollable_(True)
@@ -1446,6 +1455,13 @@ SettingDescription = {
                       'tls.certificate': 'Certificate File',
                       'tls.ca_list': 'Certificate Authority File'
                       }
+
+Placeholders = {
+                 'alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
+                 'outbound_proxy' : 'sip.example.com:5061;transport=tls',
+                 'msrp_relay': 'relay.example.com:2855;transport=tls',
+                 'voicemail_uri': 'user@example.com',
+                 'xcap_root': 'https://xcap.example.com/xcap-root/'}
 
 SectionNames = {
                        'audio': 'Audio Calls',
