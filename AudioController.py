@@ -62,6 +62,13 @@ class AudioController(MediaStream):
     transferMenu = objc.IBOutlet()
     sessionMenu = objc.IBOutlet()
 
+    zRTPBox = objc.IBOutlet()
+    zRTPStatusButton = objc.IBOutlet()
+    zRTPSecureSinceLabel = objc.IBOutlet()
+    zRTPVerifyButton = objc.IBOutlet()
+    zRTPVerifyHash = objc.IBOutlet()
+    zRTPInfoButton = objc.IBOutlet()
+
     recordingImage = 0
     audioEndTime = None
     timer = None
@@ -80,6 +87,8 @@ class AudioController(MediaStream):
     recording_path = None
 
     status = STREAM_IDLE
+    normal_height = 59
+    zrtp_height = 118
 
     @classmethod
     def createStream(self, account):
@@ -94,6 +103,7 @@ class AudioController(MediaStream):
             self.notification_center.add_observer(self, sender=self.sessionController)
 
             NSBundle.loadNibNamed_owner_("AudioSession", self)
+            self.setNormalViewHeight(self.view.frame())
 
             item = self.view.menu().itemWithTag_(20) # add to contacts
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
@@ -680,6 +690,23 @@ class AudioController(MediaStream):
             item.setTitle_("Share My Screen with %s" % title)
             item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-server'))
 
+    def toggleHeight(self):
+        frame = self.view.frame()
+        if frame.size.height == self.normal_height:
+            self.setZRTPViewHeight(frame)
+        elif frame.size.height == self.zrtp_height:
+            self.setNormalViewHeight(frame)
+
+    def setZRTPViewHeight(self, frame):
+        frame.size.height = self.zrtp_height
+        self.zRTPBox.setHidden_(False)
+        self.view.setFrame_(frame)
+
+    def setNormalViewHeight(self, frame):
+        frame.size.height = self.normal_height
+        self.zRTPBox.setHidden_(True)
+        self.view.setFrame_(frame)
+
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
@@ -706,6 +733,14 @@ class AudioController(MediaStream):
         target_session_controller = sender.representedObject()
         self.sessionController.log_info( u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
         self.sessionController.transferSession(target_session_controller.target_uri, target_session_controller)
+
+    @objc.IBAction
+    def userClickedZRTPInfoButton_(self, sender):
+        pass
+
+    @objc.IBAction
+    def userClickedZRTPVerifyButton_(self, sender):
+        pass
 
     @objc.IBAction
     def userClickedAudioButton_(self, sender):

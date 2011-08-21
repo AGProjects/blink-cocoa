@@ -78,7 +78,6 @@
 		1F2272C312B554F50010A8B2 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
 		1F2272C412B554F50010A8B2 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		1F2272C512B554F50010A8B2 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
-		1F2272C612B554F50010A8B2 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BA28D671028FD2800B99A0E /* AudioSession.xib */; };
 		1F2272C712B554F50010A8B2 /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		1F2272C812B554F50010A8B2 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
 		1F2272C912B554F50010A8B2 /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
@@ -232,6 +231,9 @@
 		1F22738012B5559C0010A8B2 /* liblzo.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
 		1F22738112B5559C0010A8B2 /* libtasn1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
 		1F22738212B5559C0010A8B2 /* libz.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722D12B554000010A8B2 /* libz.1.dylib */; };
+		1F2489E013FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
+		1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
+		1F2489E213FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
 		1F2746791388755F0052C384 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
 		1F27467A1388755F0052C384 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
 		1F27467B1388755F0052C384 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
@@ -317,7 +319,6 @@
 		1F8DC351135084FA0034815C /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
 		1F8DC352135084FA0034815C /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		1F8DC353135084FA0034815C /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
-		1F8DC354135084FA0034815C /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BA28D671028FD2800B99A0E /* AudioSession.xib */; };
 		1F8DC355135084FA0034815C /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		1F8DC356135084FA0034815C /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
 		1F8DC357135084FA0034815C /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
@@ -675,7 +676,6 @@
 		2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
 		2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
 		2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
-		2BA28D691028FD2800B99A0E /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BA28D671028FD2800B99A0E /* AudioSession.xib */; };
 		2BAF381A0FE088C70040117A /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
 		2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
@@ -1120,6 +1120,7 @@
 		1F22722B12B554000010A8B2 /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblzo.1.dylib; path = Distribution/Frameworks/liblzo.1.dylib; sourceTree = "<group>"; };
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
 		1F22722D12B554000010A8B2 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = Distribution/Frameworks/libz.1.dylib; sourceTree = "<group>"; };
+		1F2489DF13FE781F007CDFD5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1F274637138868010052C384 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
 		1F2746781388755F0052C384 /* fullscreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = fullscreen.png; path = icons/fullscreen.png; sourceTree = "<group>"; };
 		1F2747D21388FC5C0052C384 /* restore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = restore.png; path = icons/restore.png; sourceTree = "<group>"; };
@@ -1294,7 +1295,6 @@
 		2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
 		2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryViewer.py; sourceTree = "<group>"; };
-		2BA28D681028FD2800B99A0E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddContact.xib; sourceTree = "<group>"; };
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainWindow.xib; sourceTree = "<group>"; };
@@ -1877,9 +1877,9 @@
 		2BF42C7A107E6E7600F04A6C /* Audio */ = {
 			isa = PBXGroup;
 			children = (
+				1F2489DE13FE781F007CDFD5 /* AudioSession.xib */,
 				2BF430B01082EEFE00F04A6C /* AudioController.py */,
 				2B103E361015721E00002158 /* AudioSession.py */,
-				2BA28D671028FD2800B99A0E /* AudioSession.xib */,
 				2BC08A781063B3570069AB9A /* AnsweringMachine.py */,
 				C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */,
 			);
@@ -2081,7 +2081,6 @@
 				1F2272C312B554F50010A8B2 /* DebugWindow.xib in Resources */,
 				1F2272C412B554F50010A8B2 /* PhotoPicker.xib in Resources */,
 				1F2272C512B554F50010A8B2 /* PhotoPicker.py in Resources */,
-				1F2272C612B554F50010A8B2 /* AudioSession.xib in Resources */,
 				1F2272C712B554F50010A8B2 /* SoundSetting.xib in Resources */,
 				1F2272C812B554F50010A8B2 /* audio.png in Resources */,
 				1F2272C912B554F50010A8B2 /* display.png in Resources */,
@@ -2211,6 +2210,7 @@
 				1FF2F5B413AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3213B246FF0081F90B /* contacts.png in Resources */,
 				C71785FC13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1F2489E213FE781F007CDFD5 /* AudioSession.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2264,7 +2264,6 @@
 				1F8DC351135084FA0034815C /* DebugWindow.xib in Resources */,
 				1F8DC352135084FA0034815C /* PhotoPicker.xib in Resources */,
 				1F8DC353135084FA0034815C /* PhotoPicker.py in Resources */,
-				1F8DC354135084FA0034815C /* AudioSession.xib in Resources */,
 				1F8DC355135084FA0034815C /* SoundSetting.xib in Resources */,
 				1F8DC356135084FA0034815C /* audio.png in Resources */,
 				1F8DC357135084FA0034815C /* display.png in Resources */,
@@ -2392,6 +2391,7 @@
 				1FF2F5B213AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3013B246FF0081F90B /* contacts.png in Resources */,
 				C71785FE13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1F2489E013FE781F007CDFD5 /* AudioSession.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2445,7 +2445,6 @@
 				2B2409861022A05A00079580 /* DebugWindow.xib in Resources */,
 				2B240B731023AB1200079580 /* PhotoPicker.xib in Resources */,
 				2B240B771023CFAF00079580 /* PhotoPicker.py in Resources */,
-				2BA28D691028FD2800B99A0E /* AudioSession.xib in Resources */,
 				2B2392AF1039E69C00D9023B /* SoundSetting.xib in Resources */,
 				2B239608103B1C6600D9023B /* audio.png in Resources */,
 				2B23991F103C823D00D9023B /* display.png in Resources */,
@@ -2576,6 +2575,7 @@
 				1FF2F5B313AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3113B246FF0081F90B /* contacts.png in Resources */,
 				C71785FD13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2631,6 +2631,14 @@
 				1F0D0EC1132D231C00614205 /* English */,
 			);
 			name = ConferenceConfigurationPanel.xib;
+			sourceTree = "<group>";
+		};
+		1F2489DE13FE781F007CDFD5 /* AudioSession.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F2489DF13FE781F007CDFD5 /* English */,
+			);
+			name = AudioSession.xib;
 			sourceTree = "<group>";
 		};
 		1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */ = {
@@ -2767,14 +2775,6 @@
 				2B87529F10B5C29B002FD271 /* English */,
 			);
 			name = DesktopServerWindow.xib;
-			sourceTree = "<group>";
-		};
-		2BA28D671028FD2800B99A0E /* AudioSession.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				2BA28D681028FD2800B99A0E /* English */,
-			);
-			name = AudioSession.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38080FE088C70040117A /* AddContact.xib */ = {
