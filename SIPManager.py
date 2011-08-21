@@ -54,7 +54,7 @@ from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
 
-
+from interfaces.itunes import ITunesInterface
 
 STATUS_PHONE = "phone"
 
@@ -154,6 +154,9 @@ class SIPManager(object):
         self._version = None
         self.ip_address_monitor = IPAddressMonitor()
         self.ringer = Ringer(self)
+        self.incomingSessions = set()
+        self.activeAudioStreams = set()
+        self.pause_itunes = True
         
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
@@ -170,6 +173,13 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
+        self.notification_center.add_observer(self, name='SIPSessionDidStart')
+        self.notification_center.add_observer(self, name='SIPSessionDidFail')
+        self.notification_center.add_observer(self, name='SIPSessionGotProposal')
+        self.notification_center.add_observer(self, name='SIPSessionGotRejectProposal')
+        self.notification_center.add_observer(self, name='MediaStreamDidInitialize')
+        self.notification_center.add_observer(self, name='MediaStreamDidEnd')
+        self.notification_center.add_observer(self, name='MediaStreamDidFail')
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
 
     def set_delegate(self, delegate):
@@ -771,9 +781,11 @@ class SIPManager(object):
         self.ringer.start()
         self.ringer.update_ringtones()
 
+        settings = SIPSimpleSettings()
+        self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and NSApp.delegate().applicationName != 'Blink Lite' else False
+
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
-            settings = SIPSimpleSettings()
             for transport in settings.sip.transport_list:
                 try:
                     BlinkLogger().log_info(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
@@ -886,6 +898,9 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
             settings.save()
+        if 'audio.pause_itunes' in data.modified:
+            settings = SIPSimpleSettings()
+            self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and NSApp.delegate().applicationName != 'Blink Lite' else False
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
         account = sender.account
@@ -976,6 +991,13 @@ class SIPManager(object):
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
         BlinkLogger().log_info(u"Incoming session request from %s with %s streams" % (format_identity_address(session.remote_identity), ", ".join(s.type for s in data.streams)))
+
+        self.incomingSessions.add(session)
+
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            itunes_interface.pause()
+
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
         if not streams:
             BlinkLogger().log_info(u"Unsupported media type, session rejected")
@@ -996,6 +1018,54 @@ class SIPManager(object):
                 url = url.replace('$called_party', replace_account[5:])
                 BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+
+    def _NH_SIPSessionDidStart(self, session, data):
+        self.incomingSessions.discard(session)
+        if self.pause_itunes:
+            if all(stream.type != 'audio' for stream in data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface = ITunesInterface()
+                    itunes_interface.resume()
+
+    def _NH_SIPSessionGotProposal(self, session, data):
+        if self.pause_itunes:
+            if any(stream.type == 'audio' for stream in data.streams):
+                itunes_interface = ITunesInterface()
+                itunes_interface.pause()
+
+    def _NH_SIPSessionGotRejectProposal(self, session, data):
+        if self.pause_itunes:
+            if any(stream.type == 'audio' for stream in data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface = ITunesInterface()
+                    itunes_interface.resume()
+
+    def _NH_SIPSessionDidFail(self, session, data):
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            self.incomingSessions.discard(session)
+            if not self.activeAudioStreams and not self.incomingSessions:
+                itunes_interface.resume()
+
+    def _NH_MediaStreamDidInitialize(self, stream, data):
+        if stream.type == 'audio':
+            self.activeAudioStreams.add(stream)
+
+    def _NH_MediaStreamDidEnd(self, stream, data):
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            if stream.type == "audio":
+                self.activeAudioStreams.discard(stream)
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface.resume()
+
+    def _NH_MediaStreamDidFail(self, stream, data):
+        if self.pause_itunes:
+            itunes_interface = ITunesInterface()
+            if stream.type == "audio":
+                self.activeAudioStreams.discard(stream)
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    itunes_interface.resume()
 
     @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):

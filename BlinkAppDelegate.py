@@ -33,7 +33,6 @@ from EnrollmentController import EnrollmentController
 
 import PreferencesController
 from DesktopSharingController import DesktopSharingController
-from interfaces.itunes import ITunesInterface
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, call_in_gui_thread
 
@@ -43,6 +42,15 @@ def fourcharToInt(fourCharCode):
 
 
 class BlinkAppDelegate(NSObject):
+    '''Responsable for starting and stoping the application
+       Register URL types handled by Blink
+       Updating the dock icon with missed calls
+       Migrating data from one version to another
+       Start enrollment if run first time
+       Calling Initial SIP URL if necessary
+       Handle wakeup from sleep
+       Show about panel'''
+
     implements(IObserver)
 
     windowController = objc.IBOutlet()
@@ -52,13 +60,10 @@ class BlinkAppDelegate(NSObject):
     aboutVersion = objc.IBOutlet()
     aboutBundle = objc.IBOutlet()
     blinkMenu = objc.IBOutlet()
-    activeAudioStreams = set()
-    incomingSessions = set()
     ready = False
     missedCalls = 0
     missedChats = 0
     urisToOpen = []
-    pause_itunes = True
     
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -67,18 +72,10 @@ class BlinkAppDelegate(NSObject):
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
             
             nc = NotificationCenter()
-            nc.add_observer(self, name="CFGSettingsObjectDidChange")
-            nc.add_observer(self, name="SIPApplicationDidStart")
-            nc.add_observer(self, name="SIPSessionNewIncoming")
-            nc.add_observer(self, name="SIPSessionGotProposal")
-            nc.add_observer(self, name="SIPSessionGotRejectProposal")
-            nc.add_observer(self, name="SIPSessionDidFail")
-            nc.add_observer(self, name="SIPSessionDidStart")
-            nc.add_observer(self, name="MediaStreamDidInitialize")
-            nc.add_observer(self, name="MediaStreamDidEnd")
-            nc.add_observer(self, name="MediaStreamDidFail")
-
+            nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
+
+            DesktopSharingController.vncServerPort = 5900
 
             # Migrate configuration from Blink Lite to Blink Pro
             app_dir_name = (name for name in Resources.directory.split('/') if name.endswith('.app')).next()
@@ -160,7 +157,6 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationShouldHandleReopen_hasVisibleWindows_(self, sender, flag):
-
         if not flag:
             self.windowController.showWindow_(None)
         self.missedCalls = 0
@@ -172,11 +168,6 @@ class BlinkAppDelegate(NSObject):
         self.missedCalls = 0
         self.missedChats = 0
         self.updateDockTile()
-
-    def _NH_CFGSettingsObjectDidChange(self, notification):
-       settings = SIPSimpleSettings()
-       if notification.data.modified.has_key("audio.pause_itunes"):
-            self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
 
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationName)
@@ -201,8 +192,7 @@ class BlinkAppDelegate(NSObject):
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
                 if NSRunAlertPanel("Error Reading Configurations", 
-                    """The configuration file could not be read. The file could be corrupted or written by an older version of Blink.
-You might need to Replace it and re-enter your account information. Your old file will be backed up.""", 
+                    """The configuration file could not be read. The file could be corrupted or written by an older version of Blink. You might need to Replace it and re-enter your account information. Your old file will be backed up.""",
                     "Replace", "Quit", None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
@@ -218,7 +208,6 @@ You might need to Replace it and re-enter your account information. Your old fil
 
 
         # window should be shown only after enrollment check
-        # "pl do not show Main interface at the first start, just show the wizard"
         self.windowController.showWindow_(None)
 
         self.windowController.setupFinished()
@@ -236,7 +225,7 @@ You might need to Replace it and re-enter your account information. Your old fil
         time.sleep(4)
         import os
         import signal
-        print "Forcing termination of apparently hanged Blink process"
+        BlinkLogger().log_info(u"Forcing termination of apparently hanged Blink process")
         os.kill(os.getpid(), signal.SIGTERM)
 
     def applicationShouldTerminate_(self, sender):
@@ -253,68 +242,8 @@ You might need to Replace it and re-enter your account information. Your old fil
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def _NH_SIPApplicationDidStart(self, notification):
-        self.vncServerPort = 5900
-        DesktopSharingController.vncServerPort = self.vncServerPort
-        settings = SIPSimpleSettings()
-        self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and self.applicationName != 'Blink Lite' else False
-
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
-
-    def _NH_SIPSessionNewIncoming(self, notification):
-        self.incomingSessions.add(notification.sender)
-        if self.pause_itunes:
-            itunes_interface = ITunesInterface()
-            itunes_interface.pause()
-
-    def _NH_SIPSessionGotProposal(self, notification):
-        if self.pause_itunes:
-            if any(stream.type == 'audio' for stream in notification.data.streams):
-                itunes_interface = ITunesInterface()
-                itunes_interface.pause()
-
-    def _NH_SIPSessionGotRejectProposal(self, notification):
-        if self.pause_itunes:
-            if any(stream.type == 'audio' for stream in notification.data.streams):
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    itunes_interface = ITunesInterface()
-                    itunes_interface.resume()
-
-    def _NH_SIPSessionDidStart(self, notification):
-        self.incomingSessions.discard(notification.sender)
-        if self.pause_itunes:
-            if all(stream.type != 'audio' for stream in notification.data.streams):
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    itunes_interface = ITunesInterface()
-                    itunes_interface.resume()
-
-    def _NH_SIPSessionDidFail(self, notification):
-        if self.pause_itunes:
-            itunes_interface = ITunesInterface()
-            self.incomingSessions.discard(notification.sender)
-            if not self.activeAudioStreams and not self.incomingSessions:
-                itunes_interface.resume()
-
-    def _NH_MediaStreamDidInitialize(self, notification):
-        if notification.sender.type == 'audio':
-            self.activeAudioStreams.add(notification.sender)
-
-    def _NH_MediaStreamDidEnd(self, notification):
-        if self.pause_itunes:
-            itunes_interface = ITunesInterface()
-            if notification.sender.type == "audio":
-                self.activeAudioStreams.discard(notification.sender)
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    itunes_interface.resume()
-
-    def _NH_MediaStreamDidFail(self, notification):
-        if self.pause_itunes:
-            itunes_interface = ITunesInterface()
-            if notification.sender.type == "audio":
-                self.activeAudioStreams.discard(notification.sender)
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    itunes_interface.resume()
 
     def applicationWillTerminate_(self, notification):
         pass
