@@ -765,7 +765,7 @@ class SIPManager(object):
         settings.audio.sample_rate = 16000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
         settings.save()
-        BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % 'enabled' if settings.audio.enable_aec else 'disabled')
+        BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
 
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
