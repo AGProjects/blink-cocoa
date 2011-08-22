@@ -1317,11 +1317,7 @@ class ContactListModel(CustomListModel):
                             contact.save()
                         except DuplicateIDError:
                             pass
-
-        try:
-            os.unlink(path)
-        except:
-            pass
+        unlink(path)
 
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount():
