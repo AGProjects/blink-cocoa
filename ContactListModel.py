@@ -1281,9 +1281,12 @@ class ContactListModel(CustomListModel):
 
         BlinkLogger().log_info(u"Migrating old contacts to the new model...")
 
-        f = open(path, "r")
-        data = cPickle.load(f)
-        f.close()
+        try:
+            with open(path, 'r') as f:
+                data = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            BlinkLogger().log_info(u"Couldn't load old contacts")
+            return
 
         for group_item in data:
             if type(group_item) == tuple:
