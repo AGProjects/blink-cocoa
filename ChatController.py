@@ -912,8 +912,6 @@ class ChatController(MediaStream):
                 item.setEnabled_(True)
             elif identifier == 'video' and self.backend.isMediaTypeSupported('video'):
                 item.setEnabled_(True)
-                # TODO: enable video -adi
-                continue
                 if self.sessionController.hasStreamOfType("video"):
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
                         item.setToolTip_('Click to cancel the video call')
@@ -1021,8 +1019,6 @@ class ChatController(MediaStream):
             elif identifier == 'maximize' and self.video_frame_visible:
                 return True
             elif identifier == 'video' and self.backend.isMediaTypeSupported('video'):
-                return True
-                # TODO: enable video -adi
                 if self.sessionController.hasStreamOfType("video"):
                     if video_stream.status == STREAM_CONNECTED:
                         item.setToolTip_('Click to hangup the video call')

@@ -113,6 +113,14 @@ class ChatWindowController(NSWindowController):
 
             self.setOwnIcon()
 
+            if not SIPManager().isMediaTypeSupported('video'):
+                j = 0
+                for item in self.toolbar.visibleItems():
+                    if item.itemIdentifier() in ('video', 'maximize'):
+                        self.toolbar.removeItemAtIndex_(j)
+                    else:
+                        j += 1
+
         return self
 
     def setOwnIcon(self):

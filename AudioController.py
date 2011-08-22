@@ -678,8 +678,8 @@ class AudioController(MediaStream):
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
 
             item = menu.itemWithTag_(13) # Add Video
-            # TODO: enable video -adi
-            item.setEnabled_(False)
+            item.setEnabled_(can_propose and SIPManager().isMediaTypeSupported('video'))
+            item.setHidden_(not(SIPManager().isMediaTypeSupported('video')))
 
             title = self.sessionController.getTitleShort()
             have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")

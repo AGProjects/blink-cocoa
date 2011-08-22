@@ -43,7 +43,7 @@ from EnrollmentController import EnrollmentController
 from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionController
-from SIPManager import MWIData
+from SIPManager import SIPManager, MWIData
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import Resources
 from util import *
@@ -1731,9 +1731,12 @@ class ContactWindowController(NSWindowController):
         item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
         item.setEnabled_(self.backend.isMediaTypeSupported('file-transfer'))
 
-        item = self.statusMenu.itemWithTag_(54) # my video
+        item = self.statusMenu.itemWithTag_(60) # my video delimiter
+        item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
+
+        item = self.statusMenu.itemWithTag_(61) # my video
         item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
-        item.setEnabled_(False) # TODO: enable video -adi
+        item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
 
 
     def updateToolsMenu(self):
@@ -2355,7 +2358,7 @@ class ContactWindowController(NSWindowController):
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
             chat_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('chat'))
             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
-            video_item.setHidden_(True)
+            video_item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
             sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

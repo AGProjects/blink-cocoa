@@ -7,6 +7,9 @@ from QTKit import QTMovie
 
 class VideoView(NSView):
     # TODO: replace this view with an OpenGL view that can stream from pjmedia video buffer -adi
+    # http://webrtc.googlecode.com/svn/trunk/src/modules/video_render/main/source/mac/
+    # https://trac.pjsip.org/repos/wiki/ReleaseNotes-2.0
+
     delegate = None
     videoView = objc.IBOutlet()
     video_initialized = False

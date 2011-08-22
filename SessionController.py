@@ -37,7 +37,8 @@ SessionIdentifierSerial = 0
 StreamHandlerForType = {
     "chat" : ChatController,
     "audio" : AudioController,
-    "video" : VideoController,
+#    "video" : VideoController,  TODO: add video -adi
+    "video" : ChatController,
     "file-transfer" : FileTransferController,
     "desktop-sharing" : DesktopSharingController,
     "desktop-server" : DesktopSharingServerController,
