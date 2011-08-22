@@ -59,6 +59,10 @@ class BlinkAppDelegate(NSObject):
     migrationProgressWheel = objc.IBOutlet()
     aboutVersion = objc.IBOutlet()
     aboutBundle = objc.IBOutlet()
+    aboutSlogan = objc.IBOutlet()
+    aboutCredits = objc.IBOutlet()
+    aboutCopyright = objc.IBOutlet()
+
     blinkMenu = objc.IBOutlet()
     ready = False
     missedCalls = 0
