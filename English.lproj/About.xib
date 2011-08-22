@@ -166,13 +166,13 @@
 						<object class="NSTextField" id="847835958">
 							<reference key="NSNextResponder" ref="661994322"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{47, 320}, {251, 17}}</string>
+							<string key="NSFrame">{{17, 321}, {311, 16}}</string>
 							<reference key="NSSuperview" ref="661994322"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="534644642">
 								<int key="NSCellFlags">68288064</int>
-								<int key="NSCellFlags2">272630784</int>
+								<int key="NSCellFlags2">138413056</int>
 								<string key="NSContents">A state of the art, easy to use SIP client</string>
 								<object class="NSFont" key="NSSupport" id="258894516">
 									<string key="NSName">LucidaGrande</string>
@@ -330,10 +330,10 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 							<reference ref="329083180"/>
 							<reference ref="290987934"/>
 							<reference ref="785100316"/>
-							<reference ref="847835958"/>
 							<reference ref="115938858"/>
 							<reference ref="647659762"/>
 							<reference ref="598190755"/>
+							<reference ref="847835958"/>
 						</object>
 						<reference key="parent" ref="649789553"/>
 					</object>
@@ -479,7 +479,7 @@ IFNJUCBTSU1QTEUgQ2xpZW50IGh0dHA6Ly9zaXBzaW1wbGVjbGllbnQuY29tLw</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAABCPAAAw6eAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAABCPAAAw6dAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>

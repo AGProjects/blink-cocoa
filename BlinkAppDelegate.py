@@ -270,6 +270,12 @@ class BlinkAppDelegate(NSObject):
             elif self.applicationName == 'Blink Lite':
                 self.aboutBundle.setStringValue_("Lite")
                 self.aboutBundle.setHidden_(False)
+            elif self.applicationName == 'Blink Crypto':
+                self.aboutBundle.setStringValue_("Crypto")
+                self.aboutSlogan.setStringValue_("The Most Secure VoIP Client in the World")
+                self.aboutCredits.setAlignment_(NSCenterTextAlignment)
+                self.aboutCredits.setStringValue_("Brought to you by\n\nAG Projects\nhttp://ag-projects.com\n\nand\n\nPhil Zimmermann\nhttp://www.philzimmermann.com/")
+                self.aboutBundle.setHidden_(False)
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
@@ -313,6 +319,8 @@ class BlinkAppDelegate(NSObject):
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
             elif self.applicationName == 'Blink Lite':
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
+            elif self.applicationName == 'Blink Crypto':
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-crypto.phtml"))
             else:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
         elif sender.tag() == 3: # Donate

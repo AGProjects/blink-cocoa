@@ -761,6 +761,10 @@ class SIPManager(object):
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
         BlinkLogger().log_info(u"Starting SIP User Agent %s" % settings.user_agent)
 
+        if NSApp.delegate().applicationName == 'Blink Crypto':
+            settings.service_provider.name = 'Phil Zimmermann'
+            settings.service_provider.about_url = 'http://en.wikipedia.org/wiki/Phil_Zimmermann'
+
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 16000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
@@ -1007,7 +1011,7 @@ class SIPManager(object):
         session.blink_supported_streams = streams 
         self._delegate.handle_incoming_session(session, streams)
 
-        if NSApp.delegate().applicationName == 'Blink Pro':
+        if NSApp.delegate().applicationName != 'Blink Lite':
             settings = SIPSimpleSettings()
             if settings.server.alert_url:
                 url = unicode(settings.server.alert_url)

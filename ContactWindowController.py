@@ -274,8 +274,6 @@ class ContactWindowController(NSWindowController):
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
-        self.window().setTitle_(NSApp.delegate().applicationName)
-
         white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
         self.statusPopUp.removeAllItems()
 
@@ -316,6 +314,8 @@ class ContactWindowController(NSWindowController):
             item.setHidden_(True)
             item = self.statusMenu.itemWithTag_(55)
             item.setHidden_(True)
+
+        self.window().setTitle_(NSApp.delegate().applicationName)
 
         self.loaded = True
 
@@ -557,7 +557,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
-        if settings.service_provider.name:
+        if settings.service_provider.name and NSApp.delegate().applicationName != 'Blink Crypto':
             window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
             self.window().setTitle_(window_title)
 
@@ -1663,6 +1663,8 @@ class ContactWindowController(NSWindowController):
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-lite.phtml"))
         elif  NSApp.delegate().applicationName == 'Blink Pro':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-pro.phtml"))
+        elif  NSApp.delegate().applicationName == 'Blink Crypto':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-crypto.phtml"))
         else:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help.phtml"))
 
@@ -1671,7 +1673,7 @@ class ContactWindowController(NSWindowController):
 
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationName)
 
-        if NSApp.delegate().applicationName == 'Blink Pro':
+        if NSApp.delegate().applicationName in ('Blink Pro', 'Blink Crypto'):
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
