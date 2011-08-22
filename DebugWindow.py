@@ -182,6 +182,7 @@ class EngineLogger(NSObject, object):
             elif data.query_type == 'TXT':
                 for record in data.answer:
                     message += ", ".join(s for s in record.strings)
+                self.printXCAP_(message)
             elif data.query_type == 'SRV':
                 message += ", ".join('%d %d %d %s' % (record.priority, record.weight, record.port, record.target) for record in data.answer)
             elif data.query_type == 'NAPTR':
@@ -195,13 +196,8 @@ class EngineLogger(NSObject, object):
             message += ' failed: %s' % message_map.get(data.error.__class__, '')
         self.printDNS_(message)
 
-        if data.query_type == 'TXT':
-            self.printXCAP_('\n')
-            self.printXCAP_(message)
-
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
         account = notification.sender.account
-        self.printXCAP_("\n")
         if account.xcap.discovered:
             self.printXCAP_(u"%s Discovered XCAP root %s for account %s" % (notification.data.timestamp, notification.sender.client.root, account.id))
         else:
