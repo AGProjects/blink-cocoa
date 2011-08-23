@@ -1179,7 +1179,8 @@ class ContactListModel(CustomListModel):
 
         if NSApp.delegate().windowController.first_run:
             self.createInitialGroupAndContacts()
-            self._migrateContacts()
+
+        self._migrateContacts()
 
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30.0, self, "checkContactBackup:", None, False)
