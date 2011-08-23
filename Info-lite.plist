@@ -49,5 +49,7 @@
 	<string>MainWindow</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+        <key>NSUbiquitousDisplaySet</key>
+        <string>com.agprojects.Blink</string>
 </dict>
 </plist>
