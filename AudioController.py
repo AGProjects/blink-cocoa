@@ -30,6 +30,8 @@ from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
 
+from SessionInfoController import RingBuffer
+
 from resources import Resources
 from util import *
 
@@ -90,6 +92,7 @@ class AudioController(MediaStream):
     normal_height = 59
     zrtp_height = 118
 
+
     @classmethod
     def createStream(self, account):
         return AudioStream(account)
@@ -100,6 +103,10 @@ class AudioController(MediaStream):
         if self:
             self.last_latency = ''
             self.last_packet_loss = ''
+
+            self.latency_history = RingBuffer(600) # 10 minutes of history data for printing in Session Info graph
+            self.packet_loss_history = RingBuffer(600)
+
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, sender=self)
@@ -677,7 +684,8 @@ class AudioController(MediaStream):
                     status_data.loss = '%d %%' % pktloss
 
                 self.info.setStringValue_(", ".join(text))
-
+                self.latency_history.append(rtt or 0)
+                self.packet_loss_history.append(pktloss or 0)
             else:
                 self.info.setStringValue_("")
         else:
@@ -934,11 +942,22 @@ class AudioController(MediaStream):
                 self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.remote_rtp_address, self.stream.remote_rtp_port))
 
     @run_in_gui_thread
+    def _NH_MediaStreamDidFail(self, sender, data):
+        self.transfer_in_progress = False
+        self.ice_negotiation_status = None
+        self.holdByLocal = False
+        self.holdByRemote = False
+        self.latency_history = None
+        self.packet_loss_history = None
+
+    @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.transfer_in_progress = False
         self.ice_negotiation_status = None
         self.holdByLocal = False
         self.holdByRemote = False
+        self.latency_history = None
+        self.packet_loss_history = None
     
         self.sessionController.log_info( "Audio stream ended")
         if self.transfer_timer is not None and self.transfer_timer.isValid():
