@@ -98,7 +98,8 @@ class AudioController(MediaStream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
-            self.last_status = ''
+            self.last_latency = ''
+            self.last_packet_loss = ''
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, sender=self)
@@ -682,7 +683,10 @@ class AudioController(MediaStream):
         else:
             self.info.setStringValue_("")
 
-        self.notification_center.post_notification("AudioSessionInformationGotUpdated", sender=self, data=status_data)
+        if (self.last_latency != status_data.latency or self.last_packet_loss != status_data.loss):
+            self.last_latency = status_data.latency
+            self.last_packet_loss = status_data.loss
+            self.notification_center.post_notification("AudioSessionInformationGotUpdated", sender=self, data=status_data)
 
     def menuWillOpen_(self, menu):
         if menu == self.transferMenu:
