@@ -2,7 +2,6 @@ Main tasks
 ----------
 
 + Presence
-+ AEC
 + iOS port
 
 Measure keyboard/mouse idle time for presence
