@@ -62,6 +62,7 @@ class BlinkAppDelegate(NSObject):
     aboutSlogan = objc.IBOutlet()
     aboutCredits = objc.IBOutlet()
     aboutCopyright = objc.IBOutlet()
+    aboutzRTPIcon = objc.IBOutlet()
 
     blinkMenu = objc.IBOutlet()
     ready = False
@@ -272,10 +273,11 @@ class BlinkAppDelegate(NSObject):
                 self.aboutBundle.setHidden_(False)
             elif self.applicationName == 'Blink Crypto':
                 self.aboutBundle.setStringValue_("Crypto")
-                self.aboutSlogan.setStringValue_("The Most Secure VoIP Client in the World")
+                self.aboutSlogan.setStringValue_("VoIP Client with Guaranteed End-To-End Privacy")
                 self.aboutCredits.setAlignment_(NSCenterTextAlignment)
-                self.aboutCredits.setStringValue_("Brought to you by\n\nAG Projects\nhttp://ag-projects.com\n\nand\n\nPhil Zimmermann\nhttp://www.philzimmermann.com/")
+                self.aboutCredits.setStringValue_("Brought to you by:\n\nAG Projects\nhttp://ag-projects.com\n\nand\n\nPhilip R. Zimmermann\nhttp://www.philzimmermann.com/")
                 self.aboutBundle.setHidden_(False)
+                self.aboutzRTPIcon.setHidden_(False)
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 

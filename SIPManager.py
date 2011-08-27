@@ -762,8 +762,9 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Starting SIP User Agent %s" % settings.user_agent)
 
         if NSApp.delegate().applicationName == 'Blink Crypto':
-            settings.service_provider.name = 'Phil Zimmermann'
+            settings.service_provider.name = 'Philip R. Zimmermann'
             settings.service_provider.about_url = 'http://en.wikipedia.org/wiki/Phil_Zimmermann'
+            settings.service_provider.help_url = 'http://zfoneproject.com/faq.html'
 
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 16000

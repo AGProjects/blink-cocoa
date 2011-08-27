@@ -801,6 +801,9 @@
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
+		1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
+		1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
+		1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
 		1FCF118F1390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCF11901390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCF11911390EDE7001D1CAF /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
@@ -2607,6 +2610,7 @@
 				1FB22A0E140308950024F921 /* zrtp-security-failed.wav in Resources */,
 				1F5C06D914041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0763140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2792,6 +2796,7 @@
 				1FB22A10140308950024F921 /* zrtp-security-failed.wav in Resources */,
 				1F5C06DA14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0762140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3166,6 +3171,7 @@
 				1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1F5C06D814041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0764140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

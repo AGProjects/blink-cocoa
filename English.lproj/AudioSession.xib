@@ -12,6 +12,7 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
+			<integer value="1"/>
 			<integer value="53"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -39,7 +40,7 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSCustomView" id="1005">
-				<nil key="NSNextResponder"/>
+				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">268</int>
 				<object class="NSMutableArray" key="NSSubviews">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -520,6 +521,7 @@
 					</object>
 				</object>
 				<string key="NSFrameSize">{212, 118}</string>
+				<reference key="NSSuperview"/>
 				<string key="NSClassName">AudioSession</string>
 			</object>
 			<object class="NSMenu" id="590086273">
@@ -872,14 +874,6 @@
 					<int key="connectionID">131</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZRTPInfoButton:</string>
-						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="432417747"/>
-					</object>
-					<int key="connectionID">140</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">zRTPVerifyButton</string>
 						<reference key="source" ref="1001"/>
@@ -926,6 +920,14 @@
 						<reference key="destination" ref="242589564"/>
 					</object>
 					<int key="connectionID">161</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedSessionInfoButton:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="432417747"/>
+					</object>
+					<int key="connectionID">163</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -1505,7 +1507,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">162</int>
+			<int key="maxID">163</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1518,9 +1520,9 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>userClickedAudioButton:</string>
+							<string>userClickedSessionInfoButton:</string>
 							<string>userClickedSessionMenuItem:</string>
 							<string>userClickedTransferMenuItem:</string>
-							<string>userClickedZRTPInfoButton:</string>
 							<string>userClickedZRTPVerifyButton:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -1537,9 +1539,9 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>userClickedAudioButton:</string>
+							<string>userClickedSessionInfoButton:</string>
 							<string>userClickedSessionMenuItem:</string>
 							<string>userClickedTransferMenuItem:</string>
-							<string>userClickedZRTPInfoButton:</string>
 							<string>userClickedZRTPVerifyButton:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -1549,15 +1551,15 @@
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
+								<string key="name">userClickedSessionInfoButton:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
 								<string key="name">userClickedSessionMenuItem:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">userClickedTransferMenuItem:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">userClickedZRTPInfoButton:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
