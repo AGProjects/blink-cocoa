@@ -41,7 +41,7 @@ PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
 PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
-
+PARTICIPANTS_MENU_SHOW_SESSION_INFO = 400
 
 class ChatWindowController(NSWindowController):
     implements(IObserver)
@@ -496,6 +496,8 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(False)
+
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
             remote_uri = format_identity_address(session.remotePartyObject)
@@ -513,6 +515,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session.state == 'connected' else False)
 
     def sharedFileSelectionChanged_(self, notification):
         # TODO: When/if more items are added to this menu, save item tags as module level variables
@@ -735,6 +738,8 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "chat")
             elif tag == PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
+            elif tag == PARTICIPANTS_MENU_SHOW_SESSION_INFO:
+                session.show_info_panel()
 
     @objc.IBAction
     def userClickedSharedFileMenu_(self, sender):

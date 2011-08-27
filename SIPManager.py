@@ -961,8 +961,8 @@ class SIPManager(object):
             return False
 
         if 'video' in stream_type_list:
-            # TODO: enable Video
-            return True
+            # TODO: enable Video -adi
+            return False
 
         return True
 
@@ -987,8 +987,8 @@ class SIPManager(object):
             return False
 
         if type == 'video':
-            # TODO: enable Video
-            return True
+            # TODO: enable Video -adi
+            return False
 
         return True
 

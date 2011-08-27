@@ -27,6 +27,7 @@ from ChatController import ChatController, userClickedToolbarButtonWhileDisconne
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
 from FileTransferController import FileTransferController
 
+from SessionInfoPanelController import SessionInfoPanelController
 from SIPManager import SIPManager
 from interfaces.itunes import ITunesInterface
 from util import *
@@ -89,6 +90,7 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
+        self.info_panel = SessionInfoPanelController(self)
 
         # used for accounting
         self.streams_log = []
@@ -120,6 +122,7 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
+        self.info_panel = SessionInfoPanelController(self)
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -221,6 +224,7 @@ class SessionController(NSObject):
             self.log_info("Removing %s stream from session" % streamHandler.stream.type)
             try:
                 self.session.remove_stream(streamHandler.stream)
+                self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
                 return True
             except IllegalStateError, e:
                 self.log_info("IllegalStateError: %s" % e)
@@ -288,7 +292,7 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.streams_log = []
         self.remote_conference_has_audio = False
-
+        self.info_panel = None
 
     def initializeSessionWithAccount(self, account):
         if self.session is None:
@@ -358,6 +362,8 @@ class SessionController(NSObject):
                 except IllegalStateError, e:
                     self.log_info("IllegalStateError: %s" % e)
                     return False
+            self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+        
         return True
 
     def startSessionWithStreamOfType(self, stype, kwargs={}): # pyobjc doesn't like **kwargs
@@ -422,6 +428,11 @@ class SessionController(NSObject):
     def addRemoteDesktopToSession(self):
         if not self.hasStreamOfType("desktop"):
             self.startSessionWithStreamOfType("desktop-viewer")
+
+    def show_info_panel(self):
+        if self.info_panel is None:
+            self.info_panel = SessionInfoPanelController(self)
+        self.info_panel.show()
 
     def getTitle(self):
         return format_identity(self.remotePartyObject)
@@ -587,6 +598,7 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.streams_log = []
         self.remote_conference_has_audio = False
+        self.info_panel = None
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
@@ -609,6 +621,10 @@ class SessionController(NSObject):
                 else:
                     self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
+        if self.info_panel is not None:
+            self.info_panel.close()
+            self.info_panel = None
+
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.changeSessionState(STATE_FINISHED, data.originator)
         self.log_info("Session ended")
@@ -629,6 +645,10 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+
+        if self.info_panel is not None:
+            self.info_panel.close()
+            self.info_panel = None
 
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True
@@ -715,6 +735,7 @@ class SessionController(NSObject):
         if data.action == 'remove' and not sender.streams:
             self.log_info("There are no streams anymore, ending the session")
             self.end()
+        self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
         self.log_info(u"Received conference-info update")
@@ -746,7 +767,7 @@ class SessionController(NSObject):
                 self.conference_shared_files.append(file)
 
         # notify controllers who need conference information
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=data)
 
     def _NH_SIPConferenceDidAddParticipant(self, sender, data):
         self.log_info(u"Added participant to conference: %s" % data.participant)

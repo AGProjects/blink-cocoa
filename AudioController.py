@@ -98,12 +98,17 @@ class AudioController(MediaStream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
+            self.last_status = ''
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
+            self.notification_center.add_observer(self, sender=self)
             self.notification_center.add_observer(self, sender=self.sessionController)
 
+            self.ice_negotiation_status = u'Disabled' if not self.sessionController.account.nat_traversal.use_ice else None
+
             NSBundle.loadNibNamed_owner_("AudioSession", self)
-            self.setNormalViewHeight(self.view.frame())
+            if NSApp.delegate().applicationName != 'Blink Crypto':
+                self.setNormalViewHeight(self.view.frame())
 
             item = self.view.menu().itemWithTag_(20) # add to contacts
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
@@ -625,10 +630,16 @@ class AudioController(MediaStream):
     def updateTimeElapsed(self):
         if not self.session:
             return
+
+        status_data = TimestampedNotificationData()
+        status_data.loss = ''
+        status_data.latency = ''
+
         if self.session.end_time:
             now = self.session.end_time
         else:
             now = datetime.datetime(*time.localtime()[:6])
+
         if self.session.start_time and now >= self.session.start_time:
             elapsed = now - self.session.start_time
             h = elapsed.seconds / (60*60)
@@ -649,16 +660,29 @@ class AudioController(MediaStream):
                     pktloss = 100
                 text = []
                 if rtt > 1000:
-                    text.append('Latency %.1fs' % (float(rtt)/1000.0))
+                    latency = '%.1f' % (float(rtt)/1000.0)
+                    text.append('Latency %ss' % latency)
+                    status_data.latency = '%s s' % latency
                 elif rtt > 100:
                     text.append('Latency %dms' % rtt)
+                    status_data.latency = '%d ms' % rtt
+                else:
+                    status_data.latency = '%d ms' % rtt
+
                 if pktloss > 3:
                     text.append('Packet Loss %d%%' % pktloss)
+                    status_data.loss = '%d %%' % pktloss
+                else:
+                    status_data.loss = '%d %%' % pktloss
+
                 self.info.setStringValue_(", ".join(text))
+
             else:
                 self.info.setStringValue_("")
         else:
             self.info.setStringValue_("")
+
+        self.notification_center.post_notification("AudioSessionInformationGotUpdated", sender=self, data=status_data)
 
     def menuWillOpen_(self, menu):
         if menu == self.transferMenu:
@@ -689,6 +713,9 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(12)
             item.setTitle_("Share My Screen with %s" % title)
             item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-server'))
+
+            item = menu.itemWithTag_(30)
+            item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state == 'connected' else False)
 
     def toggleHeight(self):
         frame = self.view.frame()
@@ -727,6 +754,8 @@ class AudioController(MediaStream):
                 display_name = None
             NSApp.delegate().windowController.addContact(self.sessionController.target_uri, display_name)
             sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
+        elif tag == 30: #
+            self.sessionController.show_info_panel()
 
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
@@ -735,8 +764,8 @@ class AudioController(MediaStream):
         self.sessionController.transferSession(target_session_controller.target_uri, target_session_controller)
 
     @objc.IBAction
-    def userClickedZRTPInfoButton_(self, sender):
-        pass
+    def userClickedSessionInfoButton_(self, sender):
+        self.sessionController.show_info_panel()
 
     @objc.IBAction
     def userClickedZRTPVerifyButton_(self, sender):
@@ -843,6 +872,12 @@ class AudioController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
+        self.ice_negotiation_status = 'Failed'
+
+    def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
+        self.ice_negotiation_status = 'Success'
+
     def _NH_BlinkAudioStreamUnholdRequested(self, sender, data):
         if sender is self or (sender.isConferencing and self.isConferencing):
             return
@@ -897,6 +932,10 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.transfer_in_progress = False
+        self.ice_negotiation_status = None
+        self.holdByLocal = False
+        self.holdByRemote = False
+    
         self.sessionController.log_info( "Audio stream ended")
         if self.transfer_timer is not None and self.transfer_timer.isValid():
             self.transfer_timer.invalidate()
