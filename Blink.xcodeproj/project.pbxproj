@@ -264,10 +264,10 @@
 		1F5C06D914041B9E001DA3EF /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
 		1F5C06DA14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
 		1F5C06DB14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
-		1F5C0761140436E4001DA3EF /* SessionInfoPanelController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoPanelController.py */; };
-		1F5C0762140436E4001DA3EF /* SessionInfoPanelController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoPanelController.py */; };
-		1F5C0763140436E4001DA3EF /* SessionInfoPanelController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoPanelController.py */; };
-		1F5C0764140436E4001DA3EF /* SessionInfoPanelController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoPanelController.py */; };
+		1F5C0761140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
+		1F5C0762140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
+		1F5C0763140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
+		1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
 		1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
@@ -1476,7 +1476,7 @@
 		1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "test@conference.sip2sip.info.tiff"; path = "icons/test@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F5677C01323DDDD00D087D1 /* transfer.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = transfer.png; path = icons/transfer.png; sourceTree = "<group>"; };
 		1F5C06D214041B98001DA3EF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
-		1F5C0760140436E4001DA3EF /* SessionInfoPanelController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoPanelController.py; sourceTree = "<group>"; };
+		1F5C0760140436E4001DA3EF /* SessionInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoController.py; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
@@ -2202,7 +2202,7 @@
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
 				2B240839102117F200079580 /* SessionRinger.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
-				1F5C0760140436E4001DA3EF /* SessionInfoPanelController.py */,
+				1F5C0760140436E4001DA3EF /* SessionInfoController.py */,
 				1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */,
 				2BFB34B110178A43002D79FB /* AlertPanel */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
@@ -2609,7 +2609,7 @@
 				1FB22A0D140308950024F921 /* zrtp-securemode.wav in Resources */,
 				1FB22A0E140308950024F921 /* zrtp-security-failed.wav in Resources */,
 				1F5C06D914041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
-				1F5C0763140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1F5C0763140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2795,7 +2795,7 @@
 				1FB22A0F140308950024F921 /* zrtp-securemode.wav in Resources */,
 				1FB22A10140308950024F921 /* zrtp-security-failed.wav in Resources */,
 				1F5C06DA14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
-				1F5C0762140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1F5C0762140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2984,7 +2984,7 @@
 				1FB22A0B140308950024F921 /* zrtp-securemode.wav in Resources */,
 				1FB22A0C140308950024F921 /* zrtp-security-failed.wav in Resources */,
 				1F5C06DB14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
-				1F5C0761140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1F5C0761140436E4001DA3EF /* SessionInfoController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3170,7 +3170,7 @@
 				C71785FD13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
 				1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1F5C06D814041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
-				1F5C0764140436E4001DA3EF /* SessionInfoPanelController.py in Resources */,
+				1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

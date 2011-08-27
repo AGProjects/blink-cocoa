@@ -27,7 +27,7 @@ from ChatController import ChatController, userClickedToolbarButtonWhileDisconne
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
 from FileTransferController import FileTransferController
 
-from SessionInfoPanelController import SessionInfoPanelController
+from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from interfaces.itunes import ITunesInterface
 from util import *
@@ -90,7 +90,7 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
-        self.info_panel = SessionInfoPanelController(self)
+        self.info_panel = SessionInfoController(self)
 
         # used for accounting
         self.streams_log = []
@@ -122,7 +122,7 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
-        self.info_panel = SessionInfoPanelController(self)
+        self.info_panel = SessionInfoController(self)
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -431,7 +431,7 @@ class SessionController(NSObject):
 
     def show_info_panel(self):
         if self.info_panel is None:
-            self.info_panel = SessionInfoPanelController(self)
+            self.info_panel = SessionInfoController(self)
         self.info_panel.show()
 
     def getTitle(self):

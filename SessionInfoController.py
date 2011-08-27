@@ -15,7 +15,7 @@ from util import *
 from MediaStream import *
 
 
-class SessionInfoPanelController(NSObject):
+class SessionInfoController(NSObject):
     implements(IObserver)
 
     window = objc.IBOutlet()
