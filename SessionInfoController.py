@@ -32,6 +32,7 @@ class SessionInfoController(NSObject):
     conference = objc.IBOutlet()
     remote_endpoint = objc.IBOutlet()
     local_endpoint = objc.IBOutlet()
+    tls_lock = objc.IBOutlet()
 
     audio_status = objc.IBOutlet()
     audio_srtp_active = objc.IBOutlet()
@@ -46,10 +47,12 @@ class SessionInfoController(NSObject):
     audio_packet_loss = objc.IBOutlet()
     audio_rtt_graph = objc.IBOutlet()
     audio_packet_loss_graph = objc.IBOutlet()
+    audio_srtp_lock = objc.IBOutlet()
 
     chat_local_endpoint = objc.IBOutlet()
     chat_remote_endpoint = objc.IBOutlet()
     chat_connection_mode = objc.IBOutlet()
+    chat_tls_lock = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -193,6 +196,7 @@ class SessionInfoController(NSObject):
                 self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
                 local_contact = self.sessionController.account.contact[transport]
                 self.local_endpoint.setStringValue_('%s:%s:%d' % (transport, local_contact.host, local_contact.port))
+                self.tls_lock.setHidden_(False if transport == 'tls' else True)
 
     def updateAudio(self):
         if self.audio_stream is None or self.audio_stream.stream is None:
@@ -206,10 +210,12 @@ class SessionInfoController(NSObject):
                 self.audio_codec.setStringValue_(self.audio_stream.stream.codec)
                 self.audio_sample_rate.setStringValue_("%0.fkHz" % (self.audio_stream.stream.sample_rate/1000))
                 self.audio_srtp_active.setStringValue_('Enable' if self.audio_stream.stream.srtp_active else 'Disabled')
+                self.audio_srtp_lock.setHidden_(False if self.audio_stream.stream.srtp_active else True)
             else:   
                 self.audio_codec.setStringValue_('')
                 self.audio_sample_rate.setStringValue_('')
                 self.audio_srtp_active.setStringValue_('')
+                self.audio_srtp_lock.setHidden_(True)
                               
             self.audio_local_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.local_rtp_address, self.audio_stream.stream.local_rtp_port) if self.audio_stream.stream.local_rtp_address else '')
             self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
