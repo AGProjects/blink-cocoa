@@ -52,6 +52,8 @@ class SessionInfoController(NSObject):
     audio_packet_loss = objc.IBOutlet()
     audio_rtt_graph = objc.IBOutlet()
     audio_packet_loss_graph = objc.IBOutlet()
+    audio_jitter = objc.IBOutlet()
+    audio_jitter_graph = objc.IBOutlet()
     audio_srtp_lock = objc.IBOutlet()
 
     chat_local_endpoint = objc.IBOutlet()
@@ -98,6 +100,11 @@ class SessionInfoController(NSObject):
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
         self.audio_rtt_graph.setAboveLimit_(200)
+
+        self.audio_jitter_graph.setDataQueue_([])
+        self.audio_jitter_graph.setLineWidth_(1.0)
+        self.audio_jitter_graph.setLineSpacing_(1.0)
+        self.audio_jitter_graph.setAboveLimit_(100)
 
         self.resetSession()
         self.resetAudio()
@@ -175,6 +182,7 @@ class SessionInfoController(NSObject):
         self.audio_ice_remote_candidate.setStringValue_('')
         self.audio_rtt.setStringValue_('')
         self.audio_packet_loss.setStringValue_('')
+        self.audio_jitter.setStringValue_('')
 
     def resetChat(self):
         self.chat_local_endpoint.setStringValue_('')
@@ -277,6 +285,7 @@ class SessionInfoController(NSObject):
         if self.audio_stream:
             self.audio_rtt_graph.setDataQueue_(self.audio_stream.latency_history)
             self.audio_packet_loss_graph.setDataQueue_(self.audio_stream.packet_loss_history)
+            self.audio_jitter_graph.setDataQueue_(self.audio_stream.jitter_history)
 
     def updateDuration(self):
         if self.sessionController is not None and self.sessionController.session is not None:
@@ -312,6 +321,7 @@ class SessionInfoController(NSObject):
     def _NH_AudioSessionInformationGotUpdated(self, notification):
         self.audio_rtt.setStringValue_(notification.data.latency if self.audio_stream.last_latency!= '0 ms' else '')
         self.audio_packet_loss.setStringValue_(notification.data.loss)
+        self.audio_jitter.setStringValue_(notification.data.jitter)
 
     @run_in_gui_thread
     def _NH_BlinkSessionChangedState(self, notification):

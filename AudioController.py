@@ -104,9 +104,11 @@ class AudioController(MediaStream):
         if self:
             self.last_latency = ''
             self.last_packet_loss = ''
+            self.last_jitter = ''
 
             self.latency_history = RingBuffer(600) # 10 minutes of history data for printing in Session Info graph
             self.packet_loss_history = RingBuffer(600)
+            self.jitter_history = RingBuffer(600)
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
@@ -646,6 +648,7 @@ class AudioController(MediaStream):
         status_data = TimestampedNotificationData()
         status_data.loss = ''
         status_data.latency = ''
+        status_data.jitter = ''
 
         if self.session.end_time:
             now = self.session.end_time
@@ -665,11 +668,12 @@ class AudioController(MediaStream):
         if self.stream:
             stats = self.stream.statistics
             if stats is not None:
+                jitter = float(stats['rx']['jitter']['avg']) / 1000 + float(stats['tx']['jitter']['avg']) / 1000
                 rtt = stats['rtt']['avg'] / 1000
                 pktloss = 100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
                 # pjsip reports wrong values sometime, which leads to more than 100% loss
                 if pktloss > 100:
-                    pktloss = 100
+                    pktloss = 100.0
                 text = []
                 if rtt > 1000:
                     latency = '%.1f' % (float(rtt)/1000.0)
@@ -685,18 +689,21 @@ class AudioController(MediaStream):
                     text.append('Packet Loss %d%%' % pktloss)
 
                 status_data.loss = '%.1f %%' % pktloss
+                status_data.jitter = '%.1f ms' % jitter
 
                 self.info.setStringValue_(", ".join(text))
                 self.latency_history.append(rtt or 0)
+                self.jitter_history.append(jitter or 0)
                 self.packet_loss_history.append(pktloss or 0)
             else:
                 self.info.setStringValue_("")
         else:
             self.info.setStringValue_("")
 
-        if (self.last_latency != status_data.latency or self.last_packet_loss != status_data.loss):
+        if (self.last_latency != status_data.latency or self.last_packet_loss != status_data.loss or self.last_jitter != status_data.jitter):
             self.last_latency = status_data.latency
             self.last_packet_loss = status_data.loss
+            self.last_jitter = status_data.jitter
             self.notification_center.post_notification("AudioSessionInformationGotUpdated", sender=self, data=status_data)
 
     def menuWillOpen_(self, menu):
@@ -955,6 +962,7 @@ class AudioController(MediaStream):
         self.holdByRemote = False
         self.latency_history = None
         self.packet_loss_history = None
+        self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
 
     @run_in_gui_thread
