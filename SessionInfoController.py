@@ -199,7 +199,7 @@ class SessionInfoController(NSObject):
             self.resetAudio()
         else:
             self.updateAudioStatus()
-            self.audio_rtt.setStringValue_(self.audio_stream.last_latency)
+            self.audio_rtt.setStringValue_(self.audio_stream.last_latency if self.audio_stream.last_latency!= '0 ms' else '')
             self.audio_packet_loss.setStringValue_(self.audio_stream.last_packet_loss)
 
             if self.audio_stream.stream.sample_rate and self.audio_stream.stream.codec:
@@ -274,7 +274,7 @@ class SessionInfoController(NSObject):
             
     @run_in_gui_thread
     def _NH_AudioSessionInformationGotUpdated(self, notification):
-        self.audio_rtt.setStringValue_(notification.data.latency)
+        self.audio_rtt.setStringValue_(notification.data.latency if self.audio_stream.last_latency!= '0 ms' else '')
         self.audio_packet_loss.setStringValue_(notification.data.loss)
 
     @run_in_gui_thread
