@@ -55,6 +55,8 @@ class SessionInfoController(NSObject):
         return cls.alloc().init()
 
     def __init__(self, sessionController):
+        self.visible = False
+
         self.notification_center = NotificationCenter()
         self.sessionController = sessionController
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -331,9 +333,21 @@ class SessionInfoController(NSObject):
 
     def show(self):
         self.window.makeKeyAndOrderFront_(None)
+        self.notification_center.post_notification("SessionInfoPanelIsVisible", sender=self.sessionController)
+
+    def hide(self):
+        self.window.orderOut_(None)
+        self.notification_center.post_notification("SessionInfoPanelIsHidden", sender=self.sessionController)
+
+    def toggle(self):
+        if self.window.isVisible():
+            self.hide()
+        else:
+            self.show()
 
     def windowShouldClose_(self, sender):
         self.window.orderOut_(None)
+        self.notification_center.post_notification("SessionInfoPanelIsHidden", sender=self.sessionController)
 
     def close(self):
         self.timer.invalidate()
@@ -346,6 +360,8 @@ class SessionInfoController(NSObject):
         self.audio_packet_loss_buffer = None
         self.audio_rtt_buffer = None
         self.window.orderOut_(None)
+        self.notification_center.post_notification("SessionInfoPanelIsHidden", sender=self.sessionController)
+        self.visible = False
 
 
 class CBGraphView(NSView):
@@ -432,7 +448,7 @@ class CBGraphView(NSView):
         self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
         
         self.borderColor.set() # set border to white
-        NSBezierPath.setDefaultLineWidth_(3.0) # set line width for outline
+        NSBezierPath.setDefaultLineWidth_(1.0) # set line width for outline
         NSBezierPath.strokeRect_(bounds) # draw outline
 
         NSBezierPath.clipRect_(insetBounds) # set the clipping path

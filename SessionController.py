@@ -434,6 +434,10 @@ class SessionController(NSObject):
             self.info_panel = SessionInfoController(self)
         self.info_panel.show()
 
+    def hide_info_panel(self):
+        if self.info_panel is not None:
+            self.info_panel.hide()
+
     def getTitle(self):
         return format_identity(self.remotePartyObject)
 

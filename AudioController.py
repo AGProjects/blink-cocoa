@@ -55,6 +55,7 @@ class AudioController(MediaStream):
     elapsed = objc.IBOutlet()
     info = objc.IBOutlet()
 
+    sessionInfoButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
     srtpIcon = objc.IBOutlet()
     tlsIcon = objc.IBOutlet()
@@ -142,6 +143,9 @@ class AudioController(MediaStream):
             else:
                 self.transferSegmented.setHidden_(True)
                 self.audioSegmented.setHidden_(False)
+
+            self.sessionInfoButton.setEnabled_(True if scontroller.session.state == 'connected' else False)
+            self.sessionInfoButton.setState_(NSOnState if scontroller.info_panel.window.isVisible() else NSOffState)
 
         return self
 
@@ -728,6 +732,7 @@ class AudioController(MediaStream):
 
             item = menu.itemWithTag_(30)
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state == 'connected' else False)
+            item.setTitle_('Hide Session Information' if self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
 
     def toggleHeight(self):
         frame = self.view.frame()
@@ -767,7 +772,7 @@ class AudioController(MediaStream):
             NSApp.delegate().windowController.addContact(self.sessionController.target_uri, display_name)
             sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
         elif tag == 30: #
-            self.sessionController.show_info_panel()
+            self.sessionController.info_panel.toggle()
 
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
@@ -777,7 +782,7 @@ class AudioController(MediaStream):
 
     @objc.IBAction
     def userClickedSessionInfoButton_(self, sender):
-        self.sessionController.show_info_panel()
+        self.sessionController.info_panel.toggle()
 
     @objc.IBAction
     def userClickedZRTPVerifyButton_(self, sender):
@@ -941,6 +946,8 @@ class AudioController(MediaStream):
             else:
                 self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.remote_rtp_address, self.stream.remote_rtp_port))
 
+        self.sessionInfoButton.setEnabled_(True)
+
     @run_in_gui_thread
     def _NH_MediaStreamDidFail(self, sender, data):
         self.transfer_in_progress = False
@@ -949,6 +956,7 @@ class AudioController(MediaStream):
         self.holdByRemote = False
         self.latency_history = None
         self.packet_loss_history = None
+        self.sessionInfoButton.setEnabled_(False)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -958,6 +966,7 @@ class AudioController(MediaStream):
         self.holdByRemote = False
         self.latency_history = None
         self.packet_loss_history = None
+        self.sessionInfoButton.setEnabled_(False)
     
         self.sessionController.log_info( "Audio stream ended")
         if self.transfer_timer is not None and self.transfer_timer.isValid():
@@ -982,6 +991,14 @@ class AudioController(MediaStream):
         elif data.state == 'ICE Negotiation In Progress':
             self.audioStatus.setStringValue_("Negotiating ICE...")
         self.audioStatus.sizeToFit()
+
+    @run_in_gui_thread
+    def _NH_SessionInfoPanelIsVisible(self, sender, data):
+        self.sessionInfoButton.setState_(NSOnState)
+
+    @run_in_gui_thread
+    def _NH_SessionInfoPanelIsHidden(self, sender, data):
+        self.sessionInfoButton.setState_(NSOffState)
 
     @run_in_gui_thread
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):

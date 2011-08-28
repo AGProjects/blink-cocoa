@@ -496,7 +496,6 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
-            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(False)
 
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
@@ -515,7 +514,6 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
-            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session.state == 'connected' else False)
 
     def sharedFileSelectionChanged_(self, notification):
         # TODO: When/if more items are added to this menu, save item tags as module level variables
@@ -696,6 +694,17 @@ class ChatWindowController(NSWindowController):
             uri = object.uri
             self.removeParticipant(uri)
 
+    def menuWillOpen_(self, menu):
+        if menu == self.participantMenu:
+            session = self.selectedSessionController()
+            if session:
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session.state == 'connected' else False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setTitle_('Hide Session Information' if session.info_panel.window.isVisible() else 'Show Session Information')
+            else:
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setTitle_('Show Session Information')
+
+
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
         session = self.selectedSessionController()
@@ -739,7 +748,7 @@ class ChatWindowController(NSWindowController):
             elif tag == PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
             elif tag == PARTICIPANTS_MENU_SHOW_SESSION_INFO:
-                session.show_info_panel()
+                session.info_panel.toggle()
 
     @objc.IBAction
     def userClickedSharedFileMenu_(self, sender):
