@@ -91,20 +91,22 @@ class SessionInfoController(NSObject):
         chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Chat MSRP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.chatBox.setTitle_(chatBoxTitle)       
 
-        self.audio_packet_loss_graph.setDataQueue_([])
-        self.audio_packet_loss_graph.setLineWidth_(1.0)
-        self.audio_packet_loss_graph.setLineSpacing_(1.0)
-        self.audio_packet_loss_graph.setAboveLimit_(4)
-
         self.audio_rtt_graph.setDataQueue_([])
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
-        self.audio_rtt_graph.setAboveLimit_(200)
+        self.audio_rtt_graph.setAboveLimit_(200) # if higher than 200 ms show red color
+
+        self.audio_packet_loss_graph.setDataQueue_([])
+        self.audio_packet_loss_graph.setLineWidth_(1.0)
+        self.audio_packet_loss_graph.setLineSpacing_(1.0)
+        self.audio_packet_loss_graph.setAboveLimit_(3) # if higher than 3% show red color
+        self.audio_packet_loss_graph.setLineColor_(NSColor.greenColor())
 
         self.audio_jitter_graph.setDataQueue_([])
         self.audio_jitter_graph.setLineWidth_(1.0)
         self.audio_jitter_graph.setLineSpacing_(1.0)
-        self.audio_jitter_graph.setAboveLimit_(100)
+        self.audio_jitter_graph.setAboveLimit_(50) # if higher than 50 ms show red color
+        self.audio_jitter_graph.setLineColor_(NSColor.yellowColor())
 
         self.resetSession()
         self.resetAudio()
@@ -435,7 +437,7 @@ class CBGraphView(NSView):
         if self:
             self.gradientGray = NSColor.colorWithCalibratedRed_green_blue_alpha_(50/255.0, 50/255.0, 50/255.0, 1.0)
             self.lineColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(33/255.0, 104/255.0, 198/255.0, 1.0)
-            self.lineColorAboveLimit = NSColor.orangeColor()
+            self.lineColorAboveLimit = NSColor.redColor()
             self.borderColor = NSColor.whiteColor()
 
             self.grad = NSGradient.alloc().initWithStartingColor_endingColor_(NSColor.blackColor(), self.gradientGray)
