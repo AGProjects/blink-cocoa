@@ -15,6 +15,11 @@ from util import *
 
 from MediaStream import *
 
+ice_candidates= {'srflx': 'Server Reflexive',
+                 'prflx': 'Peer Reflexive',
+                 'host': 'Host',
+                 'relay': 'Server Relay'
+                 }
 
 class SessionInfoController(NSObject):
     implements(IObserver)
@@ -221,13 +226,38 @@ class SessionInfoController(NSObject):
             self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
 
             if self.audio_stream.stream.ice_active:
-                self.audio_ice_local_candidate.setStringValue_(self.audio_stream.stream.local_rtp_candidate_type.capitalize())
-                self.audio_ice_remote_candidate.setStringValue_(self.audio_stream.stream.local_rtp_candidate_type.capitalize())
+                if self.audio_stream.stream.local_rtp_candidate_type is not None:
+                    try:
+                        candidate = ice_candidates[self.audio_stream.stream.local_rtp_candidate_type]
+                    except KeyError:
+                        candidate = self.audio_stream.stream.local_rtp_candidate_type.capitalize()
+                else:
+                    candidate = ''
+
+                self.audio_ice_local_candidate.setStringValue_(candidate)
+
+                if self.audio_stream.stream.remote_rtp_candidate_type is not None:
+                    try:
+                        candidate = ice_candidates[self.audio_stream.stream.remote_rtp_candidate_type]
+                    except KeyError:
+                        candidate = self.audio_stream.stream.remote_rtp_candidate_type.capitalize()
+                else:
+                    candidate = ''
+
+                self.audio_ice_remote_candidate.setStringValue_(candidate)
+
+                ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
+                if ice_status:
+                    if self.audio_stream.stream.local_rtp_candidate_type != 'relay' and self.audio_stream.stream.remote_rtp_candidate_type != 'relay':
+                        ice_status += ' (Peer to Peer)'
+                    else:
+                        ice_status += ' (Server Relayed)'
             else:
                 self.audio_ice_local_candidate.setStringValue_('')
                 self.audio_ice_remote_candidate.setStringValue_('')
+                ice_status = ''
 
-            self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
+            self.audio_ice_negotiation.setStringValue_(ice_status)
 
     def updateChat(self):
         if self.chat_stream is None or self.chat_stream.stream is None or self.chat_stream.stream.msrp is None:
