@@ -318,34 +318,33 @@ class SessionInfoController(NSObject):
             else:   
                 self.audio_status.setStringValue_("")
             
-    @run_in_gui_thread
-    def _NH_AudioSessionInformationGotUpdated(self, notification):
-        self.audio_rtt.setStringValue_(notification.data.latency if self.audio_stream.last_latency!= '0 ms' else '')
-        self.audio_packet_loss.setStringValue_(notification.data.loss)
-        self.audio_jitter.setStringValue_(notification.data.jitter)
-
-    @run_in_gui_thread
     def _NH_BlinkSessionChangedState(self, notification):
         self.status.setStringValue_(self.sessionController.state.title())
 
-    @run_in_gui_thread
     def _NH_BlinkSentAddProposal(self, notification):
         self.status.setStringValue_('Propose Add Stream')
 
     def _NH_BlinkSentRemoveProposal(self, notification):
         self.status.setStringValue_('Propose Remove Stream')
 
-    @run_in_gui_thread
     def _NH_BlinkProposalGotRejected(self, notification):
         self.status.setStringValue_(self.sessionController.state.title())
 
-    @run_in_gui_thread
     def _NH_BlinkStreamHandlersChanged(self, notification):
         self.status.setStringValue_(self.sessionController.state.title())
+        self.updatePanelValues()
 
-    @run_in_gui_thread
     def _NH_BlinkGotProposal(self, notification):
         self.status.setStringValue_('Receive Proposal')
+
+    def _NH_BlinkSessionDidStart(self, notification):
+        self.add_audio_stream()
+        self.add_chat_stream()
+        self.updatePanelValues()
+
+    def _NH_BlinkConferenceGotUpdate(self, notification):
+        if self.sessionController.session is not None:
+            self.conference.setStringValue_('%d Participants' % len(notification.data.conference_info.users))
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
@@ -359,24 +358,13 @@ class SessionInfoController(NSObject):
             return
         self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
 
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidStart(self, notification):
-        self.add_audio_stream()
-        self.add_chat_stream()
-        self.updatePanelValues()
-
-    @run_in_gui_thread
     def _NH_AudioStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
 
-    @run_in_gui_thread
-    def _NH_BlinkConferenceGotUpdate(self, notification):
-        if self.sessionController.session is not None:
-            self.conference.setStringValue_('%d Participants' % len(notification.data.conference_info.users))
-
-    @run_in_gui_thread
-    def _NH_BlinkStreamHandlerChangedState(self, notification):
-        self.updatePanelValues()
+    def _NH_AudioSessionInformationGotUpdated(self, notification):
+        self.audio_rtt.setStringValue_(notification.data.latency if self.audio_stream.last_latency!= '0 ms' else '')
+        self.audio_packet_loss.setStringValue_(notification.data.loss)
+        self.audio_jitter.setStringValue_(notification.data.jitter)
 
     def show(self):
         self.window.makeKeyAndOrderFront_(None)
