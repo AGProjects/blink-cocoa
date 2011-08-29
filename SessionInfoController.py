@@ -64,15 +64,14 @@ class SessionInfoController(NSObject):
         return cls.alloc().init()
 
     def __init__(self, sessionController):
-        self.visible = False
 
         self.notification_center = NotificationCenter()
-        self.sessionController = sessionController
-        self.notification_center.add_observer(self, sender=self.sessionController)
 
+        self.sessionController = None
         self.audio_stream = None
         self.chat_stream = None
 
+        self.add_session(sessionController)
         self.add_audio_stream()
         self.add_chat_stream()
 
@@ -105,23 +104,28 @@ class SessionInfoController(NSObject):
         self.audio_jitter_graph.setLineColor_(NSColor.yellowColor())
 
         self.resetSession()
-        self.resetAudio()
-        self.resetChat()
         self.updatePanelValues()
+
+    def add_session(self, sessionController):
+        if self.sessionController is None:
+            self.sessionController = sessionController
+            self.notification_center.add_observer(self, sender=self.sessionController)
 
     def remove_session(self):
         if self.sessionController is not None:
             self.notification_center.remove_observer(self, sender=self.sessionController)
             self.sessionController = None
+        self.remove_audio_stream()
+        self.remove_chat_stream()
         
     def add_audio_stream(self):
-        if self.sessionController.hasStreamOfType("audio") and self.audio_stream is None:
+        if self.sessionController is not None and self.sessionController.hasStreamOfType("audio") and self.audio_stream is None:
             self.audio_stream = self.sessionController.streamHandlerOfType("audio")
             self.notification_center.add_observer(self, sender=self.audio_stream)
             self.notification_center.add_observer(self, sender=self.audio_stream.stream)
 
     def add_chat_stream(self):
-        if self.sessionController.hasStreamOfType("chat") and self.chat_stream is None:
+        if self.sessionController is not None and self.sessionController.hasStreamOfType("chat") and self.chat_stream is None:
             self.chat_stream = self.sessionController.streamHandlerOfType("chat")
             self.notification_center.add_observer(self, sender=self.chat_stream)
             self.notification_center.add_observer(self, sender=self.chat_stream.stream)
@@ -168,6 +172,9 @@ class SessionInfoController(NSObject):
         self.status.setStringValue_('')
         self.duration.setStringValue_('')
 
+        self.resetAudio()
+        self.resetChat()
+
     def resetAudio(self):
         self.audio_status.setStringValue_('')
         self.audio_codec.setStringValue_('')
@@ -189,11 +196,12 @@ class SessionInfoController(NSObject):
     
     def updatePanelValues(self):
         self.updateSession()
-        self.updateAudio()
-        self.updateChat()
 
     def updateSession(self):
-        if self.sessionController is not None:
+        if self.sessionController is None:
+            self.resetSession()
+        else:
+            self.status.setStringValue_(self.sessionController.state.title())
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
 
             self.status.setStringValue_(self.sessionController.state.title())
@@ -209,8 +217,11 @@ class SessionInfoController(NSObject):
                 self.local_endpoint.setStringValue_('%s:%s:%d' % (transport, local_contact.host, local_contact.port))
                 self.tls_lock.setHidden_(False if transport == 'tls' else True)
 
+        self.updateAudio()
+        self.updateChat()
+
     def updateAudio(self):
-        if self.audio_stream is None or self.audio_stream.stream is None:
+        if self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None:
             self.resetAudio()
         else:
             self.updateAudioStatus()
@@ -266,7 +277,7 @@ class SessionInfoController(NSObject):
             self.audio_ice_negotiation.setStringValue_(ice_status)
 
     def updateChat(self):
-        if self.chat_stream is None or self.chat_stream.stream is None or self.chat_stream.stream.msrp is None:
+        if self.sessionController is None or self.chat_stream is None or self.chat_stream.stream is None or self.chat_stream.stream.msrp is None:
             self.resetChat()
         else:
             self.chat_local_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_local_path[-1]))
@@ -278,12 +289,13 @@ class SessionInfoController(NSObject):
             self.chat_connection_mode.setStringValue_(self.chat_stream.stream.local_role.title())
     
     def updateTimer_(self, timer):
-        self.updateDuration()
+        if self.sessionController is not None:
+            self.updateDuration()
 
-        if self.audio_stream:
-            self.audio_rtt_graph.setDataQueue_(self.audio_stream.latency_history)
-            self.audio_packet_loss_graph.setDataQueue_(self.audio_stream.packet_loss_history)
-            self.audio_jitter_graph.setDataQueue_(self.audio_stream.jitter_history)
+            if self.audio_stream:
+                self.audio_rtt_graph.setDataQueue_(self.audio_stream.latency_history)
+                self.audio_packet_loss_graph.setDataQueue_(self.audio_stream.packet_loss_history)
+                self.audio_jitter_graph.setDataQueue_(self.audio_stream.jitter_history)
 
     def updateDuration(self):
         if self.sessionController is not None and self.sessionController.session is not None:
@@ -303,7 +315,7 @@ class SessionInfoController(NSObject):
                 self.duration.setStringValue_('')
 
     def updateAudioStatus(self):
-        if self.audio_stream is None:
+        if self.sessionController is None or self.audio_stream is None:
             self.audio_status.setStringValue_("")
         else:
             if self.audio_stream.holdByLocal:
@@ -312,7 +324,7 @@ class SessionInfoController(NSObject):
                 self.audio_status.setStringValue_(u"Hold by Remote")
             elif self.audio_stream.status == STREAM_CONNECTED:
                 self.audio_status.setStringValue_(u"Active")
-            else:   
+            else:
                 self.audio_status.setStringValue_("")
             
     def _NH_BlinkSessionChangedState(self, notification):
@@ -324,15 +336,14 @@ class SessionInfoController(NSObject):
     def _NH_BlinkSentRemoveProposal(self, notification):
         self.status.setStringValue_('Propose Remove Stream')
 
+    def _NH_BlinkGotProposal(self, notification):
+        self.status.setStringValue_('Receive Proposal')
+
     def _NH_BlinkProposalGotRejected(self, notification):
         self.status.setStringValue_(self.sessionController.state.title())
 
     def _NH_BlinkStreamHandlersChanged(self, notification):
-        self.status.setStringValue_(self.sessionController.state.title())
         self.updatePanelValues()
-
-    def _NH_BlinkGotProposal(self, notification):
-        self.status.setStringValue_('Receive Proposal')
 
     def _NH_BlinkSessionDidStart(self, notification):
         self.add_audio_stream()
@@ -340,20 +351,18 @@ class SessionInfoController(NSObject):
         self.updatePanelValues()
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
-        if self.sessionController.session is not None:
+        if self.sessionController is not None and self.sessionController.session is not None:
             self.conference.setStringValue_('%d Participants' % len(notification.data.conference_info.users))
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
-        if self.audio_stream is None:
-            return
-        self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
+        if self.audio_stream is not None:
+            self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
-        if self.audio_stream is None:
-            return
-        self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
+        if self.audio_stream is not None:
+            self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
 
     def _NH_AudioStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
@@ -381,15 +390,8 @@ class SessionInfoController(NSObject):
     def close(self):
         self.timer.invalidate()
         self.timer = None
-
         self.remove_session()
-        self.remove_audio_stream()
-        self.remove_chat_stream()
-
-        self.audio_packet_loss_buffer = None
-        self.audio_rtt_buffer = None
         self.window.orderOut_(None)
-        self.visible = False
 
 
 class CBGraphView(NSView):
@@ -498,14 +500,14 @@ class CBGraphView(NSView):
             NSGraphicsContext.currentContext().setShouldAntialias_(NO)
 
             # draw each bar
-
             barRect.origin.x = insetBounds.size.width - self.lineWidth + 2
             for b in rbuf:
                 if b:
+                    # set drawing color
                     if b >= self.limit:
-                        self.lineColorAboveLimit.set() # set drawing color
+                        self.lineColorAboveLimit.set()
                     else:
-                        self.lineColor.set() # set drawing color
+                        self.lineColor.set()
 
                     barRect.origin.y = insetBounds.origin.y
                     barRect.size.width = self.lineWidth
