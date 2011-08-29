@@ -699,7 +699,7 @@ class AudioController(MediaStream):
         else:
             self.info.setStringValue_("")
 
-        if (self.last_latency != status_data.latency or self.last_packet_loss != status_data.loss or self.last_jitter != status_data.jitter):
+        if self.last_latency != status_data.latency or self.last_packet_loss != status_data.loss or self.last_jitter != status_data.jitter:
             self.last_latency = status_data.latency
             self.last_packet_loss = status_data.loss
             self.last_jitter = status_data.jitter
