@@ -205,7 +205,7 @@ class SessionInfoController(NSObject):
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
 
             self.status.setStringValue_(self.sessionController.state.title())
-            self.conference.setStringValue_('%d Participants' % len(self.sessionController.conference_info.users) if self.sessionController.conference_info is not None and self.sessionController.remote_focus else 'No')
+            self.conference.setStringValue_('%d Participants' % len(self.sessionController.conference_info.users) if self.sessionController.conference_info is not None and self.sessionController.remote_focus else '')
 
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:
                 self.remote_ua.setStringValue_(self.sessionController.session.remote_user_agent)
@@ -272,7 +272,7 @@ class SessionInfoController(NSObject):
             else:
                 self.audio_ice_local_candidate.setStringValue_('')
                 self.audio_ice_remote_candidate.setStringValue_('')
-                ice_status = ''
+                ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
 
             self.audio_ice_negotiation.setStringValue_(ice_status)
 

@@ -892,7 +892,7 @@ class AudioController(MediaStream):
         handler(notification.sender, notification.data)
 
     def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
-        self.ice_negotiation_status = 'Failed'
+        self.ice_negotiation_status = data.reason
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
         self.ice_negotiation_status = 'Success'
