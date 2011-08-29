@@ -365,11 +365,9 @@ class SessionInfoController(NSObject):
 
     def show(self):
         self.window.makeKeyAndOrderFront_(None)
-        self.notification_center.post_notification("SessionInfoPanelIsVisible", sender=self.sessionController)
 
     def hide(self):
         self.window.orderOut_(None)
-        self.notification_center.post_notification("SessionInfoPanelIsHidden", sender=self.sessionController)
 
     def toggle(self):
         if self.window.isVisible():
@@ -379,7 +377,6 @@ class SessionInfoController(NSObject):
 
     def windowShouldClose_(self, sender):
         self.window.orderOut_(None)
-        self.notification_center.post_notification("SessionInfoPanelIsHidden", sender=self.sessionController)
 
     def close(self):
         self.timer.invalidate()
@@ -392,7 +389,6 @@ class SessionInfoController(NSObject):
         self.audio_packet_loss_buffer = None
         self.audio_rtt_buffer = None
         self.window.orderOut_(None)
-        self.notification_center.post_notification("SessionInfoPanelIsHidden", sender=self.sessionController)
         self.visible = False
 
 

@@ -69,7 +69,6 @@ class AudioController(MediaStream):
     zRTPSecureSinceLabel = objc.IBOutlet()
     zRTPVerifyButton = objc.IBOutlet()
     zRTPVerifyHash = objc.IBOutlet()
-    zRTPInfoButton = objc.IBOutlet()
 
     recordingImage = 0
     audioEndTime = None
@@ -145,7 +144,6 @@ class AudioController(MediaStream):
                 self.audioSegmented.setHidden_(False)
 
             self.sessionInfoButton.setEnabled_(True if scontroller.session.state == 'connected' else False)
-            self.sessionInfoButton.setState_(NSOnState if scontroller.info_panel.window.isVisible() else NSOffState)
 
         return self
 
@@ -996,14 +994,6 @@ class AudioController(MediaStream):
         elif data.state == 'ICE Negotiation In Progress':
             self.audioStatus.setStringValue_("Negotiating ICE...")
         self.audioStatus.sizeToFit()
-
-    @run_in_gui_thread
-    def _NH_SessionInfoPanelIsVisible(self, sender, data):
-        self.sessionInfoButton.setState_(NSOnState)
-
-    @run_in_gui_thread
-    def _NH_SessionInfoPanelIsHidden(self, sender, data):
-        self.sessionInfoButton.setState_(NSOffState)
 
     @run_in_gui_thread
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
