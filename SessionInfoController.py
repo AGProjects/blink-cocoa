@@ -4,7 +4,6 @@
 import datetime
 import time
 
-from objc import YES, NO, IBAction, IBOutlet
 from AppKit import *
 from Foundation import *
 
@@ -448,7 +447,7 @@ class CBGraphView(NSView):
     def setDataQueue_(self, dq):
         """ set the data object we are graphig """
         self.dataQueue = dq
-        self.setNeedsDisplay_(YES)
+        self.setNeedsDisplay_(True)
         
     def setLineWidth_(self, width):
         """ let user change line (bar) width """
@@ -478,7 +477,7 @@ class CBGraphView(NSView):
         
     def isOpaque(self):
         """ are we opaque? why, of course we are! """
-        return YES
+        return True
         
     def dealloc(self):
         """ default destructor """
