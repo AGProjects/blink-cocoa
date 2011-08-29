@@ -90,18 +90,15 @@ class SessionInfoController(NSObject):
         chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Chat MSRP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.chatBox.setTitle_(chatBoxTitle)       
 
-        self.audio_rtt_graph.setDataQueue_([])
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
         self.audio_rtt_graph.setAboveLimit_(200) # if higher than 200 ms show red color
 
-        self.audio_packet_loss_graph.setDataQueue_([])
         self.audio_packet_loss_graph.setLineWidth_(1.0)
         self.audio_packet_loss_graph.setLineSpacing_(1.0)
         self.audio_packet_loss_graph.setAboveLimit_(3) # if higher than 3% show red color
         self.audio_packet_loss_graph.setLineColor_(NSColor.greenColor())
 
-        self.audio_jitter_graph.setDataQueue_([])
         self.audio_jitter_graph.setLineWidth_(1.0)
         self.audio_jitter_graph.setLineSpacing_(1.0)
         self.audio_jitter_graph.setAboveLimit_(50) # if higher than 50 ms show red color
@@ -489,13 +486,8 @@ class CBGraphView(NSView):
         NSBezierPath.clipRect_(insetBounds) # set the clipping path
         insetBounds.size.height -= 2 # leave room at the top (purely my personal asthetic
 
-        buf = None  # init the list structure we will be using
-        
         if self.dataQueue:
-            buf = self.dataQueue.get()  # get the list
-        
-        if buf:
-            rbuf = [ q for q in buf if q ] # filter "None" from the list
+            rbuf = [ q for q in self.dataQueue if q ] # filter "None" from the list
             rbuf.reverse() # reverse the list
             
             barRect = NSRect() # init the rect
@@ -529,18 +521,4 @@ class CBGraphView(NSView):
                     
             NSGraphicsContext.currentContext().setShouldAntialias_(shouldAA)
 
-
-class RingBuffer:
-    def __init__(self, size):
-        """ init with # of elements in the queue """
-        self.data = [ None for i in xrange(size)  ]
-
-    def append(self, x):
-        """ take away one and put one in """
-        self.data.pop(0)
-        self.data.append(x)
-
-    def get(self):
-        """ return the list so we can manipulate it """
-        return self.data
 

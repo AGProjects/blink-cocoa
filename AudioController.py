@@ -13,6 +13,7 @@ import urllib
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
+from collections import deque
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
@@ -29,8 +30,6 @@ from AnsweringMachine import AnsweringMachine
 from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
-
-from SessionInfoController import RingBuffer
 
 from resources import Resources
 from util import *
@@ -106,9 +105,9 @@ class AudioController(MediaStream):
             self.last_packet_loss = ''
             self.last_jitter = ''
 
-            self.latency_history = RingBuffer(600) # 10 minutes of history data for printing in Session Info graph
-            self.packet_loss_history = RingBuffer(600)
-            self.jitter_history = RingBuffer(600)
+            self.latency_history = deque([None for x in xrange(600), 600]) # 10 minutes of history data for printing in Session Info graph
+            self.packet_loss_history = deque([None for x in xrange(600), 600])
+            self.jitter_history = deque([None for x in xrange(600), 600])
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
