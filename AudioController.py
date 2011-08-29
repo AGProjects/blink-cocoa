@@ -143,7 +143,7 @@ class AudioController(MediaStream):
                 self.transferSegmented.setHidden_(True)
                 self.audioSegmented.setHidden_(False)
 
-            self.sessionInfoButton.setEnabled_(True if scontroller.session.state == 'connected' else False)
+            self.sessionInfoButton.setEnabled_(True)
 
         return self
 
