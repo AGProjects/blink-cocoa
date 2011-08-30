@@ -1188,8 +1188,8 @@ class ChatController(MediaStream):
 
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
-        if status == 0 and self.sessionController:
-            self.backend.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, [self.screencapture_file])
+        if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
+            self.sendFiles([unicode(self.screencapture_file)])
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, self.screenshot_task)
         self.screenshot_task = None
 
