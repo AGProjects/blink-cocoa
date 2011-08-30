@@ -40,7 +40,7 @@ from ContactCell import ContactCell
 from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
-from FileTransferWindowController import FileTransferWindowController, openFileTransferSelectionDialog
+from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionController
 from SIPManager import SIPManager, MWIData
