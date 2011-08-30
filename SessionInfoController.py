@@ -92,16 +92,19 @@ class SessionInfoController(NSObject):
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
         self.audio_rtt_graph.setAboveLimit_(200) # if higher than 200 ms show red color
+        self.audio_rtt_graph.setMinimumHeigth_(150)
 
         self.audio_packet_loss_graph.setLineWidth_(1.0)
         self.audio_packet_loss_graph.setLineSpacing_(1.0)
         self.audio_packet_loss_graph.setAboveLimit_(3) # if higher than 3% show red color
         self.audio_packet_loss_graph.setLineColor_(NSColor.greenColor())
+        self.audio_packet_loss_graph.setMinimumHeigth_(5)
 
         self.audio_jitter_graph.setLineWidth_(1.0)
         self.audio_jitter_graph.setLineSpacing_(1.0)
         self.audio_jitter_graph.setAboveLimit_(50) # if higher than 50 ms show red color
         self.audio_jitter_graph.setLineColor_(NSColor.yellowColor())
+        self.audio_jitter_graph.setMinimumHeigth_(10)
 
         self.resetSession()
         self.updatePanelValues()
@@ -413,6 +416,7 @@ class CBGraphView(NSView):
     lineWidth = 1.0      # default bar width (1 "pixel")
     lineSpacing = 0.0    # default spacing between bars to no space
     limit = 1000
+    minHeigth = None
     
     def initWithFrame_(self, frame):
         """ basic constructor for views. here we init colors and gradients """
@@ -442,6 +446,10 @@ class CBGraphView(NSView):
     def setAboveLimit_(self, limit):
         """ show red color above limit """
         self.limit = limit
+
+    def setMinimumHeigth_(self, heigth):
+        """ show red color above limit """
+        self.minHeigth = heigth
         
     def setLineSpacing_(self, spacing):
         """ let user change spacing bewteen bars (lines) """
@@ -495,6 +503,7 @@ class CBGraphView(NSView):
                 
             try:      
                 maxB = max(rbuf) # find out the max value so we can scale the graph
+                maxB = self.minHeigth if self.minHeigth and self.minHeigth > maxB else maxB
             except ValueError:
                 maxB = 0
 
