@@ -1484,6 +1484,12 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
                 self.startIncomingSession(session, streams)
                 return
+
+        if stream_type_list == ['file-transfer'] and 'xscreencapture' in streams[0].file_selector.name.decode("utf8"):
+            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % session.remote_identity)
+            self.startIncomingSession(session, streams)
+            return
+
         try:
             session.send_ring_indication()
         except IllegalStateError, e:

@@ -1164,7 +1164,7 @@ class ChatController(MediaStream):
 
             elif identifier == 'screenshot':
                 makedirs('/tmp/blink_screenshots/')
-                filename = '/tmp/blink_screenshots/screencapture.png'  
+                filename = '/tmp/blink_screenshots/xscreencapture.png'
                 basename, ext = os.path.splitext(filename)
                 i = 1
                 while os.path.exists(filename):

@@ -17,6 +17,7 @@ from FileTransferItemView import FileTransferItemView
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 import SIPManager
+from FileTransferSession import IncomingFileTransferHandler
 
 
 def openFileTransferSelectionDialog(account, dest_uri):
@@ -137,7 +138,10 @@ class FileTransferWindowController(NSObject, object):
         h = NSHeight(self.listView.frame())
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
-        self.window.orderFront_(None)
+        if type(sender) is IncomingFileTransferHandler and 'xscreencapture' in sender.file_name:
+            pass
+        else:
+            self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
         if count == 1:
@@ -151,7 +155,10 @@ class FileTransferWindowController(NSObject, object):
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
         # jump dock icon and bring window to front
-        self.window.orderFront_(None)
-        NSApp.requestUserAttention_(NSInformationalRequest)
+        if type(sender) is IncomingFileTransferHandler and 'xscreencapture' in sender.file_name:
+            pass
+        else:
+            self.window.orderFront_(None)
+            NSApp.requestUserAttention_(NSInformationalRequest)
 
 
