@@ -516,6 +516,7 @@ class SessionController(NSObject):
     def _NH_SIPSessionGotRingIndication(self, sender, data):
         for sc in self.streamHandlers:
             sc.sessionRinging()
+        self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self)
 
     def _NH_SIPSessionWillStart(self, sender, data):
         self.log_info("Session will start")

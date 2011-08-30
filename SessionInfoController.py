@@ -330,6 +330,9 @@ class SessionInfoController(NSObject):
     def _NH_BlinkSessionChangedState(self, notification):
         self.status.setStringValue_(self.sessionController.state.title())
 
+    def _NH_BlinkSessionGotRingIndication(self, notification):
+        self.status.setStringValue_('Ringing')
+
     def _NH_BlinkSentAddProposal(self, notification):
         self.status.setStringValue_('Propose Add Stream')
 
