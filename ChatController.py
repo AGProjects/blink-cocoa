@@ -12,6 +12,7 @@ import unicodedata
 import uuid
 
 from application.notification import IObserver, NotificationCenter
+from application.system import makedirs
 from application.python import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
@@ -361,6 +362,8 @@ class ChatController(MediaStream):
 
     drawerSplitterPosition = None
     mainViewSplitterPosition = None
+
+    screenshot_task = None
 
     @classmethod
     def createStream(self, account):
@@ -960,6 +963,8 @@ class ChatController(MediaStream):
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
                 item.setEnabled_(True)
+            elif identifier == 'screenshot':
+                item.setEnabled_(True)
 
     def validateToolbarButton(self, item):
         """Called automatically by Cocoa in ChatWindowController"""
@@ -1041,6 +1046,8 @@ class ChatController(MediaStream):
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
                 return True
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
+                return True
+            elif identifier == 'screenshot':
                 return True
 
         elif item.tag() in (TOOLBAR_DESKTOP_SHARING_BUTTON, TOOLBAR_SHARE_DESKTOP_MENU, TOOLBAR_REQUEST_DESKTOP_MENU) and self.status==STREAM_CONNECTED:
@@ -1155,6 +1162,22 @@ class ChatController(MediaStream):
                 else:
                     contactWindow.historyViewer.filterByContact(format_identity(self.sessionController.target_uri), media_type='chat')
 
+            elif identifier == 'screenshot':
+                makedirs('/tmp/blink_screenshots/')
+                filename = '/tmp/blink_screenshots/screencapture.png'  
+                basename, ext = os.path.splitext(filename)
+                i = 1
+                while os.path.exists(filename):
+                    filename = '%s_%d%s' % (basename, i, ext)
+                    i += 1
+
+                self.screencapture_file = filename
+                self.screenshot_task = NSTask.alloc().init()
+                self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+                self.screenshot_task.setArguments_(['-W', '-tpng', self.screencapture_file])
+                NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
+                self.screenshot_task.launch()
+
         elif sender.tag() == TOOLBAR_SHARE_DESKTOP_MENU and self.status == STREAM_CONNECTED:
             self.sessionController.addMyDesktopToSession()
             sender.setEnabled_(False)
@@ -1162,6 +1185,13 @@ class ChatController(MediaStream):
         elif sender.tag() == TOOLBAR_REQUEST_DESKTOP_MENU and self.status == STREAM_CONNECTED:
             self.sessionController.addRemoteDesktopToSession()
             sender.setEnabled_(False)
+
+    def checkScreenshotTaskStatus_(self, notification):
+        status = notification.object().terminationStatus()
+        if status == 0 and self.sessionController:
+            self.backend.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, [self.screencapture_file])
+        NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, self.screenshot_task)
+        self.screenshot_task = None
 
     def toggleEditor(self):
         self.chatViewController.editor_has_changed = False

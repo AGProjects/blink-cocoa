@@ -274,6 +274,10 @@
 		1F689572140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
 		1F689573140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
 		1F689574140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
+		1F6896A0140CE18E00DA5329 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
+		1F6896A1140CE18E00DA5329 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
+		1F6896A2140CE18E00DA5329 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
+		1F6896A3140CE18E00DA5329 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
 		1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
@@ -1483,6 +1487,7 @@
 		1F5C0760140436E4001DA3EF /* SessionInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoController.py; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
 		1F689570140BA93100DA5329 /* panel-info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "panel-info.png"; path = "icons/panel-info.png"; sourceTree = "<group>"; };
+		1F68969F140CE18E00DA5329 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = screenshot.png; path = icons/screenshot.png; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
@@ -1965,6 +1970,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F68969F140CE18E00DA5329 /* screenshot.png */,
 				1F689570140BA93100DA5329 /* panel-info.png */,
 				1FB22A07140306EC0024F921 /* lock-zrtp.png */,
 				1FA47A2F13B246FF0081F90B /* contacts.png */,
@@ -2618,6 +2624,7 @@
 				1F5C0763140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 				1F689573140BA93100DA5329 /* panel-info.png in Resources */,
+				1F6896A2140CE18E00DA5329 /* screenshot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2805,6 +2812,7 @@
 				1F5C0762140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 				1F689572140BA93100DA5329 /* panel-info.png in Resources */,
+				1F6896A1140CE18E00DA5329 /* screenshot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2994,6 +3002,7 @@
 				1F5C06DB14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0761140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1F689571140BA93100DA5329 /* panel-info.png in Resources */,
+				1F6896A0140CE18E00DA5329 /* screenshot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3182,6 +3191,7 @@
 				1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */,
 				1F689574140BA93100DA5329 /* panel-info.png in Resources */,
+				1F6896A3140CE18E00DA5329 /* screenshot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -23,6 +23,7 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading import call_in_thread
 from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
@@ -79,6 +80,15 @@ class BlinkAppDelegate(NSObject):
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
+
+            def purge_screenshots():
+                path = os.path.join('/tmp/blink_screenshots/') # used by chat controller
+                try:
+                    shutil.rmtree(path)
+                except EnvironmentError:
+                    pass
+
+            call_in_thread('file-io', purge_screenshots)
 
             DesktopSharingController.vncServerPort = 5900
 
