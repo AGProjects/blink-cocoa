@@ -1138,7 +1138,7 @@ class ChatController(MediaStream):
                 self.enterFullScreen()
 
             elif identifier == 'sendfile':
-                openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.session.remote_identity.uri)
+                openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
 
             elif identifier == 'reconnect' and self.status in (STREAM_IDLE, STREAM_FAILED):
                 self.sessionController.log_info(u"Re-establishing session to %s" % self.remoteParty)

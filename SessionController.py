@@ -11,6 +11,7 @@ from application.python import Null
 
 from datetime import datetime
 
+from sipsimple.account import BonjourAccount
 from sipsimple.session import Session, IllegalStateError
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.util import TimestampedNotificationData
@@ -107,7 +108,7 @@ class SessionController(NSObject):
         self.remotePartyObject = session.remote_identity
         self.account = session.account
         self.session = session
-        self.target_uri = SIPURI.new(session.remote_identity.uri)
+        self.target_uri = SIPURI.new(session.remote_identity.uri if session.account is not BonjourAccount() else session._invitation.remote_contact_header.uri)
         self.remoteSIPAddress = format_identity_address(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
