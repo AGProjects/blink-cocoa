@@ -92,7 +92,7 @@ class SessionInfoController(NSObject):
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
         self.audio_rtt_graph.setAboveLimit_(200) # if higher than 200 ms show red color
-        self.audio_rtt_graph.setMinimumHeigth_(150)
+        self.audio_rtt_graph.setMinimumHeigth_(200)
 
         self.audio_packet_loss_graph.setLineWidth_(1.0)
         self.audio_packet_loss_graph.setLineSpacing_(1.0)
@@ -104,7 +104,7 @@ class SessionInfoController(NSObject):
         self.audio_jitter_graph.setLineSpacing_(1.0)
         self.audio_jitter_graph.setAboveLimit_(50) # if higher than 50 ms show red color
         self.audio_jitter_graph.setLineColor_(NSColor.yellowColor())
-        self.audio_jitter_graph.setMinimumHeigth_(40)
+        self.audio_jitter_graph.setMinimumHeigth_(100)
 
         self.resetSession()
         self.updatePanelValues()
