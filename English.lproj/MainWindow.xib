@@ -14,6 +14,7 @@
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<integer value="29"/>
 			<integer value="371"/>
+			<integer value="474"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2213,7 +2214,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="NSFrameAutosaveName">ContactWindow</string>
 			</object>
 			<object class="NSCustomView" id="396422209">
-				<nil key="NSNextResponder"/>
+				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">258</int>
 				<object class="NSMutableArray" key="NSSubviews">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2320,7 +2321,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 												<string key="NSClassName">ListView</string>
 											</object>
 										</object>
-										<string key="NSFrame">{{1, 1}, {217, 358}}</string>
+										<string key="NSFrame">{{1, 1}, {217, 355}}</string>
 										<reference key="NSSuperview" ref="777147927"/>
 										<reference key="NSNextKeyView" ref="989716831"/>
 										<reference key="NSDocView" ref="989716831"/>
@@ -2349,7 +2350,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 										<double key="NSPercent">0.50602409999999998</double>
 									</object>
 								</object>
-								<string key="NSFrameSize">{219, 360}</string>
+								<string key="NSFrameSize">{219, 357}</string>
 								<reference key="NSSuperview" ref="912902537"/>
 								<reference key="NSNextKeyView" ref="854858918"/>
 								<int key="NSsFlags">530</int>
@@ -2476,7 +2477,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 									</object>
 									<reference ref="471061860"/>
 								</object>
-								<string key="NSFrame">{{0, 361}, {219, 0}}</string>
+								<string key="NSFrame">{{0, 358}, {219, 0}}</string>
 								<reference key="NSSuperview" ref="912902537"/>
 								<reference key="NSNextKeyView" ref="56636289"/>
 								<int key="NSsFlags">594</int>
@@ -2488,7 +2489,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<bytes key="NSScrollAmts">QSAAAEEgAABCEAAAQhAAAA</bytes>
 							</object>
 						</object>
-						<string key="NSFrame">{{0, 26}, {219, 361}}</string>
+						<string key="NSFrame">{{0, 26}, {219, 358}}</string>
 						<reference key="NSSuperview" ref="396422209"/>
 						<int key="NSDividerStyle">2</int>
 					</object>
@@ -2759,6 +2760,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<string key="NSFrameSize">{219, 399}</string>
+				<reference key="NSSuperview"/>
 				<string key="NSClassName">NSView</string>
 			</object>
 			<object class="NSCustomObject" id="610635028">
@@ -4848,9 +4850,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<reference ref="128081379"/>
-							<reference ref="460764113"/>
-							<reference ref="912902537"/>
 							<reference ref="629575245"/>
+							<reference ref="912902537"/>
+							<reference ref="460764113"/>
 						</object>
 						<reference key="parent" ref="88742313"/>
 						<string key="objectName">Audio Sessions Drawer View</string>
@@ -5995,111 +5997,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="parent" ref="208635261"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">643</int>
-						<reference key="object" ref="460764113"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="583478344"/>
-						</object>
-						<reference key="parent" ref="396422209"/>
-						<string key="objectName">Drawer Title Bar</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">644</int>
-						<reference key="object" ref="583478344"/>
-						<reference key="parent" ref="460764113"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1524</int>
-						<reference key="object" ref="912902537"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="777147927"/>
-							<reference ref="53699439"/>
-						</object>
-						<reference key="parent" ref="396422209"/>
-						<string key="objectName">Drawer Main View</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">544</int>
-						<reference key="object" ref="777147927"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="455551467"/>
-							<reference ref="60000382"/>
-							<reference ref="989716831"/>
-						</object>
-						<reference key="parent" ref="912902537"/>
-						<string key="objectName">Audio Sessions Section View</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">545</int>
-						<reference key="object" ref="455551467"/>
-						<reference key="parent" ref="777147927"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">546</int>
-						<reference key="object" ref="60000382"/>
-						<reference key="parent" ref="777147927"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">547</int>
-						<reference key="object" ref="989716831"/>
-						<reference key="parent" ref="777147927"/>
-						<string key="objectName">Audio Sessions List View</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1534</int>
-						<reference key="object" ref="53699439"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="1004714251"/>
-							<reference ref="787233811"/>
-							<reference ref="910683784"/>
-							<reference ref="435476791"/>
-						</object>
-						<reference key="parent" ref="912902537"/>
-						<string key="objectName">Conference Participants Section View</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1538</int>
-						<reference key="object" ref="1004714251"/>
-						<reference key="parent" ref="53699439"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1537</int>
-						<reference key="object" ref="787233811"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="337813941"/>
-						</object>
-						<reference key="parent" ref="53699439"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1536</int>
-						<reference key="object" ref="910683784"/>
-						<reference key="parent" ref="53699439"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1535</int>
-						<reference key="object" ref="435476791"/>
-						<reference key="parent" ref="53699439"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1539</int>
-						<reference key="object" ref="337813941"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="1002373485"/>
-						</object>
-						<reference key="parent" ref="787233811"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">1540</int>
-						<reference key="object" ref="1002373485"/>
-						<reference key="parent" ref="337813941"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">1563</int>
 						<reference key="object" ref="713410130"/>
 						<object class="NSMutableArray" key="children">
@@ -6267,6 +6164,111 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<int key="objectID">1514</int>
 						<reference key="object" ref="1025809552"/>
 						<reference key="parent" ref="633631115"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1524</int>
+						<reference key="object" ref="912902537"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="53699439"/>
+							<reference ref="777147927"/>
+						</object>
+						<reference key="parent" ref="396422209"/>
+						<string key="objectName">Drawer Main View</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1534</int>
+						<reference key="object" ref="53699439"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="435476791"/>
+							<reference ref="910683784"/>
+							<reference ref="787233811"/>
+							<reference ref="1004714251"/>
+						</object>
+						<reference key="parent" ref="912902537"/>
+						<string key="objectName">Conference Participants Section View</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1535</int>
+						<reference key="object" ref="435476791"/>
+						<reference key="parent" ref="53699439"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1536</int>
+						<reference key="object" ref="910683784"/>
+						<reference key="parent" ref="53699439"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1537</int>
+						<reference key="object" ref="787233811"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="337813941"/>
+						</object>
+						<reference key="parent" ref="53699439"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1538</int>
+						<reference key="object" ref="1004714251"/>
+						<reference key="parent" ref="53699439"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1539</int>
+						<reference key="object" ref="337813941"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="1002373485"/>
+						</object>
+						<reference key="parent" ref="787233811"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1540</int>
+						<reference key="object" ref="1002373485"/>
+						<reference key="parent" ref="337813941"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">544</int>
+						<reference key="object" ref="777147927"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="989716831"/>
+							<reference ref="60000382"/>
+							<reference ref="455551467"/>
+						</object>
+						<reference key="parent" ref="912902537"/>
+						<string key="objectName">Audio Sessions Section View</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">547</int>
+						<reference key="object" ref="989716831"/>
+						<reference key="parent" ref="777147927"/>
+						<string key="objectName">Audio Sessions List View</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">546</int>
+						<reference key="object" ref="60000382"/>
+						<reference key="parent" ref="777147927"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">545</int>
+						<reference key="object" ref="455551467"/>
+						<reference key="parent" ref="777147927"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">643</int>
+						<reference key="object" ref="460764113"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="583478344"/>
+						</object>
+						<reference key="parent" ref="396422209"/>
+						<string key="objectName">Drawer Title Bar</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">644</int>
+						<reference key="object" ref="583478344"/>
+						<reference key="parent" ref="460764113"/>
 					</object>
 				</object>
 			</object>
@@ -6858,7 +6860,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">P4AAAL+AAAAAAAAAw8CAAA</bytes>
+						<bytes key="NSTransformStruct">P4AAAL+AAAAAAAAAw8aAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
@@ -6933,9 +6935,9 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
 					<string>{{539, 906}, {519, 20}}</string>
-					<string>{{541, 121}, {274, 480}}</string>
+					<string>{{368, 67}, {274, 480}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{541, 121}, {274, 480}}</string>
+					<string>{{368, 67}, {274, 480}}</string>
 					<integer value="0"/>
 					<string>{{238, 285}, {274, 439}}</string>
 					<boolean value="NO"/>
@@ -7029,7 +7031,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<bytes key="NSTransformStruct">P4AAAL+AAABBAAAAw+EAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{413, 143}, {219, 399}}</string>
+					<string>{{113, 126}, {219, 399}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform"/>
 					<integer value="1"/>
@@ -7457,8 +7459,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>aboutBundle</string>
+							<string>aboutCopyright</string>
+							<string>aboutCredits</string>
 							<string>aboutPanel</string>
+							<string>aboutSlogan</string>
 							<string>aboutVersion</string>
+							<string>aboutzRTPIcon</string>
 							<string>blinkMenu</string>
 							<string>migrationPanel</string>
 							<string>migrationProgressWheel</string>
@@ -7466,6 +7472,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -7480,8 +7490,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>aboutBundle</string>
+							<string>aboutCopyright</string>
+							<string>aboutCredits</string>
 							<string>aboutPanel</string>
+							<string>aboutSlogan</string>
 							<string>aboutVersion</string>
+							<string>aboutzRTPIcon</string>
 							<string>blinkMenu</string>
 							<string>migrationPanel</string>
 							<string>migrationProgressWheel</string>
@@ -7494,11 +7508,27 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
+								<string key="name">aboutCopyright</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">aboutCredits</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
 								<string key="name">aboutPanel</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
+								<string key="name">aboutSlogan</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
 								<string key="name">aboutVersion</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">aboutzRTPIcon</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
@@ -7627,14 +7657,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>participantsView</string>
 							<string>recordButton</string>
 							<string>sharedFileMenu</string>
-							<string>srtpIcon</string>
 							<string>tabSwitcher</string>
 							<string>tabView</string>
 							<string>toolbar</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -7674,7 +7702,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>participantsView</string>
 							<string>recordButton</string>
 							<string>sharedFileMenu</string>
-							<string>srtpIcon</string>
 							<string>tabSwitcher</string>
 							<string>tabView</string>
 							<string>toolbar</string>
@@ -7739,10 +7766,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">sharedFileMenu</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBToOneOutletInfo">
-								<string key="name">srtpIcon</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
