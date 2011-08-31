@@ -1421,7 +1421,7 @@ SettingDescription = {
                       'audio.silent': 'Silence Audible Alerts',
                       'audio.pause_itunes': 'Pause iTunes During Audio Calls',
                       'audio.automatic_device_switch': 'Switch to New Devices when Plugged-in',
-                      'audio.enable_aec': 'Enable Acoustic Echo Canceller',
+                      'audio.enable_aec': 'Enable Acoustic Echo Cancellation',
                       'answering_machine.enabled': 'Enable Answering Machine',
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
