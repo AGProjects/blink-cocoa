@@ -1485,7 +1485,7 @@ class ContactWindowController(NSWindowController):
                 self.startIncomingSession(session, streams)
                 return
 
-        if stream_type_list == ['file-transfer'] and 'xscreencapture' in streams[0].file_selector.name.decode("utf8"):
+        if stream_type_list == ['file-transfer'] and streams[0].file_selector.name.decode("utf8").startswith('xscreencapture'):
             BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % session.remote_identity)
             self.startIncomingSession(session, streams)
             return
