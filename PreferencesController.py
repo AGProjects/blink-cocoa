@@ -182,6 +182,8 @@ class PreferencesController(NSWindowController, object):
         elif section == 'advanced':
             self.sectionDescription.setStringValue_(u'Advanced Settings')
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
+        elif section == 'help':
+            NSApp.delegate().windowController.showHelp('#preferences')
 
     def createGeneralOptionsUI(self, type='basic'):
         for i in range(self.generalTabView.numberOfTabViewItems()):

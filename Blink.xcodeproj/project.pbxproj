@@ -840,6 +840,10 @@
 		1FF2F5C813AB41AB00502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5C913AB41BF00502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF5936C110F07C70047E2CD /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
+		1FF62300140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
+		1FF62301140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
+		1FF62302140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
+		1FF62303140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
 		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
@@ -1541,6 +1545,7 @@
 		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
+		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -1970,6 +1975,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FF622FF140E20C000E81891 /* help.png */,
 				1F68969F140CE18E00DA5329 /* screenshot.png */,
 				1F689570140BA93100DA5329 /* panel-info.png */,
 				1FB22A07140306EC0024F921 /* lock-zrtp.png */,
@@ -2625,6 +2631,7 @@
 				1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 				1F689573140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A2140CE18E00DA5329 /* screenshot.png in Resources */,
+				1FF62302140E20C000E81891 /* help.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2813,6 +2820,7 @@
 				1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */,
 				1F689572140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A1140CE18E00DA5329 /* screenshot.png in Resources */,
+				1FF62301140E20C000E81891 /* help.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3003,6 +3011,7 @@
 				1F5C0761140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1F689571140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A0140CE18E00DA5329 /* screenshot.png in Resources */,
+				1FF62300140E20C000E81891 /* help.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3192,6 +3201,7 @@
 				1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */,
 				1F689574140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A3140CE18E00DA5329 /* screenshot.png in Resources */,
+				1FF62303140E20C000E81891 /* help.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
