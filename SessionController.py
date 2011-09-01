@@ -595,7 +595,6 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.streams_log = []
         self.remote_conference_has_audio = False
-        self.info_panel = None
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
