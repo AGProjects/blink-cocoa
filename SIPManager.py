@@ -935,7 +935,7 @@ class SIPManager(object):
     def activateRemoteDesktopSharing(self):
         # TODO: automatic check if VNC server is running with the right options, if not relaunch it -adi
         # http://docs.info.apple.com/article.html?path=RemoteDesktop/3.0/en/ARDC882.html
-        BlinkLogger().log_info("Enable Sharing in System Preferences -> Remote Management -> Computer Settings -> Anyone may request permission to control screen")
+        pass
 
     def isProposedMediaTypeSupported(self, streams):
         settings = SIPSimpleSettings()
@@ -972,10 +972,8 @@ class SIPManager(object):
 
         if type == 'desktop-server':
             if settings.desktop_sharing.disabled:
-                BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
                 return False
             if not self.isRemoteDesktopSharingActive():
-                BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
                 self.activateRemoteDesktopSharing()
                 return False
 
