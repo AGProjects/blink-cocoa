@@ -814,7 +814,7 @@ class ContactWindowController(NSWindowController):
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
-        self.actionButtons.setEnabled_forSegment_(desktopOk and (self.backend.isMediaTypeSupported('desktop-server') or self.backend.isMediaTypeSupported('desktop-client')), 2)
+        self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
