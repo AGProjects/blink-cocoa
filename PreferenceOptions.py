@@ -103,9 +103,7 @@ class Option(HorizontalBoxView):
         try:
             self._store()
         except Exception, e:
-            import traceback
-            traceback.print_exc()
-            NSRunAlertPanel("Error", "Can't set option %s\n%s"%(self.option,str(e)), "OK", None, None)
+            NSRunAlertPanel("Error", "Can't set option '%s'\n.Error: %s"%(self.option,str(e)), "OK", None, None)
             self.restore()
     
     def _store(self):

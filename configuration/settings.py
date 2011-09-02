@@ -5,6 +5,8 @@
 Blink settings extensions.
 """
 
+import os
+
 __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
@@ -46,7 +48,7 @@ class DesktopSharingSettingsExtension(DesktopSharingSettings):
 
 class FileTransferSettingsExtension(FileTransferSettings):
     disabled = Setting(type=bool, default=False)
-    directory = Setting(type=UserDataPath, default=UserDataPath('file_transfers'))
+    directory = Setting(type=UserDataPath, default=UserDataPath(os.path.expanduser('~/Downloads')))
     auto_accept = Setting(type=bool, default=False)
     render_incoming_video_in_chat_window = Setting(type=bool, default=True)
     render_incoming_image_in_chat_window = Setting(type=bool, default=True)
