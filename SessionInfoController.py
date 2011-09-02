@@ -127,12 +127,6 @@ class SessionInfoController(NSObject):
             self.notification_center.add_observer(self, sender=self.audio_stream)
             self.notification_center.add_observer(self, sender=self.audio_stream.stream)
 
-    def add_chat_stream(self):
-        if self.sessionController is not None and self.sessionController.hasStreamOfType("chat") and self.chat_stream is None:
-            self.chat_stream = self.sessionController.streamHandlerOfType("chat")
-            self.notification_center.add_observer(self, sender=self.chat_stream)
-            self.notification_center.add_observer(self, sender=self.chat_stream.stream)
-
     def remove_audio_stream(self):
         if self.audio_stream is not None:
             self.notification_center.remove_observer(self, sender=self.audio_stream)
@@ -140,11 +134,16 @@ class SessionInfoController(NSObject):
             self.audio_stream = None
             self.updateAudioStatus()
 
+    def add_chat_stream(self):
+        if self.sessionController is not None and self.sessionController.hasStreamOfType("chat") and self.chat_stream is None:
+            self.chat_stream = self.sessionController.streamHandlerOfType("chat")
+
     def remove_chat_stream(self):
         if self.chat_stream is not None:
-            self.notification_center.remove_observer(self, sender=self.chat_stream)
-            self.notification_center.remove_observer(self, sender=self.chat_stream.stream)
             self.chat_stream = None
+
+    def _NH_MediaStreamDidFail(self, notification):
+        self.remove_audio_stream()
 
     def _NH_BlinkDidRenegotiateStreams(self, notification):
         if notification.data.action == 'remove':
