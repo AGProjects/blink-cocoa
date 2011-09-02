@@ -312,6 +312,7 @@ class SessionController(NSObject):
             # no session yet, initiate it
             self.initializeSessionWithAccount(self.account)
             new_session = True
+            self.info_panel = SessionInfoController(self)
 
         for stype in stype_tuple:
             if type(stype) == tuple:
