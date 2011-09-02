@@ -130,13 +130,12 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['file_transfer.directory'] = HiddenOption
             PreferenceOptionTypes['logs.directory'] = HiddenOption
 
-            for i in ('answering_machine', 'contacts', 'advanced', 'alerts'):
-                j = 0
-                for item in self.toolbar.visibleItems():
-                    if item.itemIdentifier() == i:
-                        self.toolbar.removeItemAtIndex_(j)
-                    else:
-                        j += 1
+            for identifier in ('answering_machine', 'contacts', 'advanced', 'alerts'):
+                try:
+                    item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
+                    self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
+                except StopIteration:
+                    pass
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
