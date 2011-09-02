@@ -15,7 +15,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, formatName
+from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
@@ -296,6 +296,12 @@ class PreferencesController(NSWindowController, object):
             try:
                 tooltip = ToolTips[description_key]
                 control.setTooltip(tooltip)
+            except KeyError:
+                pass
+
+            try:
+                placeholder = Placeholders[description_key]
+                control.setPlaceHolder(placeholder)
             except KeyError:
                 pass
 

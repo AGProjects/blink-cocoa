@@ -114,6 +114,9 @@ class Option(HorizontalBoxView):
     def setTooltip(self, text):
         pass
 
+    def setPlaceHolder(self, text):
+        pass
+
 
 class BoolOption(Option):    
     def __init__(self, object, name, option, description=None):
@@ -157,8 +160,6 @@ class StringOption(Option):
             self.text = NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         else:
             self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
-            if Placeholders.has_key(name):
-                self.text.cell().setPlaceholderString_(Placeholders[name])
 
         self.text.sizeToFit()
         self.setViewExpands(self.text)
@@ -196,6 +197,9 @@ class StringOption(Option):
     def setTooltip(self, text):
         self.text.setToolTip_(text)
 
+    def setPlaceHolder(self, text):
+        self.text.cell().setPlaceholderString_(text)
+
 
 class NullableStringOption(StringOption):
     def __init__(self, object, name, option, description=None):
@@ -215,8 +219,6 @@ class UnicodeOption(Option):
             self.text = NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         else:
             self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
-        if Placeholders.has_key(name):
-            self.text.cell().setPlaceholderString_(Placeholders[name])
 
         self.text.sizeToFit()
         self.setViewExpands(self.text)
@@ -246,6 +248,9 @@ class UnicodeOption(Option):
 
     def setTooltip(self, text):
         self.text.setToolTip_(text)
+
+    def setPlaceHolder(self, text):
+        self.text.cell().setPlaceholderString_(text)
 
 
 class NullableUnicodeOption(UnicodeOption):
@@ -1457,11 +1462,12 @@ SettingDescription = {
                       }
 
 Placeholders = {
-                 'alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
-                 'outbound_proxy' : 'sip.example.com:5061;transport=tls',
-                 'msrp_relay': 'relay.example.com:2855;transport=tls',
+                 'server.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
+                 'sip.outbound_proxy' : 'sip.example.com:5061;transport=tls',
+                 'nat_travsersal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'voicemail_uri': 'user@example.com',
-                 'xcap_root': 'https://xcap.example.com/xcap-root/'}
+                 'file_transfer.directory': '~/Downloads',
+                 'xcap.xcap_root': 'https://xcap.example.com/xcap-root/'}
 
 SectionNames = {
                        'audio': 'Audio Calls',
