@@ -60,7 +60,7 @@ class SIPSettingsExtension(SIPSettings):
 class ServerSettings(SettingsGroup):
     settings_url = Setting(type=HTTPURL, default=None, nillable=True)
     conference_server = Setting(type=Hostname, default=None, nillable=True)
-    web_password = Setting(type=str, default='')
+    web_password = Setting(type=str, default='', nillable=True)
 
 class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=AccountSoundFile, default=AccountSoundFile(AccountSoundFile.DefaultSoundFile('sounds.audio_inbound')), nillable=True)
