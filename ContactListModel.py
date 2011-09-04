@@ -42,6 +42,14 @@ from util import *
 
 ICON_SIZE=48
 
+
+def base64Icon(icon):
+    tiff_data = icon.TIFFRepresentation()
+    bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+    png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+    return base64.b64encode(png_data)
+
+
 PresenceActivityPrefix = {
     "Available": "is",
     "Working": "is",
@@ -307,31 +315,30 @@ class BlinkPresenceContact(BlinkContact):
             self.reference.save()
 
     def saveIcon(self):
-        if self.reference:
-            if self.icon:
-                originalSize = self.icon.size()
-                if originalSize.width > ICON_SIZE or originalSize.height > ICON_SIZE:
-                    resizeWidth = ICON_SIZE
-                    resizeHeight = ICON_SIZE * originalSize.height/originalSize.width
-                    scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
-                    scaled_icon.lockFocus()
-                    self.icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
-                    scaled_icon.unlockFocus()
-                    tiff_data = scaled_icon.TIFFRepresentation()
-                    saveContactIconToFile(scaled_icon, str(self.uri))
-                else:
-                    tiff_data = self.icon.TIFFRepresentation()
-                    saveContactIconToFile(self.icon, str(self.uri))
-
-                bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
-                png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-                self.reference.icon = base64.b64encode(png_data)
+        if self.icon:
+            originalSize = self.icon.size()
+            base64icon = None
+            if originalSize.width > ICON_SIZE or originalSize.height > ICON_SIZE:
+                resizeWidth = ICON_SIZE
+                resizeHeight = ICON_SIZE * originalSize.height/originalSize.width
+                scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
+                scaled_icon.lockFocus()
+                self.icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
+                scaled_icon.unlockFocus()
+                saveContactIconToFile(scaled_icon, str(self.uri))
+                base64icon = base64Icon(scaled_icon)
             else:
-                self.reference.icon = None
-                saveContactIconToFile(None, str(self.uri))
-            self.reference.save()
+                saveContactIconToFile(self.icon, str(self.uri))
+                base64icon = base64Icon(self.icon)
+
+            if self.reference and base64icon:
+                self.reference.icon = base64icon
+                self.reference.save()
         else:
             saveContactIconToFile(None, str(self.uri))
+            if self.reference:
+                self.reference.icon = None
+                self.reference.save()
 
 
 class HistoryBlinkContact(BlinkContact):
@@ -1871,6 +1878,9 @@ class ContactListModel(CustomListModel):
                 contact = Contact(blink_contact.uri, group=group, account=blink_contact.stored_in_account)
                 contact.aliases = new_aliases if new_aliases else None
                 contact.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
+                base64icon = base64Icon(blink_contact.icon)
+                if base64icon:
+                    contact.icon = base64icon
                 contact.name = blink_contact.display_name
                 contact.save()
             else:
