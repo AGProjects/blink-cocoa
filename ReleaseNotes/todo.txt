@@ -1,8 +1,10 @@
 Main tasks
 ----------
 
++ LDAP support
 + Presence
-+ iOS port
+- Video
 
 Measure keyboard/mouse idle time for presence
 http://stackoverflow.com/questions/3799717/hide-mouse-cursor-on-os-x-after-a-few-seconds
+
