@@ -1667,7 +1667,7 @@ class ContactListModel(CustomListModel):
 
         if group.type == "addressbook":
             self.addressbook_group.name = group.name
-            if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_address_book:
+            if settings.contacts.enable_address_book:
                 if not group.position:
                     position = len(self.contactGroupsList) - 1 if self.contactGroupsList else 0
                     group.position = position
