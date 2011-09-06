@@ -697,7 +697,7 @@ class ChatWindowController(NSWindowController):
         if menu == self.participantMenu:
             session = self.selectedSessionController()
             if session:
-                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session is not None and session.session.state == 'connected' else False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session is not None and session.session.state is not None else False)
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setTitle_('Hide Session Information' if session.info_panel is not None and session.info_panel.window.isVisible() else 'Show Session Information')
             else:
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(False)
