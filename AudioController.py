@@ -17,6 +17,7 @@ from collections import deque
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
+from sipsimple.account import BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -637,6 +638,23 @@ class AudioController(MediaStream):
 
         MediaStream.changeStatus(self, newstate, fail_reason)
 
+    def toggleHeight(self):
+        frame = self.view.frame()
+        if frame.size.height == self.normal_height:
+            self.setZRTPViewHeight(frame)
+        elif frame.size.height == self.zrtp_height:
+            self.setNormalViewHeight(frame)
+
+    def setZRTPViewHeight(self, frame):
+        frame.size.height = self.zrtp_height
+        self.zRTPBox.setHidden_(False)
+        self.view.setFrame_(frame)
+
+    def setNormalViewHeight(self, frame):
+        frame.size.height = self.normal_height
+        self.zRTPBox.setHidden_(True)
+        self.view.setFrame_(frame)
+
     def updateTimeElapsed(self):
         if not self.session:
             return
@@ -716,42 +734,28 @@ class AudioController(MediaStream):
             item.setEnabled_(False)
         else:
             can_propose = self.status == STREAM_CONNECTED and not self.sessionController.inProposal
-            item = menu.itemWithTag_(10) # Add Chat
+            item = menu.itemWithTag_(10) # add Chat
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
 
-            item = menu.itemWithTag_(13) # Add Video
+            item = menu.itemWithTag_(13) # add Video
             item.setEnabled_(can_propose and SIPManager().isMediaTypeSupported('video'))
             item.setHidden_(not(SIPManager().isMediaTypeSupported('video')))
 
             title = self.sessionController.getTitleShort()
             have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
-            item = menu.itemWithTag_(11)
+            item = menu.itemWithTag_(11) # request remote desktop
             item.setTitle_("Request Screen from %s" % title)
             item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-client'))
-            item = menu.itemWithTag_(12)
+            item = menu.itemWithTag_(12) # share local desktop
             item.setTitle_("Share My Screen with %s" % title)
             item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-server'))
 
+            item = menu.itemWithTag_(20) # add to contacts
+            item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
+
             item = menu.itemWithTag_(30)
-            item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state == 'connected' else False)
-            item.setTitle_('Hide Session Information' if self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
-
-    def toggleHeight(self):
-        frame = self.view.frame()
-        if frame.size.height == self.normal_height:
-            self.setZRTPViewHeight(frame)
-        elif frame.size.height == self.zrtp_height:
-            self.setNormalViewHeight(frame)
-
-    def setZRTPViewHeight(self, frame):
-        frame.size.height = self.zrtp_height
-        self.zRTPBox.setHidden_(False)
-        self.view.setFrame_(frame)
-
-    def setNormalViewHeight(self, frame):
-        frame.size.height = self.normal_height
-        self.zRTPBox.setHidden_(True)
-        self.view.setFrame_(frame)
+            item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
+            item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
 
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):
@@ -772,7 +776,7 @@ class AudioController(MediaStream):
             else:
                 display_name = None
             NSApp.delegate().windowController.addContact(self.sessionController.target_uri, display_name)
-            sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
+            sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
         elif tag == 30: #
             self.sessionController.info_panel.toggle()
 
