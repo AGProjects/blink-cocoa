@@ -62,7 +62,7 @@ PARTICIPANTS_MENU_SEND_FILES = 323
 
 # TODO: enable presence -adi
 ENABLE_PRESENCE=True
-ENABLE_DIALOG=FALSE
+ENABLE_DIALOG=False
 
 class PhotoView(NSImageView):
     entered = False
