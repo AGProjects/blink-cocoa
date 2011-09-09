@@ -20,7 +20,7 @@ from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
-from ContactWindowController import ENABLE_PRESENCE
+from ContactWindowController import ENABLE_DIALOG, ENABLE_PRESENCE
 
 class PreferencesController(NSWindowController, object):
     implements(IObserver)
@@ -231,7 +231,10 @@ class PreferencesController(NSWindowController, object):
             if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn'):
                 continue
 
-            if section in ('presence', 'dialog_event') and not ENABLE_PRESENCE:
+            if section == 'presence' and not ENABLE_PRESENCE:
+                continue
+
+            if section == 'dialog_event' and not ENABLE_DIALOG:
                 continue
 
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
@@ -270,7 +273,7 @@ class PreferencesController(NSWindowController, object):
         except KeyError:
             options = unordered_options
 
-        if not ENABLE_PRESENCE:
+        if not ENABLE_PRESENCE and not ENABLE_DIALOG:
             PreferenceOptionTypes['sip.publish_interval'] = HiddenOption
 
         for option_name in options:
