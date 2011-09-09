@@ -172,8 +172,6 @@ class SessionController(NSObject):
             if not is_update:
                 self.session.accept(streams)
         except Exception, exc:
-            import traceback
-            traceback.print_exc()
             # if there was some exception, reject the session
             if is_update:
                 self.log_info(u"Error initializing additional streams: %s" % exc)
