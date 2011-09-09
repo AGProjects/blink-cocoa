@@ -91,11 +91,11 @@ class EnrollmentController(NSObject):
             password = unicode(self.passwordText.stringValue())
 
             if not address or "@" not in address:
-                NSRunAlertPanel("Sign In to SIP Account", "Please enter your SIP Account address.",
+                NSRunAlertPanel("Sign In to SIP Account", "Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com",
                                 "OK", None, None)
                 return False
             if not password:
-                NSRunAlertPanel("Sign In to SIP Account", "Please enter your SIP Account password.",
+                NSRunAlertPanel("Sign In to SIP Account", "Please enter your account password.",
                                 "OK", None, None)
                 return False
             return True
