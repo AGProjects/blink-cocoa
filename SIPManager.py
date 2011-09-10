@@ -932,10 +932,6 @@ class SIPManager(object):
             s.close()
             return False
 
-    def activateRemoteDesktopSharing(self):
-        # TODO: automatic check if VNC server is running with the right options, if not relaunch it -adi
-        # http://docs.info.apple.com/article.html?path=RemoteDesktop/3.0/en/ARDC882.html
-        pass
 
     def isProposedMediaTypeSupported(self, streams):
         settings = SIPSimpleSettings()
@@ -950,7 +946,6 @@ class SIPManager(object):
                     return False
                 if not self.isRemoteDesktopSharingActive():
                     BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
-                    self.activateRemoteDesktopSharing()
                     return False
 
         if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
@@ -974,7 +969,6 @@ class SIPManager(object):
             if settings.desktop_sharing.disabled:
                 return False
             if not self.isRemoteDesktopSharingActive():
-                self.activateRemoteDesktopSharing()
                 return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
