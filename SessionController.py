@@ -255,7 +255,6 @@ class SessionController(NSObject):
 
     def removeStreamHandler(self, streamHandler):
         if streamHandler not in self.streamHandlers:
-            self.log_info("Error: Attempt to remove an invalid stream handler")
             return
 
         self.streamHandlers.remove(streamHandler)
