@@ -778,7 +778,8 @@ class AudioController(MediaStream):
             NSApp.delegate().windowController.addContact(self.sessionController.target_uri, display_name)
             sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
         elif tag == 30: #
-            self.sessionController.info_panel.toggle()
+            if self.sessionController.info_panel is not None:
+                self.sessionController.info_panel.toggle()
 
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
@@ -788,7 +789,8 @@ class AudioController(MediaStream):
 
     @objc.IBAction
     def userClickedSessionInfoButton_(self, sender):
-        self.sessionController.info_panel.toggle()
+        if self.sessionController.info_panel is not None:
+            self.sessionController.info_panel.toggle()
 
     @objc.IBAction
     def userClickedZRTPVerifyButton_(self, sender):
