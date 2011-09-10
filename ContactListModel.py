@@ -955,10 +955,14 @@ class CustomListModel(NSObject):
                 return True
         else:
             for group_index, group in enumerate(self.contactGroupsList):
-                if items[0] in group.contacts:
+                if isinstance(group, BlinkContactGroup) and items[0] in group.contacts:
                     contact_index = group.contacts.index(items[0])
                     pboard.declareTypes_owner_(["dragged-contact", "x-blink-sip-uri"], self)
                     pboard.setString_forType_(str((group_index, contact_index)), "dragged-contact")
+                    pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
+                    return True
+                elif isinstance(group, SearchResultContact):
+                    pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
                     pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
                     return True
             else:
