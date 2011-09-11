@@ -929,8 +929,8 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setStringValue_(u"Connected")
                 self.audioStatus.setHidden_(False)
             else:
-                self.audioStatus.setHidden_(True)
-                self.audioStatus.setStringValue_('')
+                self.audioStatus.setHidden_(False)
+                self.audioStatus.setStringValue_(u"Not Connected")
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
