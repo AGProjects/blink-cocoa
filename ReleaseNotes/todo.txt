@@ -1,8 +1,9 @@
 Main tasks
 ----------
 
-+ LDAP support
 + Presence
+- LDAP support
+- AGC
 - Video
 
 Measure keyboard/mouse idle time for presence
