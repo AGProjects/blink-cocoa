@@ -13,7 +13,6 @@
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<integer value="135"/>
-			<integer value="1"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -194,8 +193,8 @@
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">91FA6B1F-67F1-4778-BE23-5E3E60B93288</characters>
 								</object>
-								<string key="NSToolbarItemLabel">Reconnect</string>
-								<string key="NSToolbarItemPaletteLabel">Reconnect</string>
+								<string key="NSToolbarItemLabel">Connect</string>
+								<string key="NSToolbarItemPaletteLabel">Connect</string>
 								<string key="NSToolbarItemToolTip">Reconnect the Chat session</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
@@ -530,6 +529,7 @@
 							<int key="NSvFlags">290</int>
 							<string key="NSFrame">{{0, -1}, {650, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -537,6 +537,7 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 21}, {650, 500}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<object class="NSMutableArray" key="NSTabViewItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
 							</object>
@@ -548,6 +549,7 @@
 					</object>
 					<string key="NSFrameSize">{650, 521}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{650, 597}</string>
