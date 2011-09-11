@@ -460,10 +460,15 @@ class ChatController(MediaStream):
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
 
-    def startOutgoing(self, is_update):
+    def openChatWindow(self):
         ChatWindowManager.ChatWindowManager().addChatWindow(self.sessionController)
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         window.chat_controllers.add(self)
+        window.drawer.open()
+        self.changeStatus(STREAM_IDLE)
+
+    def startOutgoing(self, is_update):
+        self.openChatWindow()
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):

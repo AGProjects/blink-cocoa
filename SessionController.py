@@ -92,6 +92,7 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
         self.info_panel = SessionInfoController(self)
+        self.open_chat_window_only = False
 
         # used for accounting
         self.streams_log = []
@@ -124,6 +125,7 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
         self.info_panel = SessionInfoController(self)
+        self.open_chat_window_only = False
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -291,6 +293,7 @@ class SessionController(NSObject):
         self.streams_log = []
         self.remote_conference_has_audio = False
         self.info_panel = None
+        self.open_chat_window_only = False
 
     def initializeSessionWithAccount(self, account):
         if self.session is None:
@@ -330,7 +333,12 @@ class SessionController(NSObject):
                 controller = handlerClass(self, stream)
                 self.streamHandlers.append(controller)
 
-                controller.startOutgoing(not new_session, **kwargs)
+                if stype == 'chat' and len(stype_tuple) == 1 and self.open_chat_window_only:
+                    # just show the window and wait for user to type before starting the outgoing session
+                    controller.openChatWindow()
+                else:
+                    # starts outgoing chat session
+                    controller.startOutgoing(not new_session, **kwargs)
 
                 if not new_session:
                     self.log_info("Adding %s stream"%stype)
@@ -339,21 +347,28 @@ class SessionController(NSObject):
 
             else:
                 self.log_info("Stream already exists: %s"%self.streamHandlers)
+                if stype == 'chat':
+                    controller = self.streamHandlerOfType('chat')
+                    if controller.status == STREAM_IDLE and len(stype_tuple) == 1:
+                        # starts outgoing chat session
+                        new_session = True
+                        controller.startOutgoing(not new_session, **kwargs)
 
         if new_session:
-            self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
-            self.changeSessionState(STATE_DNS_LOOKUP)
-            SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
+            if not self.open_chat_window_only:
+                # starts outgoing chat session
+                self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
+                self.changeSessionState(STATE_DNS_LOOKUP)
+                SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
-            if SIPManager().pause_itunes:
-                if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
-                    self.waitingForITunes = True
-                    itunes_interface = ITunesInterface()
-                    self.notification_center.add_observer(self, sender=itunes_interface)
-                    itunes_interface.pause()
-                else:
-                    self.waitingForITunes = False
-    
+                if SIPManager().pause_itunes:
+                    if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
+                        self.waitingForITunes = True
+                        itunes_interface = ITunesInterface()
+                        self.notification_center.add_observer(self, sender=itunes_interface)
+                        itunes_interface.pause()
+                    else:
+                        self.waitingForITunes = False
         else:
             for stream in add_streams:
                 try:
@@ -362,7 +377,8 @@ class SessionController(NSObject):
                     self.log_info("IllegalStateError: %s" % e)
                     return False
             self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
-        
+
+        self.open_chat_window_only = False
         return True
 
     def startSessionWithStreamOfType(self, stype, kwargs={}): # pyobjc doesn't like **kwargs
@@ -637,6 +653,7 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.streams_log = []
         self.remote_conference_has_audio = False
+        self.open_chat_window_only = False
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 

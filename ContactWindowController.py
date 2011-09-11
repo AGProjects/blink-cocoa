@@ -1187,6 +1187,10 @@ class ContactWindowController(NSWindowController):
             media = ("video", "audio")
 
         if type(media) is not tuple:
+            if media == "chat":
+                # just show the window and wait for user to type before starting the outgoing session
+                session.open_chat_window_only = True
+
             if not session.startSessionWithStreamOfType(media):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
