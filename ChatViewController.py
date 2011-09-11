@@ -389,7 +389,7 @@ class ChatViewController(NSObject):
             listener.ignore()
             NSWorkspace.sharedWorkspace().openURL_(theURL)
 
-    # capture java-script funtion collaborativeEditorisTyping
+    # capture java-script function collaborativeEditorisTyping
     def isSelectorExcludedFromWebScript_(self, sel):
         if sel == "collaborativeEditorisTyping":
             return False
