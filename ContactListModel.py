@@ -44,6 +44,8 @@ ICON_SIZE=48
 
 
 def base64Icon(icon):
+    if not icon:
+        return None
     tiff_data = icon.TIFFRepresentation()
     bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
     png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
