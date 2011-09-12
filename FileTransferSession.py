@@ -141,6 +141,9 @@ class FileTransfer(object):
             self.last_rate_pos = self.file_pos
             self.rate_history = []
 
+        notification_center = NotificationCenter()
+        notification_center.post_notification("BlinkFileTransferSpeedDidUpdate", sender=self)
+
     @run_in_green_thread
     def add_to_history(self):
         FileTransferHistory().add_transfer(transfer_id=self.ft_info.transfer_id, direction=self.ft_info.direction, local_uri=self.ft_info.local_uri, remote_uri=self.ft_info.remote_uri, file_path=self.ft_info.file_path, bytes_transfered=self.ft_info.bytes_transfered, file_size=self.ft_info.file_size or 0, status=self.ft_info.status)
@@ -375,6 +378,7 @@ class IncomingFileTransferHandler(FileTransfer):
 
         self.session = None
         self.stream = None
+        self.transfer_rate = None
         self.add_to_history()
 
     _NH_BlinkFileTransferDidFail = _NH_BlinkFileTransferDidEnd
@@ -601,6 +605,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             notification_center.remove_observer(self, sender=self.session)
             self.session = None
             self.stream = None
+            self.transfer_rate = None
         self.add_to_history()
 
     _NH_BlinkFileTransferDidFail = _NH_BlinkFileTransferDidEnd
@@ -843,6 +848,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
         self.session = None
         self.stream = None
+        self.transfer_rate = None
         self.add_to_history()
 
     _NH_BlinkFileTransferDidFail = _NH_BlinkFileTransferDidEnd

@@ -17,8 +17,8 @@ from FileTransferItemView import FileTransferItemView
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 import SIPManager
-from FileTransferSession import IncomingFileTransferHandler
-
+from FileTransferSession import IncomingFileTransferHandler, OutgoingPushFileTransferHandler, OutgoingPullFileTransferHandler
+from util import format_size
 
 def openFileTransferSelectionDialog(account, dest_uri):
     if not SIPManager.SIPManager().isMediaTypeSupported('file-transfer'):
@@ -39,6 +39,7 @@ class FileTransferWindowController(NSObject, object):
     window = objc.IBOutlet()
     listView = objc.IBOutlet()
     bottomLabel = objc.IBOutlet()
+    transferSpeed = objc.IBOutlet()
     history = []
 
     def init(self):
@@ -46,7 +47,7 @@ class FileTransferWindowController(NSObject, object):
         NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
-
+        NotificationCenter().add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
         NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
 
         NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
@@ -101,6 +102,29 @@ class FileTransferWindowController(NSObject, object):
 
         self.get_previous_transfers(active_items)
 
+    def refresh_transfer_rate(self):
+        incoming_transfer_rate = 0
+        outgoing_transfer_rate = 0
+        for item in self.listView.subviews().copy():
+            if item.transfer and item.transfer.transfer_rate is not None:
+                if isinstance(item.transfer, IncomingFileTransferHandler):
+                    incoming_transfer_rate += item.transfer.transfer_rate
+                elif isinstance(item.transfer, OutgoingPushFileTransferHandler):
+                    outgoing_transfer_rate += item.transfer.transfer_rate
+                elif isinstance(item.transfer, OutgoingPushFileTransferHandler):
+                    incoming_transfer_rate += item.transfer.transfer_rate
+
+        if incoming_transfer_rate or outgoing_transfer_rate:
+            if incoming_transfer_rate and outgoing_transfer_rate:
+                text = 'Incoming %s/s, Outgoing %s/s' % (format_size(incoming_transfer_rate, bits=True), format_size(outgoing_transfer_rate, bits=True))
+            elif incoming_transfer_rate:
+                text = 'Incoming %s/s' % format_size(incoming_transfer_rate, bits=True)
+            elif outgoing_transfer_rate:
+                text = 'Outgoing %s/s' % format_size(outgoing_transfer_rate, bits=True)
+            self.transferSpeed.setStringValue_(text)
+        else:
+            self.transferSpeed.setStringValue_('No Active Transfers')
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -149,6 +173,10 @@ class FileTransferWindowController(NSObject, object):
 
     def _NH_BlinkFileTransferDidFail(self, sender, data):
         self.listView.relayout()
+        self.refresh_transfer_rate()
+
+    def _NH_BlinkFileTransferSpeedDidUpdate(self, sender, data):
+        self.refresh_transfer_rate()
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
@@ -156,5 +184,6 @@ class FileTransferWindowController(NSObject, object):
         if not (isinstance(sender, IncomingFileTransferHandler) and sender.file_name.startswith('xscreencapture')):
             self.window.orderFront_(None)
             NSApp.requestUserAttention_(NSInformationalRequest)
+        self.refresh_transfer_rate()
 
 
