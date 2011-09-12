@@ -942,7 +942,7 @@ class ContactWindowController(NSWindowController):
                 self.searchContacts()
 
                 row = self.contactOutline.rowForItem_(contact)
-                if row != NSNotFound:
+                if row != NSNotFound and row != -1:
                     self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
                     self.contactOutline.scrollRowToVisible_(row)
                     self.window().makeFirstResponder_(self.contactOutline)
@@ -958,7 +958,7 @@ class ContactWindowController(NSWindowController):
                 self.searchContacts()
 
                 row = self.contactOutline.rowForItem_(contact)
-                if row != -1:
+                if row != NSNotFound and row != -1:
                     self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
                     self.contactOutline.scrollRowToVisible_(row)
                     self.window().makeFirstResponder_(self.contactOutline)
