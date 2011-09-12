@@ -117,7 +117,7 @@ class FileTransfer(object):
                     time_left = "%i minutes left" % (eta/60)
                 else:
                     time_left = "%s left" % format_duration(datetime.timedelta(seconds=eta))
-                status = "%s of %s (%s/sec) %s %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024), format_size(self.transfer_rate), unichr(0x2014), time_left)
+                status = "%s of %s (%s/s) %s %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024), format_size(self.transfer_rate, bits=True), unichr(0x2014), time_left)
         else:
             status = "%s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
         return status

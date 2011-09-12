@@ -183,26 +183,51 @@ def is_full_sip_uri(uri):
             return sip_uri.user is not None and sip_uri.host is not None
 
 
-def format_size(s, minsize=0):
-    if max(s,minsize) < 1024:
-        return "%s B"%s
-    elif max(s,minsize) < 1024*1024:
-        return "%.01f KB"%(s/1024.0)
-    elif max(s,minsize) < 1024*1024*1024:
-        return "%.02f MB"%(s/(1024.0*1024.0))
+def format_size(s, minsize=0, bits=False):
+    if bits:
+        # used for network speed
+        s = s * 8;
+        if max(s,minsize) < 1024:
+            return "%s bit"%s
+        elif max(s,minsize) < 1024*1024:
+            return "%.01f Kbit"%(s/1024.0)
+        elif max(s,minsize) < 1024*1024*1024:
+            return "%.02f Mbit"%(s/(1024.0*1024.0))
+        else:
+            return "%.04f Gbit"%(s/(1024.0*1024.0*1024.0))
     else:
-        return "%.04f GB"%(s/(1024.0*1024.0*1024.0))
+        if max(s,minsize) < 1024:
+            return "%s B"%s
+        elif max(s,minsize) < 1024*1024:
+            return "%.01f KB"%(s/1024.0)
+        elif max(s,minsize) < 1024*1024*1024:
+            return "%.02f MB"%(s/(1024.0*1024.0))
+        else:
+            return "%.04f GB"%(s/(1024.0*1024.0*1024.0))
 
 
-def format_size_rounded(s, minsize=0):
-    if max(s,minsize) < 1024:
-        return "%s B"%s
-    elif max(s,minsize) < 1024*1024:
-        return "%.00f KB"%(s/1024.0)
-    elif max(s,minsize) < 1024*1024*1024:
-        return "%.01f MB"%(s/(1024.0*1024.0))
+def format_size_rounded(s, minsize=0, bits=False):
+    if bits:
+        # used for network speed
+        s = s * 8;
+        if max(s,minsize) < 1024:
+            return "%s bit"%s
+        elif max(s,minsize) < 1024*1024:
+            return "%.00f Kbit"%(s/1024.0)
+        elif max(s,minsize) < 1024*1024*1024:
+            return "%.01f Mbit"%(s/(1024.0*1024.0))
+        else:
+            return "%.01f Gbit"%(s/(1024.0*1024.0*1024.0))
     else:
-        return "%.01f GB"%(s/(1024.0*1024.0*1024.0))
+        # used for file size
+        if max(s,minsize) < 1024:
+            return "%s B"%s
+        elif max(s,minsize) < 1024*1024:
+            return "%.00f KB"%(s/1024.0)
+        elif max(s,minsize) < 1024*1024*1024:
+            return "%.01f MB"%(s/(1024.0*1024.0))
+        else:
+            return "%.01f GB"%(s/(1024.0*1024.0*1024.0))
 
 
 def escape_html(text):
