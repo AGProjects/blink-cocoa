@@ -45,7 +45,7 @@ def loadImages():
 
 AUDIO_CLEANUP_DELAY = 4.0
 TRANSFERRED_CLEANUP_DELAY = 6.0
-
+STATISTICS_INTERVAL = 3.0
 
 class AudioController(MediaStream):
     implements(IObserver)
@@ -74,6 +74,7 @@ class AudioController(MediaStream):
     recordingImage = 0
     audioEndTime = None
     timer = None
+    statistics_timer = None
     transfer_timer = None
     hangedUp = False
     transferred = False
@@ -101,12 +102,10 @@ class AudioController(MediaStream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
 
         if self:
-            self.last_latency = ''
-            self.last_packet_loss = ''
-            self.last_jitter = ''
-
-            self.latency_history = deque([None for x in xrange(600), 600]) # 10 minutes of history data for printing in Session Info graph
-            self.packet_loss_history = deque([None for x in xrange(600), 600])
+            self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
+            # 10 minutes of history data for printing in Session Info graph
+            self.loss_history = deque([None for x in xrange(600), 600])
+            self.rtt_history = deque([None for x in xrange(600), 600])
             self.jitter_history = deque([None for x in xrange(600), 600])
 
             self.notification_center = NotificationCenter()
@@ -132,6 +131,11 @@ class AudioController(MediaStream):
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
 
+            if not self.statistics_timer:
+                self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSModalPanelRunLoopMode)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSDefaultRunLoopMode)
+
             loadImages()
 
             self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
@@ -151,6 +155,8 @@ class AudioController(MediaStream):
     def dealloc(self):
         if self.timer:
             self.timer.invalidate()
+        if self.statistics_timer:
+            self.statistics_timer.invalidate()
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False):
@@ -401,7 +407,7 @@ class AudioController(MediaStream):
         self.sessionController.transferSession(target)
 
     def updateTimer_(self, timer):
-        self.updateTimeElapsed()
+        self.updateTileStatistics()
         
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
@@ -655,14 +661,30 @@ class AudioController(MediaStream):
         self.zRTPBox.setHidden_(True)
         self.view.setFrame_(frame)
 
-    def updateTimeElapsed(self):
-        if not self.session:
+    def updateStatisticsTimer_(self, timer):
+        self.getStatistics()
+
+    def getStatistics(self):
+        if not self.stream:
             return
 
-        status_data = TimestampedNotificationData()
-        status_data.loss = ''
-        status_data.latency = ''
-        status_data.jitter = ''
+        stats = self.stream.statistics
+        if stats is not None:
+            jitter = float(stats['rx']['jitter']['avg']) / 1000 + float(stats['tx']['jitter']['avg']) / 1000
+            rtt = stats['rtt']['avg'] / 1000
+            loss = 100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
+            if loss > 100:
+                loss = 100.0
+
+            self.statistics['loss']=loss
+            if jitter:
+                self.statistics['jitter']=jitter
+            if rtt:
+                self.statistics['rtt']=rtt
+
+    def updateDuration(self):
+        if not self.session:
+            return
 
         if self.session.end_time:
             now = self.session.end_time
@@ -679,46 +701,36 @@ class AudioController(MediaStream):
         else:
             self.elapsed.setStringValue_(u"")
 
+
+    def updateTileStatistics(self):
+        if not self.session:
+            return
+
+        self.updateDuration()
+
         if self.stream:
-            stats = self.stream.statistics
-            if stats is not None:
-                jitter = float(stats['rx']['jitter']['avg']) / 1000 + float(stats['tx']['jitter']['avg']) / 1000
-                rtt = stats['rtt']['avg'] / 1000
-                pktloss = 100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
-                # pjsip reports wrong values sometime, which leads to more than 100% loss
-                if pktloss > 100:
-                    pktloss = 100.0
-                text = []
-                if rtt > 1000:
-                    latency = '%.1f' % (float(rtt)/1000.0)
-                    text.append('Latency %ss' % latency)
-                    status_data.latency = '%s s' % latency
-                elif rtt > 100:
-                    text.append('Latency %dms' % rtt)
-                    status_data.latency = '%d ms' % rtt
-                else:
-                    status_data.latency = '%d ms' % rtt
+            jitter = self.statistics['jitter']
+            rtt = self.statistics['rtt']
+            loss = self.statistics['loss']
 
-                if pktloss > 3:
-                    text.append('Packet Loss %d%%' % pktloss)
+            self.jitter_history.append(jitter)
+            self.rtt_history.append(rtt)
+            self.loss_history.append(loss)
 
-                status_data.loss = '%.1f %%' % pktloss
-                status_data.jitter = '%.1f ms' % jitter
+            text = []
+            if rtt > 1000:
+                latency = '%.1f' % (float(rtt)/1000.0)
+                text.append('Latency %ss' % latency)
+            elif rtt > 100:
+                text.append('Latency %dms' % rtt)
 
-                self.info.setStringValue_(", ".join(text))
-                self.latency_history.append(rtt or 0)
-                self.jitter_history.append(jitter or 0)
-                self.packet_loss_history.append(pktloss or 0)
-            else:
-                self.info.setStringValue_("")
+            if loss > 3:
+                text.append('Packet Loss %d%%' % loss)
+
+            self.info.setStringValue_(", ".join(text))
+
         else:
             self.info.setStringValue_("")
-
-        if self.last_latency != status_data.latency or self.last_packet_loss != status_data.loss or self.last_jitter != status_data.jitter:
-            self.last_latency = status_data.latency
-            self.last_packet_loss = status_data.loss
-            self.last_jitter = status_data.jitter
-            self.notification_center.post_notification("AudioSessionInformationGotUpdated", sender=self, data=status_data)
 
     def menuWillOpen_(self, menu):
         if menu == self.transferMenu:
@@ -962,8 +974,8 @@ class AudioController(MediaStream):
         self.ice_negotiation_status = None
         self.holdByLocal = False
         self.holdByRemote = False
-        self.latency_history = None
-        self.packet_loss_history = None
+        self.rtt_history = None
+        self.loss_history = None
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
 
@@ -973,8 +985,8 @@ class AudioController(MediaStream):
         self.ice_negotiation_status = None
         self.holdByLocal = False
         self.holdByRemote = False
-        self.latency_history = None
-        self.packet_loss_history = None
+        self.rtt_history = None
+        self.loss_history = None
         self.sessionInfoButton.setEnabled_(False)
     
         self.sessionController.log_info( "Audio stream ended")

@@ -363,14 +363,6 @@ class DebugWindow(NSObject):
                     if session.remote_user_agent is not None:
                         text += 'Remote SIP User Agent is "%s"\n' % session.remote_user_agent
 
-                stats = audio_stream.statistics
-                if stats is not None:
-                    text += '%s %s: RTT=%d ms, packet loss=%.1f%%, jitter RX/TX=%d/%d ms\n' %\
-                            (datetime.now().replace(microsecond=0), session.remote_identity,
-                            stats['rtt']['avg'] / 1000,
-                            100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0,
-                            stats['rx']['jitter']['avg'] / 1000,
-                            stats['tx']['jitter']['avg'] / 1000)
                     astring = NSAttributedString.alloc().initWithString_(text)
                     self.rtpLog.textStorage().appendAttributedString_(astring)
                     self.rtpLog.scrollRangeToVisible_(NSMakeRange(self.rtpLog.textStorage().length()-1, 1))

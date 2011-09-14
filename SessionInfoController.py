@@ -227,8 +227,24 @@ class SessionInfoController(NSObject):
             self.resetAudio()
         else:
             self.updateAudioStatus()
-            self.audio_rtt.setStringValue_(self.audio_stream.last_latency if self.audio_stream.last_latency!= '0 ms' else '')
-            self.audio_packet_loss.setStringValue_(self.audio_stream.last_packet_loss)
+
+            self.audio_rtt_graph.setDataQueue_(self.audio_stream.rtt_history)
+            self.audio_packet_loss_graph.setDataQueue_(self.audio_stream.loss_history)
+            self.audio_jitter_graph.setDataQueue_(self.audio_stream.jitter_history)
+
+            rtt = self.audio_stream.statistics['rtt']
+            if rtt > 1000:
+                text = '%.1f s' % (float(rtt)/1000.0)
+            elif rtt > 100:
+                text = '%d ms' % rtt
+            elif rtt:
+                text = '%d ms' % rtt
+            else:
+                text = ''
+
+            self.audio_rtt.setStringValue_(text)
+            self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'])
+            self.audio_jitter.setStringValue_('%.1f ms' % self.audio_stream.statistics['jitter'])
 
             if self.audio_stream.stream.sample_rate and self.audio_stream.stream.codec:
                 self.audio_codec.setStringValue_(self.audio_stream.stream.codec)
@@ -293,11 +309,7 @@ class SessionInfoController(NSObject):
     def updateTimer_(self, timer):
         if self.sessionController is not None:
             self.updateDuration()
-
-            if self.audio_stream:
-                self.audio_rtt_graph.setDataQueue_(self.audio_stream.latency_history)
-                self.audio_packet_loss_graph.setDataQueue_(self.audio_stream.packet_loss_history)
-                self.audio_jitter_graph.setDataQueue_(self.audio_stream.jitter_history)
+            self.updateAudio()
 
     def updateDuration(self):
         if self.sessionController is not None and self.sessionController.session is not None:
@@ -371,11 +383,6 @@ class SessionInfoController(NSObject):
 
     def _NH_AudioStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
-
-    def _NH_AudioSessionInformationGotUpdated(self, notification):
-        self.audio_rtt.setStringValue_(notification.data.latency if self.audio_stream.last_latency!= '0 ms' else '')
-        self.audio_packet_loss.setStringValue_(notification.data.loss)
-        self.audio_jitter.setStringValue_(notification.data.jitter)
 
     def show(self):
         self.window.makeKeyAndOrderFront_(None)
