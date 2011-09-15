@@ -232,9 +232,7 @@ class EnrollmentController(NSObject):
         AccountManager().default_account = account
 
         return True
-        
-            
-        
+
     @objc.IBAction
     def buttonClicked_(self, sender):
         if sender == self.nextButton:
