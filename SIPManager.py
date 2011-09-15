@@ -29,6 +29,7 @@ from gnutls.errors import GNUTLSError
 from socket import gethostbyname
 from zope.interface import implements
 
+from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.contact import Contact, ContactGroup
@@ -759,7 +760,8 @@ class SIPManager(object):
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
-        BlinkLogger().log_info(u"Starting SIP User Agent %s" % settings.user_agent)
+        BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s" % sdk_version)
+        BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
 
         if NSApp.delegate().applicationName == 'Blink Crypto':
             settings.service_provider.name = 'Philip R. Zimmermann'
