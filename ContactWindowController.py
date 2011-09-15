@@ -253,6 +253,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SIPAccountDidActivate")
         nc.add_observer(self, name="SIPAccountDidDeactivate")
+        nc.add_observer(self, name="SIPAccountManagerDidChangeDefaultAccount")
         nc.add_observer(self, name="SIPAccountWillRegister")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
@@ -488,6 +489,9 @@ class ContactWindowController(NSWindowController):
         self.refreshAccountList()
 
     def _NH_SIPAccountDidDeactivate(self, notification):
+        self.refreshAccountList()
+
+    def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.refreshAccountList()
 
     def _NH_SIPAccountWillRegister(self, notification):
