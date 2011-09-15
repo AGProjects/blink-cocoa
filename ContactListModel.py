@@ -40,7 +40,7 @@ from SIPManager import SIPManager, strip_addressbook_special_characters, Presenc
 from resources import ApplicationData
 from util import *
 
-ICON_SIZE=48
+ICON_SIZE=64
 
 
 def base64Icon(icon):
