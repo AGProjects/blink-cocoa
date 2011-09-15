@@ -468,6 +468,10 @@ class SessionController(NSObject):
         self.changeSessionState(STATE_DNS_FAILED, msg)
         self.end()
 
+        if self.info_panel is not None:
+            self.info_panel.close()
+            self.info_panel = None
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
