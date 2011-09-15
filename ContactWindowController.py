@@ -1225,7 +1225,6 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
-
     def startSessionWithSIPURI(self, text, session_type="audio"):
         account = self.activeAccount()
         if not account:
