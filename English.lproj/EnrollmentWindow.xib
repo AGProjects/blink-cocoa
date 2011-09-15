@@ -609,7 +609,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 									<object class="NSTextFieldCell" key="NSCell" id="412509263">
 										<int key="NSCellFlags">68288064</int>
 										<int key="NSCellFlags2">71304192</int>
-										<string key="NSContents">Choose Password:</string>
+										<string key="NSContents">Password:</string>
 										<reference key="NSSupport" ref="205924054"/>
 										<reference key="NSControlView" ref="972917323"/>
 										<reference key="NSBackgroundColor" ref="169502143"/>
@@ -757,7 +757,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 									<object class="NSTextFieldCell" key="NSCell" id="591129452">
 										<int key="NSCellFlags">68288064</int>
 										<int key="NSCellFlags2">71304192</int>
-										<string key="NSContents">Choose Username:</string>
+										<string key="NSContents">Username:</string>
 										<reference key="NSSupport" ref="205924054"/>
 										<reference key="NSControlView" ref="117238210"/>
 										<reference key="NSBackgroundColor" ref="169502143"/>
@@ -1591,6 +1591,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<string>85.IBPluginDependency</string>
 					<string>86.IBPluginDependency</string>
 					<string>89.IBPluginDependency</string>
+					<string>89.IBViewBoundsToFrameTransform</string>
 					<string>9.IBPluginDependency</string>
 					<string>90.IBPluginDependency</string>
 					<string>90.IBViewBoundsToFrameTransform</string>
@@ -1617,7 +1618,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
-						<bytes key="NSTransformStruct">AUFQAADCmAAAA</bytes>
+						<bytes key="NSTransformStruct">AUGgAADCogAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
@@ -1690,6 +1691,9 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABCVAAAw2UAAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSAffineTransform">
