@@ -283,7 +283,7 @@ class BlinkAppDelegate(NSObject):
                 self.aboutBundle.setHidden_(False)
             elif self.applicationName == 'Blink Crypto':
                 self.aboutBundle.setStringValue_("Crypto")
-                self.aboutSlogan.setStringValue_("VoIP Client with Guaranteed End-To-End Privacy")
+                self.aboutSlogan.setStringValue_("Guaranteed End-To-End Privacy")
                 self.aboutCredits.setAlignment_(NSCenterTextAlignment)
                 self.aboutCredits.setStringValue_("Brought to you by:\n\nAG Projects\nhttp://ag-projects.com\n\nand\n\nPhilip R. Zimmermann\nhttp://www.philzimmermann.com/")
                 self.aboutBundle.setHidden_(False)
