@@ -243,7 +243,7 @@ class SessionInfoController(NSObject):
                 text = ''
 
             self.audio_rtt.setStringValue_(text)
-            self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'])
+            self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'] if self.audio_stream.statistics['loss'] else '')
             self.audio_jitter.setStringValue_('%.1f ms' % self.audio_stream.statistics['jitter'])
 
             if self.audio_stream.stream.sample_rate and self.audio_stream.stream.codec:
@@ -502,7 +502,7 @@ class CBGraphView(NSView):
         insetBounds.size.height -= 2 # leave room at the top (purely my personal asthetic
 
         if self.dataQueue:
-            rbuf = [ q for q in self.dataQueue if q ] # filter "None" from the list
+            rbuf = [ q for q in self.dataQueue if q is not None] # filter "None" from the list
             rbuf.reverse() # reverse the list
             
             barRect = NSRect() # init the rect
@@ -520,20 +520,19 @@ class CBGraphView(NSView):
             # draw each bar
             barRect.origin.x = insetBounds.size.width - self.lineWidth + 2
             for b in rbuf:
-                if b:
-                    # set drawing color
-                    if b >= self.limit:
-                        self.lineColorAboveLimit.set()
-                    else:
-                        self.lineColor.set()
+                # set drawing color
+                if b >= self.limit:
+                    self.lineColorAboveLimit.set()
+                else:
+                    self.lineColor.set()
 
-                    barRect.origin.y = insetBounds.origin.y
-                    barRect.size.width = self.lineWidth
-                    barRect.size.height = ((int(b) * insetBounds.size.height) / maxB)
-                    
-                    NSBezierPath.fillRect_(barRect)
-                    
-                    barRect.origin.x = barRect.origin.x - self.lineWidth - self.lineSpacing
+                barRect.origin.y = insetBounds.origin.y
+                barRect.size.width = self.lineWidth
+                barRect.size.height = ((int(b) * insetBounds.size.height) / maxB)
+                
+                NSBezierPath.fillRect_(barRect)
+                
+                barRect.origin.x = barRect.origin.x - self.lineWidth - self.lineSpacing
                     
             NSGraphicsContext.currentContext().setShouldAntialias_(shouldAA)
 
