@@ -57,8 +57,6 @@ class PreferencesController(NSWindowController, object):
         if self:
             notification_center = NotificationCenter()
             notification_center.add_observer(self, name="SIPAccountWillRegister")
-            notification_center.add_observer(self, name="SIPAccountManagerDidAddAccount")
-            notification_center.add_observer(self, name="SIPAccountManagerDidRemoveAccount")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidFail")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidEnd")
