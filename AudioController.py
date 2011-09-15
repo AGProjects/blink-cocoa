@@ -713,9 +713,12 @@ class AudioController(MediaStream):
             rtt = self.statistics['rtt']
             loss = self.statistics['loss']
 
-            self.jitter_history.append(jitter)
-            self.rtt_history.append(rtt)
-            self.loss_history.append(loss)
+            if self.jitter_history:
+                self.jitter_history.append(jitter)
+            if self.rtt_history:
+                self.rtt_history.append(rtt)
+            if self.loss_history:
+                self.loss_history.append(loss)
 
             text = []
             if rtt > 1000:
@@ -987,6 +990,7 @@ class AudioController(MediaStream):
         self.holdByRemote = False
         self.rtt_history = None
         self.loss_history = None
+        self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
     
         self.sessionController.log_info( "Audio stream ended")
