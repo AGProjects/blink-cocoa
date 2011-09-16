@@ -759,22 +759,18 @@ class ChatWindowController(NSWindowController):
             self.requestFileTransfer()
 
     def requestFileTransfer(self):
-        if NSApp.delegate().applicationName == 'Blink Pro':
-            session = self.selectedSessionController()
-            if session:
-                row = self.conferenceFilesTableView.selectedRow()
-                if row == -1:
-                    return
-                conference_file = self.conference_shared_files[row]
-                file = conference_file.file
-                if file.status != 'OK':
-                    return
-                session.log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
-                transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
-                transfer_handler.start()
-        else:
-            NSRunAlertPanel(u"Request File Transfer", u"This feature is available in Blink Pro. ", u"Close", None, None)
-
+        session = self.selectedSessionController()
+        if session:
+            row = self.conferenceFilesTableView.selectedRow()
+            if row == -1:
+                return
+            conference_file = self.conference_shared_files[row]
+            file = conference_file.file
+            if file.status != 'OK':
+                return
+            session.log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
+            transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
+            transfer_handler.start()
 
     @objc.IBAction
     def muteClicked_(self, sender):
