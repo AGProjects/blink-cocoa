@@ -4,10 +4,8 @@ Dependencies
 
  * MacOSX 10.5, 10.6 or 10.7 on Intel Processor
  * Apple Developer Tools (XCode)
- * Sparkle Framework http://sparkle.andymatuschak.org
- * Vine VNC server http://sourceforge.net/projects/osxvnc
- * Growl and its Python SDK http://growl.info
  * SIP SIMPLE client SDK
+ * Growl
  * python-cjson
  * formencode
  * sqlobject
