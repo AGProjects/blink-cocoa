@@ -832,11 +832,6 @@
 		1FF62301140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
 		1FF62302140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
 		1FF62303140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
-		1FF810FE14225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */; };
-		1FF810FF14225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */; };
-		1FF8110014225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */; };
-		1FF8110114225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */; };
-		1FF8110C14225DA600515348 /* libgcrypt.11.6.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */; };
 		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
@@ -1106,7 +1101,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1FF8110C14225DA600515348 /* libgcrypt.11.6.0.dylib in Copy Frameworks */,
 				1F22737112B5558A0010A8B2 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F22737212B5558A0010A8B2 /* libgnutls-extra.26.dylib in Copy Frameworks */,
 				1F22737312B5558A0010A8B2 /* libgnutls.26.dylib in Copy Frameworks */,
@@ -1532,7 +1526,6 @@
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
-		1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgcrypt.11.6.0.dylib; path = Distribution/Frameworks/libgcrypt.11.6.0.dylib; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -1712,7 +1705,6 @@
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F22732512B554F50010A8B2 /* Python.framework in Frameworks */,
 				1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */,
-				1FF8110014225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1729,7 +1721,6 @@
 				1F8DC3C8135084FA0034815C /* libtasn1.3.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */,
-				1FF810FF14225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1747,7 +1738,6 @@
 				1FA0ED701402F6D0007D96B2 /* Cocoa.framework in Frameworks */,
 				1FA0ED711402F6D0007D96B2 /* Python.framework in Frameworks */,
 				1FA0ED721402F6D0007D96B2 /* QTKit.framework in Frameworks */,
-				1FF810FE14225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1758,7 +1748,6 @@
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				77631A270C06C501005415CB /* Python.framework in Frameworks */,
 				2B0CD87510BD6F0500325F30 /* Sparkle.framework in Frameworks */,
-				1FF8110114225D6D00515348 /* libgcrypt.11.6.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1827,7 +1816,6 @@
 		1F2271F012B551AC0010A8B2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1FF810FD14225D6D00515348 /* libgcrypt.11.6.0.dylib */,
 				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
 				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
 				1F22722712B554000010A8B2 /* libgnutls.26.dylib */,
