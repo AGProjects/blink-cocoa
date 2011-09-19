@@ -9,6 +9,7 @@ from Foundation import *
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from application.system import unlink
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -361,8 +362,7 @@ class PreferencesController(NSWindowController, object):
             if NSRunAlertPanel("Remove Account", "Permanently remove account %s?" % account_info.name, "Remove", "Cancel", None) != NSAlertDefaultReturn:
                 return
 
-            if account.tls.certificate:
-                from application.system import unlink
+            if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
                 unlink(account.tls.certificate.normalized)
 
             account_manager = AccountManager()
