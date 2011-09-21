@@ -133,6 +133,21 @@ class AccountSettings(NSObject):
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
+
+    def showIncomingCall(self, session, url):
+        self._account = session.account
+
+        self.webView.setHidden_(True)
+        self.loadingText.setHidden_(False)
+        self.spinWheel.setHidden_(False)
+        self.spinWheel.startAnimation_(None)
+        self.errorText.setHidden_(True)
+
+        self.window.setTitle_("Incoming Call from %s <%s@%s>"%(session.remote_identity.display_name, session.remote_identity.uri.user, session.remote_identity.uri.host))
+        url = NSURL.URLWithString_(url)
+        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+        self.webView.mainFrame().loadRequest_(request)
+        self.window.makeKeyAndOrderFront_(self)
         
     def webView_runOpenPanelForFileButtonWithResultListener_(self, sender, resultListener):
         panel = NSOpenPanel.openPanel()
@@ -140,7 +155,6 @@ class AccountSettings(NSObject):
             resultListener.chooseFilename_(panel.filename())
         else:
             resultListener.cancel()
-        
 
     def webView_didStartProvisionalLoadForFrame_(self, sender, frame):
         self._authRequestCount = 0

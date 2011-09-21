@@ -998,20 +998,23 @@ class SIPManager(object):
             session.reject(488, 'Incompatible media')
             return
         self.ringer.add_incoming(session, streams)
-        session.blink_supported_streams = streams 
+        session.blink_supported_streams = streams
         self._delegate.handle_incoming_session(session, streams)
 
-        if NSApp.delegate().applicationName != 'Blink Lite':
-            settings = SIPSimpleSettings()
-            if settings.server.alert_url:
-                url = unicode(settings.server.alert_url)
-                replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
-                print replace_caller
-                url = url.replace('$caller_party', replace_caller[5:])
-                replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
-                url = url.replace('$called_party', replace_account[5:])
-                BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+        # open web page with caller information
+        if NSApp.delegate().applicationName != 'Blink Lite' and session.account.server.alert_url:
+            url = unicode(session.account.server.alert_url)
+            replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
+            caller_key = replace_caller[5:]
+            url = url.replace('$caller_party', caller_key)
+            replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
+            url = url.replace('$called_party', replace_account[5:])
+            BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
+            from AccountSettings import AccountSettings
+            if not self._delegate.accountSettingsPanels.has_key(caller_key):
+                self._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
+            self._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
+            #NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
 
     def _NH_SIPSessionDidStart(self, session, data):
         self.incomingSessions.discard(session)

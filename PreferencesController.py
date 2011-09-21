@@ -200,7 +200,7 @@ class PreferencesController(NSWindowController, object):
         frame.origin.y = 0
 
         for section in (section for section in sections if section not in DisabledPreferenceSections):
-            if NSApp.delegate().applicationName == 'Blink Lite' and section in ('server'):
+            if section in ('server'):
                 continue
             view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
@@ -274,6 +274,9 @@ class PreferencesController(NSWindowController, object):
 
         if not ENABLE_PRESENCE and not ENABLE_DIALOG:
             PreferenceOptionTypes['sip.publish_interval'] = HiddenOption
+
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            PreferenceOptionTypes['server.alert_url'] = HiddenOption
 
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
