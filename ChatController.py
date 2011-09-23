@@ -55,6 +55,8 @@ MAX_MESSAGE_LENGTH = 16*1024
 TOOLBAR_DESKTOP_SHARING_BUTTON = 200
 TOOLBAR_REQUEST_DESKTOP_MENU = 201
 TOOLBAR_SHARE_DESKTOP_MENU = 202
+TOOLBAR_SCREENSHOT_SHARE_WINDOW_MENU = 301
+TOOLBAR_SCREENSHOT_SHARE_AREA_MENU = 302
 
 bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
@@ -1167,21 +1169,27 @@ class ChatController(MediaStream):
                 else:
                     contactWindow.historyViewer.filterByContact(format_identity(self.sessionController.target_uri), media_type='chat')
 
-            elif identifier == 'screenshot':
-                makedirs('/tmp/blink_screenshots/')
-                filename = '/tmp/blink_screenshots/xscreencapture.png'
-                basename, ext = os.path.splitext(filename)
-                i = 1
-                while os.path.exists(filename):
-                    filename = '%s_%d%s' % (basename, i, ext)
-                    i += 1
+        elif sender.tag() in (TOOLBAR_SCREENSHOT_SHARE_WINDOW_MENU, TOOLBAR_SCREENSHOT_SHARE_AREA_MENU):
+            makedirs('/tmp/blink_screenshots/')
+            filename = '/tmp/blink_screenshots/xscreencapture.png'
+            basename, ext = os.path.splitext(filename)
+            i = 1
+            while os.path.exists(filename):
+                filename = '%s_%d%s' % (basename, i, ext)
+                i += 1
 
-                self.screencapture_file = filename
-                self.screenshot_task = NSTask.alloc().init()
-                self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+            self.screencapture_file = filename
+            self.screenshot_task = NSTask.alloc().init()
+            self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+            if sender.tag() == TOOLBAR_SCREENSHOT_SHARE_WINDOW_MENU:
                 self.screenshot_task.setArguments_(['-W', '-tpng', self.screencapture_file])
-                NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
-                self.screenshot_task.launch()
+            elif sender.tag() == TOOLBAR_SCREENSHOT_SHARE_AREA_MENU:
+                self.screenshot_task.setArguments_(['-s', '-tpng', self.screencapture_file])
+            else:
+                return
+
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
+            self.screenshot_task.launch()
 
         elif sender.tag() == TOOLBAR_SHARE_DESKTOP_MENU and self.status == STREAM_CONNECTED:
             self.sessionController.addMyDesktopToSession()
@@ -1292,6 +1300,9 @@ class ChatController(MediaStream):
         self.updateToolbarMuteIcon()
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
+        if self.sessionController.session is None:
+            return
+
         settings = SIPSimpleSettings()
         if not settings.file_transfer.render_incoming_image_in_chat_window and not settings.file_transfer.render_incoming_video_in_chat_window:
             return

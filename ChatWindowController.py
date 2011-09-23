@@ -50,6 +50,7 @@ class ChatWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
+    screenshotShareMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
@@ -674,6 +675,15 @@ class ChatWindowController(NSWindowController):
                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
                 0, 1, 0)
             NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
+            return
+
+        elif sender.tag() == 300: # screenshot sharing menu button
+            point = sender.convertPointToBase_(NSZeroPoint)
+            point.y -= NSHeight(sender.frame())
+            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
+                0, 1, 0)
+            NSMenu.popUpContextMenu_withEvent_forView_(self.screenshotShareMenu, event, sender)
             return
 
         # dispatch the click to the active session
