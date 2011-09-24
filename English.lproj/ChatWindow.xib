@@ -225,7 +225,7 @@
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
-									<string key="NSResourceName">reconnect</string>
+									<string key="NSResourceName">start_chat</string>
 								</object>
 								<nil key="NSToolbarItemTarget"/>
 								<nil key="NSToolbarItemAction"/>
@@ -2695,7 +2695,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>reconnect</string>
+					<string>connect_button</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>sendfile</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3657,7 +3657,7 @@
 				<string>mute</string>
 				<string>muted</string>
 				<string>pause</string>
-				<string>reconnect</string>
+				<string>connect_button</string>
 				<string>record</string>
 				<string>screenshot</string>
 				<string>smiley_on</string>

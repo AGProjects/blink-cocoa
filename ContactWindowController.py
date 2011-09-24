@@ -1190,7 +1190,7 @@ class ContactWindowController(NSWindowController):
             media = ("video", "audio")
 
         if type(media) is not tuple:
-            if media == "chat":
+            if media == "chat" and account is not BonjourAccount():
                 # just show the window and wait for user to type before starting the outgoing session
                 session.open_chat_window_only = True
 

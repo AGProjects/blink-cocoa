@@ -67,7 +67,7 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
     Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab.
     """
     identifier = sender.itemIdentifier()
-    if identifier == 'reconnect':
+    if identifier == 'connect_button':
         BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
         sessionController.startChatSession()
     elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
@@ -85,8 +85,8 @@ def validateToolbarButtonWhileDisconnected(sessionController, item):
         valid_items.append('history')
         valid_items.append(NSToolbarPrintItemIdentifier)
 
-    if sessionController.account is not BonjourAccount():
-        valid_items.append('reconnect')
+    #if sessionController.account is not BonjourAccount():
+    valid_items.append('connect_button')
 
     return item.itemIdentifier() in valid_items
 
@@ -94,7 +94,7 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
     settings = SIPSimpleSettings()
     for item in toolbar.visibleItems():
         identifier = item.itemIdentifier()
-        if identifier == 'reconnect':
+        if identifier == 'connect_button':
             item.setEnabled_(True if sessionController.account is not BonjourAccount() else False)
         elif identifier == 'audio':
             item.setToolTip_('Click to add audio to this session')
@@ -865,11 +865,25 @@ class ChatController(MediaStream):
 
         for item in toolbar.visibleItems():
             identifier = item.itemIdentifier()
-            if identifier == 'reconnect':
-                if self.status in (STREAM_IDLE, STREAM_FAILED):
+            if identifier == 'connect_button':
+                if self.status in (STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                     item.setEnabled_(True)
                 else:
                     item.setEnabled_(False)
+
+                if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                    item.setToolTip_('Click to cancel the chat request')
+                    item.setLabel_(u'Cancel')
+                    item.setImage_(NSImage.imageNamed_("stop_chat"))
+                elif self.status == STREAM_CONNECTED:
+                    item.setToolTip_('Click to disconnect the chat session')
+                    item.setLabel_(u'Disconnect')
+                    item.setImage_(NSImage.imageNamed_("stop_chat"))
+                else:
+                    item.setToolTip_('Click to request chat session')
+                    item.setLabel_(u'Connect')
+                    item.setImage_(NSImage.imageNamed_("start_chat"))
+
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_PROPOSING or audio_stream.status == STREAM_RINGING:
@@ -989,7 +1003,20 @@ class ChatController(MediaStream):
             if self.sessionController.hasStreamOfType("video"):
                 video_stream = self.sessionController.streamHandlerOfType("video")
 
-            if identifier == 'reconnect' and self.status in (STREAM_IDLE, STREAM_FAILED):
+            if identifier == 'connect_button' and self.status in (STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                    item.setToolTip_('Click to cancel the chat request')
+                    item.setLabel_(u'Cancel')
+                    item.setImage_(NSImage.imageNamed_("stop_chat"))
+                elif self.status == STREAM_CONNECTED:
+                    item.setToolTip_('Click to disconnect the chat session')
+                    item.setLabel_(u'Disconnect')
+                    item.setImage_(NSImage.imageNamed_("stop_chat"))
+                else:
+                    item.setToolTip_('Click to request chat session')
+                    item.setLabel_(u'Connect')
+                    item.setImage_(NSImage.imageNamed_("start_chat"))
+
                 return True
             elif identifier == 'audio' and self.status == STREAM_CONNECTED:
                 if self.sessionController.hasStreamOfType("audio"):
@@ -1147,11 +1174,14 @@ class ChatController(MediaStream):
             elif identifier == 'sendfile':
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
 
-            elif identifier == 'reconnect' and self.status in (STREAM_IDLE, STREAM_FAILED):
-                self.sessionController.log_info(u"Re-establishing session to %s" % self.remoteParty)
-                self.sessionController.mustShowDrawer = True
-                self.sessionController.startChatSession()
-
+            elif identifier == 'connect_button':
+                if self.status in (STREAM_IDLE, STREAM_FAILED):
+                    self.sessionController.log_info(u"Re-establishing session to %s" % self.remoteParty)
+                    self.sessionController.mustShowDrawer = True
+                    self.sessionController.startChatSession()
+                elif self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                    self.finishStream()                    
+                
             elif identifier == 'smileys':
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
                 sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
@@ -1421,19 +1451,22 @@ class ChatController(MediaStream):
         self.stream = None
         self.mediastream_failed = True
 
-    def closeTab(self):
+    def finishStream(self):
         if self.status != STREAM_DISCONNECTING:
             self.backend.ringer.stop_ringing(self.sessionController.session)
 
-            if self.status == STREAM_PROPOSING:
-                self.sessionController.cancelProposal(self.stream)
-                self.changeStatus(STREAM_CANCELLING)
-            elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
-                self.sessionController.end()
-                self.changeStatus(STREAM_DISCONNECTING)
-            else:
-                self.sessionController.endStream(self)
-                self.changeStatus(STREAM_DISCONNECTING)
+        if self.status == STREAM_PROPOSING:
+            self.sessionController.cancelProposal(self.stream)
+            self.changeStatus(STREAM_CANCELLING)
+        elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
+            self.sessionController.end()
+            self.changeStatus(STREAM_DISCONNECTING)
+        else:
+            self.sessionController.endStream(self)
+            self.changeStatus(STREAM_DISCONNECTING)
+
+    def closeTab(self):
+        self.finishStream()
 
         # remove this controller from session stream handlers list
         self.sessionController.lastChatOutputView = None
