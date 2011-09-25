@@ -1441,7 +1441,7 @@ SettingDescription = {
                       'file_transfer.directory': 'Save Files in',
                       'message_summary.voicemail_uri': 'Mailbox URI',
                       'logs.directory': 'Logs Directory',
-                      'logs.trace_msrp': 'Trace MSRP (used for chat, file transfer and desktop sharing)',
+                      'logs.trace_msrp': 'Trace MSRP (used for chat, file transfer and screen sharing)',
                       'logs.trace_xcap': 'Trace XCAP (used for storage of contacts and presence policy)',
                       'logs.trace_pjsip': 'Trace Core Library',
                       'logs.pjsip_level': 'Core Level',

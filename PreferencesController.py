@@ -173,7 +173,7 @@ class PreferencesController(NSWindowController, object):
         elif section == 'desktop-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("desktop_sharing")
-            self.sectionDescription.setStringValue_(u'Desktop Sharing Settings')
+            self.sectionDescription.setStringValue_(u'Screen Sharing Settings')
         elif section == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")

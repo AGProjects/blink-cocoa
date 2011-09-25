@@ -232,8 +232,8 @@
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">BFA1BA39-4A16-467F-A060-CC2BEE06DFE5</characters>
 								</object>
-								<string key="NSToolbarItemLabel">Desktop</string>
-								<string key="NSToolbarItemPaletteLabel">Desktop</string>
+								<string key="NSToolbarItemLabel">Screen</string>
+								<string key="NSToolbarItemPaletteLabel">Screen</string>
 								<string key="NSToolbarItemToolTip"/>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
