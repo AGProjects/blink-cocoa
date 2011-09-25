@@ -872,15 +872,15 @@ class ChatController(MediaStream):
                     item.setEnabled_(False)
 
                 if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                    item.setToolTip_('Click to cancel the chat request')
+                    item.setToolTip_('Click to cancel the chat session')
                     item.setLabel_(u'Cancel')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_CONNECTED:
-                    item.setToolTip_('Click to disconnect the chat session')
+                    item.setToolTip_('Click to stop the chat session')
                     item.setLabel_(u'Disconnect')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
-                    item.setToolTip_('Click to request chat session')
+                    item.setToolTip_('Click to start a chat session')
                     item.setLabel_(u'Connect')
                     item.setImage_(NSImage.imageNamed_("start_chat"))
 
@@ -1005,15 +1005,15 @@ class ChatController(MediaStream):
 
             if identifier == 'connect_button' and self.status in (STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                 if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                    item.setToolTip_('Click to cancel the chat request')
+                    item.setToolTip_('Click to cancel the chat session request')
                     item.setLabel_(u'Cancel')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_CONNECTED:
-                    item.setToolTip_('Click to disconnect the chat session')
+                    item.setToolTip_('Click to stop the chat session')
                     item.setLabel_(u'Disconnect')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
-                    item.setToolTip_('Click to request chat session')
+                    item.setToolTip_('Click to start a chat session')
                     item.setLabel_(u'Connect')
                     item.setImage_(NSImage.imageNamed_("start_chat"))
 

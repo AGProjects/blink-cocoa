@@ -13,7 +13,6 @@
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<integer value="123"/>
-			<integer value="461"/>
 			<integer value="135"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -109,7 +108,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Screenshot</string>
 								<string key="NSToolbarItemPaletteLabel">Screenshot</string>
-								<string key="NSToolbarItemToolTip">Start Desktop Sharing </string>
+								<string key="NSToolbarItemToolTip">Send a Screenshot</string>
 								<object class="NSButton" key="NSToolbarItemView" id="281418617">
 									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
@@ -351,9 +350,9 @@
 								<object class="NSMutableString" key="NSToolbarItemIdentifier">
 									<characters key="NS.bytes">DF25641C-2845-4BEF-AD31-C7BAD51ABFC1</characters>
 								</object>
-								<string key="NSToolbarItemLabel">Desktop</string>
-								<string key="NSToolbarItemPaletteLabel">Desktop</string>
-								<string key="NSToolbarItemToolTip">Start Desktop Sharing </string>
+								<string key="NSToolbarItemLabel">Screen</string>
+								<string key="NSToolbarItemPaletteLabel">Screen</string>
+								<string key="NSToolbarItemToolTip">Start Screen Sharing</string>
 								<object class="NSButton" key="NSToolbarItemView" id="452326362">
 									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
@@ -1137,6 +1136,7 @@
 					<object class="NSMenuItem" id="670744445">
 						<reference key="NSMenu" ref="898627079"/>
 						<bool key="NSIsDisabled">YES</bool>
+						<bool key="NSIsHidden">YES</bool>
 						<int key="NSIndent">1</int>
 						<string key="NSTitle">Start Video Session</string>
 						<string key="NSKeyEquiv"/>
@@ -1882,6 +1882,7 @@
 							<reference ref="392736716"/>
 						</object>
 						<reference key="parent" ref="0"/>
+						<string key="objectName">Menu (Screen Sharing)</string>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">125</int>
@@ -2679,7 +2680,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{403, 681}, {355, 73}}</string>
+					<string>{{233, 805}, {355, 73}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3657,10 +3658,10 @@
 				<string>mute</string>
 				<string>muted</string>
 				<string>pause</string>
-				<string>connect_button</string>
 				<string>record</string>
 				<string>screenshot</string>
 				<string>smiley_on</string>
+				<string>start_chat</string>
 				<string>upfile</string>
 				<string>video</string>
 			</object>
@@ -3679,10 +3680,10 @@
 				<string>{24, 24}</string>
 				<string>{24, 24}</string>
 				<string>{48, 48}</string>
-				<string>{26.4009, 26.4009}</string>
 				<string>{48, 48}</string>
 				<string>{128, 128}</string>
 				<string>{32, 32}</string>
+				<string>{26.4009, 26.4009}</string>
 				<string>{32, 32}</string>
 				<string>{154, 154}</string>
 			</object>
