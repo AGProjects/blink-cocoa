@@ -66,17 +66,18 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
     """
     Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab.
     """
-    identifier = sender.itemIdentifier()
-    if identifier == 'connect_button':
-        BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
-        sessionController.startChatSession()
-    elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
-        contactWindow = sessionController.owner
-        contactWindow.showHistoryViewer_(None)
-        if sessionController.account is BonjourAccount():
-            contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
-        else:
-            contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
+    if hasattr(sender, 'itemIdentifier'):
+        identifier = sender.itemIdentifier()
+        if identifier == 'connect_button':
+            BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
+            sessionController.startChatSession()
+        elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
+            contactWindow = sessionController.owner
+            contactWindow.showHistoryViewer_(None)
+            if sessionController.account is BonjourAccount():
+                contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
+            else:
+                contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
     valid_items = []
@@ -112,6 +113,8 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif identifier == 'sendfile':
             item.setEnabled_(False)
         elif identifier == 'desktop':
+            item.setEnabled_(False)
+        elif identifier == 'screenshot':
             item.setEnabled_(False)
         elif identifier == 'smileys':
             item.setImage_(NSImage.imageNamed_("smiley_on"))
@@ -985,7 +988,7 @@ class ChatController(MediaStream):
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
                 item.setEnabled_(True)
             elif identifier == 'screenshot':
-                item.setEnabled_(True)
+                item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
 
     def validateToolbarButton(self, item):
         """Called automatically by Cocoa in ChatWindowController"""
