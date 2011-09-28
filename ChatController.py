@@ -1369,8 +1369,10 @@ class ChatController(MediaStream):
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.session_failed = True
         if not self.mediastream_failed:
-            message = "Session failed (%s): %s" % (data.originator, data.failure_reason or data.reason)
-            self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+            reason = data.failure_reason or data.reason
+            if reason != 'Session Cancelled':
+                message = "Session failed (%s): %s" % (data.originator, reason)
+                self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
