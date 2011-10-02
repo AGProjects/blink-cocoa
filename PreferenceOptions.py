@@ -1466,6 +1466,7 @@ Placeholders = {
                  'sip.outbound_proxy' : 'sip.example.com:5061;transport=tls',
                  'nat_travsersal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'voicemail_uri': 'user@example.com',
+                 'server.conference_server': 'conference.sip2sip.info',
                  'file_transfer.directory': '~/Downloads',
                  'xcap.xcap_root': 'https://xcap.example.com/xcap-root/'}
 
