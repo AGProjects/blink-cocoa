@@ -47,7 +47,6 @@ StreamHandlerForType = {
     "desktop-viewer" : DesktopSharingViewerController
 }
 
-
 class SessionController(NSObject):
     implements(IObserver)
 
@@ -681,7 +680,7 @@ class SessionController(NSObject):
         self.proposalOriginator = None
         self.log_info("Proposal got rejected: %s (%s)"%(data.reason, data.code))
 
-        log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason)
+        log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
         self.notification_center.post_notification("BlinkProposalGotRejected", sender=self, data=log_data)
 
         if data.streams:

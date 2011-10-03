@@ -2316,7 +2316,6 @@ class ContactWindowController(NSWindowController):
             SIPApplication.voice_audio_bridge.add(wave_player)
             wave_player.start()
 
-
     @objc.IBAction
     def showAccountSettings_(self, sender):
         account = self.activeAccount()

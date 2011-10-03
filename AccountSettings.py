@@ -10,6 +10,7 @@ from BlinkLogger import BlinkLogger
 
 accountWindowList = []
 
+
 class AccountSettings(NSObject):
     window = objc.IBOutlet()
     webView = objc.IBOutlet()
@@ -158,13 +159,11 @@ class AccountSettings(NSObject):
 
     def webView_didStartProvisionalLoadForFrame_(self, sender, frame):
         self._authRequestCount = 0
-        BlinkLogger().log_info(u"Loading Blink Server Tools for %s..." % self._account.id)
         self.errorText.setHidden_(True)
         if self.spinWheel.isHidden():
             self.spinWheel2.startAnimation_(None)
 
     def webView_didFinishLoadForFrame_(self, sender, frame):
-        BlinkLogger().log_info(u"Loaded Blink Server Tools page")
         self.spinWheel.stopAnimation_(None)
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
@@ -197,13 +196,12 @@ class AccountSettings(NSObject):
     def webView_resource_didReceiveAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         self._authRequestCount += 1
         if self._authRequestCount > 2:
-            BlinkLogger().log_info(u"Received duplicated authentication request, probably authentication failure")
+            BlinkLogger().log_info(u"Could not load Blink Server Tools page: authentication failure")
             self.errorText.setHidden_(False)
             self.errorText.setStringValue_("Could not load Blink Server Tools page: authentication failure")
             self.spinWheel.stopAnimation_(None)
             self.loadingText.setHidden_(True)
         else:
-            BlinkLogger().log_info(u"Sending credentials for authentication request (account = %s)" % self._account.id)
             credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id, self._account.server.web_password or self._account.auth.password, NSURLCredentialPersistenceNone)
             challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 

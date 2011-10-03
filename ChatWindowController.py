@@ -13,6 +13,7 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.streams.applications.chat import CPIMIdentity
 
 from MediaStream import *
+from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import BlinkConferenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
@@ -41,7 +42,16 @@ PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
 PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
+PARTICIPANTS_MENU_VIEW_SCREEN = 324
 PARTICIPANTS_MENU_SHOW_SESSION_INFO = 400
+
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
+
+
+# TODO: detect chat stream support for screen sharing
+screen_sharing_support_flag = 'x-screensharing'
+
 
 class ChatWindowController(NSWindowController):
     implements(IObserver)
@@ -51,6 +61,7 @@ class ChatWindowController(NSWindowController):
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
     screenshotShareMenu = objc.IBOutlet()
+    conferenceScreenSharingQualityMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
@@ -75,8 +86,8 @@ class ChatWindowController(NSWindowController):
             self.participants = []
             self.conference_shared_files = []
             self.sessions = {}
-            self.toolbarItems = {}
             self.unreadMessageCounts = {}
+            self.remoteScreens = {}
             # keep a reference to the controller object  because it may be used later by cocoa
             self.chat_controllers = set()
 
@@ -293,6 +304,15 @@ class ChatWindowController(NSWindowController):
         if item:
             item.setComposing_(flag)
 
+    def noteSession_isScreenSharing_(self, session, flag):
+        index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
+        if index == NSNotFound:
+            return
+        tabItem = self.tabView.tabViewItemAtIndex_(index)
+        item = self.tabSwitcher.itemForTabViewItem_(tabItem)
+        if item:
+            item.setScreenSharing_(flag)
+
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -496,6 +516,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).setEnabled_(False)
 
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
@@ -509,14 +530,17 @@ class ChatWindowController(NSWindowController):
                 chat_stream = session.streamHandlerOfType("chat")
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
             else:
-                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)          
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
+
+            stream_supports_screen_sharing = True if (hasattr(chat_stream.stream, screen_sharing_support_flag) and getattr(chat_stream.stream, screen_sharing_support_flag)) else False
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).setEnabled_(True if stream_supports_screen_sharing and contact.uri != own_uri and not isinstance(session.account, BonjourAccount) and (contact.screensharing_url is not None or self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).state == NSOnState) else False)
+
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
 
     def sharedFileSelectionChanged_(self, notification):
-        # TODO: When/if more items are added to this menu, save item tags as module level variables
         session = self.selectedSessionController()
         if not session:
             self.sharedFileMenu.itemWithTag_(100).setEnabled_(False)
@@ -713,6 +737,26 @@ class ChatWindowController(NSWindowController):
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(False)
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setTitle_('Show Session Information')
 
+            row = self.participantsTableView.selectedRow()
+            try:
+                object = self.participants[row]
+                uri = object.uri
+                item = menu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN)
+                item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
+            except IndexError:
+                pass
+
+        elif menu == self.conferenceScreenSharingQualityMenu:
+            session = self.selectedSessionController()
+            if session and session.hasStreamOfType("chat"):
+                chat_stream = session.streamHandlerOfType("chat")
+                if chat_stream.screensharing_handler is not None and chat_stream.screensharing_handler.connected:
+                    item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH)
+                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'high' else NSOffState)
+                    item.setEnabled_(True)
+                    item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
+                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'low' else NSOffState)
+                    item.setEnabled_(True)
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
@@ -728,6 +772,7 @@ class ChatWindowController(NSWindowController):
 
             uri = object.uri
             display_name = object.display_name
+            screensharing_url = object.screensharing_url
 
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:
                 NSApp.delegate().windowController.addContact(uri, display_name)
@@ -754,10 +799,26 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "video")
             elif tag == PARTICIPANTS_MENU_START_CHAT_SESSION:
                 NSApp.delegate().windowController.startSessionWithAccount(session.account, uri, "chat")
+            elif tag == PARTICIPANTS_MENU_VIEW_SCREEN:
+                try:
+                    remoteScreen = self.remoteScreens[uri]
+                except KeyError:
+                    self.viewSharedScreen(uri, display_name, screensharing_url)
+                else:
+                    remoteScreen.close_(None)
+                sender.setState_(NSOffState if sender.state() == NSOnState else NSOnState)
             elif tag == PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
             elif tag == PARTICIPANTS_MENU_SHOW_SESSION_INFO:
                 session.info_panel.toggle()
+
+    def viewSharedScreen(self, uri, display_name, url):
+        session = self.selectedSessionController()
+        if session:
+            session.log_info(u"Opening Shared Screen of %s from %s" % (uri, url))
+            remoteScreen = ConferenceScreenSharing.createWithOwner_(self)
+            remoteScreen.showSharedScreen(display_name, uri, url)
+            self.remoteScreens[uri] = remoteScreen
 
     @objc.IBAction
     def userClickedSharedFileMenu_(self, sender):
@@ -873,19 +934,6 @@ class ChatWindowController(NSWindowController):
 
                 for user in session.conference_info.users:
                     uri = re.sub("^(sip:|sips:)", "", user.entity)
-                    active_media = []
-
-                    chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
-                    if chat_endpoints:
-                        active_media.append('message')
-
-                    audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
-                    user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
-                    if audio_endpoints and not user_on_hold:
-                        active_media.append('audio')
-                    elif audio_endpoints and user_on_hold:
-                        active_media.append('audio-onhold')
-
                     contact = getContactMatchingURI(uri)
                     if contact:
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
@@ -894,8 +942,25 @@ class ChatWindowController(NSWindowController):
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                         contact = BlinkConferenceContact(uri, name=display_name)
 
-                    contact.setActiveMedia(active_media)
+                    active_media = []
 
+                    chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
+                    if chat_endpoints:
+                        active_media.append('message')
+
+                    # TODO: set screen sharing url
+                    # active_media.append('screen')
+                    # contact.setScreensharingUrl('http://icanblink.com/screensharing/screen.phtml')
+
+                    audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
+                    user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
+                    if audio_endpoints and not user_on_hold:
+                        active_media.append('audio')
+                    elif audio_endpoints and user_on_hold:
+                        active_media.append('audio-onhold')
+
+
+                    contact.setActiveMedia(active_media)
                     # detail will be reset on receival of next conference-info update
                     if uri in session.pending_removal_participants:
                         contact.setDetail('Removal requested...')
@@ -951,7 +1016,6 @@ class ChatWindowController(NSWindowController):
 
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 
-            # TODO - don't re-render everything, use file hashes to calculate additions, removals
             self.conference_shared_files = []
 
             for file in reversed(session.conference_shared_files):

@@ -265,9 +265,13 @@ class BlinkConferenceContact(BlinkContact):
         self.type = 'conference'
     	BlinkContact.__init__(self, *args, **kw)
         self.active_media = []
+        self.screensharing_url = None
 
     def setActiveMedia(self, media):
         self.active_media = media
+
+    def setScreensharingUrl(self, url):
+        self.screensharing_url = url
 
 
 class BlinkPresenceContact(BlinkContact):

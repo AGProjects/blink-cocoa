@@ -3,7 +3,9 @@
 
 from Foundation import *
 from AppKit import *
+from Quartz import *
 
+import base64
 import datetime
 import hashlib
 import os
@@ -52,11 +54,17 @@ kUIOptionDisableHide = 1 << 6
 
 MAX_MESSAGE_LENGTH = 16*1024
 
-TOOLBAR_DESKTOP_SHARING_BUTTON = 200
-TOOLBAR_REQUEST_DESKTOP_MENU = 201
-TOOLBAR_SHARE_DESKTOP_MENU = 202
-TOOLBAR_SCREENSHOT_SHARE_WINDOW_MENU = 301
-TOOLBAR_SCREENSHOT_SHARE_AREA_MENU = 302
+TOOLBAR_SCREENSHARING_BUTTON = 200
+TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
+TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
+TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
+
+TOOLBAR_SCREENSHOT_MENU_WINDOW = 301
+TOOLBAR_SCREENSHOT_MENU_AREA = 302
+
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU = 400
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 
 bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
@@ -126,6 +134,116 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif identifier == NSToolbarPrintItemIdentifier:
             item.setEnabled_(True)
 
+
+kCGWindowListOptionOnScreenOnly = 1 << 0
+kCGNullWindowID = 0
+kCGWindowImageDefault = 0
+
+
+class ConferenceScreenSharingHandler(object):
+    implements(IObserver)
+
+    connected = False
+    screenSharingTimer = None
+    stream = None
+    rect = None
+    frames = 0.0
+    last_time = None
+    current_framerate = None
+    may_send = True # wait until previous screen has been sent
+    max_framerate = 1
+    compression = 0.7 # jpeg compression
+
+    # GUI controled value
+    quality = 'high' # or 'low'
+
+    def setMaxFramerate(self, max_framerate):
+        self.max_framerate = max_framerate
+
+    def setQuality(self, quality):
+        BlinkLogger().log_info('Set screen sharing quality to %s' % quality)
+        self.quality = quality
+        self.compression = 0.7 if self.quality == 'high' else 0.3
+        self.max_framerate = 1 if self.quality == 'high' else 3
+
+    def setConnected(self, stream):
+        self.connected = True
+        self.stream = stream
+        self.last_time = time.time()
+        NotificationCenter().add_observer(self, sender=stream)
+
+        if self.screenSharingTimer is None:
+            self.screenSharingTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "sendScreenshotTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSDefaultRunLoopMode)
+
+    def setDisconnected(self):
+        self.connected = False
+        self.may_send = True
+        self.frames = 0
+        self.last_time = None
+
+        if self.screenSharingTimer is not None:
+            self.screenSharingTimer.invalidate()
+            self.screenSharingTimer = None
+
+        if self.stream:
+            NotificationCenter().remove_observer(self, sender=self.stream)
+            self.stream = None
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_ChatStreamDidDeliverMessage(self, sender, data):
+        self.may_send = True
+        self.last_snapshot_time = time.time()
+
+    def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
+        self.may_send = True
+        self.last_snapshot_time = time.time()
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def sendScreenshotTimer_(self, timer):
+        dt = time.time() - self.last_time
+        if dt >= 1:
+            self.current_framerate = self.frames / dt
+            self.frames = 0.0
+            self.last_time = time.time()
+
+        if self.may_send and dt >= 1/self.max_framerate:
+            #if self.current_framerate is not None:
+            #    BlinkLogger().log_info('Framerate: %.1f' % self.current_framerate)
+
+            self.frames = self.frames + 1
+            rect = CGDisplayBounds(CGMainDisplayID())
+            img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
+            if self.quality == 'high':
+                bitmap_data = NSBitmapImageRep.alloc().initWithCGImage_(img)
+            else:
+                image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
+                originalSize = image.size()
+                resizeWidth = originalSize.width/2
+                resizeHeight = originalSize.height/2
+                scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
+                scaled_image.lockFocus()
+                image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
+                scaled_image.unlockFocus()
+                tiff_data = scaled_image.TIFFRepresentation()
+                bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+
+            properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
+            data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
+            now = datetime.datetime.now(tzlocal())
+            text=base64.b64encode(data)
+            #BlinkLogger().log_info('Sending %s bytes screen' % len(text))
+            self.stream.send_message(text, content_type='image/jpeg', timestamp=Timestamp(now))
+            self.may_send = False
+
+
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
         self.msgid = msgid 
@@ -136,6 +254,7 @@ class MessageInfo(object):
         self.text = text
         self.private = private
         self.status = status
+
 
 class MessageHandler(NSObject):
     """
@@ -302,17 +421,25 @@ class MessageHandler(NSObject):
         handler(notification.sender, notification.data)
 
     def _NH_ChatStreamDidDeliverMessage(self, sender, data):
-        message = self.messages.pop(data.message_id)
-        message.status='delivered'
-        self.markMessage(message, MSG_STATE_DELIVERED)
-        self.add_to_history(message)
-        self.lastDeliveredTime = time.time()
+        try:
+            message = self.messages.pop(data.message_id)
+            if message:
+                message.status='delivered'
+                self.markMessage(message, MSG_STATE_DELIVERED)
+                self.add_to_history(message)
+                self.lastDeliveredTime = time.time()
+        except KeyError:
+            pass
 
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
-        message = self.messages.pop(data.message_id)
-        message.status='failed'
-        self.markMessage(message, MSG_STATE_FAILED)
-        self.add_to_history(message)
+        try:
+            message = self.messages.pop(data.message_id)
+            if message:
+                message.status='failed'
+                self.markMessage(message, MSG_STATE_FAILED)
+                self.add_to_history(message)
+        except KeyError:
+            pass
 
     @allocate_autorelease_pool
     @run_in_green_thread
@@ -358,6 +485,7 @@ class ChatController(MediaStream):
 
     history = None
     handler = None
+    screensharing_handler = None
 
     lastDeliveredTime = None
     undeliveredMessages = {} # id -> message
@@ -378,6 +506,7 @@ class ChatController(MediaStream):
         self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
         self.mediastream_failed = False
         self.session_failed = False
+        self.share_screen_in_conference = False
 
         if self:
             self.history_msgid_list=set()
@@ -401,8 +530,11 @@ class ChatController(MediaStream):
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
 
+            self.screensharing_handler = ConferenceScreenSharingHandler()
+
             self.history=ChatHistory()
             self.backend = SIPManager()
+
 
         return self
 
@@ -858,6 +990,8 @@ class ChatController(MediaStream):
             window.noteNewMessageForSession_(self.sessionController)
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
+        """Called when the session state has changed"""
+
         settings = SIPSimpleSettings()
 
         if self.sessionController.hasStreamOfType("audio"):
@@ -962,27 +1096,66 @@ class ChatController(MediaStream):
                 else:
                     item.setEnabled_(False)
             elif identifier == 'desktop':
-                if self.status == STREAM_CONNECTED and not got_proposal and not self.sessionController.remote_focus:
-                    item.setEnabled_(True)
-                else:
-                    item.setEnabled_(False)
-                title = self.sessionController.getTitleShort()
                 menu = toolbar.delegate().desktopShareMenu
-                menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setTitle_("Request Screen from %s" % title)
-                menu.itemWithTag_(TOOLBAR_REQUEST_DESKTOP_MENU).setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
+                if not self.sessionController.remote_focus:
+                    item.setImage_(NSImage.imageNamed_("display"))
+                    item.setEnabled_(True if self.status == STREAM_CONNECTED and not got_proposal else False)
 
-                item = menu.itemWithTag_(TOOLBAR_SHARE_DESKTOP_MENU)
-                if not self.backend.isMediaTypeSupported('desktop-server'):
-                    item.setHidden_(True)
+                    title = self.sessionController.getTitleShort()
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                    mitem.setTitle_("Request Screen from %s" % title)
+                    mitem.setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
+                    mitem.setHidden_(False)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                    mitem.setTitle_("Share My Screen with %s" % title)
+                    mitem.setEnabled_(True if not self.backend.isMediaTypeSupported('desktop-server') else False)
+                    mitem.setHidden_(False)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
+                    mitem.setEnabled_(False)
+                    mitem.setHidden_(True)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
+                    mitem.setEnabled_(False)
+                    mitem.setHidden_(False)
+
+                    if self.sessionController.hasStreamOfType("desktop-sharing"):
+                        desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+                        if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                            mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                            mitem.setEnabled_(False)
+                            mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                            mitem.setEnabled_(False)
+                            mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
+                            mitem.setEnabled_(True)
+                            mitem.setHidden_(False)
                 else:
-                    item.setHidden_(False)
-                    item.setTitle_("Share My Screen with %s" % title)
+                    item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
+                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                    mitem.setHidden_(True)
+
+                    # TODO: detect if chatroom supports screen sharing
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                    mitem.setHidden_(False)
+                    mitem.setEnabled_(True)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
+                    mitem.setEnabled_(False)
+                    mitem.setHidden_(True)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                    mitem.setTitle_("Share My Screen with Conference Participants")
+                    mitem.setEnabled_(True)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
+                    mitem.setHidden_(False)
+                    mitem.setEnabled_(True)
 
             elif identifier == 'smileys':
-                if self.status == STREAM_CONNECTED:
-                    item.setEnabled_(True)
-                else:
-                    item.setEnabled_(False)
+                item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
@@ -993,18 +1166,21 @@ class ChatController(MediaStream):
     def validateToolbarButton(self, item):
         """Called automatically by Cocoa in ChatWindowController"""
 
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+
+        if self.sessionController.hasStreamOfType("video"):
+            video_stream = self.sessionController.streamHandlerOfType("video")
+
+        if self.sessionController.hasStreamOfType("desktop-sharing"):
+            desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+
         if hasattr(item, 'itemIdentifier'):
             settings = SIPSimpleSettings()
 
             identifier = item.itemIdentifier()
             if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
-
-            if self.sessionController.hasStreamOfType("audio"):
-                audio_stream = self.sessionController.streamHandlerOfType("audio")
-
-            if self.sessionController.hasStreamOfType("video"):
-                video_stream = self.sessionController.streamHandlerOfType("video")
 
             if identifier == 'connect_button' and self.status in (STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                 if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
@@ -1087,10 +1263,19 @@ class ChatController(MediaStream):
             elif identifier == 'screenshot':
                 return True
 
-        elif item.tag() in (TOOLBAR_DESKTOP_SHARING_BUTTON, TOOLBAR_SHARE_DESKTOP_MENU, TOOLBAR_REQUEST_DESKTOP_MENU) and self.status==STREAM_CONNECTED:
-            if self.sessionController.inProposal or self.sessionController.hasStreamOfType("desktop-sharing") or self.sessionController.remote_focus:
+        elif item.tag() in (TOOLBAR_SCREENSHARING_BUTTON, TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL, TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE) and self.status==STREAM_CONNECTED:
+            if self.sessionController.hasStreamOfType("desktop-sharing"):
                 return False
             return True
+ 
+        elif item.tag() == TOOLBAR_SCREENSHARING_MENU_CANCEL and self.status==STREAM_CONNECTED:
+            if self.sessionController.hasStreamOfType("desktop-sharing"):
+                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                    return True
+            return False
+        elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW):
+            if self.sessionController.remote_focus and self.screensharing_handler is not None and self.screensharing_handler.connected:
+                return True
 
         return False
 
@@ -1099,6 +1284,7 @@ class ChatController(MediaStream):
         Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab
         """
         if hasattr(sender, 'itemIdentifier'):
+            # regular toolbar items (except buttons and menus)
             settings = SIPSimpleSettings()
 
             identifier = sender.itemIdentifier()
@@ -1202,7 +1388,7 @@ class ChatController(MediaStream):
                 else:
                     contactWindow.historyViewer.filterByContact(format_identity(self.sessionController.target_uri), media_type='chat')
 
-        elif sender.tag() in (TOOLBAR_SCREENSHOT_SHARE_WINDOW_MENU, TOOLBAR_SCREENSHOT_SHARE_AREA_MENU):
+        elif sender.tag() in (TOOLBAR_SCREENSHOT_MENU_WINDOW, TOOLBAR_SCREENSHOT_MENU_AREA):
             makedirs('/tmp/blink_screenshots/')
             filename = '/tmp/blink_screenshots/xscreencapture.png'
             basename, ext = os.path.splitext(filename)
@@ -1214,9 +1400,9 @@ class ChatController(MediaStream):
             self.screencapture_file = filename
             self.screenshot_task = NSTask.alloc().init()
             self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
-            if sender.tag() == TOOLBAR_SCREENSHOT_SHARE_WINDOW_MENU:
+            if sender.tag() == TOOLBAR_SCREENSHOT_MENU_WINDOW:
                 self.screenshot_task.setArguments_(['-W', '-tpng', self.screencapture_file])
-            elif sender.tag() == TOOLBAR_SCREENSHOT_SHARE_AREA_MENU:
+            elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_AREA:
                 self.screenshot_task.setArguments_(['-s', '-tpng', self.screencapture_file])
             else:
                 return
@@ -1224,13 +1410,48 @@ class ChatController(MediaStream):
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
             self.screenshot_task.launch()
 
-        elif sender.tag() == TOOLBAR_SHARE_DESKTOP_MENU and self.status == STREAM_CONNECTED:
-            self.sessionController.addMyDesktopToSession()
-            sender.setEnabled_(False)
+        elif sender.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL and self.status == STREAM_CONNECTED:
+            if not self.sessionController.remote_focus:
+                if not self.sessionController.hasStreamOfType("desktop-sharing"):
+                    self.sessionController.addMyDesktopToSession()
+                    sender.setEnabled_(False)
+            else:
+                self.shareScreenWithConferenceParticipants()
+        elif sender.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE and self.status == STREAM_CONNECTED:
+            if not self.sessionController.hasStreamOfType("desktop-sharing"):
+                self.sessionController.addRemoteDesktopToSession()
+                sender.setEnabled_(False)
+        elif sender.tag() == TOOLBAR_SCREENSHARING_MENU_CANCEL and self.status == STREAM_CONNECTED:
+            if self.sessionController.hasStreamOfType("desktop-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                    self.sessionController.cancelProposal(desktop_sharing_stream)
+        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH:
+            if self.screensharing_handler is not None:
+                self.screensharing_handler.setQuality('high')
+        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW:
+            if self.screensharing_handler is not None:
+                self.screensharing_handler.setQuality('low')
 
-        elif sender.tag() == TOOLBAR_REQUEST_DESKTOP_MENU and self.status == STREAM_CONNECTED:
-            self.sessionController.addRemoteDesktopToSession()
-            sender.setEnabled_(False)
+    def shareScreenWithConferenceParticipants(self):
+        self.share_screen_in_conference = True if self.share_screen_in_conference == False else False
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
+            menu = window.toolbar.delegate().desktopShareMenu
+            menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else 'Stop Screen Sharing')
+            window.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
+
+            try:
+                item = (item for item in window.toolbar.visibleItems() if item.tag() == TOOLBAR_SCREENSHARING_BUTTON).next()
+            except StopIteration:
+                pass
+            else:
+                item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
+
+        if self.share_screen_in_conference and self.stream is not None:
+            self.screensharing_handler.setConnected(self.stream)
+        else:
+            self.screensharing_handler.setDisconnected()
 
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
@@ -1389,7 +1610,7 @@ class ChatController(MediaStream):
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
-        message = "Proposal failed: %s" % data.reason
+        message = "Proposal canceled" if data.code == 487 else "Proposal failed: %s" % data.reason
         self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
@@ -1427,6 +1648,7 @@ class ChatController(MediaStream):
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
+            self.screensharing_handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
         else:
             self.handler = None
@@ -1450,6 +1672,7 @@ class ChatController(MediaStream):
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
+            self.screensharing_handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
         else:
             self.handler = None

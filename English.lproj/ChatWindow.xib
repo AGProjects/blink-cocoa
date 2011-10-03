@@ -12,7 +12,6 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="123"/>
 			<integer value="135"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -112,7 +111,7 @@
 								<object class="NSButton" key="NSToolbarItemView" id="281418617">
 									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
-									<string key="NSFrame">{{0, 14}, {96, 32}}</string>
+									<string key="NSFrame">{{17, 14}, {32, 32}}</string>
 									<int key="NSTag">300</int>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="46849197">
@@ -356,7 +355,7 @@
 								<object class="NSButton" key="NSToolbarItemView" id="452326362">
 									<nil key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
-									<string key="NSFrame">{{0, 14}, {96, 32}}</string>
+									<string key="NSFrame">{{6, 14}, {32, 32}}</string>
 									<int key="NSTag">200</int>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="126467494">
@@ -570,31 +569,6 @@
 				<string key="NSMinSize">{650, 597}</string>
 				<string key="NSMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSFrameAutosaveName">chat_window</string>
-			</object>
-			<object class="NSMenu" id="755021066">
-				<string key="NSTitle">Desktop Sharing</string>
-				<object class="NSMutableArray" key="NSMenuItems">
-					<bool key="EncodedWithXMLCoder">YES</bool>
-					<object class="NSMenuItem" id="337362766">
-						<reference key="NSMenu" ref="755021066"/>
-						<string key="NSTitle">Request Desktop from Contact</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="677793703"/>
-						<reference key="NSMixedImage" ref="730172549"/>
-						<int key="NSTag">201</int>
-					</object>
-					<object class="NSMenuItem" id="392736716">
-						<reference key="NSMenu" ref="755021066"/>
-						<string key="NSTitle">Share My Desktop with Contact</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="677793703"/>
-						<reference key="NSMixedImage" ref="730172549"/>
-						<int key="NSTag">202</int>
-					</object>
-				</object>
-				<bool key="NSNoAutoenable">YES</bool>
 			</object>
 			<object class="NSCustomView" id="1030100440">
 				<reference key="NSNextResponder"/>
@@ -1145,6 +1119,16 @@
 						<reference key="NSMixedImage" ref="730172549"/>
 						<int key="NSTag">322</int>
 					</object>
+					<object class="NSMenuItem" id="463616372">
+						<reference key="NSMenu" ref="898627079"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">View Shared Screen</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">324</int>
+					</object>
 					<object class="NSMenuItem" id="257260512">
 						<reference key="NSMenu" ref="898627079"/>
 						<bool key="NSIsDisabled">YES</bool>
@@ -1236,6 +1220,74 @@
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
 						<reference key="NSMixedImage" ref="730172549"/>
+					</object>
+				</object>
+				<bool key="NSNoAutoenable">YES</bool>
+			</object>
+			<object class="NSMenu" id="755021066">
+				<string key="NSTitle">Desktop Sharing</string>
+				<object class="NSMutableArray" key="NSMenuItems">
+					<bool key="EncodedWithXMLCoder">YES</bool>
+					<object class="NSMenuItem" id="337362766">
+						<reference key="NSMenu" ref="755021066"/>
+						<string key="NSTitle">Request Desktop from Contact</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">201</int>
+					</object>
+					<object class="NSMenuItem" id="392736716">
+						<reference key="NSMenu" ref="755021066"/>
+						<string key="NSTitle">Share My Desktop with Contact</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">202</int>
+					</object>
+					<object class="NSMenuItem" id="866040156">
+						<reference key="NSMenu" ref="755021066"/>
+						<string key="NSTitle">Cancel Screen Sharing Proposal</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">203</int>
+					</object>
+					<object class="NSMenuItem" id="213810548">
+						<reference key="NSMenu" ref="755021066"/>
+						<string key="NSTitle">Quality</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<string key="NSAction">submenuAction:</string>
+						<int key="NSTag">400</int>
+						<object class="NSMenu" key="NSSubmenu" id="643938423">
+							<string key="NSTitle">Quality</string>
+							<object class="NSMutableArray" key="NSMenuItems">
+								<bool key="EncodedWithXMLCoder">YES</bool>
+								<object class="NSMenuItem" id="541013583">
+									<reference key="NSMenu" ref="643938423"/>
+									<string key="NSTitle">Higher Quality of Details (Slower Updates)</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="677793703"/>
+									<reference key="NSMixedImage" ref="730172549"/>
+									<int key="NSTag">401</int>
+								</object>
+								<object class="NSMenuItem" id="558926955">
+									<reference key="NSMenu" ref="643938423"/>
+									<string key="NSTitle">Lower Quality of Details (Faster Updates)</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="677793703"/>
+									<reference key="NSMixedImage" ref="730172549"/>
+									<int key="NSTag">402</int>
+								</object>
+							</object>
+						</object>
 					</object>
 				</object>
 				<bool key="NSNoAutoenable">YES</bool>
@@ -1812,6 +1864,62 @@
 					</object>
 					<int key="connectionID">481</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedParticipantMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="463616372"/>
+					</object>
+					<int key="connectionID">484</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedToolbarButton:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="541013583"/>
+					</object>
+					<int key="connectionID">489</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedToolbarButton:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="558926955"/>
+					</object>
+					<int key="connectionID">490</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="643938423"/>
+						<reference key="destination" ref="1001"/>
+					</object>
+					<int key="connectionID">491</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="755021066"/>
+						<reference key="destination" ref="1001"/>
+					</object>
+					<int key="connectionID">492</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">conferenceScreenSharingQualityMenu</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="643938423"/>
+					</object>
+					<int key="connectionID">493</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedToolbarButton:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="866040156"/>
+					</object>
+					<int key="connectionID">495</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -1880,6 +1988,8 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<reference ref="337362766"/>
 							<reference ref="392736716"/>
+							<reference ref="213810548"/>
+							<reference ref="866040156"/>
 						</object>
 						<reference key="parent" ref="0"/>
 						<string key="objectName">Menu (Screen Sharing)</string>
@@ -2025,6 +2135,7 @@
 							<reference ref="235914187"/>
 							<reference ref="198368147"/>
 							<reference ref="943204892"/>
+							<reference ref="463616372"/>
 						</object>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -2361,6 +2472,45 @@
 						<reference key="object" ref="901919749"/>
 						<reference key="parent" ref="226015323"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">483</int>
+						<reference key="object" ref="463616372"/>
+						<reference key="parent" ref="898627079"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">485</int>
+						<reference key="object" ref="213810548"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="643938423"/>
+						</object>
+						<reference key="parent" ref="755021066"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">486</int>
+						<reference key="object" ref="643938423"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="541013583"/>
+							<reference ref="558926955"/>
+						</object>
+						<reference key="parent" ref="213810548"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">487</int>
+						<reference key="object" ref="541013583"/>
+						<reference key="parent" ref="643938423"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">488</int>
+						<reference key="object" ref="558926955"/>
+						<reference key="parent" ref="643938423"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">494</int>
+						<reference key="object" ref="866040156"/>
+						<reference key="parent" ref="755021066"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -2484,6 +2634,13 @@
 					<string>478.IBPluginDependency</string>
 					<string>480.IBPluginDependency</string>
 					<string>482.IBPluginDependency</string>
+					<string>483.IBPluginDependency</string>
+					<string>485.IBPluginDependency</string>
+					<string>486.IBEditorWindowLastContentRect</string>
+					<string>486.IBPluginDependency</string>
+					<string>487.IBPluginDependency</string>
+					<string>488.IBPluginDependency</string>
+					<string>494.IBPluginDependency</string>
 					<string>72.IBEditorWindowLastContentRect</string>
 					<string>72.IBPluginDependency</string>
 					<string>78.IBPluginDependency</string>
@@ -2512,11 +2669,11 @@
 					<string>audio</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>maximize</string>
-					<string>{{678, 873}, {264, 43}}</string>
+					<string>{{928, 886}, {265, 83}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{933, 125}, {260, 600}}</string>
+					<string>{{760, 125}, {260, 600}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2583,7 +2740,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>hold</string>
-					<string>{{277, 703}, {238, 303}}</string>
+					<string>{{277, 683}, {238, 323}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<object class="NSMutableDictionary">
 						<string key="NS.key.0">AccessibilityDescription</string>
@@ -2692,6 +2849,13 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{1514, 866}, {342, 43}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{456, 694}, {616, 0}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2718,7 +2882,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">482</int>
+			<int key="maxID">495</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -2815,6 +2979,7 @@
 							<string>audioStatus</string>
 							<string>conferenceFilesTableView</string>
 							<string>conferenceFilesView</string>
+							<string>conferenceScreenSharingQualityMenu</string>
 							<string>desktopShareMenu</string>
 							<string>drawer</string>
 							<string>drawerScrollView</string>
@@ -2852,6 +3017,7 @@
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
+							<string>id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
@@ -2862,6 +3028,7 @@
 							<string>audioStatus</string>
 							<string>conferenceFilesTableView</string>
 							<string>conferenceFilesView</string>
+							<string>conferenceScreenSharingQualityMenu</string>
 							<string>desktopShareMenu</string>
 							<string>drawer</string>
 							<string>drawerScrollView</string>
@@ -2894,6 +3061,10 @@
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">conferenceFilesView</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">conferenceScreenSharingQualityMenu</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">

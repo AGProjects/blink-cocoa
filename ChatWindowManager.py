@@ -52,12 +52,15 @@ class ChatWindowManager(object):
     def dettachChatWindow(self, sessionController):
         for window in self.chatWindows:
             if window.hasSession_(sessionController):
+                remoteScreens = window.remoteScreens
                 view = window.detachWindow_(sessionController)
                 if not window.sessions:
                     window.window().orderOut_(None)
                     self.chatWindows.remove(window)
                 if view:
-                    return self.addChatWindow(sessionController, True, view)
+                    new_window = self.addChatWindow(sessionController, True, view)
+                    new_window.remoteScreens = remoteScreens
+                    return new_window
                 break
         else:
             return None

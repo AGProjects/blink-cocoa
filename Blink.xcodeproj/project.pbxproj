@@ -504,6 +504,10 @@
 		1F8DC40D135084FA0034815C /* libtasn1.3.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
 		1F8DC9121351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F8DC9131351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
+		1F9406BF14307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
+		1F9406C014307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
+		1F9406C114307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
+		1F9406C214307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9A8DA612BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
 		1F9A8DA712BE11670097FD10 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A8DA512BE11670097FD10 /* JoinConferenceWindow.xib */; };
 		1FA0EC971402F6AE007D96B2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
@@ -797,6 +801,14 @@
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
+		1FC9FE9614378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
+		1FC9FE9714378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
+		1FC9FE9814378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
+		1FC9FE9914378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
+		1FC9FEF314379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
+		1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
+		1FC9FEF514379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
+		1FC9FEF614379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
 		1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
 		1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
 		1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
@@ -816,6 +828,14 @@
 		1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1FD2EF901439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
+		1FD2EF911439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
+		1FD2EF921439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
+		1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
+		1FD2EF961439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
+		1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
+		1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
+		1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD996FE142DEFC400EE171F /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
@@ -842,6 +862,14 @@
 		1FF62303140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
 		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
+		1FFB386A1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
+		1FFB386B1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
+		1FFB386C1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
+		1FFB386D1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
+		1FFB38D7143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
+		1FFB38D8143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
+		1FFB38D9143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
+		1FFB38DA143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
@@ -1488,6 +1516,7 @@
 		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
+		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
 		1FA0EC911402F676007D96B2 /* Blink Crypto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Crypto.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
@@ -1520,6 +1549,8 @@
 		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FC66DE7139E17D600D03D71 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
+		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
+		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
 		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
 		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
 		1FCF119A1390EE08001D1CAF /* logs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logs.png; path = icons/logs.png; sourceTree = "<group>"; };
@@ -1528,6 +1559,8 @@
 		1FCF160812B5639F00F71BE5 /* Info-pro.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-pro.plist"; sourceTree = "<group>"; };
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
+		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
@@ -1537,6 +1570,8 @@
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
+		1FFB38691432026D003B29ED /* display_red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red.png; path = icons/display_red.png; sourceTree = "<group>"; };
+		1FFB38D6143209E0003B29ED /* display_red_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red_16.png; path = icons/display_red_16.png; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -1853,6 +1888,8 @@
 				1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */,
 				1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */,
 				1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */,
+				1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */,
+				1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */,
 			);
 			name = Conference;
 			sourceTree = "<group>";
@@ -1957,6 +1994,11 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */,
+				1FC9FE9514378A450056B3A8 /* shrinktofit.png */,
+				1FFB38D6143209E0003B29ED /* display_red_16.png */,
+				1FFB38691432026D003B29ED /* display_red.png */,
+				1F9406BE14307D180053D741 /* display_16.png */,
 				1FD99702142DEFD100EE171F /* stop_chat.png */,
 				1FD996FD142DEFC400EE171F /* start_chat.png */,
 				1FF622FF140E20C000E81891 /* help.png */,
@@ -2618,6 +2660,13 @@
 				1FF62302140E20C000E81891 /* help.png in Resources */,
 				1FD99700142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99705142DEFD100EE171F /* stop_chat.png in Resources */,
+				1F9406C114307D180053D741 /* display_16.png in Resources */,
+				1FFB386B1432026D003B29ED /* display_red.png in Resources */,
+				1FFB38D8143209E0003B29ED /* display_red_16.png in Resources */,
+				1FC9FE9814378A450056B3A8 /* shrinktofit.png in Resources */,
+				1FC9FEF514379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
+				1FD2EF921439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
+				1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2809,6 +2858,13 @@
 				1FF62301140E20C000E81891 /* help.png in Resources */,
 				1FD996FF142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99704142DEFD100EE171F /* stop_chat.png in Resources */,
+				1F9406C014307D180053D741 /* display_16.png in Resources */,
+				1FFB386A1432026D003B29ED /* display_red.png in Resources */,
+				1FFB38D7143209E0003B29ED /* display_red_16.png in Resources */,
+				1FC9FE9714378A450056B3A8 /* shrinktofit.png in Resources */,
+				1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
+				1FD2EF911439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
+				1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3002,6 +3058,13 @@
 				1FF62300140E20C000E81891 /* help.png in Resources */,
 				1FD996FE142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99703142DEFD100EE171F /* stop_chat.png in Resources */,
+				1F9406BF14307D180053D741 /* display_16.png in Resources */,
+				1FFB386D1432026D003B29ED /* display_red.png in Resources */,
+				1FFB38DA143209E0003B29ED /* display_red_16.png in Resources */,
+				1FC9FE9614378A450056B3A8 /* shrinktofit.png in Resources */,
+				1FC9FEF314379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
+				1FD2EF901439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
+				1FD2EF961439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3194,6 +3257,13 @@
 				1FF62303140E20C000E81891 /* help.png in Resources */,
 				1FD99701142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99706142DEFD100EE171F /* stop_chat.png in Resources */,
+				1F9406C214307D180053D741 /* display_16.png in Resources */,
+				1FFB386C1432026D003B29ED /* display_red.png in Resources */,
+				1FFB38D9143209E0003B29ED /* display_red_16.png in Resources */,
+				1FC9FE9914378A450056B3A8 /* shrinktofit.png in Resources */,
+				1FC9FEF614379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
+				1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
+				1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3305,6 +3375,14 @@
 				1FC66DE7139E17D600D03D71 /* English */,
 			);
 			name = MigrationPanel.xib;
+			sourceTree = "<group>";
+		};
+		1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FD2EF951439CCC300DFBB2A /* English */,
+			);
+			name = ConferenceScreenSharing.xib;
 			sourceTree = "<group>";
 		};
 		1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */ = {

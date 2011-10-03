@@ -18,8 +18,10 @@ class FancyTabItem(NSView):
     trackingArea = None
     cachedDragImage = None
     composing = False
+    screen_sharing = False
     closeIcon = NSImage.imageNamed_("NSStopProgressFreestandingTemplate").copy()
     composeIcon = NSImage.imageNamed_("pencil")
+    screenIcon = NSImage.imageNamed_("display_red_16")
 
     badgeAttributes = None
     draggedOut = False
@@ -137,6 +139,11 @@ class FancyTabItem(NSView):
             rect.size = self.composeIcon.size()
             self.composeIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(3, 3), rect, NSCompositeSourceOver, 1)
 
+        if self.screen_sharing:
+            rect = NSZeroRect.copy()
+            rect.size = self.screenIcon.size()
+            self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(20, 3), rect, NSCompositeSourceOver, 1)
+
 
         if not self.draggedOut:
             shadow = NSShadow.alloc().init()
@@ -202,11 +209,13 @@ class FancyTabItem(NSView):
         if self.busyIndicator:
             self.busyIndicator.setHidden_(flag)
 
-
     def setComposing_(self, flag):
         self.composing = flag
         self.setNeedsDisplay_(True)
 
+    def setScreenSharing_(self, flag):
+        self.screen_sharing = flag
+        self.setNeedsDisplay_(True)
 
     def setBusy_(self, flag):
         if flag:
