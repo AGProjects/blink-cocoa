@@ -8,6 +8,8 @@ from SIPManager import SIPManager
 from sipsimple.account import Account, AccountManager, BonjourAccount
 import re
 
+ALLOWED_DOMAINS = []
+
 class EnrollmentController(NSObject):
     window = objc.IBOutlet()
 
@@ -94,6 +96,14 @@ class EnrollmentController(NSObject):
                 NSRunAlertPanel("Sign In to SIP Account", "Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com",
                                 "OK", None, None)
                 return False
+
+            if ALLOWED_DOMAINS:
+                domain = address.split("@")[1]
+                if domain not in ALLOWED_DOMAINS:
+                    NSRunAlertPanel("Sign In to SIP Account", "Invalid Domain Name",
+                                    "OK", None, None)
+                    return False
+
             if not password:
                 NSRunAlertPanel("Sign In to SIP Account", "Please enter your account password.",
                                 "OK", None, None)
