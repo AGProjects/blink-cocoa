@@ -528,11 +528,12 @@ class ChatWindowController(NSWindowController):
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
+                stream_supports_screen_sharing = True if (hasattr(chat_stream.stream, screen_sharing_support_flag) and getattr(chat_stream.stream, screen_sharing_support_flag)) else False
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
             else:
+                stream_supports_screen_sharing = False
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
 
-            stream_supports_screen_sharing = True if (hasattr(chat_stream.stream, screen_sharing_support_flag) and getattr(chat_stream.stream, screen_sharing_support_flag)) else False
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).setEnabled_(True if stream_supports_screen_sharing and contact.uri != own_uri and not isinstance(session.account, BonjourAccount) and (contact.screensharing_url is not None or self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).state == NSOnState) else False)
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
@@ -737,14 +738,16 @@ class ChatWindowController(NSWindowController):
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setEnabled_(False)
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SHOW_SESSION_INFO).setTitle_('Show Session Information')
 
+            item = menu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN)
             row = self.participantsTableView.selectedRow()
             try:
                 object = self.participants[row]
                 uri = object.uri
-                item = menu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN)
                 item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
+                item.setEnabled_(True if 'screen' in contact.active_media else False)
             except IndexError:
-                pass
+                item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
+                item.setEnabled_(False)
 
         elif menu == self.conferenceScreenSharingQualityMenu:
             session = self.selectedSessionController()
