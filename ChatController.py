@@ -1563,6 +1563,7 @@ class ChatController(MediaStream):
 
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window or self.sessionController.remoteSIPAddress != sender.remote_identity:
+            NSApp.delegate().windowController.fileTransfersWindow.showWindow_(None)
             return
 
         if  video_file_extension_pattern.search(data.file_path):

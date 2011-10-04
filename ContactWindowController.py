@@ -110,7 +110,7 @@ class ContactWindowController(NSWindowController):
     participants = []
 
     searchResultsModel = objc.IBOutlet()
-    fileTranfersWindow = objc.IBOutlet()
+    fileTransfersWindow = objc.IBOutlet()
 
     debugWindow = None
     mirrorWindow = None
