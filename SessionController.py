@@ -209,38 +209,39 @@ class SessionController(NSObject):
             self.session.end()
 
     def endStream(self, streamHandler):
-        if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
-            # if session is desktop-sharing end it 
-            self.end()
-            return True
-        elif self.streamHandlers == [streamHandler]:
-            # session established, streamHandler is the only stream
-            self.log_info("Ending session with  %s stream"% streamHandler.stream.type)
-            # end the whole session
-            self.end()
-            return True
-        elif len(self.streamHandlers) > 1 and self.session.streams and streamHandler.stream in self.session.streams:
-            # session established, streamHandler is one of many streams
-            self.log_info("Removing %s stream from session" % streamHandler.stream.type)
-            try:
-                self.session.remove_stream(streamHandler.stream)
-                self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
-                return True
-            except IllegalStateError, e:
-                self.log_info("IllegalStateError: %s" % e)
-                return False
-        elif not self.streamHandlers and streamHandler.stream is None: # 3
-            # session established, streamHandler is being proposed but not yet established
-            self.log_info("Ending session with not-estabslihed %s stream"% streamHandler.stream.type)
-            self.end()
-            return True
-        else:
-            # session not yet established
-            self.log_info("Ending session that did not start yet")
-            if self.session.streams is None:
+        if self.session:
+            if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
+                # if session is desktop-sharing end it 
                 self.end()
                 return True
-            return False
+            elif self.streamHandlers == [streamHandler]:
+                # session established, streamHandler is the only stream
+                self.log_info("Ending session with  %s stream"% streamHandler.stream.type)
+                # end the whole session
+                self.end()
+                return True
+            elif len(self.streamHandlers) > 1 and self.session.streams and streamHandler.stream in self.session.streams:
+                # session established, streamHandler is one of many streams
+                self.log_info("Removing %s stream from session" % streamHandler.stream.type)
+                try:
+                    self.session.remove_stream(streamHandler.stream)
+                    self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
+                    return True
+                except IllegalStateError, e:
+                    self.log_info("IllegalStateError: %s" % e)
+                    return False
+            elif not self.streamHandlers and streamHandler.stream is None: # 3
+                # session established, streamHandler is being proposed but not yet established
+                self.log_info("Ending session with not-estabslihed %s stream"% streamHandler.stream.type)
+                self.end()
+                return True
+            else:
+                # session not yet established
+                self.log_info("Ending session that did not start yet")
+                if self.session.streams is None:
+                    self.end()
+                    return True
+                return False
 
     def cancelProposal(self, stream):
         if self.session:
