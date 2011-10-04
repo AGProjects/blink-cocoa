@@ -162,10 +162,11 @@ class FileTransfer(object):
         ChatHistory().add_message(self.ft_info.transfer_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     def end(self):
-        if self.end_session_when_done or self.session.streams == [self.stream] or self.session.proposed_streams == [self.stream]:
-            self.session.end()
-        else:
-            self.session.remove_stream(self.stream)
+        if self.session:
+            if self.end_session_when_done or self.session.streams == [self.stream] or self.session.proposed_streams == [self.stream]:
+                self.session.end()
+            else:
+                self.session.remove_stream(self.stream)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
