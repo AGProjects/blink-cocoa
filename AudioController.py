@@ -752,7 +752,7 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(10) # add Chat
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
 
-            item = menu.itemWithTag_(13) # add Video
+            item = menu.itemWithTag_(40) # add Video
             item.setEnabled_(can_propose and SIPManager().isMediaTypeSupported('video'))
             item.setHidden_(not(SIPManager().isMediaTypeSupported('video')))
 
@@ -761,9 +761,17 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(11) # request remote desktop
             item.setTitle_("Request Screen from %s" % title)
             item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-client'))
+
             item = menu.itemWithTag_(12) # share local desktop
             item.setTitle_("Share My Screen with %s" % title)
             item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-server'))
+
+            item = menu.itemWithTag_(13) # cancel
+            item.setEnabled_(False)
+            if self.sessionController.hasStreamOfType("desktop-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                    item.setEnabled_(True)
 
             item = menu.itemWithTag_(20) # add to contacts
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
@@ -778,13 +786,18 @@ class AudioController(MediaStream):
         if tag == 10: # add chat
             NSApp.delegate().windowController.drawer.close()
             self.sessionController.addChatToSession()
-        elif tag == 13: # add video
+        elif tag == 40: # add video
             NSApp.delegate().windowController.drawer.close()
             self.sessionController.addVideoToSession()
-        elif tag == 11: # request remote desktop
+        elif tag == 11: # share remote screen
             self.sessionController.addRemoteDesktopToSession()
-        elif tag == 12: # share local desktop
+        elif tag == 12: # share local screen
             self.sessionController.addMyDesktopToSession()
+        elif tag == 13: # cancel screen sharing proposal
+            if self.sessionController.hasStreamOfType("desktop-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                    self.sessionController.cancelProposal(desktop_sharing_stream)
         elif tag == 20: # add to contacts
             if hasattr(self.sessionController.remotePartyObject, "display_name"):
                 display_name = self.sessionController.remotePartyObject.display_name
