@@ -183,7 +183,7 @@ class SMSViewController(NSObject):
         timestamp = timestamp or Timestamp(datetime.datetime.now(tzlocal()))
 
         hash = hashlib.sha1()
-        hash.update(str(message)+str(timestamp)+str(sender))
+        hash.update(message.encode('utf-8')+str(timestamp)+str(sender))
         msgid = hash.hexdigest()
 
         self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
@@ -281,7 +281,7 @@ class SMSViewController(NSObject):
             settings = SIPSimpleSettings()
             if settings.chat.sms_replication:
                 contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
-                msg = CPIMMessage(sent_message.body, sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
+                msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
                 self.sendReplicationMessage(response_code, str(msg), content_type='message/cpim')
 
     @run_in_green_thread
