@@ -100,8 +100,7 @@ class EnrollmentController(NSObject):
             if ALLOWED_DOMAINS:
                 domain = address.split("@")[1]
                 if domain not in ALLOWED_DOMAINS:
-                    NSRunAlertPanel("Sign In to SIP Account", "Invalid Domain Name",
-                                    "OK", None, None)
+                    NSRunAlertPanel("Sign In to SIP Account", "Invalid domain name chosen. Valid domain names are: %s" % ",".join(ALLOWED_DOMAINS), "OK", None, None)
                     return False
 
             if not password:
