@@ -747,7 +747,7 @@ class ChatWindowController(NSWindowController):
                 object = self.participants[row]
                 uri = object.uri
                 item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
-                item.setEnabled_(True if 'screen' in contact.active_media else False)
+                item.setEnabled_(True if 'screen' in object.active_media else False)
             except IndexError:
                 item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
                 item.setEnabled_(False)
