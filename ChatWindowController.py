@@ -284,6 +284,9 @@ class ChatWindowController(NSWindowController):
 
         self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(icon)
 
+    def window_shouldDragDocumentWithEvent_from_withPasteboard_(self, window, event, point, pasteboard):
+        return False
+
     def getConferenceTitle(self):
         title = None
         session = self.selectedSessionController()
