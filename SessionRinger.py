@@ -70,6 +70,8 @@ class Ringer(object):
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.add_observer(self, name="ConferenceHasAddedAudio")
+        notification_center.add_observer(self, name="BlinkWillCancelProposal")
+
         self.started = True
 
     def stop(self):
@@ -81,6 +83,7 @@ class Ringer(object):
         notification_center.remove_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.remove_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.remove_observer(self, name="ConferenceHasAddedAudio")
+        notification_center.remove_observer(self, name="BlinkWillCancelProposal")
 
     def update_playing_ringtones(self):
         should_play_incoming = False
@@ -291,7 +294,7 @@ class Ringer(object):
             NotificationCenter().remove_observer(self, sender=session)
             self.active_sessions.discard(session)
             self.stop_ringing(session)
-        elif name in ("SIPSessionGotAcceptProposal", "SIPSessionGotRejectProposal", "SIPSessionHadProposalFailure"):
+        elif name in ("SIPSessionGotAcceptProposal", "SIPSessionGotRejectProposal", "SIPSessionHadProposalFailure", "BlinkWillCancelProposal"):
             self.stop_ringing(session)
         elif name == "SIPSessionGotProposal":
             stream_types = [stream.type for stream in data.streams]

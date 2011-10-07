@@ -267,11 +267,17 @@ class SessionController(NSObject):
 
     def cancelProposal(self, stream):
         if self.session:
-            self.cancelledStream = stream
-            try:
-                self.session.cancel_proposal()
-            except IllegalStateError, e:
-                self.log_info("IllegalStateError: %s" % e)
+            if self.canCancelProposal():
+                self.log_info("Cancelling proposal...")
+                self.cancelledStream = stream
+                try:
+                    self.session.cancel_proposal()
+                    self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session)
+
+                except IllegalStateError, e:
+                    self.log_info("IllegalStateError: %s" % e)
+            else:
+                self.log_info("Cancelling proposal is already in progress")
 
     @property
     def ended(self):
