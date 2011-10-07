@@ -225,7 +225,10 @@ class SessionInfoController(NSObject):
         if sub_state is None:
             sub_state = self.sessionController.session.state if self.sessionController.session is not None else 'none'
 
-        self.status.setStringValue_('%s (%s)' % (self.sessionController.state.title(), re.sub("_", " ", str(sub_state)).title()))
+        sub_state = re.sub("_", " ", str(sub_state)).title()
+        state = self.sessionController.state.title()
+
+        self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state else state)
 
     def updateAudio(self):
         if self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None:
