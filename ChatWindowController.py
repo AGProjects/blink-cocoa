@@ -383,7 +383,6 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setStringValue_('')
 
         elif name == "BlinkAudioStreamChangedHoldState":
-            print 'BlinkAudioStreamChangedHoldState'
             self.revalidateToolbar()
             self.refreshDrawer()
         elif name == "BlinkStreamHandlersChanged":

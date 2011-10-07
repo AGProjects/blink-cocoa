@@ -33,6 +33,7 @@ import ChatWindowManager
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
+from ChatWindowController import screen_sharing_support_flag
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
@@ -1134,21 +1135,18 @@ class ChatController(MediaStream):
                     item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
                     item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
 
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                    mitem.setTitle_("Share My Screen with Conference Participants")
+                    from ChatWindowController import screen_sharing_support_flag
+                    mitem.setEnabled_(True if (hasattr(self.stream, screen_sharing_support_flag) and getattr(self.stream, screen_sharing_support_flag)) else False)
+                    mitem.setHidden_(False)
+
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                     mitem.setHidden_(True)
-
-                    # TODO: detect if chatroom supports screen sharing
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setHidden_(False)
-                    mitem.setEnabled_(True)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setEnabled_(False)
                     mitem.setHidden_(True)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_("Share My Screen with Conference Participants")
-                    mitem.setEnabled_(True)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
                     mitem.setHidden_(False)
@@ -1264,16 +1262,23 @@ class ChatController(MediaStream):
             elif identifier == 'screenshot':
                 return True
 
-        elif item.tag() in (TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL, TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE):
-            if self.sessionController.hasStreamOfType("desktop-sharing"):
-                return False
-            return True if self.sessionController.canProposeMediaStreamChanges() else False
- 
+        elif item.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL:
+            if not self.sessionController.remote_focus:
+                if self.sessionController.hasStreamOfType("desktop-sharing"):
+                    return False
+                return True if self.sessionController.canProposeMediaStreamChanges() else False
+            else:
+                return (True if (hasattr(self.stream, screen_sharing_support_flag) and getattr(self.stream, screen_sharing_support_flag)) else False)
+
+        elif item.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE:
+            if not self.sessionController.remote_focus:
+                if self.sessionController.hasStreamOfType("desktop-sharing"):
+                    return False
+                return True if self.sessionController.canProposeMediaStreamChanges() else False
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_CANCEL:
             if self.sessionController.hasStreamOfType("desktop-sharing"):
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     return True if self.sessionController.canCancelProposal() else False
-            return False
         elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW):
             if self.sessionController.remote_focus and self.screensharing_handler is not None and self.screensharing_handler.connected:
                 return True
