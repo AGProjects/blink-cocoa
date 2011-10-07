@@ -748,7 +748,8 @@ class AudioController(MediaStream):
             item.setIndentationLevel_(1)
             item.setEnabled_(False)
         else:
-            can_propose = self.status == STREAM_CONNECTED and not self.sessionController.inProposal
+            can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
+
             item = menu.itemWithTag_(10) # add Chat
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
 

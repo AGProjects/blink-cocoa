@@ -150,6 +150,23 @@ class SessionController(NSObject):
     def isActive(self):
         return self.state in (STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP)
 
+    def canProposeMediaStreamChanges(self):
+        # TODO: hold is not handled by this, how to deal with it
+
+        #if self.session is not None and self.session.state in ('received_proposal', 'sending_proposal', 'accepting_proposal', 'rejecting_proposal', 'cancelling_proposal'):
+        #    return False
+
+        if self.inProposal:
+            return False
+
+        return True
+
+    def canCancelProposal(self):
+        if self.session is not None and self.session.state == 'cancelling_proposal':
+            return False
+
+        return True    
+
     def handleIncomingStreams(self, streams, is_update=False):
         try:
             # give priority to chat stream so that we do not open audio drawer for composite streams
@@ -222,14 +239,19 @@ class SessionController(NSObject):
                 return True
             elif len(self.streamHandlers) > 1 and self.session.streams and streamHandler.stream in self.session.streams:
                 # session established, streamHandler is one of many streams
-                self.log_info("Removing %s stream from session" % streamHandler.stream.type)
-                try:
-                    self.session.remove_stream(streamHandler.stream)
-                    self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
-                    return True
-                except IllegalStateError, e:
-                    self.log_info("IllegalStateError: %s" % e)
+                if self.canProposeMediaStreamChanges():
+                    self.log_info("Removing %s stream" % streamHandler.stream.type)
+                    try:
+                        self.session.remove_stream(streamHandler.stream)
+                        self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
+                        return True
+                    except IllegalStateError, e:
+                        self.log_info("IllegalStateError: %s" % e)
+                        return False
+                else:
+                    self.log_info("Media Stream proposal is already in progress")
                     return False
+
             elif not self.streamHandlers and streamHandler.stream is None: # 3
                 # session established, streamHandler is being proposed but not yet established
                 self.log_info("Ending session with not-estabslihed %s stream"% streamHandler.stream.type)
@@ -237,8 +259,8 @@ class SessionController(NSObject):
                 return True
             else:
                 # session not yet established
-                self.log_info("Ending session that did not start yet")
                 if self.session.streams is None:
+                    self.log_info("Ending session that did not start yet")
                     self.end()
                     return True
                 return False
@@ -333,15 +355,18 @@ class SessionController(NSObject):
                 controller = handlerClass(self, stream)
                 self.streamHandlers.append(controller)
 
-                if stype == 'chat' and len(stype_tuple) == 1 and self.open_chat_window_only:
-                    # just show the window and wait for user to type before starting the outgoing session
-                    controller.openChatWindow()
+                if stype == 'chat':
+                    if (len(stype_tuple) == 1 and self.open_chat_window_only) or (not new_session and not self.canProposeMediaStreamChanges()):
+                        # just show the window and wait for user to type before starting the outgoing session
+                        controller.openChatWindow()
+                    else:
+                        # starts outgoing chat session
+                        controller.startOutgoing(not new_session, **kwargs)
                 else:
-                    # starts outgoing chat session
                     controller.startOutgoing(not new_session, **kwargs)
 
                 if not new_session:
-                    self.log_info("Adding %s stream"%stype)
+                    self.log_info("Append %s controller"%stype)
                     # there is already a session, add audio stream to it
                     add_streams.append(controller.stream)
 
@@ -370,13 +395,19 @@ class SessionController(NSObject):
                     else:
                         self.waitingForITunes = False
         else:
-            for stream in add_streams:
-                try:
-                   self.session.add_stream(stream)
-                except IllegalStateError, e:
-                    self.log_info("IllegalStateError: %s" % e)
-                    return False
-            self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+            if self.canProposeMediaStreamChanges():
+                self.inProposal = True
+                for stream in add_streams:
+                    self.log_info("Adding %s stream " % stream.type)
+                    try:
+                       self.session.add_stream(stream)
+                    except IllegalStateError, e:
+                        self.log_info("IllegalStateError: %s" % e)
+                        return False
+                self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+            else:
+                self.log_info("Media Stream proposal is already in progress")
+                return False
 
         self.open_chat_window_only = False
         return True
@@ -392,22 +423,6 @@ class SessionController(NSObject):
 
     def offerFileTransfer(self, file_path, content_type=None):
         return self.startSessionWithStreamOfType("chat", {"file_path":file_path, "content_type":content_type})
-
-    def offerDesktopSession(self):
-        if not self.hasStreamOfType("desktop"):
-            if NSRunAlertPanel("Desktop Sharing",
-                "Would you like to allow %s to view the contents of your desktop?" % self.target_uri,
-                "Share Desktop", "Cancel", None) != NSAlertDefaultReturn:
-                return
-
-            if self.session is None:
-                # no session yet, initiate it
-                self.startBaseSession(self.account)
-                self.desktopRequested = True
-            else:
-                self.log_info("Adding Desktop Stream (server) to session")
-                # there is already a session, add stream to it
-                pass
 
     def addAudioToSession(self):
         if not self.hasStreamOfType("audio"):
@@ -665,6 +680,8 @@ class SessionController(NSObject):
             self.info_panel.close()
             self.info_panel = None
 
+        self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
+
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True
         self.proposalOriginator = 'remote'
@@ -745,6 +762,12 @@ class SessionController(NSObject):
 
             # notify Chat Window controller to update the toolbar buttons
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+
+    def _NH_SIPInvitationChangedState(self, sender, data):
+        self.notification_center.post_notification("BlinkInvitationChangedState", sender=self, data=data)
+
+    def _NH_SIPSessionDidProcessTransaction(self, sender, data):
+        self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=data)
 
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
         if data.action == 'remove' and not sender.streams:

@@ -101,6 +101,9 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkConferenceGotUpdate")
             self.notification_center.add_observer(self, name="BlinkContactsHaveChanged")
             self.notification_center.add_observer(self, name="BlinkGotProposal")
+            self.notification_center.add_observer(self, name="BlinkSentAddProposal")
+            self.notification_center.add_observer(self, name="BlinkSentRemoveProposal")
+            self.notification_center.add_observer(self, name="BlinkProposalGotRejected")
             self.notification_center.add_observer(self, name="BlinkMuteChangedState")
             self.notification_center.add_observer(self, name="BlinkSessionChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlerChangedState")
@@ -380,6 +383,8 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setStringValue_('')
 
         elif name == "BlinkAudioStreamChangedHoldState":
+            print 'BlinkAudioStreamChangedHoldState'
+            self.revalidateToolbar()
             self.refreshDrawer()
         elif name == "BlinkStreamHandlersChanged":
             self.revalidateToolbar()
@@ -390,7 +395,7 @@ class ChatWindowController(NSWindowController):
             self.toolbar.setVisible_(True)
         elif name in( "AudioStreamDidStartRecordingAudio", "AudioStreamDidStopRecordingAudio"):
             self.revalidateToolbar()
-        elif name == "BlinkGotProposal":
+        elif name in ("BlinkGotProposal", "BlinkProposalGotRejected", "BlinkSentAddProposal", "BlinkSentRemoveProposal"):
             self.revalidateToolbar()
             self.refreshDrawer()
         elif name == "BlinkConferenceGotUpdate":

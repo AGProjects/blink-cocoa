@@ -3,6 +3,7 @@
 
 import datetime
 import time
+import re
 
 from AppKit import *
 from Foundation import *
@@ -203,10 +204,8 @@ class SessionInfoController(NSObject):
         if self.sessionController is None:
             self.resetSession()
         else:
-            self.status.setStringValue_(self.sessionController.state.title())
+            self.updateSessionStatus()
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
-
-            self.status.setStringValue_(self.sessionController.state.title())
             self.conference.setStringValue_('%d Participants' % len(self.sessionController.conference_info.users) if self.sessionController.conference_info is not None and self.sessionController.remote_focus else '')
 
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:
@@ -221,6 +220,12 @@ class SessionInfoController(NSObject):
 
         self.updateAudio()
         self.updateChat()
+
+    def updateSessionStatus(self, sub_state=None):
+        if sub_state is None:
+            sub_state = self.sessionController.session.state if self.sessionController.session is not None else 'none'
+
+        self.status.setStringValue_('%s (%s)' % (self.sessionController.state.title(), re.sub("_", " ", str(sub_state)).title()))
 
     def updateAudio(self):
         if self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None:
@@ -341,23 +346,23 @@ class SessionInfoController(NSObject):
             else:
                 self.audio_status.setStringValue_("")
             
-    def _NH_BlinkSessionChangedState(self, notification):
-        self.status.setStringValue_(self.sessionController.state.title())
-
     def _NH_BlinkSessionGotRingIndication(self, notification):
-        self.status.setStringValue_('Ringing')
+        self.updateSessionStatus(sub_state='Ringing')
+
+    def _NH_BlinkSessionDidProcessTransaction(self, notification):
+        self.updateSessionStatus()
 
     def _NH_BlinkSentAddProposal(self, notification):
-        self.status.setStringValue_('Propose Add Stream')
+        self.updateSessionStatus()
 
     def _NH_BlinkSentRemoveProposal(self, notification):
-        self.status.setStringValue_('Propose Remove Stream')
+        self.updateSessionStatus()
 
     def _NH_BlinkGotProposal(self, notification):
-        self.status.setStringValue_('Receive Proposal')
+        self.updateSessionStatus()
 
     def _NH_BlinkProposalGotRejected(self, notification):
-        self.status.setStringValue_(self.sessionController.state.title())
+        self.updateSessionStatus()
 
     def _NH_BlinkStreamHandlersChanged(self, notification):
         self.updatePanelValues()

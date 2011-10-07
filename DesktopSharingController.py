@@ -215,6 +215,8 @@ class DesktopSharingController(MediaStream):
             NotificationCenter().discard_observer(self, sender=self.stream)
         self.status = newstate
 
+        MediaStream.changeStatus(self, newstate, fail_reason)
+
     def closeWindows_(self, timer):
         if self.statusWindow:
             self.statusWindow.close()
