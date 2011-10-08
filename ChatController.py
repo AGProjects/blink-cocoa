@@ -34,6 +34,7 @@ import ChatWindowManager
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
 from ChatWindowController import screen_sharing_support_flag
+
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
@@ -91,14 +92,18 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
                 contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
 
 def validateToolbarButtonWhileDisconnected(sessionController, item):
+    settings = SIPSimpleSettings()
     valid_items = []
 
     if NSApp.delegate().applicationName != 'Blink Lite':
         valid_items.append('history')
         valid_items.append(NSToolbarPrintItemIdentifier)
 
-    #if sessionController.account is not BonjourAccount():
     valid_items.append('connect_button')
+    valid_items.append('sendfile')
+    valid_items.append('smileys')
+    if sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
+        valid_items.append('editor')
 
     return item.itemIdentifier() in valid_items
 
@@ -111,32 +116,14 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif identifier == 'audio':
             item.setToolTip_('Click to add audio to this session')
             item.setImage_(NSImage.imageNamed_("audio"))
-            item.setEnabled_(False)
         elif identifier == 'record':
             item.setImage_(NSImage.imageNamed_("record"))
-            item.setEnabled_(False)
         elif identifier == 'hold':
             item.setImage_(NSImage.imageNamed_("pause"))
-            item.setEnabled_(False)
         elif identifier == 'video':
             item.setImage_(NSImage.imageNamed_("video"))
-            item.setEnabled_(False)
-        elif identifier == 'sendfile':
-            item.setEnabled_(False)
         elif identifier == 'desktop':
             item.setEnabled_(False)
-        elif identifier == 'screenshot':
-            item.setEnabled_(False)
-        elif identifier == 'smileys':
-            item.setImage_(NSImage.imageNamed_("smiley_on"))
-            item.setEnabled_(False)
-        elif identifier == 'editor' and sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
-            item.setEnabled_(True)
-        elif identifier == 'history' and NSApp.delegate().applicationName == 'Blink Lite':
-            item.setEnabled_(False)
-        elif identifier == NSToolbarPrintItemIdentifier:
-            item.setEnabled_(True)
-
 
 kCGWindowListOptionOnScreenOnly = 1 << 0
 kCGNullWindowID = 0
@@ -997,14 +984,11 @@ class ChatController(MediaStream):
             window.noteNewMessageForSession_(self.sessionController)
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
-        """Called by ChatWindowController when receiving various notifications"""
+        """Called by ChatWindowController when receiving various middleware notifications"""
         settings = SIPSimpleSettings()
 
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
-
-        if self.sessionController.hasStreamOfType("video"):
-            video_stream = self.sessionController.streamHandlerOfType("video")
 
         for item in toolbar.visibleItems():
             identifier = item.itemIdentifier()
@@ -1013,34 +997,25 @@ class ChatController(MediaStream):
                     item.setToolTip_('Click to cancel the chat session')
                     item.setLabel_(u'Cancel')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
-                    item.setEnabled_(True if self.sessionController.canCancelProposal() else False)
                 elif self.status == STREAM_CONNECTED:
                     item.setToolTip_('Click to stop the chat session')
                     item.setLabel_(u'Disconnect')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
-                    item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
                 else:
                     item.setToolTip_('Click to start a chat session')
                     item.setLabel_(u'Connect')
                     item.setImage_(NSImage.imageNamed_("start_chat"))
-                    item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
-
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
                         item.setToolTip_('Click to hangup the audio call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
-                        item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
                     elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
                         item.setToolTip_('Click to cancel the audio call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
-                        item.setEnabled_(True if self.sessionController.canCancelProposal() else False)
-                    else:
-                        item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
                 else:
                     item.setToolTip_('Click to add audio to this session')
                     item.setImage_(NSImage.imageNamed_("audio"))
-                    item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
@@ -1050,31 +1025,15 @@ class ChatController(MediaStream):
                             item.setImage_(NSImage.imageNamed_("paused"))
                         else:
                             item.setImage_(NSImage.imageNamed_("pause"))
-                        item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
                     else:
                         item.setImage_(NSImage.imageNamed_("pause"))
-                        item.setEnabled_(False)
                 else:
                     item.setImage_(NSImage.imageNamed_("pause"))
-                    item.setEnabled_(False)
             elif identifier == 'record':
-                if NSApp.delegate().applicationName == 'Blink Lite':
-                    item.setEnabled_(False)
-                    continue
-                if self.sessionController.hasStreamOfType("audio"):
-                    if audio_stream.status == STREAM_CONNECTED:
-                        if audio_stream.stream.recording_active:
-                            item.setImage_(NSImage.imageNamed_("recording1"))
-                        else:
-                            item.setImage_(NSImage.imageNamed_("record"))
-                        item.setEnabled_(True)
-                    else:
-                        item.setImage_(NSImage.imageNamed_("record"))
-            elif identifier == 'maximize' and self.video_frame_visible:
-                item.setEnabled_(True)
+                item.setImage_(NSImage.imageNamed_("record" if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recording_active else "recording1"))
             elif identifier == 'video' and self.backend.isMediaTypeSupported('video'):
-                item.setEnabled_(True)
                 if self.sessionController.hasStreamOfType("video"):
+                    video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
                         item.setToolTip_('Click to cancel the video call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
@@ -1084,199 +1043,128 @@ class ChatController(MediaStream):
                 else:
                     item.setToolTip_('Click to add video to this session')
                     item.setImage_(NSImage.imageNamed_("video"))
-
-                if self.status == STREAM_INCOMING:
-                    item.setEnabled_(False)
-                elif self.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING) and not got_proposal:
-                    item.setEnabled_(True)
-                else:
-                    item.setEnabled_(False)
-            elif identifier == 'sendfile':
-                if self.status == STREAM_CONNECTED:
-                    item.setEnabled_(True and self.backend.isMediaTypeSupported('file-transfer'))
-                else:
-                    item.setEnabled_(False)
             elif identifier == 'desktop':
+                item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
+
                 menu = toolbar.delegate().desktopShareMenu
                 if not self.sessionController.remote_focus:
                     item.setImage_(NSImage.imageNamed_("display"))
-                    item.setEnabled_(True if self.status == STREAM_CONNECTED and not got_proposal else False)
 
                     title = self.sessionController.getTitleShort()
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                     mitem.setTitle_("Request Screen from %s" % title)
-                    mitem.setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                     mitem.setTitle_("Share My Screen with %s" % title)
-                    mitem.setEnabled_(True if not self.backend.isMediaTypeSupported('desktop-server') else False)
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
-                    mitem.setEnabled_(False)
                     mitem.setHidden_(True)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setEnabled_(False)
                     mitem.setHidden_(False)
 
                     if self.sessionController.hasStreamOfType("desktop-sharing"):
                         desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                         if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                             mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                            mitem.setEnabled_(False)
                             mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                            mitem.setEnabled_(False)
                             mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                            mitem.setEnabled_(True if self.sessionController.canCancelProposal() else False)
                             mitem.setHidden_(False)
                 else:
                     item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
-                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                     mitem.setTitle_("Share My Screen with Conference Participants")
-                    from ChatWindowController import screen_sharing_support_flag
-                    mitem.setEnabled_(True if (hasattr(self.stream, screen_sharing_support_flag) and getattr(self.stream, screen_sharing_support_flag)) else False)
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                     mitem.setHidden_(True)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setEnabled_(False)
                     mitem.setHidden_(True)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
                     mitem.setHidden_(False)
-                    mitem.setEnabled_(True)
 
             elif identifier == 'smileys':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
+                item.setEnabled_(True)
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
-                item.setEnabled_(True)
-            elif identifier == 'screenshot':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
 
     def validateToolbarButton(self, item):
-        """Called automatically by Cocoa in ChatWindowController"""
+        """
+        Called automatically by Cocoa in ChatWindowController to enable/disable each toolbar item
+        """
+
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
 
-        if self.sessionController.hasStreamOfType("video"):
-            video_stream = self.sessionController.streamHandlerOfType("video")
-
-        if self.sessionController.hasStreamOfType("desktop-sharing"):
-            desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
-
         if hasattr(item, 'itemIdentifier'):
             identifier = item.itemIdentifier()
-            settings = SIPSimpleSettings()
             if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
 
             if identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                    item.setToolTip_('Click to cancel the chat session request')
-                    item.setLabel_(u'Cancel')
-                    item.setImage_(NSImage.imageNamed_("stop_chat"))
                     return True if self.sessionController.canCancelProposal() else False
                 elif self.status == STREAM_CONNECTED:
-                    item.setToolTip_('Click to stop the chat session')
-                    item.setLabel_(u'Disconnect')
-                    item.setImage_(NSImage.imageNamed_("stop_chat"))
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
                 else:
-                    item.setToolTip_('Click to start a chat session')
-                    item.setLabel_(u'Connect')
-                    item.setImage_(NSImage.imageNamed_("start_chat"))
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-
-            elif identifier == 'audio':
-                if self.status == STREAM_CONNECTED:
-                    if self.sessionController.hasStreamOfType("audio"):
-                        if audio_stream.status == STREAM_CONNECTED:
-                            item.setToolTip_('Click to hangup the audio call')
-                            item.setImage_(NSImage.imageNamed_("hangup"))
-                            return True if self.sessionController.canProposeMediaStreamChanges() else False
-                        elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                            item.setToolTip_('Click to cancel the audio call')
-                            item.setImage_(NSImage.imageNamed_("hangup"))
-                            return True if self.sessionController.canCancelProposal() else False
-                        else:
-                            return True if self.sessionController.canProposeMediaStreamChanges() else False
+            elif identifier == 'audio' and self.status == STREAM_CONNECTED:
+                if self.sessionController.hasStreamOfType("audio"):
+                    if audio_stream.status == STREAM_CONNECTED:
+                        return True if self.sessionController.canProposeMediaStreamChanges() else False
+                    elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
+                        return True if self.sessionController.canCancelProposal() else False
                     else:
                         return True if self.sessionController.canProposeMediaStreamChanges() else False
                 else:
-                    return False
+                    return True if self.sessionController.canProposeMediaStreamChanges() else False
             elif identifier == 'hold' and self.status == STREAM_CONNECTED:
-                if not self.sessionController.canProposeMediaStreamChanges():
-                    return False
                 if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
-                    return True if audio_stream.status == STREAM_CONNECTED else False
+                    return True
             elif identifier == 'record':
-                if NSApp.delegate().applicationName == 'Blink Lite':
-                    return False
-                if self.sessionController.hasStreamOfType("audio"):
-                    if audio_stream.status == STREAM_CONNECTED:
-                        if audio_stream.stream.recording_active:
-                            item.setImage_(NSImage.imageNamed_("recording1"))
-                        else:
-                            item.setImage_(NSImage.imageNamed_("record"))
-                        return True
-                    else:
-                        item.setImage_(NSImage.imageNamed_("record"))
-                        return False
-                else:
-                    return False
-
+                return True if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and NSApp.delegate().applicationName != 'Blink Lite' else False
             elif identifier == 'maximize' and self.video_frame_visible:
                 return True
-            elif identifier == 'video' and self.backend.isMediaTypeSupported('video'):
+            elif identifier == 'video' and self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('video'):
                 if self.sessionController.hasStreamOfType("video"):
+                    video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_('Click to hangup the video call')
-                        item.setImage_(NSImage.imageNamed_("video-hangup"))
-                        return True
-                    elif video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
-                        item.setToolTip_('Click to cancel the video call')
-                        item.setImage_(NSImage.imageNamed_("video-hangup"))
-                        return True
+                        return True if self.sessionController.canProposeMediaStreamChanges() else False
+                    elif video_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
+                        return True if self.sessionController.canCancelProposal() else False
                     else:
-                        return False
-                if self.sessionController.inProposal:
-                    return False
+                        return True if self.sessionController.canProposeMediaStreamChanges() else False
+                else:
+                    return True if self.sessionController.canProposeMediaStreamChanges() else False
+            elif identifier == 'sendfile' and self.backend.isMediaTypeSupported('file-transfer'):
                 return True
-            elif identifier == 'sendfile'and self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('file-transfer'):
+            elif identifier == 'smileys':
                 return True
-            elif identifier == 'smileys' and self.status == STREAM_CONNECTED:
-                return True
-            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
-                item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
-                return True
+            elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
+                settings = SIPSimpleSettings()
+                if not settings.chat.disable_collaboration_editor:
+                    return True
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
             elif identifier == 'screenshot':
                 return True
-
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL:
-            if not self.sessionController.remote_focus:
-                if self.sessionController.hasStreamOfType("desktop-sharing"):
-                    return False
-                return True if self.sessionController.canProposeMediaStreamChanges() else False
-            else:
+            if self.sessionController.remote_focus:
                 return (True if (hasattr(self.stream, screen_sharing_support_flag) and getattr(self.stream, screen_sharing_support_flag)) else False)
-
+            else:
+                return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE:
             if not self.sessionController.remote_focus:
-                if self.sessionController.hasStreamOfType("desktop-sharing"):
-                    return False
-                return True if self.sessionController.canProposeMediaStreamChanges() else False
+                return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_CANCEL:
             if self.sessionController.hasStreamOfType("desktop-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     return True if self.sessionController.canCancelProposal() else False
         elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW):
@@ -1292,9 +1180,7 @@ class ChatController(MediaStream):
         if hasattr(sender, 'itemIdentifier'):
             # regular toolbar items (except buttons and menus)
             settings = SIPSimpleSettings()
-
             identifier = sender.itemIdentifier()
-            settings = SIPSimpleSettings()
 
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
