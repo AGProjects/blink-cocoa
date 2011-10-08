@@ -169,10 +169,9 @@ class DesktopSharingController(MediaStream):
 
     def changeStatus(self, newstate, fail_reason=None):
         if newstate == STREAM_CONNECTED:
-            self.sessionController.log_info("Screen Sharing Started")
             if self.direction == "active":
                 ip, port = self.stream.handler.address
-                self.sessionController.log_info("Connecting viewer to 127.0.0.1:%s" % port)
+                self.sessionController.log_info("Connecting viewer to vnc://127.0.0.1:%s" % port)
                 url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
                 NSWorkspace.sharedWorkspace().openURL_(url)
             else:
@@ -194,9 +193,9 @@ class DesktopSharingController(MediaStream):
                     label = "Waiting for connection..."
                 elif newstate == STREAM_FAILED:
                     if self.sessionController.failureReason or fail_reason:
-                        label = "Could not establish screen sharing:\n%s" % (self.sessionController.failureReason or fail_reason)
+                        label = "Could not establish screen sharing session:\n%s" % (self.sessionController.failureReason or fail_reason)
                     else:
-                        label = "Could not establish screen sharing"
+                        label = "Could not establish screen sharing session"
                     self.statusProgress.stopAnimation_(None)
                 elif newstate == STREAM_IDLE:
                     if self.status in (STREAM_DISCONNECTING, STREAM_CONNECTED):
@@ -229,15 +228,12 @@ class DesktopSharingController(MediaStream):
         handler(notification.sender, notification.data)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.sessionController.log_info("Screen sharing started")
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        if data.failure.type == VNCConnectionError:
-            self.changeStatus(STREAM_IDLE)
-            self.sessionController.log_info("Screen sharing ended because the viewer has been closed")
-        else:
-            self.sessionController.log_info("Screen sharing failed: %s" % data.reason)
-            self.changeStatus(STREAM_FAILED)
+        self.sessionController.log_info("Screen sharing failed")
+        self.changeStatus(STREAM_IDLE)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Screen sharing ended")
@@ -245,11 +241,7 @@ class DesktopSharingController(MediaStream):
 
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
-            self.sessionController.log_info("Screen sharing ended: %s" % data.reason)
-            # middleware is supposed to end the session now
-        else:
-            self.sessionController.log_info("Screen sharing error: %s" % data.reason)
-
+            self.sessionController.log_info("%s" % data.reason)
 
 class DesktopSharingViewerController(DesktopSharingController):
     @classmethod
