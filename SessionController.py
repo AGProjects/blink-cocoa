@@ -233,7 +233,7 @@ class SessionController(NSObject):
                 return True
             elif self.streamHandlers == [streamHandler]:
                 # session established, streamHandler is the only stream
-                self.log_info("Ending session with  %s stream"% streamHandler.stream.type)
+                self.log_info("Ending session with %s stream"% streamHandler.stream.type)
                 # end the whole session
                 self.end()
                 return True
@@ -268,7 +268,7 @@ class SessionController(NSObject):
     def cancelProposal(self, stream):
         if self.session:
             if self.canCancelProposal():
-                self.log_info("Cancelling proposal...")
+                self.log_info("Cancelling proposal")
                 self.cancelledStream = stream
                 try:
                     self.session.cancel_proposal()
@@ -372,7 +372,6 @@ class SessionController(NSObject):
                     controller.startOutgoing(not new_session, **kwargs)
 
                 if not new_session:
-                    self.log_info("Append %s controller"%stype)
                     # there is already a session, add audio stream to it
                     add_streams.append(controller.stream)
 
@@ -404,7 +403,7 @@ class SessionController(NSObject):
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
                 for stream in add_streams:
-                    self.log_info("Adding %s stream " % stream.type)
+                    self.log_info("Proposing %s stream" % stream.type)
                     try:
                        self.session.add_stream(stream)
                     except IllegalStateError, e:
@@ -412,7 +411,7 @@ class SessionController(NSObject):
                         return False
                 self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
             else:
-                self.log_info("Media Stream proposal is already in progress")
+                self.log_info("A stream proposal is already in progress")
                 return False
 
         self.open_chat_window_only = False
@@ -486,7 +485,7 @@ class SessionController(NSObject):
             return format_identity_simple(self.remotePartyObject)
 
     def setRoutesFailed(self, msg):
-        self.log_info("DNS Lookup for SIP routes failed: '%s'"%msg)
+        self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
 
         log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
@@ -519,7 +518,7 @@ class SessionController(NSObject):
             streams = [s.stream for s in self.streamHandlers]
             self.session.connect(ToHeader(self.target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)
-            self.log_info("Connecting Session...")
+            self.log_info("Connecting session")
 
     def transferSession(self, target, replaced_session_controller=None):
         if self.session:
@@ -534,7 +533,7 @@ class SessionController(NSObject):
                 self.log_info("Bogus SIP URI for transfer" % target_uri)
             else:
                 self.session.transfer(target_uri, replaced_session_controller.session if replaced_session_controller is not None else None)
-                self.log_info("Transferring Session to: %s" % target_uri)
+                self.log_info("Transferring session to: %s" % target_uri)
 
     def _acceptTransfer(self):
         self.session.accept_transfer()
@@ -623,7 +622,7 @@ class SessionController(NSObject):
         log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
-        self.log_info("Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
+        self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
 
         self.changeSessionState(STATE_FAILED, status)
 
@@ -707,7 +706,7 @@ class SessionController(NSObject):
     def _NH_SIPSessionGotRejectProposal(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
-        self.log_info("Proposal got rejected: %s (%s)"%(data.reason, data.code))
+        self.log_info("Proposal cancelled" if data.code == 487 else "Proposal was rejected: %s (%s)"%(data.reason, data.code))
 
         log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
         self.notification_center.post_notification("BlinkProposalGotRejected", sender=self, data=log_data)
@@ -717,17 +716,17 @@ class SessionController(NSObject):
                 if stream == self.cancelledStream:
                     self.cancelledStream = None
                 if stream.type == "chat":
-                    self.log_info("Removing chat stream from session")
+                    self.log_info("Removing chat stream")
                     handler = self.streamHandlerForStream(stream)
                     if handler:
                         handler.changeStatus(STREAM_FAILED, data.reason)
                 elif stream.type == "audio":
-                    self.log_info("Removing audio stream from session")
+                    self.log_info("Removing audio stream")
                     handler = self.streamHandlerForStream(stream)
                     if handler:
                         handler.changeStatus(STREAM_FAILED, data.reason)
                 elif stream.type == "desktop-sharing":
-                    self.log_info("Removing desktop sharing stream from session")
+                    self.log_info("Removing desktop sharing stream")
                     handler = self.streamHandlerForStream(stream)
                     if handler:
                         handler.changeStatus(STREAM_FAILED, data.reason)
@@ -766,7 +765,7 @@ class SessionController(NSObject):
             for stream in data.streams:
                 if stream == self.cancelledStream:
                     self.cancelledStream = None
-                self.log_info("Removing %s stream from session" % stream.type)
+                self.log_info("Removing %s stream" % stream.type)
                 handler = self.streamHandlerForStream(stream)
                 if handler:
                     handler.changeStatus(STREAM_FAILED, data.failure_reason)
