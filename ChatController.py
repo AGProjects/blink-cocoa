@@ -1068,10 +1068,11 @@ class ChatController(MediaStream):
                     if self.sessionController.hasStreamOfType("desktop-sharing"):
                         desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                         if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
-                            mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                            mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                            mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                            mitem.setHidden_(False)
+                            mitem.setTitle_("Cancel Screen Sharing Proposal")
+                        elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                            mitem.setTitle_("Stop Screen Sharing")
+                    else:
+                        mitem.setTitle_("Cancel Screen Sharing Proposal")
                 else:
                     item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
 
@@ -1167,6 +1168,8 @@ class ChatController(MediaStream):
                 desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     return True if self.sessionController.canCancelProposal() else False
+                elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                    return True if self.sessionController.canProposeMediaStreamChanges() else False
         elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW):
             if self.sessionController.remote_focus and self.screensharing_handler is not None and self.screensharing_handler.connected:
                 return True
@@ -1322,6 +1325,8 @@ class ChatController(MediaStream):
                 desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     self.sessionController.cancelProposal(desktop_sharing_stream)
+                elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                    self.sessionController.removeDesktopFromSession()
         elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH:
             if self.screensharing_handler is not None:
                 self.screensharing_handler.setQuality('high')

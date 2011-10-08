@@ -458,12 +458,17 @@ class SessionController(NSObject):
             self.endStream(videoStream)
 
     def addMyDesktopToSession(self):
-        if not self.hasStreamOfType("desktop"):
+        if not self.hasStreamOfType("desktop-sharing"):
             self.startSessionWithStreamOfType("desktop-server")
 
     def addRemoteDesktopToSession(self):
-        if not self.hasStreamOfType("desktop"):
+        if not self.hasStreamOfType("desktop-sharing"):
             self.startSessionWithStreamOfType("desktop-viewer")
+
+    def removeDesktopFromSession(self):
+        if self.hasStreamOfType("desktop-sharing"):
+            desktopStream = self.streamHandlerOfType("desktop-sharing")
+            self.endStream(desktopStream)
 
     def getTitle(self):
         return format_identity(self.remotePartyObject)

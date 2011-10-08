@@ -773,10 +773,14 @@ class AudioController(MediaStream):
                 desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     item.setEnabled_(True)
-
+                    item.setTitle_("Cancel Screen Sharing Proposal")
+                elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                    item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
+                    item.setTitle_("Stop Screen Sharing")
+            else:
+                item.setTitle_("Cancel Screen Sharing Proposal")
             item = menu.itemWithTag_(20) # add to contacts
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
-
             item = menu.itemWithTag_(30)
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
             item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
@@ -799,6 +803,8 @@ class AudioController(MediaStream):
                 desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     self.sessionController.cancelProposal(desktop_sharing_stream)
+                elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                    self.sessionController.removeDesktopFromSession()
         elif tag == 20: # add to contacts
             if hasattr(self.sessionController.remotePartyObject, "display_name"):
                 display_name = self.sessionController.remotePartyObject.display_name
