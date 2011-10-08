@@ -85,7 +85,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Hold</string>
 								<string key="NSToolbarItemPaletteLabel">Hold</string>
-								<string key="NSToolbarItemToolTip">Hold/Unhold the audio call</string>
+								<string key="NSToolbarItemToolTip">Hold/Unhold Audio</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
@@ -107,11 +107,13 @@
 								</object>
 								<string key="NSToolbarItemLabel">Screenshot</string>
 								<string key="NSToolbarItemPaletteLabel">Screenshot</string>
-								<string key="NSToolbarItemToolTip">Send a Screenshot</string>
+								<string key="NSToolbarItemToolTip">Send Screenshots</string>
 								<object class="NSButton" key="NSToolbarItemView" id="281418617">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{17, 14}, {32, 32}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<int key="NSTag">300</int>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="46849197">
@@ -175,7 +177,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Send File</string>
 								<string key="NSToolbarItemPaletteLabel">Send File</string>
-								<string key="NSToolbarItemToolTip">Send one or more files</string>
+								<string key="NSToolbarItemToolTip">Send Files</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
@@ -197,7 +199,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Record</string>
 								<string key="NSToolbarItemPaletteLabel">Record</string>
-								<string key="NSToolbarItemToolTip">Record the audio call</string>
+								<string key="NSToolbarItemToolTip">Record Audio</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
@@ -219,7 +221,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Connect</string>
 								<string key="NSToolbarItemPaletteLabel">Connect</string>
-								<string key="NSToolbarItemToolTip">Reconnect the Chat session</string>
+								<string key="NSToolbarItemToolTip">Connect Chat</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
@@ -241,7 +243,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Participants</string>
 								<string key="NSToolbarItemPaletteLabel">Participants</string>
-								<string key="NSToolbarItemToolTip"/>
+								<string key="NSToolbarItemToolTip">Toogle Participants Drawer</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
@@ -285,7 +287,7 @@
 								</object>
 								<string key="NSToolbarItemLabel">Editor</string>
 								<string key="NSToolbarItemPaletteLabel">Editor</string>
-								<string key="NSToolbarItemToolTip">Enable Collaborative Editor</string>
+								<string key="NSToolbarItemToolTip">Toggle Collaborative Editor</string>
 								<nil key="NSToolbarItemView"/>
 								<object class="NSCustomResource" key="NSToolbarItemImage">
 									<string key="NSClassName">NSImage</string>
@@ -351,11 +353,13 @@
 								</object>
 								<string key="NSToolbarItemLabel">Screen</string>
 								<string key="NSToolbarItemPaletteLabel">Screen</string>
-								<string key="NSToolbarItemToolTip">Start Screen Sharing</string>
+								<string key="NSToolbarItemToolTip">Screen Sharing</string>
 								<object class="NSButton" key="NSToolbarItemView" id="452326362">
-									<nil key="NSNextResponder"/>
+									<reference key="NSNextResponder"/>
 									<int key="NSvFlags">268</int>
 									<string key="NSFrame">{{6, 14}, {32, 32}}</string>
+									<reference key="NSSuperview"/>
+									<reference key="NSWindow"/>
 									<int key="NSTag">200</int>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="126467494">
@@ -538,7 +542,7 @@
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSWindowContentMinSize">{650, 521}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -547,6 +551,7 @@
 							<int key="NSvFlags">290</int>
 							<string key="NSFrame">{{0, -1}, {650, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -554,6 +559,7 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 21}, {650, 500}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<object class="NSMutableArray" key="NSTabViewItems">
 								<bool key="EncodedWithXMLCoder">YES</bool>
 							</object>
@@ -564,6 +570,8 @@
 						</object>
 					</object>
 					<string key="NSFrameSize">{650, 521}</string>
+					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{650, 597}</string>
