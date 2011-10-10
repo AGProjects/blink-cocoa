@@ -12,7 +12,6 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="53"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -634,7 +633,8 @@
 						<reference key="NSMenu" ref="590086273"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<string key="NSTitle">Show Session Information</string>
-						<string key="NSKeyEquiv"/>
+						<string key="NSKeyEquiv">i</string>
+						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
@@ -1511,7 +1511,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="2"/>
-					<string>{{718, 262}, {266, 193}}</string>
+					<string>{{718, 262}, {284, 193}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>

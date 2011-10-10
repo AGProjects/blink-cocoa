@@ -279,15 +279,21 @@ class AudioController(MediaStream):
     def sessionBoxKeyPressEvent(self, sender, event):
         s = event.characters()
         if s and self.stream:
-            key = s[0].upper()
-            if key == " ":
-                if not self.isConferencing:
-                    self.toggleHold()
-            elif key == chr(27):
-                if not self.isConferencing:
-                    self.end();
-            elif key in string.digits+string.uppercase+'#*':
-                self.send_dtmf(key)
+            key = s[0]
+            if event.modifierFlags() & NSCommandKeyMask:
+                if key == 'i':
+                    if self.sessionController.info_panel is not None:
+                        self.sessionController.info_panel.toggle()
+            else:
+                key = key.upper()
+                if key == " ":
+                    if not self.isConferencing:
+                        self.toggleHold()
+                elif key == chr(27):
+                    if not self.isConferencing:
+                        self.end();
+                elif key in string.digits+string.uppercase+'#*':
+                    self.send_dtmf(key)
 
     def send_dtmf(self, key):
         if not self.stream:

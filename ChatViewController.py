@@ -143,6 +143,10 @@ class ChatInputTextView(NSTextView):
     def keyDown_(self, event):
         if event.keyCode() == 36 and (event.modifierFlags() & NSShiftKeyMask):
             self.insertText_('\r\n')
+        elif (event.modifierFlags() & NSCommandKeyMask):
+            keys = event.characters()
+            if keys[0] == 'i' and self.owner.delegate.sessionController.info_panel is not None:
+                self.owner.delegate.sessionController.info_panel.toggle()
         else:
             super(ChatInputTextView, self).keyDown_(event)
 
