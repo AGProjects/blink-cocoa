@@ -134,6 +134,7 @@ class ContactWindowController(NSWindowController):
     participantsView = objc.IBOutlet()
     participantsTableView = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
+    addsView = objc.IBOutlet()
     sessionsView = objc.IBOutlet()
     sessionListView = objc.IBOutlet()
     drawerSplitterPosition = None
@@ -316,9 +317,33 @@ class ContactWindowController(NSWindowController):
             item = self.statusMenu.itemWithTag_(55)
             item.setHidden_(True)
 
-        self.window().setTitle_(NSApp.delegate().applicationName)
+            # TODO: enable adds view
+            self.hideAddsView()
+        else:
+            self.hideAddsView()
 
+        self.window().setTitle_(NSApp.delegate().applicationName)
         self.loaded = True
+
+    def toggleAddsView(self):
+        if self.addsView.isHidden():
+            self.showAddsView()
+        else:
+            self.hideAddsView()
+
+    def hideAddsView(self):
+        # hide adds view and resize audio sessions drawer
+        self.addsView.setHidden_(True)
+        drawer_frame = self.drawerSplitView.frame()
+        drawer_frame.size.height +=  self.addsView.frame().size.height
+        self.drawerSplitView.setFrame_(drawer_frame)
+
+    def showAddsView(self):
+        # show adds view and resize audio sessions drawer
+        self.addsView.setHidden_(False)
+        drawer_frame = self.drawerSplitView.frame()
+        drawer_frame.size.height -=  self.addsView.frame().size.height
+        self.drawerSplitView.setFrame_(drawer_frame)
 
     def setup(self, sipManager):
         self.backend = sipManager
