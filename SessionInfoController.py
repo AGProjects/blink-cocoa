@@ -393,7 +393,7 @@ class SessionInfoController(NSObject):
         self.updateAudioStatus()
 
     def show(self):
-        self.window.makeKeyAndOrderFront_(None)
+        self.window.orderFront_(None)
 
     def hide(self):
         self.window.orderOut_(None)
