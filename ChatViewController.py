@@ -85,7 +85,7 @@ class ChatInputTextView(NSTextView):
         return self
     
     def setOwner(self, owner):
-        self.owner = owner
+        self.owner = owner   # ChatViewController
     
     def setMaxLength_(self, l):
         self.maxLength = l
@@ -181,7 +181,7 @@ class ChatViewController(NSObject):
 
     splitterHeight = None
 
-    delegate = objc.IBOutlet()
+    delegate = objc.IBOutlet() # ChatController
     account = None
     rendered_messages = None
     finishedLoading = False
