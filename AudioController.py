@@ -748,7 +748,8 @@ class AudioController(MediaStream):
             item.setIndentationLevel_(1)
             item.setEnabled_(False)
         else:
-            can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.remote_focus
+            can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
+            can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             item = menu.itemWithTag_(10) # add Chat
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
@@ -758,14 +759,14 @@ class AudioController(MediaStream):
             item.setHidden_(not(SIPManager().isMediaTypeSupported('video')))
 
             title = self.sessionController.getTitleShort()
-            have_desktop_sharing = self.sessionController.hasStreamOfType("desktop-sharing")
+            have_screensharing = self.sessionController.hasStreamOfType("desktop-sharing")
             item = menu.itemWithTag_(11) # request remote desktop
             item.setTitle_("Request Screen from %s" % title)
-            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-client'))
+            item.setEnabled_(not have_screensharing and can_propose_screensharing and SIPManager().isMediaTypeSupported('desktop-client'))
 
             item = menu.itemWithTag_(12) # share local desktop
             item.setTitle_("Share My Screen with %s" % title)
-            item.setEnabled_(not have_desktop_sharing and can_propose and SIPManager().isMediaTypeSupported('desktop-server'))
+            item.setEnabled_(not have_screensharing and can_propose_screensharing and SIPManager().isMediaTypeSupported('desktop-server'))
 
             item = menu.itemWithTag_(13) # cancel
             item.setEnabled_(False)
