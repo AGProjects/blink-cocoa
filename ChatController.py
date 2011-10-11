@@ -33,7 +33,6 @@ import ChatWindowManager
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
-from ChatWindowController import screen_sharing_support_flag
 
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -143,6 +142,7 @@ class ConferenceScreenSharingHandler(object):
     may_send = True # wait until previous screen has been sent
     max_framerate = 1
     compression = 0.7 # jpeg compression
+    scale_factor = 1
 
     # GUI controled value
     quality = 'high' # or 'low'
@@ -150,11 +150,16 @@ class ConferenceScreenSharingHandler(object):
     def setMaxFramerate(self, max_framerate):
         self.max_framerate = max_framerate
 
+    def setScaleFactor(self, scale_factor):
+        self.scale_factor = scale_factor
+
     def setQuality(self, quality):
         BlinkLogger().log_info('Set screen sharing quality to %s' % quality)
         self.quality = quality
         self.compression = 0.7 if self.quality == 'high' else 0.3
         self.max_framerate = 1 if self.quality == 'high' else 3
+        if self.quality == 'low':
+            self.setScaleFactor(10)
 
     def setConnected(self, stream):
         self.connected = True
@@ -216,8 +221,8 @@ class ConferenceScreenSharingHandler(object):
             else:
                 image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
                 originalSize = image.size()
-                resizeWidth = originalSize.width/2
-                resizeHeight = originalSize.height/2
+                resizeWidth = originalSize.width/self.scale_factor
+                resizeHeight = originalSize.height/self.scale_factor
                 scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
                 scaled_image.lockFocus()
                 image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
@@ -228,8 +233,8 @@ class ConferenceScreenSharingHandler(object):
             properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
             data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
             now = datetime.datetime.now(tzlocal())
-            text=base64.b64encode(data)
-            #BlinkLogger().log_info('Sending %s bytes screen' % len(text))
+            text=base64.encodestring(data)
+            BlinkLogger().log_info('Sending %s bytes screen' % len(text))
             self.stream.send_message(text, content_type='image/jpeg', timestamp=Timestamp(now))
             self.may_send = False
 
@@ -1077,7 +1082,7 @@ class ChatController(MediaStream):
                     item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_("Share My Screen with Conference Participants")
+                    mitem.setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
@@ -1157,7 +1162,8 @@ class ChatController(MediaStream):
                 return True
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL:
             if self.sessionController.remote_focus:
-                return (True if (hasattr(self.stream, screen_sharing_support_flag) and getattr(self.stream, screen_sharing_support_flag)) else False)
+                # TODO: multiparty screensharing
+                return (True if hasattr(self.stream, "screensharing_allowed") and self.stream.screensharing_allowed else False)
             else:
                 return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE:
@@ -1339,7 +1345,7 @@ class ChatController(MediaStream):
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             menu = window.toolbar.delegate().desktopShareMenu
-            menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else 'Stop Screen Sharing')
+            menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
             window.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
             try:

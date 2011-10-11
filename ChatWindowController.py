@@ -49,10 +49,6 @@ TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 
 
-# TODO: detect chat stream support for screen sharing
-screen_sharing_support_flag = 'x-screensharing'
-
-
 class ChatWindowController(NSWindowController):
     implements(IObserver)
 
@@ -535,7 +531,8 @@ class ChatWindowController(NSWindowController):
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
-                stream_supports_screen_sharing = True if (hasattr(chat_stream.stream, screen_sharing_support_flag) and getattr(chat_stream.stream, screen_sharing_support_flag)) else False
+                # TODO: multiparty screensharing
+                stream_supports_screen_sharing = True if hasattr(chat_stream.stream, "screensharing_allowed") and chat_stream.stream.screensharing_allowed else False
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
             else:
                 stream_supports_screen_sharing = False
@@ -959,8 +956,9 @@ class ChatWindowController(NSWindowController):
                         active_media.append('message')
 
                     # TODO: set screen sharing url
-                    # active_media.append('screen')
-                    # contact.setScreensharingUrl('http://icanblink.com/screensharing/screen.phtml')
+                    if hasattr(user, "screensharing_url") and user.screensharing_url is not None:
+                        active_media.append('screen')
+                        contact.setScreensharingUrl(user.screensharing_url)
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)

@@ -144,7 +144,6 @@ class FancyTabItem(NSView):
             rect.size = self.screenIcon.size()
             self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(20, 3), rect, NSCompositeSourceOver, 1)
 
-
         if not self.draggedOut:
             shadow = NSShadow.alloc().init()
             shadow.setShadowOffset_(NSMakeSize(0, -1))
@@ -214,6 +213,15 @@ class FancyTabItem(NSView):
         self.setNeedsDisplay_(True)
 
     def setScreenSharing_(self, flag):
+        if self.screen_sharing and not flag:
+            frame = self.frame()
+            frame.size.width -= 16
+            self.setFrame_(frame)
+        elif flag and not self.screen_sharing:
+            frame = self.frame()
+            frame.size.width += 16
+            self.setFrame_(frame)
+
         self.screen_sharing = flag
         self.setNeedsDisplay_(True)
 
