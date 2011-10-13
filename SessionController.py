@@ -134,14 +134,44 @@ class SessionController(NSObject):
         return self
 
     def initWithSessionTransfer_owner_(self, session, owner):
-        self = SessionController.alloc().initWithSession_(session)
+        global SessionIdentifierSerial
+        self = super(SessionController, self).init()
+        self.contactDisplayName = None
+        self.remoteParty = format_identity_simple(session.remote_identity)
+        self.remotePartyObject = session.remote_identity
+        self.account = session.account
+        self.session = session
+        self.target_uri = SIPURI.new(session.remote_identity.uri)
+        self.remoteSIPAddress = format_identity_address(self.target_uri)
+        self.streamHandlers = []
+        SessionIdentifierSerial += 1
+        self.identifier = SessionIdentifierSerial
+        self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, sender=self.session)
+        self.cancelledStream = None
+        self.remote_focus = False
+        self.conference_info = None
+        self.invited_participants = []
+        self.conference_shared_files = []
+        self.pending_removal_participants = set()
+        self.failed_to_join_participants = {}
+        self.mustShowDrawer = True
+        self.info_panel = SessionInfoController(self)
+        self.open_chat_window_only = False
         self.owner = owner
+
+        # used for accounting
+        self.streams_log = [stream.type for stream in session.proposed_streams or []]
+        self.participants_log = set()
+        self.remote_focus_log = False
+
         for stream in session.proposed_streams:
             if SIPManager().isMediaTypeSupported(stream.type) and not self.hasStreamOfType(stream.type):
                 handlerClass = StreamHandlerForType[stream.type]
                 stream_controller = handlerClass(self, stream)
                 self.streamHandlers.append(stream_controller)
                 stream_controller.startOutgoing(False)
+
         return self
 
     def log_info(self, text):
