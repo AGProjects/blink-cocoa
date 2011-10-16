@@ -171,6 +171,7 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidEnd')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidFail')
+        self.notification_center.add_observer(self, name='SIPAccountRegistrationGotAnswer')
         self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
@@ -846,7 +847,7 @@ class SIPManager(object):
         MWIData.remove(account)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = u'Registered Contact "%s" for sip:%s at %s:%d;transport=%s for %d seconds\n' % (data.contact_header.uri, account.id, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+        message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds\n' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
@@ -854,6 +855,10 @@ class SIPManager(object):
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info(u"%s was unregistered" % account)
+
+    def _NH_SIPAccountRegistrationGotAnswer(self, account, data):
+        if data.code > 200:
+            BlinkLogger().log_info(u"%s failed to register at %s: %s (%s)" % (account, data.registrar, data.reason, data.code))
 
     def _NH_SIPAccountRegistrationDidFail(self, account, data):
         BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, data.error, data.timeout))
