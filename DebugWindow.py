@@ -159,19 +159,17 @@ class EngineLogger(NSObject, object):
         self.fullTrace = flag
 
     @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    @run_in_gui_thread
     def _NH_SIPEngineLog(self, notification):
         self.printPJSIP_("%(timestamp)s (%(level)d) %(sender)14s: %(message)s" % notification.data.__dict__)
 
-    @run_in_gui_thread
     def _NH_SIPEngineSIPTrace(self, notification):
         self.printSIP_(notification.data)
 
-    @run_in_gui_thread
     def _NH_DNSLookupTrace(self, notification):
         data = notification.data
         message = '%(timestamp)s: DNS lookup %(query_type)s %(query_name)s' % data.__dict__
