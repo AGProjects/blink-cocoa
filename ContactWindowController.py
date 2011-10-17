@@ -257,6 +257,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPAccountWillRegister")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
+        nc.add_observer(self, name="SIPAccountRegistrationGotAnswer")
         nc.add_observer(self, name="SIPAccountRegistrationDidEnd")
         nc.add_observer(self, name="BonjourAccountWillRegister")
         nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
@@ -404,7 +405,13 @@ class ContactWindowController(NSWindowController):
                 item.setImage_(image)
             else:
                 if not account_info.registration_state == 'succeeded':
-                    title = NSAttributedString.alloc().initWithString_attributes_(account_info.name, grayAttrs)
+                    if account_info.failure_reason and account_info.failure_code:
+                        name = '%s (%s %s)' % (account_info.name, account_info.failure_code, account_info.failure_reason)
+                    elif account_info.failure_reason:
+                        name = '%s (%s)' % (account_info.name, account_info.failure_reason)
+                    else:
+                        name = account_info.name
+                    title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
                     item.setAttributedTitle_(title)
 
             if account_info.account is account_manager.default_account:
@@ -492,7 +499,6 @@ class ContactWindowController(NSWindowController):
                 return False
         return True
 
-
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -534,12 +540,31 @@ class ContactWindowController(NSWindowController):
         self.accounts[position].registration_state = 'succeeded'
         self.refreshAccountList()
 
+    def _NH_SIPAccountRegistrationGotAnswer(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+
+        if notification.data.code > 200:
+            self.accounts[position].failure_code = notification.data.code
+            self.accounts[position].failure_reason = notification.data.reason
+        else:
+            self.accounts[position].failure_code = None
+            self.accounts[position].failure_reason = None
+
     def _NH_SIPAccountRegistrationDidFail(self, notification):
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
         self.accounts[position].registration_state = 'failed'
+        if self.accounts[position].failure_reason is None:
+            if notification.data.error.startswith('DNS'):
+                self.accounts[position].failure_reason = 'DNS failure'
+            else:
+                self.accounts[position].failure_reason = notification.data.error
+
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
             if not self.authFailPopupShown:

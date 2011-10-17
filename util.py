@@ -314,6 +314,8 @@ class AccountInfo(object):
     def __init__(self, account):
         self.account = account
         self.registration_state = None
+        self.failure_code = None
+        self.failure_reason = None
 
     @property
     def name(self):
