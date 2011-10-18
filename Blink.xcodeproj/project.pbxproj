@@ -494,14 +494,14 @@
 		1F8DC3FF135084FA0034815C /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
 		1F8DC401135084FA0034815C /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		1F8DC402135084FA0034815C /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
-		1F8DC404135084FA0034815C /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
-		1F8DC406135084FA0034815C /* libgcrypt.11.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
-		1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
-		1F8DC408135084FA0034815C /* libgnutls.26.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
-		1F8DC409135084FA0034815C /* libgpg-error.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
-		1F8DC40B135084FA0034815C /* libintl.8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722A12B554000010A8B2 /* libintl.8.dylib */; };
-		1F8DC40C135084FA0034815C /* liblzo.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
-		1F8DC40D135084FA0034815C /* libtasn1.3.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
+		1F8DC404135084FA0034815C /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1F8DC406135084FA0034815C /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
+		1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
+		1F8DC408135084FA0034815C /* libgnutls.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
+		1F8DC409135084FA0034815C /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
+		1F8DC40B135084FA0034815C /* libintl.8.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722A12B554000010A8B2 /* libintl.8.dylib */; };
+		1F8DC40C135084FA0034815C /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
+		1F8DC40D135084FA0034815C /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
 		1F8DC9121351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F8DC9131351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F9406BF14307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
@@ -1228,30 +1228,32 @@
 			name = "Copy Interfaces Package";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1F8DC403135084FA0034815C /* CopyFiles */ = {
+		1F8DC403135084FA0034815C /* Copy Libraries */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 7;
 			files = (
-				1F8DC404135084FA0034815C /* lib in CopyFiles */,
+				1F8DC404135084FA0034815C /* lib in Copy Libraries */,
 			);
+			name = "Copy Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1F8DC405135084FA0034815C /* CopyFiles */ = {
+		1F8DC405135084FA0034815C /* Copy Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1F8DC406135084FA0034815C /* libgcrypt.11.dylib in CopyFiles */,
-				1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in CopyFiles */,
-				1F8DC408135084FA0034815C /* libgnutls.26.dylib in CopyFiles */,
-				1F8DC409135084FA0034815C /* libgpg-error.0.dylib in CopyFiles */,
-				1F8DC40B135084FA0034815C /* libintl.8.dylib in CopyFiles */,
-				1F8DC40C135084FA0034815C /* liblzo.1.dylib in CopyFiles */,
-				1F8DC40D135084FA0034815C /* libtasn1.3.dylib in CopyFiles */,
+				1F8DC406135084FA0034815C /* libgcrypt.11.dylib in Copy Frameworks */,
+				1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in Copy Frameworks */,
+				1F8DC408135084FA0034815C /* libgnutls.26.dylib in Copy Frameworks */,
+				1F8DC409135084FA0034815C /* libgpg-error.0.dylib in Copy Frameworks */,
+				1F8DC40B135084FA0034815C /* libintl.8.dylib in Copy Frameworks */,
+				1F8DC40C135084FA0034815C /* liblzo.1.dylib in Copy Frameworks */,
+				1F8DC40D135084FA0034815C /* libtasn1.3.dylib in Copy Frameworks */,
 			);
+			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1FA0ED761402F778007D96B2 /* Copy Smiley Files (default) */ = {
@@ -1819,6 +1821,9 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
+				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
 				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
 				2B0CD87410BD6F0500325F30 /* Sparkle.framework */,
 				77631A260C06C501005415CB /* Python.framework */,
@@ -1826,16 +1831,6 @@
 				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
 			);
 			name = "Linked Frameworks";
-			sourceTree = "<group>";
-		};
-		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
-				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
-				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
-			);
-			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
@@ -1947,7 +1942,6 @@
 			isa = PBXGroup;
 			children = (
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
-				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -2384,8 +2378,8 @@
 				1F8DC3CC135084FA0034815C /* Copy Smiley Files (default) */,
 				1F8DC3FB135084FA0034815C /* Copy Configuration Package */,
 				1F8DC400135084FA0034815C /* Copy Interfaces Package */,
-				1F8DC403135084FA0034815C /* CopyFiles */,
-				1F8DC405135084FA0034815C /* CopyFiles */,
+				1F8DC403135084FA0034815C /* Copy Libraries */,
+				1F8DC405135084FA0034815C /* Copy Frameworks */,
 			);
 			buildRules = (
 			);
@@ -3571,7 +3565,11 @@
 				CODE_SIGN_IDENTITY = "Don't Code Sign";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
@@ -3600,6 +3598,11 @@
 				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
@@ -3624,7 +3627,11 @@
 				CODE_SIGN_IDENTITY = "Don't Code Sign";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
@@ -3652,6 +3659,11 @@
 				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
@@ -3676,6 +3688,11 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn .git *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = "";
@@ -3711,6 +3728,11 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn .git *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3737,6 +3759,11 @@
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
@@ -3763,6 +3790,11 @@
 				ARCHS = i386;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
