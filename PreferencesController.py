@@ -34,6 +34,7 @@ class PreferencesController(NSWindowController, object):
     displayNameText = objc.IBOutlet()
     addressText = objc.IBOutlet()
     passwordText = objc.IBOutlet()
+    registration_status = objc.IBOutlet()
 
     addButton = objc.IBOutlet()
     removeButton = objc.IBOutlet()
@@ -57,10 +58,12 @@ class PreferencesController(NSWindowController, object):
         self = super(PreferencesController, self).init()
         if self:
             notification_center = NotificationCenter()
-            notification_center.add_observer(self, name="SIPAccountWillRegister")
+            notification_center.add_observer(self, name="SIPAccountDidDeactivate")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidFail")
             notification_center.add_observer(self, name="SIPAccountRegistrationDidEnd")
+            notification_center.add_observer(self, name="SIPAccountRegistrationGotAnswer")
+            notification_center.add_observer(self, name="SIPAccountWillRegister")
             notification_center.add_observer(self, name="BonjourAccountWillRegister")
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidFail")
@@ -416,6 +419,25 @@ class PreferencesController(NSWindowController, object):
         if self.accountTable:
             self.accountTable.reloadData()
 
+    def updateRegistrationStatus(self):
+        if self.registration_status:
+            selected_account = self.selectedAccount()
+            if selected_account:
+                if selected_account.failure_code and selected_account.failure_reason:
+                    self.registration_status.setStringValue_(u'Registration failed: %s (%s)' % (selected_account.failure_reason, selected_account.failure_code))
+                    self.registration_status.setHidden_(False)
+                elif selected_account.failure_reason:
+                    self.registration_status.setStringValue_(u'Registration failed: %s' % selected_account.failure_reason)
+                    self.registration_status.setHidden_(False)
+                else:
+                    if selected_account.registration_state:
+                        self.registration_status.setStringValue_('Registration %s' % selected_account.registration_state.title())
+                        self.registration_status.setHidden_(False)
+                    else:
+                        self.registration_status.setHidden_(True)
+            else:
+                self.registration_status.setHidden_(True)
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -429,6 +451,7 @@ class PreferencesController(NSWindowController, object):
         if self.accountTable:
             self.tableViewSelectionDidChange_(None)
         self.validateAddAccountButton()
+        self.updateRegistrationStatus()
 
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
@@ -437,6 +460,16 @@ class PreferencesController(NSWindowController, object):
         if self.accountTable:
             self.tableViewSelectionDidChange_(None)
         self.validateAddAccountButton()
+        self.updateRegistrationStatus()
+
+    def _NH_SIPAccountDidDeactivate(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+        self.accounts[position].failure_code = None
+        self.accounts[position].failure_reason = None
+        self.updateRegistrationStatus()
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
@@ -445,6 +478,7 @@ class PreferencesController(NSWindowController, object):
             return
         self.accounts[position].registration_state = 'started'
         self.refresh_account_table()
+        self.updateRegistrationStatus()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
         try:
@@ -452,7 +486,25 @@ class PreferencesController(NSWindowController, object):
         except ValueError:
             return
         self.accounts[position].registration_state = 'succeeded'
+        self.accounts[position].failure_code = None
+        self.accounts[position].failure_reason = None
+
         self.refresh_account_table()
+        self.updateRegistrationStatus()
+
+    def _NH_SIPAccountRegistrationGotAnswer(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            return
+
+        if notification.data.code > 200:
+            self.accounts[position].failure_code = notification.data.code
+            self.accounts[position].failure_reason = notification.data.reason
+        else:
+            self.accounts[position].failure_code = None
+            self.accounts[position].failure_reason = None
+        self.updateRegistrationStatus()
 
     def _NH_SIPAccountRegistrationDidFail(self, notification):
         try:
@@ -460,7 +512,12 @@ class PreferencesController(NSWindowController, object):
         except ValueError:
             return
         self.accounts[position].registration_state = 'failed'
+
+        if self.accounts[position].failure_reason is None:
+            self.accounts[position].failure_reason = notification.data.error
+
         self.refresh_account_table()
+        self.updateRegistrationStatus()
 
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
         try:
@@ -469,6 +526,7 @@ class PreferencesController(NSWindowController, object):
             return
         self.accounts[position].registration_state = 'ended'
         self.refresh_account_table()
+        self.updateRegistrationStatus()
 
     _NH_BonjourAccountWillRegister = _NH_SIPAccountWillRegister
     _NH_BonjourAccountRegistrationDidSucceed = _NH_SIPAccountRegistrationDidSucceed
@@ -485,11 +543,14 @@ class PreferencesController(NSWindowController, object):
         sender = notification.sender
         if not self.saving and sender in (SIPSimpleSettings(), self.selectedAccount()):
             for option in (o for o in notification.data.modified if o in self.settingViews):
-                self.settingViews[option].restore() 
+                self.settingViews[option].restore()
             if 'display_name' in notification.data.modified:
                 self.displayNameText.setStringValue_(sender.display_name or u'')
+
         if 'audio.silent' in notification.data.modified:
             self.settingViews['audio.silent'].restore()
+
+        self.updateRegistrationStatus()
 
     def updateAudioDevices_(self, object):
         audio_device_option_types = (PreferenceOptionTypes["audio.input_device"], PreferenceOptionTypes["audio.output_device"])
@@ -548,6 +609,7 @@ class PreferencesController(NSWindowController, object):
                 self.addressText.setHidden_(False)
                 sv.viewWithTag_(20).setHidden_(False)
                 sv.viewWithTag_(21).setHidden_(False)
+
         else:
             self.addressText.setStringValue_("Please select an account")
             self.addressText.setEditable_(False)
@@ -565,6 +627,7 @@ class PreferencesController(NSWindowController, object):
             sv.viewWithTag_(21).setHidden_(False)
             
         self.removeButton.setEnabled_(account_info is not None and account_info.account is not BonjourAccount())
+        self.updateRegistrationStatus()
     
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         account_info = self.getAccountForRow(row)
