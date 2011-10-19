@@ -1706,7 +1706,7 @@ class ContactWindowController(NSWindowController):
                 frame.size.height = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - self.searchOutlineTopOffset
                 self.searchOutline.enclosingScrollView().setFrame_(frame)
 
-        self.refreshAdsLayout()
+        #self.refreshAdsLayout()
 
     def drawerDidOpen_(self, notification):
         windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
