@@ -316,6 +316,7 @@ class AccountInfo(object):
         self.registration_state = None
         self.failure_code = None
         self.failure_reason = None
+        self.registrar = None
 
     @property
     def name(self):

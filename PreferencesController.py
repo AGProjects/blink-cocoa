@@ -414,7 +414,6 @@ class PreferencesController(NSWindowController, object):
 
     def getAccountForRow(self, row):
         return self.accounts[row]
-
     def refresh_account_table(self):
         if self.accountTable:
             self.accountTable.reloadData()
@@ -430,8 +429,11 @@ class PreferencesController(NSWindowController, object):
                     self.registration_status.setStringValue_(u'Registration failed: %s' % selected_account.failure_reason)
                     self.registration_status.setHidden_(False)
                 else:
-                    if selected_account.registration_state:
-                        self.registration_status.setStringValue_('Registration %s' % selected_account.registration_state.title())
+                    if selected_account.registration_state and selected_account.registration_state != 'ended':
+                        if selected_account.registrar:
+                            self.registration_status.setStringValue_('Registration %s at %s' % (selected_account.registration_state.title(), selected_account.registrar))
+                        else:
+                            self.registration_status.setStringValue_('Registration %s' % selected_account.registration_state.title())
                         self.registration_status.setHidden_(False)
                     else:
                         self.registration_status.setHidden_(True)
@@ -504,6 +506,8 @@ class PreferencesController(NSWindowController, object):
         else:
             self.accounts[position].failure_code = None
             self.accounts[position].failure_reason = None
+        self.accounts[position].registrar = '%s:%s:%d' % (notification.data.registrar.transport, notification.data.registrar.address, notification.data.registrar.port)
+
         self.updateRegistrationStatus()
 
     def _NH_SIPAccountRegistrationDidFail(self, notification):
