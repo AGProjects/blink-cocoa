@@ -430,7 +430,7 @@ class PreferencesController(NSWindowController, object):
                     self.registration_status.setHidden_(False)
                 else:
                     if selected_account.registration_state and selected_account.registration_state != 'ended':
-                        if selected_account.registrar:
+                        if selected_account.registrar and selected_account.registration_state == 'succeeded':
                             self.registration_status.setStringValue_('Registration %s at %s' % (selected_account.registration_state.title(), selected_account.registrar))
                         else:
                             self.registration_status.setStringValue_('Registration %s' % selected_account.registration_state.title())
