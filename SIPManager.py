@@ -989,7 +989,7 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
-        BlinkLogger().log_info(u"Incoming session request from %s with %s streams" % (format_identity_address(session.remote_identity), ", ".join(s.type for s in data.streams)))
+        BlinkLogger().log_info(u"Incoming session request from %s <%s> with %s streams" % (session.remote_identity.display_name, format_identity_address(session.remote_identity), ", ".join(s.type for s in data.streams)))
 
         self.incomingSessions.add(session)
 
