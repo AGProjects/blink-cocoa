@@ -228,8 +228,6 @@ class SessionInfoController(NSObject):
         sub_state = re.sub("_", " ", str(sub_state)).title()
         state = self.sessionController.state.title()
 
-        print self.sessionController.state
-
         self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state and sub_state != 'None' else state)
 
     def updateAudio(self):
