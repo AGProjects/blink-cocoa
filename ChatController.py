@@ -112,6 +112,9 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         identifier = item.itemIdentifier()
         if identifier == 'connect_button':
             item.setEnabled_(True if sessionController.account is not BonjourAccount() else False)
+            item.setToolTip_('Click to start a chat session')
+            item.setLabel_(u'Connect')
+            item.setImage_(NSImage.imageNamed_("start_chat"))
         elif identifier == 'audio':
             item.setToolTip_('Click to add audio to this session')
             item.setImage_(NSImage.imageNamed_("audio"))
