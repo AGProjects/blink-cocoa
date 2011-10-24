@@ -549,6 +549,7 @@ class SessionController(NSObject):
             self.session.connect(ToHeader(self.target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)
             self.log_info("Connecting session")
+            self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
     def transferSession(self, target, replaced_session_controller=None):
         if self.session:

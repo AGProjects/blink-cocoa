@@ -228,7 +228,9 @@ class SessionInfoController(NSObject):
         sub_state = re.sub("_", " ", str(sub_state)).title()
         state = self.sessionController.state.title()
 
-        self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state else state)
+        print self.sessionController.state
+
+        self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state and sub_state != 'None' else state)
 
     def updateAudio(self):
         if self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None:
@@ -368,6 +370,9 @@ class SessionInfoController(NSObject):
         self.updateSessionStatus()
 
     def _NH_BlinkStreamHandlersChanged(self, notification):
+        self.updatePanelValues()
+
+    def _NH_BlinkSessionWillStart(self, notification):
         self.updatePanelValues()
 
     def _NH_BlinkSessionDidStart(self, notification):
