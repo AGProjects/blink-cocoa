@@ -35,6 +35,7 @@ class PreferencesController(NSWindowController, object):
     addressText = objc.IBOutlet()
     passwordText = objc.IBOutlet()
     registration_status = objc.IBOutlet()
+    registration_tls_icon = objc.IBOutlet()
 
     addButton = objc.IBOutlet()
     removeButton = objc.IBOutlet()
@@ -421,6 +422,13 @@ class PreferencesController(NSWindowController, object):
     def updateRegistrationStatus(self):
         if self.registration_status:
             selected_account = self.selectedAccount()
+            frame = self.registration_status.frame()
+            frame.origin.x = 330
+            self.registration_status.setFrame_(frame)
+
+            self.registration_status.setHidden_(True)
+            self.registration_tls_icon.setHidden_(True)
+
             if selected_account:
                 if selected_account.failure_code and selected_account.failure_reason:
                     self.registration_status.setStringValue_(u'Registration failed: %s (%s)' % (selected_account.failure_reason, selected_account.failure_code))
@@ -432,13 +440,13 @@ class PreferencesController(NSWindowController, object):
                     if selected_account.registration_state and selected_account.registration_state != 'ended':
                         if selected_account.registrar and selected_account.registration_state == 'succeeded':
                             self.registration_status.setStringValue_('Registration %s at %s' % (selected_account.registration_state.title(), selected_account.registrar))
+                            self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
+                            if selected_account.registrar.startswith('tls:'):
+                                frame.origin.x = 312
+                                self.registration_status.setFrame_(frame)
                         else:
                             self.registration_status.setStringValue_('Registration %s' % selected_account.registration_state.title())
                         self.registration_status.setHidden_(False)
-                    else:
-                        self.registration_status.setHidden_(True)
-            else:
-                self.registration_status.setHidden_(True)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
