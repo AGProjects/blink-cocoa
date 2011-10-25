@@ -322,25 +322,4 @@ class BlinkAppDelegate(NSObject):
         LaunchServices.LSSetDefaultHandlerForURLScheme("sip", bundleID)
         LaunchServices.LSSetDefaultHandlerForURLScheme("tel", bundleID)
 
-    @objc.IBAction
-    def openMenuLink_(self, sender):
-        settings = SIPSimpleSettings()
-    
-        if sender.tag() == 400: # Changelog
-            if self.applicationName == 'Blink Pro':
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
-            elif self.applicationName == 'Blink Lite':
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
-            elif self.applicationName == 'Blink Crypto':
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-crypto.phtml"))
-            else:
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
-        elif sender.tag() == 3: # Donate
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
-        elif sender.tag() == 5: # About Service Provider
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.about_url)))
-        elif sender.tag() == 6: # Help from Service Provider
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.help_url)))
-        elif sender.tag() == 7: # Purchase Blink Pro
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://itunes.apple.com/us/app/blink-pro/id404360415?mt=12&ls=1"))
 

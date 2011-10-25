@@ -3086,3 +3086,32 @@ class ContactWindowController(NSWindowController):
                 session.log_info(u"Invite %s to conference" % uri)
                 session.session.conference.add_participant(uri)
             return True
+
+    @objc.IBAction
+    def showChangelog_(self, sender):
+        settings = SIPSimpleSettings()
+    
+        if NSApp.delegate().applicationName == 'Blink Pro':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
+        elif NSApp.delegate().applicationName == 'Blink Lite':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
+        elif NSApp.delegate().applicationName == 'Blink Crypto':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-crypto.phtml"))
+        else:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
+
+    @objc.IBAction
+    def showDonate_(self, sender):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
+
+    @objc.IBAction
+    def showBlinkPro_(self, sender):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://itunes.apple.com/us/app/blink-pro/id404360415?mt=12&ls=1"))
+
+    @objc.IBAction
+    def showServiceProvider_(self, sender):
+        settings = SIPSimpleSettings()
+        if sender.tag() == 5: # About Service Provider
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.about_url)))
+        elif sender.tag() == 6: # Help from Service Provider
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.help_url)))

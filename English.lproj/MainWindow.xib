@@ -12,8 +12,6 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="474"/>
-			<integer value="502"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1076,7 +1074,7 @@
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<string key="NSWindowContentMinSize">{274, 132}</string>
 				<object class="NSView" key="NSWindowView" id="439893737">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">274</int>
 					<object class="NSMutableArray" key="NSSubviews">
 						<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1497,7 +1495,6 @@
 														</object>
 														<string key="NSFrame">{{1, 1}, {272, 346}}</string>
 														<reference key="NSSuperview" ref="787736654"/>
-														<reference key="NSNextKeyView" ref="788885680"/>
 														<int key="NSViewLayerContentsRedrawPolicy">2</int>
 														<reference key="NSDocView" ref="788885680"/>
 														<reference key="NSBGColor" ref="1025419567"/>
@@ -1528,7 +1525,6 @@
 												</object>
 												<string key="NSFrameSize">{274, 348}</string>
 												<reference key="NSSuperview" ref="384228997"/>
-												<reference key="NSNextKeyView" ref="257109644"/>
 												<int key="NSViewLayerContentsRedrawPolicy">2</int>
 												<int key="NSsFlags">562</int>
 												<reference key="NSVScroller" ref="9775178"/>
@@ -2211,7 +2207,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 					</object>
 					<string key="NSFrameSize">{274, 480}</string>
-					<reference key="NSSuperview"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{274, 154}</string>
@@ -2219,7 +2214,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="NSFrameAutosaveName">ContactWindow</string>
 			</object>
 			<object class="NSCustomView" id="396422209">
-				<reference key="NSNextResponder"/>
+				<nil key="NSNextResponder"/>
 				<int key="NSvFlags">258</int>
 				<object class="NSMutableArray" key="NSSubviews">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -2335,7 +2330,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 										</object>
 										<string key="NSFrame">{{1, 1}, {217, 358}}</string>
 										<reference key="NSSuperview" ref="777147927"/>
-										<reference key="NSNextKeyView" ref="989716831"/>
 										<reference key="NSDocView" ref="989716831"/>
 										<reference key="NSBGColor" ref="1036855206"/>
 										<int key="NScvFlags">6</int>
@@ -2364,7 +2358,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								</object>
 								<string key="NSFrameSize">{219, 360}</string>
 								<reference key="NSSuperview" ref="912902537"/>
-								<reference key="NSNextKeyView" ref="854858918"/>
 								<int key="NSsFlags">530</int>
 								<reference key="NSVScroller" ref="455551467"/>
 								<reference key="NSHScroller" ref="60000382"/>
@@ -2449,7 +2442,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 										</object>
 										<string key="NSFrame">{{1, 0}, {202, 0}}</string>
 										<reference key="NSSuperview" ref="53699439"/>
-										<reference key="NSNextKeyView" ref="787233811"/>
 										<reference key="NSDocView" ref="787233811"/>
 										<reference key="NSBGColor" ref="1025419567"/>
 										<int key="NScvFlags">4</int>
@@ -2482,7 +2474,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 										</object>
 										<string key="NSFrame">{{1, 0}, {202, 0}}</string>
 										<reference key="NSSuperview" ref="53699439"/>
-										<reference key="NSNextKeyView" ref="1004714251"/>
 										<reference key="NSDocView" ref="1004714251"/>
 										<reference key="NSBGColor" ref="1025419567"/>
 										<int key="NScvFlags">4</int>
@@ -2491,7 +2482,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								</object>
 								<string key="NSFrame">{{0, 361}, {219, 0}}</string>
 								<reference key="NSSuperview" ref="912902537"/>
-								<reference key="NSNextKeyView" ref="56636289"/>
 								<int key="NSsFlags">594</int>
 								<reference key="NSVScroller" ref="435476791"/>
 								<reference key="NSHScroller" ref="910683784"/>
@@ -2772,7 +2762,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<string key="NSFrameSize">{219, 399}</string>
-				<reference key="NSSuperview"/>
 				<string key="NSClassName">NSView</string>
 			</object>
 			<object class="NSCustomObject" id="610635028">
@@ -3796,22 +3785,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">openMenuLink:</string>
-						<reference key="source" ref="610635028"/>
-						<reference key="destination" ref="785462561"/>
-					</object>
-					<int key="connectionID">984</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">openMenuLink:</string>
-						<reference key="source" ref="610635028"/>
-						<reference key="destination" ref="396070695"/>
-					</object>
-					<int key="connectionID">985</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
 						<string key="label">togglePresenceOfflineStatus:</string>
 						<reference key="source" ref="160575707"/>
 						<reference key="destination" ref="29179348"/>
@@ -3891,22 +3864,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1047</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">openMenuLink:</string>
-						<reference key="source" ref="610635028"/>
-						<reference key="destination" ref="442885301"/>
-					</object>
-					<int key="connectionID">1050</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">openMenuLink:</string>
-						<reference key="source" ref="610635028"/>
-						<reference key="destination" ref="284688065"/>
-					</object>
-					<int key="connectionID">1052</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">delegate</string>
 						<reference key="source" ref="1038306992"/>
@@ -3921,14 +3878,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="88240595"/>
 					</object>
 					<int key="connectionID">1084</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">openMenuLink:</string>
-						<reference key="source" ref="610635028"/>
-						<reference key="destination" ref="867091754"/>
-					</object>
-					<int key="connectionID">1088</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -4481,6 +4430,46 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="963630422"/>
 					</object>
 					<int key="connectionID">1632</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showChangelog:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="396070695"/>
+					</object>
+					<int key="connectionID">1633</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showBlinkPro:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="867091754"/>
+					</object>
+					<int key="connectionID">1634</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showServiceProvider:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="442885301"/>
+					</object>
+					<int key="connectionID">1635</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showServiceProvider:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="284688065"/>
+					</object>
+					<int key="connectionID">1636</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showDonate:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="785462561"/>
+					</object>
+					<int key="connectionID">1637</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -6749,7 +6738,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{727, 853}, {215, 53}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{643, 651}, {144, 43}}</string>
+					<string>{{910, 943}, {144, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{596, 852}, {216, 23}}</string>
@@ -6784,7 +6773,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{530, 726}, {64, 6}}</string>
+					<string>{{526, 800}, {64, 6}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{436, 809}, {64, 6}}</string>
@@ -6986,7 +6975,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
-					<string>{{354, 986}, {617, 20}}</string>
+					<string>{{208, 986}, {617, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
@@ -7204,7 +7193,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{294, 445}, {306, 303}}</string>
+					<string>{{220, 683}, {306, 303}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{23, 794}, {245, 183}}</string>
@@ -7470,7 +7459,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1632</int>
+			<int key="maxID">1637</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7479,35 +7468,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<string key="className">BlinkAppDelegate</string>
 					<string key="superclassName">NSObject</string>
 					<object class="NSMutableDictionary" key="actions">
-						<bool key="EncodedWithXMLCoder">YES</bool>
-						<object class="NSArray" key="dict.sortedKeys">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>openMenuLink:</string>
-							<string>orderFrontAboutPanel:</string>
-						</object>
-						<object class="NSMutableArray" key="dict.values">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>id</string>
-							<string>id</string>
-						</object>
+						<string key="NS.key.0">orderFrontAboutPanel:</string>
+						<string key="NS.object.0">id</string>
 					</object>
 					<object class="NSMutableDictionary" key="actionInfosByName">
-						<bool key="EncodedWithXMLCoder">YES</bool>
-						<object class="NSArray" key="dict.sortedKeys">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<string>openMenuLink:</string>
-							<string>orderFrontAboutPanel:</string>
-						</object>
-						<object class="NSMutableArray" key="dict.values">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<object class="IBActionInfo">
-								<string key="name">openMenuLink:</string>
-								<string key="candidateClassName">id</string>
-							</object>
-							<object class="IBActionInfo">
-								<string key="name">orderFrontAboutPanel:</string>
-								<string key="candidateClassName">id</string>
-							</object>
+						<string key="NS.key.0">orderFrontAboutPanel:</string>
+						<object class="IBActionInfo" key="NS.object.0">
+							<string key="name">orderFrontAboutPanel:</string>
+							<string key="candidateClassName">id</string>
 						</object>
 					</object>
 					<object class="NSMutableDictionary" key="outlets">
@@ -7930,12 +7898,16 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>setPresencePolicyForContact:</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
+							<string>showBlinkPro:</string>
+							<string>showChangelog:</string>
 							<string>showDebugWindow:</string>
+							<string>showDonate:</string>
 							<string>showHelp:</string>
 							<string>showHistoryViewer:</string>
 							<string>showInFavoritesGroup:</string>
 							<string>showPSTNAccess:</string>
 							<string>showServerHistory:</string>
+							<string>showServiceProvider:</string>
 							<string>silentClicked:</string>
 							<string>startAudioToSelected:</string>
 							<string>startChatToSelected:</string>
@@ -7951,6 +7923,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8037,12 +8013,16 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>setPresencePolicyForContact:</string>
 							<string>showAccountDirectory:</string>
 							<string>showAccountSettings:</string>
+							<string>showBlinkPro:</string>
+							<string>showChangelog:</string>
 							<string>showDebugWindow:</string>
+							<string>showDonate:</string>
 							<string>showHelp:</string>
 							<string>showHistoryViewer:</string>
 							<string>showInFavoritesGroup:</string>
 							<string>showPSTNAccess:</string>
 							<string>showServerHistory:</string>
+							<string>showServiceProvider:</string>
 							<string>silentClicked:</string>
 							<string>startAudioToSelected:</string>
 							<string>startChatToSelected:</string>
@@ -8183,7 +8163,19 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
+								<string key="name">showBlinkPro:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">showChangelog:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
 								<string key="name">showDebugWindow:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">showDonate:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -8204,6 +8196,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">showServerHistory:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">showServiceProvider:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -8798,12 +8794,16 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>generalTabView</string>
 							<string>mainTabView</string>
 							<string>passwordText</string>
+							<string>registration_status</string>
+							<string>registration_tls_icon</string>
 							<string>removeButton</string>
 							<string>sectionDescription</string>
 							<string>toolbar</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -8833,6 +8833,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string>generalTabView</string>
 							<string>mainTabView</string>
 							<string>passwordText</string>
+							<string>registration_status</string>
+							<string>registration_tls_icon</string>
 							<string>removeButton</string>
 							<string>sectionDescription</string>
 							<string>toolbar</string>
@@ -8877,6 +8879,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">passwordText</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">registration_status</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">registration_tls_icon</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBToOneOutletInfo">
