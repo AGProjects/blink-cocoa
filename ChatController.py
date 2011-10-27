@@ -1529,7 +1529,7 @@ class ChatController(MediaStream):
         if data.code != 487:
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
-                message = "Proposal failed: %s" % data.reason
+                message = "Proposal rejected: %s" % data.reason if data.code != 200 else "Proposal rejected"
                 self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
