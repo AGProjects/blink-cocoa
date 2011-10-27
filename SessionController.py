@@ -92,6 +92,7 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
+        self.try_next_hop = False
 
         # used for accounting
         self.streams_log = []
@@ -125,6 +126,7 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
+        self.try_next_hop = False
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -357,7 +359,8 @@ class SessionController(NSObject):
         if self.session is None:
             self.session = Session(account)
             self.notification_center.add_observer(self, sender=self.session)
-            self.routes = None
+            if not self.try_next_hop:
+                self.routes = None
             self.failureReason = None
 
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
@@ -417,18 +420,21 @@ class SessionController(NSObject):
         if new_session:
             if not self.open_chat_window_only:
                 # starts outgoing chat session
-                self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
-                self.changeSessionState(STATE_DNS_LOOKUP)
-                SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
+                if self.routes and self.try_next_hop:
+                    self.connectSession()
+                else:
+                    self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
+                    self.changeSessionState(STATE_DNS_LOOKUP)
+                    SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
-                if SIPManager().pause_itunes:
-                    if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
-                        self.waitingForITunes = True
-                        itunes_interface = ITunesInterface()
-                        self.notification_center.add_observer(self, sender=itunes_interface)
-                        itunes_interface.pause()
-                    else:
-                        self.waitingForITunes = False
+                    if SIPManager().pause_itunes:
+                        if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
+                            self.waitingForITunes = True
+                            itunes_interface = ITunesInterface()
+                            self.notification_center.add_observer(self, sender=itunes_interface)
+                            itunes_interface.pause()
+                        else:
+                            self.waitingForITunes = False
         else:
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
@@ -548,7 +554,7 @@ class SessionController(NSObject):
             streams = [s.stream for s in self.streamHandlers]
             self.session.connect(ToHeader(self.target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)
-            self.log_info("Connecting session")
+            self.log_info("Connecting session to %s" % self.routes[0])
             self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
     def transferSession(self, target, replaced_session_controller=None):
@@ -691,9 +697,18 @@ class SessionController(NSObject):
                 else:
                     self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
+        elif data.code == 408 and len(self.routes) > 1:
+            self.routes.pop(0)
+            self.try_next_hop = True
+            if len(oldSession.proposed_streams) == 1:
+                self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
+            else:
+                self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+
         if self.info_panel is not None:
             self.info_panel.close()
             self.info_panel = None
+
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.changeSessionState(STATE_FINISHED, data.originator)
