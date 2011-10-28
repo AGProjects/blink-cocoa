@@ -902,6 +902,9 @@ class SessionController(NSObject):
                     contact.setDetail('Invitation accepted')
                 elif data.code < 400:
                     contact.setDetail('%s (%s)' % (data.reason, data.code))
+                elif data.code >= 400:
+                    self.invited_participants.remove(contact)
+
                 # notify controllers who need conference information
                 self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
                 break
