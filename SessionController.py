@@ -738,6 +738,11 @@ class SessionController(NSObject):
 
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
 
+    def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
+        if data.code != 180:
+            log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
+            self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
+
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True
         self.proposalOriginator = 'remote'

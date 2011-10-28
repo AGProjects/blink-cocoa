@@ -264,7 +264,7 @@ class SessionInfoController(NSObject):
                 self.audio_sample_rate.setStringValue_('')
                 self.audio_srtp_active.setStringValue_('')
                 self.audio_srtp_lock.setHidden_(True)
-                              
+
             self.audio_local_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.local_rtp_address, self.audio_stream.stream.local_rtp_port) if self.audio_stream.stream.local_rtp_address else '')
             self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
 
@@ -351,6 +351,9 @@ class SessionInfoController(NSObject):
             
     def _NH_BlinkSessionGotRingIndication(self, notification):
         self.updateSessionStatus(sub_state='Ringing')
+
+    def _NH_BlinkSessionGotProvisionalResponse(self, notification):
+        self.updateSessionStatus(sub_state=notification.data.reason)
 
     def _NH_BlinkSessionDidProcessTransaction(self, notification):
         self.updateSessionStatus()
