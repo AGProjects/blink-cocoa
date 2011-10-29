@@ -93,6 +93,8 @@ class SessionController(NSObject):
         self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
         self.try_next_hop = False
+        self.info_panel_was_visible = False
+        self.info_panel_last_frame = False
 
         # used for accounting
         self.streams_log = []
@@ -127,6 +129,8 @@ class SessionController(NSObject):
         self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
         self.try_next_hop = False
+        self.info_panel_was_visible = False
+        self.info_panel_last_frame = False
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -161,6 +165,9 @@ class SessionController(NSObject):
         self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
         self.owner = owner
+        self.try_next_hop = False
+        self.info_panel_was_visible = False
+        self.info_panel_last_frame = False
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -422,9 +429,12 @@ class SessionController(NSObject):
 
         if new_session:
             if not self.open_chat_window_only:
-                # starts outgoing chat session
+                # starts outgoing session
                 if self.routes and self.try_next_hop:
                     self.connectSession()
+                    if self.info_panel_was_visible:
+                        self.info_panel.show()
+                        self.info_panel.window.setFrame_display_animate_(self.info_panel_last_frame, True, True)
                 else:
                     self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
                     self.changeSessionState(STATE_DNS_LOOKUP)
@@ -665,6 +675,10 @@ class SessionController(NSObject):
         self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
 
         self.changeSessionState(STATE_FAILED, status)
+
+        if self.info_panel is not None and self.info_panel.window.isVisible():
+            self.info_panel_was_visible = True
+            self.info_panel_last_frame = self.info_panel.window.frame()
 
         oldSession = self.session
         self.resetSession()
