@@ -27,6 +27,7 @@ from eventlet import api
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
 from socket import gethostbyname
+from twisted.internet import reactor
 from zope.interface import implements
 
 from sipsimple import __version__ as sdk_version
