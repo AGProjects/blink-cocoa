@@ -352,8 +352,11 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.streams_log = []
         self.remote_conference_has_audio = False
-        self.info_panel = None
         self.open_chat_window_only = False
+
+        if self.info_panel is not None:
+            self.info_panel.close()
+            self.info_panel = None
 
     def initializeSessionWithAccount(self, account):
         if self.session is None:
@@ -664,17 +667,7 @@ class SessionController(NSObject):
         self.changeSessionState(STATE_FAILED, status)
 
         oldSession = self.session
-        self.notification_center.remove_observer(self, sender=self.session)
-        self.session = None
-        self.cancelledStream = None
-        self.remote_focus = False
-        self.remote_focus_log = False
-        self.conference_info = None
-        self.invited_participants = []
-        self.conference_shared_files = []
-        self.participants_log = set()
-        self.streams_log = []
-        self.remote_conference_has_audio = False
+        self.resetSession()
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
@@ -717,25 +710,9 @@ class SessionController(NSObject):
         log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
 
-        self.notification_center.remove_observer(self, sender=self.session)
-        self.session = None
-        self.cancelledStream = None
-        self.remote_focus = False
-        self.remote_focus_log = False
-        self.conference_info = None
-        self.invited_participants = []
-        self.conference_shared_files = []
-        self.participants_log = set()
-        self.streams_log = []
-        self.remote_conference_has_audio = False
-        self.open_chat_window_only = False
+        self.resetSession()
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
-
-        if self.info_panel is not None:
-            self.info_panel.close()
-            self.info_panel = None
-
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
