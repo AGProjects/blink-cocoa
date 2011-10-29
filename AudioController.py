@@ -591,7 +591,7 @@ class AudioController(MediaStream):
             elif oldstatus == STREAM_CANCELLING:
                 self.setStatusText(u"Request Cancelled", True)
             elif oldstatus != STREAM_FAILED:
-                self.setStatusText(fail_reason[0:32] if fail_reason else "Error", True)
+                self.setStatusText(fail_reason[0:32].title() if fail_reason else "Error", True)
 
         if status == STREAM_CONNECTED:
             self.audioSegmented.setEnabled_forSegment_(True, 0)
