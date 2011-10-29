@@ -954,10 +954,10 @@ class AudioController(MediaStream):
             self.hold()
 
     def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
-        self.sessionController.log_info( u'Recording audio to %s\n' % data.filename)
+        self.sessionController.log_info( u'Start recording audio to %s\n' % data.filename)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
-        self.sessionController.log_info( u'Stopped recording audio to %s\n' % data.filename)
+        self.sessionController.log_info( u'Stop recording audio to %s\n' % data.filename)
         self.addRecordingToHistory(data.filename)
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
