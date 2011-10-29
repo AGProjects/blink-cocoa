@@ -915,7 +915,7 @@ class AudioController(MediaStream):
         message += "<p>%s" % filename
         message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
         media_type = 'audio-recording'
-        local_uri = format_identity_address(self.sessionController.session.account)
+        local_uri = format_identity_address(self.sessionController.account)
         remote_uri = format_identity_address(self.sessionController.target_uri)
         direction = 'incoming'
         status = 'delivered'
