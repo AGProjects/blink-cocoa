@@ -254,7 +254,7 @@ class SessionInfoController(NSObject):
             self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'] if self.audio_stream.statistics['loss'] else '')
             self.audio_jitter.setStringValue_('%.1f ms' % self.audio_stream.statistics['jitter'])
 
-            if self.audio_stream.stream.sample_rate and self.audio_stream.stream.codec and self.audio_stream.stream.sample_rate:
+            if self.audio_stream.stream.codec and self.audio_stream.stream.sample_rate:
                 self.audio_codec.setStringValue_(self.audio_stream.stream.codec)
                 self.audio_sample_rate.setStringValue_("%0.fkHz" % (self.audio_stream.stream.sample_rate/1000))
                 self.audio_srtp_active.setStringValue_('Enabled' if self.audio_stream.stream.srtp_active else 'Disabled')
