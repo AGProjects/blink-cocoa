@@ -525,7 +525,7 @@ class PreferencesController(NSWindowController, object):
             return
         self.accounts[position].registration_state = 'failed'
 
-        if self.accounts[position].failure_reason is None:
+        if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
             self.accounts[position].failure_reason = notification.data.error
 
         self.refresh_account_table()

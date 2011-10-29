@@ -588,7 +588,7 @@ class ContactWindowController(NSWindowController):
         except ValueError:
             return
         self.accounts[position].registration_state = 'failed'
-        if self.accounts[position].failure_reason is None:
+        if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
             if notification.data.error.startswith('DNS'):
                 self.accounts[position].failure_reason = 'DNS failure'
             else:
