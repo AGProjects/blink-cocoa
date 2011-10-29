@@ -211,12 +211,24 @@ class SessionInfoController(NSObject):
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:
                 self.remote_ua.setStringValue_(self.sessionController.session.remote_user_agent)
 
-            if self.sessionController.session is not None and self.sessionController.session.peer_address is not None and self.sessionController.session.transport is not None:
-                transport = self.sessionController.session.transport
-                self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
-                local_contact = self.sessionController.account.contact[transport]
-                self.local_endpoint.setStringValue_('%s:%s:%d' % (transport, local_contact.host, local_contact.port))
-                self.tls_lock.setHidden_(False if transport == 'tls' else True)
+            if self.sessionController.session is not None:
+                if self.sessionController.session.transport is not None:
+                    transport = self.sessionController.session.transport
+                    local_contact = self.sessionController.account.contact[transport]
+                    self.local_endpoint.setStringValue_('%s:%s:%d' % (transport, local_contact.host, local_contact.port))
+                    local_contact = self.sessionController.account.contact[transport]
+
+                if self.sessionController.session.peer_address is not None:
+                    self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
+                    self.tls_lock.setHidden_(False if transport == 'tls' else True)
+                elif self.sessionController.routes:
+                    route = self.sessionController.routes[0]
+                    self.remote_endpoint.setStringValue_('%s:%s:%s' % (route.transport, route.address, route.port))
+                    self.tls_lock.setHidden_(False if route.transport == 'tls' else True)
+            elif self.sessionController.routes:
+                route = self.sessionController.routes[0]
+                self.remote_endpoint.setStringValue_('%s:%s:%s' % (route.transport, route.address, route.port))
+                self.tls_lock.setHidden_(False if route.transport == 'tls' else True)
 
         self.updateAudio()
         self.updateChat()
