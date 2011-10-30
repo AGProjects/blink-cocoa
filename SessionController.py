@@ -101,6 +101,7 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
+        self.log_info('Starting outgoing session to %s' % format_identity_simple(target_uri))
         return self
 
     def initWithSession_(self, session):
@@ -137,6 +138,7 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
+        self.log_info(u"Incoming request from %s with %s" % (session.remote_identity.display_name, ", ".join(self.streams_log)))
         return self
 
     def initWithSessionTransfer_owner_(self, session, owner):
@@ -181,6 +183,7 @@ class SessionController(NSObject):
                 self.streamHandlers.append(stream_controller)
                 stream_controller.startOutgoing(False)
 
+        self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
         return self
 
     def log_info(self, text):
@@ -651,7 +654,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
     def _NH_SIPSessionWillEnd(self, sender, data):
-        self.log_info("Session will end (%s)"%data.originator)
+        self.log_info("Session will end %sly"%data.originator)
         self.endingBy = data.originator
         if self.transfer_window is not None:
             self.transfer_window.close()
@@ -671,10 +674,9 @@ class SessionController(NSObject):
             status = u"Session Failed"
             self.failureReason = "failed"
 
+        self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
         log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
-
-        self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
 
         self.changeSessionState(STATE_FAILED, status)
 
@@ -716,10 +718,8 @@ class SessionController(NSObject):
             else:
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
-        if self.info_panel is not None:
-            self.info_panel.close()
-            self.info_panel = None
-
+    def _NH_SIPSessionNewOutgoing(self, session, data):
+        self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.changeSessionState(STATE_FINISHED, data.originator)
@@ -734,6 +734,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
+        self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
         if data.code != 180:
             log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)

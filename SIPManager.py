@@ -384,13 +384,13 @@ class SIPManager(object):
         if isinstance(account, Account) and account.sip.outbound_proxy is not None:
             uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
                 parameters={'transport': account.sip.outbound_proxy.transport})
-            BlinkLogger().log_info(u"Starting DNS Lookup for %s through proxy %s" % (target_uri, uri))
+            session_controller.log_info(u"Starting DNS Lookup for %s through proxy %s" % (target_uri, uri))
         elif isinstance(account, Account) and account.sip.always_use_my_proxy:
             uri = SIPURI(host=account.id.domain)
-            BlinkLogger().log_info(u"Starting DNS Lookup for %s via proxy of account %s" % (target_uri, account.id))
+            session_controller.log_info(u"Starting DNS Lookup for %s via proxy of account %s" % (target_uri, account.id))
         else:
             uri = target_uri
-            BlinkLogger().log_info(u"Starting DNS Lookup for %s" % target_uri)
+            session_controller.log_info(u"Starting DNS Lookup for %s" % target_uri)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def lookup_stun_servers(self, account):
@@ -827,7 +827,7 @@ class SIPManager(object):
         elif lookup.type == 'sip_proxies':
             session_controller = lookup.owner
             result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
-            BlinkLogger().log_info(u"DNS Lookup for %s succeeded: %s" % (session_controller.target_uri, result_text))
+            session_controller.log_info(u"DNS Lookup for %s succeeded: %s" % (session_controller.target_uri, result_text))
             routes = data.result
             if not routes:
                 call_in_gui_thread(session_controller.setRoutesFailed, "No routes found to SIP Proxy")
@@ -990,8 +990,6 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
-        BlinkLogger().log_info(u"Incoming session request from %s <%s> with %s streams" % (session.remote_identity.display_name, format_identity_address(session.remote_identity), ", ".join(s.type for s in data.streams)))
-
         self.incomingSessions.add(session)
 
         if self.pause_itunes:
@@ -1072,7 +1070,6 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):
-        BlinkLogger().log_info(u"Starting Outgoing Session to %s with %s" % (format_identity_address(session.remote_identity), [s.type for s in data.streams]))
         self.ringer.add_outgoing(session, data.streams)
         self._delegate.handle_outgoing_session(session)
 
