@@ -1004,6 +1004,7 @@ class SIPManager(object):
 
         if self.pause_itunes:
             itunes_interface = ITunesInterface()
+            BlinkLogger().log_info(u"Stopping iTunes playback")
             itunes_interface.pause()
 
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
@@ -1036,12 +1037,14 @@ class SIPManager(object):
             if all(stream.type != 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     itunes_interface = ITunesInterface()
+                    BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
 
     def _NH_SIPSessionGotProposal(self, session, data):
         if self.pause_itunes:
             if any(stream.type == 'audio' for stream in data.streams):
                 itunes_interface = ITunesInterface()
+                BlinkLogger().log_info(u"Stopping iTunes playback")
                 itunes_interface.pause()
 
     def _NH_SIPSessionGotRejectProposal(self, session, data):
@@ -1049,14 +1052,8 @@ class SIPManager(object):
             if any(stream.type == 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     itunes_interface = ITunesInterface()
+                    BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
-
-    def _NH_SIPSessionDidFail(self, session, data):
-        if self.pause_itunes:
-            itunes_interface = ITunesInterface()
-            self.incomingSessions.discard(session)
-            if not self.activeAudioStreams and not self.incomingSessions:
-                itunes_interface.resume()
 
     def _NH_MediaStreamDidInitialize(self, stream, data):
         if stream.type == 'audio':
@@ -1067,7 +1064,11 @@ class SIPManager(object):
             itunes_interface = ITunesInterface()
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
-                if not self.activeAudioStreams and not self.incomingSessions:
+                # TODO: check if session has other streams and if yes, resume itunes
+                # in case of session ends, resume is handled by the Session Controller
+                session_has_other_streams = False
+                if not self.activeAudioStreams and not self.incomingSessions and session_has_other_streams:
+                    BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
 
     def _NH_MediaStreamDidFail(self, stream, data):
@@ -1076,6 +1077,7 @@ class SIPManager(object):
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
                 if not self.activeAudioStreams and not self.incomingSessions:
+                    BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
 
     @run_in_gui_thread

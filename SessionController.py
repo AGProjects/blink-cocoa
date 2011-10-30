@@ -435,6 +435,7 @@ class SessionController(NSObject):
                 # starts outgoing session
                 if self.routes and self.try_next_hop:
                     self.connectSession()
+
                     if self.info_panel_was_visible:
                         self.info_panel.show()
                         self.info_panel.window.setFrame_display_animate_(self.info_panel_last_frame, True, True)
@@ -448,9 +449,11 @@ class SessionController(NSObject):
                             self.waitingForITunes = True
                             itunes_interface = ITunesInterface()
                             self.notification_center.add_observer(self, sender=itunes_interface)
+                            self.log_info(u"Stopping iTunes playback")
                             itunes_interface.pause()
                         else:
                             self.waitingForITunes = False
+
         else:
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
@@ -717,14 +720,19 @@ class SessionController(NSObject):
                 self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
             else:
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+        elif SIPManager().pause_itunes:
+            SIPManager().incomingSessions.discard(sender)
+            if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
+                itunes_interface = ITunesInterface()
+                self.log_info(u"Resuming iTunes playback")
+                itunes_interface.resume()
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
 
     def _NH_SIPSessionDidEnd(self, sender, data):
-        self.changeSessionState(STATE_FINISHED, data.originator)
         self.log_info("Session ended")
-
+        self.changeSessionState(STATE_FINISHED, data.originator)
         log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
 
@@ -732,6 +740,13 @@ class SessionController(NSObject):
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
+
+        if SIPManager().pause_itunes:
+            SIPManager().incomingSessions.discard(sender)
+            if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
+                itunes_interface = ITunesInterface()
+                self.log_info(u"Resuming iTunes playback")
+                itunes_interface.resume()
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
