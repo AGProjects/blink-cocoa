@@ -143,7 +143,10 @@ class SMSViewController(NSObject):
 
     def isOutputFrameVisible(self):
         return True
-    
+
+    def log_info(self, text):
+        BlinkLogger().log_info(u"[Message to %s] %s" % (self.remote_uri, text))
+
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
         if sender.tag() == 1:
