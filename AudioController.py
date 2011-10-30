@@ -826,7 +826,7 @@ class AudioController(MediaStream):
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
         target_session_controller = sender.representedObject()
-        self.sessionController.log_info( u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
+        self.sessionController.log_info(u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
         self.sessionController.transferSession(target_session_controller.target_uri, target_session_controller)
 
     @objc.IBAction

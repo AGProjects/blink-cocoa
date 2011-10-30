@@ -583,13 +583,15 @@ class SessionController(NSObject):
                 self.log_info("Bogus SIP URI for transfer" % target_uri)
             else:
                 self.session.transfer(target_uri, replaced_session_controller.session if replaced_session_controller is not None else None)
-                self.log_info("Transferring session to: %s" % target_uri)
+                self.log_info("Outgoing transfer request to %s" % re.sub("^(sip:|sips:)", "", str(target_uri)))
 
     def _acceptTransfer(self):
+        self.log_info("Transfer request accepted by user")
         self.session.accept_transfer()
         self.transfer_window = None
 
     def _rejectTransfer(self):
+        self.log_info("Transfer request rejected by user")
         self.session.reject_transfer()
         self.transfer_window = None
 
@@ -915,7 +917,6 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionTransferNewOutgoing(self, sender, data):
         target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
-        self.log_info(u'Outgoing transfer request to %s' % target)
         self.notification_center.post_notification("BlinkSessionTransferNewOutgoing", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidStart(self, sender, data):
@@ -923,14 +924,15 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionTransferDidStart", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidEnd(self, sender, data):
-        self.log_info(u'Transfer ended')
+        self.log_info(u'Transfer succeeded')
         self.notification_center.post_notification("BlinkSessionTransferDidEnd", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidFail(self, sender, data):
-        self.log_info(u'Transfer failed: %s' % data.reason)
+        self.log_info(u'Transfer failed %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferDidFail", sender=self, data=data)
 
     def _NH_SIPSessionTransferGotProgress(self, sender, data):
+        self.log_info(u'Transfer got progress %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferGotProgress", sender=self, data=data)
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
