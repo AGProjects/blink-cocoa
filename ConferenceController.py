@@ -9,11 +9,18 @@ import random
 import re
 import string
 
-from sipsimple.account import AccountManager
-from sipsimple.core import SIPCoreError, SIPURI
-
-from ConferenceConfigurationPanel import ConferenceConfigurationPanel
+from application.notification import NotificationCenter, IObserver
+from application.python import Null
 from resources import ApplicationData
+from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.core import SIPCoreError, SIPURI
+from sipsimple.threading import run_in_twisted_thread
+from util import allocate_autorelease_pool, run_in_gui_thread
+from zope.interface import implements
+
+from SIPManager import SIPManager
+from ConferenceConfigurationPanel import ConferenceConfigurationPanel
 
 
 class ServerConferenceRoom(object):
@@ -43,6 +50,8 @@ def validateParticipant(uri):
 
 
 class JoinConferenceWindowController(NSObject):
+    implements(IObserver)
+
     window = objc.IBOutlet()
     room = objc.IBOutlet()
     addRemove = objc.IBOutlet()
@@ -52,6 +61,8 @@ class JoinConferenceWindowController(NSObject):
     audio = objc.IBOutlet()
     removeAllParticipants = objc.IBOutlet()
     configurationsButton = objc.IBOutlet()
+    bonjour_server_combolist = objc.IBOutlet()
+    ok_button = objc.IBOutlet()
 
     default_conference_server = 'conference.sip2sip.info'
 
@@ -60,6 +71,12 @@ class JoinConferenceWindowController(NSObject):
 
     def __init__(self, target=None, participants=[], media=["chat"], default_domain=None):
         NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
+
+        self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='BonjourConferenceServicesDidRemoveServer')
+        self.notification_center.add_observer(self, name='BonjourConferenceServicesDidUpdateServer')
+        self.notification_center.add_observer(self, name='BonjourConferenceServicesDidAddServer')
+        self.notification_center.add_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
 
         self.selected_configuration = None
 
@@ -83,8 +100,33 @@ class JoinConferenceWindowController(NSObject):
             self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
             self.chat.setState_(NSOnState if "chat" in media else NSOffState) 
 
-        self.loadConfigurations()
-        self.updateConfigurationsPopupButton()
+        self.updatePopupButtons()
+
+    @run_in_twisted_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def _NH_BonjourConferenceServicesDidRemoveServer(self, notification):
+        self.updateBonjourServersPopupButton()
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def _NH_BonjourConferenceServicesDidUpdateServer(self, notification):
+        self.updateBonjourServersPopupButton()
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def _NH_BonjourConferenceServicesDidAddServer(self, notification):
+        self.updateBonjourServersPopupButton()
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
+        self.room.setStringValue_('')
+        self.updatePopupButtons()
 
     def loadConfigurations(self):
         self.storage_path = ApplicationData.get('conference_configurations.pickle')
@@ -92,6 +134,19 @@ class JoinConferenceWindowController(NSObject):
             self.conference_configurations = cPickle.load(open(self.storage_path))
         except:
             self.conference_configurations = {}
+
+    def updatePopupButtons(self):
+        account = AccountManager().default_account
+        if isinstance(account, BonjourAccount):
+            self.configurationsButton.setHidden_(True)
+            self.bonjour_server_combolist.setHidden_(False)
+            self.updateBonjourServersPopupButton()
+        else:
+            self.configurationsButton.setHidden_(False)
+            self.bonjour_server_combolist.setHidden_(True)
+            self.loadConfigurations()
+            self.updateConfigurationsPopupButton()
+            self.ok_button.setEnabled_(True)
 
     @objc.IBAction
     def configurationsButtonClicked_(self, sender):
@@ -180,6 +235,26 @@ class JoinConferenceWindowController(NSObject):
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
         self.configurationsButton.addItemWithTitle_(u"Delete configuration")
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
+
+    def updateBonjourServersPopupButton(self):
+        settings = SIPSimpleSettings()
+        account = AccountManager().default_account
+        if isinstance(account, BonjourAccount):
+            self.bonjour_server_combolist.removeAllItems()
+            if SIPManager().bonjour_conference_services.servers:
+                # TODO: filter by available transport, show only one entry
+                # settings.sip.transport_list
+                for server in SIPManager().bonjour_conference_services.servers:
+                    self.bonjour_server_combolist.addItemWithTitle_('%s (%s)' % (server.host, server.uri))
+                    item = self.bonjour_server_combolist.lastItem()
+                    item.setRepresentedObject_(server)
+                    self.ok_button.setEnabled_(True)
+            else:
+                self.bonjour_server_combolist.addItemWithTitle_(u"No SylkServer in this Neighbourhood")
+                self.bonjour_server_combolist.lastItem().setEnabled_(False)
+                self.ok_button.setEnabled_(False)
+        else:
+            self.ok_button.setEnabled_(False)
 
     def setDefaults(self):
         self.selected_configuration = None
@@ -355,10 +430,18 @@ class JoinConferenceWindowController(NSObject):
             self.target = u'%s' % room
         else:
             account = AccountManager().default_account
-            if account.server.conference_server:
-                self.target = u'%s@%s' % (room, account.server.conference_server)
+            if isinstance(account, BonjourAccount):
+                item = self.bonjour_server_combolist.selectedItem().representedObject()
+                if hasattr(item, 'host'):
+                    self.target = u'%s@%s:%s;transport=%s' % (room, item.uri.host, item.uri.port, item.uri.parameters.get('transport','udp'))
+                else:
+                    NSRunAlertPanel('Start a new Conference', 'No SylkServer in the Neighbourhood', "OK", None, None)
+                    return False
             else:
-                self.target = u'%s@%s' % (room, self.default_conference_server)
+                if account.server.conference_server:
+                    self.target = u'%s@%s' % (room, account.server.conference_server)
+                else:
+                    self.target = u'%s@%s' % (room, self.default_conference_server)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target

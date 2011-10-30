@@ -23,7 +23,8 @@ from application.system import host, makedirs, unlink
 
 from collections import defaultdict
 from dateutil.tz import tzlocal
-from eventlet import api
+from eventlet import api, coros, proc
+from eventlet.green import select
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
 from socket import gethostbyname
@@ -33,16 +34,17 @@ from zope.interface import implements
 from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
+from sipsimple.account import bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
 from sipsimple.contact import Contact, ContactGroup
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import SIPURI, SIPCoreError
+from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
-from sipsimple.threading.green import run_in_green_thread
+from sipsimple.threading.green import run_in_green_thread, Command
 from sipsimple.util import TimestampedNotificationData, Timestamp
 
 from HistoryManager import ChatHistory, SessionHistory
@@ -159,7 +161,9 @@ class SIPManager(object):
         self.incomingSessions = set()
         self.activeAudioStreams = set()
         self.pause_itunes = True
-        
+        self.bonjour_conference_services = BonjourConferenceServices()
+        # Instantiate BonjourConferenceServerDiscoverer
+
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
         self.notification_center.add_observer(self, sender=self._app.engine)
@@ -842,10 +846,16 @@ class SIPManager(object):
 
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info(u"%s activated" % account)
+        # Activate BonjourConferenceServer discovery
+        if account is BonjourAccount():
+            self.bonjour_conference_services.start()
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info(u"%s deactivated" % account)
         MWIData.remove(account)
+        # Deactivate BonjourConferenceServer discovery
+        if account is BonjourAccount():
+            self.bonjour_conference_services.stop()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds\n' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
@@ -1150,4 +1160,240 @@ class MWIData(object):
     @classmethod
     def get(cls, account_id):
         return cls._data.get(account_id, None)
+
+
+class RestartSelect(Exception): pass
+
+class BonjourConferenceServerDescription(object):
+    def __init__(self, uri, host, name):
+        self.uri = uri
+        self.host = host
+        self.name = name
+
+class BonjourConferenceServices(object):
+    implements(IObserver)
+
+    def __init__(self):
+        self._stopped = True
+        self._files = []
+        self._servers = {}
+        self._command_channel = coros.queue()
+        self._select_proc = None
+        self._discover_timer = None
+        self._wakeup_timer = None
+
+    @property
+    def servers(self):
+        return self._servers.values()
+
+    def start(self):
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, name='SystemIPAddressDidChange')
+        notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
+        self._select_proc = proc.spawn(self._process_files)
+        proc.spawn(self._handle_commands)
+        # activate
+        self._stopped = False
+        self._command_channel.send(Command('discover'))
+
+    def stop(self):
+        # deactivate
+        command = Command('stop')
+        self._command_channel.send(command)
+        command.wait()
+        self._stopped = True
+
+        notification_center = NotificationCenter()
+        notification_center.remove_observer(self, name='SystemIPAddressDidChange')
+        notification_center.remove_observer(self, name='SystemDidWakeUpFromSleep')
+        self._select_proc.kill()
+        self._command_channel.send_exception(api.GreenletExit)
+
+    def restart_discovery(self):
+        self._command_channel.send(Command('discover'))
+
+    def _browse_cb(self, file, flags, interface_index, error_code, service_name, regtype, reply_domain):
+        notification_center = NotificationCenter()
+        file = BonjourDiscoveryFile.find_by_file(file)
+        service_description = BonjourServiceDescription(service_name, regtype, reply_domain)
+        if error_code != bonjour.kDNSServiceErr_NoError:
+            error = bonjour.BonjourError(error_code)
+            notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=TimestampedNotificationData(reason=str(error), transport=file.transport))
+            removed_files = [file] + [f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file]
+            for f in removed_files:
+                self._files.remove(f)
+            self._select_proc.kill(RestartSelect)
+            for f in removed_files:
+                f.close()
+            if self._discover_timer is None:
+                self._discover_timer = reactor.callLater(1, self._command_channel.send, Command('discover'))
+            return
+        if reply_domain != 'local.':
+            return
+        if flags & bonjour.kDNSServiceFlagsAdd:
+            try:
+                resolution_file = (f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description).next()
+            except StopIteration:
+                try:
+                    resolution_file = bonjour.DNSServiceResolve(0, interface_index, service_name, regtype, reply_domain, self._resolve_cb)
+                except bonjour.BonjourError, e:
+                    notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=TimestampedNotificationData(error=str(e), transport=file.transport))
+                else:
+                    resolution_file = BonjourResolutionFile(resolution_file, discovery_file=file, service_description=service_description)
+                    self._files.append(resolution_file)
+                    self._select_proc.kill(RestartSelect)
+        else:
+            try:
+                resolution_file = (f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description).next()
+            except StopIteration:
+                pass
+            else:
+                self._files.remove(resolution_file)
+                self._select_proc.kill(RestartSelect)
+                resolution_file.close()
+                service_description = resolution_file.service_description
+                if service_description in self._servers:
+                    del self._servers[service_description]
+                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
+
+    def _resolve_cb(self, file, flags, interface_index, error_code, fullname, host_target, port, txtrecord):
+        notification_center = NotificationCenter()
+        settings = SIPSimpleSettings()
+        file = BonjourResolutionFile.find_by_file(file)
+        if error_code == bonjour.kDNSServiceErr_NoError:
+            txt = bonjour.TXTRecord.parse(txtrecord)
+            name = txt['name'].decode('utf-8') if 'name' in txt else None
+            host = re.match(r'^(.*?)(\.local)?\.?$', host_target).group(1)
+            contact = txt.get('contact', file.service_description.name).split(None, 1)[0].strip('<>')
+            try:
+                uri = FrozenSIPURI.parse(contact)
+            except SIPCoreError:
+                pass
+            else:
+                account = BonjourAccount()
+                service_description = file.service_description
+                transport = uri.transport
+                supported_transport = transport in settings.sip.transport_list and (transport!='tls' or account.tls.certificate is not None)
+                if not supported_transport and service_description in self._servers:
+                    del self._servers[service_description]
+                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
+                elif supported_transport:
+                    try:
+                        contact_uri = account.contact[transport]
+                    except KeyError:
+                        return
+                    if uri != contact_uri:
+                        notification_name = 'BonjourConferenceServicesDidUpdateServer' if service_description in self._servers else 'BonjourConferenceServicesDidAddServer'
+                        notification_data = TimestampedNotificationData(server=service_description, name=name, host=host, uri=uri)
+                        server_description = BonjourConferenceServerDescription(uri, host, name)
+                        self._servers[service_description] = server_description
+                        notification_center.post_notification(notification_name, sender=self, data=notification_data)
+        else:
+            self._files.remove(file)
+            self._select_proc.kill(RestartSelect)
+            file.close()
+            error = bonjour.BonjourError(error_code)
+            notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=TimestampedNotificationData(error=str(error), transport=file.transport))
+            # start a new resolve process here? -Dan
+
+    def _process_files(self):
+        while True:
+            try:
+                ready = select.select([f for f in self._files if not f.active and not f.closed], [], [])[0]
+            except RestartSelect:
+                continue
+            else:
+                for file in ready:
+                    file.active = True
+                self._command_channel.send(Command('process_results', files=[f for f in ready if not f.closed]))
+
+    def _handle_commands(self):
+        while True:
+            command = self._command_channel.wait()
+            if not self._stopped:
+                handler = getattr(self, '_CH_%s' % command.name)
+                handler(command)
+
+    def _CH_discover(self, command):
+        notification_center = NotificationCenter()
+        settings = SIPSimpleSettings()
+        if self._discover_timer is not None and self._discover_timer.active():
+            self._discover_timer.cancel()
+        self._discover_timer = None
+        account = BonjourAccount()
+        supported_transports = set(transport for transport in settings.sip.transport_list if transport!='tls' or account.tls.certificate is not None)
+        discoverable_transports = set('tcp' if transport=='tls' else transport for transport in supported_transports)
+        old_files = []
+        for file in (f for f in self._files[:] if isinstance(f, (BonjourDiscoveryFile, BonjourResolutionFile)) and f.transport not in discoverable_transports):
+            old_files.append(file)
+            self._files.remove(file)
+        self._select_proc.kill(RestartSelect)
+        for file in old_files:
+            file.close()
+        for service_description in [service for service, description in self._servers.iteritems() if description.uri.transport not in supported_transports]:
+            del self._servers[service_description]
+            notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
+        discovered_transports = set(file.transport for file in self._files if isinstance(file, BonjourDiscoveryFile))
+        missing_transports = discoverable_transports - discovered_transports
+        added_transports = set()
+        for transport in missing_transports:
+            notification_center.post_notification('BonjourConferenceServicesWillInitiateDiscovery', sender=self, data=TimestampedNotificationData(transport=transport))
+            try:
+                file = bonjour.DNSServiceBrowse(regtype="_sipfocus._%s" % transport, callBack=self._browse_cb)
+            except bonjour.BonjourError, e:
+                notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=TimestampedNotificationData(reason=str(e), transport=transport))
+            else:
+                self._files.append(BonjourDiscoveryFile(file, transport))
+                added_transports.add(transport)
+        if added_transports:
+            self._select_proc.kill(RestartSelect)
+        if added_transports != missing_transports:
+            self._discover_timer = reactor.callLater(1, self._command_channel.send, Command('discover', command.event))
+        else:
+            command.signal()
+
+    def _CH_process_results(self, command):
+        for file in (f for f in command.files if not f.closed):
+            try:
+                bonjour.DNSServiceProcessResult(file.file)
+            except:
+                # Should we close the file? The documentation doesn't say anything about this. -Luci
+                log.err()
+        for file in command.files:
+            file.active = False
+        self._files = [f for f in self._files if not f.closed]
+        self._select_proc.kill(RestartSelect)
+
+    def _CH_stop(self, command):
+        if self._discover_timer is not None and self._discover_timer.active():
+            self._discover_timer.cancel()
+        self._discover_timer = None
+        if self._wakeup_timer is not None and self._wakeup_timer.active():
+            self._wakeup_timer.cancel()
+        self._wakeup_timer = None
+        old_files = self._files
+        self._files = []
+        self._select_proc.kill(RestartSelect)
+        self._servers = {}
+        for file in old_files:
+            file.close()
+        command.signal()
+
+    @run_in_twisted_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_SystemIPAddressDidChange(self, notification):
+        if self._files:
+            self.restart_discovery()
+
+    def _NH_SystemDidWakeUpFromSleep(self, notification):
+        if self._wakeup_timer is None:
+            def wakeup_action():
+                if self._files:
+                    self.restart_discovery()
+                self._wakeup_timer = None
+            self._wakeup_timer = reactor.callLater(5, wakeup_action) # wait for system to stabilize
+
 

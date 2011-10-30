@@ -1851,7 +1851,6 @@ class ContactWindowController(NSWindowController):
         item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
         item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
 
-
     def updateToolsMenu(self):
         account = self.activeAccount()
 
@@ -1880,7 +1879,7 @@ class ContactWindowController(NSWindowController):
         account = self.activeAccount()
 
         item = menu.itemWithTag_(44) # Join Conference
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.backend.isMediaTypeSupported('chat')))
+        item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
 
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
