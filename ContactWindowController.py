@@ -1563,20 +1563,20 @@ class ContactWindowController(NSWindowController):
 
         if self.model.hasContactMatchingURI(session.remote_identity.uri):
             if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
             elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
         elif session.account is BonjourAccount() and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
 
         if stream_type_list == ['file-transfer'] and streams[0].file_selector.name.decode("utf8").startswith('xscreencapture'):
-            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % session.remote_identity)
+            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity(session.remote_identity))
             self.startIncomingSession(session, streams)
             return
 
@@ -1605,12 +1605,12 @@ class ContactWindowController(NSWindowController):
             session.reject_proposal()
             return
         elif stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
-            BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % session.remote_identity)
+            BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % format_identity(session.remote_identity))
             self.acceptIncomingProposal(session, streams)
             return
         elif session.account is BonjourAccount():
             if stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity(session.remote_identity))
                 self.acceptIncomingProposal(session, streams)
                 return
             elif 'audio' in stream_type_list and session.account.audio.auto_accept:
@@ -1618,17 +1618,17 @@ class ContactWindowController(NSWindowController):
                 have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                 if not have_audio_call:
                     accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
-                    BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % session.remote_identity)
+                    BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % format_identity(session.remote_identity))
                     self.acceptIncomingProposal(session, accepted_streams)
                     return
         elif self.model.hasContactMatchingURI(session.remote_identity.uri):
             settings = SIPSimpleSettings()
             if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity(session.remote_identity))
                 self.acceptIncomingProposal(session, streams)
                 return
             elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % session.remote_identity)
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity(session.remote_identity))
                 self.acceptIncomingProposal(session, streams)
                 return
         try:
@@ -1648,7 +1648,7 @@ class ContactWindowController(NSWindowController):
             self.sessionControllers.append(controller)
 
     def sip_session_missed(self, session, stream_types):
-        BlinkLogger().log_info(u"Missed incoming session from %s" % session.remote_identity)
+        BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity(session.remote_identity))
         if 'audio' in stream_types:
             NSApp.delegate().noteMissedCall()
 
