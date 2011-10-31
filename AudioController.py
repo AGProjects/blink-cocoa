@@ -1044,29 +1044,24 @@ class AudioController(MediaStream):
             self.audioStatus.setStringValue_("Negotiating ICE...")
         self.audioStatus.sizeToFit()
 
-    @run_in_gui_thread
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
 
     _NH_BlinkSessionTransferNewOutgoing = _NH_BlinkSessionTransferNewIncoming
 
-    @run_in_gui_thread
     def _NH_BlinkSessionTransferDidStart(self, sender, data):
         self.updateTransferProgress("Transferring...")
 
-    @run_in_gui_thread
     def _NH_BlinkSessionTransferDidEnd(self, sender, data):
         self.updateTransferProgress("Transfer Succeeded")
         self.transferred = True
         self.transfer_in_progress = False
 
-    @run_in_gui_thread
     def _NH_BlinkSessionTransferDidFail(self, sender, data):
         self.updateTransferProgress("Transfer Rejected (%s)" % data.code if data.code in (486, 603) else "Transfer Failed (%s)" % data.code)
         self.transfer_in_progress = False
         self.transfer_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "transferFailed:", None, False)
 
-    @run_in_gui_thread
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
         self.updateTransferProgress("Transfer: %s" % data.reason.capitalize())
 
