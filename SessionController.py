@@ -12,7 +12,7 @@ from application.python import Null
 from datetime import datetime
 
 from sipsimple.account import BonjourAccount
-from sipsimple.session import Session, IllegalStateError
+from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.util import TimestampedNotificationData
 
@@ -593,12 +593,18 @@ class SessionController(NSObject):
 
     def _acceptTransfer(self):
         self.log_info("Transfer request accepted by user")
-        self.session.accept_transfer()
+        try:
+            self.session.accept_transfer()
+        except IllegalDirectionError:
+            pass
         self.transfer_window = None
 
     def _rejectTransfer(self):
         self.log_info("Transfer request rejected by user")
-        self.session.reject_transfer()
+        try:
+            self.session.reject_transfer()
+        except IllegalDirectionError:
+            pass
         self.transfer_window = None
 
     @allocate_autorelease_pool
