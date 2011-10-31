@@ -1720,8 +1720,8 @@ class ContactWindowController(NSWindowController):
             self.window().zoom_(None)
             self.setCollapsed(True)
 
-        self.toggleAudioAdsView()
-        self.toggleContactsAdsView()
+        #self.toggleAudioAdsView()
+        #self.toggleContactsAdsView()
 
 
     @objc.IBAction
