@@ -645,6 +645,16 @@ class ContactWindowController(NSWindowController):
             window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
             self.window().setTitle_(window_title)
 
+        self.callPendingURIs()
+
+    @run_in_gui_thread
+    def callPendingURIs(self):
+        NSApp.delegate().ready = True
+        if NSApp.delegate().urisToOpen:
+            for uri, session_type in NSApp.delegate().urisToOpen:
+                 self.startSessionWithSIPURI(uri, session_type)
+            NSApp.delegate().urisToOpen = []
+
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
             self.muteButton.setState_(NSOnState)

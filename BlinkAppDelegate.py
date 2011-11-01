@@ -230,10 +230,6 @@ class BlinkAppDelegate(NSObject):
         smileys = SmileyManager()
         smileys.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
 
-        self.ready = True
-        for uri, session_type in self.urisToOpen:
-            self.windowController.startSessionWithSIPURI(uri, session_type)
-
     def killSelfAfterTimeout_(self, arg):
         # wait 4 seconds then kill self
         import time
@@ -294,7 +290,7 @@ class BlinkAppDelegate(NSObject):
     def getURL_withReplyEvent_(self, event, replyEvent):
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
 
-        BlinkLogger().log_info(u"Got request to open URL %s" % url)
+        BlinkLogger().log_info(u"Will start session to %s once the application is ready" % url)
 
         _split = url.split(';')
         _url = []
