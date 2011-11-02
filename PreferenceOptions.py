@@ -1520,6 +1520,7 @@ UnitOptions = {
 
 ToolTips = {
              'audio.auto_transfer' : 'Automatically accept transfer requests from remote party',
+             'audio.call_waiting' : 'If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress',
              'auth.username': 'Enter authentication username if different than the SIP Address username',
              'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
              'nat_traversal.msrp_relay': 'If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain',

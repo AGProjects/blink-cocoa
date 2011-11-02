@@ -1601,6 +1601,14 @@ class ContactWindowController(NSWindowController):
                 sessionController = SessionController.alloc().initWithSession_(session)
                 sessionController.setOwner_(self)
                 self.sessionControllers.append(sessionController)
+
+                # if call waiting is disabled and we have audio calls reject with busy
+                hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+                if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
+                    BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity(session.remote_identity))
+                    sessionController.reject(486, 'Busy Here')
+                    return
+
                 if not self.alertPanel:
                     self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
                 self.alertPanel.addIncomingSession(session)
