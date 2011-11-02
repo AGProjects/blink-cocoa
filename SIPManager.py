@@ -904,7 +904,8 @@ class SIPManager(object):
             cpim_to = format_identity_address(account)
             timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
-            self.add_to_chat_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            id=str(uuid.uuid1())
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
