@@ -27,7 +27,6 @@
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
 		1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
-		1F1E26DC1393AD1A00AC2BE7 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E26D91393AD1A00AC2BE7 /* audio.png */; };
 		1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1FC04812D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
@@ -3235,7 +3234,6 @@
 				1FCF119D1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11F113910878001D1CAF /* audio-preferences.png in Resources */,
 				1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */,
-				1F1E26DC1393AD1A00AC2BE7 /* audio.png in Resources */,
 				1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673113A8A987006EEB0F /* default.crt in Resources */,
