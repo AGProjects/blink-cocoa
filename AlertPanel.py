@@ -663,7 +663,7 @@ class AlertPanel(NSObject, object):
                         BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_address(s.remote_identity))
                         self.acceptProposedStreams(s)
                     else:
-                        BlinkLogger().log_info(u"Accepting session to %s" % format_identity_address(s.remote_identity))
+                        BlinkLogger().log_info(u"Accepting session from %s" % format_identity_address(s.remote_identity))
                         self.acceptStreams(s)
                 except Exception, exc:
                     import traceback
