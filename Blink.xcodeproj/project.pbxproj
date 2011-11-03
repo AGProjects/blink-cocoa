@@ -244,6 +244,8 @@
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
+		1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
+		1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
 		1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
@@ -845,6 +847,8 @@
 		1FD99704142DEFD100EE171F /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
 		1FD99705142DEFD100EE171F /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
 		1FD99706142DEFD100EE171F /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
+		1FDCDAC31462914300476792 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */; };
+		1FDCDAD41462945600476792 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */; };
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
@@ -1499,6 +1503,7 @@
 		1F274895138930580052C384 /* VideoView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoView.py; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
+		1F2FBFFC1462A444008B3D52 /* container-migration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "container-migration.plist"; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
@@ -1510,6 +1515,7 @@
 		1F689570140BA93100DA5329 /* panel-info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "panel-info.png"; path = "icons/panel-info.png"; sourceTree = "<group>"; };
 		1F68969F140CE18E00DA5329 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = screenshot.png; path = icons/screenshot.png; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
@@ -1898,6 +1904,15 @@
 			name = History;
 			sourceTree = "<group>";
 		};
+		1F922C461462B021001B7953 /* Sandbox */ = {
+			isa = PBXGroup;
+			children = (
+				1F2FBFFC1462A444008B3D52 /* container-migration.plist */,
+				1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */,
+			);
+			name = Sandbox;
+			sourceTree = "<group>";
+		};
 		1FAF8D2E12DA1F5F0029857C /* Video */ = {
 			isa = PBXGroup;
 			children = (
@@ -1912,6 +1927,7 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -2440,6 +2456,9 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Blink" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -2660,6 +2679,8 @@
 				1FC9FEF514379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
 				1FD2EF921439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
+				1FDCDAC31462914300476792 /* Entitlements.plist in Resources */,
+				1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2858,6 +2879,8 @@
 				1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
 				1FD2EF911439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
+				1FDCDAD41462945600476792 /* Entitlements.plist in Resources */,
+				1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3560,7 +3583,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Don't Code Sign";
+				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3569,7 +3593,6 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3593,7 +3616,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
+				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3622,7 +3646,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Don't Code Sign";
+				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3631,7 +3656,6 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3654,7 +3678,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
+				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3672,6 +3697,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = "Blink Lite";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -3682,6 +3708,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
 				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -3692,7 +3719,6 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3710,9 +3736,8 @@
 					"-framework",
 					AppKit,
 				);
-				PREBINDING = NO;
 				PRODUCT_NAME = "Blink Crypto";
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
@@ -3731,7 +3756,6 @@
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
@@ -3743,9 +3767,8 @@
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = "Blink Crypto";
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 				VALID_ARCHS = "i386 x86_64";
 				ZERO_LINK = NO;
 			};
@@ -3755,6 +3778,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3763,7 +3787,6 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3814,8 +3837,7 @@
 			buildSettings = {
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				PREBINDING = NO;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -3828,8 +3850,7 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				PREBINDING = NO;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
