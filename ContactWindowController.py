@@ -302,7 +302,7 @@ class ContactWindowController(NSWindowController):
 
         self.window().makeFirstResponder_(self.contactOutline)
 
-        self.contactsMenu.itemWithTag_(42).setEnabled_(NSApp.delegate().applicationName == 'Blink Pro') # Dialpad
+        self.contactsMenu.itemWithTag_(42).setEnabled_(NSApp.delegate().applicationName != 'Blink Lite') # Dialpad
 
         # Presence policy
         item = self.contactsMenu.itemWithTag_(21)
@@ -1790,12 +1790,8 @@ class ContactWindowController(NSWindowController):
     def showHelp(self, append_url=''):
         if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-lite.phtml"+append_url))
-        elif  NSApp.delegate().applicationName == 'Blink Pro':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-pro.phtml"+append_url))
-        elif  NSApp.delegate().applicationName == 'Blink Crypto':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-crypto.phtml"+append_url))
         else:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help.phtml"+append_url))
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-pro.phtml"+append_url))
 
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
@@ -2697,7 +2693,7 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(selected_group and selected_group.deletable)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
-            if NSApp.delegate().applicationName == 'Blink Pro':
+            if NSApp.delegate().applicationName != 'Blink Lite':
                 item.setEnabled_(True)
                 item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
             else:
@@ -3108,14 +3104,10 @@ class ContactWindowController(NSWindowController):
     def showChangelog_(self, sender):
         settings = SIPSimpleSettings()
     
-        if NSApp.delegate().applicationName == 'Blink Pro':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
-        elif NSApp.delegate().applicationName == 'Blink Lite':
+        if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
-        elif NSApp.delegate().applicationName == 'Blink Crypto':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-crypto.phtml"))
         else:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog.phtml"))
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
 
     @objc.IBAction
     def showDonate_(self, sender):

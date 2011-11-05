@@ -139,7 +139,7 @@ class AudioController(MediaStream):
 
             loadImages()
 
-            self.transferEnabled = True if NSApp.delegate().applicationName == 'Blink Pro' else False
+            self.transferEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
             self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
 
             if self.transferEnabled:
