@@ -13,6 +13,7 @@ from datetime import datetime
 
 from sipsimple.account import BonjourAccount
 from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.util import TimestampedNotificationData
 
@@ -444,6 +445,16 @@ class SessionController(NSObject):
                     self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
                     self.changeSessionState(STATE_DNS_LOOKUP)
                     SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
+
+                    outdev = SIPSimpleSettings().audio.output_device
+                    indev = SIPSimpleSettings().audio.input_device
+                    if outdev == u"system_default":
+                        outdev = u"System Default"
+                    if indev == u"system_default":
+                        indev = u"System Default"
+
+                    if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
+                        self.log_info(u"Selected audio input/output devices: %s/%s" % (indev, outdev))
 
                     if SIPManager().pause_itunes:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):

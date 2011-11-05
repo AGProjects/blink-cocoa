@@ -223,6 +223,9 @@ class AlertPanel(NSObject, object):
                 self.deviceLabel.setStringValue_(u"Selected Output Device is %s, Input is %s" % (outdev.strip(), indev.strip()))
             else:
                 self.deviceLabel.setStringValue_(u"Selected Audio Device is %s" % outdev.strip())
+
+            BlinkLogger().log_info(u"Selected audio input/output devices: %s/%s" % (indev, outdev))
+
             self.deviceLabel.sizeToFit()
             self.deviceLabel.setHidden_(False)
         else:
