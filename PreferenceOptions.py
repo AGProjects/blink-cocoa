@@ -1504,7 +1504,7 @@ AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', '
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
 
 AccountSettingsOrder = {
-                       'audio': ['auto_transfer', 'auto_accept', 'answer_delay'],
+                       'audio': ['call_waiting', 'auto_transfer', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
                        }
 
