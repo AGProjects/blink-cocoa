@@ -22,6 +22,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import AudioStream
+from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp, TimestampedNotificationData
 
@@ -997,6 +998,14 @@ class AudioController(MediaStream):
                 self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.remote_rtp_address, self.stream.remote_rtp_port))
 
         self.sessionInfoButton.setEnabled_(True)
+        if self.sessionController.postdial_string is not None:
+            call_in_thread('dtmf-io', self.send_postdial_string_as_dtmf)
+
+    def send_postdial_string_as_dtmf(self):
+        time.sleep(2)
+        for digit in self.sessionController.postdial_string:
+            time.sleep(0.5)
+            self.send_dtmf(digit)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidFail(self, sender, data):

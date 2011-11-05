@@ -77,6 +77,7 @@ class SessionController(NSObject):
         self.remotePartyObject = target_uri
         self.account = account
         self.target_uri = target_uri
+        self.postdial_string = None
         self.remoteSIPAddress = format_identity_address(target_uri)
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
@@ -113,6 +114,7 @@ class SessionController(NSObject):
         self.account = session.account
         self.session = session
         self.target_uri = SIPURI.new(session.remote_identity.uri if session.account is not BonjourAccount() else session._invitation.remote_contact_header.uri)
+        self.postdial_string = None
         self.remoteSIPAddress = format_identity_address(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
@@ -570,7 +572,19 @@ class SessionController(NSObject):
     def connectSession(self):
         if self.session:
             streams = [s.stream for s in self.streamHandlers]
-            self.session.connect(ToHeader(self.target_uri), self.routes, streams)
+            target_uri = SIPURI.new(self.target_uri)
+
+            if '#' in target_uri.user:
+                hash_parts = target_uri.user.partition('#')
+                username_without_postdial_string = hash_parts[0]
+                try:
+                    postdial_string = int(hash_parts[2])
+                    target_uri.user = hash_parts[0]
+                    self.postdial_string = hash_parts[2]
+                except ValueError:
+                    pass
+
+            self.session.connect(ToHeader(target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)
             self.log_info("Connecting session to %s" % self.routes[0])
             self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
