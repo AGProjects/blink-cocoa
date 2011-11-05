@@ -93,6 +93,7 @@ class BlinkAppDelegate(NSObject):
             DesktopSharingController.vncServerPort = 5900
 
             # Migrate configuration from Blink Lite to Blink Pro
+            # TODO: this will not work in the sandbox environment -adi
             app_dir_name = (name for name in Resources.directory.split('/') if name.endswith('.app')).next()
             path = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0])
             lite_path = os.path.join(path, 'Blink Lite')
