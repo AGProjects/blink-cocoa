@@ -743,8 +743,8 @@ class SessionController(NSObject):
                 else:
                     self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
-        # timeout and we have alternative routes
-        elif data.code == 408 and len(self.routes) > 1:
+        # local timeout while we have an alternative route
+        elif data.code == 408 and data.originator == 'local' and len(self.routes) > 1:
             self.log_info('Trying alternative route')
             self.routes.pop(0)
             self.try_next_hop = True
