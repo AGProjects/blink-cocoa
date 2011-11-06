@@ -388,13 +388,13 @@ class SIPManager(object):
         if isinstance(account, Account) and account.sip.outbound_proxy is not None:
             uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
                 parameters={'transport': account.sip.outbound_proxy.transport})
-            session_controller.log_info(u"Starting DNS Lookup for %s through proxy %s" % (target_uri, uri))
+            session_controller.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
         elif isinstance(account, Account) and account.sip.always_use_my_proxy:
             uri = SIPURI(host=account.id.domain)
-            session_controller.log_info(u"Starting DNS Lookup for %s via proxy of account %s" % (target_uri, account.id))
+            session_controller.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, account.id))
         else:
             uri = target_uri
-            session_controller.log_info(u"Starting DNS Lookup for %s" % target_uri)
+            session_controller.log_info(u"Starting DNS lookup for %s" % target_uri.host)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def lookup_stun_servers(self, account):
@@ -409,7 +409,7 @@ class SIPManager(object):
                 address = account.nat_traversal.stun_server_list[0]
             else:
                 lookup.lookup_service(SIPURI(host=account.id.domain), "stun")
-                BlinkLogger().log_info(u"Starting DNS Lookup for STUN servers of domain %s" % account.id.domain)
+                BlinkLogger().log_info(u"Starting DNS lookup for STUN servers of domain %s" % account.id.domain)
 
     def parse_sip_uri(self, target_uri, account):
         try:
@@ -811,15 +811,15 @@ class SIPManager(object):
 
         if lookup.type == 'stun_servers':
             account = lookup.owner
-            message = u"DNS Lookup of STUN servers for %s failed: %s" % (account.id.domain, data.error)
+            message = u"DNS lookup of STUN servers for %s failed: %s" % (account.id.domain, data.error)
             # stun lookup errors can be ignored
         elif lookup.type == 'sip_proxies':
             session_controller = lookup.owner
-            message = u"DNS Lookup of SIP proxies for %s failed: %s" % (unicode(session_controller.target_uri), data.error)
+            message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(session_controller.target_uri.host), data.error)
             call_in_gui_thread(session_controller.setRoutesFailed, message)
         else:
             # we should never get here
-            raise RuntimeError("DNS Lookup failure for unknown request type: %s: %s" % (lookup.type, data.error))
+            raise RuntimeError("DNS lookup failure for unknown request type: %s: %s" % (lookup.type, data.error))
         BlinkLogger().log_error(message)
 
     def _NH_DNSLookupDidSucceed(self, lookup, data):
@@ -827,11 +827,11 @@ class SIPManager(object):
 
         if lookup.type == 'stun_servers':
             account = lookup.owner
-            BlinkLogger().log_info(u"DNS Lookup of STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
+            BlinkLogger().log_info(u"DNS lookup of STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
         elif lookup.type == 'sip_proxies':
             session_controller = lookup.owner
             result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
-            session_controller.log_info(u"DNS Lookup for %s succeeded: %s" % (session_controller.target_uri, result_text))
+            session_controller.log_info(u"DNS lookup for %s succeeded: %s" % (session_controller.target_uri.host, result_text))
             routes = data.result
             if not routes:
                 call_in_gui_thread(session_controller.setRoutesFailed, "No routes found to SIP Proxy")
@@ -839,7 +839,7 @@ class SIPManager(object):
                 call_in_gui_thread(session_controller.setRoutesResolved, routes)
         else:
             # we should never get here
-            raise RuntimeError("DNS Lookup result for unknown request type: %s" % lookup.type)
+            raise RuntimeError("DNS lookup result for unknown request type: %s" % lookup.type)
 
     def _NH_SIPEngineGotException(self, sender, data):
         print "SIP Engine Exception", data

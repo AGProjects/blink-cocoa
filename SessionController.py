@@ -442,7 +442,6 @@ class SessionController(NSObject):
                         self.info_panel.show()
                         self.info_panel.window.setFrame_display_animate_(self.info_panel_last_frame, True, True)
                 else:
-                    self.log_info(u"Initiating DNS Lookup of %s to %s"%(self.account, self.target_uri))
                     self.changeSessionState(STATE_DNS_LOOKUP)
                     SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
 
