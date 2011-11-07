@@ -1,15 +1,13 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-# import modules required by application
-import objc
+import os
+import sys
+
 import Foundation
-import AppKit
 
 from PyObjCTools import AppHelper
 
-import os
-import sys
 
 class NSLogger(object):
     closed = False
