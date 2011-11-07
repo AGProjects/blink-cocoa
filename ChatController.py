@@ -19,6 +19,7 @@ from application.python import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
+from resources import ApplicationData
 from sipsimple.account import BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
@@ -1297,8 +1298,10 @@ class ChatController(MediaStream):
                     contactWindow.historyViewer.filterByContact(format_identity(self.sessionController.target_uri), media_type='chat')
 
         elif sender.tag() in (TOOLBAR_SCREENSHOT_MENU_WINDOW, TOOLBAR_SCREENSHOT_MENU_AREA):
-            makedirs('/tmp/blink_screenshots/')
-            filename = '/tmp/blink_screenshots/xscreencapture.png'
+            screenshots_folder = ApplicationData.get('.tmp_screenshots')
+            if not os.path.exists(screenshots_folder):
+                os.mkdir(screenshots_folder, 0700)
+            filename = '%s/xscreencapture.png' % screenshots_folder
             basename, ext = os.path.splitext(filename)
             i = 1
             while os.path.exists(filename):

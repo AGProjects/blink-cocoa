@@ -82,11 +82,12 @@ class BlinkAppDelegate(NSObject):
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
 
             def purge_screenshots():
-                path = os.path.join('/tmp/blink_screenshots/') # used by chat controller
-                try:
-                    shutil.rmtree(path)
-                except EnvironmentError:
-                    pass
+                screenshots_folder = ApplicationData.get('.tmp_screenshots')
+                if os.path.exists(screenshots_folder):
+                    try:
+                        shutil.rmtree(screenshots_folder)
+                    except EnvironmentError:
+                        pass
 
             call_in_thread('file-io', purge_screenshots)
 
