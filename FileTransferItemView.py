@@ -10,6 +10,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from zope.interface import implements
 
+from resources import ApplicationData
 from FileTransferSession import OutgoingPushFileTransferHandler
 from util import allocate_autorelease_pool, format_size, run_in_gui_thread
 
@@ -92,7 +93,11 @@ class FileTransferItemView(NSView):
             if os.path.exists(filename):
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(filename))
             else:
-                tmpf = "/tmp/tmpf"+os.path.splitext(filename)[1]
+                tmp_folder = ApplicationData.get('.tmp_file_transfers')
+                if not os.path.exists(tmp_folder):
+                    os.mkdir(tmp_folder, 0700)
+
+                tmpf = tmp_folder + "/tmpf" + os.path.splitext(filename)[1]
                 open(tmpf, "w+").close()
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(tmpf))
                 os.remove(tmpf)
