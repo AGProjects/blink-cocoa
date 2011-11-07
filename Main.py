@@ -8,6 +8,7 @@ import AppKit
 
 from PyObjCTools import AppHelper
 
+import os
 import sys
 
 class NSLogger(object):
@@ -48,9 +49,13 @@ class NSLogger(object):
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
-# Add our python module directories to the path
-path = unicode(Foundation.NSBundle.mainBundle().resourcePath())
-sys.path.insert(0, path + "/lib")
+# Add our python module directories to the python path
+resource_path = unicode(Foundation.NSBundle.mainBundle().resourcePath())
+sys.path.insert(0, os.path.join(resource_path, "lib"))
+
+# Make mimetypes use our copy of the file in order to work with sandboxing
+import mimetypes
+mimetypes.init(os.path.join(resource_path, "mime.types"))
 
 # import modules containing classes required to start application and load MainMenu.nib
 import BlinkAppDelegate

@@ -1026,6 +1026,10 @@
 		2BFB34B510178AB7002D79FB /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
 		2BFB34B810178B34002D79FB /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		2BFB35541017E363002D79FB /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
+		3725A1EE1467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
+		3725A1EF1467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
+		3725A1F01467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
+		3725A1F11467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
 		77631A270C06C501005415CB /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
@@ -1763,6 +1767,7 @@
 		2BFB34B410178AB7002D79FB /* AlertPanelView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanelView.xib; path = English.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
 		2BFB34B710178B34002D79FB /* AlertPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanel.xib; path = English.lproj/AlertPanel.xib; sourceTree = "<group>"; };
 		2BFB35531017E363002D79FB /* blink.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = blink.icns; sourceTree = "<group>"; };
+		3725A1ED1467F7DB004EBAA5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		77631A260C06C501005415CB /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = /System/Library/Frameworks/Python.framework; sourceTree = "<absolute>"; };
 		8547A6C6114EB6E200AD84BF /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		8547A6C7114EB6E200AD84BF /* itunes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = itunes.py; sourceTree = "<group>"; };
@@ -1890,6 +1895,7 @@
 			children = (
 				1F2271F112B551B40010A8B2 /* Resources */,
 				1F2271F012B551AC0010A8B2 /* Frameworks */,
+				3725A1ED1467F7DB004EBAA5 /* mime.types */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -2720,6 +2726,7 @@
 				1FDCDAC31462914300476792 /* Entitlements.plist in Resources */,
 				1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FCC7AC014656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
+				3725A1EF1467F7DB004EBAA5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2920,6 +2927,7 @@
 				1FDCDAD41462945600476792 /* Entitlements.plist in Resources */,
 				1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FCC7AC114656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
+				3725A1F01467F7DB004EBAA5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3120,6 +3128,7 @@
 				1FD2EF901439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF961439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FCC7AC214656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
+				3725A1F11467F7DB004EBAA5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3318,6 +3327,7 @@
 				1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FCC7ABF14656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
+				3725A1EE1467F7DB004EBAA5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
