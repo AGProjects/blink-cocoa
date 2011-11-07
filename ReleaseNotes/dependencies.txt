@@ -2,9 +2,10 @@
 Dependencies
 ------------
 
- * MacOSX 10.5, 10.6 or 10.7 on Intel Processor
- * Apple Developer Tools (XCode)
- * SIP SIMPLE client SDK
+ * MacOSX >= 10.6
+ * Intel Processor
+ * XCode >= 4.2
+ * SIP SIMPLE Client SDK >= 0.19
  * Growl
  * python-cjson
  * formencode
