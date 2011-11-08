@@ -141,7 +141,7 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
-        self.log_info(u"Incoming request from %s with %s" % (session.remote_identity.display_name, ", ".join(self.streams_log)))
+        self.log_info(u'Invite from: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
         return self
 
     def initWithSessionTransfer_owner_(self, session, owner):
