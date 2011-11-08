@@ -56,13 +56,13 @@ def format_identity(identity, check_contact=False):
         address = u"%s@%s:%d;transport=%s" % (user, host, port, transport)
 
     match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
-    if match is not None:
-        return match.group('number')
-    elif contact:
+    if contact:
         if display_name == user or not display_name:
             return "%s <%s>" % (contact.name, address)
         else:
             return "%s <%s>" % (display_name, address)
+    elif match is not None:
+        return "%s <%s>" % (display_name, match.group('number')) if display_name else match.group('number')
     elif display_name:
         return "%s <%s>" % (display_name, address)
     else:
