@@ -92,7 +92,7 @@ class VLCInterface(object):
             set MyList to (name of every process)
         end tell
         if (MyList contains "VLC") is true then
-            tell application "VLC" to stop
+            tell application "VLC" to mute
         end if
         """
 

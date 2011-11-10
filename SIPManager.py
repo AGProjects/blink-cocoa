@@ -1005,10 +1005,9 @@ class SIPManager(object):
 
         if self.pause_itunes:
             itunes_interface = ITunesInterface()
-            BlinkLogger().log_info(u"Stopping iTunes playback")
+            BlinkLogger().log_info(u"Stopping iTunes playback and muting VLC")
             itunes_interface.pause()
             vlc_interface = VLCInterface()
-            BlinkLogger().log_info(u"Stopping VLC playback")
             vlc_interface.pause()
 
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
@@ -1048,10 +1047,9 @@ class SIPManager(object):
         if self.pause_itunes:
             if any(stream.type == 'audio' for stream in data.streams):
                 itunes_interface = ITunesInterface()
-                BlinkLogger().log_info(u"Stopping iTunes playback")
+                BlinkLogger().log_info(u"Stopping iTunes playback and muting VLC")
                 itunes_interface.pause()
                 vlc_interface = VLCInterface()
-                BlinkLogger().log_info(u"Stopping VLC playback")
                 vlc_interface.pause()
     def _NH_SIPSessionGotRejectProposal(self, session, data):
         if self.pause_itunes:
