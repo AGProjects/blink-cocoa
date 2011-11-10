@@ -31,7 +31,7 @@ from FileTransferController import FileTransferController
 
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
-from interfaces.itunes import ITunesInterface
+from interfaces.itunes import ITunesInterface, VLCInterface
 from util import *
 
 SessionIdentifierSerial = 0
@@ -460,8 +460,10 @@ class SessionController(NSObject):
                             self.waitingForITunes = True
                             itunes_interface = ITunesInterface()
                             self.notification_center.add_observer(self, sender=itunes_interface)
-                            self.log_info(u"Stopping iTunes playback")
+                            self.log_info(u"Stopping iTunes playback and muting VLC")
                             itunes_interface.pause()
+                            vlc_interface = VLCInterface()
+                            vlc_interface.pause()
                         else:
                             self.waitingForITunes = False
 
