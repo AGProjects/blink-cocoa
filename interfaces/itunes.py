@@ -1,7 +1,7 @@
 # Copyright (C) 2010 AG Projects. See LICENSE for details.
 #
 
-__all__ = ['ITunesInterface']
+__all__ = ['ITunesInterface', 'VLCInterface']
 
 
 from application.notification import NotificationCenter
@@ -77,5 +77,30 @@ class ITunesInterface(object):
             self.paused = False
         notification_center = NotificationCenter()
         notification_center.post_notification('ITunesResumeDidExecute', sender=self, data=TimestampedNotificationData())
+
+
+class VLCInterface(object):
+    """
+        VLC does not export any api to check the player state and volume level so
+        we just pause it automatically and let user start it manually later
+    """
+
+    __metaclass__ = Singleton
+
+    pause_script = """
+        tell application "System Events"
+            set MyList to (name of every process)
+        end tell
+        if (MyList contains "VLC") is true then
+            tell application "VLC" to stop
+        end if
+        """
+
+    @run_in_thread('iTunes-interface')
+    @allocate_autorelease_pool
+    def pause(self):
+        notification_center = NotificationCenter()
+        script = NSAppleScript.alloc().initWithSource_(self.pause_script)
+        script.executeAndReturnError_(None)
 
 
