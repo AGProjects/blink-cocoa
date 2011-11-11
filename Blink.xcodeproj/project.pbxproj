@@ -764,6 +764,14 @@
 		1FB22A0E140308950024F921 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
 		1FB22A0F140308950024F921 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
 		1FB22A10140308950024F921 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
+		1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
+		1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
+		1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
+		1FB30806146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
+		1FB3080A146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
+		1FB3080B146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
+		1FB3080C146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
+		1FB3080D146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
 		1FB9B1191095BFF500284E18 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
 		1FB9B11A1095BFF500284E18 /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
 		1FB9B11B1095BFF500284E18 /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
@@ -789,13 +797,6 @@
 		1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FBD0E0212EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
-		1FBEB074146595500051676D /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
-		1FBEB0761465958F0051676D /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
-		1FBEB077146595920051676D /* libgnutls-extra.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
-		1FBEB078146595950051676D /* libgnutls.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
-		1FBEB079146595990051676D /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
-		1FBEB07B146595A40051676D /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
-		1FBEB07C146595A60051676D /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
@@ -807,10 +808,6 @@
 		1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
 		1FC9FEF514379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
 		1FC9FEF614379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
-		1FCC7ABF14656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FCC7ABD14656A18007BAFF2 /* JoinConferenceWindow.xib */; };
-		1FCC7AC014656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FCC7ABD14656A18007BAFF2 /* JoinConferenceWindow.xib */; };
-		1FCC7AC114656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FCC7ABD14656A18007BAFF2 /* JoinConferenceWindow.xib */; };
-		1FCC7AC214656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FCC7ABD14656A18007BAFF2 /* JoinConferenceWindow.xib */; };
 		1FCE80B01408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
 		1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
 		1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
@@ -1019,10 +1016,6 @@
 		2BFB34B510178AB7002D79FB /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
 		2BFB34B810178B34002D79FB /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		2BFB35541017E363002D79FB /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
-		3725A1EE1467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
-		3725A1EF1467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
-		3725A1F01467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
-		3725A1F11467F7DB004EBAA5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 3725A1ED1467F7DB004EBAA5 /* mime.types */; };
 		77631A270C06C501005415CB /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
@@ -1369,33 +1362,6 @@
 			name = "Copy Configuration Package";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1FBEB073146595460051676D /* Copy Libraries */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 7;
-			files = (
-				1FBEB074146595500051676D /* lib in Copy Libraries */,
-			);
-			name = "Copy Libraries";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FBEB075146595710051676D /* Copy Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				1FBEB0761465958F0051676D /* libgcrypt.11.dylib in Copy Frameworks */,
-				1FBEB077146595920051676D /* libgnutls-extra.26.dylib in Copy Frameworks */,
-				1FBEB078146595950051676D /* libgnutls.26.dylib in Copy Frameworks */,
-				1FBEB079146595990051676D /* libgpg-error.0.dylib in Copy Frameworks */,
-				1FBEB07B146595A40051676D /* liblzo.1.dylib in Copy Frameworks */,
-				1FBEB07C146595A60051676D /* libtasn1.3.dylib in Copy Frameworks */,
-			);
-			name = "Copy Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		2B0C1E8B10781A62008266C7 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1559,6 +1525,8 @@
 		1FB22A07140306EC0024F921 /* lock-zrtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "lock-zrtp.png"; path = "icons/lock-zrtp.png"; sourceTree = "<group>"; };
 		1FB22A09140308950024F921 /* zrtp-securemode.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-securemode.wav"; path = "sounds/zrtp-securemode.wav"; sourceTree = "<group>"; };
 		1FB22A0A140308950024F921 /* zrtp-security-failed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-security-failed.wav"; path = "sounds/zrtp-security-failed.wav"; sourceTree = "<group>"; };
+		1FB30807146D540C001430B5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1FB30809146D5598001430B5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
 		1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_0_tone.wav; path = sounds/dtmf_0_tone.wav; sourceTree = "<group>"; };
 		1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_1_tone.wav; path = sounds/dtmf_1_tone.wav; sourceTree = "<group>"; };
@@ -1585,7 +1553,6 @@
 		1FC66DE7139E17D600D03D71 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
-		1FCC7ABE14656A18007BAFF2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
 		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
 		1FCF119A1390EE08001D1CAF /* logs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logs.png; path = icons/logs.png; sourceTree = "<group>"; };
@@ -1755,7 +1722,6 @@
 		2BFB34B410178AB7002D79FB /* AlertPanelView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanelView.xib; path = English.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
 		2BFB34B710178B34002D79FB /* AlertPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanel.xib; path = English.lproj/AlertPanel.xib; sourceTree = "<group>"; };
 		2BFB35531017E363002D79FB /* blink.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = blink.icns; sourceTree = "<group>"; };
-		3725A1ED1467F7DB004EBAA5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		77631A260C06C501005415CB /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = /System/Library/Frameworks/Python.framework; sourceTree = "<absolute>"; };
 		8547A6C6114EB6E200AD84BF /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		8547A6C7114EB6E200AD84BF /* itunes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = itunes.py; sourceTree = "<group>"; };
@@ -1880,7 +1846,6 @@
 			children = (
 				1F2271F112B551B40010A8B2 /* Resources */,
 				1F2271F012B551AC0010A8B2 /* Frameworks */,
-				3725A1ED1467F7DB004EBAA5 /* mime.types */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -1909,7 +1874,7 @@
 		1F2615A712BD8FFA00B402E1 /* Conference */ = {
 			isa = PBXGroup;
 			children = (
-				1FCC7ABD14656A18007BAFF2 /* JoinConferenceWindow.xib */,
+				1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */,
 				1F092DB312B2785E000CEE7F /* ConferenceController.py */,
 				1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */,
 				1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */,
@@ -1955,6 +1920,7 @@
 			children = (
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
+				1FB30809146D5598001430B5 /* mime.types */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -2466,8 +2432,6 @@
 				2B87567D10B6DD51002FD271 /* Copy Helper Binaries */,
 				85E8551210F644170083D346 /* Copy Configuration Package */,
 				857DA94D114EB82B00C798A3 /* Copy Interfaces Package */,
-				1FBEB073146595460051676D /* Copy Libraries */,
-				1FBEB075146595710051676D /* Copy Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2486,7 +2450,6 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0420;
-				ORGANIZATIONNAME = "AG Projects";
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Blink" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2709,8 +2672,8 @@
 				1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FDCDAC31462914300476792 /* Entitlements.plist in Resources */,
 				1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */,
-				1FCC7AC014656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
-				3725A1EF1467F7DB004EBAA5 /* mime.types in Resources */,
+				1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
+				1FB3080B146D5598001430B5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2910,8 +2873,8 @@
 				1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FDCDAD41462945600476792 /* Entitlements.plist in Resources */,
 				1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */,
-				1FCC7AC114656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
-				3725A1F01467F7DB004EBAA5 /* mime.types in Resources */,
+				1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
+				1FB3080C146D5598001430B5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3111,8 +3074,8 @@
 				1FC9FEF314379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
 				1FD2EF901439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF961439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
-				1FCC7AC214656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
-				3725A1F11467F7DB004EBAA5 /* mime.types in Resources */,
+				1FB30806146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
+				1FB3080D146D5598001430B5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3310,8 +3273,8 @@
 				1FC9FEF614379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
 				1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
-				1FCC7ABF14656A18007BAFF2 /* JoinConferenceWindow.xib in Resources */,
-				3725A1EE1467F7DB004EBAA5 /* mime.types in Resources */,
+				1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
+				1FB3080A146D5598001430B5 /* mime.types in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3409,20 +3372,20 @@
 			name = AddParticipantsWindow.xib;
 			sourceTree = "<group>";
 		};
+		1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FB30807146D540C001430B5 /* English */,
+			);
+			name = JoinConferenceWindow.xib;
+			sourceTree = "<group>";
+		};
 		1FC66E0C139E208700D03D71 /* MigrationPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				1FC66DE7139E17D600D03D71 /* English */,
 			);
 			name = MigrationPanel.xib;
-			sourceTree = "<group>";
-		};
-		1FCC7ABD14656A18007BAFF2 /* JoinConferenceWindow.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1FCC7ABE14656A18007BAFF2 /* English */,
-			);
-			name = JoinConferenceWindow.xib;
 			sourceTree = "<group>";
 		};
 		1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */ = {
@@ -3620,16 +3583,23 @@
 				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-pro.plist";
-				INSTALL_PATH = "";
-				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
-				ONLY_ACTIVE_ARCH = YES;
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(inherited)",
+					/usr/local/lib,
+				);
 				PRODUCT_NAME = "Blink Pro";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
@@ -3641,19 +3611,25 @@
 		1F22736212B554F50010A8B2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = i386;
 				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
 				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
-				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-pro.plist";
-				INSTALL_PATH = "";
-				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(inherited)",
+				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "Blink Pro";
 				SDKROOT = macosx10.6;
@@ -3670,15 +3646,22 @@
 				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-lite.plist";
-				INSTALL_PATH = "";
-				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(inherited)",
+				);
 				PRODUCT_NAME = "Blink Lite";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
@@ -3690,19 +3673,26 @@
 		1F8DC411135084FA0034815C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = i386;
 				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
 				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-lite.plist";
-				INSTALL_PATH = "";
-				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/Distribution/Frameworks\"";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(inherited)",
+				);
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.6;
@@ -3790,6 +3780,7 @@
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3798,9 +3789,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "";
+				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/usr/local/lib,
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				PRODUCT_NAME = Blink;
@@ -3813,22 +3805,22 @@
 		C01FCF4C08A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
-				COPY_PHASE_STRIP = NO;
+				ARCHS = i386;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "";
+				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					/usr/local/lib,
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				PRODUCT_NAME = Blink;
@@ -3840,22 +3832,23 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				COPY_PHASE_STRIP = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
