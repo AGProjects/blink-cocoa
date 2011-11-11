@@ -87,20 +87,23 @@ class VLCInterface(object):
 
     __metaclass__ = Singleton
 
-    pause_script = """
+    check_active_script = """
         tell application "System Events"
-            set MyList to (name of every process)
+        return (name of processes contains "VLC")
         end tell
-        if (MyList contains "VLC") is true then
-            tell application "VLC" to mute
-        end if
+        """
+
+    pause_script = """
+        tell application "VLC" to mute
         """
 
     @run_in_thread('iTunes-interface')
     @allocate_autorelease_pool
     def mute(self):
         notification_center = NotificationCenter()
-        script = NSAppleScript.alloc().initWithSource_(self.pause_script)
-        script.executeAndReturnError_(None)
-
+        script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
+        result, error_info = script.executeAndReturnError_(None)
+        if result and result.booleanValue():
+            script = NSAppleScript.alloc().initWithSource_(self.pause_script)
+            script.executeAndReturnError_(None)
 
