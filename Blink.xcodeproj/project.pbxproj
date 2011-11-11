@@ -1521,7 +1521,6 @@
 		1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libgnutls-extra.26.dylib"; path = "Distribution/Frameworks/libgnutls-extra.26.dylib"; sourceTree = "<group>"; };
 		1F22722712B554000010A8B2 /* libgnutls.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.26.dylib; path = Distribution/Frameworks/libgnutls.26.dylib; sourceTree = "<group>"; };
 		1F22722812B554000010A8B2 /* libgpg-error.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libgpg-error.0.dylib"; path = "Distribution/Frameworks/libgpg-error.0.dylib"; sourceTree = "<group>"; };
-		1F22722A12B554000010A8B2 /* libintl.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libintl.8.dylib; path = Distribution/Frameworks/libintl.8.dylib; sourceTree = "<group>"; };
 		1F22722B12B554000010A8B2 /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblzo.1.dylib; path = Distribution/Frameworks/liblzo.1.dylib; sourceTree = "<group>"; };
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
 		1F2489DF13FE781F007CDFD5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AudioSession.xib; sourceTree = "<group>"; };
@@ -1893,7 +1892,6 @@
 				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
 				1F22722712B554000010A8B2 /* libgnutls.26.dylib */,
 				1F22722812B554000010A8B2 /* libgpg-error.0.dylib */,
-				1F22722A12B554000010A8B2 /* libintl.8.dylib */,
 				1F22722B12B554000010A8B2 /* liblzo.1.dylib */,
 				1F22722C12B554000010A8B2 /* libtasn1.3.dylib */,
 			);
