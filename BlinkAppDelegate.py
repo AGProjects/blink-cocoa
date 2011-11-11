@@ -269,8 +269,9 @@ class BlinkAppDelegate(NSObject):
         if not self.aboutPanel:
             NSBundle.loadNibNamed_owner_("About", self)
             version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
+            build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-            self.aboutVersion.setStringValue_("Version "+version+"\n"+vdate)
+            self.aboutVersion.setStringValue_("Version %s build %s\n%s" % (version, build, vdate))
             self.aboutPanel.setTitle_('About %s' % self.applicationName)
 
             if self.applicationName == 'Blink Pro':
