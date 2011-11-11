@@ -1846,6 +1846,7 @@
 			children = (
 				1F2271F112B551B40010A8B2 /* Resources */,
 				1F2271F012B551AC0010A8B2 /* Frameworks */,
+				1FB30809146D5598001430B5 /* mime.types */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -1920,7 +1921,6 @@
 			children = (
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
-				1FB30809146D5598001430B5 /* mime.types */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
