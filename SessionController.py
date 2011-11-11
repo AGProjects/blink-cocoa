@@ -463,7 +463,7 @@ class SessionController(NSObject):
                             self.log_info(u"Stopping iTunes playback and muting VLC")
                             itunes_interface.pause()
                             vlc_interface = VLCInterface()
-                            vlc_interface.pause()
+                            vlc_interface.mute()
                         else:
                             self.waitingForITunes = False
 

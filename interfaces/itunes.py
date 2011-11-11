@@ -98,7 +98,7 @@ class VLCInterface(object):
 
     @run_in_thread('iTunes-interface')
     @allocate_autorelease_pool
-    def pause(self):
+    def mute(self):
         notification_center = NotificationCenter()
         script = NSAppleScript.alloc().initWithSource_(self.pause_script)
         script.executeAndReturnError_(None)
