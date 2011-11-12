@@ -858,7 +858,7 @@ class SIPManager(object):
             self.bonjour_conference_services.stop()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds\n' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+        message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
