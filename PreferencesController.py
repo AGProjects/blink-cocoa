@@ -130,7 +130,6 @@ class PreferencesController(NSWindowController, object):
         if NSApp.delegate().applicationName == 'Blink Lite':
             PreferenceOptionTypes['audio.pause_itunes'] = HiddenOption
             PreferenceOptionTypes['audio.directory'] = HiddenOption
-            PreferenceOptionTypes['file_transfer.directory'] = HiddenOption
             PreferenceOptionTypes['logs.directory'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_favorites_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_incoming_calls_group'] = HiddenOption

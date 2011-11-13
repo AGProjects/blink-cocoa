@@ -1391,6 +1391,7 @@ PreferenceOptionTypes = {
 "audio.sample_rate": HiddenOption,
 "audio.tail_length": HiddenOption,
 "chat.sms_replication": HiddenOption,
+"file_transfer.directory": HiddenOption,
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
 "file_transfer.render_incoming_video_in_chat_window": HiddenOption,
 "logs.directory": HiddenOption,
@@ -1440,7 +1441,6 @@ SettingDescription = {
                       'contacts.enable_outgoing_calls_group': 'Show Outgoing Calls',
                       'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
-                      'file_transfer.directory': 'Save Files in',
                       'message_summary.voicemail_uri': 'Mailbox URI',
                       'logs.trace_msrp': 'Trace MSRP Media',
                       'logs.trace_sip': 'Trace SIP Signaling',
@@ -1469,7 +1469,6 @@ Placeholders = {
                  'nat_travsersal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'voicemail_uri': 'user@example.com',
                  'server.conference_server': 'conference.sip2sip.info',
-                 'file_transfer.directory': '~/Downloads',
                  'xcap.xcap_root': 'https://xcap.example.com/xcap-root/'}
 
 SectionNames = {

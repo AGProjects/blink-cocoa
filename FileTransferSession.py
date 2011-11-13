@@ -7,6 +7,7 @@ from dateutil.tz import tzlocal
 import os
 import re
 import time
+import unicodedata
 import uuid
 
 from application.notification import NotificationCenter, IObserver
@@ -31,6 +32,8 @@ from HistoryManager import FileTransferHistory, ChatHistory
 from MediaStream import *
 
 from util import *
+
+from Foundation import NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
 
 
 def format_duration(t):
@@ -216,8 +219,7 @@ class IncomingFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         settings = SIPSimpleSettings()
 
-        download_folder = settings.file_transfer.directory.normalized
-        makedirs(download_folder)
+        download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
 
         for name in self.filename_generator(os.path.join(download_folder, self.file_name)):
             if not os.path.exists(name) and not os.path.exists(name+".download"):
@@ -646,8 +648,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         settings = SIPSimpleSettings()
 
-        download_folder = settings.file_transfer.directory.normalized
-        makedirs(download_folder)
+        download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
         for name in self.filename_generator(os.path.join(download_folder, self.file_name)):
             if not os.path.exists(name) and not os.path.exists(name+".download"):
                 self.file_path = name + '.download'

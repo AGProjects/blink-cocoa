@@ -220,10 +220,6 @@ class SIPManager(object):
         if self._selected_account is None:
             self._selected_account = account_manager.get_accounts()[0]
 
-        download_folder = settings.file_transfer.directory.normalized
-        if not os.path.exists(download_folder):
-            os.mkdir(download_folder, 0700)
-
         #if options.no_relay:
         #    account.msrp.use_relay_for_inbound = False
         #    account.msrp.use_relay_for_outbound = False
@@ -1051,6 +1047,7 @@ class SIPManager(object):
                 itunes_interface.pause()
                 vlc_interface = VLCInterface()
                 vlc_interface.mute()
+
     def _NH_SIPSessionGotRejectProposal(self, session, data):
         if self.pause_itunes:
             if any(stream.type == 'audio' for stream in data.streams):
