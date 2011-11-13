@@ -1419,7 +1419,7 @@ DisabledAccountPreferenceSections = []
 DisabledPreferenceSections = ['service_provider']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts']
+StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts', 'tls']
 
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
