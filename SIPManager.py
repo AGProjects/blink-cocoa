@@ -765,6 +765,10 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s" % sdk_version)
         BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
 
+        build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
+        date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
+        BlinkLogger().log_info(u"Build %s from %s" % (build, date))
+
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 16000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
