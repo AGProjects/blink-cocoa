@@ -600,6 +600,25 @@
 								</object>
 								<object class="NSMenuItem" id="209324156">
 									<reference key="NSMenu" ref="728662662"/>
+									<string key="NSTitle">Reload Address Book</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">70</int>
+								</object>
+								<object class="NSMenuItem" id="278785469">
+									<reference key="NSMenu" ref="728662662"/>
+									<bool key="NSIsDisabled">YES</bool>
+									<bool key="NSIsSeparator">YES</bool>
+									<string key="NSTitle"/>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+								</object>
+								<object class="NSMenuItem" id="684639474">
+									<reference key="NSMenu" ref="728662662"/>
 									<string key="NSTitle">Backup Now</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -2189,7 +2208,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</array>
 					<string key="NSFrameSize">{274, 480}</string>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{274, 154}</string>
 				<string key="NSMaxSize">{1e+13, 1e+13}</string>
 				<string key="NSFrameAutosaveName">ContactWindow</string>
@@ -4050,14 +4069,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1599</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">backupContacts:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="209324156"/>
-					</object>
-					<int key="connectionID">1600</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">restoreContactsMenu</string>
 						<reference key="source" ref="900429702"/>
@@ -4144,6 +4155,22 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="785462561"/>
 					</object>
 					<int key="connectionID">1637</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">backupContacts:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="684639474"/>
+					</object>
+					<int key="connectionID">1639</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">reloadAddressBookMenuClicked:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="209324156"/>
+					</object>
+					<int key="connectionID">1641</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -5208,6 +5235,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="209324156"/>
 							<reference ref="548434855"/>
 							<reference ref="450393502"/>
+							<reference ref="684639474"/>
+							<reference ref="278785469"/>
 						</array>
 						<reference key="parent" ref="556337794"/>
 					</object>
@@ -6181,6 +6210,16 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="147249893"/>
 						<reference key="parent" ref="384228997"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1638</int>
+						<reference key="object" ref="684639474"/>
+						<reference key="parent" ref="728662662"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1640</int>
+						<reference key="object" ref="278785469"/>
+						<reference key="parent" ref="728662662"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -6329,6 +6368,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="1612.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1627.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1629.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1638.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1640.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="19.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="197.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="198.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6647,7 +6688,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1637</int>
+			<int key="maxID">1641</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -6951,6 +6992,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="presentStatusChanged:">id</string>
 						<string key="recordingClicked:">id</string>
 						<string key="redialLast:">id</string>
+						<string key="reloadAddressBookMenuClicked:">id</string>
 						<string key="renameGroup:">id</string>
 						<string key="restoreContactsClicked:">id</string>
 						<string key="searchContacts:">id</string>
@@ -7070,6 +7112,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="redialLast:">
 							<string key="name">redialLast:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="reloadAddressBookMenuClicked:">
+							<string key="name">reloadAddressBookMenuClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="renameGroup:">
