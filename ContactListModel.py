@@ -1039,9 +1039,6 @@ class ContactListModel(CustomListModel):
         if group.reference:
             group.reference.expanded = True
             group.reference.save()
-            if type(group) == AddressBookBlinkContactGroup:
-                group.loadAddressBook()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def hasContactMatchingURI(self, uri):
         return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts)
