@@ -1742,11 +1742,6 @@ class ContactWindowController(NSWindowController):
         #self.toggleContactsAdsView()
 
     @objc.IBAction
-    def reloadAddressBookMenuClicked_(self, sender):
-        self.model.addressbook_group.loadAddressBook()
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
-
-    @objc.IBAction
     def showDebugWindow_(self, sender):
         self.debugWindow.show()
 
@@ -2693,8 +2688,6 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(selected_group and selected_group.editable)
             item = self.contactsMenu.itemWithTag_(35) # Delete Group
             item.setEnabled_(selected_group and selected_group.deletable)
-            item = self.contactsMenu.itemWithTag_(70) # Reload AB
-            item.setEnabled_(True if settings.contacts.enable_address_book else False)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             if NSApp.delegate().applicationName != 'Blink Lite':

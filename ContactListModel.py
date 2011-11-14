@@ -996,6 +996,7 @@ class ContactListModel(CustomListModel):
         self.incoming_calls_group = IncomingCallsBlinkContactGroup()
         self.favorites_group = FavoritesBlinkContactGroup()
         self.contact_backup_timer = None
+
         return self
 
     @allocate_autorelease_pool
@@ -1027,6 +1028,8 @@ class ContactListModel(CustomListModel):
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactGroupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "contactGroupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
+        ns_nc.addObserver_selector_name_object_(self, "reloadAddressbook:", AddressBook.kABDatabaseChangedNotification, None)
+        ns_nc.addObserver_selector_name_object_(self, "reloadAddressbook:", AddressBook.kABDatabaseChangedExternallyNotification, None)
 
     def contactGroupCollapsed_(self, notification):
         group = notification.userInfo()["NSObject"]
@@ -1039,6 +1042,13 @@ class ContactListModel(CustomListModel):
         if group.reference:
             group.reference.expanded = True
             group.reference.save()
+
+    def reloadAddressbook_(self, notification):
+        settings = SIPSimpleSettings()
+        if settings.contacts.enable_address_book:
+            BlinkLogger().log_info(u"Address Book has changed")
+            self.addressbook_group.loadAddressBook()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def hasContactMatchingURI(self, uri):
         return any(blink_contact.matchesURI(uri) for group in self.contactGroupsList if group.ignore_search is False for blink_contact in group.contacts)
