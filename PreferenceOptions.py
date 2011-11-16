@@ -1425,6 +1425,7 @@ StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing',
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
                       'audio.auto_transfer': 'Automatic Transfer',
+                      'audio.auto_recording': 'Automatic Recording',
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
                       'audio.pause_itunes': 'Pause iTunes During Audio Calls',
@@ -1503,7 +1504,7 @@ AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', '
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
 
 AccountSettingsOrder = {
-                       'audio': ['call_waiting', 'auto_transfer', 'auto_accept', 'answer_delay'],
+                       'audio': ['call_waiting', 'auto_transfer', 'auto_recording', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
                        }
 

@@ -874,14 +874,7 @@ class AudioController(MediaStream):
                 self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
             else:
-                settings = SIPSimpleSettings()
-                session = self.sessionController.session
-                direction = session.direction
-                remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
-                filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
-                path = os.path.join(settings.audio.directory.normalized, session.account.id)
-                self.recording_path=os.path.join(path, filename)
-                self.stream.start_recording(self.recording_path)
+                self.startAudioRecording()
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
                 self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
                 self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
@@ -911,6 +904,16 @@ class AudioController(MediaStream):
                     self.view.setSelected_(True)
                     self.unhold()
                 self.answerCall()
+
+    def startAudioRecording(self):
+        settings = SIPSimpleSettings()
+        session = self.sessionController.session
+        direction = session.direction
+        remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
+        filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
+        path = os.path.join(settings.audio.directory.normalized, session.account.id)
+        self.recording_path=os.path.join(path, filename)
+        self.stream.start_recording(self.recording_path)
 
     def addRecordingToHistory(self, filename):
         message = "<h3>Audio Session Recorded</h3>"
@@ -1001,6 +1004,9 @@ class AudioController(MediaStream):
         self.sessionInfoButton.setEnabled_(True)
         if self.sessionController.postdial_string is not None:
             call_in_thread('dtmf-io', self.send_postdial_string_as_dtmf)
+
+        if NSApp.delegate().applicationName != 'Blink Lite' and self.sessionController.account.audio.auto_recording:
+            self.startAudioRecording()
 
     def send_postdial_string_as_dtmf(self):
         time.sleep(2)

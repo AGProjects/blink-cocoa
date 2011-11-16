@@ -21,6 +21,7 @@ class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
 class AudioSettingsExtension(SettingsGroup):
     auto_accept = Setting(type=bool, default=False)
     auto_transfer = Setting(type=bool, default=False)
+    auto_recording = Setting(type=bool, default=False)
     answer_delay = Setting(type=NonNegativeInteger, default=6)
     call_waiting = Setting(type=bool, default=True)
 
