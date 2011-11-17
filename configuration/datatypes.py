@@ -5,8 +5,9 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL']
+__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername']
 
+import ldap
 import os
 import urlparse
 
@@ -261,4 +262,28 @@ class HTTPURL(object):
     def __unicode__(self):
         return unicode(self.url.geturl())
 
+
+class LDAPdn(str):
+    def __new__(cls, value):
+        value = str(value)
+
+        try:
+            ldap.dn.str2dn(value)
+        except ldap.DECODING_ERROR:
+            raise ValueError("illegal LDAP DN format: %s" % value)
+
+        return value
+
+
+class LDAPusername(str):
+    def __new__(cls, value):
+        value = str(value)
+
+        if "," in value:
+            try:
+                ldap.dn.str2dn(value)
+            except ldap.DECODING_ERROR:
+                raise ValueError("illegal LDAP DN format for username: %s" % value)
+
+        return value
 

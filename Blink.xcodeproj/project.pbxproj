@@ -271,6 +271,10 @@
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
+		1F7CC99614730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
+		1F7CC99714730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
+		1F7CC99814730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
+		1F7CC99914730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
@@ -1492,6 +1496,7 @@
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
+		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
@@ -1959,6 +1964,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F7CC99514730F6F00F2C981 /* ldap.png */,
 				1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */,
 				1FC9FE9514378A450056B3A8 /* shrinktofit.png */,
 				1FFB38D6143209E0003B29ED /* display_red_16.png */,
@@ -2638,6 +2644,7 @@
 				1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080B146D5598001430B5 /* mime.types in Resources */,
+				1F7CC99714730F6F00F2C981 /* ldap.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2839,6 +2846,7 @@
 				1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080C146D5598001430B5 /* mime.types in Resources */,
+				1F7CC99814730F6F00F2C981 /* ldap.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3040,6 +3048,7 @@
 				1FD2EF961439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FB30806146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080D146D5598001430B5 /* mime.types in Resources */,
+				1F7CC99914730F6F00F2C981 /* ldap.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3239,6 +3248,7 @@
 				1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080A146D5598001430B5 /* mime.types in Resources */,
+				1F7CC99614730F6F00F2C981 /* ldap.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

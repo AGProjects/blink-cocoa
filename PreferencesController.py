@@ -562,6 +562,18 @@ class PreferencesController(NSWindowController, object):
         if 'audio.silent' in notification.data.modified:
             self.settingViews['audio.silent'].restore()
 
+        if 'ldap.transport' in notification.data.modified:
+            sender.ldap.port = 389 if sender.ldap.transport == 'tcp' else 636
+            sender.save()
+
+        if 'ldap.port' in notification.data.modified:
+            if sender.ldap.port ==  389 and sender.ldap.transport != 'tcp':
+                sender.ldap.transport = 'tcp'
+                sender.save()
+            elif sender.ldap.port ==  636 and sender.ldap.transport != 'tls':
+                sender.ldap.transport = 'tls'
+                sender.save()
+
         self.updateRegistrationStatus()
 
     def updateAudioDevices_(self, object):

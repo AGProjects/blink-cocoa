@@ -778,9 +778,15 @@ class SIPManager(object):
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
-            if account.id.domain == "sip2sip.info" and account.server.settings_url is None:
-                account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
-                account.save()
+            if account.id.domain == "sip2sip.info":
+                if account.server.settings_url is None:
+                    account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
+                    account.save()
+                if not account.ldap.hostname:
+                    account.ldap.hostname = "ldap.sipthor.net"
+                    account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
+                    account.ldap.enabled = True
+                    account.save()
         logger = FileLogger()
         logger.start()
         self.ip_address_monitor.start()

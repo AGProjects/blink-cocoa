@@ -11,7 +11,7 @@ from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPS
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption
 
-from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL
+from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername
 
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
@@ -78,10 +78,21 @@ class XCAPSettingsExtension(XCAPSettings):
     enabled = Setting(type=bool, default=True)
 
 
+class LDAPSettingsExtension(SettingsGroup):
+    enabled = Setting(type=bool, default=False)
+    hostname = Setting(type=Hostname, default=None, nillable=True)
+    username = Setting(type=LDAPusername, default='', nillable=True)
+    password = Setting(type=str, default='', nillable=True)
+    transport = Setting(type=MSRPTransport, default='tls')
+    port = Setting(type=NonNegativeInteger, default=636)
+    dn = Setting(type=LDAPdn, default='', nillable=True)
+
+
 class AccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
     audio = AudioSettingsExtension
+    ldap = LDAPSettingsExtension
     message_summary = MessageSummarySettingsExtension
     msrp = MSRPSettingsExtension
     pstn = PSTNSettings
@@ -98,6 +109,7 @@ class BonjourAccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
     audio = AudioSettingsExtension
+    ldap = LDAPSettingsExtension
     msrp = BonjourMSRPSettingsExtension
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings

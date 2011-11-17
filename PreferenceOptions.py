@@ -103,7 +103,7 @@ class Option(HorizontalBoxView):
         try:
             self._store()
         except Exception, e:
-            NSRunAlertPanel("Error", "Can't set option '%s'\n.Error: %s"%(self.option,str(e)), "OK", None, None)
+            NSRunAlertPanel("Error", "Can't set option '%s'.\nError: %s"%(self.option,str(e)), "OK", None, None)
             self.restore()
     
     def _store(self):
@@ -1394,6 +1394,8 @@ PreferenceOptionTypes = {
 "file_transfer.directory": HiddenOption,
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
 "file_transfer.render_incoming_video_in_chat_window": HiddenOption,
+"ldap.dn": NullableStringOption,
+"ldap.username": NullableStringOption,
 "logs.directory": HiddenOption,
 "logs.trace_xcap": HiddenOption,
 "msrp.connection_model" : HiddenOption,
@@ -1443,6 +1445,8 @@ SettingDescription = {
                       'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
                       'message_summary.voicemail_uri': 'Mailbox URI',
+                      'ldap.hostname': 'Server Address',
+                      'ldap.dn': 'Search Base',
                       'logs.trace_msrp': 'Trace MSRP Media',
                       'logs.trace_sip': 'Trace SIP Signaling',
                       'logs.trace_xcap': 'Trace XCAP (used for storage of contacts and presence policy)',
@@ -1470,7 +1474,12 @@ Placeholders = {
                  'nat_travsersal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'voicemail_uri': 'user@example.com',
                  'server.conference_server': 'conference.sip2sip.info',
-                 'xcap.xcap_root': 'https://xcap.example.com/xcap-root/'}
+                 'xcap.xcap_root': 'https://xcap.example.com/xcap-root/',
+                 'ldap.hostname': 'ldap.example.com',
+                 'ldap.username': 'uid=user, dc=example, dc=com',
+                 'ldap.dn': 'dc=example, dc=com'
+                  }
+
 
 SectionNames = {
                        'audio': 'Audio Calls',
@@ -1487,7 +1496,8 @@ SectionNames = {
                        'sounds': 'Alert Tones',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
-                       'xcap': 'XCAP Storage'
+                       'xcap': 'XCAP Storage',
+                       'ldap': 'LDAP Directory'
                        }
 
 GeneralSettingsOrder = {
@@ -1499,13 +1509,14 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server')
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
 
-BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp')
+BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'ldap')
 
 AccountSettingsOrder = {
                        'audio': ['call_waiting', 'auto_transfer', 'auto_recording', 'auto_accept', 'answer_delay'],
-                       'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound']
+                       'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
+                       'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn']
                        }
 
 UnitOptions = {

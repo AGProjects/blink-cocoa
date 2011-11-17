@@ -5,10 +5,11 @@ from Foundation import *
 from AppKit import *
 import objc
 
-import datetime
 import os
 import re
 import string
+import ldap
+from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -19,8 +20,9 @@ from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
-from sipsimple.threading import call_in_thread
+from sipsimple.threading import call_in_thread, run_in_thread
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import TimestampedNotificationData
 from operator import attrgetter
 from zope.interface import implements
 
@@ -45,9 +47,8 @@ from ConferenceController import JoinConferenceWindowController, AddParticipants
 from SessionController import SessionController
 from SIPManager import SIPManager, MWIData
 from VideoMirrorWindowController import VideoMirrorWindowController
-from resources import Resources
+from resources import ApplicationData, Resources
 from util import *
-
 
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
 PARTICIPANTS_MENU_ADD_CONTACT = 301
@@ -198,6 +199,8 @@ class ContactWindowController(NSWindowController):
     addParticipantsWindow = None
 
     silence_player = None
+    ldap_directory = None
+    ldap_search = None
 
     first_run = False
 
@@ -247,9 +250,15 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="ActiveAudioSessionChanged")
         nc.add_observer(self, name="BlinkChatWindowClosed")
         nc.add_observer(self, name="BlinkConferenceGotUpdate")
+        nc.add_observer(self, name="BlinkContactsHaveChanged")
+        nc.add_observer(self, name="LDAPDirectorySearchFoundContact")
+        nc.add_observer(self, name="BlinkMuteChangedState")
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
-        nc.add_observer(self, name="BlinkMuteChangedState")
+        nc.add_observer(self, name="BonjourAccountWillRegister")
+        nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
+        nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
+        nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
@@ -261,11 +270,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
         nc.add_observer(self, name="SIPAccountRegistrationGotAnswer")
         nc.add_observer(self, name="SIPAccountRegistrationDidEnd")
-        nc.add_observer(self, name="BonjourAccountWillRegister")
-        nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
-        nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
-        nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
-        nc.add_observer(self, name="BlinkContactsHaveChanged")
+
         nc.add_observer(self, sender=AccountManager())
 
         ns_nc = NSNotificationCenter.defaultCenter()
@@ -326,6 +331,15 @@ class ContactWindowController(NSWindowController):
 
         self.window().setTitle_(NSApp.delegate().applicationName)
         self.loaded = True
+
+    def refreshLdapDirectory(self):
+        active_account = self.activeAccount()
+        if active_account and active_account.ldap.hostname and active_account.ldap.enabled:
+            self.ldap_directory = LdapDirectory(active_account.ldap)
+        else:
+            if self.ldap_directory:
+                self.ldap_directory.disconnect()
+                self.ldap_directory = None
 
     def initAds(self):
         # TODO: enable adds
@@ -552,6 +566,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.refreshAccountList()
+        self.refreshLdapDirectory()
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
@@ -646,6 +661,7 @@ class ContactWindowController(NSWindowController):
             self.window().setTitle_(window_title)
 
         self.callPendingURIs()
+        self.refreshLdapDirectory()
 
     @run_in_gui_thread
     def callPendingURIs(self):
@@ -741,6 +757,25 @@ class ContactWindowController(NSWindowController):
                 self.window().setTitle_(window_title)
             else:
                 self.window().setTitle_(NSApp.delegate().applicationName)
+
+        if notification.data.modified.has_key("ldap.enabled"):
+            self.refreshLdapDirectory()
+
+        if notification.data.modified.has_key("ldap.hostname"):
+            self.refreshLdapDirectory()
+
+        if notification.data.modified.has_key("ldap.protocol"):
+            self.refreshLdapDirectory()
+
+        if notification.data.modified.has_key("ldap.port"):
+            self.refreshLdapDirectory()
+
+        if notification.data.modified.has_key("ldap.username"):
+            self.refreshLdapDirectory()
+
+        if notification.data.modified.has_key("ldap.password"):
+            self.refreshLdapDirectory()
+
         if isinstance(notification.sender, (Account, BonjourAccount)) and 'order' in notification.data.modified:
             self.refreshAccountList()
 
@@ -1002,6 +1037,8 @@ class ContactWindowController(NSWindowController):
         self.addContactToConferenceDialPad.setEnabled_(False)
         self.addContactButtonDialPad.setEnabled_(False)
         self.updateActionButtons()
+        if self.ldap_search:
+            self.ldap_search = None
 
     @objc.IBAction
     def addGroup_(self, sender):
@@ -1194,17 +1231,38 @@ class ContactWindowController(NSWindowController):
 
         active_account = self.activeAccount()
         if active_account:
-            input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
-            input_contact = SearchResultContact(input_text, name=unicode(input_text))
-            exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
+            # perform LDAP search
+            if len(text) > 3 and self.ldap_directory is not None:
+                self.ldap_search = LdapSearch(self.ldap_directory)
+                self.ldap_search.search(text)
 
-            if not exists:
-                self.searchResultsModel.contactGroupsList.append(input_contact)
+            # create a syntetic contact with what we typed 
+            if " " not in text:
+                input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
+                input_contact = SearchResultContact(input_text, name=unicode(input_text))
+                exists = text in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
 
-            self.addContactButtonSearch.setEnabled_(not exists)
+                if not exists:
+                    self.searchResultsModel.contactGroupsList.append(input_contact)
+
+                self.addContactButtonSearch.setEnabled_(not exists)
+
             self.searchOutline.reloadData()
 
-
+    def _NH_LDAPDirectorySearchFoundContact(self, notification):
+        found = 0
+        for key in notification.data.uris.keys():
+            uri = notification.data.uris[key]
+            if uri:
+                exists = uri in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
+                if not exists:
+                    found += 1
+                    contact = SearchResultContact(str(uri), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
+                    contact.setDetail('%s (%s)' % (str(uri), key))
+                    self.searchResultsModel.contactGroupsList.append(contact)
+        if found:
+            self.searchOutline.reloadData()
+    
     @objc.IBAction
     def addContactToConference_(self, sender):
         active_sessions = [s for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
@@ -1961,7 +2019,7 @@ class ContactWindowController(NSWindowController):
         def format_date(dt):
             if not dt:
                 return "unknown"
-            now = datetime.datetime.now()
+            now = datetime.now()
             delta = now - dt
             if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
                 return dt.strftime("at %H:%M")
@@ -3121,3 +3179,67 @@ class ContactWindowController(NSWindowController):
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.about_url)))
         elif sender.tag() == 6: # Help from Service Provider
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.help_url)))
+
+
+class LdapDirectory(object):
+    def __init__(self, ldap_settings):
+        self.connected = False
+        self.server = '%s://%s:%d' % ('ldap' if ldap_settings.transport == 'tcp' else 'ldaps', ldap_settings.hostname, ldap_settings.port)
+        self.username = ldap_settings.username or ''
+        self.password = ldap_settings.password or ''
+        self.dn = ldap_settings.dn or ''
+
+        self.l = ldap.initialize(self.server)
+        tls_folder = ApplicationData.get('tls')
+        ca_path = os.path.join(tls_folder, 'ca.crt')
+        self.l.set_option(ldap.OPT_X_TLS_CERTFILE, ca_path)
+        self.l.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
+        self.l.set_option(ldap.OPT_TIMEOUT, 5)
+        self.l.set_option(ldap.OPT_TIMELIMIT, 10)
+        self.l.set_option(ldap.OPT_SIZELIMIT, 500)
+
+    def connect(self):
+        if self.connected is False:
+            try:
+                self.l.simple_bind_s(self.username, self.password)
+                BlinkLogger().log_info('Connected to LDAP server %s' % self.server)
+                self.connected = True
+            except ldap.LDAPError, e:
+                print 'Connection to LDAP server %s failed: %s' % (self.server, e)
+                self.connected = False
+    
+    def disconnect(self):
+        if self.l is not None and self.connected:
+            BlinkLogger().log_info('Disconnected from LDAP server %s' % self.server)
+            self.l.unbind_ext_s()
+
+
+class LdapSearch(object):
+    def __init__(self, ldap_directory):
+        self.ldap_directory = ldap_directory
+
+    @run_in_thread('ldap-query')
+    def search(self, keyword=""):
+        if self.ldap_directory:
+            self.ldap_directory.connect()
+            if self.ldap_directory.connected:
+                filter = "cn=" + "*" + keyword + "*"
+                try:
+                    result = self.ldap_directory.l.search_s(self.ldap_directory.dn, ldap.SCOPE_SUBTREE, filter)
+                except ldap.LDAPError:
+                    pass
+                else:
+                    uris = {}
+                    for dn, entry in result:
+                        if entry.has_key('telephoneNumber'):
+                            uris['telephone'] = entry['telephoneNumber'][0]
+                        if entry.has_key('workNumber'):
+                            uris['work'] = entry['workNumber'][0]
+                        if entry.has_key('mobile'):
+                            uris['mobile'] = entry['mobile'][0]
+                        if entry.has_key('SIPIdentitySIPURI'):
+                            uris['sip'] = re.sub("^(sip:|sips:)", "", str(entry['SIPIdentitySIPURI'][0]))
+                        if uris:
+                            data = TimestampedNotificationData(timestamp=datetime.now(), name=entry['cn'][0], uris=uris)
+                            NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
+
