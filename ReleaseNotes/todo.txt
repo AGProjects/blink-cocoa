@@ -2,7 +2,6 @@ Main tasks
 ----------
 
 + Presence
-- LDAP support
 - AGC
 - Video
 - Pause/Resume File Transfer
