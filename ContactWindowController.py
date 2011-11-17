@@ -336,6 +336,8 @@ class ContactWindowController(NSWindowController):
     def refreshLdapDirectory(self):
         active_account = self.activeAccount()
         if active_account and active_account.ldap.hostname and active_account.ldap.enabled:
+            if self.ldap_directory:
+                self.ldap_directory.disconnect()
             self.ldap_directory = LdapDirectory(active_account.ldap)
         else:
             if self.ldap_directory:
@@ -3213,13 +3215,16 @@ class LdapDirectory(object):
                 BlinkLogger().log_info('Connected to LDAP server %s' % self.server)
                 self.connected = True
             except ldap.LDAPError, e:
-                print 'Connection to LDAP server %s failed: %s' % (self.server, e)
+                BlinkLogger().log_info('Connection to LDAP server %s failed: %s' % (self.server, e))
                 self.connected = False
     
     def disconnect(self):
         if self.l is not None and self.connected:
-            BlinkLogger().log_info('Disconnected from LDAP server %s' % self.server)
-            self.l.unbind_ext_s()
+            try:
+                self.l.unbind_ext_s()
+                BlinkLogger().log_info('Disconnected from LDAP server %s' % self.server)
+            except ldap.LDAPError:
+                pass
 
 
 class LdapSearch(object):
@@ -3228,8 +3233,11 @@ class LdapSearch(object):
         self.ldap_query_id = None
 
     def cancel(self):
-        if self.ldap_query_id:
-            self.ldap_directory.l.cancel(self.ldap_query_id)
+        if self.ldap_query_id and self.ldap_directory.connected:
+            try:
+                self.ldap_directory.l.cancel(self.ldap_query_id)
+            except ldap.LDAPError:
+                return
 
     @run_in_thread('ldap-query')
     def search(self, keyword):
