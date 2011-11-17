@@ -1251,14 +1251,13 @@ class ContactWindowController(NSWindowController):
 
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         found = 0
-        for key in notification.data.uris.keys():
-            uri = notification.data.uris[key]
+        for type, uri in notification.data.uris:
             if uri:
                 exists = uri in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
                 if not exists:
                     found += 1
                     contact = SearchResultContact(str(uri), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
-                    contact.setDetail('%s (%s)' % (str(uri), key))
+                    contact.setDetail('%s (%s)' % (str(uri), type))
                     self.searchResultsModel.contactGroupsList.append(contact)
         if found:
             self.searchOutline.reloadData()
@@ -3229,16 +3228,24 @@ class LdapSearch(object):
                 except ldap.LDAPError:
                     pass
                 else:
-                    uris = {}
+                    uris = []
                     for dn, entry in result:
                         if entry.has_key('telephoneNumber'):
-                            uris['telephone'] = entry['telephoneNumber'][0]
+                            for _entry in entry['telephoneNumber']:
+                                address = ('telephone', str(_entry))
+                                uris.append(address)
                         if entry.has_key('workNumber'):
-                            uris['work'] = entry['workNumber'][0]
+                            for _entry in entry['workNumber']:
+                                address = ('work', str(_entry))
+                                uris.append(address)
                         if entry.has_key('mobile'):
-                            uris['mobile'] = entry['mobile'][0]
+                            for _entry in entry['mobile']:
+                                address = ('mobile', str(_entry))
+                                uris.append(address)
                         if entry.has_key('SIPIdentitySIPURI'):
-                            uris['sip'] = re.sub("^(sip:|sips:)", "", str(entry['SIPIdentitySIPURI'][0]))
+                            for _entry in entry['SIPIdentitySIPURI']:
+                                address = ('sip', re.sub("^(sip:|sips:)", "", str(_entry)))
+                                uris.append(address)
                         if uris:
                             data = TimestampedNotificationData(timestamp=datetime.now(), name=entry['cn'][0], uris=uris)
                             NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
