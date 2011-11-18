@@ -308,7 +308,7 @@ class ContactWindowController(NSWindowController):
 
         self.window().makeFirstResponder_(self.contactOutline)
 
-        self.contactsMenu.itemWithTag_(42).setEnabled_(NSApp.delegate().applicationName != 'Blink Lite') # Dialpad
+        self.contactsMenu.itemWithTag_(42).setEnabled_(True) # Dialpad
 
         # Presence policy
         item = self.contactsMenu.itemWithTag_(21)
@@ -2758,13 +2758,8 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(selected_group and selected_group.deletable)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
-            if NSApp.delegate().applicationName != 'Blink Lite':
-                item.setEnabled_(True)
-                item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
-            else:
-                item.setHidden_(True)
-                item = self.contactsMenu.itemWithTag_(41)
-                item.setHidden_(True)
+            item.setEnabled_(True)
+            item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
 
 
     def selectInputDevice_(self, sender):
