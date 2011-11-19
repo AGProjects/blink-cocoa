@@ -292,8 +292,10 @@ class BlinkAppDelegate(NSObject):
 
     def getURL_withReplyEvent_(self, event, replyEvent):
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
+        if url.startswith('tel:'):
+            url = re.sub("^tel:", "", url)
 
-        BlinkLogger().log_info(u"Will start session to %s once the application is ready" % url)
+        BlinkLogger().log_info(u"Will start session to %s from external link" % url)
 
         _split = url.split(';')
         _url = []
