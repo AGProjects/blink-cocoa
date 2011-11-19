@@ -268,7 +268,10 @@ class SessionInfoController(NSObject):
 
             if self.audio_stream.stream.codec and self.audio_stream.stream.sample_rate:
                 self.audio_codec.setStringValue_(self.audio_stream.stream.codec)
-                self.audio_sample_rate.setStringValue_("%0.fkHz" % (self.audio_stream.stream.sample_rate/1000))
+                try:
+                    self.audio_sample_rate.setStringValue_("%0.fkHz" % (self.audio_stream.stream.sample_rate/1000))
+                except TypeError:
+                    pass
                 self.audio_srtp_active.setStringValue_('Enabled' if self.audio_stream.stream.srtp_active else 'Disabled')
                 self.audio_srtp_lock.setHidden_(False if self.audio_stream.stream.srtp_active else True)
             else:
