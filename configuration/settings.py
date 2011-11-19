@@ -13,7 +13,7 @@ from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtens
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
 
-from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath
+from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, NightVolume
 
 
 class AnsweringMachineSettings(SettingsGroup):
@@ -81,6 +81,7 @@ class SoundsSettings(SettingsGroup):
     file_sent = Setting(type=SoundFile, default=SoundFile("file_sent.wav", volume=20), nillable=True)
     message_received = Setting(type=SoundFile, default=SoundFile("message_received.wav", volume=10), nillable=True)
     message_sent = Setting(type=SoundFile, default=SoundFile("message_sent.wav", volume=10), nillable=True)
+    night_volume = Setting(type=NightVolume, default=NightVolume(start_hour=22, end_hour=8, volume=10), nillable=True)
 
 
 class TLSSettingsExtension(TLSSettings):

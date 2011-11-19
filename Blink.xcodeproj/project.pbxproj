@@ -278,6 +278,10 @@
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
+		1F87B6EA1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
+		1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
+		1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
+		1F87B6ED1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
 		1F8A7630138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7631138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7632138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
@@ -1499,6 +1503,7 @@
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
+		1F87B6EE1477D57000BDF25A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2122,6 +2127,7 @@
 				2BAF38100FE088C70040117A /* PreferencesWindow.xib */,
 				2B5DE51F0FFC5D0500701821 /* PreferencesController.py */,
 				2B8F17D31008318700E0775C /* PreferenceOptions.py */,
+				1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */,
 			);
 			name = Preferences;
 			sourceTree = "<group>";
@@ -2645,6 +2651,7 @@
 				1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080B146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99714730F6F00F2C981 /* ldap.png in Resources */,
+				1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2847,6 +2854,7 @@
 				1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080C146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99814730F6F00F2C981 /* ldap.png in Resources */,
+				1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3049,6 +3057,7 @@
 				1FB30806146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080D146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99914730F6F00F2C981 /* ldap.png in Resources */,
+				1F87B6ED1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3249,6 +3258,7 @@
 				1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080A146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99614730F6F00F2C981 /* ldap.png in Resources */,
+				1F87B6EA1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3344,6 +3354,14 @@
 				1F6EE8F912BF73A2000C47DA /* English */,
 			);
 			name = AddParticipantsWindow.xib;
+			sourceTree = "<group>";
+		};
+		1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F87B6EE1477D57000BDF25A /* English */,
+			);
+			name = NightVolumeSetting.xib;
 			sourceTree = "<group>";
 		};
 		1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */ = {

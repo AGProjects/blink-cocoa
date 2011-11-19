@@ -4,6 +4,8 @@
 from Foundation import *
 from AppKit import *
 
+from PreferenceOptions import NightVolumeOption
+
 
 class VerticalBoxView(NSView):
     def initWithFrame_(self, frame):
@@ -72,18 +74,26 @@ class VerticalBoxView(NSView):
         y = self.border
         for view in self.subviews():
             rect = view.frame()
-            rect.origin.x = self.border
+            # position NightVolumeOption to the right of Inbound Ringtone view
+            if type(view) is NightVolumeOption:
+                rect.origin.x = 230
+                rect.origin.y = self.border
+            else:
+                rect.origin.x = self.border
+                rect.origin.y = y
+                y += NSHeight(rect) + self.spacing
+
             rect.size.width = width
-            rect.origin.y = y
             if hasattr(view, "expand"):
                 rect.size.height = expandedHeight
 
             view.setFrame_(rect)
-            y += NSHeight(rect) + self.spacing
 
         if sview:
             frame.size.width = sview.contentSize().width
+
         frame.size.height = minimumHeight
+
         self.setFrame_(frame)
 
 

@@ -21,7 +21,7 @@ from zope.interface import implements
 from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
 
-from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile
+from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
 from util import allocate_autorelease_pool
 
@@ -958,7 +958,6 @@ class SoundFileOption(Option):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
         self.sound = None
 
-
     @objc.IBAction
     def chooseFile_(self, sender):
         if sender.indexOfSelectedItem() == sender.numberOfItems() - 1:
@@ -991,9 +990,11 @@ class SoundFileOption(Option):
         if value:
             self.set(SoundFile(unicode(value), volume=self.slider.integerValue()*10))
             self.slider.setEnabled_(True)
+            self.play.setEnabled_(True)
         else:
             self.set(None)
             self.slider.setEnabled_(False)
+            self.play.setEnabled_(False)
 
     def restore(self):
         value = self.get()
@@ -1002,9 +1003,11 @@ class SoundFileOption(Option):
             self.slider.setIntegerValue_(value.volume/10)
             self.volumeText.setStringValue_("Volume: %i%%"%value.volume)
             value = unicode(value.path)
+            self.play.setEnabled_(True)
         else:
             self.slider.setEnabled_(False)
-            
+            self.play.setEnabled_(False)
+
         found = False
         for i in range(self.popup.numberOfItems()):
             item = self.popup.itemAtIndex_(i)
@@ -1014,6 +1017,100 @@ class SoundFileOption(Option):
                 break
         if not found and value:
             self.oldIndex = self.addItemForPath(value)
+
+
+class NightVolumeOption(Option):
+    implements(IObserver)
+
+    view = objc.IBOutlet()
+    slider = objc.IBOutlet()
+    volumeText = objc.IBOutlet()
+    play = objc.IBOutlet()
+    start_hour = objc.IBOutlet()
+    end_hour = objc.IBOutlet()
+    sound = None
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 340, 38))
+
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
+        self.oldIndex = 0
+
+        self.caption = makeLabel(description or formatName(name))
+        self.setSpacing_(8)
+        self.addSubview_(self.caption)
+
+        NSBundle.loadNibNamed_owner_("NightVolumeSetting", self)
+
+        self.addSubview_(self.view)
+        self.start_hour.setDelegate_(self)
+        self.end_hour.setDelegate_(self)
+
+    def controlTextDidEndEditing_(self, notification):
+        self.store()
+
+    @objc.IBAction
+    def changeVolume_(self, sender):
+        self.volumeText.setStringValue_("Volume: %i%%" % (sender.integerValue()*10))
+        self.store()
+
+    @objc.IBAction
+    def dummy_(self, sender):
+        if self.sound:
+            self.sound.stop()
+            self.finished_(None)
+            return
+
+        settings = SIPSimpleSettings()
+        if settings.sounds.audio_inbound:
+            path = settings.sounds.audio_inbound.path
+            if not path:
+                return
+            self.play.setImage_(NSImage.imageNamed_("pause"))
+            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
+            NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
+            SIPApplication.voice_audio_bridge.add(self.sound)
+            self.sound.start()
+
+    @allocate_autorelease_pool
+    def handle_notification(self, notification):
+        NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
+        if self.sound == notification.sender:
+            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)
+
+    def finished_(self, data):
+        self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
+        self.sound = None
+
+    def _store(self):
+        try:
+            start_hour = int(self.start_hour.stringValue())
+            end_hour = int(self.end_hour.stringValue())
+        except:
+            NSRunAlertPanel("Invalid Hour", "Must be between 0 and 23.", "OK", None, None)
+            self.restore()
+            return
+
+        if start_hour < 0 or start_hour > 23 or end_hour < 0 or end_hour > 23:
+            NSRunAlertPanel("Invalid Hour", "Must be between 0 and 23.", "OK", None, None)
+            self.restore()
+            return
+
+        self.set(NightVolume(self.start_hour.stringValue(), self.end_hour.stringValue(), volume=self.slider.integerValue()*10))
+        self.slider.setEnabled_(True)
+
+    def restore(self):
+        value = self.get()
+
+        if value:
+            self.slider.setEnabled_(True)
+            self.slider.setIntegerValue_(value.volume/10)
+            self.start_hour.setStringValue_(value.start_hour)
+            self.end_hour.setStringValue_(value.end_hour)
+            self.volumeText.setStringValue_("Volume: %i%%"%value.volume)
+        else:
+            self.slider.setEnabled_(False)
         
 
 class AnsweringMessageOption(Option):
@@ -1374,6 +1471,7 @@ PreferenceOptionTypes = {
 "Resolution" : ResolutionOption,
 "SampleRate" : SampleRateOption,
 "SoundFile" : SoundFileOption,
+"NightVolume" : NightVolumeOption,
 "AccountSoundFile" : AccountSoundFileOption,
 "SIPTransportList" : SIPTransportListOption,
 "AudioCodecList" : AudioCodecListOption,
@@ -1463,7 +1561,8 @@ SettingDescription = {
                       'sip.invite_timeout': 'Session Timeout',
                       'sip.transport_list': 'Protocols',
                       'sounds.audio_inbound': 'Inbound Ringtone',
-                      'sounds.audio_outbound': 'Outbound Ringtone',
+                      'sounds.audio_inbound': 'Inbound Ringtone',
+                      'sounds.night_volume': ' ',
                       'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'X.509 Certificate File',
                       'tls.ca_list': 'Certificate Authority File'
@@ -1515,7 +1614,7 @@ AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', '
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'ldap')
 
 AccountSettingsOrder = {
-                       'audio': ['call_waiting', 'auto_transfer', 'auto_recording', 'auto_accept', 'answer_delay'],
+                       'audio': ['call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn']
                        }

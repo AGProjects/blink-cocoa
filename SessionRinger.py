@@ -1,7 +1,9 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+import datetime
 import time
+from dateutil.tz import tzlocal
 from itertools import chain
 
 from zope.interface import implements
@@ -15,6 +17,7 @@ from sipsimple.application import SIPApplication
 
 from resources import Resources
 from util import allocate_autorelease_pool
+
 
 
 HANGUP_TONE_THROTLE_DELAY = 2.0
@@ -115,6 +118,22 @@ class Ringer(object):
 
         if self.inbound_ringtone:
             if should_play_incoming and not self.inbound_ringtone.is_active:
+                settings = SIPSimpleSettings()
+
+                this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+                volume = None
+                if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour and this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                    volume = settings.sounds.night_volume.volume
+                elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour:
+                        volume = settings.sounds.night_volume.volume
+                    elif this_hour >=  settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume
+
+                if volume is None:
+                    volume = settings.sounds.audio_inbound.volume
+
+                self.inbound_ringtone.volume = volume
                 self.inbound_ringtone.start()
             elif not should_play_incoming and self.inbound_ringtone.is_active:
                 self.inbound_ringtone.stop()
@@ -164,17 +183,17 @@ class Ringer(object):
         if inbound_ringtone and not settings.audio.silent:
             # Workaround not to use same device from two bridges. -Saul
             if settings.audio.alert_device is not None and app.alert_audio_mixer.real_output_device == app.voice_audio_mixer.real_output_device:
-                new_tone = WavePlayer(app.voice_audio_mixer, inbound_ringtone.path, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
+                new_tone = WavePlayer(app.voice_audio_mixer, inbound_ringtone.path, loop_count=0, pause_time=6)
                 app.voice_audio_bridge.add(new_tone)
             else:
-                new_tone = WavePlayer(app.alert_audio_mixer, inbound_ringtone.path, volume=inbound_ringtone.volume, loop_count=0, pause_time=6)
+                new_tone = WavePlayer(app.alert_audio_mixer, inbound_ringtone.path, loop_count=0, pause_time=6)
                 app.alert_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("inbound_ringtone", new_tone)
 
         if inbound_ringtone and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None
@@ -183,17 +202,17 @@ class Ringer(object):
         if inbound_ringtone and not settings.audio.silent:
             # Workaround not to use same device from two bridges. -Saul
             if settings.audio.alert_device is not None and app.alert_audio_mixer.real_output_device == app.voice_audio_mixer.real_output_device:
-                new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+                new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6)
                 app.voice_audio_bridge.add(new_tone)
             else:
-                new_tone = WavePlayer(app.alert_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+                new_tone = WavePlayer(app.alert_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6)
                 app.alert_audio_bridge.add(new_tone)
         else:
             new_tone = None
         change_tone("chat_ringtone", new_tone)
 
         if inbound_ringtone and not settings.audio.silent:
-            new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6, volume=inbound_ringtone.volume)
+            new_tone = WavePlayer(app.voice_audio_mixer, Resources.get('ring_tone.wav'), loop_count=0, pause_time=6)
             app.voice_audio_bridge.add(new_tone)
         else:
             new_tone = None

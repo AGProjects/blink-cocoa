@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername']
+__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername', 'NightVolume']
 
 import ldap
 import os
@@ -67,6 +67,36 @@ class SoundFile(object):
         self.__dict__['path'] = path
     path = property(_get_path, _set_path)
     del _get_path, _set_path
+
+
+class NightVolume(object):
+    def __init__(self, start_hour=22, end_hour=8, volume=10):
+        self.start_hour = int(start_hour)
+        self.end_hour = int(end_hour)
+        self.volume = int(volume)
+
+        if self.volume < 0 or self.volume > 100:
+            raise ValueError("illegal volume level: %d" % self.volume)
+
+        if self.start_hour < 0 or self.start_hour > 23:
+            raise ValueError("illegal start hour value: %d" % self.start_hour)
+
+        if self.end_hour < 0 or self.end_hour > 23:
+            raise ValueError("illegal end hour value: %d" % self.end_hour)
+
+    def __getstate__(self):
+        return u'%s,%s,%s' % (self.start_hour, self.end_hour, self.volume)
+
+    def __setstate__(self, state):
+        try:
+            start_hour, end_hour, volume = state.split(u',')
+        except ValueError:
+            self.__init__(state)
+        else:
+            self.__init__(start_hour, end_hour, volume)
+
+    def __repr__(self):
+        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.start_hour, self.end_hour, self.volume)
 
 
 class AccountSoundFile(object):

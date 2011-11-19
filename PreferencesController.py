@@ -321,6 +321,7 @@ class PreferencesController(NSWindowController, object):
 
             self.settingViews[section_name+"."+option_name] = control
             vbox.addSubview_(control)
+
             control.delegate = self
             control.owner = object
             control.restore()
