@@ -130,6 +130,7 @@ class Ringer(object):
                     elif this_hour >=  settings.sounds.night_volume.start_hour:
                         volume = settings.sounds.night_volume.volume
 
+                # TODO: we must use the volume of account ringtone if set but we do not know the account in this point -adi
                 if volume is None:
                     volume = settings.sounds.audio_inbound.volume
 
