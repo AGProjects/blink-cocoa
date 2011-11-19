@@ -1428,6 +1428,7 @@ SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
                       'audio.auto_transfer': 'Automatic Transfer',
                       'audio.auto_recording': 'Automatic Recording',
+                      'audio.reject_anonymous': 'Reject Anonymous Callers',
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
                       'audio.pause_itunes': 'Pause iTunes During Audio Calls',
