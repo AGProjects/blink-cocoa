@@ -1812,7 +1812,7 @@ class ContactListModel(CustomListModel):
             self.saveGroupPosition()
 
     def restoreBonjourGroupPosition(self):
-        if self.bonjour_group in self.contactGroupsList:
+        if self.bonjour_group in self.contactGroupsList and self.bonjour_group.reference.position:
             self.contactGroupsList.remove(self.bonjour_group)
             self.contactGroupsList.insert(self.bonjour_group.reference.position, self.bonjour_group)
             self.saveGroupPosition()
