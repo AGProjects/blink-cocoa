@@ -1195,7 +1195,7 @@ class ContactWindowController(NSWindowController):
                         if key in string.digits:
                             self.play_dtmf(key)
 
-            if text != u"" and event.type() == NSKeyDown and event.characters() == u"\r":
+            if text != u"" and event.type() == NSKeyDown and event.keyCode() in (36, 76):
                 try:
                     text = unicode(text)
                 except:
