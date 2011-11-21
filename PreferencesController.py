@@ -561,7 +561,10 @@ class PreferencesController(NSWindowController, object):
                 self.displayNameText.setStringValue_(sender.display_name or u'')
 
         if 'audio.silent' in notification.data.modified:
-            self.settingViews['audio.silent'].restore()
+            try:
+                self.settingViews['audio.silent'].restore()
+            except KeyError:
+                pass
 
         if 'ldap.transport' in notification.data.modified:
             sender.ldap.port = 389 if sender.ldap.transport == 'tcp' else 636
