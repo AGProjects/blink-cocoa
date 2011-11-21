@@ -88,7 +88,7 @@ class Ringer(object):
         notification_center.remove_observer(self, name="ConferenceHasAddedAudio")
         notification_center.remove_observer(self, name="BlinkWillCancelProposal")
 
-    def update_playing_ringtones(self):
+    def update_playing_ringtones(self, account=None):
         should_play_incoming = False
         should_play_incoming_tone = False
         should_play_chat = False
@@ -118,21 +118,28 @@ class Ringer(object):
 
         if self.inbound_ringtone:
             if should_play_incoming and not self.inbound_ringtone.is_active:
-                settings = SIPSimpleSettings()
+                self.update_ringtones(account)
 
+                settings = SIPSimpleSettings()
                 this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
                 volume = None
-                if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour and this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
-                    volume = settings.sounds.night_volume.volume
+                if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume
                 elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
                     if this_hour < settings.sounds.night_volume.end_hour:
                         volume = settings.sounds.night_volume.volume
                     elif this_hour >=  settings.sounds.night_volume.start_hour:
                         volume = settings.sounds.night_volume.volume
 
-                # TODO: we must use the volume of account ringtone if set but we do not know the account in this point -adi
                 if volume is None:
-                    volume = settings.sounds.audio_inbound.volume
+                    if account is not None:
+                        if hasattr(account.sounds.audio_inbound.sound_file, 'volume'):
+                            volume = account.sounds.audio_inbound.sound_file.volume
+                        else:
+                            volume = settings.sounds.audio_inbound.volume
+                    else:
+                        volume = settings.sounds.audio_inbound.volume
 
                 self.inbound_ringtone.volume = volume
                 self.inbound_ringtone.start()
@@ -157,8 +164,9 @@ class Ringer(object):
             elif not should_play_chat_tone and self.tone_chat_ringtone.is_active:
                 self.tone_chat_ringtone.stop()
 
-    def update_ringtones(self):
-        account = AccountManager().default_account
+    def update_ringtones(self, account=None):
+        if account is None:
+            account = AccountManager().default_account
         settings = SIPSimpleSettings()
         app = SIPApplication()
 
@@ -261,7 +269,7 @@ class Ringer(object):
             if 'file-transfer' in stream_types:
                 self.filerecv_sessions[session] = streams
         NotificationCenter().add_observer(self, sender=session)
-        self.update_playing_ringtones()
+        self.update_playing_ringtones(session.account)
 
     def add_outgoing(self, session, streams):
         NotificationCenter().add_observer(self, sender=session)
@@ -329,7 +337,7 @@ class Ringer(object):
                 self.ds_sessions[session] = data.streams
             elif 'file-transfer' in stream_types:
                 self.filerecv_sessions[session] = data.streams
-            self.update_playing_ringtones()
+            self.update_playing_ringtones(session.account)
         elif name == "SIPSessionDidRenegotiateStreams":
             if data.action == "remove":
                 for stream in (s for s in data.streams if s.type=='audio'):
