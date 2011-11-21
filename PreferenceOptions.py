@@ -1563,6 +1563,7 @@ SettingDescription = {
                       'sounds.audio_inbound': 'Inbound Ringtone',
                       'sounds.audio_inbound': 'Inbound Ringtone',
                       'sounds.night_volume': ' ',
+                      'server.alert_url': 'Web Alert Page',
                       'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'X.509 Certificate File',
                       'tls.ca_list': 'Certificate Authority File'
