@@ -3,10 +3,12 @@ Dependencies
 ------------
 
  * MacOSX >= 10.6
- * Intel Processor
  * XCode >= 4.2
  * SIP SIMPLE Client SDK >= 0.19
- * Growl
+ * Growl python bindings
  * python-cjson
  * formencode
  * sqlobject
+ * python-ldap == 2.3.13
+
+
