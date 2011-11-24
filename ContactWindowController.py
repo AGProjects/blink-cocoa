@@ -1595,8 +1595,7 @@ class ContactWindowController(NSWindowController):
             # if conference already started:
             #    return
 
-            if NSRunAlertPanel("Audio Conference", "Would you like to start a conference with the %i active sessions?"%count,
-                            "OK", "Cancel", "") != NSAlertDefaultReturn:
+            if NSRunAlertPanel("Audio Conference", "Would you like to start a conference with the %i active sessions? Once started you may use drag and drop to add and remove contacts to and from the conference. "%count, "OK", "Cancel", "") != NSAlertDefaultReturn:
                 self.conferenceButton.setState_(NSOffState)
                 return
 
