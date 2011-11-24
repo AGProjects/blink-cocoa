@@ -1502,7 +1502,6 @@ PreferenceOptionTypes = {
 "rtp.timeout": HiddenOption,
 "server.collaboration_url" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
-"sip.register" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
 "tls.ca_list": TLSCAListPathOption,
@@ -1617,7 +1616,8 @@ BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'ldap')
 AccountSettingsOrder = {
                        'audio': ['call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
-                       'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn']
+                       'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
+                       'sip': ['register']
                        }
 
 UnitOptions = {
