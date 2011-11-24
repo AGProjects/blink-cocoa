@@ -1558,6 +1558,7 @@ SettingDescription = {
                       'rtp.port_range': 'UDP Port Range',
                       'rtp.srtp_encryption': 'sRTP Encryption',
                       'sip.invite_timeout': 'Session Timeout',
+                      'sip.register': 'Receive Incoming Calls',
                       'sip.transport_list': 'Protocols',
                       'sounds.audio_inbound': 'Inbound Ringtone',
                       'sounds.audio_inbound': 'Inbound Ringtone',
@@ -1645,6 +1646,7 @@ ToolTips = {
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
              'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
+             'sip.register': 'When enabled, the account will register to the SIP server and is able to receive incoming calls',
              'tls.certificate': 'X.509 certificate and unencrypted private key concatenated in the same file',
              'xcap.xcap_root': 'If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain'
            }
