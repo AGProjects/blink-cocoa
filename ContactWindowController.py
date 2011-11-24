@@ -1070,7 +1070,12 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def addContact_(self, sender):
         if sender != self.addContactButton:
-            contact = self.model.addContact(self.searchBox.stringValue())
+            row = self.searchOutline.selectedRow()
+            if row != NSNotFound and row != -1:
+                item = self.searchOutline.itemAtRow_(row)
+                contact = self.model.addContact(item.uri, display_name=item.display_name)
+            else:
+                contact = self.model.addContact(self.searchBox.stringValue())
 
             if contact:
                 self.resetWidgets()
