@@ -25,7 +25,6 @@ from sipsimple.streams import AudioStream
 from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp, TimestampedNotificationData
-
 import AudioSession
 
 from AnsweringMachine import AnsweringMachine
@@ -443,7 +442,7 @@ class AudioController(MediaStream):
                 self.recordingImage = 0
 
         if self.stream and self.stream.codec and self.stream.sample_rate:
-            if self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.session.remote_identity.uri.user.isdigit():
+            if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.session.remote_identity.uri.user.isdigit():
                 self.audioStatus.setTextColor_(NSColor.orangeColor())
                 self.audioStatus.setStringValue_(u"For DTMF use keyboard")
                 self.audioStatus.sizeToFit()

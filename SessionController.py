@@ -35,7 +35,7 @@ from interfaces.itunes import ITunesInterface, VLCInterface
 from util import *
 
 SessionIdentifierSerial = 0
-
+OUTBOUND_AUDIO_CALLS = 0
 
 StreamHandlerForType = {
     "chat" : ChatController,
@@ -68,6 +68,7 @@ class SessionController(NSObject):
     collaboration_form_id = None
     remote_conference_has_audio = False
     transfer_window = None
+    outbound_audio_calls = 0
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -454,6 +455,9 @@ class SessionController(NSObject):
 
                     if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                         self.log_info(u"Selected audio input/output devices: %s/%s" % (indev, outdev))
+                        global OUTBOUND_AUDIO_CALLS
+                        OUTBOUND_AUDIO_CALLS += 1
+                        self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
 
                     if SIPManager().pause_itunes:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
