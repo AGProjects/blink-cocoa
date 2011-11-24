@@ -234,6 +234,9 @@ class PreferencesController(NSWindowController, object):
             if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn', 'ldap'):
                 continue
 
+            if section == 'tls':
+                continue
+
             if section == 'presence' and not ENABLE_PRESENCE:
                 continue
 
