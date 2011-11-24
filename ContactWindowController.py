@@ -39,7 +39,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -1265,7 +1265,7 @@ class ContactWindowController(NSWindowController):
                 if uri:
                     exists = uri in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
                     if not exists:
-                        contact = SearchResultContact(str(uri), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
+                        contact = LdapSearchResultContact(str(uri), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
                         contact.setDetail('%s (%s)' % (str(uri), type))
                         self.ldap_found_contacts.append(contact)
 

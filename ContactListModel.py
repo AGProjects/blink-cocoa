@@ -413,6 +413,12 @@ class SearchResultContact(BlinkContact):
     deletable = False
 
 
+class LdapSearchResultContact(BlinkContact):
+    """Contact representation for LDAP results in the search outline"""
+    editable = False
+    deletable = False
+
+
 class AddressBookBlinkContact(BlinkContact):
     """Contact representation for system Address Book entries"""
     editable = True
