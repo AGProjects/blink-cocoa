@@ -580,7 +580,7 @@ class AudioController(MediaStream):
                 self.updateAudioStatusWithSessionState(u"Session Cancelled")
             elif not self.transferred:
                 if fail_reason == "remote":
-                    self.updateAudioStatusWithSessionState(u"Session Ended by remote")
+                    self.updateAudioStatusWithSessionState(u"Session Ended by Remote")
                 elif fail_reason == "local":
                     self.updateAudioStatusWithSessionState(u"Session Ended")
                 else:
@@ -1043,7 +1043,10 @@ class AudioController(MediaStream):
             if self.status not in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_FAILED):
                 # stream was negotiated away
                 self.audioEndTime = time.time()
-                self.changeStatus(STREAM_IDLE, "Audio removed")
+                if self.sessionController.hasStreamOfType("chat"):
+                    self.changeStatus(STREAM_IDLE, "Audio Removed")
+                else:
+                    self.changeStatus(STREAM_IDLE, "Session Ended")
         self.notification_center.remove_observer(self, sender=self.stream)
         self.notification_center.remove_observer(self, sender=self.sessionController)
 
