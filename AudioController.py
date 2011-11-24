@@ -87,6 +87,7 @@ class AudioController(MediaStream):
     holdByLocal = False
     mutedInConference = False
     transferEnabled = False
+    duration = 0
 
     recording_path = None
 
@@ -189,7 +190,7 @@ class AudioController(MediaStream):
 
     def sessionStateChanged(self, state, detail):
         if state == STATE_CONNECTING:
-            self.setStatusText(u"Connecting...")
+            self.updateAudioStatusWithSessionState(u"Connecting...")
             self.updateTLSIcon()
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
@@ -254,8 +255,7 @@ class AudioController(MediaStream):
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
         self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
-        self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % ("HD Audio" if self.stream.sample_rate > 8000 else "Audio", self.stream.codec, self.stream.sample_rate/1000))
-        self.audioStatus.sizeToFit()
+        self.updateAudioStatusWithCodecInformation()
         self.answeringMachine.stop()
         self.answeringMachine = None
 
@@ -442,10 +442,18 @@ class AudioController(MediaStream):
             if self.recordingImage >= len(RecordingImages):
                 self.recordingImage = 0
 
+        if self.stream and self.stream.codec and self.stream.sample_rate:
+            if self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.session.remote_identity.uri.user.isdigit():
+                self.audioStatus.setTextColor_(NSColor.orangeColor())
+                self.audioStatus.setStringValue_(u"For DTMF use keyboard")
+                self.audioStatus.sizeToFit()
+            else:
+                self.updateAudioStatusWithCodecInformation()
+
     def transferFailed_(self, timer):
         self.changeStatus(STREAM_CONNECTED)
 
-    def setStatusText(self, text, error=False):
+    def updateAudioStatusWithSessionState(self, text, error=False):
         if error:
             self.audioStatus.setTextColor_(NSColor.redColor())
         else:
@@ -453,6 +461,26 @@ class AudioController(MediaStream):
         self.audioStatus.setStringValue_(text)
         self.audioStatus.sizeToFit()
         self.audioStatus.display()
+
+    def updateAudioStatusWithCodecInformation(self):
+        if self.holdByLocal:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setStringValue_(u"On Hold")
+        elif self.holdByRemote:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setStringValue_(u"Hold by Remote")
+        else:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
+            if self.answeringMachine:
+                self.audioStatus.setStringValue_(u"Answering machine active")
+            elif self.stream.sample_rate and self.stream.codec:
+                if self.stream.sample_rate > 8000:
+                    hd_label = 'HD Audio'
+                else:
+                    hd_label = 'Audio'
+                self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, self.stream.codec, self.stream.sample_rate/1000))
+
+        self.audioStatus.sizeToFit()
 
     def updateLabelColor(self):
         if self.isConferencing:
@@ -502,23 +530,15 @@ class AudioController(MediaStream):
         status = self.status
 
         if status == STREAM_WAITING_DNS_LOOKUP:
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(0/256.0, 75/256.0, 149/256.0, 1.0))
-            self.audioStatus.setStringValue_(u"Finding Destination...")
-            self.audioStatus.sizeToFit()
+            self.updateAudioStatusWithSessionState(u"Finding Destination...")
         elif status == STREAM_RINGING:
-            self.audioStatus.setTextColor_(NSColor.blackColor())
-            self.audioStatus.setStringValue_(u"Ringing...")
-            self.audioStatus.sizeToFit()
+            self.updateAudioStatusWithSessionState(u"Ringing...")
         elif status == STREAM_CONNECTING:
             self.updateTLSIcon()
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(0/256.0, 75/256.0, 149/256.0, 1.0))
-            self.audioStatus.setStringValue_(u"Initiating Session...")
-            self.audioStatus.sizeToFit()
+            self.updateAudioStatusWithSessionState(u"Initiating Session...")
         elif status == STREAM_PROPOSING:
             self.updateTLSIcon()
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(0/256.0, 75/256.0, 149/256.0, 1.0))
-            self.audioStatus.setStringValue_(u"Adding Audio...")
-            self.audioStatus.sizeToFit()
+            self.updateAudioStatusWithSessionState(u"Adding Audio...")
         elif status == STREAM_CONNECTED:
             if not self.answeringMachine:
                 if self.holdByLocal:
@@ -542,58 +562,39 @@ class AudioController(MediaStream):
                 self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
 
             if not self.transfer_in_progress:
-                if self.holdByLocal:
-                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.audioStatus.setStringValue_(u"On Hold")
-                elif self.holdByRemote:
-                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.audioStatus.setStringValue_(u"Hold by Remote")
-                else:
-                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
-                    if self.answeringMachine:
-                        self.audioStatus.setStringValue_(u"Answering machine active")
-                    elif self.stream.sample_rate and self.stream.codec:
-                        if self.stream.sample_rate > 8000:
-                            hd_label = 'HD Audio'
-                        else:
-                            hd_label = 'Audio'
-                        self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, self.stream.codec, self.stream.sample_rate/1000))
+                self.updateAudioStatusWithCodecInformation()
             self.updateLabelColor()
-
-            self.audioStatus.sizeToFit()
             self.updateTLSIcon()
             self.updateSRTPIcon()
 
             self.sessionManager.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
-                self.setStatusText(u"Audio removed")
+                self.updateAudioStatusWithSessionState(u"Audio removed")
         elif status == STREAM_CANCELLING:
-            self.setStatusText(u"Cancelling Request...")
+            self.updateAudioStatusWithSessionState(u"Cancelling Request...")
         elif status == STREAM_INCOMING:
             self.updateTLSIcon()
-            self.setStatusText(u"Accepting Session...")
+            self.updateAudioStatusWithSessionState(u"Accepting Session...")
         elif status == STREAM_IDLE:
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(126/256.0, 0/256.0, 0/256.0, 1.0))
             if self.hangedUp and oldstatus in (STREAM_INCOMING, STREAM_CONNECTING, STREAM_PROPOSING):
-                self.audioStatus.setStringValue_(u"Session Cancelled")
+                self.updateAudioStatusWithSessionState(u"Session Cancelled")
             elif not self.transferred:
                 if fail_reason == "remote":
-                    self.audioStatus.setStringValue_(u"Session Ended by remote")
+                    self.updateAudioStatusWithSessionState(u"Session Ended by remote")
                 elif fail_reason == "local":
-                    self.audioStatus.setStringValue_(u"Session Ended")
+                    self.updateAudioStatusWithSessionState(u"Session Ended")
                 else:
-                    self.audioStatus.setStringValue_(fail_reason)
+                    self.updateAudioStatusWithSessionState(fail_reason)
             self.audioStatus.sizeToFit()
         elif status == STREAM_FAILED:
             self.audioEndTime = time.time()
             if self.hangedUp and oldstatus in (STREAM_CONNECTING, STREAM_PROPOSING):
-                self.audioStatus.setStringValue_(u"Session Cancelled")
-                self.audioStatus.sizeToFit()
+                self.updateAudioStatusWithSessionState(u"Session Cancelled")
             elif oldstatus == STREAM_CANCELLING:
-                self.setStatusText(u"Request Cancelled", True)
+                self.updateAudioStatusWithSessionState(u"Request Cancelled", True)
             elif oldstatus != STREAM_FAILED:
-                self.setStatusText(fail_reason[0:32].title() if fail_reason else "Error", True)
+                self.updateAudioStatusWithSessionState(fail_reason[0:32].title() if fail_reason else "Error", True)
 
         if status == STREAM_CONNECTED:
             self.audioSegmented.setEnabled_forSegment_(True, 0)
@@ -701,6 +702,7 @@ class AudioController(MediaStream):
 
         if self.session.start_time and now >= self.session.start_time:
             elapsed = now - self.session.start_time
+            self.duration = elapsed.seconds
             h = elapsed.seconds / (60*60)
             m = (elapsed.seconds / 60) % 60
             s = elapsed.seconds % 60
@@ -737,8 +739,6 @@ class AudioController(MediaStream):
 
             if loss > 3:
                 text.append('Packet Loss %d%%' % loss)
-
-            self.info.setStringValue_(", ".join(text))
 
         else:
             self.info.setStringValue_("")
@@ -931,9 +931,7 @@ class AudioController(MediaStream):
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     def updateTransferProgress(self, msg):
-        self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-        self.audioStatus.setStringValue_(msg)
-        self.audioStatus.sizeToFit()
+        self.updateAudioStatusWithSessionState(msg)
 
     @run_in_green_thread
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
@@ -989,7 +987,7 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
         self.sessionController.log_info("Audio stream started")
-        self.setStatusText(u"Audio %s" % self.stream.codec)
+        self.updateTileStatistics()
 
         self.changeStatus(STREAM_CONNECTED)
         if not self.isActive:
@@ -1053,12 +1051,11 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
         if data.state == 'ICE Candidates Gathering':
-            self.audioStatus.setStringValue_("Gathering ICE Candidates...")
+            self.updateAudioStatusWithSessionState("Gathering ICE Candidates...")
         elif data.state == 'ICE Session Initialized':
-            self.audioStatus.setStringValue_("Connecting...")
+            self.updateAudioStatusWithSessionState("Connecting...")
         elif data.state == 'ICE Negotiation In Progress':
-            self.audioStatus.setStringValue_("Negotiating ICE...")
-        self.audioStatus.sizeToFit()
+            self.updateAudioStatusWithSessionState("Negotiating ICE...")
 
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
