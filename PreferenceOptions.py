@@ -1519,7 +1519,7 @@ DisabledAccountPreferenceSections = []
 DisabledPreferenceSections = ['service_provider']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts', 'tls']
+StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
@@ -1648,5 +1648,6 @@ ToolTips = {
              'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
              'sip.register': 'When enabled, the account will register to the SIP server and is able to receive incoming calls',
              'tls.certificate': 'X.509 certificate and unencrypted private key concatenated in the same file',
+             'tls.verify_server': 'Verify TLS certificate of SIP and MSRP servers',
              'xcap.xcap_root': 'If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain'
            }

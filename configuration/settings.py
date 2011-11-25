@@ -86,6 +86,7 @@ class SoundsSettings(SettingsGroup):
 
 class TLSSettingsExtension(TLSSettings):
     ca_list = Setting(type=UserDataPath, default=None, nillable=True)
+    verify_server = Setting(type=bool, default=False)
 
 
 class ContactsSettings(SettingsGroup):

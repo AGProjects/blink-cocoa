@@ -923,6 +923,7 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
             settings.save()
+
         if 'audio.pause_itunes' in data.modified:
             settings = SIPSimpleSettings()
             self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and NSApp.delegate().applicationName != 'Blink Lite' else False

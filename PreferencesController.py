@@ -550,14 +550,16 @@ class PreferencesController(NSWindowController, object):
     _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-        self.updateSettings_(notification)
-
-    def _NH_AudioDevicesDidChange(self, notification):
-        self.updateAudioDevices_(None)
-
-    def updateSettings_(self, notification):
         sender = notification.sender
-        if not self.saving and sender in (SIPSimpleSettings(), self.selectedAccount()):
+
+        settings = SIPSimpleSettings()
+        if sender is settings:
+            if 'tls.verify_server' in notification.data.modified:
+                for account in AccountManager().iter_accounts():
+                    account.tls.verify_server = settings.tls.verify_server
+                    account.save()
+
+        if not self.saving and sender in (settings, self.selectedAccount()):
             for option in (o for o in notification.data.modified if o in self.settingViews):
                 self.settingViews[option].restore()
             if 'display_name' in notification.data.modified:
@@ -582,6 +584,9 @@ class PreferencesController(NSWindowController, object):
                 sender.save()
 
         self.updateRegistrationStatus()
+
+    def _NH_AudioDevicesDidChange(self, notification):
+        self.updateAudioDevices_(None)
 
     def updateAudioDevices_(self, object):
         audio_device_option_types = (PreferenceOptionTypes["audio.input_device"], PreferenceOptionTypes["audio.output_device"])
