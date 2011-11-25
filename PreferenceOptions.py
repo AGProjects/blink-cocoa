@@ -1648,6 +1648,6 @@ ToolTips = {
              'sip.outbound_proxy': 'Overwrite the address of the SIP Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
              'sip.register': 'When enabled, the account will register to the SIP server and is able to receive incoming calls',
              'tls.certificate': 'X.509 certificate and unencrypted private key concatenated in the same file',
-             'tls.verify_server': 'Verify TLS certificate of SIP and MSRP servers',
+             'tls.verify_server': 'Verify the validity of TLS certificate for SIP and MSRP servers',
              'xcap.xcap_root': 'If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain'
            }
