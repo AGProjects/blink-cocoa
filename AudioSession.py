@@ -78,7 +78,12 @@ class AudioSession(NSView):
             NSString.stringWithString_("Drop outside to remove from conference").drawAtPoint_withAttributes_(point, 
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         else:
-            NSString.stringWithString_("Drop over an audio session to conference them").drawAtPoint_withAttributes_(point, 
+            audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers]
+            if self.delegate.transferEnabled:
+                text = "Drop this over a session or contact" if len(audio_sessions) > 1 else "Drop this over a contact to transfer"
+            else:
+                text = "Drop this over a session to conference"
+            NSString.stringWithString_(text).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         
         icon = NSImage.imageNamed_("NSUserGroup")
