@@ -1488,6 +1488,7 @@ PreferenceOptionTypes = {
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.sample_rate": HiddenOption,
 "audio.tail_length": HiddenOption,
+"chat.disable_collaboration_editor": HiddenOption,
 "chat.sms_replication": HiddenOption,
 "file_transfer.directory": HiddenOption,
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
