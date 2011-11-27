@@ -820,9 +820,9 @@ class CustomListModel(NSObject):
             return (None, rect)
 
     # drag and drop
-    def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_parent, index):
+    def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or not hasattr(proposed_parent, "supported_media"):
+            if index != NSOutlineViewDropOnItemIndex or not hasattr(proposed_item, "supported_media"):
                 return NSDragOperationNone
 
             ws = NSWorkspace.sharedWorkspace()
@@ -833,6 +833,13 @@ class CustomListModel(NSObject):
                     return NSDragOperationNone
             return NSDragOperationCopy
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
+            source = info.draggingSource()
+            if source.delegate is None or not source.delegate.canTransfer or not source.delegate.transferEnabled:
+                return NSDragOperationNone
+
+            if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, BlinkContact):
+                return NSDragOperationNone
+
             return NSDragOperationGeneric
         else:
             if info.draggingSource() != table:
@@ -840,14 +847,14 @@ class CustomListModel(NSObject):
 
             group, blink_contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
             if blink_contact is None:
-                if isinstance(proposed_parent, BlinkContact):
-                    proposed_parent = table.parentForItem_(proposed_parent)
+                if isinstance(proposed_item, BlinkContact):
+                    proposed_item = table.parentForItem_(proposed_item)
 
-                if proposed_parent == self.contactGroupsList[group]:
+                if proposed_item == self.contactGroupsList[group]:
                     return NSDragOperationNone
 
                 try:
-                    i = self.contactGroupsList.index(proposed_parent)
+                    i = self.contactGroupsList.index(proposed_item)
                 except:
                     i = len(self.contactGroupsList)
                     if group == i-1:
@@ -856,26 +863,33 @@ class CustomListModel(NSObject):
                 table.setDropItem_dropChildIndex_(None, i)
             else:
                 sourceGroup = self.contactGroupsList[group]
+
                 if type(sourceGroup) == FavoritesBlinkContactGroup:
                     return NSDragOperationNone
 
-                if isinstance(proposed_parent, BlinkContactGroup):
-                    if type(proposed_parent) == FavoritesBlinkContactGroup:
-                        return NSDragOperationCopy
-
-                    if not proposed_parent.editable:
+                if isinstance(proposed_item, BlinkContactGroup):
+                    if sourceGroup == proposed_item:
                         return NSDragOperationNone
 
-                    c = len(proposed_parent.contacts) if index == NSOutlineViewDropOnItemIndex else index
-                    i = self.contactGroupsList.index(proposed_parent)
+                    if type(proposed_item) == FavoritesBlinkContactGroup:
+                        return NSDragOperationCopy
+
+                    if not proposed_item.editable:
+                        return NSDragOperationNone
+
+                    c = len(proposed_item.contacts) if index == NSOutlineViewDropOnItemIndex else index
+                    i = self.contactGroupsList.index(proposed_item)
                     table.setDropItem_dropChildIndex_(self.contactGroupsList[i], c)
                 else:
-                    targetGroup = table.parentForItem_(proposed_parent)
+                    targetGroup = table.parentForItem_(proposed_item)
+                    if sourceGroup == targetGroup:
+                        return NSDragOperationNone
+
                     if not targetGroup.editable:
                         return NSDragOperationNone
 
                     if index == NSOutlineViewDropOnItemIndex:
-                        index = targetGroup.contacts.index(proposed_parent)
+                        index = targetGroup.contacts.index(proposed_item)
 
                     draggedContact = self.contactGroupsList[group].contacts[blink_contact]
 
@@ -901,7 +915,7 @@ class CustomListModel(NSObject):
                 return False
             if source.delegate is None:
                 return False
-            if not source.delegate.canTransfer:
+            if not source.delegate.canTransfer or not source.delegate.transferEnabled:
                 return False
             source.delegate.transferSession(item.uri)
             return True
