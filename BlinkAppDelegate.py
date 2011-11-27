@@ -61,7 +61,6 @@ class BlinkAppDelegate(NSObject):
     aboutVersion = objc.IBOutlet()
     aboutBundle = objc.IBOutlet()
     aboutSlogan = objc.IBOutlet()
-    aboutCredits = objc.IBOutlet()
     aboutCopyright = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
 
@@ -271,22 +270,16 @@ class BlinkAppDelegate(NSObject):
             version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
             build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-            self.aboutVersion.setStringValue_("Version %s build %s\n%s" % (version, build, vdate))
             self.aboutPanel.setTitle_('About %s' % self.applicationName)
 
             if self.applicationName == 'Blink Pro':
-                self.aboutBundle.setStringValue_("Pro")
-                self.aboutBundle.setHidden_(False)
+                target = "Pro"
             elif self.applicationName == 'Blink Lite':
-                self.aboutBundle.setStringValue_("Lite")
-                self.aboutBundle.setHidden_(False)
-            elif self.applicationName == 'Blink Crypto':
-                self.aboutBundle.setStringValue_("Crypto")
-                self.aboutSlogan.setStringValue_("Guaranteed End-To-End Privacy")
-                self.aboutCredits.setAlignment_(NSCenterTextAlignment)
-                self.aboutCredits.setStringValue_("Brought to you by:\n\nAG Projects\nhttp://ag-projects.com\n\nand\n\nPhilip R. Zimmermann\nhttp://www.philzimmermann.com/")
-                self.aboutBundle.setHidden_(False)
-                self.aboutzRTPIcon.setHidden_(False)
+                target = "Lite"
+            else:
+                target = ''
+
+            self.aboutVersion.setStringValue_("Version %s %s build %s\n%s" % (target, version, build, vdate))
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
