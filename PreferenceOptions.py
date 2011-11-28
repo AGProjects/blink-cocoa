@@ -1567,7 +1567,8 @@ SettingDescription = {
                       'server.alert_url': 'Web Alert Page',
                       'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'X.509 Certificate File',
-                      'tls.ca_list': 'Certificate Authority File'
+                      'tls.ca_list': 'Certificate Authority File',
+                      'xcap.xcap_root' : 'Root URI'
                       }
 
 Placeholders = {
