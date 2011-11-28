@@ -1572,17 +1572,13 @@ SettingDescription = {
                       }
 
 Placeholders = {
+                 'nat_traversal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'server.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
-                 'sip.outbound_proxy' : 'sip.example.com:5061;transport=tls',
-                 'nat_travsersal.msrp_relay': 'relay.example.com:2855;transport=tls',
-                 'voicemail_uri': 'user@example.com',
                  'server.conference_server': 'conference.sip2sip.info',
+                 'sip.outbound_proxy' : 'sip.example.com:5061;transport=tls',
+                 'voicemail_uri': 'user@example.com',
                  'xcap.xcap_root': 'https://xcap.example.com/xcap-root/',
-                 'ldap.hostname': 'ldap.example.com',
-                 'ldap.username': 'uid=user, dc=example, dc=com',
-                 'ldap.dn': 'dc=example, dc=com'
                   }
-
 
 SectionNames = {
                        'audio': 'Audio Calls',
