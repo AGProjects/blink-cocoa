@@ -39,7 +39,7 @@ class ITunesInterface(object):
           play
           repeat with i from 0 to currentvolume by 2
             set the sound volume to i
-            delay 0.1
+            delay 0.15
           end repeat
         end tell
     """
