@@ -231,6 +231,9 @@ class EnrollmentController(NSObject):
         account.display_name = display_name
         account.auth.password = password
         account.nat_traversal.use_ice = False
+        account.ldap.hostname = "ldap.sipthor.net"
+        account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
+        account.ldap.enabled = True
         account.save()
                 
         NSRunAlertPanel("SIP Account Created", "Your new SIP Address is:\n\n%s"%new_address, "Continue", None, None)
