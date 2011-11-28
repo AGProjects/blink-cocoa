@@ -1324,11 +1324,6 @@ class ContactWindowController(NSWindowController):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
 
-        account = self.activeAccount()
-        if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
-            return
-
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
@@ -1339,6 +1334,11 @@ class ContactWindowController(NSWindowController):
         else:
             target = contact.uri
             display_name = contact.display_name
+
+        account = self.getAccountWitDialPlan(target)
+        if not account:
+            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
+            return
 
         target = self.backend.parse_sip_uri(target, account)
         if not target:
@@ -1514,10 +1514,6 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def actionButtonClicked_(self, sender):
-        account = self.activeAccount()
-        if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
-            return
 
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             target = unicode(self.searchBox.stringValue()).strip()
@@ -2001,6 +1997,14 @@ class ContactWindowController(NSWindowController):
                 lastItem.setTag_(555)
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(account)
+
+    def getAccountWitDialPlan(self, uri):
+        try:
+            account = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.pstn.dial_plan and any(prefix for prefix in account.pstn.dial_plan.split(" ") if uri.startswith(prefix))).next()
+            BlinkLogger().log_info(u"Auto-selecting account %s based on dial-plan match for %s" % (account.id, uri))
+        except StopIteration:
+            account = AccountManager().default_account
+        return account
 
     def conferenceHistoryClicked_(self, sender):
         item = sender.representedObject()
