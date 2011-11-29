@@ -315,10 +315,6 @@ class ContactWindowController(NSWindowController):
         item.setEnabled_(ENABLE_PRESENCE)
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            self.callMenu.removeItemAtIndex_(0)
-            self.callMenu.removeItemAtIndex_(0)
-            self.windowMenu.itemWithTag_(3).setHidden_(True)
-
             # Answering machine
             item = self.statusMenu.itemWithTag_(50)
             item.setEnabled_(False)
@@ -1952,12 +1948,8 @@ class ContactWindowController(NSWindowController):
     def updateCallMenu(self):
         menu = self.callMenu
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            while menu.numberOfItems() > 4:
-                menu.removeItemAtIndex_(4)
-        else:
-            while menu.numberOfItems() > 6:
-                menu.removeItemAtIndex_(6)
+        while menu.numberOfItems() > 6:
+            menu.removeItemAtIndex_(6)
 
         account = self.activeAccount()
 
