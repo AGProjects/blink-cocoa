@@ -396,6 +396,9 @@ class SessionInfoController(NSObject):
         self.add_chat_stream()
         self.updatePanelValues()
 
+    def _NH_BlinkSessionDidEnd(self, notification):
+        self.stopTimer()
+
     def _NH_BlinkConferenceGotUpdate(self, notification):
         if self.sessionController is not None and self.sessionController.session is not None:
             self.conference.setStringValue_('%d Participants' % len(notification.data.conference_info.users))
@@ -429,10 +432,14 @@ class SessionInfoController(NSObject):
         self.window.orderOut_(None)
 
     def close(self):
-        self.timer.invalidate()
-        self.timer = None
+        self.stopTimer()
         self.remove_session()
         self.window.orderOut_(None)
+
+    def stopTimer(self):
+        if self.timer:
+            self.timer.invalidate()
+            self.timer = None
 
 
 class CBGraphView(NSView):
