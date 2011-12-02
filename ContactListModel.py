@@ -702,7 +702,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
                     if labelNames.get(label, None) != 'fax':
-                        sip_addresses.append((labelNames.get(label, None), re.sub("^(sip:|sips:)", "", uri)))
+                        sip_addresses.append((labelNames.get(label, label), re.sub("^(sip:|sips:)", "", uri)))
 
             # get SIP addresses from the Email section
             value = match.valueForProperty_(AddressBook.kABEmailProperty)
