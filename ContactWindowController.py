@@ -2022,10 +2022,10 @@ class ContactWindowController(NSWindowController):
         else:
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
             item.setEnabled_((is_full_sip_uri(contact.uri) or no_contact_selected) and self.backend.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.backend.isMediaTypeSupported('chat'))
 
     @run_in_green_thread
@@ -2549,18 +2549,18 @@ class ContactWindowController(NSWindowController):
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_full_sip_uri(item.uri)
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
-            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Chat Session", "startChatToSelected:", "")
+            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
             chat_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('chat'))
             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
             video_item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
-            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS", "sendSMSToSelected:", "")
+            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
             sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
             sf_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('file-transfer'))
             if item not in self.model.bonjour_group.contacts:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History...", "viewHistory:", "")
+                sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
                 sf_item.setEnabled_(has_full_sip_uri and NSApp.delegate().applicationName != 'Blink Lite')
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             contact = item.display_name
