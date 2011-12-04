@@ -22,7 +22,6 @@ from sipsimple.configuration.datatypes import Hostname
 class Digits(str):
     pass
 
-
 ## Path datatypes
 
 class UserDataPath(unicode):
@@ -316,4 +315,5 @@ class LDAPusername(str):
                 raise ValueError("illegal LDAP DN format for username: %s" % value)
 
         return value
+
 

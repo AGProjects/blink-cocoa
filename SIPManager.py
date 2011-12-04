@@ -37,6 +37,7 @@ from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.account import bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
 from sipsimple.contact import Contact, ContactGroup
 from sipsimple.audio import WavePlayer
+from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
@@ -162,8 +163,6 @@ class SIPManager(object):
         self.activeAudioStreams = set()
         self.pause_itunes = True
         self.bonjour_conference_services = BonjourConferenceServices()
-        # Instantiate BonjourConferenceServerDiscoverer
-
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
         self.notification_center.add_observer(self, sender=self._app.engine)
@@ -190,7 +189,30 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
 
     def set_delegate(self, delegate):
-        self._delegate= delegate
+        self._delegate = delegate
+
+    def migratePasswordsToKeychain(self):
+        account_manager = AccountManager()
+        configuration_manager = ConfigurationManager()
+        bonjour_account = BonjourAccount()
+        for account in (account for account in account_manager.iter_accounts() if account is not bonjour_account):
+            try:
+                stored_auth_password = configuration_manager.get(account.__key__ + ['auth', 'password'])
+            except ObjectNotFoundError:
+                stored_auth_password = None
+            try:
+                stored_ldap_password = configuration_manager.get(account.__key__ + ['ldap', 'password'])
+            except ObjectNotFoundError:
+                stored_ldap_password = None
+            try:
+                stored_web_password = configuration_manager.get(account.__key__ + ['server', 'web_password'])
+            except ObjectNotFoundError:
+                stored_web_password = None
+            if (stored_auth_password, stored_ldap_password, stored_web_password) != ('keychain', 'keychain', 'keychain'):
+                Account.auth.password.dirty[account.auth] = True
+                Account.ldap.password.dirty[account.ldap] = True
+                Account.server.web_password.dirty[account.server] = True
+                account.save()
 
     def init(self):
         self._version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
@@ -768,6 +790,8 @@ class SIPManager(object):
         build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
         date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
         BlinkLogger().log_info(u"Build %s from %s" % (build, date))
+
+        self.migratePasswordsToKeychain()
 
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 16000

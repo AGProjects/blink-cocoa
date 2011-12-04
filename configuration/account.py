@@ -7,11 +7,17 @@ Blink account settings extensions.
 
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
-from sipsimple.account import BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
+from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption
 
+from configuration import KeychainPasswordSetting
 from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername
+
+
+class AuthSettingsExtension(AuthSettings):
+    username = Setting(type=str, default=None, nillable=True)
+    password = KeychainPasswordSetting(type=str, default='')
 
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
@@ -64,7 +70,7 @@ class SIPSettingsExtension(SIPSettings):
 class ServerSettings(SettingsGroup):
     settings_url = Setting(type=HTTPURL, default=None, nillable=True)
     conference_server = Setting(type=Hostname, default=None, nillable=True)
-    web_password = Setting(type=str, default='', nillable=True)
+    web_password = KeychainPasswordSetting(type=str, default='', nillable=True, label='WEB')
     alert_url = Setting(type=HTTPURL, default=None, nillable=True)
 
 
@@ -84,7 +90,7 @@ class LDAPSettingsExtension(SettingsGroup):
     enabled = Setting(type=bool, default=False)
     hostname = Setting(type=Hostname, default=None, nillable=True)
     username = Setting(type=LDAPusername, default='', nillable=True)
-    password = Setting(type=str, default='', nillable=True)
+    password = KeychainPasswordSetting(type=str, default='', nillable=True, label='LDAP')
     transport = Setting(type=MSRPTransport, default='tls')
     port = Setting(type=NonNegativeInteger, default=636)
     dn = Setting(type=LDAPdn, default='', nillable=True)
@@ -93,6 +99,7 @@ class LDAPSettingsExtension(SettingsGroup):
 class AccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
+    auth = AuthSettingsExtension
     audio = AudioSettingsExtension
     ldap = LDAPSettingsExtension
     message_summary = MessageSummarySettingsExtension
