@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">10K549</string>
+		<int key="IBDocument.SystemTarget">1070</int>
+		<string key="IBDocument.SystemVersion">11C74</string>
 		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1038.36</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.AppKitVersion">1138.23</string>
+		<string key="IBDocument.HIToolboxVersion">567.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">1938</string>
@@ -56,6 +56,7 @@
 				<string key="NSWindowTitle">Join Conference</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
+				<nil key="NSUserInterfaceItemIdentifier"/>
 				<string key="NSWindowContentMaxSize">{511, 356}</string>
 				<string key="NSWindowContentMinSize">{511, 355}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
@@ -393,7 +394,7 @@
 											<reference key="NSBackgroundColor" ref="335696586"/>
 											<reference key="NSGridColor" ref="722768590"/>
 											<double key="NSRowHeight">17</double>
-											<int key="NSTvFlags">104857600</int>
+											<int key="NSTvFlags">641728512</int>
 											<reference key="NSDelegate"/>
 											<reference key="NSDataSource"/>
 											<int key="NSGridStyleMask">2</int>
@@ -402,6 +403,7 @@
 											<int key="NSDraggingSourceMaskForNonLocal">0</int>
 											<bool key="NSAllowsTypeSelect">NO</bool>
 											<int key="NSTableViewDraggingDestinationStyle">0</int>
+											<int key="NSTableViewGroupRowStyle">1</int>
 										</object>
 									</array>
 									<string key="NSFrame">{{1, 1}, {353, 133}}</string>
@@ -438,7 +440,7 @@
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="81961920"/>
-							<int key="NSsFlags">562</int>
+							<int key="NSsFlags">133682</int>
 							<reference key="NSVScroller" ref="872651259"/>
 							<reference key="NSHScroller" ref="311684853"/>
 							<reference key="NSContentView" ref="81961920"/>
@@ -447,7 +449,7 @@
 						<object class="NSSegmentedControl" id="222224844">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{435, 218}, {56, 25}}</string>
+							<string key="NSFrame">{{435, 219}, {56, 24}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
@@ -481,7 +483,7 @@
 									</object>
 								</array>
 								<int key="NSTrackingMode">2</int>
-								<int key="NSSegmentStyle">2</int>
+								<int key="NSSegmentStyle">1</int>
 							</object>
 						</object>
 						<object class="NSButton" id="627535326">
@@ -498,7 +500,7 @@
 								<reference key="NSSupport" ref="658349089"/>
 								<reference key="NSControlView" ref="627535326"/>
 								<int key="NSButtonFlags">-2042347265</int>
-								<int key="NSButtonFlags2">134</int>
+								<int key="NSButtonFlags2">70</int>
 								<object class="NSCustomResource" key="NSNormalImage">
 									<string key="NSClassName">NSImage</string>
 									<string key="NSResourceName">trash</string>
@@ -614,6 +616,7 @@
 				<string key="NSMinSize">{511, 377}</string>
 				<string key="NSMaxSize">{511, 378}</string>
 				<string key="NSFrameAutosaveName">startConferenceWindow</string>
+				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
 		</array>
 		<object class="IBObjectContainer" key="IBDocument.Objects">

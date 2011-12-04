@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">10K549</string>
+		<int key="IBDocument.SystemTarget">1070</int>
+		<string key="IBDocument.SystemVersion">11C74</string>
 		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1038.36</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.AppKitVersion">1138.23</string>
+		<string key="IBDocument.HIToolboxVersion">567.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">1938</string>
@@ -51,6 +51,7 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{192, 98}, {16, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="44578391">
 							<int key="NSCellFlags">67239424</int>
@@ -63,7 +64,7 @@
 							</object>
 							<reference key="NSControlView" ref="2310863"/>
 							<int key="NSButtonFlags">-2042347265</int>
-							<int key="NSButtonFlags2">162</int>
+							<int key="NSButtonFlags2">98</int>
 							<object class="NSCustomResource" key="NSNormalImage">
 								<string key="NSClassName">NSImage</string>
 								<string key="NSResourceName">panel-info</string>
@@ -80,13 +81,14 @@
 						<array class="NSMutableArray" key="NSSubviews">
 							<object class="NSView" id="6918464">
 								<reference key="NSNextResponder" ref="210381867"/>
-								<int key="NSvFlags">256</int>
+								<int key="NSvFlags">274</int>
 								<array class="NSMutableArray" key="NSSubviews">
 									<object class="NSButton" id="60712282">
 										<reference key="NSNextResponder" ref="6918464"/>
 										<int key="NSvFlags">266</int>
 										<string key="NSFrame">{{2, 33}, {201, 25}}</string>
 										<reference key="NSSuperview" ref="6918464"/>
+										<reference key="NSWindow"/>
 										<int key="NSViewLayerContentsRedrawPolicy">2</int>
 										<bool key="NSEnabled">YES</bool>
 										<object class="NSButtonCell" key="NSCell" id="151420621">
@@ -108,6 +110,7 @@
 										<int key="NSvFlags">292</int>
 										<string key="NSFrame">{{4, 4}, {179, 14}}</string>
 										<reference key="NSSuperview" ref="6918464"/>
+										<reference key="NSWindow"/>
 										<bool key="NSEnabled">YES</bool>
 										<object class="NSTextFieldCell" key="NSCell" id="200466623">
 											<int key="NSCellFlags">68288064</int>
@@ -144,6 +147,7 @@
 										<int key="NSvFlags">268</int>
 										<string key="NSFrame">{{59, 18}, {147, 14}}</string>
 										<reference key="NSSuperview" ref="6918464"/>
+										<reference key="NSWindow"/>
 										<bool key="NSEnabled">YES</bool>
 										<object class="NSTextFieldCell" key="NSCell" id="185416551">
 											<int key="NSCellFlags">68288064</int>
@@ -160,6 +164,7 @@
 										<int key="NSvFlags">268</int>
 										<string key="NSFrame">{{3, 16}, {57, 18}}</string>
 										<reference key="NSSuperview" ref="6918464"/>
+										<reference key="NSWindow"/>
 										<bool key="NSEnabled">YES</bool>
 										<object class="NSButtonCell" key="NSCell" id="538044218">
 											<int key="NSCellFlags">-2080244224</int>
@@ -185,10 +190,12 @@
 								</array>
 								<string key="NSFrame">{{1, 1}, {206, 56}}</string>
 								<reference key="NSSuperview" ref="210381867"/>
+								<reference key="NSWindow"/>
 							</object>
 						</array>
 						<string key="NSFrame">{{3, 2}, {208, 72}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<string key="NSOffsets">{0, 0}</string>
 						<object class="NSTextFieldCell" key="NSTitleCell">
 							<int key="NSCellFlags">67239424</int>
@@ -220,6 +227,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 98}, {191, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="481585753">
 							<int key="NSCellFlags">68288064</int>
@@ -240,6 +248,7 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{4, 80}, {66, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="420729772">
 							<int key="NSCellFlags">68288064</int>
@@ -268,6 +277,7 @@
 						</set>
 						<string key="NSFrame">{{7, 98}, {14, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="1067246760">
 							<int key="NSCellFlags">67239424</int>
@@ -289,6 +299,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{72, 82}, {135, 12}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="451413128">
 							<int key="NSCellFlags">68288064</int>
@@ -307,8 +318,9 @@
 					<object class="NSSegmentedControl" id="452112932">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">265</int>
-						<string key="NSFrame">{{143, 64}, {64, 19}}</string>
+						<string key="NSFrame">{{141, 63}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080244224</int>
@@ -354,14 +366,15 @@
 							</array>
 							<int key="NSSelectedSegment">2</int>
 							<int key="NSTrackingMode">1</int>
-							<int key="NSSegmentStyle">2</int>
+							<int key="NSSegmentStyle">1</int>
 						</object>
 					</object>
 					<object class="NSSegmentedControl" id="491586822">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">-2147483383</int>
-						<string key="NSFrame">{{122, 64}, {85, 19}}</string>
+						<string key="NSFrame">{{120, 63}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="383047219">
 							<int key="NSCellFlags">67239424</int>
@@ -405,14 +418,15 @@
 								</object>
 							</array>
 							<int key="NSTrackingMode">1</int>
-							<int key="NSSegmentStyle">2</int>
+							<int key="NSSegmentStyle">1</int>
 						</object>
 					</object>
 					<object class="NSSegmentedControl" id="88869251">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">-2147483383</int>
-						<string key="NSFrame">{{122, 64}, {85, 19}}</string>
+						<string key="NSFrame">{{120, 63}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="710252372">
 							<int key="NSCellFlags">67239424</int>
@@ -456,7 +470,7 @@
 								</object>
 							</array>
 							<int key="NSTrackingMode">1</int>
-							<int key="NSSegmentStyle">2</int>
+							<int key="NSSegmentStyle">1</int>
 						</object>
 					</object>
 					<object class="NSTextField" id="163338663">
@@ -464,6 +478,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 65}, {118, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="1026873649">
 							<int key="NSCellFlags">68288064</int>
@@ -492,6 +507,7 @@
 						</set>
 						<string key="NSFrame">{{5, 65}, {17, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="71900893">
 							<int key="NSCellFlags">67239424</int>
@@ -511,6 +527,7 @@
 				</array>
 				<string key="NSFrameSize">{212, 118}</string>
 				<reference key="NSSuperview"/>
+				<reference key="NSWindow"/>
 				<string key="NSClassName">AudioSession</string>
 			</object>
 			<object class="NSMenu" id="590086273">
@@ -1415,7 +1432,157 @@
 			<nil key="sourceID"/>
 			<int key="maxID">174</int>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes"/>
+		<object class="IBClassDescriber" key="IBDocument.Classes">
+			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<object class="IBPartialClassDescription">
+					<string key="className">AudioController</string>
+					<string key="superclassName">MediaStream</string>
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="userClickedAudioButton:">id</string>
+						<string key="userClickedSessionInfoButton:">id</string>
+						<string key="userClickedSessionMenuItem:">id</string>
+						<string key="userClickedTransferMenuItem:">id</string>
+						<string key="userClickedZRTPVerifyButton:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="userClickedAudioButton:">
+							<string key="name">userClickedAudioButton:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedSessionInfoButton:">
+							<string key="name">userClickedSessionInfoButton:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedSessionMenuItem:">
+							<string key="name">userClickedSessionMenuItem:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedTransferMenuItem:">
+							<string key="name">userClickedTransferMenuItem:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedZRTPVerifyButton:">
+							<string key="name">userClickedZRTPVerifyButton:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="audioSegmented">id</string>
+						<string key="audioStatus">id</string>
+						<string key="conferenceSegmented">id</string>
+						<string key="elapsed">id</string>
+						<string key="info">id</string>
+						<string key="label">id</string>
+						<string key="sessionInfoButton">id</string>
+						<string key="sessionMenu">id</string>
+						<string key="srtpIcon">id</string>
+						<string key="tlsIcon">id</string>
+						<string key="transferMenu">id</string>
+						<string key="transferSegmented">id</string>
+						<string key="view">id</string>
+						<string key="zRTPBox">id</string>
+						<string key="zRTPSecureSinceLabel">id</string>
+						<string key="zRTPStatusButton">id</string>
+						<string key="zRTPVerifyButton">id</string>
+						<string key="zRTPVerifyHash">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="audioSegmented">
+							<string key="name">audioSegmented</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="audioStatus">
+							<string key="name">audioStatus</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="conferenceSegmented">
+							<string key="name">conferenceSegmented</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="elapsed">
+							<string key="name">elapsed</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="info">
+							<string key="name">info</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="label">
+							<string key="name">label</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="sessionInfoButton">
+							<string key="name">sessionInfoButton</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="sessionMenu">
+							<string key="name">sessionMenu</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="srtpIcon">
+							<string key="name">srtpIcon</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="tlsIcon">
+							<string key="name">tlsIcon</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="transferMenu">
+							<string key="name">transferMenu</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="transferSegmented">
+							<string key="name">transferSegmented</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="view">
+							<string key="name">view</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zRTPBox">
+							<string key="name">zRTPBox</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zRTPSecureSinceLabel">
+							<string key="name">zRTPSecureSinceLabel</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zRTPStatusButton">
+							<string key="name">zRTPStatusButton</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zRTPVerifyButton">
+							<string key="name">zRTPVerifyButton</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zRTPVerifyHash">
+							<string key="name">zRTPVerifyHash</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/AudioController.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">AudioSession</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/AudioSession.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">MediaStream</string>
+					<string key="superclassName">NSObject</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/MediaStream.h</string>
+					</object>
+				</object>
+			</array>
+		</object>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>
@@ -1424,14 +1591,14 @@
 			<string key="NSMenuCheckmark">{9, 8}</string>
 			<string key="NSMenuMixedState">{7, 2}</string>
 			<string key="NSSwitch">{15, 15}</string>
-			<string key="bluelock">{15.359, 14.879}</string>
-			<string key="hangup">{239.114, 239.114}</string>
-			<string key="hangup_small">{53.1365, 53.1365}</string>
+			<string key="bluelock">{15.358976630687144, 14.87900861097817}</string>
+			<string key="hangup">{239.11438777804796, 239.11438777804796}</string>
+			<string key="hangup_small">{53.136530617343993, 53.136530617343993}</string>
 			<string key="mute">{24, 24}</string>
 			<string key="panel-info">{64, 64}</string>
 			<string key="pause">{48, 48}</string>
 			<string key="record">{48, 48}</string>
-			<string key="srtp">{15.359, 15.359}</string>
+			<string key="srtp">{15.358976630687144, 15.358976630687144}</string>
 			<string key="transfer">{48, 48}</string>
 		</dictionary>
 	</data>
