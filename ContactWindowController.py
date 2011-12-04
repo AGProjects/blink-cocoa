@@ -688,6 +688,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkContactsHaveChanged(self, notification):
         self.refreshContactsList()
+        self.searchContacts()
 
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
