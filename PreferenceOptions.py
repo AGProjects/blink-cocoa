@@ -1592,7 +1592,7 @@ SectionNames = {
                        'rtp': 'RTP Media',
                        'presence': 'Presence',
                        'sip': 'SIP Signaling',
-                       'sounds': 'Alert Tones',
+                       'sounds': 'Alerts',
                        'server': 'Server Settings',
                        'tls': 'TLS Settings',
                        'xcap': 'XCAP Storage',
