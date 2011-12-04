@@ -1481,7 +1481,7 @@ class ChatController(MediaStream):
 
         if  video_file_extension_pattern.search(data.file_path):
             text  = "Incoming video file transfer has finished"
-            text += "<p><video src='%s' controls='controls' autoplay='autoplay'></video>" % data.file_path
+            text += "<p><video src='%s' controls='controls'></video>" % data.file_path
         elif image_file_extension_pattern.search(data.file_path):
             text  = "Incoming image file transfer has finished"
             try:
