@@ -232,7 +232,6 @@ class DesktopSharingController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        self.sessionController.log_info("Screen sharing failed")
         self.changeStatus(STREAM_IDLE)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -241,7 +240,7 @@ class DesktopSharingController(MediaStream):
 
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
-            self.sessionController.log_info("%s" % data.reason)
+            self.sessionController.log_info("%s" % data.reason.title())
 
 class DesktopSharingViewerController(DesktopSharingController):
     @classmethod
