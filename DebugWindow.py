@@ -441,8 +441,12 @@ class DebugWindow(NSObject):
 
     def _NH_MSRPTransportTrace(self, notification):
         arrow = {'incoming': '<--', 'outgoing': '-->'}[notification.data.direction]
-        local_address = notification.sender.getHost()
-        local_address = '%s:%d' % (local_address.host, local_address.port)
+
+        try:
+            local_address = notification.sender.getHost()
+            local_address = '%s:%d' % (local_address.host, local_address.port)
+        except AttributeError:
+            local_address = 'unknown'
         remote_address = notification.sender.getPeer()
         remote_address = '%s:%d' % (remote_address.host, remote_address.port)
 
@@ -451,8 +455,8 @@ class DebugWindow(NSObject):
         if self.msrpTraceType == "full":
             header = notification.data.data.split("\n")
         else:
-            if notification.data.startswith("MSRP "):
-                lines = notification.data.split("\n")
+            if notification.data.data.startswith("MSRP "):
+                lines = notification.data.data.split("\n")
                 for line in lines:
                     if not line.strip() or line[0] == "-":
                         break
