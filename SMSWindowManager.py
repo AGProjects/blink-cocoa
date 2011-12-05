@@ -290,7 +290,7 @@ class SMSWindowManagerClass(NSObject):
             msg = IsComposingMessage.parse(body)
             state = msg.state.value
             refresh = msg.refresh.value if msg.refresh is not None else None
-            content_type = msg.contenttype.value if msg.contenttype is not None else None
+            content_type = msg.content_type.value if msg.content_type is not None else None
             last_active = msg.last_active.value if msg.last_active is not None else None
 
             viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False)
