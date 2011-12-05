@@ -69,6 +69,7 @@ class SessionController(NSObject):
     remote_conference_has_audio = False
     transfer_window = None
     outbound_audio_calls = 0
+    valid_dtmf = re.compile(r"^[0-9*#p]*$")
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -592,13 +593,9 @@ class SessionController(NSObject):
 
             if '#' in target_uri.user:
                 hash_parts = target_uri.user.partition('#')
-                username_without_postdial_string = hash_parts[0]
-                try:
-                    postdial_string = int(hash_parts[2])
+                if self.valid_dtmf.match(hash_parts[2]):
                     target_uri.user = hash_parts[0]
                     self.postdial_string = hash_parts[2]
-                except ValueError:
-                    pass
 
             self.session.connect(ToHeader(target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)

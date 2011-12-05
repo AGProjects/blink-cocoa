@@ -1009,7 +1009,10 @@ class AudioController(MediaStream):
         time.sleep(2)
         for digit in self.sessionController.postdial_string:
             time.sleep(0.5)
-            self.send_dtmf(digit)
+            if digit == 'p':
+                time.sleep(0.5)
+            else:
+                self.send_dtmf(digit)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidFail(self, sender, data):
