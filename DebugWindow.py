@@ -216,31 +216,31 @@ class DebugWindow(NSObject):
 
     @objc.IBAction
     def clearClicked_(self, sender):
-        if sender.identifier() == 'clear-activity':
+        if sender.tag() == 106:
             self.activityTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.activityTextView.textStorage().length()))
-        elif sender.identifier() == 'clear-sip':
+        elif sender.tag() == 101:
             self.sipTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.sipTextView.textStorage().length()))
             self.sipInCount = 0
             self.sipOutCount = 0
             self.sipBytes = 0
             self.sipInfoLabel.setStringValue_('')
-        elif sender.identifier() == 'clear-rtp':
+        elif sender.tag() == 102:
             self.rtpTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.rtpTextView.textStorage().length()))
-        elif sender.identifier() == 'clear-msrp':
+        elif sender.tag() == 104:
             self.msrpInCount = 0
             self.msrpOutCount = 0
             self.msrpBytes = 0
             self.msrpInfoLabel.setStringValue_('')
             self.msrpTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.msrpTextView.textStorage().length()))
-        elif sender.identifier() == 'clear-xcap':
+        elif sender.tag() == 105:
             self.xcapTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.xcapTextView.textStorage().length()))
-        elif sender.identifier() == 'clear-notifications':
+        elif sender.tag() == 103:
             self.notifications = []
             self.notifications_unfiltered = []
             self.notificationsBytes = 0
             self.notificationsTextView.reloadData()
             self.notificationsInfoLabel.setStringValue_('')
-        elif sender.identifier() == 'clear-engine':
+        elif sender.tag() == 107:
             self.pjsipCount = 0
             self.pjsipBytes = 0
             self.pjsipInfoLabel.setStringValue_('')
