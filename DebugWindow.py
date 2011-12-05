@@ -109,15 +109,7 @@ class DebugWindow(NSObject):
     def init(self):
         self = super(DebugWindow, self).init()
 
-        userdef = NSUserDefaults.standardUserDefaults()
-        savedFrame = userdef.stringForKey_("NSWindow Frame DebugWindow")
-
         NSBundle.loadNibNamed_owner_("DebugWindow", self)
-
-        if savedFrame:
-            x, y, w, h = str(savedFrame).split()[:4]
-            frame = NSMakeRect(int(x), int(y), int(w), int(h))
-            self.window.setFrame_display_(frame, True)
 
         for textView in [self.activityTextView, self.sipTextView, self.rtpTextView, self.msrpTextView, self.xcapTextView, self.pjsipTextView]:
             textView.setString_("")
@@ -139,10 +131,6 @@ class DebugWindow(NSObject):
         self.userDefaultsDidChange_(None)
 
         return self
-
-    def windowDidMove_(self, notification):
-        if self.window.frameAutosaveName():
-            self.window.saveFrameUsingName_(self.window.frameAutosaveName())
 
     def show(self):
         self.window.makeKeyAndOrderFront_(self)
