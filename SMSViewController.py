@@ -16,7 +16,7 @@ from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup
-from sipsimple.payloads.iscomposing import IsComposingMessage, State, LastActive, Refresh, ContentType
+from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import Timestamp, TimestampedNotificationData
@@ -389,12 +389,12 @@ class SMSViewController(NSObject):
     def chatView_becameIdle_(self, chatView, last_active):
         if self.enableIsComposing:
             content = IsComposingMessage(state=State("idle"), refresh=Refresh(60), last_active=LastActive(last_active or datetime.now()), content_type=ContentType('text')).toxml()
-            self.sendMessage(content, IsComposingMessage.content_type)
+            self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatView_becameActive_(self, chatView, last_active):
         if self.enableIsComposing:
             content = IsComposingMessage(state=State("active"), refresh=Refresh(60), last_active=LastActive(last_active or datetime.now()), content_type=ContentType('text')).toxml()
-            self.sendMessage(content, IsComposingMessage.content_type)
+            self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
