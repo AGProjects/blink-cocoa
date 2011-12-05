@@ -443,10 +443,12 @@ class DebugWindow(NSObject):
         arrow = {'incoming': '<--', 'outgoing': '-->'}[notification.data.direction]
 
         try:
-            local_address = notification.sender.getHost()
+            local_address = notification.sender.transport.getHost()
             local_address = '%s:%d' % (local_address.host, local_address.port)
         except AttributeError:
-            local_address = 'unknown'
+            # this may happen because we process this notification after transport has been disconnected
+            local_address = 'local'
+
         remote_address = notification.sender.getPeer()
         remote_address = '%s:%d' % (remote_address.host, remote_address.port)
 
