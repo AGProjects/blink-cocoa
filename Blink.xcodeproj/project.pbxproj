@@ -242,6 +242,8 @@
 		1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
+		1F489AD0148D335A0033D860 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9268FF1486C494006F2FD8 /* Carbon.framework */; };
+		1F489AD1148D33650033D860 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9269011486C4A4006F2FD8 /* Security.framework */; };
 		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
@@ -1394,6 +1396,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F489AD1148D33650033D860 /* Security.framework in Frameworks */,
+				1F489AD0148D335A0033D860 /* Carbon.framework in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */,
 			);
