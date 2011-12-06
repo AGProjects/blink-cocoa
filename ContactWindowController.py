@@ -1678,7 +1678,7 @@ class ContactWindowController(NSWindowController):
                     sessionController.reject(486, 'Busy Here')
                     return
 
-                if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown'):
+                if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
                     BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
                     sessionController.reject(403, 'Not Acceptable')
                     return
