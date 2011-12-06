@@ -243,9 +243,9 @@ class SessionInfoController(NSObject):
         self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state and sub_state != 'None' else state)
 
     def updateAudio(self):
-        if self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None:
+        if self.audio_status.stringValue() and (self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None):
             self.resetAudio()
-        else:
+        elif (self.sessionController is not None and self.audio_stream is not None and self.audio_stream.stream is not None):
             self.updateAudioStatus()
 
             self.audio_rtt_graph.setDataQueue_(self.audio_stream.rtt_history)
