@@ -1009,7 +1009,7 @@ class AudioController(MediaStream):
         time.sleep(2)
         for digit in self.sessionController.postdial_string:
             time.sleep(0.5)
-            if digit == 'p':
+            if digit == ',':
                 time.sleep(0.5)
             else:
                 self.send_dtmf(digit)

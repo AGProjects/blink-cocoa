@@ -69,7 +69,7 @@ class SessionController(NSObject):
     remote_conference_has_audio = False
     transfer_window = None
     outbound_audio_calls = 0
-    valid_dtmf = re.compile(r"^[0-9*#p]*$")
+    valid_dtmf = re.compile(r"^[0-9*#,]*$")
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
