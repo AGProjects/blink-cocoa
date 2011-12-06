@@ -1033,6 +1033,9 @@ class AudioController(MediaStream):
         self.loss_history = None
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
+        self.invalidateTimers()
+        self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.remove_observer(self, sender=self.sessionController)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
