@@ -216,7 +216,7 @@ class DebugWindow(NSObject):
 
     @objc.IBAction
     def clearClicked_(self, sender):
-        if sender.tag() == 106:
+        if sender.tag() == 100:
             self.activityTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.activityTextView.textStorage().length()))
         elif sender.tag() == 101:
             self.sipTextView.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.sipTextView.textStorage().length()))
