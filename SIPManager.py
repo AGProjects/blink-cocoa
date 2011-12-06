@@ -554,7 +554,7 @@ class SIPManager(object):
         focus = "1" if data.focus else "0"
         failure_reason = 'Answered elsewhere'
 
-        self.add_to_history(id, media_types, 'incoming', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
