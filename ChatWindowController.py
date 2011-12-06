@@ -116,11 +116,6 @@ class ChatWindowController(NSWindowController):
                 self.muteButton.setImage_(NSImage.imageNamed_("mute"))
                 self.muteButton.setState_(NSOffState)
 
-            if not self.timer:
-                self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
-
             self.setOwnIcon()
 
             if not SIPManager().isMediaTypeSupported('video'):
@@ -132,6 +127,16 @@ class ChatWindowController(NSWindowController):
                         pass
 
         return self
+
+    def addTimer(self):
+        if not self.timer:
+            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
+
+    def removeTimer(self):
+        if self.timer:
+           self.timer.invalidate()
 
     def setOwnIcon(self):
         self.own_icon = None
@@ -441,6 +446,9 @@ class ChatWindowController(NSWindowController):
             else:
                 self.detachWindow_(selectedSession)
 
+    def windowDidExpose_(self, sender):
+        self.addTimer()
+
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
 
@@ -462,6 +470,7 @@ class ChatWindowController(NSWindowController):
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self)
+        self.removeTimer()
 
         return True
 
