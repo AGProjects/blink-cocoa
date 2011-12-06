@@ -153,11 +153,20 @@ class AudioController(MediaStream):
 
         return self
 
-    def dealloc(self):
-        if self.timer:
-            self.timer.invalidate()
-        if self.statistics_timer:
+    def invalidateTimers(self):
+        if self.statistics_timer is not None and self.statistics_timer.isValid():
             self.statistics_timer.invalidate()
+        self.statistics_timer = None
+
+        if self.transfer_timer is not None and self.transfer_timer.isValid():
+            self.transfer_timer.invalidate()
+        self.transfer_timer = None
+
+    def dealloc(self):
+        self.invalidateTimers()
+        if self.timer is not None and self.timer.isValid():
+            self.timer.invalidate()
+        self.timer = None
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False):
@@ -1035,11 +1044,9 @@ class AudioController(MediaStream):
         self.loss_history = None
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
-    
+        self.invalidateTimers()
         self.sessionController.log_info("Audio stream ended")
-        if self.transfer_timer is not None and self.transfer_timer.isValid():
-            self.transfer_timer.invalidate()
-        self.transfer_timer = None
+
         if self.sessionController.endingBy:
             pass # the session is being ended
         else:
