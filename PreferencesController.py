@@ -256,6 +256,7 @@ class PreferencesController(NSWindowController, object):
 
             tabItem.setLabel_(label)
             tabItem.setView_(view)
+
             self.advancedTabView.addTabViewItem_(tabItem)
 
     def createUIForSection(self, object, frame, section_name, section, forAccount=False):
@@ -610,14 +611,19 @@ class PreferencesController(NSWindowController, object):
             account_info = self.getAccountForRow(row)
             if not account_info.account.enabled:
                 cell.setImage_(None)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration disabled'), NSAccessibilityTitleAttribute)
             elif account_info.registration_state == 'succeeded':
                 cell.setImage_(self.dots["green"])
+                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration succeeded'), NSAccessibilityTitleAttribute)
             elif account_info.registration_state == 'started':
                 cell.setImage_(self.dots["yellow"])
+                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration started'), NSAccessibilityTitleAttribute)
             elif account_info.registration_state == 'failed':
                 cell.setImage_(self.dots["red"])
+                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration failed'), NSAccessibilityTitleAttribute)
             else:
                 cell.setImage_(None)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration disabled'), NSAccessibilityTitleAttribute)
 
     def tableViewSelectionDidChange_(self, notification):
         sv = self.passwordText.superview()

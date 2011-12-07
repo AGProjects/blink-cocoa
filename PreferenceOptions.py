@@ -159,6 +159,8 @@ class StringOption(Option):
         else:
             self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
 
+        self.text.cell().accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_(description or re.sub('_', ' ', name)), NSAccessibilityTitleAttribute)
+
         self.text.sizeToFit()
         self.setViewExpands(self.text)
         self.text.cell().setScrollable_(True)
@@ -217,6 +219,8 @@ class UnicodeOption(Option):
             self.text = NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
         else:
             self.text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 17))
+
+        self.text.cell().accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_(description or re.sub('_', ' ', name)), NSAccessibilityTitleAttribute)
 
         self.text.sizeToFit()
         self.setViewExpands(self.text)
@@ -398,7 +402,7 @@ class MultipleSelectionOption(Option):
         cell.setTitle_("")
         column.setDataCell_(cell)
         self.table.addTableColumn_(column)
-        
+
         column = NSTableColumn.alloc().initWithIdentifier_("text")
         cell = NSTextFieldCell.alloc().init()
         cell.setControlSize_(NSSmallControlSize)
@@ -451,8 +455,7 @@ class MultipleSelectionOption(Option):
             table.reloadData()
             return True
         return False
-        
-    
+
     def tableView_writeRows_toPasteboard_(self, table, rows, pboard):
         if not self.allowReorder: return False
         index = rows[0]
@@ -635,8 +638,9 @@ class PopUpMenuOption(Option):
         self.caption = makeLabel(description or formatName(name))
         self.setSpacing_(8)
         self.addSubview_(self.caption)
-        
+
         self.popup = NSPopUpButton.alloc().initWithFrame_(NSMakeRect(120, 0, 200, 26))
+
         self.addSubview_(self.popup)
         
         self.popup.setTarget_(self)
@@ -1404,7 +1408,10 @@ class NumberPairOption(Option):
             text.setIntegerValue_(0)
             text.setFormatter_(formatter)
             text.setDelegate_(self)
-                    
+
+        self.first.cell().accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('%s start value' % description or re.sub('_', ' ', name)), NSAccessibilityTitleAttribute)
+        self.second.cell().accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('%s end value' % description or re.sub('_', ' ', name)), NSAccessibilityTitleAttribute)
+
         self.addSubview_(self.caption)
         self.addSubview_(self.first)
         self.addSubview_(self.second)

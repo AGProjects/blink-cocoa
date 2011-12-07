@@ -79,7 +79,7 @@
 						<string key="NSFrame">{{-1, 16}, {207, 22}}</string>
 						<reference key="NSSuperview" ref="860144051"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="487749716"/>
+						<reference key="NSNextKeyView" ref="257018209"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSPopUpButtonCell" key="NSCell" id="222415347">
 							<int key="NSCellFlags">-2076049856</int>
@@ -151,6 +151,7 @@
 						<string key="NSFrame">{{2, 4}, {80, 14}}</string>
 						<reference key="NSSuperview" ref="860144051"/>
 						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView" ref="487749716"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="980515609">
 							<int key="NSCellFlags">68288064</int>
@@ -184,7 +185,7 @@
 						<string key="NSFrame">{{179, 0}, {26, 20}}</string>
 						<reference key="NSSuperview" ref="860144051"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="257018209"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="79904190">
 							<int key="NSCellFlags">67239424</int>
@@ -281,6 +282,14 @@
 						<reference key="destination" ref="504998051"/>
 					</object>
 					<int key="connectionID">16</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBAccessibilityConnection" key="connection">
+						<string key="label">title</string>
+						<reference key="source" ref="487749716"/>
+						<reference key="destination" ref="257018209"/>
+					</object>
+					<int key="connectionID">31</int>
 				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -409,10 +418,27 @@
 				<string key="1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="10.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="11.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<object class="NSMutableDictionary" key="14.IBAttributePlaceholdersKey">
+					<string key="NS.key.0">AccessibilityDescription</string>
+					<object class="IBAccessibilityAttribute" key="NS.object.0">
+						<string key="name">AccessibilityDescription</string>
+						<reference key="object" ref="953184246"/>
+						<string key="accessibilityValue">Play tone</string>
+					</object>
+				</object>
 				<string key="14.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="15.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<dictionary class="NSMutableDictionary" key="2.IBAttributePlaceholdersKey"/>
 				<string key="2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<object class="NSMutableDictionary" key="4.IBAttributePlaceholdersKey">
+					<string key="NS.key.0">AccessibilityDescription</string>
+					<object class="IBAccessibilityAttribute" key="NS.object.0">
+						<string key="name">AccessibilityDescription</string>
+						<reference key="object" ref="504998051"/>
+						<string key="accessibilityValue">Sounds List</string>
+					</object>
+				</object>
 				<string key="4.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="5.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="6.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -424,7 +450,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">30</int>
+			<int key="maxID">31</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
