@@ -874,15 +874,6 @@
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">40</int>
 								</object>
-								<object class="NSMenuItem" id="43955222">
-									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Search for People...</string>
-									<string key="NSKeyEquiv"/>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<reference key="NSOnImage" ref="660791971"/>
-									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">41</int>
-								</object>
 								<object class="NSMenuItem" id="745628434">
 									<reference key="NSMenu" ref="427015895"/>
 									<string key="NSTitle">Call History on Server...</string>
@@ -3583,14 +3574,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">937</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">showAccountDirectory:</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="43955222"/>
-					</object>
-					<int key="connectionID">949</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">desktopShareMenu</string>
 						<reference key="source" ref="900429702"/>
@@ -5509,7 +5492,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="427015895"/>
 						<array class="NSMutableArray" key="children">
 							<reference ref="548750920"/>
-							<reference ref="43955222"/>
 							<reference ref="624394804"/>
 							<reference ref="745628434"/>
 						</array>
@@ -5518,11 +5500,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBObjectRecord">
 						<int key="objectID">1016</int>
 						<reference key="object" ref="548750920"/>
-						<reference key="parent" ref="427015895"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">948</int>
-						<reference key="object" ref="43955222"/>
 						<reference key="parent" ref="427015895"/>
 					</object>
 					<object class="IBObjectRecord">
@@ -6796,7 +6773,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="929.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="930.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="945.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="948.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="951.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="952.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="953.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>

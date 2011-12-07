@@ -69,28 +69,6 @@ class AccountSettings(NSObject):
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
 
-    def showDirectoryForAccount_(self, account):
-        if account.server.settings_url is None:
-            return
-        self._account = account
-
-        self.webView.setHidden_(True)
-        self.loadingText.setHidden_(False)
-        self.spinWheel.setHidden_(False)
-        self.spinWheel.startAnimation_(None)
-        self.errorText.setHidden_(True)
-
-        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
-
-        query_string = "realm=%s&tab=contacts&task=directory&user_agent=blink" % self._account.id
-        if account.server.settings_url.query:
-            query_string = "%s&%s" % (account.server.settings_url.query, query_string)
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        url = NSURL.URLWithString_(url)
-        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-        self.webView.mainFrame().loadRequest_(request)
-        self.window.makeKeyAndOrderFront_(self)
-
     def showPSTNAccessforAccount_(self, account):
         if account.server.settings_url is None:
             return

@@ -1950,9 +1950,6 @@ class ContactWindowController(NSWindowController):
         item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
 
-        item = self.toolsMenu.itemWithTag_(41) # Search Directory...
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
-
         item = self.toolsMenu.itemWithTag_(42) # Call History
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
 
@@ -2512,13 +2509,6 @@ class ContactWindowController(NSWindowController):
         if not self.accountSettingsPanels.has_key(account):
             self.accountSettingsPanels[account] = AccountSettings.createWithOwner_(self)
         self.accountSettingsPanels[account].showSettingsForAccount_(account)
-
-    @objc.IBAction
-    def showAccountDirectory_(self, sender):
-        account = self.activeAccount()
-        if not self.accountSettingsPanels.has_key(account):
-            self.accountSettingsPanels[account] = AccountSettings.alloc().initWithOwner_(self)
-        self.accountSettingsPanels[account].showDirectoryForAccount_(account)
 
     @objc.IBAction
     def showPSTNAccess_(self, sender):
