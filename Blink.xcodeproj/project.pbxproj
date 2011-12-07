@@ -1111,7 +1111,6 @@
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
-		1F0E25FA1402EE7F004AED9C /* Info-crypto.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-crypto.plist"; sourceTree = "<group>"; };
 		1F0E260C1402F097004AED9C /* blink-crypto.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-crypto.icns"; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
@@ -1567,7 +1566,6 @@
 				8D1107310486CEB800E47090 /* Info.plist */,
 				1F8DC9111351D7460034815C /* Info-lite.plist */,
 				1FCF160812B5639F00F71BE5 /* Info-pro.plist */,
-				1F0E25FA1402EE7F004AED9C /* Info-crypto.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 			);
 			name = Resources;

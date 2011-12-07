@@ -116,8 +116,8 @@ class AudioController(MediaStream):
             self.ice_negotiation_status = u'Disabled' if not self.sessionController.account.nat_traversal.use_ice else None
 
             NSBundle.loadNibNamed_owner_("AudioSession", self)
-            if NSApp.delegate().applicationName != 'Blink Crypto':
-                self.setNormalViewHeight(self.view.frame())
+            # TODO: hide zrtp area until implemented -adi
+            self.setNormalViewHeight(self.view.frame())
 
             item = self.view.menu().itemWithTag_(20) # add to contacts
             item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
