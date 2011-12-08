@@ -334,7 +334,7 @@ class MessageHandler(NSObject):
         
         leftover = text
         while leftover:
-            # if the text is too big, break it in a smaller size.. without corrupting
+            # if the text is too big, break it in a smaller size without corrupting
             # utf-8 character sequences
             if len(leftover) > MAX_MESSAGE_LENGTH:
                 text = leftover[:MAX_MESSAGE_LENGTH]
