@@ -347,7 +347,6 @@
 									</object>
 									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Put the session on hold</string>
-									<bool key="NSSegmentItemSelected">YES</bool>
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
 								<object class="NSSegmentItem">
@@ -359,7 +358,6 @@
 									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Record the Audio Session to file</string>
 									<int key="NSSegmentItemTag">1</int>
-									<bool key="NSSegmentItemSelected">YES</bool>
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
 								<object class="NSSegmentItem">
@@ -371,12 +369,11 @@
 									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Hangup</string>
 									<int key="NSSegmentItemTag">2</int>
-									<bool key="NSSegmentItemSelected">YES</bool>
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
 							</array>
 							<int key="NSSelectedSegment">2</int>
-							<int key="NSTrackingMode">1</int>
+							<int key="NSTrackingMode">2</int>
 							<int key="NSSegmentStyle">1</int>
 						</object>
 					</object>
@@ -429,7 +426,7 @@
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
 							</array>
-							<int key="NSTrackingMode">1</int>
+							<int key="NSTrackingMode">2</int>
 							<int key="NSSegmentStyle">1</int>
 						</object>
 					</object>
@@ -482,7 +479,7 @@
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
 							</array>
-							<int key="NSTrackingMode">1</int>
+							<int key="NSTrackingMode">2</int>
 							<int key="NSSegmentStyle">1</int>
 						</object>
 					</object>
