@@ -1397,11 +1397,13 @@ class ChatController(MediaStream):
         handler(notification.sender, notification.data)
 
     def _NH_ChatStreamGotMessage(self, stream, data):
+        message = data.message
+        if not message.content_type.startswith("text/"):
+            return
+
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if not window:
             return
-
-        message = data.message
 
         hash = hashlib.sha1()
         hash.update(message.body.encode("utf-8")+str(message.timestamp))
