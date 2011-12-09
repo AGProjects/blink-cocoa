@@ -182,6 +182,7 @@ class ContactWindowController(NSWindowController):
     presenceMenu = objc.IBOutlet()
     windowMenu = objc.IBOutlet()
     restoreContactsMenu = objc.IBOutlet()
+    keepOnTopMenuItem = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
@@ -278,6 +279,7 @@ class ContactWindowController(NSWindowController):
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
         ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
+        ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
 
         self.refreshContactsList()
         self.updateActionButtons()
@@ -336,7 +338,16 @@ class ContactWindowController(NSWindowController):
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
+        self.setAlwaysOnTop()
         self.loaded = True
+
+    def userDefaultsDidChange_(self, notification):
+        self.setAlwaysOnTop()
+
+    def setAlwaysOnTop(self):
+        always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
+        self.window().setLevel_(NSFloatingWindowLevel if always_on_top else NSNormalWindowLevel)
+        self.keepOnTopMenuItem.setState_(NSOnState if always_on_top else NSOffState)
 
     def refreshLdapDirectory(self):
         active_account = self.activeAccount()
@@ -1789,7 +1800,8 @@ class ContactWindowController(NSWindowController):
             size.height = 154
         return size
 
-    def windowDidResize_(self, notification):
+    def windowDidResize(self, notification):
+        print 'window did resize...'
         if NSHeight(self.window().frame()) > 154:
             self.originalSize = None
             self.setCollapsed(False)
@@ -1827,6 +1839,11 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def showDebugWindow_(self, sender):
         self.debugWindow.show()
+
+    @objc.IBAction
+    def keepBlinkOnTop_(self, sender):
+        always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
+        NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not always_on_top else False, "AlwaysOnTop") 
 
     @objc.IBAction
     def toggleMirrorWindow_(self, sender):
