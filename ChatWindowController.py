@@ -11,6 +11,7 @@ from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.streams.applications.chat import CPIMIdentity
+from urllib import unquote
 
 from MediaStream import *
 from ConferenceScreenSharing import ConferenceScreenSharing
@@ -46,6 +47,7 @@ PARTICIPANTS_MENU_VIEW_SCREEN = 324
 PARTICIPANTS_MENU_SHOW_SESSION_INFO = 400
 
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 
 
@@ -540,8 +542,7 @@ class ChatWindowController(NSWindowController):
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
-                # TODO: multiparty screensharing
-                stream_supports_screen_sharing = True if hasattr(chat_stream.stream, "screensharing_allowed") and chat_stream.stream.screensharing_allowed else False
+                stream_supports_screen_sharing = chat_stream.screensharing_allowed
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
             else:
                 stream_supports_screen_sharing = False
@@ -773,6 +774,9 @@ class ChatWindowController(NSWindowController):
                     item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
                     item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'low' else NSOffState)
                     item.setEnabled_(True)
+                    item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
+                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'medium' else NSOffState)
+                    item.setEnabled_(True)
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
@@ -828,12 +832,16 @@ class ChatWindowController(NSWindowController):
             elif tag == PARTICIPANTS_MENU_SHOW_SESSION_INFO:
                 session.info_panel.toggle()
 
+    @objc.IBAction
+    def setScreeSharingCompression_(self, sender):
+        self.notification_center.post_notification("ScreenSharingCompressionChanged", sender=sender)
+
     def viewSharedScreen(self, uri, display_name, url):
         session = self.selectedSessionController()
         if session:
-            session.log_info(u"Opening Shared Screen of %s from %s" % (uri, url))
+            session.log_info(u"Opening Shared Screen of %s from %s" % (uri, unquote(url)))
             remoteScreen = ConferenceScreenSharing.createWithOwner_(self)
-            remoteScreen.showSharedScreen(display_name, uri, url)
+            remoteScreen.showSharedScreen(display_name, uri, unquote(url))
             self.remoteScreens[uri] = remoteScreen
 
     @objc.IBAction
@@ -947,7 +955,6 @@ class ChatWindowController(NSWindowController):
 
             # Add conference participants if any
             if session.conference_info is not None:
-
                 for user in session.conference_info.users:
                     uri = re.sub("^(sip:|sips:)", "", user.entity)
                     contact = getContactMatchingURI(uri)
@@ -964,10 +971,9 @@ class ChatWindowController(NSWindowController):
                     if chat_endpoints:
                         active_media.append('message')
 
-                    # TODO: set screen sharing url
-                    if hasattr(user, "screensharing_url") and user.screensharing_url is not None:
+                    if user.screen_image_url is not None:
                         active_media.append('screen')
-                        contact.setScreensharingUrl(user.screensharing_url)
+                        contact.setScreensharingUrl(user.screen_image_url.value)
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
@@ -975,7 +981,6 @@ class ChatWindowController(NSWindowController):
                         active_media.append('audio')
                     elif audio_endpoints and user_on_hold:
                         active_media.append('audio-onhold')
-
 
                     contact.setActiveMedia(active_media)
                     # detail will be reset on receival of next conference-info update

@@ -17,6 +17,7 @@ from application.notification import IObserver, NotificationCenter
 from application.system import makedirs
 from application.python import Null
 from dateutil.tz import tzlocal
+from itertools import chain
 from zope.interface import implements
 
 from resources import ApplicationData
@@ -67,6 +68,7 @@ TOOLBAR_SCREENSHOT_MENU_AREA = 302
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU = 400
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
+TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
 
 bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
@@ -147,9 +149,15 @@ class ConferenceScreenSharingHandler(object):
     max_framerate = 1
     compression = 0.7 # jpeg compression
     scale_factor = 1
+    high_quality_compression = 0.8
+    low_quality_compression = 0.5
+    medium_quality_compression = 0.2
+    high_quality_scale_factor = 1
+    low_quality_scale_factor = 1
+    medium_quality_scale_factor = 1
 
     # GUI controled value
-    quality = 'high' # or 'low'
+    quality = 'medium' # or 'low'
 
     def setMaxFramerate(self, max_framerate):
         self.max_framerate = max_framerate
@@ -160,16 +168,22 @@ class ConferenceScreenSharingHandler(object):
     def setQuality(self, quality):
         BlinkLogger().log_info('Set screen sharing quality to %s' % quality)
         self.quality = quality
-        self.compression = 0.7 if self.quality == 'high' else 0.3
-        self.max_framerate = 1 if self.quality == 'high' else 3
         if self.quality == 'low':
-            self.setScaleFactor(10)
+            self.setScaleFactor(self.low_quality_scale_factor)
+            self.compression = self.low_quality_compression
+        elif self.quality == 'high':
+            self.setScaleFactor(self.high_quality_scale_factor)
+            self.compression = self.high_quality_compression
+        elif self.quality == 'medium':
+            self.setScaleFactor(self.medium_quality_scale_factor)
+            self.compression = self.medium_quality_compression
 
     def setConnected(self, stream):
         self.connected = True
         self.stream = stream
         self.last_time = time.time()
         NotificationCenter().add_observer(self, sender=stream)
+        NotificationCenter().add_observer(self, name="ScreenSharingCompressionChanged")
 
         if self.screenSharingTimer is None:
             self.screenSharingTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "sendScreenshotTimer:", None, True)
@@ -188,6 +202,7 @@ class ConferenceScreenSharingHandler(object):
 
         if self.stream:
             NotificationCenter().remove_observer(self, sender=self.stream)
+            NotificationCenter().remove_observer(self, name="ScreenSharingCompressionChanged")
             self.stream = None
 
     @allocate_autorelease_pool
@@ -199,6 +214,11 @@ class ConferenceScreenSharingHandler(object):
     def _NH_ChatStreamDidDeliverMessage(self, sender, data):
         self.may_send = True
         self.last_snapshot_time = time.time()
+
+    def _NH_ScreenSharingCompressionChanged(self, sender, data):
+        self.compression = sender.integerValue() * 0.1
+        BlinkLogger().log_info('Screen sharing compression set to %s' % self.compression)
+
 
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
         self.may_send = True
@@ -214,32 +234,30 @@ class ConferenceScreenSharingHandler(object):
             self.last_time = time.time()
 
         if self.may_send and dt >= 1/self.max_framerate:
-            #if self.current_framerate is not None:
-            #    BlinkLogger().log_info('Framerate: %.1f' % self.current_framerate)
-
             self.frames = self.frames + 1
             rect = CGDisplayBounds(CGMainDisplayID())
             img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
-            if self.quality == 'high':
-                bitmap_data = NSBitmapImageRep.alloc().initWithCGImage_(img)
-            else:
-                image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
-                originalSize = image.size()
-                resizeWidth = originalSize.width/self.scale_factor
-                resizeHeight = originalSize.height/self.scale_factor
+            image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
+            originalSize = image.size()
+            if self.scale_factor != 1:
+                resizeWidth = originalSize.width*self.scale_factor
+                resizeHeight = originalSize.height*self.scale_factor
                 scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
                 scaled_image.lockFocus()
                 image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
                 scaled_image.unlockFocus()
                 tiff_data = scaled_image.TIFFRepresentation()
-                bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+            else:
+                tiff_data = image.TIFFRepresentation()
+
+            bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
 
             properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
             data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
             now = datetime.datetime.now(tzlocal())
             text=base64.encodestring(data)
             BlinkLogger().log_info('Sending %s bytes screen' % len(text))
-            self.stream.send_message(text, content_type='image/jpeg', timestamp=Timestamp(now))
+            self.stream.send_message(text, content_type='application/blink-screensharing', timestamp=Timestamp(now))
             self.may_send = False
 
 
@@ -537,6 +555,10 @@ class ChatController(MediaStream):
 
 
         return self
+
+    @property
+    def screensharing_allowed(self):
+        return 'screen-sharing' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
 
     def awakeFromNib(self):
         # setup smiley popup 
@@ -1165,11 +1187,10 @@ class ChatController(MediaStream):
             elif identifier == 'screenshot':
                 return True
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL:
-            if self.sessionController.remote_focus:
-                # TODO: multiparty screensharing
-                return (True if hasattr(self.stream, "screensharing_allowed") and self.stream.screensharing_allowed else False)
-            else:
+            if not self.sessionController.remote_focus:
                 return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
+            elif self.screensharing_allowed:
+                return True
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE:
             if not self.sessionController.remote_focus:
                 return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
@@ -1180,7 +1201,7 @@ class ChatController(MediaStream):
                     return True if self.sessionController.canCancelProposal() else False
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-        elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW):
+        elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM):
             if self.sessionController.remote_focus and self.screensharing_handler is not None and self.screensharing_handler.connected:
                 return True
 
@@ -1345,27 +1366,35 @@ class ChatController(MediaStream):
         elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW:
             if self.screensharing_handler is not None:
                 self.screensharing_handler.setQuality('low')
+        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM:
+            if self.screensharing_handler is not None:
+                self.screensharing_handler.setQuality('medium')
 
     def shareScreenWithConferenceParticipants(self):
-        self.share_screen_in_conference = True if self.share_screen_in_conference == False else False
+        self.share_screen_in_conference = True if not self.share_screen_in_conference else False
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             menu = window.toolbar.delegate().desktopShareMenu
             menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
             window.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
-            try:
-                item = (item for item in window.toolbar.visibleItems() if item.tag() == TOOLBAR_SCREENSHARING_BUTTON).next()
-            except StopIteration:
-                pass
-            else:
-                item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
+        self.setScreenSharingToolbarIcon()
 
         if self.share_screen_in_conference and self.stream is not None:
             self.screensharing_handler.setConnected(self.stream)
         else:
             self.screensharing_handler.setDisconnected()
 
+    def setScreenSharingToolbarIcon(self):
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
+            try:
+                item = (item for item in window.toolbar.visibleItems() if item.tag() == TOOLBAR_SCREENSHARING_BUTTON).next()
+            except StopIteration:
+                pass
+            else:
+                item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
+    
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
         if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
@@ -1569,12 +1598,14 @@ class ChatController(MediaStream):
             self.videoContainer.hideVideo()
             self.exitFullScreen()
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-
+        self.share_screen_in_conference = False
+        self.setScreenSharingToolbarIcon()
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
             self.screensharing_handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
+            window.noteSession_isScreenSharing_(self.sessionController, False)
         else:
             self.handler = None
         self.stream = None
@@ -1588,17 +1619,20 @@ class ChatController(MediaStream):
             self.chatViewController.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
+        self.share_screen_in_conference = False
         # save the view so we can print it
         self.sessionController.lastChatOutputView = self.chatViewController.outputView
         self.removeFromSession()
         self.videoContainer.hideVideo()
         self.exitFullScreen()
+        self.setScreenSharingToolbarIcon()
 
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
             self.screensharing_handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
+            window.noteSession_isScreenSharing_(self.sessionController, False)
         else:
             self.handler = None
         self.stream = None
