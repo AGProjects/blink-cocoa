@@ -527,7 +527,7 @@ class CBGraphView(NSView):
         bounds = self.bounds() # get our view bounds
         insetBounds = NSInsetRect(bounds, 2, 2) # set the inside ortion
         
-        r = NSBezierPath.bezierPathWithRect_(bounds) # creatre a new bezier rect
+        r = NSBezierPath.bezierPathWithRect_(bounds) # create a new bezier rect
         self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
         
         self.borderColor.set() # set border to white
@@ -538,7 +538,8 @@ class CBGraphView(NSView):
         insetBounds.size.height -= 2 # leave room at the top (purely my personal asthetic
 
         if self.dataQueue:
-            rbuf = [ q for q in self.dataQueue if q is not None] # filter "None" from the list
+            buf = self.dataQueue.get()
+            rbuf = [ q for q in buf if q is not None]
             rbuf.reverse() # reverse the list
             
             barRect = NSRect() # init the rect
