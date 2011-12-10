@@ -104,10 +104,10 @@ class AudioController(MediaStream):
 
         if self:
             self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
-            # 10 minutes of history data for printing in Session Info graph
-            self.loss_history = deque(maxlen=600)
-            self.rtt_history = deque(maxlen=600)
-            self.jitter_history = deque(maxlen=600)
+            # 5 minutes of history data for Session Info graphs
+            self.loss_history = deque(maxlen=300)
+            self.rtt_history = deque(maxlen=300)
+            self.jitter_history = deque(maxlen=300)
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)

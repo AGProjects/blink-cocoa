@@ -47,7 +47,7 @@
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
-				<string key="NSWindowContentMaxSize">{1024, 683}</string>
+				<string key="NSWindowContentMaxSize">{712, 683}</string>
 				<string key="NSWindowContentMinSize">{302, 683}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
 					<reference key="NSNextResponder"/>
@@ -1084,7 +1084,7 @@
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{302, 702}</string>
-				<string key="NSMaxSize">{1024, 702}</string>
+				<string key="NSMaxSize">{712, 702}</string>
 				<string key="NSFrameAutosaveName">session-info-panel</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
