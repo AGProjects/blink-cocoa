@@ -4203,7 +4203,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">keepBlinkOnTop:</string>
+						<string key="label">setAlwaysOnTop:</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="386904539"/>
 					</object>
@@ -4211,7 +4211,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">keepOnTopMenuItem</string>
+						<string key="label">alwaysOnTopMenuItem</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="386904539"/>
 					</object>
@@ -7138,7 +7138,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="goToBackupContactsFolderClicked:">id</string>
 						<string key="hangupAllClicked:">id</string>
 						<string key="joinConferenceClicked:">id</string>
-						<string key="keepBlinkOnTop:">id</string>
+						<string key="setAlwaysOnTop:">id</string>
 						<string key="muteClicked:">id</string>
 						<string key="presenceTextAction:">id</string>
 						<string key="presentStatusChanged:">id</string>
@@ -7244,8 +7244,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">joinConferenceClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBActionInfo" key="keepBlinkOnTop:">
-							<string key="name">keepBlinkOnTop:</string>
+						<object class="IBActionInfo" key="setAlwaysOnTop:">
+							<string key="name">setAlwaysOnTop:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="muteClicked:">

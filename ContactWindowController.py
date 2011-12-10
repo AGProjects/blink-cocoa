@@ -182,7 +182,7 @@ class ContactWindowController(NSWindowController):
     presenceMenu = objc.IBOutlet()
     windowMenu = objc.IBOutlet()
     restoreContactsMenu = objc.IBOutlet()
-    keepOnTopMenuItem = objc.IBOutlet()
+    alwaysOnTopMenuItem = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
@@ -347,7 +347,7 @@ class ContactWindowController(NSWindowController):
     def setAlwaysOnTop(self):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
         self.window().setLevel_(NSFloatingWindowLevel if always_on_top else NSNormalWindowLevel)
-        self.keepOnTopMenuItem.setState_(NSOnState if always_on_top else NSOffState)
+        self.alwaysOnTopMenuItem.setState_(NSOnState if always_on_top else NSOffState)
 
     def refreshLdapDirectory(self):
         active_account = self.activeAccount()
@@ -1841,7 +1841,7 @@ class ContactWindowController(NSWindowController):
         self.debugWindow.show()
 
     @objc.IBAction
-    def keepBlinkOnTop_(self, sender):
+    def setAlwaysOnTop_(self, sender):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
         NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not always_on_top else False, "AlwaysOnTop") 
 
