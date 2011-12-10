@@ -248,9 +248,9 @@ class SessionInfoController(NSObject):
         elif (self.sessionController is not None and self.audio_stream is not None and self.audio_stream.stream is not None):
             self.updateAudioStatus()
 
-            self.audio_rtt_graph.setDataQueue_(self.audio_stream.rtt_history)
-            self.audio_packet_loss_graph.setDataQueue_(self.audio_stream.loss_history)
-            self.audio_jitter_graph.setDataQueue_(self.audio_stream.jitter_history)
+            self.audio_rtt_graph.setDataQueue_needsDisplay_(self.audio_stream.rtt_history, True if self.window.isVisible() else False)
+            self.audio_packet_loss_graph.setDataQueue_needsDisplay_(self.audio_stream.loss_history, True if self.window.isVisible() else False)
+            self.audio_jitter_graph.setDataQueue_needsDisplay_(self.audio_stream.jitter_history, True if self.window.isVisible() else False)
 
             rtt = self.audio_stream.statistics['rtt']
             if rtt > 1000:
@@ -476,10 +476,10 @@ class CBGraphView(NSView):
 
         return self
         
-    def setDataQueue_(self, dq):
+    def setDataQueue_needsDisplay_(self, dq, needs_display=False):
         """ set the data object we are graphig """
         self.dataQueue = dq
-        self.setNeedsDisplay_(True)
+        self.setNeedsDisplay_(needs_display)
         
     def setLineWidth_(self, width):
         """ let user change line (bar) width """
