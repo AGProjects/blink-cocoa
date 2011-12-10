@@ -4,7 +4,7 @@
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt',
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'image_file_extension_pattern', 'video_file_extension_pattern', 'translate_alpha2digit',
-           'AccountInfo', 'RingBuffer']
+           'AccountInfo']
 
 import re
 import shlex
@@ -338,18 +338,4 @@ class AccountInfo(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-
-class RingBuffer:
-    def __init__(self, size):
-        """ init with # of elements in the queue """
-        self.data = [ None for i in xrange(size) ]
-
-    def append(self, x):
-        """ take away one and put one in """
-        self.data.pop(0)
-        self.data.append(x)
-
-    def get(self):
-        """ return the list so we can manipulate it """
-        return self.data
 

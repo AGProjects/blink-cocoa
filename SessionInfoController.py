@@ -538,17 +538,10 @@ class CBGraphView(NSView):
         insetBounds.size.height -= 2 # leave room at the top (purely my personal asthetic
 
         if self.dataQueue:
-            buf = self.dataQueue.get()
-            rbuf = [ q for q in buf if q is not None]
-            rbuf.reverse() # reverse the list
-            
             barRect = NSRect() # init the rect
-                
-            try:      
-                maxB = max(rbuf) # find out the max value so we can scale the graph
-                maxB = self.minHeigth if self.minHeigth and self.minHeigth > maxB else maxB
-            except ValueError:
-                maxB = 0
+
+            # find out the max value so we can scale the graph
+            maxB = max(max(self.dataQueue), self.minHeigth or 1)
 
             # disable anti-aliasing since it looks bad
             shouldAA = NSGraphicsContext.currentContext().shouldAntialias()
@@ -556,16 +549,16 @@ class CBGraphView(NSView):
 
             # draw each bar
             barRect.origin.x = insetBounds.size.width - self.lineWidth + 2
-            for b in rbuf:
+            for sample in reversed(self.dataQueue):
                 # set drawing color
-                if b >= self.limit:
+                if sample >= self.limit:
                     self.lineColorAboveLimit.set()
                 else:
                     self.lineColor.set()
 
                 barRect.origin.y = insetBounds.origin.y
                 barRect.size.width = self.lineWidth
-                barRect.size.height = ((int(b) * insetBounds.size.height) / maxB)
+                barRect.size.height = ((int(sample) * insetBounds.size.height) / maxB)
                 
                 NSBezierPath.fillRect_(barRect)
                 

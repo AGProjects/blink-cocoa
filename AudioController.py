@@ -13,6 +13,7 @@ import urllib
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
+from collections import deque
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
@@ -104,9 +105,9 @@ class AudioController(MediaStream):
         if self:
             self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
             # 10 minutes of history data for printing in Session Info graph
-            self.loss_history = RingBuffer(600)
-            self.rtt_history = RingBuffer(600)
-            self.jitter_history = RingBuffer(600)
+            self.loss_history = deque(maxlen=600)
+            self.rtt_history = deque(maxlen=600)
+            self.jitter_history = deque(maxlen=600)
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
@@ -760,11 +761,11 @@ class AudioController(MediaStream):
             rtt = self.statistics['rtt']
             loss = self.statistics['loss']
 
-            if self.jitter_history:
+            if self.jitter_history is not None:
                 self.jitter_history.append(jitter)
-            if self.rtt_history:
+            if self.rtt_history is not None:
                 self.rtt_history.append(rtt)
-            if self.loss_history:
+            if self.loss_history is not None:
                 self.loss_history.append(loss)
 
             text = []
