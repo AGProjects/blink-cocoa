@@ -959,7 +959,8 @@
 								<object class="NSMenuItem" id="386904539">
 									<reference key="NSMenu" ref="835318025"/>
 									<string key="NSTitle">Always On Top</string>
-									<string key="NSKeyEquiv"/>
+									<string key="NSKeyEquiv">t</string>
+									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
@@ -1548,6 +1549,7 @@
 												<int key="NSvFlags">-2147483382</int>
 												<string key="NSFrame">{{0, 288}, {274, 60}}</string>
 												<reference key="NSSuperview" ref="384228997"/>
+												<reference key="NSNextKeyView"/>
 												<string key="NSClassName">NSView</string>
 											</object>
 										</array>
@@ -7138,7 +7140,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="goToBackupContactsFolderClicked:">id</string>
 						<string key="hangupAllClicked:">id</string>
 						<string key="joinConferenceClicked:">id</string>
-						<string key="setAlwaysOnTop:">id</string>
 						<string key="muteClicked:">id</string>
 						<string key="presenceTextAction:">id</string>
 						<string key="presentStatusChanged:">id</string>
@@ -7150,6 +7151,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="sendFile:">id</string>
 						<string key="sendSMSToSelected:">id</string>
 						<string key="sessionButtonClicked:">id</string>
+						<string key="setAlwaysOnTop:">id</string>
 						<string key="setPresencePolicyForContact:">id</string>
 						<string key="showAccountSettings:">id</string>
 						<string key="showBlinkPro:">id</string>
@@ -7244,10 +7246,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">joinConferenceClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBActionInfo" key="setAlwaysOnTop:">
-							<string key="name">setAlwaysOnTop:</string>
-							<string key="candidateClassName">id</string>
-						</object>
 						<object class="IBActionInfo" key="muteClicked:">
 							<string key="name">muteClicked:</string>
 							<string key="candidateClassName">id</string>
@@ -7290,6 +7288,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="sessionButtonClicked:">
 							<string key="name">sessionButtonClicked:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="setAlwaysOnTop:">
+							<string key="name">setAlwaysOnTop:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="setPresencePolicyForContact:">
@@ -7396,6 +7398,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="addContactButtonDialPad">id</string>
 						<string key="addContactButtonSearch">id</string>
 						<string key="addContactToConferenceDialPad">id</string>
+						<string key="alwaysOnTopMenuItem">id</string>
 						<string key="audioAdsView">id</string>
 						<string key="blinkMenu">id</string>
 						<string key="callMenu">id</string>
@@ -7462,6 +7465,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="addContactToConferenceDialPad">
 							<string key="name">addContactToConferenceDialPad</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="alwaysOnTopMenuItem">
+							<string key="name">alwaysOnTopMenuItem</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="audioAdsView">
