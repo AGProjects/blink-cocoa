@@ -184,6 +184,8 @@ class ContactWindowController(NSWindowController):
     restoreContactsMenu = objc.IBOutlet()
     alwaysOnTopMenuItem = objc.IBOutlet()
     useSpeechRecognitionMenuItem = objc.IBOutlet()
+    useSpeechSynthesisMenuItem = objc.IBOutlet()
+
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
 
@@ -349,6 +351,10 @@ class ContactWindowController(NSWindowController):
     def setSpeechRecognition(self):
         use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
         self.useSpeechRecognitionMenuItem.setState_(NSOnState if use_speech_recognition else NSOffState)
+
+    def setSpeechSynthesis(self):
+        settings = SIPSimpleSettings()
+        self.useSpeechSynthesisMenuItem.setState_(NSOnState if settings.sounds.enable_speech_synthesizer else False)
 
     def setAlwaysOnTop(self):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
@@ -691,6 +697,7 @@ class ContactWindowController(NSWindowController):
 
         self.callPendingURIs()
         self.refreshLdapDirectory()
+        self.setSpeechSynthesis()
 
     @run_in_gui_thread
     def callPendingURIs(self):
@@ -808,6 +815,9 @@ class ContactWindowController(NSWindowController):
 
         if isinstance(notification.sender, (Account, BonjourAccount)) and 'order' in notification.data.modified:
             self.refreshAccountList()
+
+        if notification.data.modified.has_key("sounds.enable_speech_synthesizer"):
+            self.setSpeechSynthesis()
 
     def showAudioSession(self, streamController):
         self.sessionListView.addItemView_(streamController.view)
@@ -1850,6 +1860,13 @@ class ContactWindowController(NSWindowController):
     def setAlwaysOnTop_(self, sender):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
         NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not always_on_top else False, "AlwaysOnTop") 
+
+    @objc.IBAction
+    def setSpeechSyntezis_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.sounds.enable_speech_synthesizer = not settings.sounds.enable_speech_synthesizer
+        settings.save()
+        self.setSpeechSynthesis()
 
     @objc.IBAction
     def setUseSpeechRecognition_(self, sender):
