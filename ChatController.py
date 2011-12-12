@@ -1510,10 +1510,7 @@ class ChatController(MediaStream):
             NSApp.delegate().windowController.fileTransfersWindow.showWindow_(None)
             return
 
-        if  video_file_extension_pattern.search(data.file_path):
-            text  = "Incoming video file transfer has finished"
-            text += "<p><video src='%s' controls='controls'></video>" % data.file_path
-        elif image_file_extension_pattern.search(data.file_path):
+        if image_file_extension_pattern.search(data.file_path):
             text  = "Incoming image file transfer has finished"
             try:
                 image = NSImage.alloc().initWithContentsOfFile_(data.file_path)
