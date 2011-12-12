@@ -865,9 +865,19 @@
 						<object class="NSMenu" key="NSSubmenu" id="427015895">
 							<string key="NSTitle">Tools</string>
 							<array class="NSMutableArray" key="NSMenuItems">
+								<object class="NSMenuItem" id="394083750">
+									<reference key="NSMenu" ref="427015895"/>
+									<bool key="NSIsDisabled">YES</bool>
+									<string key="NSTitle">Server Features</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+								</object>
 								<object class="NSMenuItem" id="548750920">
 									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Settings on SIP server...</string>
+									<int key="NSIndent">1</int>
+									<string key="NSTitle">SIP Account Settings...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -876,7 +886,8 @@
 								</object>
 								<object class="NSMenuItem" id="745628434">
 									<reference key="NSMenu" ref="427015895"/>
-									<string key="NSTitle">Call History on Server...</string>
+									<int key="NSIndent">1</int>
+									<string key="NSTitle">Call History...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -885,6 +896,7 @@
 								</object>
 								<object class="NSMenuItem" id="624394804">
 									<reference key="NSMenu" ref="427015895"/>
+									<int key="NSIndent">1</int>
 									<string key="NSTitle">Call to Phone Numbers...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -911,7 +923,6 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
-									<int key="NSTag">43</int>
 								</object>
 								<object class="NSMenuItem" id="22133682">
 									<reference key="NSMenu" ref="427015895"/>
@@ -4296,6 +4307,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1668</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">setUseSpeechRecognition:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="394083750"/>
+					</object>
+					<int key="connectionID">1670</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
 						<string key="label">link</string>
 						<reference key="source" ref="954251869"/>
@@ -5614,6 +5633,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="328836867"/>
 							<reference ref="457661255"/>
 							<reference ref="335371061"/>
+							<reference ref="394083750"/>
 						</array>
 						<reference key="parent" ref="492702972"/>
 					</object>
@@ -6409,6 +6429,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="335371061"/>
 						<reference key="parent" ref="427015895"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1669</int>
+						<reference key="object" ref="394083750"/>
+						<reference key="parent" ref="427015895"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -6580,6 +6605,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="1657.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1658.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1660.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1669.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="19.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="197.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="198.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6950,7 +6976,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1668</int>
+			<int key="maxID">1670</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7229,552 +7255,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">ContactWindowController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="accountSelectionChanged:">id</string>
-						<string key="actionButtonClicked:">id</string>
-						<string key="addContact:">id</string>
-						<string key="addContactToConference:">id</string>
-						<string key="addGroup:">id</string>
-						<string key="backToContacts:">id</string>
-						<string key="backupContacts:">id</string>
-						<string key="clearSearchField:">id</string>
-						<string key="close:">id</string>
-						<string key="conferenceClicked:">id</string>
-						<string key="deleteContact:">id</string>
-						<string key="deleteGroup:">id</string>
-						<string key="dialPadButtonClicked:">id</string>
-						<string key="editContact:">id</string>
-						<string key="goToBackupContactsFolderClicked:">id</string>
-						<string key="hangupAllClicked:">id</string>
-						<string key="joinConferenceClicked:">id</string>
-						<string key="muteClicked:">id</string>
-						<string key="presenceTextAction:">id</string>
-						<string key="presentStatusChanged:">id</string>
-						<string key="recordingClicked:">id</string>
-						<string key="redialLast:">id</string>
-						<string key="renameGroup:">id</string>
-						<string key="restoreContactsClicked:">id</string>
-						<string key="searchContacts:">id</string>
-						<string key="sendFile:">id</string>
-						<string key="sendSMSToSelected:">id</string>
-						<string key="sessionButtonClicked:">id</string>
-						<string key="setAlwaysOnTop:">id</string>
-						<string key="setPresencePolicyForContact:">id</string>
-						<string key="setSpeechSyntezis:">id</string>
-						<string key="setUseSpeechRecognition:">id</string>
-						<string key="showAccountSettings:">id</string>
-						<string key="showBlinkPro:">id</string>
-						<string key="showChangelog:">id</string>
-						<string key="showDebugWindow:">id</string>
-						<string key="showDonate:">id</string>
-						<string key="showHelp:">id</string>
-						<string key="showHistoryViewer:">id</string>
-						<string key="showInFavoritesGroup:">id</string>
-						<string key="showPSTNAccess:">id</string>
-						<string key="showServerHistory:">id</string>
-						<string key="showServiceProvider:">id</string>
-						<string key="silentClicked:">id</string>
-						<string key="startAudioToSelected:">id</string>
-						<string key="startChatToSelected:">id</string>
-						<string key="startDesktopToSelected:">id</string>
-						<string key="startVideoToSelected:">id</string>
-						<string key="toggleAnsweringMachine:">id</string>
-						<string key="toggleAudioSessionsDrawer:">id</string>
-						<string key="toggleAutoAccept:">id</string>
-						<string key="toggleDialPadClicked:">id</string>
-						<string key="toggleMirrorWindow:">id</string>
-						<string key="userClickedParticipantMenu:">id</string>
-						<string key="viewHistory:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="accountSelectionChanged:">
-							<string key="name">accountSelectionChanged:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="actionButtonClicked:">
-							<string key="name">actionButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addContact:">
-							<string key="name">addContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addContactToConference:">
-							<string key="name">addContactToConference:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addGroup:">
-							<string key="name">addGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="backToContacts:">
-							<string key="name">backToContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="backupContacts:">
-							<string key="name">backupContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="clearSearchField:">
-							<string key="name">clearSearchField:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="close:">
-							<string key="name">close:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="conferenceClicked:">
-							<string key="name">conferenceClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="deleteContact:">
-							<string key="name">deleteContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="deleteGroup:">
-							<string key="name">deleteGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="dialPadButtonClicked:">
-							<string key="name">dialPadButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="editContact:">
-							<string key="name">editContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="goToBackupContactsFolderClicked:">
-							<string key="name">goToBackupContactsFolderClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="hangupAllClicked:">
-							<string key="name">hangupAllClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="joinConferenceClicked:">
-							<string key="name">joinConferenceClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="muteClicked:">
-							<string key="name">muteClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="presenceTextAction:">
-							<string key="name">presenceTextAction:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="presentStatusChanged:">
-							<string key="name">presentStatusChanged:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="recordingClicked:">
-							<string key="name">recordingClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="redialLast:">
-							<string key="name">redialLast:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="renameGroup:">
-							<string key="name">renameGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="restoreContactsClicked:">
-							<string key="name">restoreContactsClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="searchContacts:">
-							<string key="name">searchContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sendFile:">
-							<string key="name">sendFile:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sendSMSToSelected:">
-							<string key="name">sendSMSToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sessionButtonClicked:">
-							<string key="name">sessionButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setAlwaysOnTop:">
-							<string key="name">setAlwaysOnTop:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setPresencePolicyForContact:">
-							<string key="name">setPresencePolicyForContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setSpeechSyntezis:">
-							<string key="name">setSpeechSyntezis:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setUseSpeechRecognition:">
-							<string key="name">setUseSpeechRecognition:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showAccountSettings:">
-							<string key="name">showAccountSettings:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showBlinkPro:">
-							<string key="name">showBlinkPro:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showChangelog:">
-							<string key="name">showChangelog:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showDebugWindow:">
-							<string key="name">showDebugWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showDonate:">
-							<string key="name">showDonate:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showHelp:">
-							<string key="name">showHelp:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showHistoryViewer:">
-							<string key="name">showHistoryViewer:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showInFavoritesGroup:">
-							<string key="name">showInFavoritesGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showPSTNAccess:">
-							<string key="name">showPSTNAccess:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showServerHistory:">
-							<string key="name">showServerHistory:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showServiceProvider:">
-							<string key="name">showServiceProvider:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="silentClicked:">
-							<string key="name">silentClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startAudioToSelected:">
-							<string key="name">startAudioToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startChatToSelected:">
-							<string key="name">startChatToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startDesktopToSelected:">
-							<string key="name">startDesktopToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startVideoToSelected:">
-							<string key="name">startVideoToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleAnsweringMachine:">
-							<string key="name">toggleAnsweringMachine:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleAudioSessionsDrawer:">
-							<string key="name">toggleAudioSessionsDrawer:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleAutoAccept:">
-							<string key="name">toggleAutoAccept:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleDialPadClicked:">
-							<string key="name">toggleDialPadClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleMirrorWindow:">
-							<string key="name">toggleMirrorWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedParticipantMenu:">
-							<string key="name">userClickedParticipantMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="viewHistory:">
-							<string key="name">viewHistory:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="accountPopUp">id</string>
-						<string key="actionButtons">id</string>
-						<string key="addContactButton">id</string>
-						<string key="addContactButtonDialPad">id</string>
-						<string key="addContactButtonSearch">id</string>
-						<string key="addContactToConferenceDialPad">id</string>
-						<string key="alwaysOnTopMenuItem">id</string>
-						<string key="audioAdsView">id</string>
-						<string key="blinkMenu">id</string>
-						<string key="callMenu">id</string>
-						<string key="chatMenu">id</string>
-						<string key="conferenceButton">id</string>
-						<string key="contactContextMenu">id</string>
-						<string key="contactOutline">id</string>
-						<string key="contactsAdsView">id</string>
-						<string key="contactsMenu">id</string>
-						<string key="contactsScrollView">id</string>
-						<string key="desktopShareMenu">id</string>
-						<string key="devicesMenu">id</string>
-						<string key="dialPadView">id</string>
-						<string key="drawer">id</string>
-						<string key="drawerSplitView">id</string>
-						<string key="fileTransfersWindow">id</string>
-						<string key="historyMenu">id</string>
-						<string key="mainTabView">id</string>
-						<string key="model">id</string>
-						<string key="muteButton">id</string>
-						<string key="nameText">id</string>
-						<string key="notFoundText">id</string>
-						<string key="participantMenu">id</string>
-						<string key="participantsTableView">id</string>
-						<string key="participantsView">id</string>
-						<string key="photoImage">id</string>
-						<string key="presenceMenu">id</string>
-						<string key="presencePolicy">id</string>
-						<string key="recordingsMenu">id</string>
-						<string key="recordingsSubMenu">id</string>
-						<string key="restoreContactsMenu">id</string>
-						<string key="searchBox">id</string>
-						<string key="searchOutline">id</string>
-						<string key="searchResultsModel">id</string>
-						<string key="sessionListView">id</string>
-						<string key="sessionsView">id</string>
-						<string key="silentButton">id</string>
-						<string key="statusMenu">id</string>
-						<string key="statusPopUp">id</string>
-						<string key="statusText">id</string>
-						<string key="toolsMenu">id</string>
-						<string key="useSpeechRecognitionMenuItem">id</string>
-						<string key="useSpeechSynthesisMenuItem">id</string>
-						<string key="windowMenu">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="accountPopUp">
-							<string key="name">accountPopUp</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="actionButtons">
-							<string key="name">actionButtons</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactButton">
-							<string key="name">addContactButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactButtonDialPad">
-							<string key="name">addContactButtonDialPad</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactButtonSearch">
-							<string key="name">addContactButtonSearch</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactToConferenceDialPad">
-							<string key="name">addContactToConferenceDialPad</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="alwaysOnTopMenuItem">
-							<string key="name">alwaysOnTopMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="audioAdsView">
-							<string key="name">audioAdsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="blinkMenu">
-							<string key="name">blinkMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="callMenu">
-							<string key="name">callMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="chatMenu">
-							<string key="name">chatMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceButton">
-							<string key="name">conferenceButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactContextMenu">
-							<string key="name">contactContextMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactOutline">
-							<string key="name">contactOutline</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactsAdsView">
-							<string key="name">contactsAdsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactsMenu">
-							<string key="name">contactsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactsScrollView">
-							<string key="name">contactsScrollView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="desktopShareMenu">
-							<string key="name">desktopShareMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="devicesMenu">
-							<string key="name">devicesMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="dialPadView">
-							<string key="name">dialPadView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawer">
-							<string key="name">drawer</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawerSplitView">
-							<string key="name">drawerSplitView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="fileTransfersWindow">
-							<string key="name">fileTransfersWindow</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="historyMenu">
-							<string key="name">historyMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="mainTabView">
-							<string key="name">mainTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="model">
-							<string key="name">model</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="muteButton">
-							<string key="name">muteButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="nameText">
-							<string key="name">nameText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="notFoundText">
-							<string key="name">notFoundText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantMenu">
-							<string key="name">participantMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsTableView">
-							<string key="name">participantsTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsView">
-							<string key="name">participantsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="photoImage">
-							<string key="name">photoImage</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presenceMenu">
-							<string key="name">presenceMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presencePolicy">
-							<string key="name">presencePolicy</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="recordingsMenu">
-							<string key="name">recordingsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="recordingsSubMenu">
-							<string key="name">recordingsSubMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="restoreContactsMenu">
-							<string key="name">restoreContactsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchBox">
-							<string key="name">searchBox</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchOutline">
-							<string key="name">searchOutline</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchResultsModel">
-							<string key="name">searchResultsModel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sessionListView">
-							<string key="name">sessionListView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sessionsView">
-							<string key="name">sessionsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="silentButton">
-							<string key="name">silentButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="statusMenu">
-							<string key="name">statusMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="statusPopUp">
-							<string key="name">statusPopUp</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="statusText">
-							<string key="name">statusText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolsMenu">
-							<string key="name">toolsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="useSpeechRecognitionMenuItem">
-							<string key="name">useSpeechRecognitionMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="useSpeechSynthesisMenuItem">
-							<string key="name">useSpeechSynthesisMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="windowMenu">
-							<string key="name">windowMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactWindowController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">CustomListModel</string>
 					<string key="superclassName">NSObject</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
@@ -7847,14 +7327,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/ParticipantsTableView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">PhotoView</string>
-					<string key="superclassName">NSImageView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PhotoView.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
@@ -8130,14 +7602,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/SearchContactListModel.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">VerticalBoxView</string>
-					<string key="superclassName">NSView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/VerticalBoxView.h</string>
 					</object>
 				</object>
 			</array>
