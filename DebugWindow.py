@@ -440,6 +440,9 @@ class DebugWindow(NSObject):
             self.sessions.remove(notification.sender)
 
     def _NH_MSRPTransportTrace(self, notification):
+        if self.msrpTraceType is None:
+            return
+
         arrow = {'incoming': '<--', 'outgoing': '-->'}[notification.data.direction]
 
         try:
@@ -489,10 +492,12 @@ class DebugWindow(NSObject):
         self.msrpInfoLabel.setStringValue_("%d MSRP messages sent, %d MRSP messages received, %sytes" % (self.msrpOutCount, self.msrpInCount, format_size(self.msrpBytes)))
 
     def _NH_MSRPLibraryLog(self, notification):
-        if self.msrpTraceType:
-            message = '%s %s%s\n\n' % (notification.data.timestamp, notification.data.level.prefix, notification.data.message)
-            text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
-            self.append_line(self.msrpTextView, text)
+        if self.msrpTraceType is None:
+            return
+
+        message = '%s %s%s\n\n' % (notification.data.timestamp, notification.data.level.prefix, notification.data.message)
+        text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
+        self.append_line(self.msrpTextView, text)
 
     def _NH_AudioStreamDidChangeRTPParameters(self, notification):
         sender = notification.sender
