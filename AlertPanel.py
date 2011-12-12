@@ -108,6 +108,9 @@ class AlertPanel(NSObject, object):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
 
+    def stopSpeechSynthesizer(self):
+        self.speech_synthesizer.stopSpeaking()
+
     def show(self):
         self.panel.orderFront_(self)
         self.attention = NSApp.requestUserAttention_(NSCriticalRequest)
@@ -467,6 +470,7 @@ class AlertPanel(NSObject, object):
             del self.proposals[session]
 
         self.stopSpeechRecognition()
+        self.stopSpeechSynthesizer()
 
     def disableAnsweringMachine(self, view, session):
         if session in self.answeringMachineTimers:
