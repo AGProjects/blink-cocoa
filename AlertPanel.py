@@ -107,7 +107,6 @@ class AlertPanel(NSObject, object):
     def init_speech_synthesis(self):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
-        self.speech_synthesizer.setVoice_("com.apple.speech.synthesis.voice.Vicki")
 
     def show(self):
         self.panel.orderFront_(self)
