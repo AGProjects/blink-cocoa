@@ -36,6 +36,7 @@ class AlertPanel(NSObject, object):
     attention = None
     speech_recognizer = None
     speech_synthesizer = None
+    muted_by_synthesizer = False
 
     def initWithOwner_(self, owner):
         self = super(AlertPanel, self).init()
@@ -98,6 +99,11 @@ class AlertPanel(NSObject, object):
             settings.answering_machine.enabled = not settings.answering_machine.enabled
             settings.save()
 
+    @run_in_gui_thread
+    def speechSynthesizer_didFinishSpeaking_(self, sender, success):
+        if self.muted_by_synthesizer:
+            NSApp.delegate().windowController.muteClicked_(None)
+
     def init_speech_synthesis(self):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
@@ -158,6 +164,10 @@ class AlertPanel(NSObject, object):
         if len(self.sessions) == 1:
             self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity))
             if SIPSimpleSettings().sounds.enable_speech_synthesizer:
+                hasAudio = any(sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers)
+                if hasAudio:
+                    NSApp.delegate().windowController.muteClicked_(None)
+                    self.muted_by_synthesizer = True
                 speak_text= NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity))
                 self.speech_synthesizer.startSpeakingString_(speak_text)
         else:
