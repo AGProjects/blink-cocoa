@@ -6,6 +6,7 @@ from AppKit import *
 
 import time
 from application.notification import NotificationCenter, IObserver
+from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import SessionManager
@@ -16,6 +17,10 @@ from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 from util import *
 
+ACCEPT = 0
+ACCEPT_CHAT = 1
+REJECT = 2
+BUSY = 3
 
 class AlertPanel(NSObject, object):
     implements(IObserver)
@@ -29,6 +34,8 @@ class AlertPanel(NSObject, object):
     answeringMachineTimers = {}
     autoAnswerTimers = {}
     attention = None
+    speech_recognizer = None
+    speech_synthesizer = None
 
     def initWithOwner_(self, owner):
         self = super(AlertPanel, self).init()
@@ -40,7 +47,61 @@ class AlertPanel(NSObject, object):
             self.extraHeight = self.panel.contentRectForFrameRect_(self.panel.frame()).size.height - self.sessionsListView.frame().size.height
             self.sessionsListView.setSpacing_(2)
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
+            ns_nc = NSNotificationCenter.defaultCenter()
+            ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
+
+            self.init_speech_recognition()
+            self.init_speech_synthesis()
+
         return self
+
+    def userDefaultsDidChange_(self, notification):
+        self.use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
+        if self.speech_recognizer is not None and not self.use_speech_recognition:
+            self.speech_recognizer.stopListening()
+
+    def init_speech_recognition(self):
+        self.use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
+        if self.use_speech_recognition:
+            self.speech_recognizer = NSSpeechRecognizer.alloc().init()
+            self.speech_recognizer.setDelegate_(self)
+            self.speech_recognizer.setListensInForegroundOnly_(False)
+            commands = NSArray.arrayWithObjects_(NSString.stringWithString_("Accept"),
+                                                 NSString.stringWithString_("Busy"),
+                                                 NSString.stringWithString_("Reject"),
+                                                 NSString.stringWithString_("Voicemail")
+                                                 )
+            self.speech_recognizer.setCommands_(commands)
+
+    def startSpeechRecognition(self):
+        if self.speech_recognizer is None:
+            self.init_speech_recognition()
+
+        if self.speech_recognizer is not None and len(self.sessions):
+            self.speech_recognizer.startListening()
+
+    def stopSpeechRecognition(self):
+        if not self.sessions and self.speech_recognizer:
+            self.speech_recognizer.stopListening()
+            self.speech_recognizer = None
+
+    @run_in_gui_thread
+    def speechRecognizer_didRecognizeCommand_(self, recognizer, command):
+        if command == u'Reject':
+            self.decideForAllSessionRequests(REJECT)
+        elif command == u'Busy':
+            self.decideForAllSessionRequests(BUSY)
+        elif command == u'Accept':
+            self.decideForAllSessionRequests(ACCEPT)
+        elif command == u'Voicemail':
+            settings = SIPSimpleSettings()
+            settings.answering_machine.enabled = not settings.answering_machine.enabled
+            settings.save()
+
+    def init_speech_synthesis(self):
+        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+        self.speech_synthesizer.setDelegate_(self)
+        self.speech_synthesizer.setVoice_("com.apple.speech.synthesis.voice.Vicki")
 
     def show(self):
         self.panel.orderFront_(self)
@@ -95,9 +156,12 @@ class AlertPanel(NSObject, object):
         self.sessions[session] = view
 
         if len(self.sessions) == 1:
-            self.panel.setTitle_(u"Incoming SIP Session")
+            self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity))
+            if SIPSimpleSettings().sounds.enable_speech_synthesizer:
+                speak_text= NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity))
+                self.speech_synthesizer.startSpeakingString_(speak_text)
         else:
-            self.panel.setTitle_(u"Incoming SIP Sessions")
+            self.panel.setTitle_(u"Multiple Incoming Calls")
 
         NotificationCenter().add_observer(self, sender=session)
 
@@ -111,6 +175,8 @@ class AlertPanel(NSObject, object):
         photoImage = view.viewWithTag_(99)
 
         stream_types = [s.type for s in streams]
+
+        self.startSpeechRecognition()
 
         typeCount = 0
         if 'audio' in stream_types:
@@ -205,9 +271,8 @@ class AlertPanel(NSObject, object):
         captionT.setFrame_(frame)
 
         caller_contact = self.owner.getContactMatchingURI(session.remote_identity.uri)
-        if caller_contact:
-            if caller_contact.icon:
-                photoImage.setImage_(caller_contact.icon)
+        if caller_contact and caller_contact.icon:
+            photoImage.setImage_(caller_contact.icon)
         fromT.setStringValue_(u"%s" % format_identity(session.remote_identity, check_contact=True))
         fromT.sizeToFit()
 
@@ -282,9 +347,9 @@ class AlertPanel(NSObject, object):
                 if ds:
                     type_names.remove("Desktop sharing")
                     if ds[0].handler.type == "active":
-                        type_names.append("Remote Desktop offered by")
+                        type_names.append("Remote Screen offered by")
                     else:
-                        type_names.append("Access to my Desktop requested by")
+                        type_names.append("My Screen requested by")
                 subject = u"Addition of %s" % " and ".join(type_names)
             else:
                 subject = u"Addition of %s to Session requested by" % " and ".join(type_names)
@@ -303,12 +368,11 @@ class AlertPanel(NSObject, object):
             if streams[0].handler.type == "active":
                 subject = u"Remote Screen offered by"
             else:
-                subject = u"Access to my Screen requested by"
+                subject = u"My Screen requested by"
             alt_action = None
         else:
             subject = u"Addition of unknown Stream to existing Session requested by"
             alt_action = None
-            print "Unknown Session contents"
         return subject, default_action, alt_action
 
     def format_subject_for_incoming_invite(self, session, streams):
@@ -333,7 +397,7 @@ class AlertPanel(NSObject, object):
                         if ds[0].handler.type == "active":
                             type_names.append("Remote Screen offered by")
                         else:
-                            type_names.append("Access to my Screen requested by")
+                            type_names.append("My Screen requested by")
                     subject = u"%s" % " and ".join(type_names)
                 else:
                     subject = u"%s session requested by" % " and ".join(type_names)
@@ -342,7 +406,7 @@ class AlertPanel(NSObject, object):
             elif type(streams[0]) is ChatStream:
                 subject = u"Chat Session requested by"
             elif type(streams[0]) is DesktopSharingStream:
-                subject = u"Remote Screen offered by" if streams[0].handler.type == "active" else u"Access to my Screen requested by"
+                subject = u"Remote Screen offered by" if streams[0].handler.type == "active" else u"My Screen requested by"
             elif type(streams[0]) is FileTransferStream:
                 subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
             else:
@@ -350,24 +414,6 @@ class AlertPanel(NSObject, object):
                 BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
 
         return subject, default_action, alt_action
-
-    def reject_incoming_session(self, session, code=603, reason=None):
-        session.reject(code, reason)
-
-    def cancelSession(self, session, reason):
-        """Session cancelled by something other than the user"""
-
-        # possibly already removed
-        if not self.sessions.has_key(session):
-            return 
-
-        view = self.sessions[session]
-        captionT = view.viewWithTag_(1)
-        captionT.setStringValue_(reason)
-        captionT.sizeToFit()
-        for i in (5, 6, 7, 8):
-            view.viewWithTag_(i).setEnabled_(False)
-        self.removeSession(session)
 
     def removeSession(self, session):
         SIPManager().ringer.stop_ringing(session)
@@ -410,6 +456,8 @@ class AlertPanel(NSObject, object):
         del self.sessions[session]
         if session in self.proposals:
             del self.proposals[session]
+
+        self.stopSpeechRecognition()
 
     def disableAnsweringMachine(self, view, session):
         if session in self.answeringMachineTimers:
@@ -472,38 +520,47 @@ class AlertPanel(NSObject, object):
         text = "Automatically answering call in %i seconds..." % remaining
         info["label"].setStringValue_(text)
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
-        name = notification.name
-        session = notification.sender
-        data = notification.data
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
 
-        if name in ("SIPSessionDidFail", "SIPSessionGotRejectProposal"):
-            call_in_gui_thread(self.cancelSession, session, data.reason)
-        elif name == "SIPSessionDidEnd":
-            call_in_gui_thread(self.cancelSession, session, data.end_reason)
-        elif name == "CFGSettingsObjectDidChange":
-            if data.modified.has_key("answering_machine.enabled"):
-                if SIPSimpleSettings().answering_machine.enabled:
-                    for session, view in self.sessions.iteritems():
-                        if session.account is not BonjourAccount():
-                            self.enableAnsweringMachine(view, session, True)
-                else:
-                    for session, view in self.sessions.iteritems():
-                        if session.account is not BonjourAccount():
-                            self.disableAnsweringMachine(view, session)
+    def _NH_SIPSessionDidFail(self, notification):
+        self.cancelSession(notification.sender, notification.data.reason)
 
-            elif data.modified.has_key("audio.auto_accept"):
-                bonjour_account = BonjourAccount()
-                try:
-                    session, view = ((session, view) for session, view in self.sessions.iteritems() if session.account is bonjour_account).next()
-                except StopIteration:
-                    pass
+    def _NH_SIPSessionGotRejectProposal(self, notification):
+        self.cancelSession(notification.sender, notification.data.reason)
+
+    def _NH_SIPSessionDidEnd(self, notification):
+        self.cancelSession(notification.sender, notification.data.end_reason)
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        if notification.data.modified.has_key("answering_machine.enabled"):
+            if SIPSimpleSettings().answering_machine.enabled:
+                for session, view in self.sessions.items():
+                    if session.account is not BonjourAccount():
+                        self.enableAnsweringMachine(view, session, True)
+            else:
+                for session, view in self.sessions.items():
+                    if session.account is not BonjourAccount():
+                        self.disableAnsweringMachine(view, session)
+
+        elif notification.data.modified.has_key("audio.auto_accept"):
+            bonjour_account = BonjourAccount()
+            try:
+                session, view = ((session, view) for session, view in self.sessions.iteritems() if session.account is bonjour_account).next()
+            except StopIteration:
+                pass
+            else:
+                if bonjour_account.audio.auto_accept:
+                    self.enableAutoAnswer(view, session)
                 else:
-                    if bonjour_account.audio.auto_accept:
-                        self.enableAutoAnswer(view, session)
-                    else:
-                        self.disableAutoAnswer(view, session)
+                    self.disableAutoAnswer(view, session)
+
+    @objc.IBAction
+    def globalButtonClicked_(self, sender):
+        action = sender.cell().representedObject().integerValue()
+        self.decideForAllSessionRequests(action)
 
     @objc.IBAction
     def buttonClicked_(self, sender):
@@ -511,38 +568,108 @@ class AlertPanel(NSObject, object):
             NSApp.cancelUserAttentionRequest_(self.attention)
             self.attention = None
 
-        v = sender.superview().superview()
-        for sess, view in self.sessions.iteritems():
-            if view == v:
-                session = sess
-                break
-        else:
+        action = sender.cell().representedObject().integerValue()
+
+        try:
+            (session, view) = ((sess, view)  for sess, view in self.sessions.iteritems() if view == sender.superview().superview()).next()
+        except StopIteration:
             return
 
-        resp = sender.cell().representedObject().integerValue()
         if self.proposals.has_key(session):
-            self.respondProposal(resp, session, self.proposals[session])
+            self.decideForProposalRequest(action, session, self.proposals[session])
         else:
-            self.respondSession(resp, session)
+            self.decideForSessionRequest(action, session)
 
-    def respondProposal(self, resp, session, streams):
-        if resp == 0: # Accept All
+    def decideForProposalRequest(self, action, session, streams):
+        if action == ACCEPT:
             try:
                 self.acceptProposedStreams(session)
             except Exception, exc:
-                # possibly the session was cancelled in the meantime
-                self.removeSession(session)
                 BlinkLogger().log_warning(u"Error accepting proposal: %s" % exc)
-                return                
-        elif resp == 2: # Reject
-            try:
-                session.reject_proposal()
-            except Exception, exc:
-                # possibly the session was cancelled in the meantime
                 self.removeSession(session)
-                BlinkLogger().log_info(u"Error during rejection of proposal: %s" % exc)
-                return
-            self.removeSession(session)
+        elif action == REJECT:
+            try:
+                self.rejectProposal(session)
+            except Exception, exc:
+                BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
+                self.removeSession(session)
+
+    def decideForSessionRequest(self, action, session):
+        if action == ACCEPT:
+            NSApp.activateIgnoringOtherApps_(True)
+            try:
+                self.acceptStreams(session)
+            except Exception, exc:
+                BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
+                self.removeSession(session)
+        elif action == ACCEPT_CHAT:
+            NSApp.activateIgnoringOtherApps_(True)
+            try:
+                self.acceptChatStream(session)
+            except Exception, exc:
+                BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
+                self.removeSession(session)
+        elif action == REJECT:
+            try:
+                self.rejectSession(session, 603, "Busy Everywhere")
+            except Exception, exc:
+                BlinkLogger().log_info(u"Error rejecting session: %s" % exc)
+                self.removeSession(session)
+        elif action == BUSY:
+            try:
+                self.rejectSession(session, 486)
+            except Exception, exc:
+                BlinkLogger().log_info(u"Error rejecting session: %s" % exc)
+                self.removeSession(session)
+
+    def decideForAllSessionRequests(self, action):
+        if self.attention is not None:
+            NSApp.cancelUserAttentionRequest_(self.attention)
+            self.attention = None
+        self.panel.close()
+
+        if action == ACCEPT:
+            NSApp.activateIgnoringOtherApps_(True)
+            for s in self.sessions.keys():
+                is_proposal = self.proposals.has_key(s)
+                try:
+                    if is_proposal:
+                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_address(s.remote_identity))
+                        self.acceptProposedStreams(s)
+                    else:
+                        BlinkLogger().log_info(u"Accepting session from %s" % format_identity_address(s.remote_identity))
+                        self.acceptStreams(s)
+                except Exception, exc:
+                    BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
+                    self.removeSession(s)
+        elif action == ACCEPT_CHAT:
+            NSApp.activateIgnoringOtherApps_(True)
+            for s in self.sessions.keys():
+                try:
+                    BlinkLogger().log_info(u"Accepting chat stream to session with %s" % format_identity_address(s.remote_identity))
+                    self.acceptChatStream(s)
+                except Exception, exc:
+                    BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
+                    self.removeSession(s)
+        elif action == REJECT:
+            self.rejectAllSessions()
+        elif action == BUSY:
+            for s in self.sessions.keys():
+                is_proposal = self.proposals.has_key(s)
+                try:
+                    if is_proposal:
+                        BlinkLogger().log_info(u"Rejecting proposed streams from %s" % format_identity_address(s.remote_identity))
+                        try:
+                            self.rejectProposal(s)
+                        except Exception, exc:
+                            BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
+                            self.removeSession(session)
+                    else:
+                        BlinkLogger().log_info(u"Rejecting session from %s with Busy " % format_identity_address(s.remote_identity))
+                        self.rejectSession(s, 486)
+                except Exception, exc:
+                    BlinkLogger().log_warning(u"Error rejecting session: %s" % exc)
+                    self.removeSession(s)
 
     def acceptStreams(self, session):
         self.owner.startIncomingSession(session, session.blink_supported_streams)
@@ -572,136 +699,53 @@ class AlertPanel(NSObject, object):
             self.owner.startIncomingSession(session, streams)
         self.removeSession(session)
 
-    def respondSession(self, resp, session):
-        if resp == 0: # Accept All streams
-            # activate app
-            NSApp.activateIgnoringOtherApps_(True)
-            try:
-                self.acceptStreams(session)
-            except Exception, exc:
-                import traceback
-                traceback.print_exc()
-                # possibly the session was cancelled in the meantime
-                self.removeSession(session)
-                BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
-                return
-        elif resp == 1: # Accept only chat
-            NSApp.activateIgnoringOtherApps_(True)
-            try:
-                self.acceptChatStream(session)
-            except Exception, exc:
-                import traceback
-                traceback.print_exc()
-                # possibly the session was cancelled in the meantime
-                self.removeSession(session)
-                BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
-                return
-        elif resp == 2: # Reject
-            try:
-                self.reject_incoming_session(session, 603, "Busy Everywhere")
-            except Exception, exc:
-                # possibly the session was cancelled in the meantime
-                self.removeSession(session)
-                BlinkLogger().log_info(u"Error during rejection of session: %s" % exc)
-                return
-            self.removeSession(session)
-        elif resp == 3: # Reject (busy)
-            try:
-                self.reject_incoming_session(session, 486)
-            except Exception, exc:
-                import traceback
-                traceback.print_exc()
-                # possibly the session was cancelled in the meantime
-                self.removeSession(session)
-                BlinkLogger().log_info(u"Error during rejection of session: %s" % exc)
-                return
-            self.removeSession(session)
+    def rejectProposal(self, session):
+        session.reject_proposal()
+        self.removeSession(session)
 
-    def windowWillClose_(self, notification):
-        if self.attention is not None:
-            NSApp.cancelUserAttentionRequest_(self.attention)
-            self.attention = None
-    
-    
-    def windowShouldClose_(self, sender):
-        self.rejectAllSessions()
-        return True
+    def rejectSession(self, session, code=603, reason=None):
+        session.reject(code, reason)
+        self.removeSession(session)
 
-    
+    def cancelSession(self, session, reason):
+        """Session cancelled by something other than the user"""
+
+        # possibly already removed
+        if not self.sessions.has_key(session):
+            return
+
+        view = self.sessions[session]
+        captionT = view.viewWithTag_(1)
+        captionT.setStringValue_(reason)
+        captionT.sizeToFit()
+        for i in (5, 6, 7, 8):
+            view.viewWithTag_(i).setEnabled_(False)
+        self.removeSession(session)
+
     def rejectAllSessions(self):
         for s in self.sessions.keys():
             is_proposal = self.proposals.has_key(s)
             try:
                 if is_proposal:
                     BlinkLogger().log_info(u"Rejecting %s proposal from %s"%([stream.type for stream in s.proposed_streams], format_identity_address(s.remote_identity)))
-                    s.reject_proposal()
+                    try:
+                        self.rejectProposal(s)
+                    except Exception, exc:
+                        BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
+                        self.removeSession(s)
                 else:
                     BlinkLogger().log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_address(s.remote_identity))
-                    self.reject_incoming_session(s, 603, "Busy Everywhere")
+                    self.rejectSession(s, 603, "Busy Everywhere")
             except Exception, exc:
-                import traceback
-                traceback.print_exc()
-                # possibly the session was cancelled in the meantime
                 self.removeSession(s)
-                BlinkLogger().log_warning(u"Error during rejection of session: %s" % exc)
-                continue
-            self.removeSession(s)
+                BlinkLogger().log_warning(u"Error rejecting session: %s" % exc)
 
-
-    @objc.IBAction
-    def globalButtonClicked_(self, sender):
+    def windowWillClose_(self, notification):
         if self.attention is not None:
             NSApp.cancelUserAttentionRequest_(self.attention)
             self.attention = None
-        self.panel.close()
 
-        resp = sender.cell().representedObject().integerValue()
-
-        if resp == 0: # Accept All proposed streams
-            NSApp.activateIgnoringOtherApps_(True)
-            for s in self.sessions.keys():
-                is_proposal = self.proposals.has_key(s)
-                try:
-                    if is_proposal:
-                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_address(s.remote_identity))
-                        self.acceptProposedStreams(s)
-                    else:
-                        BlinkLogger().log_info(u"Accepting session from %s" % format_identity_address(s.remote_identity))
-                        self.acceptStreams(s)
-                except Exception, exc:
-                    import traceback
-                    traceback.print_exc()
-                    # possibly the session was cancelled in the meantime
-                    self.removeSession(s)
-                    BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
-                    continue
-        elif resp == 1: # Accept only chat stream
-            NSApp.activateIgnoringOtherApps_(True)
-            for s in self.sessions.keys():
-                try:
-                    BlinkLogger().log_info(u"Accepting chat stream to session with %s" % format_identity_address(s.remote_identity))
-                    self.acceptChatStream(s)
-                except Exception, exc:
-                    import traceback
-                    traceback.print_exc()
-                    # possibly the session was cancelled in the meantime
-                    self.removeSession(s)
-                    BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
-                    continue
-        elif resp == 2: # Reject
-            self.rejectAllSessions()
-        elif resp == 3: # Reject (busy)
-            for s in self.sessions.keys():
-                try:
-                    BlinkLogger().log_info(u"Rejecting session from %s with Busy " % format_identity_address(s.remote_identity))
-                    self.reject_incoming_session(s, 486)
-                except Exception, exc:
-                    import traceback
-                    traceback.print_exc()
-                    # possibly the session was cancelled in the meantime
-                    self.removeSession(s)
-                    BlinkLogger().log_warning(u"Error during rejection of session: %s" % exc)
-                    continue
-                self.removeSession(s)
-
+    def windowShouldClose_(self, sender):
+        self.rejectAllSessions()
+        return True
 

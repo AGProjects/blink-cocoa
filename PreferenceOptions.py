@@ -1571,6 +1571,7 @@ SettingDescription = {
                       'sounds.audio_inbound': 'Inbound Ringtone',
                       'sounds.audio_inbound': 'Inbound Ringtone',
                       'sounds.night_volume': ' ',
+                      'sounds.enable_speech_synthesizer': 'Say Incoming Caller Name',
                       'server.alert_url': 'Web Alert Page',
                       'server.settings_url': 'Settings Web Page',
                       'tls.certificate': 'X.509 Certificate File',
@@ -1612,6 +1613,7 @@ GeneralSettingsOrder = {
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
+                       'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'enable_speech_synthesizer', 'night_volume'],
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 

@@ -73,7 +73,6 @@ class ServiceProviderSettings(SettingsGroup):
     about_url = Setting(type=HTTPURL, default=None, nillable=True)
     help_url = Setting(type=HTTPURL, default=None, nillable=True)
 
-
 class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=SoundFile, default=SoundFile("ring_inbound.wav"), nillable=True)
     audio_outbound = Setting(type=SoundFile, default=SoundFile("ring_outbound.wav"), nillable=True)
@@ -82,7 +81,7 @@ class SoundsSettings(SettingsGroup):
     message_received = Setting(type=SoundFile, default=SoundFile("message_received.wav", volume=10), nillable=True)
     message_sent = Setting(type=SoundFile, default=SoundFile("message_sent.wav", volume=10), nillable=True)
     night_volume = Setting(type=NightVolume, default=NightVolume(start_hour=22, end_hour=8, volume=10), nillable=True)
-
+    enable_speech_synthesizer = Setting(type=bool, default=True)
 
 class TLSSettingsExtension(TLSSettings):
     ca_list = Setting(type=UserDataPath, default=None, nillable=True)

@@ -183,7 +183,7 @@ class ContactWindowController(NSWindowController):
     windowMenu = objc.IBOutlet()
     restoreContactsMenu = objc.IBOutlet()
     alwaysOnTopMenuItem = objc.IBOutlet()
-
+    useSpeechRecognitionMenuItem = objc.IBOutlet()
     chatMenu = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
 
@@ -339,10 +339,16 @@ class ContactWindowController(NSWindowController):
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
         self.setAlwaysOnTop()
+        self.setSpeechRecognition()
         self.loaded = True
 
     def userDefaultsDidChange_(self, notification):
         self.setAlwaysOnTop()
+        self.setSpeechRecognition()
+
+    def setSpeechRecognition(self):
+        use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
+        self.useSpeechRecognitionMenuItem.setState_(NSOnState if use_speech_recognition else NSOffState)
 
     def setAlwaysOnTop(self):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
@@ -1844,6 +1850,11 @@ class ContactWindowController(NSWindowController):
     def setAlwaysOnTop_(self, sender):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
         NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not always_on_top else False, "AlwaysOnTop") 
+
+    @objc.IBAction
+    def setUseSpeechRecognition_(self, sender):
+        use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
+        NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not use_speech_recognition else False, "UseSpeechRecognition")
 
     @objc.IBAction
     def toggleMirrorWindow_(self, sender):
