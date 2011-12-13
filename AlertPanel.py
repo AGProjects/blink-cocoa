@@ -68,9 +68,11 @@ class AlertPanel(NSObject, object):
             self.speech_recognizer.setDelegate_(self)
             self.speech_recognizer.setListensInForegroundOnly_(False)
             commands = NSArray.arrayWithObjects_(NSString.stringWithString_("Accept"),
+                                                 NSString.stringWithString_("Answer"),
                                                  NSString.stringWithString_("Busy"),
                                                  NSString.stringWithString_("Reject"),
-                                                 NSString.stringWithString_("Voicemail")
+                                                 NSString.stringWithString_("Voicemail"),
+                                                 NSString.stringWithString_("Answering machine")
                                                  )
             self.speech_recognizer.setCommands_(commands)
 
@@ -92,9 +94,9 @@ class AlertPanel(NSObject, object):
             self.decideForAllSessionRequests(REJECT)
         elif command == u'Busy':
             self.decideForAllSessionRequests(BUSY)
-        elif command == u'Accept':
+        elif command in (u'Accept', u'Answer'):
             self.decideForAllSessionRequests(ACCEPT)
-        elif command == u'Voicemail':
+        elif command in (u'Voicemail', u'Answering machine'):
             settings = SIPSimpleSettings()
             settings.answering_machine.enabled = not settings.answering_machine.enabled
             settings.save()
