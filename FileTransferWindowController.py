@@ -52,6 +52,7 @@ class FileTransferWindowController(NSObject, object):
 
         NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
 
+        self.transferSpeed.setStringValue_('')
         return self
 
     @run_in_green_thread
@@ -123,7 +124,7 @@ class FileTransferWindowController(NSObject, object):
                 text = 'Outgoing %s/s' % format_size(outgoing_transfer_rate, bits=True)
             self.transferSpeed.setStringValue_(text)
         else:
-            self.transferSpeed.setStringValue_('No Active Transfers')
+            self.transferSpeed.setStringValue_('')
 
     @allocate_autorelease_pool
     @run_in_gui_thread
