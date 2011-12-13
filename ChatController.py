@@ -69,6 +69,7 @@ TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU = 400
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
+TOOLBAR_SCREENSHOT_WINDOW_MENU = 500
 
 bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
@@ -148,6 +149,7 @@ class ConferenceScreenSharingHandler(object):
     may_send = True # wait until previous screen has been sent
     framerate = 1
     width = 1024
+    window_id = None
     compression = 0.5 # jpeg compression
     quality = 'medium'
     quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'framerate': 1},
@@ -161,6 +163,18 @@ class ConferenceScreenSharingHandler(object):
         self.compression = self.quality_settings[quality]['compression']
         self.width = self.quality_settings[quality]['width']
         self.framerate = self.quality_settings[quality]['framerate']
+
+    def screenSharingWindowExists(self, id):
+        listOptions = kCGWindowListExcludeDesktopElements
+        windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
+        i = 0
+        windows_list = []
+        while i < windowList.count():
+            wob = windowList.objectAtIndex_(i)
+            if wob.objectForKey_(kCGWindowNumber) == id:
+                return True
+            i += 1
+        return False
 
     def setConnected(self, stream):
         self.connected = True
@@ -214,7 +228,18 @@ class ConferenceScreenSharingHandler(object):
         if self.may_send and dt >= 1/self.framerate:
             self.frames = self.frames + 1
             rect = CGDisplayBounds(CGMainDisplayID())
-            img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
+            if self.window_id:
+                if self.screenSharingWindowExists(self.window_id):
+                    img = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
+                else:
+                    return
+            else:
+                img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
+
+            if CGImageGetWidth(img) <= 1:
+                CGImageRelease(img)
+                return
+
             image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
             originalSize = image.size()
             if self.width is not None and originalSize.width > self.width:
@@ -235,10 +260,10 @@ class ConferenceScreenSharingHandler(object):
             properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
             data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
             now = datetime.datetime.now(tzlocal())
-            text=base64.encodestring(data)
-            BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(text), final_width))
+
+            BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(str(data)), final_width))
             self.may_send = False
-            self.stream.send_message(text, content_type='application/blink-screensharing', timestamp=Timestamp(now))
+            self.stream.send_message(str(data), content_type='application/blink-screensharing', timestamp=Timestamp(now))
 
 
 class MessageInfo(object):
@@ -1073,6 +1098,9 @@ class ChatController(MediaStream):
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
                     mitem.setHidden_(True)
 
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_WINDOW_MENU)
+                    mitem.setHidden_(True)
+
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setHidden_(False)
 
@@ -1098,6 +1126,9 @@ class ChatController(MediaStream):
                     mitem.setHidden_(True)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
+                    mitem.setHidden_(False)
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_WINDOW_MENU)
                     mitem.setHidden_(False)
 
             elif identifier == 'smileys':
@@ -1181,7 +1212,7 @@ class ChatController(MediaStream):
                     return True if self.sessionController.canCancelProposal() else False
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-        elif item.tag() in (TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM):
+        elif item.tag() in (TOOLBAR_SCREENSHOT_WINDOW_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM):
             if self.sessionController.remote_focus and self.screensharing_handler is not None and self.screensharing_handler.connected:
                 return True
 
