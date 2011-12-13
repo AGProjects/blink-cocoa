@@ -146,44 +146,28 @@ class ConferenceScreenSharingHandler(object):
     last_time = None
     current_framerate = None
     may_send = True # wait until previous screen has been sent
-    max_framerate = 1
-    compression = 0.7 # jpeg compression
-    scale_factor = 1
-    high_quality_compression = 0.8
-    low_quality_compression = 0.5
-    medium_quality_compression = 0.2
-    high_quality_scale_factor = 1
-    low_quality_scale_factor = 1
-    medium_quality_scale_factor = 1
+    framerate = 1
+    width = 1024
+    compression = 0.5 # jpeg compression
+    quality = 'medium'
+    quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'framerate': 1},
+                        'medium': {'compression': 0.5, 'width': 1024, 'framerate': 1},
+                        'high':   {'compression': 0.7, 'width': None, 'framerate': 1}
+                        }
 
-    # GUI controled value
-    quality = 'medium' # or 'low'
-
-    def setMaxFramerate(self, max_framerate):
-        self.max_framerate = max_framerate
-
-    def setScaleFactor(self, scale_factor):
-        self.scale_factor = scale_factor
-
-    def setQuality(self, quality):
-        BlinkLogger().log_info('Set screen sharing quality to %s' % quality)
+    def setQuality(self, quality='medium'):
         self.quality = quality
-        if self.quality == 'low':
-            self.setScaleFactor(self.low_quality_scale_factor)
-            self.compression = self.low_quality_compression
-        elif self.quality == 'high':
-            self.setScaleFactor(self.high_quality_scale_factor)
-            self.compression = self.high_quality_compression
-        elif self.quality == 'medium':
-            self.setScaleFactor(self.medium_quality_scale_factor)
-            self.compression = self.medium_quality_compression
+        BlinkLogger().log_info('Set screen sharing quality to %s' % quality)
+        self.compression = self.quality_settings[quality]['compression']
+        self.width = self.quality_settings[quality]['width']
+        self.framerate = self.quality_settings[quality]['framerate']
 
     def setConnected(self, stream):
         self.connected = True
         self.stream = stream
+        self.setQuality()
         self.last_time = time.time()
         NotificationCenter().add_observer(self, sender=stream)
-        NotificationCenter().add_observer(self, name="ScreenSharingCompressionChanged")
 
         if self.screenSharingTimer is None:
             self.screenSharingTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "sendScreenshotTimer:", None, True)
@@ -202,7 +186,6 @@ class ConferenceScreenSharingHandler(object):
 
         if self.stream:
             NotificationCenter().remove_observer(self, sender=self.stream)
-            NotificationCenter().remove_observer(self, name="ScreenSharingCompressionChanged")
             self.stream = None
 
     @allocate_autorelease_pool
@@ -214,11 +197,6 @@ class ConferenceScreenSharingHandler(object):
     def _NH_ChatStreamDidDeliverMessage(self, sender, data):
         self.may_send = True
         self.last_snapshot_time = time.time()
-
-    def _NH_ScreenSharingCompressionChanged(self, sender, data):
-        self.compression = sender.integerValue() * 0.1
-        BlinkLogger().log_info('Screen sharing compression set to %s' % self.compression)
-
 
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
         self.may_send = True
@@ -233,21 +211,23 @@ class ConferenceScreenSharingHandler(object):
             self.frames = 0.0
             self.last_time = time.time()
 
-        if self.may_send and dt >= 1/self.max_framerate:
+        if self.may_send and dt >= 1/self.framerate:
             self.frames = self.frames + 1
             rect = CGDisplayBounds(CGMainDisplayID())
             img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
             image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
             originalSize = image.size()
-            if self.scale_factor != 1:
-                resizeWidth = originalSize.width*self.scale_factor
-                resizeHeight = originalSize.height*self.scale_factor
+            if self.width is not None and originalSize.width > self.width:
+                resizeWidth = self.width
+                resizeHeight = self.width * originalSize.height/originalSize.width
                 scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
                 scaled_image.lockFocus()
                 image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
                 scaled_image.unlockFocus()
+                final_width = self.width
                 tiff_data = scaled_image.TIFFRepresentation()
             else:
+                final_width = originalSize.width
                 tiff_data = image.TIFFRepresentation()
 
             bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
@@ -256,9 +236,9 @@ class ConferenceScreenSharingHandler(object):
             data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
             now = datetime.datetime.now(tzlocal())
             text=base64.encodestring(data)
-            BlinkLogger().log_info('Sending %s bytes screen' % len(text))
-            self.stream.send_message(text, content_type='application/blink-screensharing', timestamp=Timestamp(now))
+            BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(text), final_width))
             self.may_send = False
+            self.stream.send_message(text, content_type='application/blink-screensharing', timestamp=Timestamp(now))
 
 
 class MessageInfo(object):

@@ -832,10 +832,6 @@ class ChatWindowController(NSWindowController):
             elif tag == PARTICIPANTS_MENU_SHOW_SESSION_INFO:
                 session.info_panel.toggle()
 
-    @objc.IBAction
-    def setScreeSharingCompression_(self, sender):
-        self.notification_center.post_notification("ScreenSharingCompressionChanged", sender=sender)
-
     def viewSharedScreen(self, uri, display_name, url):
         session = self.selectedSessionController()
         if session:
