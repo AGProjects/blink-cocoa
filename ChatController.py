@@ -1096,12 +1096,6 @@ class ChatController(MediaStream):
                     mitem.setTitle_("Share My Screen with %s" % title)
                     mitem.setHidden_(False)
 
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
-                    mitem.setHidden_(True)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_WINDOW_MENU)
-                    mitem.setHidden_(True)
-
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setHidden_(False)
 
