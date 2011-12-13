@@ -60,6 +60,7 @@ class ChatWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
+    conferenceScreeningSharingMenu = objc.IBOutlet()
     screenshotShareMenu = objc.IBOutlet()
     conferenceScreenSharingQualityMenu = objc.IBOutlet()
     conferenceScreenSharingWindowsMenu = objc.IBOutlet()
@@ -441,9 +442,9 @@ class ChatWindowController(NSWindowController):
                 if chat_stream.screensharing_handler:
                     selectedSession.log_info('Selecting %s for screen sharing' % application)
                     chat_stream.screensharing_handler.window_id = id
-                    i = 0
-                    while i < self.conferenceScreenSharingWindowsMenu.numberOfItems():
-                        item = self.conferenceScreenSharingWindowsMenu.itemAtIndex_(i)
+                    i = 6
+                    while i < self.conferenceScreeningSharingMenu.numberOfItems():
+                        item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
                         item.setState_(NSOnState if item.representedObject()['id'] == id else NSOffState)
                         i += 1
 
@@ -735,7 +736,12 @@ class ChatWindowController(NSWindowController):
             event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
                 0, 1, 0)
-            NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
+            session = self.selectedSessionController()
+            if session:
+                if session.remote_focus:
+                    NSMenu.popUpContextMenu_withEvent_forView_(self.conferenceScreeningSharingMenu, event, sender)
+                else:
+                    NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
             return
 
         elif sender.tag() == 300: # screenshot sharing menu button
@@ -799,6 +805,7 @@ class ChatWindowController(NSWindowController):
                     item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
                     item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'medium' else NSOffState)
                     item.setEnabled_(True)
+
         elif menu == self.conferenceScreenSharingWindowsMenu:
             while self.conferenceScreenSharingWindowsMenu.numberOfItems() > 0:
                 self.conferenceScreenSharingWindowsMenu.removeItemAtIndex_(0)
@@ -835,7 +842,70 @@ class ChatWindowController(NSWindowController):
                     obj = {'id': id, 'name': name, 'application': application}
                     item.setRepresentedObject_(obj)
                     item.setState_(NSOnState if selected_window == id else NSOffState)
+
+                    item = self.conferenceScreenSharingWindowsMenu.addItemWithTitle_action_keyEquivalent_(title, "selectScreenSharingWindow:", "")
+                    obj = {'id': id, 'name': name, 'application': application}
+                    item.setRepresentedObject_(obj)
+                    item.setState_(NSOnState if selected_window == id else NSOffState)
                 i += 1
+        elif menu == self.conferenceScreeningSharingMenu:
+            while self.conferenceScreeningSharingMenu.numberOfItems() > 6:
+                self.conferenceScreeningSharingMenu.removeItemAtIndex_(6)
+
+            selected_window = None
+            selectedSession = self.selectedSessionController()
+            if selectedSession:
+                chat_stream = selectedSession.streamHandlerOfType("chat")
+                if chat_stream:
+                    if chat_stream.screensharing_handler:
+                        selected_window = chat_stream.screensharing_handler.window_id
+
+                    if chat_stream.screensharing_handler is not None and chat_stream.screensharing_handler.connected:
+                        for i in (1,2,3,4,5):
+                            item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
+                            item.setHidden_(False)
+
+                        item = self.conferenceScreeningSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH)
+                        item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'high' else NSOffState)
+                        item.setEnabled_(True)
+                        item = self.conferenceScreeningSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
+                        item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'low' else NSOffState)
+                        item.setEnabled_(True)
+                        item = self.conferenceScreeningSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
+                        item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'medium' else NSOffState)
+                        item.setEnabled_(True)
+
+                        item = self.conferenceScreeningSharingMenu.addItemWithTitle_action_keyEquivalent_('Entire Desktop', "selectScreenSharingWindow:", "")
+                        obj = {'application': 'entire desktop', 'id': None, 'name': None}
+                        item.setRepresentedObject_(obj)
+                        item.setIndentationLevel_(2)
+                        item.setState_(NSOnState if selected_window is None else NSOffState)                        
+                        listOptions = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
+                        windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
+                        i = 0
+                        while i < windowList.count():
+                            wob = windowList.objectAtIndex_(i)
+                            id = wob.objectForKey_(kCGWindowNumber)
+                            application = wob.objectForKey_(kCGWindowOwnerName)
+                            name = wob.objectForKey_(kCGWindowName)
+                            onscreen = wob.objectForKey_(kCGWindowIsOnscreen)
+                            bounds = wob.objectForKey_(kCGWindowBounds)
+                            width = bounds.objectForKey_('Width')
+                            if onscreen and width >= 64 and application not in SKIP_SCREENSHARING_FOR_APPS:
+                                if application != name:
+                                    title = "%s (%s)" % (application, name or id)
+                                else:
+                                    title = "%s (%d)" % (application, id)
+                                item = self.conferenceScreeningSharingMenu.addItemWithTitle_action_keyEquivalent_(title, "selectScreenSharingWindow:", "")
+                                obj = {'id': id, 'name': name, 'application': application}
+                                item.setRepresentedObject_(obj)
+                                item.setIndentationLevel_(2)
+                                item.setState_(NSOnState if selected_window == id else NSOffState)
+                            i += 1
+                    else:
+                        for i in (1,2,3,4,5):
+                            item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
+                            item.setHidden_(True)
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):

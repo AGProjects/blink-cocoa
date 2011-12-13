@@ -139,6 +139,8 @@ kCGWindowImageDefault = 0
 class ConferenceScreenSharingHandler(object):
     implements(IObserver)
 
+
+    delegate = None
     connected = False
     screenSharingTimer = None
     stream = None
@@ -164,17 +166,8 @@ class ConferenceScreenSharingHandler(object):
         self.width = self.quality_settings[quality]['width']
         self.framerate = self.quality_settings[quality]['framerate']
 
-    def screenSharingWindowExists(self, id):
-        listOptions = kCGWindowListExcludeDesktopElements
-        windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
-        i = 0
-        windows_list = []
-        while i < windowList.count():
-            wob = windowList.objectAtIndex_(i)
-            if wob.objectForKey_(kCGWindowNumber) == id:
-                return True
-            i += 1
-        return False
+    def setDelegate_(self, delegate):
+        self.delegate = delegate
 
     def setConnected(self, stream):
         self.connected = True
@@ -216,9 +209,18 @@ class ConferenceScreenSharingHandler(object):
         self.may_send = True
         self.last_snapshot_time = time.time()
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
     def sendScreenshotTimer_(self, timer):
+        def screenSharingWindowExists(id):
+            listOptions = kCGWindowListExcludeDesktopElements
+            windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
+            i = 0
+            while i < windowList.count():
+                wob = windowList.objectAtIndex_(i)
+                if wob.objectForKey_(kCGWindowNumber) == id:
+                    return True
+                i += 1
+            return False
+
         dt = time.time() - self.last_time
         if dt >= 1:
             self.current_framerate = self.frames / dt
@@ -229,16 +231,14 @@ class ConferenceScreenSharingHandler(object):
             self.frames = self.frames + 1
             rect = CGDisplayBounds(CGMainDisplayID())
             if self.window_id:
-                if self.screenSharingWindowExists(self.window_id):
+                if screenSharingWindowExists(self.window_id):
                     img = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
                 else:
+                    self.window_id = None
+                    self.delegate.shareScreenWithConferenceParticipants()
                     return
             else:
                 img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
-
-            if CGImageGetWidth(img) <= 1:
-                CGImageRelease(img)
-                return
 
             image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
             originalSize = image.size()
@@ -554,6 +554,7 @@ class ChatController(MediaStream):
             self.handler.setDelegate(self.chatViewController)
 
             self.screensharing_handler = ConferenceScreenSharingHandler()
+            self.screensharing_handler.setDelegate_(self)
 
             self.history=ChatHistory()
             self.backend = SIPManager()
@@ -1082,8 +1083,8 @@ class ChatController(MediaStream):
             elif identifier == 'desktop':
                 item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
 
-                menu = toolbar.delegate().desktopShareMenu
                 if not self.sessionController.remote_focus:
+                    menu = toolbar.delegate().desktopShareMenu
                     item.setImage_(NSImage.imageNamed_("display"))
 
                     title = self.sessionController.getTitleShort()
@@ -1114,22 +1115,6 @@ class ChatController(MediaStream):
                         mitem.setTitle_("Cancel Screen Sharing Proposal")
                 else:
                     item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
-                    mitem.setHidden_(False)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                    mitem.setHidden_(True)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setHidden_(True)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU)
-                    mitem.setHidden_(False)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHOT_WINDOW_MENU)
-                    mitem.setHidden_(False)
 
             elif identifier == 'smileys':
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
@@ -1385,7 +1370,7 @@ class ChatController(MediaStream):
         self.share_screen_in_conference = True if not self.share_screen_in_conference else False
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
-            menu = window.toolbar.delegate().desktopShareMenu
+            menu = window.toolbar.delegate().conferenceScreeningSharingMenu
             menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
             window.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
