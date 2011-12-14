@@ -42,7 +42,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{750, 455}, {480, 270}}</string>
 				<int key="NSWTFlags">544736256</int>
-				<string key="NSWindowTitle">Screensharing Preview</string>
+				<string key="NSWindowTitle">Screen Sharing Preview</string>
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
@@ -71,7 +71,6 @@
 							<string key="NSFrame">{{-3, -3}, {486, 276}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:2141</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSImageCell" key="NSCell" id="720305619">
