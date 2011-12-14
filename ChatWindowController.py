@@ -796,7 +796,7 @@ class ChatWindowController(NSWindowController):
                 item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
                 item.setEnabled_(True if 'screen' in object.active_media else False)
             except IndexError:
-                item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
+                item.setState_(NSOffState)
                 item.setEnabled_(False)
 
         elif menu == self.conferenceScreeningSharingMenu:
