@@ -193,8 +193,9 @@ class ConferenceScreenSharingHandler(object):
 
         if self.screenSharingTimer is None:
             self.screenSharingTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "sendScreenshotTimer:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSModalPanelRunLoopMode)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSDefaultRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSEventTrackingRunLoopMode)
+            # use UITrackingRunLoopMode in iOS instead of NSEventTrackingRunLoopMode
 
     def setDisconnected(self):
         self.log_first_frame = False
