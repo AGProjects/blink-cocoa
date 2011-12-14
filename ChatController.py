@@ -161,6 +161,9 @@ class ConferenceScreenSharingHandler(object):
                         'high':   {'compression': 0.7, 'width': None, 'framerate': 1}
                         }
 
+    def setDelegate(self, delegate):
+        self.delegate = None
+
     def setQuality(self, quality):
         if quality:
             self.quality = quality
@@ -180,9 +183,8 @@ class ConferenceScreenSharingHandler(object):
         self.window_id = id
         self.show_preview = True
 
-    def setConnected(self, stream, delegate):
+    def setConnected(self, stream):
         self.log_first_frame = True
-        self.delegate = delegate
         self.connected = True
         self.stream = stream
         quality = NSUserDefaults.standardUserDefaults().stringForKey_("ScreensharingQuality")
@@ -574,6 +576,8 @@ class ChatController(MediaStream):
 
             self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
             self.handler.setDelegate(self.chatViewController)
+            self.screensharing_handler = ConferenceScreenSharingHandler()
+            self.screensharing_handler.setDelegate(self)
 
             self.history=ChatHistory()
             self.backend = SIPManager()
@@ -1210,7 +1214,7 @@ class ChatController(MediaStream):
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
         elif item.tag() in (TOOLBAR_SCREENSHOT_WINDOW_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM):
-            if self.sessionController.remote_focus and self.screensharing_handler is not None and self.screensharing_handler.connected:
+            if self.sessionController.remote_focus and self.screensharing_handler.connected:
                 return True
 
         return False
@@ -1307,7 +1311,7 @@ class ChatController(MediaStream):
                         BlinkLogger().log_info(u"Session is pending a proposal")
 
                 elif self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                    self.finishStream()                    
+                    self.endStream()
                 
             elif identifier == 'smileys':
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
@@ -1369,22 +1373,20 @@ class ChatController(MediaStream):
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:
                     self.sessionController.removeDesktopFromSession()
         elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH:
-            if self.screensharing_handler is not None:
+            if self.screensharing_handler.connected:
                 self.screensharing_handler.setQuality('high')
         elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW:
-            if self.screensharing_handler is not None:
+            if self.screensharing_handler.connected:
                 self.screensharing_handler.setQuality('low')
         elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM:
-            if self.screensharing_handler is not None:
+            if self.screensharing_handler.connected:
                 self.screensharing_handler.setQuality('medium')
 
     def toggleScreensharingWithConferenceParticipants(self):
         self.share_screen_in_conference = True if not self.share_screen_in_conference else False
         if self.share_screen_in_conference and self.stream is not None:
             self.sessionController.log_info(u"Start sharing screen with conference participants")
-            if self.screensharing_handler is None:
-                self.screensharing_handler = ConferenceScreenSharingHandler()
-            self.screensharing_handler.setConnected(self.stream, self)
+            self.screensharing_handler.setConnected(self.stream)
         else:
             self.screensharing_handler.setDisconnected()
             self.sessionController.log_info(u"Stop sharing screen with conference participants")
@@ -1592,33 +1594,16 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info(u"Chat stream ended")
-
-        self.notification_center.remove_observer(self, sender=sender)
-
         if not self.session_failed:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
-        # save the view so we can print it
-        if self.status == STREAM_CONNECTED:
-            self.sessionController.lastChatOutputView = self.chatViewController.outputView
-            self.removeFromSession()
-            self.videoContainer.hideVideo()
-            self.exitFullScreen()
-        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.share_screen_in_conference = False
-        self.setScreenSharingToolbarIcon()
 
-        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
-        if window:
-            self.handler.setDisconnected()
-            if self.screensharing_handler is not None:
-                self.screensharing_handler.setDisconnected()
-            window.noteSession_isComposing_(self.sessionController, False)
-            window.noteSession_isScreenSharing_(self.sessionController, False)
-        else:
-            self.handler = None
-            self.screensharing_handler = None
-        self.stream = None
+        # save the view so we can print it
+        self.sessionController.lastChatOutputView = self.chatViewController.outputView
+
+        self.notification_center.remove_observer(self, sender=sender)
+
+        self.reset()
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
@@ -1629,28 +1614,42 @@ class ChatController(MediaStream):
             self.chatViewController.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
-        self.share_screen_in_conference = False
+
         # save the view so we can print it
         self.sessionController.lastChatOutputView = self.chatViewController.outputView
+        self.notification_center.discard_observer(self, sender=sender)
+
+        self.mediastream_failed = True
+        self.reset()
+
+    def setIdleTabIcons(self):
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
+            window.noteSession_isComposing_(self.sessionController, False)
+            window.noteSession_isScreenSharing_(self.sessionController, False)
+
+    def disconnectHandlers(self):
+        if self.handler:
+            self.handler.setDisconnected()
+        self.handler = None
+
+        if self.screensharing_handler:
+            self.screensharing_handler.setDisconnected()
+        self.screensharing_handler = None
+
+    def reset(self):
         self.removeFromSession()
+
         self.videoContainer.hideVideo()
         self.exitFullScreen()
         self.setScreenSharingToolbarIcon()
+        self.setIdleTabIcons()
+        self.disconnectHandlers()
 
-        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
-        if window:
-            self.handler.setDisconnected()
-            if self.screensharing_handler is not None:
-                self.screensharing_handler.setDisconnected()
-            window.noteSession_isComposing_(self.sessionController, False)
-            window.noteSession_isScreenSharing_(self.sessionController, False)
-        else:
-            self.handler = None
-            self.screensharing_handler = None
+        self.share_screen_in_conference = False
         self.stream = None
-        self.mediastream_failed = True
 
-    def finishStream(self):
+    def endStream(self):
         if self.status != STREAM_DISCONNECTING:
             self.backend.ringer.stop_ringing(self.sessionController.session)
 
@@ -1665,13 +1664,11 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_DISCONNECTING)
 
     def closeTab(self):
-        self.finishStream()
+        self.endStream()
+        self.reset()
 
         # remove this controller from session stream handlers list
         self.sessionController.lastChatOutputView = None
-        self.removeFromSession()
-        self.videoContainer.hideVideo()
-        self.exitFullScreen()
 
         # remove held reference needed by the GUI
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)

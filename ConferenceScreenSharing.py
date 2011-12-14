@@ -66,10 +66,8 @@ class ConferenceScreenSharing(NSObject):
            self.loadScreensharingURL()
 
     def webView_didFailProvisionalLoadWithError_forFrame_(self, sender, error, frame):
-        self.errorText.setHidden_(False)
         BlinkLogger().log_error(u"Could not load web page: %s" % error)
 
     def webView_didFailLoadWithError_forFrame_(self, sender, error, frame):
-        self.errorText.setHidden_(False)
         BlinkLogger().log_error(u"Could not load web page: %s" % error)
 
