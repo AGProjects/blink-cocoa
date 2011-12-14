@@ -803,6 +803,9 @@ class ChatWindowController(NSWindowController):
                     if chat_stream.screensharing_handler:
                         selected_window = chat_stream.screensharing_handler.window_id
 
+                    item = self.conferenceScreeningSharingMenu.itemAtIndex_(0)
+                    item.setEnabled_(True if chat_stream.screensharing_allowed else False)
+
                     if chat_stream.screensharing_handler is not None and chat_stream.screensharing_handler.connected:
                         for i in (1,2,3,4,5):
                             item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
