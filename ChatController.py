@@ -211,6 +211,7 @@ class ConferenceScreenSharingHandler(object):
         self.may_send = True
         self.last_snapshot_time = time.time()
 
+    @allocate_autorelease_pool
     def sendScreenshotTimer_(self, timer):
         def screenSharingWindowExists(id):
             listOptions = kCGWindowListExcludeDesktopElements
@@ -219,6 +220,7 @@ class ConferenceScreenSharingHandler(object):
             while i < windowList.count():
                 wob = windowList.objectAtIndex_(i)
                 if wob.objectForKey_(kCGWindowNumber) == id:
+                    del windowList
                     return True
                 i += 1
             return False
@@ -241,8 +243,11 @@ class ConferenceScreenSharingHandler(object):
                     return
             else:
                 img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
-
+            del rect
+            if CGImageGetWidth(img) <= 1:
+                return
             image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
+            del img
             originalSize = image.size()
             if self.width is not None and originalSize.width > self.width:
                 resizeWidth = self.width
@@ -253,22 +258,24 @@ class ConferenceScreenSharingHandler(object):
                 scaled_image.unlockFocus()
                 final_width = self.width
                 tiff_data = scaled_image.TIFFRepresentation()
+                del scaled_image
             else:
                 final_width = originalSize.width
                 tiff_data = image.TIFFRepresentation()
+                del image
 
             bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
 
             properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
             data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
-            now = datetime.datetime.now(tzlocal())
+            del bitmap_data
 
             if self.log_first_frame:
                 BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(str(data)), final_width))
                 self.log_first_frame = False
             self.may_send = False
-            self.stream.send_message(str(data), content_type='application/blink-screensharing', timestamp=Timestamp(now))
-
+            self.stream.send_message(str(data), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+            del data
 
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
