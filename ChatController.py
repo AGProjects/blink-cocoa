@@ -252,18 +252,16 @@ class ConferenceScreenSharingHandler(object):
             rect = CGDisplayBounds(CGMainDisplayID())
             if self.window_id:
                 if screenSharingWindowExists(self.window_id):
-                    img = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
+                    image = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
                 else:
                     self.window_id = None
                     self.delegate.toggleScreensharingWithConferenceParticipants()
                     return
             else:
-                img = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
-            del rect
-            if CGImageGetWidth(img) <= 1:
+                image = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
+            if CGImageGetWidth(image) <= 1:
                 return
-            image = NSImage.alloc().initWithCGImage_size_(img, NSZeroSize)
-            del img
+            image = NSImage.alloc().initWithCGImage_size_(image, NSZeroSize)
             originalSize = image.size()
             if self.width is not None and originalSize.width > self.width:
                 resizeWidth = self.width
@@ -272,32 +270,22 @@ class ConferenceScreenSharingHandler(object):
                 scaled_image.lockFocus()
                 image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
                 scaled_image.unlockFocus()
-                final_width = self.width
-                tiff_data = scaled_image.TIFFRepresentation()
-                if self.show_preview:
-                    ScreensharingPreviewPanel(scaled_image)
-                    self.show_preview = False
-                del scaled_image
-            else:
-                final_width = originalSize.width
-                tiff_data = image.TIFFRepresentation()
-                if self.show_preview:
-                    ScreensharingPreviewPanel(image)
-                    self.show_preview = False
-                del image
+                image = scaled_image
 
-            bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+            if self.show_preview:
+                ScreensharingPreviewPanel(image)
+                self.show_preview = False
 
+            bitmap = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation())
             properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
-            data = bitmap_data.representationUsingType_properties_(NSJPEGFileType, properties)
-            del bitmap_data
+            jpeg = bitmap.representationUsingType_properties_(NSJPEGFileType, properties)
 
             if self.log_first_frame:
-                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(str(data)), final_width))
+                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(str(jpeg)), image.size().width))
                 self.log_first_frame = False
             self.may_send = False
-            self.stream.send_message(str(data), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
-            del data
+            self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+
 
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
