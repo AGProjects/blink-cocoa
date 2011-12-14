@@ -277,6 +277,8 @@ class ConferenceScreenSharingHandler(object):
                 self.show_preview = False
 
             jpeg = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
+            # this also works and produces the same result, but it's not documented anywhere
+            #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
 
             if self.log_first_frame:
                 BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(jpeg), image.size().width))
