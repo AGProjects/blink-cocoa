@@ -605,6 +605,12 @@
 		1FF62301140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
 		1FF62302140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
 		1FF62303140E20C000E81891 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
+		1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
+		1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
+		1FF6C4011498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
+		1FF6C4091498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
+		1FF6C40A1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
+		1FF6C40B1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
 		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB386A1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
@@ -1212,6 +1218,8 @@
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
+		1FF6C4021498C06A0019F668 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
+		1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = ScreensharingPreviewPanel.py; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		1FFB38691432026D003B29ED /* display_red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red.png; path = icons/display_red.png; sourceTree = "<group>"; };
 		1FFB38D6143209E0003B29ED /* display_red_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red_16.png; path = icons/display_red_16.png; sourceTree = "<group>"; };
@@ -1500,6 +1508,8 @@
 				1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */,
 				1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */,
 				1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */,
+				1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */,
+				1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */,
 			);
 			name = Conference;
 			sourceTree = "<group>";
@@ -2098,6 +2108,7 @@
 				1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
 				1F2272A412B554F50010A8B2 /* BlinkAppDelegate.py in Resources */,
+				1FF6C40A1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				1F2272A512B554F50010A8B2 /* SIPManager.py in Resources */,
 				1F2272A612B554F50010A8B2 /* EnrollmentController.py in Resources */,
 				1F2272A712B554F50010A8B2 /* Main.py in Resources */,
@@ -2282,6 +2293,7 @@
 				1FB3080B146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99714730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
+				1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2344,6 +2356,7 @@
 				1F8DC35B135084FA0034815C /* recording3.png in Resources */,
 				1F8DC35C135084FA0034815C /* mic.png in Resources */,
 				1F8DC35D135084FA0034815C /* speaker.png in Resources */,
+				1FF6C40B1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				1F8DC35E135084FA0034815C /* bell.png in Resources */,
 				1F8DC35F135084FA0034815C /* bluelock.png in Resources */,
 				1F8DC360135084FA0034815C /* greenlock.png in Resources */,
@@ -2485,6 +2498,7 @@
 				1FB3080C146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99814730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
+				1FF6C4011498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2553,6 +2567,7 @@
 				2B2DF3C81059F27C00F267F9 /* ContactOutlineView.py in Resources */,
 				2B2DF5E0105CBFCA00F267F9 /* FileTransferWindow.xib in Resources */,
 				2B2DF5E4105CC03400F267F9 /* FileTransferItemView.xib in Resources */,
+				1FF6C4091498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				2B2DF5EA105D3CDD00F267F9 /* FileTransferItemView.py in Resources */,
 				2B2DF5ED105D467000F267F9 /* ListView.py in Resources */,
 				2B2DF60F105D494000F267F9 /* FileTransferWindowController.py in Resources */,
@@ -2686,6 +2701,7 @@
 				1FB3080A146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99614730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EA1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
+				1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2816,6 +2832,14 @@
 				1FDFA9B412DF4689005BA20F /* English */,
 			);
 			name = ChatPrivateMessage.xib;
+			sourceTree = "<group>";
+		};
+		1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FF6C4021498C06A0019F668 /* English */,
+			);
+			name = ScreensharingPreviewPanel.xib;
 			sourceTree = "<group>";
 		};
 		2B01284C10939236009B2112 /* AccountSettings.xib */ = {

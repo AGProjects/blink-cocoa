@@ -42,6 +42,7 @@ from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
+from ScreensharingPreviewPanel import ScreensharingPreviewPanel
 
 kUIModeNormal = 0
 kUIModeContentSuppressed = 1
@@ -148,6 +149,7 @@ class ConferenceScreenSharingHandler(object):
     last_time = None
     current_framerate = None
     log_first_frame = False
+    show_preview = False
     may_send = True # wait until previous screen has been sent
     framerate = 1
     width = 1024
@@ -167,6 +169,13 @@ class ConferenceScreenSharingHandler(object):
         self.framerate = self.quality_settings[quality]['framerate']
         self.log_first_frame = True
 
+    def setShowPreview(self):
+        self.show_preview = True
+
+    def setWindowId(self, id):
+        self.window_id = id
+        self.show_preview = True
+
     def setConnected(self, stream, delegate):
         self.log_first_frame = True
         self.delegate = delegate
@@ -174,6 +183,7 @@ class ConferenceScreenSharingHandler(object):
         self.stream = stream
         self.setQuality()
         self.last_time = time.time()
+        self.show_preview = True
         NotificationCenter().add_observer(self, sender=stream)
 
         if self.screenSharingTimer is None:
@@ -188,6 +198,7 @@ class ConferenceScreenSharingHandler(object):
         self.may_send = True
         self.frames = 0
         self.last_time = None
+        self.show_preview = False
 
         if self.screenSharingTimer is not None:
             self.screenSharingTimer.invalidate()
@@ -258,10 +269,16 @@ class ConferenceScreenSharingHandler(object):
                 scaled_image.unlockFocus()
                 final_width = self.width
                 tiff_data = scaled_image.TIFFRepresentation()
+                if self.show_preview:
+                    ScreensharingPreviewPanel(scaled_image)
+                    self.show_preview = False
                 del scaled_image
             else:
                 final_width = originalSize.width
                 tiff_data = image.TIFFRepresentation()
+                if self.show_preview:
+                    ScreensharingPreviewPanel(scaled_image)
+                    self.show_preview = False
                 del image
 
             bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)

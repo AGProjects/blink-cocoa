@@ -441,7 +441,7 @@ class ChatWindowController(NSWindowController):
                 application = wob['application']
                 if chat_stream.screensharing_handler:
                     selectedSession.log_info('Selecting %s for screen sharing' % application)
-                    chat_stream.screensharing_handler.window_id = id
+                    chat_stream.screensharing_handler.setWindowId(id)
                     i = 6
                     while i < self.conferenceScreeningSharingMenu.numberOfItems():
                         item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
