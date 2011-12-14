@@ -791,63 +791,6 @@ class ChatWindowController(NSWindowController):
                 item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
                 item.setEnabled_(False)
 
-        elif menu == self.conferenceScreenSharingQualityMenu:
-            session = self.selectedSessionController()
-            if session and session.hasStreamOfType("chat"):
-                chat_stream = session.streamHandlerOfType("chat")
-                if chat_stream.screensharing_handler is not None and chat_stream.screensharing_handler.connected:
-                    item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH)
-                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'high' else NSOffState)
-                    item.setEnabled_(True)
-                    item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
-                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'low' else NSOffState)
-                    item.setEnabled_(True)
-                    item = self.conferenceScreenSharingQualityMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
-                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'medium' else NSOffState)
-                    item.setEnabled_(True)
-
-        elif menu == self.conferenceScreenSharingWindowsMenu:
-            while self.conferenceScreenSharingWindowsMenu.numberOfItems() > 0:
-                self.conferenceScreenSharingWindowsMenu.removeItemAtIndex_(0)
-
-            selected_window = None
-            selectedSession = self.selectedSessionController()
-            if selectedSession:
-                chat_stream = selectedSession.streamHandlerOfType("chat")
-                if chat_stream and chat_stream.screensharing_handler:
-                    selected_window = chat_stream.screensharing_handler.window_id
-
-            item = self.conferenceScreenSharingWindowsMenu.addItemWithTitle_action_keyEquivalent_('Entire Desktop', "selectScreenSharingWindow:", "")
-            obj = {'application': 'entire desktop', 'id': None, 'name': None}
-            item.setRepresentedObject_(obj)
-            item.setState_(NSOnState if selected_window is None else NSOffState)
-
-            listOptions = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
-            windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
-            i = 0
-            while i < windowList.count():
-                wob = windowList.objectAtIndex_(i)
-                id = wob.objectForKey_(kCGWindowNumber)
-                application = wob.objectForKey_(kCGWindowOwnerName)
-                name = wob.objectForKey_(kCGWindowName)
-                onscreen = wob.objectForKey_(kCGWindowIsOnscreen)
-                bounds = wob.objectForKey_(kCGWindowBounds)
-                width = bounds.objectForKey_('Width')
-                if onscreen and width >= 64 and application not in SKIP_SCREENSHARING_FOR_APPS:
-                    if application != name:
-                        title = "%s (%s)" % (application, name or id)
-                    else:
-                        title = "%s (%d)" % (application, id)
-                    item = self.conferenceScreenSharingWindowsMenu.addItemWithTitle_action_keyEquivalent_(title, "selectScreenSharingWindow:", "")
-                    obj = {'id': id, 'name': name, 'application': application}
-                    item.setRepresentedObject_(obj)
-                    item.setState_(NSOnState if selected_window == id else NSOffState)
-
-                    item = self.conferenceScreenSharingWindowsMenu.addItemWithTitle_action_keyEquivalent_(title, "selectScreenSharingWindow:", "")
-                    obj = {'id': id, 'name': name, 'application': application}
-                    item.setRepresentedObject_(obj)
-                    item.setState_(NSOnState if selected_window == id else NSOffState)
-                i += 1
         elif menu == self.conferenceScreeningSharingMenu:
             while self.conferenceScreeningSharingMenu.numberOfItems() > 6:
                 self.conferenceScreeningSharingMenu.removeItemAtIndex_(6)
