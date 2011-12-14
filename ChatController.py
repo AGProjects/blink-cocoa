@@ -277,8 +277,7 @@ class ConferenceScreenSharingHandler(object):
                 self.show_preview = False
 
             bitmap = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation())
-            properties = NSDictionary.dictionaryWithObject_forKey_(NSDecimalNumber.numberWithFloat_(self.compression), NSImageCompressionFactor);
-            jpeg = bitmap.representationUsingType_properties_(NSJPEGFileType, properties)
+            jpeg = bitmap.representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
 
             if self.log_first_frame:
                 BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(str(jpeg)), image.size().width))
