@@ -277,7 +277,7 @@ class ConferenceScreenSharingHandler(object):
                 final_width = originalSize.width
                 tiff_data = image.TIFFRepresentation()
                 if self.show_preview:
-                    ScreensharingPreviewPanel(scaled_image)
+                    ScreensharingPreviewPanel(image)
                     self.show_preview = False
                 del image
 
