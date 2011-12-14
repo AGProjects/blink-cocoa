@@ -280,7 +280,7 @@ class ConferenceScreenSharingHandler(object):
             jpeg = bitmap.representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
 
             if self.log_first_frame:
-                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(str(jpeg)), image.size().width))
+                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(jpeg), image.size().width))
                 self.log_first_frame = False
             self.may_send = False
             self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
