@@ -161,13 +161,17 @@ class ConferenceScreenSharingHandler(object):
                         'high':   {'compression': 0.7, 'width': None, 'framerate': 1}
                         }
 
-    def setQuality(self, quality='medium'):
-        self.quality = quality
-        BlinkLogger().log_info('Set screen sharing quality to %s' % quality)
-        self.compression = self.quality_settings[quality]['compression']
-        self.width = self.quality_settings[quality]['width']
-        self.framerate = self.quality_settings[quality]['framerate']
+    def setQuality(self, quality):
+        if quality:
+            self.quality = quality
+        else:
+            self.quality = 'medium'
+        BlinkLogger().log_info('Set screen sharing quality to %s' % self.quality)
+        self.compression = self.quality_settings[self.quality]['compression']
+        self.width = self.quality_settings[self.quality]['width']
+        self.framerate = self.quality_settings[self.quality]['framerate']
         self.log_first_frame = True
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(self.quality, "ScreensharingQuality")
 
     def setShowPreview(self):
         self.show_preview = True
@@ -181,7 +185,8 @@ class ConferenceScreenSharingHandler(object):
         self.delegate = delegate
         self.connected = True
         self.stream = stream
-        self.setQuality()
+        quality = NSUserDefaults.standardUserDefaults().stringForKey_("ScreensharingQuality")
+        self.setQuality(quality)
         self.last_time = time.time()
         self.show_preview = True
         NotificationCenter().add_observer(self, sender=stream)
