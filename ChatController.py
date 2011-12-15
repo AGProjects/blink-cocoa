@@ -598,7 +598,7 @@ class ChatController(MediaStream):
         for text, file in smileys:
             image = NSImage.alloc().initWithContentsOfFile_(file)
             if not image:
-                print "cant load %s"%file
+                BlinkLogger().log_info("cant load smiley file %s" % file)
                 continue
             image.setScalesWhenResized_(True)
             image.setSize_(NSMakeSize(16, 16))
