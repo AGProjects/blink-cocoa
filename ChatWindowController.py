@@ -87,6 +87,7 @@ class ChatWindowController(NSWindowController):
         if self:
             self.participants = []
             self.conference_shared_files = []
+            self.remote_screens_closed_by_user = set()
             self.sessions = {}
             self.unreadMessageCounts = {}
             self.remoteScreens = {}
@@ -778,6 +779,14 @@ class ChatWindowController(NSWindowController):
             uri = object.uri
             self.removeParticipant(uri)
 
+    def showRemoteScreenIfNecessary(self, participant):
+        uri = participant.uri
+        if uri not in self.remote_screens_closed_by_user:
+            try:
+                remoteScreen = self.remoteScreens[uri]
+            except KeyError:
+                self.viewSharedScreen(uri, participant.display_name, participant.screensharing_url)
+
     def menuWillOpen_(self, menu):
         if menu == self.participantMenu:
             session = self.selectedSessionController()
@@ -921,7 +930,7 @@ class ChatWindowController(NSWindowController):
         if session:
             session.log_info(u"Opening Shared Screen of %s from %s" % (uri, unquote(url)))
             remoteScreen = ConferenceScreenSharing.createWithOwner_(self)
-            remoteScreen.showSharedScreen(display_name, uri, unquote(url))
+            remoteScreen.show(display_name, uri, unquote(url))
             self.remoteScreens[uri] = remoteScreen
 
     @objc.IBAction
@@ -1054,6 +1063,8 @@ class ChatWindowController(NSWindowController):
                     if user.screen_image_url is not None:
                         active_media.append('screen')
                         contact.setScreensharingUrl(user.screen_image_url.value)
+                        if own_uri != uri:
+                            self.showRemoteScreenIfNecessary(contact)
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
