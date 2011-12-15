@@ -1598,6 +1598,8 @@ class ChatController(MediaStream):
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
 
+        self.changeStatus(STREAM_IDLE)
+
         # save the view so we can print it
         self.sessionController.lastChatOutputView = self.chatViewController.outputView
 
@@ -1617,6 +1619,7 @@ class ChatController(MediaStream):
 
         # save the view so we can print it when chat is idle
         self.sessionController.lastChatOutputView = self.chatViewController.outputView
+
         self.notification_center.discard_observer(self, sender=sender)
 
         self.mediastream_failed = True
