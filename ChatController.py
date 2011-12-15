@@ -1615,7 +1615,7 @@ class ChatController(MediaStream):
 
         self.changeStatus(STREAM_FAILED, data.reason)
 
-        # save the view so we can print it
+        # save the view so we can print it when chat is idle
         self.sessionController.lastChatOutputView = self.chatViewController.outputView
         self.notification_center.discard_observer(self, sender=sender)
 
