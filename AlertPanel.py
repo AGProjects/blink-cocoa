@@ -61,6 +61,7 @@ class AlertPanel(NSObject, object):
         if self.speech_recognizer is not None and not self.use_speech_recognition:
             self.speech_recognizer.stopListening()
 
+    @run_in_gui_thread
     def init_speech_recognition(self):
         self.use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
         if self.use_speech_recognition:
@@ -76,6 +77,7 @@ class AlertPanel(NSObject, object):
                                                  )
             self.speech_recognizer.setCommands_(commands)
 
+    @run_in_gui_thread
     def startSpeechRecognition(self):
         if self.speech_recognizer is None:
             self.init_speech_recognition()
@@ -83,8 +85,9 @@ class AlertPanel(NSObject, object):
         if self.speech_recognizer is not None and len(self.sessions):
             self.speech_recognizer.startListening()
 
+    @run_in_gui_thread
     def stopSpeechRecognition(self):
-        if not self.sessions and self.speech_recognizer:
+        if self.speech_recognizer:
             self.speech_recognizer.stopListening()
             self.speech_recognizer = None
 
@@ -100,16 +103,19 @@ class AlertPanel(NSObject, object):
             settings = SIPSimpleSettings()
             settings.answering_machine.enabled = not settings.answering_machine.enabled
             settings.save()
+        self.stopSpeechRecognition()
 
     @run_in_gui_thread
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         if self.muted_by_synthesizer:
             NSApp.delegate().windowController.muteClicked_(None)
 
+    @run_in_gui_thread
     def init_speech_synthesis(self):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
 
+    @run_in_gui_thread
     def stopSpeechSynthesizer(self):
         self.speech_synthesizer.stopSpeaking()
 
@@ -471,9 +477,6 @@ class AlertPanel(NSObject, object):
         if session in self.proposals:
             del self.proposals[session]
 
-        self.stopSpeechRecognition()
-        self.stopSpeechSynthesizer()
-
     def disableAnsweringMachine(self, view, session):
         if session in self.answeringMachineTimers:
             amLabel = view.viewWithTag_(15)
@@ -574,6 +577,8 @@ class AlertPanel(NSObject, object):
 
     @objc.IBAction
     def globalButtonClicked_(self, sender):
+        self.stopSpeechRecognition()
+        self.stopSpeechSynthesizer()
         action = sender.cell().representedObject().integerValue()
         self.decideForAllSessionRequests(action)
 
@@ -761,6 +766,8 @@ class AlertPanel(NSObject, object):
             self.attention = None
 
     def windowShouldClose_(self, sender):
-        self.rejectAllSessions()
+        self.stopSpeechRecognition()
+        self.stopSpeechSynthesizer()
+        self.decideForAllSessionRequests(REJECT)
         return True
 
