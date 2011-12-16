@@ -114,10 +114,30 @@ class AlertPanel(NSObject, object):
     def init_speech_synthesis(self):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
+        self.speak_text = None
+        self.speech_synthesizer_timer = None
 
     @run_in_gui_thread
     def stopSpeechSynthesizer(self):
         self.speech_synthesizer.stopSpeaking()
+        if self.speech_synthesizer_timer and self.speech_synthesizer_timer.isValid():
+            self.speech_synthesizer_timer.invalidate()
+        self.speak_text = None
+
+    @run_in_gui_thread
+    def startSpeechSynthesizerTimer(self):
+        self.speech_synthesizer_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(2, self, "startSpeaking:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.speech_synthesizer_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.speech_synthesizer_timer, NSEventTrackingRunLoopMode)
+
+    @run_in_gui_thread
+    def startSpeaking_(self, timer):
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers)
+        if hasAudio:
+            NSApp.delegate().windowController.muteClicked_(None)
+            self.muted_by_synthesizer = True
+        if self.speak_text:
+            self.speech_synthesizer.startSpeakingString_(self.speak_text)
 
     def show(self):
         self.panel.orderFront_(self)
@@ -174,12 +194,8 @@ class AlertPanel(NSObject, object):
         if len(self.sessions) == 1:
             self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity))
             if SIPSimpleSettings().sounds.enable_speech_synthesizer:
-                hasAudio = any(sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers)
-                if hasAudio:
-                    NSApp.delegate().windowController.muteClicked_(None)
-                    self.muted_by_synthesizer = True
-                speak_text= NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity))
-                self.speech_synthesizer.startSpeakingString_(speak_text)
+                self.speak_text= NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity))
+                self.startSpeechSynthesizerTimer()
         else:
             self.panel.setTitle_(u"Multiple Incoming Calls")
 
@@ -761,13 +777,13 @@ class AlertPanel(NSObject, object):
                 BlinkLogger().log_warning(u"Error rejecting session: %s" % exc)
 
     def windowWillClose_(self, notification):
+        self.stopSpeechRecognition()
+        self.stopSpeechSynthesizer()
         if self.attention is not None:
             NSApp.cancelUserAttentionRequest_(self.attention)
             self.attention = None
 
     def windowShouldClose_(self, sender):
-        self.stopSpeechRecognition()
-        self.stopSpeechSynthesizer()
         self.decideForAllSessionRequests(REJECT)
         return True
 
