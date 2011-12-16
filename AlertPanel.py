@@ -494,8 +494,8 @@ class AlertPanel(NSObject, object):
             delay = 0 if run_now else settings.answering_machine.answer_delay
             info = dict(delay = delay, session = session, label = amLabel, time = time.time())
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTick:", info, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSEventTrackingRunLoopMode)
             self.answeringMachineTimers[session] = timer
             self.timerTick_(timer)
             amLabel.setHidden_(False)
@@ -514,8 +514,8 @@ class AlertPanel(NSObject, object):
             label = view.viewWithTag_(15)
             info = dict(delay = session.account.audio.answer_delay, session = session, label = label, time = time.time())
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTickAutoAnswer:", info, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSEventTrackingRunLoopMode)
             self.autoAnswerTimers[session] = timer
             self.timerTickAutoAnswer_(timer)
             label.setHidden_(False)
