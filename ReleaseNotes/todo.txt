@@ -2,9 +2,11 @@ Main tasks
 ----------
 
 + Presence
++ GRUU support
 - AGC
 - Video
 - Pause/Resume File Transfer
+- Add bandwidth throttling for File Transfers
 
 Measure keyboard/mouse idle time for presence
 http://stackoverflow.com/questions/3799717/hide-mouse-cursor-on-os-x-after-a-few-seconds
