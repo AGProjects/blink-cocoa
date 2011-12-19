@@ -818,8 +818,6 @@ class ChatController(MediaStream):
         if not window:
             return
 
-        window.drawer.close()
-
         self.hideVideoMirror()
 
         if self.splitViewFrame:
@@ -1500,13 +1498,6 @@ class ChatController(MediaStream):
 
         window.noteSession_isComposing_(self.sessionController, flag)
 
-    def resetIsComposingTimer(self, refresh):
-        if self.remoteTypingTimer:
-            # if we don't get any indications in the request refresh, then we assume remote to be idle
-            self.remoteTypingTimer.setFireDate_(NSDate.dateWithTimeIntervalSinceNow_(refresh))
-        else:
-            self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
-
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateToolbarMuteIcon()
 
@@ -1599,16 +1590,14 @@ class ChatController(MediaStream):
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
 
-        self.changeStatus(STREAM_IDLE)
-
-        # save the view so we can print it
-        self.sessionController.lastChatOutputView = self.chatViewController.outputView
-
+        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.notification_center.remove_observer(self, sender=sender)
+        self.stream = None
 
-        self.reset()
+        self.resetChatViewToIdleStatus()
 
     def _NH_MediaStreamDidFail(self, sender, data):
+        self.mediastream_failed = True # used to avoid double printing chat disconnect message
         self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'A TLS packet with unexpected length was received.', 'Cannot send chunk because MSRPSession is DONE'):
             self.chatViewController.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
@@ -1617,41 +1606,52 @@ class ChatController(MediaStream):
             self.chatViewController.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
-
-        # save the view so we can print it when chat is idle
-        self.sessionController.lastChatOutputView = self.chatViewController.outputView
-
         self.notification_center.discard_observer(self, sender=sender)
+        self.stream = None
 
-        self.mediastream_failed = True
-        self.reset()
+        self.resetChatViewToIdleStatus()
 
-    def setIdleTabIcons(self):
+    def resetIsComposingTimer(self, refresh):
+        if self.remoteTypingTimer:
+            # if we don't get any indications in the request refresh, then we assume remote to be idle
+            self.remoteTypingTimer.setFireDate_(NSDate.dateWithTimeIntervalSinceNow_(refresh))
+        else:
+            self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
+
+    def resetFancyTabIcons(self):
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             window.noteSession_isComposing_(self.sessionController, False)
             window.noteSession_isScreenSharing_(self.sessionController, False)
 
-    def disconnectHandlers(self):
-        if self.handler:
+    def disconnectChatViewHandler(self):
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
             self.handler.setDisconnected()
-        self.handler = None
+            window.noteSession_isComposing_(self.sessionController, False)
+        else:
+            self.handler = None
 
-        if self.screensharing_handler:
+    def disconnectScreensharingHandler(self):
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
             self.screensharing_handler.setDisconnected()
-        self.screensharing_handler = None
+        else:
+            self.screensharing_handler = None
 
-    def reset(self):
+        self.share_screen_in_conference = False
+
+    def resetChatViewToIdleStatus(self):
+        # save the view so we can print it when chat is idle
+        self.sessionController.lastChatOutputView = self.chatViewController.outputView
+
         self.removeFromSession()
-
         self.videoContainer.hideVideo()
         self.exitFullScreen()
         self.setScreenSharingToolbarIcon()
-        self.setIdleTabIcons()
-        self.disconnectHandlers()
-
-        self.share_screen_in_conference = False
-        self.stream = None
+        self.resetFancyTabIcons()
+        self.disconnectChatViewHandler()
+        self.disconnectScreensharingHandler()
 
     def endStream(self):
         if self.status != STREAM_DISCONNECTING:
@@ -1668,10 +1668,12 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_DISCONNECTING)
 
     def closeTab(self):
+        # executed when user clicks close tab button or indirectly when user closes the whole window
         self.endStream()
-        self.reset()
 
-        # remove this controller from session stream handlers list
+        self.resetChatViewToIdleStatus()
+
+        # remove held reference needed for printing
         self.sessionController.lastChatOutputView = None
 
         # remove held reference needed by the GUI
