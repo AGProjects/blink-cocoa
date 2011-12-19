@@ -258,7 +258,8 @@ class ConferenceScreenSharingHandler(object):
                     image = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
                 else:
                     self.window_id = None
-                    self.delegate.toggleScreensharingWithConferenceParticipants()
+                    if self.delegate:
+                        self.delegate.toggleScreensharingWithConferenceParticipants()
                     return
             else:
                 image = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
