@@ -20,6 +20,7 @@ class BlinkContactExtension(ContactExtension):
     presence_policy = Setting(type=str, default=None, nillable=True)
     dialog_policy = Setting(type=str, default=None, nillable=True)
     favorite = SharedSetting(type=Boolean, default=False)
+    auto_answer = SharedSetting(type=Boolean, default=False)
 
 
 class BlinkContactGroupExtension(ContactGroupExtension):

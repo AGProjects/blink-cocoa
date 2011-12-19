@@ -309,8 +309,14 @@ class AlertPanel(NSObject, object):
         captionT.setFrame_(frame)
 
         caller_contact = self.owner.getContactMatchingURI(session.remote_identity.uri)
-        if caller_contact and caller_contact.icon:
-            photoImage.setImage_(caller_contact.icon)
+        if caller_contact:
+            if caller_contact.icon:
+                photoImage.setImage_(caller_contact.icon)
+
+            if caller_contact.auto_answer:
+                BlinkLogger().log_info(u"Auto answer enabled for this contact")
+                self.enableAutoAnswer(view, session)
+
         fromT.setStringValue_(u"%s" % format_identity(session.remote_identity, check_contact=True))
         fromT.sizeToFit()
 

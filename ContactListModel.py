@@ -116,6 +116,7 @@ class BlinkContact(NSObject):
     editable = True
     deletable = True
     favorite = False
+    auto_answer = False
     nc = NotificationCenter()
 
     def __new__(cls, *args, **kwargs):
@@ -240,6 +241,9 @@ class BlinkContact(NSObject):
 
     def setFavorite(self, favorite):
         self.favorite = favorite
+
+    def setAutoAnswer(self, value):
+        self.auto_answer = value
 
     def iconPath(self):
         return contactIconPathForURI(str(self.uri))

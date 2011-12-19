@@ -2440,6 +2440,11 @@ class ContactWindowController(NSWindowController):
         contact.setFavorite(True if not contact.favorite else False)
 
     @objc.IBAction
+    def setAutoAnswer_(self, sender):
+        contact = sender.representedObject()
+        contact.setAutoAnswer(True if not contact.auto_answer else False)
+
+    @objc.IBAction
     def goToBackupContactsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
@@ -2635,6 +2640,12 @@ class ContactWindowController(NSWindowController):
                         mitem.setState_(NSOnState if policy and policy == self.presencePolicy.allowPolicy else NSOffState)
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            if type(item) == BlinkPresenceContact:
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
+                mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+                mitem.setState_(NSOnState if item.auto_answer else NSOffState)
+
             settings = SIPSimpleSettings()
             if settings.contacts.enable_favorites_group:
                 if type(item) in (BlinkPresenceContact, AddressBookBlinkContact):
@@ -2643,6 +2654,7 @@ class ContactWindowController(NSWindowController):
                     mitem.setRepresentedObject_(item)
                     mitem.setState_(NSOnState if item.favorite else NSOffState)
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
                 elif type(item) == FavoriteBlinkContact:
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "deleteContact:", "")
                     mitem.setEnabled_(True)
