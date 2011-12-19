@@ -122,6 +122,8 @@ class AlertPanel(NSObject, object):
         self.speech_synthesizer.stopSpeaking()
         if self.speech_synthesizer_timer and self.speech_synthesizer_timer.isValid():
             self.speech_synthesizer_timer.invalidate()
+        if self.muted_by_synthesizer:
+            NSApp.delegate().windowController.muteClicked_(None)
         self.speak_text = None
 
     @run_in_gui_thread
