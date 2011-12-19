@@ -1287,7 +1287,7 @@
 					<object class="NSMenuItem" id="104137456">
 						<reference key="NSMenu" ref="669467535"/>
 						<int key="NSIndent">2</int>
-						<string key="NSTitle">High - More Bandwidth Required</string>
+						<string key="NSTitle">High - Native screen resolution</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
@@ -1297,7 +1297,7 @@
 					<object class="NSMenuItem" id="217951932">
 						<reference key="NSMenu" ref="669467535"/>
 						<int key="NSIndent">2</int>
-						<string key="NSTitle">Medium</string>
+						<string key="NSTitle">Medium - Compromise between bandwidth usage and resolution</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
@@ -1307,7 +1307,7 @@
 					<object class="NSMenuItem" id="748682552">
 						<reference key="NSMenu" ref="669467535"/>
 						<int key="NSIndent">2</int>
-						<string key="NSTitle">Low - Less Bandwidth Required</string>
+						<string key="NSTitle">Low - Uses less bandwidth</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="677793703"/>
