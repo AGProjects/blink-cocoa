@@ -76,13 +76,11 @@ class FancyTabItem(NSView):
         frame.size.width = self.idealWidth()
         self.setFrame_(frame)
 
-
     def idealWidth(self):
         attribs = NSDictionary.dictionaryWithObject_forKey_(NSFont.systemFontOfSize_(11), NSFontAttributeName)
         size = self.label.sizeWithAttributes_(attribs)
         
         return size.width + 14 + 20
-
 
     def dragImage(self):
         if self.cachedDragImage:
@@ -101,7 +99,6 @@ class FancyTabItem(NSView):
         image.unlockFocus()
 
         return image
-
 
     def drawRect_(self, rect):
         r = self.bounds()
@@ -139,10 +136,10 @@ class FancyTabItem(NSView):
             rect.size = self.composeIcon.size()
             self.composeIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(3, 3), rect, NSCompositeSourceOver, 1)
 
-        if self.screen_sharing:
+        if not self.mouseInside and not self.busyIndicator and self.screen_sharing and not self.composing:
             rect = NSZeroRect.copy()
             rect.size = self.screenIcon.size()
-            self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(20, 3), rect, NSCompositeSourceOver, 1)
+            self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(10, 3), rect, NSCompositeSourceOver, 1)
 
         if not self.draggedOut:
             shadow = NSShadow.alloc().init()
@@ -164,12 +161,12 @@ class FancyTabItem(NSView):
             rect.size.width -= 5 + 14 + 4 + 20
             self.label.drawInRect_withAttributes_(rect, attribs)
 
-
     def mouseEntered_(self, event):
         self.mouseInside = True
         self.closeButton.setHidden_(False)
         if self.busyIndicator:
             self.busyIndicator.setHidden_(True)
+
         self.setNeedsDisplay_(True)
     
     
@@ -180,7 +177,6 @@ class FancyTabItem(NSView):
             self.busyIndicator.setHidden_(False)
         self.setNeedsDisplay_(True)
     
-    
     def mouseDown_(self, event):
         self.switcher.tabView.selectTabViewItem_(self.item)
         self.switcher.startedDragging_event_(self, event)
@@ -189,7 +185,6 @@ class FancyTabItem(NSView):
         self.switcher.draggedItem_event_(self, event)
         if not self.cachedDragImage:
             self.cachedDragImage = self.dragImage()
-    
     
     def mouseUp_(self, event):
         self.switcher.finishedDraging_event_(self, event)
@@ -213,15 +208,6 @@ class FancyTabItem(NSView):
         self.setNeedsDisplay_(True)
 
     def setScreenSharing_(self, flag):
-        if self.screen_sharing and not flag:
-            frame = self.frame()
-            frame.size.width -= 16
-            self.setFrame_(frame)
-        elif flag and not self.screen_sharing:
-            frame = self.frame()
-            frame.size.width += 16
-            self.setFrame_(frame)
-
         self.screen_sharing = flag
         self.setNeedsDisplay_(True)
 
