@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">10K549</string>
+		<int key="IBDocument.SystemTarget">1070</int>
+		<string key="IBDocument.SystemVersion">11C74</string>
 		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1038.36</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<string key="IBDocument.AppKitVersion">1138.23</string>
+		<string key="IBDocument.HIToolboxVersion">567.00</string>
 		<dictionary class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="com.apple.InterfaceBuilder.CocoaPlugin">1938</string>
 			<string key="com.apple.WebKitIBPlugin">822</string>
@@ -45,6 +45,7 @@
 				<string key="NSWindowTitle">Account Settings</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
+				<nil key="NSUserInterfaceItemIdentifier"/>
 				<string key="NSWindowContentMinSize">{642, 300}</string>
 				<object class="NSView" key="NSWindowView" id="438071196">
 					<reference key="NSNextResponder"/>
@@ -126,14 +127,14 @@
 						</object>
 						<object class="NSTextField" id="687151261">
 							<reference key="NSNextResponder" ref="438071196"/>
-							<int key="NSvFlags">303</int>
-							<string key="NSFrame">{{142, 388}, {357, 17}}</string>
+							<int key="NSvFlags">319</int>
+							<string key="NSFrame">{{142, 388}, {357, 75}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="977882214">
-								<int key="NSCellFlags">68288064</int>
-								<int key="NSCellFlags2">138413056</int>
+								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags2">138412032</int>
 								<string key="NSContents">Error</string>
 								<reference key="NSSupport" ref="48136291"/>
 								<reference key="NSControlView" ref="687151261"/>
@@ -173,8 +174,9 @@
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{642, 322}</string>
-				<string key="NSMaxSize">{1e+13, 1e+13}</string>
+				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">server-settings</string>
+				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
 		</array>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
