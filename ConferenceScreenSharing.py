@@ -92,7 +92,7 @@ class ConferenceScreenSharing(NSObject):
         self.loading = True
         self.setTitle()
         delimiter = '&' if '?' in self.screensharing_url else '?'
-        url = '%s%sfit' % (self.screensharing_url, delimiter) if self.screensharing_fit_window else self.screensharing_url
+        url = '%s%sfit=1' % (self.screensharing_url, delimiter) if self.screensharing_fit_window else self.screensharing_url
         url = NSURL.URLWithString_(url)
         screesharing_request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(screesharing_request)
