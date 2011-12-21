@@ -500,7 +500,7 @@ h+=this.dmp.diff_xIndex(e,b.endPrefix.length)}}if(g===null&&h!==null)g=h;else if
 if(!b.collapsed){d=this.element.value.substring(g,h);g=d.replace(/\r\n/g,"\n").length;c.moveEnd("character",g)}c.select()}if("scrollTop"in b){this.element.scrollTop=b.scrollTop*this.element.scrollHeight;this.element.scrollLeft=b.scrollLeft*this.element.scrollWidth}};mobwrite.shareTextareaObj.normalizeLinebreaks_=function(b){return b.replace(/\r\n/g,"\n").replace(/\r/g,"\n")};
 mobwrite.shareTextareaObj.shareHandler=function(b){if(typeof b=="string")b=document.getElementById(b);if(b&&"value"in b&&"type"in b&&(b.type=="textarea"||b.type=="text"||b.type=="password")){if(mobwrite.UA_webkit){b.addEventListener("focus",function(){this.activeElement=true},false);b.addEventListener("blur",function(){this.activeElement=false},false);b.activeElement=false}return new mobwrite.shareTextareaObj(b)}return null};mobwrite.shareHandlers.push(mobwrite.shareTextareaObj.shareHandler);})()
 
-  collaboration_editor.innerHTML = "<h2 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Shared Text Editor</h2>"+
+  collaboration_editor.innerHTML = "<h3 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Shared Text Editor</h3>"+
   "<p class=msgbox>Text entered in the area below can be modified simultaneously by all participants:"+
   "<TABLE STYLE='height: 85%; width: 100%'>"+
   "<TR><TD><TEXTAREA ID='"+form_id+"' STYLE='width: 100%; height:100%' onchange='javascript:blink.collaborativeEditorisTyping();'></TEXTAREA></TD></TR>"+
@@ -517,7 +517,7 @@ mobwrite.shareTextareaObj.shareHandler=function(b){if(typeof b=="string")b=docum
 }
 
 function showDisabledCollaborationEditor() {
-  collaboration_editor.innerHTML = "<h2 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Shared Text Editor is available in <a href='http://itunes.apple.com/us/app/blink-pro/id404360415?mt=12&ls=1'>Blink Pro</a></h2>"+
+  collaboration_editor.innerHTML = "<h3 style='color: #404040; font-family: Lucida Grande, Helvetica, Arial;'>Shared Text Editor is available in <a href='http://itunes.apple.com/us/app/blink-pro/id404360415?mt=12&ls=1'>Blink Pro</a></h3>"+
   "<p class=msgbox>Text entered in the area below can be modified simultaneously by all participants:"+
   "<TABLE STYLE='height: 85%; width: 100%'>"+
   "<TR><TD><TEXTAREA disabled='disabled' STYLE='width: 100%; height:100%' onchange='javascript:blink.collaborativeEditorisTyping();'></TEXTAREA></TD></TR>"+
