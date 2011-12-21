@@ -501,10 +501,10 @@ class AudioController(MediaStream):
         self.audioStatus.display()
 
     def updateAudioStatusWithCodecInformation(self):
-        if self.holdByLocal:
+        if self.holdByLocal and not self.answeringMachine:
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
             self.audioStatus.setStringValue_(u"On Hold")
-        elif self.holdByRemote:
+        elif self.holdByRemote and not self.answeringMachine:
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
             self.audioStatus.setStringValue_(u"Hold by Remote")
         else:
