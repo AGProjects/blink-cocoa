@@ -138,8 +138,8 @@ class ChatWindowController(NSWindowController):
     def addTimer(self):
         if not self.timer:
             self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
     def removeTimer(self):
         if self.timer:
@@ -479,9 +479,6 @@ class ChatWindowController(NSWindowController):
                 chat_stream.closeTab()
             else:
                 self.detachWindow_(selectedSession)
-
-    def windowDidExpose_(self, sender):
-        self.addTimer()
 
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])

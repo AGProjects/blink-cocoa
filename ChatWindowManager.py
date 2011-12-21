@@ -29,6 +29,7 @@ class ChatWindowManager(object):
         else:
             window.selectSession_(sessionController)
         window.window().makeKeyAndOrderFront_(None)
+        window.addTimer()
         return window
 
     def getChatWindow(self, sessionController):
