@@ -931,8 +931,8 @@ class SessionController(NSObject):
             if uri == contact.uri:
                 contact.setDetail('%s (%s)' % (data.reason, data.code))
                 self.failed_to_join_participants[uri]=time.time()
-                if data.code >= 400:
-                    contact.setDetail('%s (%s)' % (data.reason, data.code))
+                if data.code >= 400 or data.code == 0:
+                    contact.setDetail('%s (%s)' % (data.reason, data.code) if data.code else data.reason)
                     self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
                     break
 

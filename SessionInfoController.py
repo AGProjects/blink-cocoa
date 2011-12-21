@@ -400,7 +400,7 @@ class SessionInfoController(NSObject):
         self.stopTimer()
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
-        if self.sessionController is not None and self.sessionController.session is not None:
+        if self.sessionController is not None and self.sessionController.session is not None and hasattr(notification.data, 'conference_info'):
             self.conference.setStringValue_('%d Participants' % len(notification.data.conference_info.users))
 
     @run_in_gui_thread
