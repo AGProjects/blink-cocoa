@@ -1406,6 +1406,16 @@ class ChatController(MediaStream):
             menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
             window.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
+    def resetEditorToolbarIcon(self):
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
+            try:
+                item = (item for item in window.toolbar.visibleItems() if item.tag() == 109).next()
+            except StopIteration:
+                pass
+            else:
+                item.setImage_(NSImage.imageNamed_("editor"))
+
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
         if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
@@ -1649,6 +1659,7 @@ class ChatController(MediaStream):
         self.videoContainer.hideVideo()
         self.exitFullScreen()
         self.setScreenSharingToolbarIcon()
+        self.resetEditorToolbarIcon()
         self.resetFancyTabIcons()
         self.disconnectChatViewHandler()
         self.disconnectScreensharingHandler()
