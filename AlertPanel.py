@@ -112,8 +112,6 @@ class AlertPanel(NSObject, object):
     @run_in_gui_thread
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         self.unMuteAfterSpeechDidEnd()
-        if self.speech_recognizer:
-            self.speech_recognizer.startListening()
 
     @run_in_gui_thread
     def init_speech_synthesis(self):
@@ -609,13 +607,15 @@ class AlertPanel(NSObject, object):
             if not SIPManager().is_muted():
                 NSApp.delegate().windowController.muteClicked_(None)
                 self.muted_by_synthesizer = True
-            if self.speech_recognizer:
-                self.speech_recognizer.stopListening()
+        if self.speech_recognizer:
+            self.speech_recognizer.stopListening()
 
     def unMuteAfterSpeechDidEnd(self):
         if self.muted_by_synthesizer and SIPManager().is_muted():
             NSApp.delegate().windowController.muteClicked_(None)
             self.muted_by_synthesizer = False
+        if self.speech_recognizer:
+            self.speech_recognizer.startListening()
 
     @objc.IBAction
     def globalButtonClicked_(self, sender):
