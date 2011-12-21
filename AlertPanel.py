@@ -95,15 +95,19 @@ class AlertPanel(NSObject, object):
     def speechRecognizer_didRecognizeCommand_(self, recognizer, command):
         if command == u'Reject':
             self.decideForAllSessionRequests(REJECT)
+            self.stopSpeechRecognition()
         elif command == u'Busy':
             self.decideForAllSessionRequests(BUSY)
+            self.stopSpeechRecognition()
         elif command in (u'Accept', u'Answer'):
             self.decideForAllSessionRequests(ACCEPT)
+            self.stopSpeechRecognition()
         elif command in (u'Voicemail', u'Answering machine'):
             settings = SIPSimpleSettings()
             settings.answering_machine.enabled = not settings.answering_machine.enabled
             settings.save()
-        self.stopSpeechRecognition()
+            if settings.answering_machine.enabled:
+                self.stopSpeechRecognition()
 
     @run_in_gui_thread
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
