@@ -107,8 +107,9 @@ class AlertPanel(NSObject, object):
 
     @run_in_gui_thread
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
-        if self.muted_by_synthesizer:
-            NSApp.delegate().windowController.muteClicked_(None)
+        self.unMuteAfterSpeechDidEnd()
+        if self.speech_recognizer:
+            self.speech_recognizer.startListening()
 
     @run_in_gui_thread
     def init_speech_synthesis(self):
@@ -122,9 +123,8 @@ class AlertPanel(NSObject, object):
         self.speech_synthesizer.stopSpeaking()
         if self.speech_synthesizer_timer and self.speech_synthesizer_timer.isValid():
             self.speech_synthesizer_timer.invalidate()
-        if self.muted_by_synthesizer:
-            NSApp.delegate().windowController.muteClicked_(None)
         self.speak_text = None
+        self.unMuteAfterSpeechDidEnd()
 
     @run_in_gui_thread
     def startSpeechSynthesizerTimer(self):
@@ -134,11 +134,8 @@ class AlertPanel(NSObject, object):
 
     @run_in_gui_thread
     def startSpeaking_(self, timer):
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers)
-        if hasAudio:
-            NSApp.delegate().windowController.muteClicked_(None)
-            self.muted_by_synthesizer = True
         if self.speak_text:
+            self.muteBeforeSpeechWillStart()
             self.speech_synthesizer.startSpeakingString_(self.speak_text)
 
     def show(self):
@@ -501,6 +498,9 @@ class AlertPanel(NSObject, object):
         if session in self.proposals:
             del self.proposals[session]
 
+        if not self.sessions:
+            self.unMuteAfterSpeechDidEnd()
+
     def disableAnsweringMachine(self, view, session):
         if session in self.answeringMachineTimers:
             amLabel = view.viewWithTag_(15)
@@ -598,6 +598,20 @@ class AlertPanel(NSObject, object):
                     self.enableAutoAnswer(view, session)
                 else:
                     self.disableAutoAnswer(view, session)
+
+    def muteBeforeSpeechWillStart(self):
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers)
+        if hasAudio:
+            if not SIPManager().is_muted():
+                NSApp.delegate().windowController.muteClicked_(None)
+                self.muted_by_synthesizer = True
+            if self.speech_recognizer:
+                self.speech_recognizer.stopListening()
+
+    def unMuteAfterSpeechDidEnd(self):
+        if self.muted_by_synthesizer and SIPManager().is_muted():
+            NSApp.delegate().windowController.muteClicked_(None)
+            self.muted_by_synthesizer = False
 
     @objc.IBAction
     def globalButtonClicked_(self, sender):
