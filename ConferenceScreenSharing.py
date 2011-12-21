@@ -1,17 +1,24 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
+import objc
 from Foundation import *
 from AppKit import *
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
-from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 from util import *
 from urllib import unquote
 
 from BlinkLogger import BlinkLogger
+
+
+class NSURLRequest(objc.Category(NSURLRequest)):
+    @classmethod
+    def allowsAnyHTTPSCertificateForHost_(cls, host):
+        # Use setting?
+        return True
 
 
 class ConferenceScreenSharing(NSObject):
@@ -95,10 +102,8 @@ class ConferenceScreenSharing(NSObject):
         delimiter = '&' if '?' in self.screensharing_url else '?'
         url = '%s%sfit=1' % (self.screensharing_url, delimiter) if self.screensharing_fit_window else self.screensharing_url
         url = NSURL.URLWithString_(url)
-        settings = SIPSimpleSettings()
-        screesharing_request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-        # allow self-signed certs based on global verify_server setting
-        self.webView.mainFrame().loadRequest_(screesharing_request)
+        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+        self.webView.mainFrame().loadRequest_(request)
 
     def stopLoading(self):
         self.loading = False
