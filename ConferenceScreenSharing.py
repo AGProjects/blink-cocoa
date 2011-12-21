@@ -7,6 +7,7 @@ from AppKit import *
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
+from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 from util import *
 from urllib import unquote
@@ -18,7 +19,8 @@ class NSURLRequest(objc.Category(NSURLRequest)):
     @classmethod
     def allowsAnyHTTPSCertificateForHost_(cls, host):
         # Use setting?
-        return True
+        settings = SIPSimpleSettings()
+        return not settings.tls.verify_server
 
 
 class ConferenceScreenSharing(NSObject):
