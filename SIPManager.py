@@ -1073,6 +1073,8 @@ class SIPManager(object):
                     itunes_interface = ITunesInterface()
                     BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
+                    vlc_interface = VLCInterface()
+                    vlc_interface.unmute()
 
     def _NH_SIPSessionGotProposal(self, session, data):
         if self.pause_itunes:
@@ -1090,6 +1092,9 @@ class SIPManager(object):
                     itunes_interface = ITunesInterface()
                     BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
+                    vlc_interface = VLCInterface()
+                    vlc_interface.unmute()
+
 
     def _NH_MediaStreamDidInitialize(self, stream, data):
         if stream.type == 'audio':
@@ -1106,6 +1111,8 @@ class SIPManager(object):
                 if not self.activeAudioStreams and not self.incomingSessions and session_has_other_streams:
                     BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
+                    vlc_interface = VLCInterface()
+                    vlc_interface.unmute()
 
     def _NH_MediaStreamDidFail(self, stream, data):
         if self.pause_itunes:
@@ -1115,6 +1122,8 @@ class SIPManager(object):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     BlinkLogger().log_info(u"Resuming iTunes playback")
                     itunes_interface.resume()
+                    vlc_interface = VLCInterface()
+                    vlc_interface.unmute()
 
     @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):

@@ -761,6 +761,8 @@ class SessionController(NSObject):
                 itunes_interface = ITunesInterface()
                 self.log_info(u"Resuming iTunes playback")
                 itunes_interface.resume()
+                vlc_interface = VLCInterface()
+                vlc_interface.unmute()
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
@@ -782,6 +784,8 @@ class SessionController(NSObject):
                 itunes_interface = ITunesInterface()
                 self.log_info(u"Resuming iTunes playback")
                 itunes_interface.resume()
+                vlc_interface = VLCInterface()
+                vlc_interface.unmute()
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))

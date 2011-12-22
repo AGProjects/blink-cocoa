@@ -93,8 +93,13 @@ class VLCInterface(object):
         end tell
         """
 
-    pause_script = """
+    mute_script = """
         tell application "VLC" to mute
+        """
+
+    unmute_script = """
+        tell application "VLC" to volumeUp
+        tell application "VLC" to volumeDown
         """
 
     @run_in_thread('iTunes-interface')
@@ -104,6 +109,16 @@ class VLCInterface(object):
         script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
         result, error_info = script.executeAndReturnError_(None)
         if result and result.booleanValue():
-            script = NSAppleScript.alloc().initWithSource_(self.pause_script)
+            script = NSAppleScript.alloc().initWithSource_(self.mute_script)
+            script.executeAndReturnError_(None)
+
+    @run_in_thread('iTunes-interface')
+    @allocate_autorelease_pool
+    def unmute(self):
+        notification_center = NotificationCenter()
+        script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
+        result, error_info = script.executeAndReturnError_(None)
+        if result and result.booleanValue():
+            script = NSAppleScript.alloc().initWithSource_(self.unmute_script)
             script.executeAndReturnError_(None)
 
