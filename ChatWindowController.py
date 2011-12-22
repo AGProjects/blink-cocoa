@@ -1083,7 +1083,8 @@ class ChatWindowController(NSWindowController):
                         active_media.append('screen')
                         contact.setScreensharingUrl(user.screen_image_url.value)
                         if own_uri != uri:
-                            self.showRemoteScreenIfNecessary(contact)
+                            pass
+                            #self.showRemoteScreenIfNecessary(contact)
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
