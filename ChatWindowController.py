@@ -62,8 +62,6 @@ class ChatWindowController(NSWindowController):
     desktopShareMenu = objc.IBOutlet()
     conferenceScreeningSharingMenu = objc.IBOutlet()
     screenshotShareMenu = objc.IBOutlet()
-    conferenceScreenSharingQualityMenu = objc.IBOutlet()
-    conferenceScreenSharingWindowsMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
