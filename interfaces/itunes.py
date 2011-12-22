@@ -81,8 +81,8 @@ class ITunesInterface(object):
 
 class VLCInterface(object):
     """
-        VLC does not export any api to check the player state and volume level so
-        we just pause it automatically and let user start it manually later
+        VLC has no apple script function to check the player state and volume level so
+        we just mute it and restore the volume afterwards
     """
 
     __metaclass__ = Singleton
