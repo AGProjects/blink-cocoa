@@ -928,6 +928,30 @@ class ChatWindowController(NSWindowController):
             remoteScreen.show(display_name, uri, unquote(url))
             self.remoteScreens[uri] = remoteScreen
 
+    def startScreenSharingWithUrl(self, url):
+        session = self.selectedSessionController()
+        if session and session.conference_info is not None:
+            try:
+                user = (user for user in session.conference_info.users if user.screen_image_url and user.screen_image_url.value == url).next()
+            except StopIteration:
+                pass
+            else:
+                uri = re.sub("^(sip:|sips:)", "", user.entity)
+                getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+
+                contact = getContactMatchingURI(uri)
+                if contact:
+                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
+                else:
+                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
+
+                try:
+                    remoteScreen = self.remoteScreens[uri]
+                except KeyError:
+                    self.viewSharedScreen(uri, display_name, url)
+                    return True
+        return False
+
     @objc.IBAction
     def userClickedSharedFileMenu_(self, sender):
         self.requestFileTransfer()

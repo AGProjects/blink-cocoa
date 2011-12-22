@@ -385,11 +385,18 @@ class ChatViewController(NSObject):
         return None
         
     def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, info, request, frame, listener):
-        # intercept link clicks so that they are opened in Safari
+        # intercept when user clicks on links so that we process them in different ways
         theURL = info[WebActionOriginalURLKey]
+
+        if self.delegate:
+            window = self.delegate.getWindow()
+            if window and window.startScreenSharingWithUrl(theURL.absoluteString()):
+                return
+
         if theURL.scheme() == "file":
             listener.use()
         else:
+            # use system wide web browser
             listener.ignore()
             NSWorkspace.sharedWorkspace().openURL_(theURL)
 

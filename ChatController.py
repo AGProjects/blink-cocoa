@@ -589,6 +589,9 @@ class ChatController(MediaStream):
     def screensharing_allowed(self):
         return 'com.ag-projects.screen-sharing' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
 
+    def getWindow(self):
+        return ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+
     def awakeFromNib(self):
         # setup smiley popup 
         smileys = SmileyManager().get_smiley_list()

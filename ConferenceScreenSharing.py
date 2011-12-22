@@ -133,4 +133,3 @@ class ConferenceScreenSharing(NSObject):
     def webView_didFinishLoadForFrame_(self, sender, frame):
         self.errorText.setStringValue_('')
         self.errorText.setHidden_(True)
-
