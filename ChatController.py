@@ -1102,9 +1102,8 @@ class ChatController(MediaStream):
                     item.setToolTip_('Click to add video to this session')
                     item.setImage_(NSImage.imageNamed_("video"))
             elif identifier == 'desktop':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
-
                 if not self.sessionController.remote_focus:
+                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
                     menu = toolbar.delegate().desktopShareMenu
                     item.setImage_(NSImage.imageNamed_("display"))
 
@@ -1129,6 +1128,7 @@ class ChatController(MediaStream):
                     else:
                         mitem.setTitle_("Cancel Screen Sharing Proposal")
                 else:
+                    item.setEnabled_(True if self.status == STREAM_CONNECTED and self.screensharing_allowed else False)
                     item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
 
             elif identifier == 'smileys':

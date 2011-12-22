@@ -435,7 +435,7 @@ class ChatWindowController(NSWindowController):
         selectedSession = self.selectedSessionController()
         if selectedSession:
             chat_stream = selectedSession.streamHandlerOfType("chat")
-            if chat_stream:
+            if chat_stream and chat_stream.screensharing_allowed:
                 wob = sender.representedObject()
                 id = wob['id']
                 name = wob['name']
