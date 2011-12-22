@@ -68,9 +68,11 @@
 							<string key="NSToolbarItemPaletteLabel"/>
 							<string key="NSToolbarItemToolTip">Click to Fit Content in Window</string>
 							<object class="NSButton" key="NSToolbarItemView" id="643650884">
-								<nil key="NSNextResponder"/>
+								<reference key="NSNextResponder"/>
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {31, 21}}</string>
+								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<int key="NSTag">100</int>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSButtonCell" key="NSCell" id="832681671">
@@ -85,21 +87,18 @@
 									<reference key="NSControlView" ref="643650884"/>
 									<int key="NSButtonFlags">-1236516609</int>
 									<int key="NSButtonFlags2">198</int>
-									<object class="NSCustomResource" key="NSNormalImage" id="119540769">
-										<string key="NSClassName">NSImage</string>
-										<string key="NSResourceName">shrinktofit</string>
-									</object>
-									<object class="NSCustomResource" key="NSAlternateImage">
+									<object class="NSCustomResource" key="NSNormalImage" id="597093284">
 										<string key="NSClassName">NSImage</string>
 										<string key="NSResourceName">shrinktofit-pressed</string>
 									</object>
+									<reference key="NSAlternateImage" ref="597093284"/>
 									<string key="NSAlternateContents"/>
 									<string key="NSKeyEquivalent"/>
 									<int key="NSPeriodicDelay">200</int>
 									<int key="NSPeriodicInterval">25</int>
 								</object>
 							</object>
-							<reference key="NSToolbarItemImage" ref="119540769"/>
+							<reference key="NSToolbarItemImage" ref="597093284"/>
 							<nil key="NSToolbarItemTarget"/>
 							<nil key="NSToolbarItemAction"/>
 							<string key="NSToolbarItemMinSize">{31, 21}</string>
@@ -168,6 +167,7 @@
 							<string key="NSFrame">{{142, 337}, {357, 68}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="977882214">
 								<int key="NSCellFlags">67239424</int>
@@ -194,6 +194,7 @@
 					<string key="NSFrameSize">{642, 678}</string>
 					<reference key="NSSuperview"/>
 					<reference key="NSWindow"/>
+					<reference key="NSNextKeyView" ref="497458157"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{642, 352}</string>
@@ -482,9 +483,9 @@
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>
 		<int key="IBDocument.defaultPropertyAccessControl">3</int>
-		<dictionary class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">
-			<string key="shrinktofit">{31, 22}</string>
-			<string key="shrinktofit-pressed">{31, 22}</string>
-		</dictionary>
+		<object class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">
+			<string key="NS.key.0">shrinktofit-pressed</string>
+			<string key="NS.object.0">{31, 22}</string>
+		</object>
 	</data>
 </archive>

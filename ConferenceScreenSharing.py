@@ -116,7 +116,7 @@ class ConferenceScreenSharing(NSObject):
     def userClickedToolbarButton_(self, sender):
         if sender.tag() == 100:
            self.fitWindowButton.setState_(NSOffState if self.fitWindowButton.state() == NSOnState else NSOnState)
-           self.fitWindowButton.setImage_(NSImage.imageNamed_('shrinktofit-pressed' if self.screensharing_fit_window else 'shrinktofit'))
+           self.fitWindowButton.setImage_(NSImage.imageNamed_('shrinktofit-pressed' if not self.screensharing_fit_window else 'shrinktofit'))
            self.screensharing_fit_window = False if self.screensharing_fit_window else True
            self.startLoading()
 
