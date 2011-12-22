@@ -157,8 +157,10 @@ class FancyTabItem(NSView):
 
             rect = self.bounds()
             rect.origin.y -= 3
-            rect.origin.x += 5 + 14 + 4
-            rect.size.width -= 5 + 14 + 4 + 20
+            rect.origin.x += 20
+            rect.origin.x = rect.origin.x + 8 if self.screen_sharing else rect.origin.x
+            rect.size.width -= 46
+            rect.size.width = rect.size.width - 8 if self.screen_sharing else rect.size.width
             self.label.drawInRect_withAttributes_(rect, attribs)
 
     def mouseEntered_(self, event):
