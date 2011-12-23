@@ -405,7 +405,7 @@ class JoinConferenceWindowController(NSObject):
 
     def validateRoom(self, allow_random_room=True):
         if not self.room.stringValue().strip() and allow_random_room:
-            room=''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(6))
+            room = random.choice('123456789') + ''.join(random.choice('0123456789') for x in range(6))
         else:
             room=self.room.stringValue().lower().strip()
 
