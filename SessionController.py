@@ -155,6 +155,7 @@ class SessionController(NSObject):
         self.account = session.account
         self.session = session
         self.target_uri = SIPURI.new(session.remote_identity.uri)
+        self.postdial_string = None
         self.remoteSIPAddress = format_identity_address(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
