@@ -15,7 +15,7 @@ class ScreensharingPreviewPanel(NSObject):
     def __init__(self, image):
         NSBundle.loadNibNamed_owner_("ScreensharingPreviewPanel", self)
         self.view.setImage_(image)
-        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "closeTimer:", None, False)
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "closeTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
         self.window.orderFront_(None)
