@@ -213,7 +213,9 @@ class AlertPanel(NSObject, object):
 
         stream_types = [s.type for s in streams]
 
-        self.startSpeechRecognition()
+        have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
+        if not have_audio_call:
+            self.startSpeechRecognition()
 
         typeCount = 0
         if 'audio' in stream_types:
