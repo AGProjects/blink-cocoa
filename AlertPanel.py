@@ -193,9 +193,9 @@ class AlertPanel(NSObject, object):
         self.sessions[session] = view
 
         if len(self.sessions) == 1:
-            self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity))
+            self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity, check_contact=True))
             if SIPSimpleSettings().sounds.enable_speech_synthesizer:
-                self.speak_text = NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity))
+                self.speak_text = NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity, check_contact=True))
                 self.startSpeechSynthesizerTimer()
         else:
             self.panel.setTitle_(u"Multiple Incoming Calls")
