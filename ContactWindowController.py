@@ -1183,6 +1183,13 @@ class ContactWindowController(NSWindowController):
         self.backend.silent(not self.backend.is_silent())
 
     @objc.IBAction
+    def dndClicked_(self, sender):
+        account = AccountManager().default_account
+        if account is not BonjourAccount:
+            account.audio.do_not_disturb = not account.audio.do_not_disturb
+            account.save()
+
+    @objc.IBAction
     def muteClicked_(self, sender):
         if sender != self.muteButton:
             if self.backend.is_muted():
@@ -1714,6 +1721,11 @@ class ContactWindowController(NSWindowController):
                     sessionController.reject(486, 'Busy Here')
                     return
 
+                if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
+                    BlinkLogger().log_info(u"Refusing audio call from %s becuase do not disturb is enabled" % format_identity(session.remote_identity))
+                    sessionController.reject(486, 'Do Not Disturb')
+                    return
+
                 if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
                     BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
                     sessionController.reject(403, 'Not Acceptable')
@@ -1950,15 +1962,6 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(5).setHidden_(True)
             self.blinkMenu.itemWithTag_(6).setHidden_(True)
 
-
-    def menuNeedsUpdate_(self, menu):
-        item = menu.itemWithTag_(300) # mute
-        if item:
-            item.setState_(self.backend.is_muted() and NSOnState or NSOffState)
-        item = menu.itemWithTag_(301) # silent
-        if item:
-            item.setState_(self.backend.is_silent() and NSOnState or NSOffState)
-
     def updateStatusMenu(self):
         settings = SIPSimpleSettings()
 
@@ -2004,8 +2007,20 @@ class ContactWindowController(NSWindowController):
     def updateCallMenu(self):
         menu = self.callMenu
 
-        while menu.numberOfItems() > 6:
-            menu.removeItemAtIndex_(6)
+        item = menu.itemWithTag_(300) # mute
+        item.setState_(NSOnState if self.backend.is_muted() else NSOffState)
+
+        item = menu.itemWithTag_(301) # silent
+        settings = SIPSimpleSettings()
+        item.setState_(NSOnState if settings.audio.silent else NSOffState)
+
+        item = menu.itemWithTag_(302) # dnd
+        account = AccountManager().default_account
+        item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
+        item.setEnabled_(True)
+
+        while menu.numberOfItems() > 7:
+            menu.removeItemAtIndex_(7)
 
         account = self.activeAccount()
 

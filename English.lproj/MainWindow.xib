@@ -717,6 +717,15 @@
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">301</int>
 								</object>
+								<object class="NSMenuItem" id="784709548">
+									<reference key="NSMenu" ref="1038306992"/>
+									<string key="NSTitle">Do Not Disturb</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">302</int>
+								</object>
 							</array>
 							<bool key="NSNoAutoenable">YES</bool>
 						</object>
@@ -4336,6 +4345,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1670</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">dndClicked:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="784709548"/>
+					</object>
+					<int key="connectionID">1674</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
 						<string key="label">link</string>
 						<reference key="source" ref="954251869"/>
@@ -5703,9 +5720,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="868644252"/>
 							<reference ref="437430946"/>
 							<reference ref="752207383"/>
-							<reference ref="827960199"/>
 							<reference ref="3527800"/>
 							<reference ref="278022017"/>
+							<reference ref="827960199"/>
+							<reference ref="784709548"/>
 						</array>
 						<reference key="parent" ref="214498531"/>
 					</object>
@@ -6455,6 +6473,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="394083750"/>
 						<reference key="parent" ref="427015895"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1671</int>
+						<reference key="object" ref="784709548"/>
+						<reference key="parent" ref="1038306992"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -6627,6 +6650,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="1658.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1660.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1669.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1671.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="19.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="197.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="198.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6997,7 +7021,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1670</int>
+			<int key="maxID">1674</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7302,6 +7326,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="deleteContact:">id</string>
 						<string key="deleteGroup:">id</string>
 						<string key="dialPadButtonClicked:">id</string>
+						<string key="dndClicked:">id</string>
 						<string key="editContact:">id</string>
 						<string key="goToBackupContactsFolderClicked:">id</string>
 						<string key="hangupAllClicked:">id</string>
@@ -7397,6 +7422,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="dialPadButtonClicked:">
 							<string key="name">dialPadButtonClicked:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="dndClicked:">
+							<string key="name">dndClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="editContact:">
@@ -7920,14 +7949,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">Policy</string>
-					<string key="superclassName">object</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/Policy.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">PreferencesController</string>
 					<string key="superclassName">NSWindowController</string>
 					<dictionary class="NSMutableDictionary" key="actions">
@@ -8036,6 +8057,159 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<object class="IBPartialClassDescription">
 					<string key="className">PresencePolicy</string>
 					<string key="superclassName">Policy</string>
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="decideLater:">id</string>
+						<string key="offlineWindowConfirm:">id</string>
+						<string key="saveNewWatcher:">id</string>
+						<string key="searchContacts:">id</string>
+						<string key="showPresenceOfflineStatus:">id</string>
+						<string key="togglePresenceOfflineStatus:">id</string>
+						<string key="userButtonClicked:">id</string>
+						<string key="userClickedApplyAllCheckBox:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="decideLater:">
+							<string key="name">decideLater:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="offlineWindowConfirm:">
+							<string key="name">offlineWindowConfirm:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="saveNewWatcher:">
+							<string key="name">saveNewWatcher:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="searchContacts:">
+							<string key="name">searchContacts:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="showPresenceOfflineStatus:">
+							<string key="name">showPresenceOfflineStatus:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="togglePresenceOfflineStatus:">
+							<string key="name">togglePresenceOfflineStatus:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userButtonClicked:">
+							<string key="name">userButtonClicked:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedApplyAllCheckBox:">
+							<string key="name">userClickedApplyAllCheckBox:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="accountPop">id</string>
+						<string key="addButton">id</string>
+						<string key="applyToAll">id</string>
+						<string key="contactExists">id</string>
+						<string key="createContact">id</string>
+						<string key="delButton">id</string>
+						<string key="dialogPolicyTableView">id</string>
+						<string key="disabled_label">id</string>
+						<string key="eventTabView">id</string>
+						<string key="groupCombo">id</string>
+						<string key="newWatcherLabel">id</string>
+						<string key="newWatcherPop">id</string>
+						<string key="newWatcherWindow">id</string>
+						<string key="newWatchers">id</string>
+						<string key="offlineActivity">id</string>
+						<string key="offlineNote">id</string>
+						<string key="offlineWindow">id</string>
+						<string key="pendingWatchersList">id</string>
+						<string key="pendingWatchersView">id</string>
+						<string key="presencePolicyTableView">id</string>
+						<string key="searchSubscriberBox">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="accountPop">
+							<string key="name">accountPop</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="addButton">
+							<string key="name">addButton</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="applyToAll">
+							<string key="name">applyToAll</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="contactExists">
+							<string key="name">contactExists</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="createContact">
+							<string key="name">createContact</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="delButton">
+							<string key="name">delButton</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="dialogPolicyTableView">
+							<string key="name">dialogPolicyTableView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="disabled_label">
+							<string key="name">disabled_label</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="eventTabView">
+							<string key="name">eventTabView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="groupCombo">
+							<string key="name">groupCombo</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="newWatcherLabel">
+							<string key="name">newWatcherLabel</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="newWatcherPop">
+							<string key="name">newWatcherPop</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="newWatcherWindow">
+							<string key="name">newWatcherWindow</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="newWatchers">
+							<string key="name">newWatchers</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="offlineActivity">
+							<string key="name">offlineActivity</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="offlineNote">
+							<string key="name">offlineNote</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="offlineWindow">
+							<string key="name">offlineWindow</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="pendingWatchersList">
+							<string key="name">pendingWatchersList</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="pendingWatchersView">
+							<string key="name">pendingWatchersView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="presencePolicyTableView">
+							<string key="name">presencePolicyTableView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="searchSubscriberBox">
+							<string key="name">searchSubscriberBox</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/PresencePolicy.h</string>
