@@ -5,6 +5,7 @@ import urlparse
 
 from Foundation import *
 from AppKit import *
+from WebKit import WebActionOriginalURLKey
 
 from BlinkLogger import BlinkLogger
 
@@ -182,6 +183,31 @@ class AccountSettings(NSObject):
         else:
             credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id, self._account.server.web_password or self._account.auth.password, NSURLCredentialPersistenceNone)
             challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+
+    def webView_decidePolicyForNewWindowAction_request_newFrameName_decisionListener_(self, webView, info, request, frame, listener):
+        try:
+            theURL = info[WebActionOriginalURLKey]
+            if theURL.host() != self._account.server.settings_url.hostname:
+                # use system wide web browser
+                NSWorkspace.sharedWorkspace().openURL_(theURL)
+                listener.ignore()
+            else:
+                listener.use()
+        except KeyError:
+            pass
+
+    def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, info, request, frame, listener):
+        # intercept when user clicks on links so that we process them in different ways
+        try:
+            theURL = info[WebActionOriginalURLKey]
+            if theURL.host() != self._account.server.settings_url.hostname:
+                # use system wide web browser
+                NSWorkspace.sharedWorkspace().openURL_(theURL)
+                listener.ignore()
+            else:
+                listener.use()
+        except KeyError:
+            pass
 
     def webView_resource_didCancelAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         BlinkLogger().log_info(u"Cancelled authentication request")
