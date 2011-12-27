@@ -932,14 +932,16 @@ class SessionController(NSObject):
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
-        for contact in self.invited_participants:
-            if uri == contact.uri:
-                contact.setDetail('%s (%s)' % (data.reason, data.code))
-                self.failed_to_join_participants[uri]=time.time()
-                if data.code >= 400 or data.code == 0:
-                    contact.setDetail('%s (%s)' % (data.reason if data.reason and data.reason != 'Unknown' else 'Invitation Failed', data.code) if data.code else data.reason)
-                    self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
-                    break
+        try:
+            contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+        except StopIteration:
+            pass
+        else:
+            contact.setDetail('%s (%s)' % (data.reason, data.code))
+            self.failed_to_join_participants[uri]=time.time()
+            if data.code >= 400 or data.code == 0:
+                contact.setDetail('Invite Failed: %s (%s)' % (data.reason, data.code))
+                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
