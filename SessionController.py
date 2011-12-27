@@ -908,9 +908,12 @@ class SessionController(NSObject):
                 self.participants_log.add(uri)
 
             # remove invited participants that joined the conference
-            for contact in self.invited_participants:
-                if uri == contact.uri:
-                    self.invited_participants.remove(contact)
+            try:
+                contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+            except StopIteration:
+                pass
+            else:
+                self.invited_participants.remove(contact)
 
         if data.conference_info.conference_description.resources is not None and data.conference_info.conference_description.resources.files is not None:
             for file in data.conference_info.conference_description.resources.files:
@@ -922,12 +925,14 @@ class SessionController(NSObject):
     def _NH_SIPConferenceDidAddParticipant(self, sender, data):
         self.log_info(u"Added participant to conference: %s" % data.participant)
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
-        for contact in self.invited_participants:
-            if uri == contact.uri:
-                self.invited_participants.remove(contact)
-                # notify controllers who need conference information
-                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
-                break
+        try:
+            contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+        except StopIteration:
+            pass
+        else:
+            self.invited_participants.remove(contact)
+            # notify controllers who need conference information
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
@@ -945,20 +950,22 @@ class SessionController(NSObject):
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
-        for contact in self.invited_participants:
-            if uri == contact.uri:
-                if data.code == 100:
-                    contact.setDetail('Connecting...')
-                elif data.code in (180, 183):
-                    contact.setDetail('Ringing...')
-                elif data.code == 200:
-                    contact.setDetail('Invitation accepted')
-                elif data.code < 400:
-                    contact.setDetail('%s (%s)' % (data.reason, data.code))
+        try:
+            contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+        except StopIteration:
+            pass
+        else:
+            if data.code == 100:
+                contact.setDetail('Connecting...')
+            elif data.code in (180, 183):
+                contact.setDetail('Ringing...')
+            elif data.code == 200:
+                contact.setDetail('Invitation accepted')
+            elif data.code < 400:
+                contact.setDetail('%s (%s)' % (data.reason, data.code))
 
-                # notify controllers who need conference information
-                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
-                break
+            # notify controllers who need conference information
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
         target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
