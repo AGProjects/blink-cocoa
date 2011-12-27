@@ -213,6 +213,7 @@ class AlertPanel(NSObject, object):
 
         stream_types = [s.type for s in streams]
 
+        session_manager = SessionManager()
         have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
         if not have_audio_call:
             self.startSpeechRecognition()
@@ -231,7 +232,6 @@ class AlertPanel(NSObject, object):
                 frame.size.height += 20 # give extra space for the counter label
                 view.setFrame_(frame)
                 if session.account.audio.auto_accept:
-                    session_manager = SessionManager()
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
                         self.enableAutoAnswer(view, session)
