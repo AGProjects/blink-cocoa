@@ -1835,11 +1835,11 @@
 		2B6328740FE421BD00446655 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
-				2B6328840FE422AE00446655 /* ChatController.py */,
 				2BF430E81082F32500F04A6C /* ChatWindowManager.py */,
 				1F71724712BE201200CBA476 /* ChatWindowController.py */,
-				2BAF38120FE088C70040117A /* ChatWindow.xib */,
+				2B6328840FE422AE00446655 /* ChatController.py */,
 				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
+				2BAF38120FE088C70040117A /* ChatWindow.xib */,
 				2BAF38160FE088C70040117A /* ChatView.xib */,
 				2BD011E110D8198400D27A92 /* ChatView.html */,
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */,
