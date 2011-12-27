@@ -1599,7 +1599,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info(u"Chat stream ended")
-        if not self.session_failed:
+        if not self.session_failed and not self.mediastream_failed:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.chatViewController.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
 
