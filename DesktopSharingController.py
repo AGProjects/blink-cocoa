@@ -243,11 +243,13 @@ class DesktopSharingController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         self.changeStatus(STREAM_IDLE)
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+        self.stopButton.setHidden_(True)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Screen sharing ended")
         self.changeStatus(STREAM_IDLE)
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+        self.stopButton.setHidden_(True)
 
     def _NH_MSRPTransportTrace(self, sender, data):
         if hasattr(data, 'stream') and self.stream == data.stream:
