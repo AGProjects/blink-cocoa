@@ -1619,10 +1619,6 @@ class ChatController(MediaStream):
             self.chatViewController.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
-        self.notification_center.discard_observer(self, sender=sender)
-        self.stream = None
-
-        self.resetChatViewToIdleStatus()
 
     def resetIsComposingTimer(self, refresh):
         if self.remoteTypingTimer:
