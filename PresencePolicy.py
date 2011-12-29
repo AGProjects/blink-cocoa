@@ -147,7 +147,7 @@ class PresencePolicy(NSWindowController):
             self.addPolicyTypes()
 
             # check for new watchers after a delay to give time for startup
-            self.performSelector_withObject_afterDelay_("checkPending", None, 10.0)
+            self.performSelector_withObject_afterDelay_("checkPending", None, 15.0)
 
         return self
 
@@ -209,12 +209,7 @@ class PresencePolicy(NSWindowController):
         for event in self.tabViewForEvent.keys():
             has_policy = self.getContactPolicyForEvent(contact, event)
             if has_policy:
-                break
-
-        if not has_policy:
-            return
-
-        self.updatePolicyDataSource(contact)
+                self.updatePolicyDataSource(contact)
 
     def _NH_ContactDidChange(self, notification):
         contact = notification.sender
@@ -318,13 +313,7 @@ class PresencePolicy(NSWindowController):
         else:
             return False
 
-    def setContactPolicyForEvent(self, contact, event, policy):
-        if event == 'presence' and contact.presence_policy != policy:
-            contact.presence_policy = policy
-        elif event == 'dialog' and contact.dialog_policy != policy:
-            contact.dialog_policy = policy
-
-    def getPolicy(self, account, event, address):
+    def accountHasPolicyForWatcherAndEvent(self, account, event, address):
         try:
             contact = (contact for contact in self.policy_data[account][event] if contact.uri == address).next()
         except StopIteration:
@@ -332,6 +321,12 @@ class PresencePolicy(NSWindowController):
         else:
             return True
         return False
+
+    def setContactPolicyForEvent(self, contact, event, policy):
+        if event == 'presence' and contact.presence_policy != policy:
+            contact.presence_policy = policy
+        elif event == 'dialog' and contact.dialog_policy != policy:
+            contact.dialog_policy = policy
 
     def deletePolicyAction(self, account, event, contact):
         # modification made by user clicking buttons
@@ -467,7 +462,7 @@ class PresencePolicy(NSWindowController):
                 if self.createContact.state() == NSOnState:
                     self.addContactToModel(self.newWatcherInfo)
             else:
-                if self.newWatcherInfo.confirm or not self.getPolicy(self.newWatcherInfo.account, self.newWatcherInfo.event, self.newWatcherInfo.address):
+                if self.newWatcherInfo.confirm or not self.accountHasPolicyForWatcherAndEvent(self.newWatcherInfo.account, self.newWatcherInfo.event, self.newWatcherInfo.address):
                     self.newWatcherLabel.setStringValue_(u"%s has subscribed to the %s information published by account %s" % (self.newWatcherInfo.address, self.newWatcherInfo.event, self.newWatcherInfo.account))
                     self.applyToAll.setTitle_(u"Apply same policy to all other %d pending subscribers" % len(self.pendingWatchers) if len(self.pendingWatchers) > 1 else u"Apply same policy to one more pending subscriber")
                     self.applyToAll.setHidden_(False if len(self.pendingWatchers) else True)

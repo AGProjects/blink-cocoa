@@ -1404,7 +1404,6 @@ class ContactListModel(CustomListModel):
                     if account.presence.enabled:
                         # TODO: set indicator to unknown when enable presence -adi
                         blink_contact.setPresenceIndicator("unknown")
-                        continue
                         indicator = random.choice(('available','busy', 'activity', 'unknown'))
                         blink_contact.setPresenceIndicator(indicator)
                         activity = random.choice(PresenceStatusList)
