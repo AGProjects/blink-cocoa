@@ -1,10 +1,14 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+import os
+import unicodedata
+
 from AppKit import *
 from Foundation import *
 
 from VerticalBoxView import VerticalBoxView
+from SIPManager import SIPManager
 
 
 class AudioSession(NSView):
@@ -32,7 +36,7 @@ class AudioSession(NSView):
             pb.setString_forType_(self.sessionInfo, NSStringPboardType)
 
     def awakeFromNib(self):
-        self.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-audio-session", "x-blink-sip-uri"))
+        self.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-audio-session", "x-blink-sip-uri", NSFilenamesPboardType))
 
     def keyDown_(self, event):
         if self.delegate:
@@ -167,7 +171,13 @@ class AudioSession(NSView):
             view.highlighted = True
             view.setNeedsDisplay_(True)
 
-        if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
+        if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
+            fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f):
+                    return NSDragOperationNone
+            return NSDragOperationCopy
+        elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
             # contact
             highlight(self)
             self.foreachConferenceSession(highlight)
@@ -206,7 +216,14 @@ class AudioSession(NSView):
     def performDragOperation_(self, info):
         source = info.draggingSource()
         pboard = info.draggingPasteboard()
-        
+
+        if pboard.types().containsObject_(NSFilenamesPboardType):
+            ws = NSWorkspace.sharedWorkspace()
+            filenames = [unicodedata.normalize('NFC', file) for file in pboard.propertyListForType_(NSFilenamesPboardType) if os.path.isfile(file)]
+            if filenames:
+                SIPManager().send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
+            return
+
         def unhighlight(view):
             view.highlighted = False
             view.setNeedsDisplay_(True)
