@@ -75,7 +75,7 @@ class BlinkAppDelegate(NSObject):
         if self:
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
-            
+            self.init_icloud_storage()
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
@@ -132,6 +132,15 @@ class BlinkAppDelegate(NSObject):
                 self.migrationPanel.close()
 
         return self
+
+    def init_icloud_storage(self):
+        pass
+        # This requires a special development certificate from Apple and settings entitlements for iCloud in target settings
+        # http://developer.apple.com/library/mac/#documentation/ToolsLanguages/Conceptual/OSXWorkflowGuide/ConfiguringApplications/ConfiguringApplications.html#//apple_ref/doc/uid/TP40011201-CH3-SW1/
+        # self.cloud_storage = NSUbiquitousKeyValueStore.defaultStore()
+        # self.cloud_storage.synchronize()
+        # NSUbiquitousKeyValueStoreDidChangeExternallyNotification notification is available in SDK 10.7
+        # NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "cloudStorageDidChange:", NSUbiquitousKeyValueStoreDidChangeExternallyNotification, None)
 
     # Needed by run_in_gui_thread and call_in_gui_thread
     def callObject_(self, callable):
