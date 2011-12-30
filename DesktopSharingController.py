@@ -74,7 +74,6 @@ class DesktopSharingController(MediaStream):
     viewer = None
     vncServerPort = None
     exhanged_bytes = 0
-
     
     #statusItem = StatusItem.alloc().init()
     
@@ -89,6 +88,7 @@ class DesktopSharingController(MediaStream):
             self.stream = stream
             self.direction = stream.handler.type
             self.vncViewerTask = None
+            self.close_timer = None
 
         return self
 
@@ -184,50 +184,52 @@ class DesktopSharingController(MediaStream):
 
         if self.direction == "passive":
             #self.statusItem.update(self, newstate)
-            if self.statusLabel:
-                label = None
+            if self.statusLabel and self.statusWindow:
                 if newstate == STREAM_CONNECTED:
                     label = "%s requests your screen. Please confirm when asked." % self.sessionController.getTitleShort()
                     self.statusProgress.setHidden_(False)
                     self.statusProgress.startAnimation_(None)
                 elif newstate == STREAM_DISCONNECTING:
-                    label = "Disconnecting..."
+                    self.statusLabel.setStringValue_("Disconnecting...")
                     self.statusProgress.setHidden_(True)
+                    self.start_auto_close_timer()
                 elif newstate == STREAM_CANCELLING:
-                    label = "Cancelling..."
+                    self.statusLabel.setStringValue_("Cancelling...")
                     self.statusProgress.setHidden_(True)
+                    self.start_auto_close_timer()
                 elif newstate == STREAM_CONNECTING:
-                    label = "Waiting for connection..."
+                    self.statusLabel.setStringValue_("Waiting for connection...")
                 elif newstate == STREAM_FAILED:
-                    if self.sessionController.failureReason or fail_reason:
-                        label = "Could not start screen sharing:\n%s" % (self.sessionController.failureReason or fail_reason)
-                    else:
-                        label = "Could not start screen sharing"
+                    label = "Could not start screen sharing:\n%s" % (self.sessionController.failureReason or fail_reason) if self.sessionController.failureReason or fail_reason else "Could not start screen sharing"
+                    self.statusLabel.setStringValue_("Screen Sharing Ended")
                     self.statusProgress.setHidden_(True)
-                elif newstate == STREAM_IDLE:
-                    if self.status in (STREAM_DISCONNECTING, STREAM_CONNECTED):
-                        label = "Screen Sharing Ended"
-                        self.statusProgress.setHidden_(True)
-                if label:
-                    self.statusLabel.setStringValue_(label)
+                elif newstate == STREAM_IDLE and self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING):
+                    self.statusLabel.setStringValue_("Screen Sharing Ended")
+                    self.statusProgress.setHidden_(True)
 
         if newstate == STREAM_IDLE:
             #if self.direction == "passive":
                 #self.statusItem.remove(self)
             self.removeFromSession()
+            self.start_auto_close_timer()
 
-            # auto-close everything in 5s
-            NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "closeWindows:", None, False)
-            NotificationCenter().discard_observer(self, sender=self.stream.handler)
-            NotificationCenter().discard_observer(self, sender=self.stream)
         self.status = newstate
-
         MediaStream.changeStatus(self, newstate, fail_reason)
+
+    def start_auto_close_timer(self):
+        if not self.close_timer:
+            # auto-close everything in 5s
+            self.close_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "closeWindows:", None, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSEventTrackingRunLoopMode)
 
     def closeWindows_(self, timer):
         if self.statusWindow:
             self.statusWindow.close()
             self.statusWindow = None
+        if self.close_timer:
+            self.close_timer.invalidate()
+            self.close_timer = None
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -241,24 +243,34 @@ class DesktopSharingController(MediaStream):
         NotificationCenter().add_observer(self, name="MSRPTransportTrace")
 
     def _NH_MediaStreamDidFail(self, sender, data):
+        self.sessionController.log_info("Screen sharing failed")
         self.changeStatus(STREAM_IDLE)
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
-        self.stopButton.setHidden_(True)
+        NotificationCenter().discard_observer(self, sender=self.stream.handler)
+        NotificationCenter().discard_observer(self, sender=self.stream)
+        if self.statusWindow:
+            self.stopButton.setHidden_(True)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Screen sharing ended")
         self.changeStatus(STREAM_IDLE)
+        if self.statusWindow:
+            self.stopButton.setHidden_(True)
+            self.statusProgress.setHidden_(True)
+
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
-        self.stopButton.setHidden_(True)
+        NotificationCenter().discard_observer(self, sender=self.stream.handler)
+        NotificationCenter().discard_observer(self, sender=self.stream)
 
     def _NH_MSRPTransportTrace(self, sender, data):
         if hasattr(data, 'stream') and self.stream == data.stream:
             self.exhanged_bytes += len(data.data)
             if self.exhanged_bytes > 16000:
-                label = "%s is watching the screen" % self.sessionController.getTitleShort()
-                self.statusLabel.setStringValue_(label)
-                self.statusProgress.setHidden_(True)
-                self.stopButton.setHidden_(False)
+                if self.statusWindow:
+                    label = "%s is watching the screen" % self.sessionController.getTitleShort()
+                    self.statusLabel.setStringValue_(label)
+                    self.statusProgress.setHidden_(True)
+                    self.stopButton.setHidden_(False)
                 NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
 
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
