@@ -396,7 +396,6 @@
 							<string key="NSFrame">{{614, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="993445270"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<int key="NSTag">10</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="648449520">
@@ -423,7 +422,6 @@
 							<string key="NSFrame">{{-8, 45}, {740, 445}}</string>
 							<reference key="NSSuperview" ref="993445270"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="350117869"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="627498078">
 									<string key="NSIdentifier">accounts</string>
@@ -463,7 +461,7 @@
 												<string key="NSFrame">{{41, 4}, {25, 23}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="51552534"/>
+												<reference key="NSNextKeyView" ref="797806448"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="821181329">
 													<int key="NSCellFlags">-2080244224</int>
@@ -497,7 +495,7 @@
 																<string key="NSFrameSize">{283, 351}</string>
 																<reference key="NSSuperview" ref="610364781"/>
 																<reference key="NSWindow"/>
-																<reference key="NSNextKeyView" ref="398299239"/>
+																<reference key="NSNextKeyView" ref="736749453"/>
 																<bool key="NSEnabled">YES</bool>
 																<object class="NSTableHeaderView" key="NSHeaderView" id="76249930">
 																	<reference key="NSNextResponder" ref="27080014"/>
@@ -550,11 +548,11 @@
 																			<reference key="NSControlView" ref="533890578"/>
 																			<int key="NSButtonFlags">1215582719</int>
 																			<int key="NSButtonFlags2">2</int>
-																			<object class="NSCustomResource" key="NSNormalImage">
+																			<object class="NSCustomResource" key="NSNormalImage" id="793947503">
 																				<string key="NSClassName">NSImage</string>
 																				<string key="NSResourceName">NSSwitch</string>
 																			</object>
-																			<object class="NSButtonImageSource" key="NSAlternateImage">
+																			<object class="NSButtonImageSource" key="NSAlternateImage" id="252686768">
 																				<string key="NSImageName">NSSwitch</string>
 																			</object>
 																			<string key="NSAlternateContents"/>
@@ -714,7 +712,7 @@
 												<string key="NSFrame">{{17, 34}, {285, 369}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="736749453"/>
+												<reference key="NSNextKeyView" ref="610364781"/>
 												<int key="NSsFlags">133650</int>
 												<reference key="NSVScroller" ref="398299239"/>
 												<reference key="NSHScroller" ref="736749453"/>
@@ -1000,7 +998,7 @@
 												<string key="NSFrame">{{693, 11}, {13, 12}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="1010782047"/>
+												<reference key="NSNextKeyView" ref="1006125994"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSImageCell" key="NSCell" id="160306721">
 													<int key="NSCellFlags">67239424</int>
@@ -1016,6 +1014,32 @@
 													<bool key="NSAnimates">NO</bool>
 												</object>
 												<bool key="NSEditable">YES</bool>
+											</object>
+											<object class="NSButton" id="797806448">
+												<reference key="NSNextResponder" ref="350117869"/>
+												<int key="NSvFlags">-2147483380</int>
+												<string key="NSFrame">{{141, 6}, {163, 18}}</string>
+												<reference key="NSSuperview" ref="350117869"/>
+												<reference key="NSWindow"/>
+												<reference key="NSNextKeyView" ref="51552534"/>
+												<string key="NSReuseIdentifierKey">_NS:771</string>
+												<bool key="NSEnabled">YES</bool>
+												<object class="NSButtonCell" key="NSCell" id="525400704">
+													<int key="NSCellFlags">-2080244224</int>
+													<int key="NSCellFlags2">131072</int>
+													<string key="NSContents">Sync Accounts with iCloud</string>
+													<reference key="NSSupport" ref="26"/>
+													<string key="NSCellIdentifier">_NS:771</string>
+													<reference key="NSControlView" ref="797806448"/>
+													<int key="NSButtonFlags">1211912703</int>
+													<int key="NSButtonFlags2">2</int>
+													<reference key="NSNormalImage" ref="793947503"/>
+													<reference key="NSAlternateImage" ref="252686768"/>
+													<string key="NSAlternateContents"/>
+													<string key="NSKeyEquivalent"/>
+													<int key="NSPeriodicDelay">200</int>
+													<int key="NSPeriodicInterval">25</int>
+												</object>
 											</object>
 										</array>
 										<string key="NSFrame">{{10, 7}, {720, 425}}</string>
@@ -1089,7 +1113,7 @@
 							<object class="NSButtonCell" key="NSCell" id="167193386">
 								<int key="NSCellFlags">67239424</int>
 								<int key="NSCellFlags2">134348800</int>
-								<string key="NSContents">Copyright © 2009-2011 AG Projects</string>
+								<string key="NSContents">Copyright © 2009-2012 AG Projects</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">11</double>
@@ -1393,6 +1417,22 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
+						<string key="label">sync_with_icloud_checkbox</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="797806448"/>
+					</object>
+					<int key="connectionID">319</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">syncWithiCloudClicked:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="797806448"/>
+					</object>
+					<int key="connectionID">320</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
 						<string key="label">dataSource</string>
 						<reference key="source" ref="533890578"/>
 						<reference key="destination" ref="1001"/>
@@ -1647,6 +1687,7 @@
 							<reference ref="201592338"/>
 							<reference ref="51552534"/>
 							<reference ref="8603640"/>
+							<reference ref="797806448"/>
 						</array>
 						<reference key="parent" ref="627498078"/>
 					</object>
@@ -2075,6 +2116,19 @@
 						<reference key="object" ref="160306721"/>
 						<reference key="parent" ref="8603640"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">316</int>
+						<reference key="object" ref="797806448"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="525400704"/>
+						</array>
+						<reference key="parent" ref="350117869"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">317</int>
+						<reference key="object" ref="525400704"/>
+						<reference key="parent" ref="797806448"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -2195,6 +2249,8 @@
 				</object>
 				<string key="304.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="305.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="316.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="317.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<object class="NSMutableDictionary" key="39.IBAttributePlaceholdersKey">
 					<string key="NS.key.0">AccessibilityDescription</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
@@ -2265,118 +2321,9 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">315</int>
+			<int key="maxID">320</int>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes">
-			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
-				<object class="IBPartialClassDescription">
-					<string key="className">PreferencesController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="buttonClicked:">id</string>
-						<string key="openSite:">id</string>
-						<string key="userClickedToolbarButton:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="buttonClicked:">
-							<string key="name">buttonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="openSite:">
-							<string key="name">openSite:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedToolbarButton:">
-							<string key="name">userClickedToolbarButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="accountTable">id</string>
-						<string key="addButton">id</string>
-						<string key="addressText">id</string>
-						<string key="advancedPop">id</string>
-						<string key="advancedTabView">id</string>
-						<string key="advancedToggle">id</string>
-						<string key="displayNameText">id</string>
-						<string key="generalTabView">id</string>
-						<string key="mainTabView">id</string>
-						<string key="passwordText">id</string>
-						<string key="registration_status">id</string>
-						<string key="registration_tls_icon">id</string>
-						<string key="removeButton">id</string>
-						<string key="sectionDescription">id</string>
-						<string key="toolbar">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="accountTable">
-							<string key="name">accountTable</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addButton">
-							<string key="name">addButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addressText">
-							<string key="name">addressText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedPop">
-							<string key="name">advancedPop</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedTabView">
-							<string key="name">advancedTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedToggle">
-							<string key="name">advancedToggle</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="displayNameText">
-							<string key="name">displayNameText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="generalTabView">
-							<string key="name">generalTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="mainTabView">
-							<string key="name">mainTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="passwordText">
-							<string key="name">passwordText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="registration_status">
-							<string key="name">registration_status</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="registration_tls_icon">
-							<string key="name">registration_tls_icon</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="removeButton">
-							<string key="name">removeButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sectionDescription">
-							<string key="name">sectionDescription</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolbar">
-							<string key="name">toolbar</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PreferencesController.h</string>
-					</object>
-				</object>
-			</array>
-		</object>
+		<object class="IBClassDescriber" key="IBDocument.Classes"/>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>

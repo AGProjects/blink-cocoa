@@ -269,6 +269,9 @@
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
+		1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
+		1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
+		1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F7CC99614730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F7CC99714730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F7CC99814730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
@@ -282,6 +285,9 @@
 		1F8A7631138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7632138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
+		1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
+		1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
+		1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8DC326135084FA0034815C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F8DC328135084FA0034815C /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
@@ -590,8 +596,8 @@
 		1FD99704142DEFD100EE171F /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
 		1FD99705142DEFD100EE171F /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
 		1FD99706142DEFD100EE171F /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
-		1FDCDAC31462914300476792 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */; };
-		1FDCDAD41462945600476792 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */; };
+		1FDCDAC31462914300476792 /* BlinkPro.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */; };
+		1FDCDAD41462945600476792 /* BlinkPro.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */; };
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
@@ -1150,14 +1156,16 @@
 		1F689570140BA93100DA5329 /* panel-info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "panel-info.png"; path = "icons/panel-info.png"; sourceTree = "<group>"; };
 		1F68969F140CE18E00DA5329 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = screenshot.png; path = icons/screenshot.png; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
-		1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
+		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
+		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F87B6EE1477D57000BDF25A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
+		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
 		1F9268F414868A82006F2FD8 /* EMKeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EMKeychainItem.h; path = keychain/EMKeychainItem.h; sourceTree = "<group>"; };
@@ -1537,7 +1545,8 @@
 			isa = PBXGroup;
 			children = (
 				1F2FBFFC1462A444008B3D52 /* container-migration.plist */,
-				1F6FFA1A1462904C002A0CB7 /* Entitlements.plist */,
+				1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */,
+				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
 			);
 			name = Sandbox;
 			sourceTree = "<group>";
@@ -1783,6 +1792,7 @@
 		2B5DE51D0FFC5C5D00701821 /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				1F789C9214ADD9DD00437EA4 /* iCloudManager.py */,
 				2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */,
 				2BB376411103C98300DA4577 /* SoundRecorder.xib */,
 				2B2392AD1039E69C00D9023B /* SoundSetting.xib */,
@@ -2287,13 +2297,15 @@
 				1FC9FEF514379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
 				1FD2EF921439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
-				1FDCDAC31462914300476792 /* Entitlements.plist in Resources */,
+				1FDCDAC31462914300476792 /* BlinkPro.entitlements in Resources */,
 				1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080B146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99714730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
+				1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */,
+				1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2492,13 +2504,15 @@
 				1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
 				1FD2EF911439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
-				1FDCDAD41462945600476792 /* Entitlements.plist in Resources */,
+				1FDCDAD41462945600476792 /* BlinkPro.entitlements in Resources */,
 				1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080C146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99814730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C4011498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
+				1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */,
+				1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2702,6 +2716,8 @@
 				1F7CC99614730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EA1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
+				1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */,
+				1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3017,8 +3033,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
+				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3040,7 +3056,7 @@
 					/usr/local/lib,
 				);
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "60CAC37A-6369-4635-B770-5C020913777B";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -3052,8 +3068,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
-				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
+				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
+				CODE_SIGN_IDENTITY = "";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3083,8 +3099,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3105,6 +3121,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = "Blink Lite";
+				PROVISIONING_PROFILE = "60CAC37A-6369-4635-B770-5C020913777B";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -3116,8 +3133,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
-				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application";
+				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -3137,7 +3154,6 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -3148,7 +3164,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = Entitlements.plist;
+				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (

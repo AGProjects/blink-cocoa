@@ -36,6 +36,7 @@ class PreferencesController(NSWindowController, object):
     passwordText = objc.IBOutlet()
     registration_status = objc.IBOutlet()
     registration_tls_icon = objc.IBOutlet()
+    sync_with_icloud_checkbox = objc.IBOutlet()
 
     addButton = objc.IBOutlet()
     removeButton = objc.IBOutlet()
@@ -102,6 +103,8 @@ class PreferencesController(NSWindowController, object):
     def awakeFromNib(self):
         if not self.accountTable:
             return
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
+
         dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(2, 2, 8, 8))
         self.dots = {}
         for i, color in [("red", NSColor.redColor()), ("yellow", NSColor.yellowColor()), ("green", NSColor.greenColor())]:
@@ -144,6 +147,15 @@ class PreferencesController(NSWindowController, object):
                     self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
                 except StopIteration:
                     pass
+
+        major, minor = platform.mac_ver()[0].split('.')[0:2]
+        self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
+
+        self.userDefaultsDidChange_(None)
+
+    def userDefaultsDidChange_(self, notification):
+        icloud_sync_enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
+        self.sync_with_icloud_checkbox.setState_(NSOnState if icloud_sync_enabled == 'Enabled' else NSOffState)
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
@@ -710,17 +722,18 @@ class PreferencesController(NSWindowController, object):
         pboard.setString_forType_(NSString.stringWithString_(str(index)), "dragged-account")
         return True
 
-
     def windowShouldClose_(self, sender):
         sender.makeFirstResponder_(None)
         return True
     
-
     @objc.IBAction
     def openSite_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://ag-projects.com"))
 
-    
+    @objc.IBAction
+    def syncWithiCloudClicked_(self, sender):
+        NSUserDefaults.standardUserDefaults().setObject_forKey_("Enabled" if sender.state() == NSOnState else "Disabled", "iCloudSyncEnabled")
+
     @objc.IBAction
     def buttonClicked_(self, sender):
         if sender == self.advancedToggle:

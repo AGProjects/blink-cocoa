@@ -28,6 +28,7 @@ from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
 from SIPManager import SIPManager
+from iCloudManager import iCloudManager
 from BlinkLogger import BlinkLogger
 from SmileyManager import SmileyManager
 from EnrollmentController import EnrollmentController
@@ -75,7 +76,6 @@ class BlinkAppDelegate(NSObject):
         if self:
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
-            self.init_icloud_storage()
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
@@ -133,15 +133,6 @@ class BlinkAppDelegate(NSObject):
 
         return self
 
-    def init_icloud_storage(self):
-        pass
-        # This requires a special development certificate from Apple and settings entitlements for iCloud in target settings
-        # http://developer.apple.com/library/mac/#documentation/ToolsLanguages/Conceptual/OSXWorkflowGuide/ConfiguringApplications/ConfiguringApplications.html#//apple_ref/doc/uid/TP40011201-CH3-SW1/
-        # self.cloud_storage = NSUbiquitousKeyValueStore.defaultStore()
-        # self.cloud_storage.synchronize()
-        # NSUbiquitousKeyValueStoreDidChangeExternallyNotification notification is available in SDK 10.7
-        # NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "cloudStorageDidChange:", NSUbiquitousKeyValueStoreDidChangeExternallyNotification, None)
-
     # Needed by run_in_gui_thread and call_in_gui_thread
     def callObject_(self, callable):
         try:
@@ -198,6 +189,7 @@ class BlinkAppDelegate(NSObject):
         self.blinkMenu.setTitle_(self.applicationName)
 
         config_file = ApplicationData.get('config')
+        self.icloud_manager = iCloudManager()
         self.backend = SIPManager()
 
         self.windowController.setup(self.backend)
