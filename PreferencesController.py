@@ -406,7 +406,7 @@ class PreferencesController(NSWindowController, object):
             if notification.object() == self.displayNameText:
                 account.display_name = unicode(self.displayNameText.stringValue())
                 account.save()
-            elif notification.object() == self.passwordText and self.passwordText.stringValue().length() > 0:
+            elif notification.object() == self.passwordText:
                 account.auth.password = unicode(self.passwordText.stringValue()).encode("utf8")
                 account.save()
 
