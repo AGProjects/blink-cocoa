@@ -55,12 +55,11 @@
 							<string key="NSFrame">{{51, 20}, {243, 28}}</string>
 							<reference key="NSSuperview" ref="661994322"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="712685643">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">138544128</int>
-								<string type="base64-UTF8" key="NSContents">Q29weXJpZ2h0IMKpIDIwMDktMjAxMSBBRyBQcm9qZWN0cyAKQWxsIFJpZ2h0cyBSZXNlcnZlZC4</string>
+								<string type="base64-UTF8" key="NSContents">Q29weXJpZ2h0IMKpIDIwMDktMjAxMiBBRyBQcm9qZWN0cyAKQWxsIFJpZ2h0cyBSZXNlcnZlZC4</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">11</double>
