@@ -1183,7 +1183,7 @@ class SIPManager(object):
 
     def validateAddAccountAction(self):
         if NSApp.delegate().applicationName == 'Blink Lite':
-            return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) <= 1
+            return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) <= 2
         return True
 
 
