@@ -24,6 +24,14 @@ class iCloudManager(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
+    def _get_first_sync_completed(self):
+        return NSUserDefaults.standardUserDefaults().boolForKey_("iCloudFirstSyncCompleted")
+
+    def _set_first_sync_completed(self, value):
+        NSUserDefaults.standardUserDefaults().setBool_forKey_(value, "iCloudFirstSyncCompleted")
+
+    first_sync_completed = property(_get_first_sync_completed, _set_first_sync_completed)
+
     def __init__(self):
         major, minor = platform.mac_ver()[0].split('.')[0:2]
         if (int(major) == 10 and int(minor) >= 7) or int(major) > 10:
@@ -36,7 +44,6 @@ class iCloudManager(NSObject):
                 self.start()
 
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
-            self.migrated_to_icloud = NSUserDefaults.standardUserDefaults().boolForKey_("iCloudMigrationCompleted")
 
     def start(self):
         BlinkLogger().log_info(u"Starting iCloud Manager")
@@ -59,8 +66,8 @@ class iCloudManager(NSObject):
         self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
 
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, u"NSUbiquitousKeyValueStoreDidChangeExternallyNotification", self.cloud_storage)
-        NSUserDefaults.standardUserDefaults().setBool_forKey_(False, "iCloudMigrationCompleted")
-        self.migrated_to_icloud = False
+
+        self.first_sync_completed = False
         BlinkLogger().log_info(u"iCloud Manager stopped")
 
     def userDefaultsDidChange_(self, notification):
@@ -84,7 +91,7 @@ class iCloudManager(NSObject):
         return size
 
     def purgeStorage(self):
-        NSUserDefaults.standardUserDefaults().setBool_forKey_(False, "iCloudMigrationCompleted")
+        self.first_sync_completed = False
         for key in self.storage_keys:
             self.cloud_storage.removeObjectForKey_(key)
 
@@ -104,14 +111,14 @@ class iCloudManager(NSObject):
 
     def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
         account = data.account
-        if self.migrated_to_icloud and account.id not in self.storage_keys and isinstance(account, Account):
+        if self.first_sync_completed and account.id not in self.storage_keys and isinstance(account, Account):
             json_data = self.getJsonAccountData(account)
             BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
             self.cloud_storage.setString_forKey_(json_data, account.id)
 
     def _NH_SIPAccountManagerDidRemoveAccount(self, sender, data):
         account = data.account
-        if self.migrated_to_icloud and account.id in self.storage_keys and isinstance(account, Account):
+        if self.first_sync_completed and account.id in self.storage_keys and isinstance(account, Account):
             BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
             self.cloud_storage.removeObjectForKey_(account.id)
 
@@ -134,7 +141,7 @@ class iCloudManager(NSObject):
         for account in list(AccountManager().iter_accounts()):
             if isinstance(account, Account):
                 if account.id not in self.storage_keys:
-                    if self.migrated_to_icloud:
+                    if self.first_sync_completed:
                         BlinkLogger().log_info(u"Removing %s because was removed from iCloud" % account.id)
                         account.delete()
                     else:
@@ -157,9 +164,8 @@ class iCloudManager(NSObject):
                 self.updateAccountFromCloud(key)
                 changes +=  1
 
-        if not self.migrated_to_icloud:
-            NSUserDefaults.standardUserDefaults().setBool_forKey_(True, "iCloudMigrationCompleted")
-            self.migrated_to_icloud = True
+        if not self.first_sync_completed:
+            self.first_sync_completed = True
             BlinkLogger().log_info(u"First time synchronization with iCloud completed")
         elif not changes:
             BlinkLogger().log_info(u"iCloud is already synchronized")
