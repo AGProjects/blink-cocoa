@@ -70,6 +70,7 @@ class PreferencesController(NSWindowController, object):
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidFail")
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidEnd")
+            notification_center.add_observer(self, name="iCloudStorageDidChange")
             notification_center.add_observer(self, sender=AccountManager())
             return self
 
@@ -470,6 +471,13 @@ class PreferencesController(NSWindowController, object):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_iCloudStorageDidChange(self, notification):
+        self.refresh_account_table()
+        if self.accountTable:
+            self.tableViewSelectionDidChange_(None)
+        self.validateAddAccountButton()
+        self.updateRegistrationStatus()
 
     def _NH_SIPAccountManagerDidAddAccount(self, notification):
         account = notification.data.account

@@ -235,3 +235,7 @@ class iCloudManager(NSObject):
                 account.delete()
             except KeyError:
                 pass
+
+        self.notification_center.post_notification("iCloudStorageDidChange", sender=self)
+
+
