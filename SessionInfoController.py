@@ -216,7 +216,6 @@ class SessionInfoController(NSObject):
                     transport = self.sessionController.session.transport
                     local_contact = self.sessionController.account.contact[transport]
                     self.local_endpoint.setStringValue_('%s:%s:%d' % (transport, local_contact.host, local_contact.port))
-                    local_contact = self.sessionController.account.contact[transport]
 
                 if self.sessionController.session.peer_address is not None:
                     self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
