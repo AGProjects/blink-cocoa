@@ -874,6 +874,14 @@ class SIPManager(object):
     def _NH_SIPEngineGotException(self, sender, data):
         print "SIP Engine Exception", data
 
+    @run_in_gui_thread
+    def _NH_SIPEngineDidFail(self, sender, data):
+        NSRunAlertPanel("Fatal Error Encountered", "There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.",
+                        "Shut Down", None, None)
+        import signal
+        BlinkLogger().log_info(u"Forcing termination of Blink, fatal error occurred")
+        os.kill(os.getpid(), signal.SIGTERM)
+
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info(u"%s activated" % account)
         # Activate BonjourConferenceServer discovery
