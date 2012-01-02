@@ -388,7 +388,7 @@ class ChatViewController(NSObject):
         # intercept when user clicks on links so that we process them in different ways
         theURL = info[WebActionOriginalURLKey]
 
-        if self.delegate:
+        if self.delegate and hasattr(self.delegate, 'getWindow'):
             window = self.delegate.getWindow()
             if window and window.startScreenSharingWithUrl(theURL.absoluteString()):
                 return
