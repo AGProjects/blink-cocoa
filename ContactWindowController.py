@@ -832,7 +832,7 @@ class ContactWindowController(NSWindowController):
     def showAudioDrawer(self):
         has_audio = False
         for v in self.sessionListView.subviews():
-            if v.delegate.sessionController.session is not None and v.delegate.sessionController.session.state in ('terminating', 'terminated'):
+            if v.delegate is not None and v.delegate.sessionController is not None and v.delegate.sessionController.session is not None and v.delegate.sessionController.session.state in ('terminating', 'terminated'):
                 continue
             else:
                 has_audio = True
