@@ -139,6 +139,7 @@ class BlinkContact(NSObject):
         uri_string = self.uri
         if '@' in uri_string:
             self.username = uri_string.partition("@")[0]
+            self.username = re.sub("^(sip:|sips:)", "", self.username)
             domain = uri_string.partition("@")[-1]
             self.domain = domain if ':' not in domain else domain.partition(":")[0]
         else:
@@ -170,22 +171,23 @@ class BlinkContact(NSObject):
             session_type = None
         return session_type or self._preferred_media
 
+    def split_uri(self, uri):
+        if isinstance(uri, (FrozenSIPURI, SIPURI)):
+            return (uri.user, uri.host)
+        elif '@' in uri:
+            user = uri.partition("@")[0]
+            host = uri.partition("@")[-1]
+            if ':' in host:
+                host = host.partition(":")[0]
+            if ':' in user:
+                user = host.partition(":")[1]
+            return (user, host)
+        else:
+            if ':' in uri:
+                uri = uri.partition(":")[0]
+            return (uri, '')
+
     def matchesURI(self, uri):
-        def split_uri(uri):
-            if isinstance(uri, (FrozenSIPURI, SIPURI)):
-                return (uri.user, uri.host)
-            elif '@' in uri:
-                user = uri.partition("@")[0]
-                host = uri.partition("@")[-1]
-                if ':' in host:
-                    host = host.partition(":")[0]
-                if ':' in user:
-                    user = host.partition(":")[1]
-                return (user, host)
-            else:
-                if ':' in uri:
-                    uri = uri.partition(":")[0]
-                return (uri, '')
 
         def match(me, candidate):
             # check exact match
@@ -214,11 +216,11 @@ class BlinkContact(NSObject):
                 return True
             return False
 
-        candidate = split_uri(uri)
+        candidate = self.split_uri(uri)
         if match((self.username, self.domain), candidate):
             return True
 
-        return any(match(split_uri(alias), candidate) for alias in self.aliases) if hasattr(self, "aliases") else False
+        return any(match(self.split_uri(alias), candidate) for alias in self.aliases) if hasattr(self, "aliases") else False
 
     def setURI(self, uri):
         self.uri = uri
@@ -410,6 +412,10 @@ class BonjourBlinkContact(BlinkContact):
     def setSupportedMedia(self, media):
         self.supported_media = media
 
+    def matchesURI(self, uri):       
+        candidate = self.split_uri(uri)
+        if (self.username, self.domain) == (candidate[0], candidate[1]):
+            return True
 
 class SearchResultContact(BlinkContact):
     """Contact representation for un-matched results in the search outline"""

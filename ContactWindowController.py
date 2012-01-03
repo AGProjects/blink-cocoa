@@ -1445,12 +1445,14 @@ class ContactWindowController(NSWindowController):
         if not text:
             return None
 
+        displayName = None
         try:
             contact = (contact for contact in self.model.bonjour_group.contacts if contact.uri == text).next()
         except StopIteration:
             account = self.activeAccount()
         else:
             account = BonjourAccount()
+            displayName = contact.display_name
 
         if not account:
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
@@ -1459,7 +1461,7 @@ class ContactWindowController(NSWindowController):
 
         target_uri = self.backend.parse_sip_uri(text, account)
         if target_uri:
-            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
+            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, displayName)
             self.sessionControllers.append(session)
             session.setOwner_(self)
             if session_type == "audio":
