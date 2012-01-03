@@ -27,7 +27,7 @@ from ChatPrivateMessageController import ChatPrivateMessageController
 from SIPManager import SIPManager
 
 import FancyTabSwitcher
-from util import allocate_autorelease_pool, format_identity_address, format_size_rounded
+from util import *
 
 import os
 import re
@@ -1024,7 +1024,7 @@ class ChatWindowController(NSWindowController):
                 active_media = []
 
                 if session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
-                        active_media.append('message')
+                    active_media.append('message')
 
                 if session.hasStreamOfType("audio"):
                     active_media.append('audio' if not audio_stream.holdByLocal else 'audio-onhold')
@@ -1048,7 +1048,12 @@ class ChatWindowController(NSWindowController):
                 elif session.state == STATE_CONNECTING:
                     contact.setDetail("Connecting...")
                 else:
-                    contact.setDetail(contact.uri)
+                    try:
+                        sip_uri = SIPURI.parse(str(contact.uri))
+                        puri = '%s@%s' % (sip_uri.user, sip_uri.host)
+                    except SIPCoreError:
+                        puri = contact.uri
+                    contact.setDetail(puri)
 
                 active_media = []
 

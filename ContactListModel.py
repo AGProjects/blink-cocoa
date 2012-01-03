@@ -412,7 +412,7 @@ class BonjourBlinkContact(BlinkContact):
     def setSupportedMedia(self, media):
         self.supported_media = media
 
-    def matchesURI(self, uri):       
+    def matchesURI(self, uri):
         candidate = self.split_uri(uri)
         if (self.username, self.domain) == (candidate[0], candidate[1]):
             return True
