@@ -635,8 +635,10 @@ class SessionController(NSObject):
         self.transfer_window = None
 
     def reject(self, code, reason):
-        self.session.reject(code, reason)
-
+        try:
+            self.session.reject(code, reason)
+        except IllegalStateError:
+            pass
 
     @allocate_autorelease_pool
     @run_in_gui_thread

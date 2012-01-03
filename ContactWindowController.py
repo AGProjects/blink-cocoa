@@ -1715,25 +1715,9 @@ class ContactWindowController(NSWindowController):
                 sessionController.setOwner_(self)
                 self.sessionControllers.append(sessionController)
 
-                # if call waiting is disabled and we have audio calls reject with busy
-                hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
-                if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
-                    BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity(session.remote_identity))
-                    sessionController.reject(486, 'Busy Here')
-                    return
-
-                if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
-                    BlinkLogger().log_info(u"Refusing audio call from %s becuase do not disturb is enabled" % format_identity(session.remote_identity))
-                    sessionController.reject(486, 'Do Not Disturb')
-                    return
-
-                if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
-                    BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
-                    sessionController.reject(403, 'Not Acceptable')
-                    return
-
                 if not self.alertPanel:
                     self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
+
                 self.alertPanel.addIncomingSession(session)
                 self.alertPanel.show()
 

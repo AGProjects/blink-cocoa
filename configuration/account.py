@@ -66,6 +66,7 @@ class BonjourRTPSettingsExtension(RTPSettings):
 class SIPSettingsExtension(SIPSettings):
     always_use_my_proxy = Setting(type=bool, default=True)
     register = Setting(type=bool, default=True)
+    do_not_disturb_code = Setting(type=NonNegativeInteger, default=486, nillable=False)
 
 
 class ServerSettings(SettingsGroup):

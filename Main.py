@@ -55,6 +55,7 @@ class NSLogger(object):
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
+
 # import modules containing classes required to start application and load MainMenu.nib
 import BlinkAppDelegate
 import ContactWindowController

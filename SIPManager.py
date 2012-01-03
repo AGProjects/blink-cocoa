@@ -1040,6 +1040,43 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
+        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
+        stream_type_list = list(set(stream.type for stream in streams))
+        if not streams:
+            BlinkLogger().log_info(u"Rejecting session for unsupported media type")
+            from SessionController import SessionController
+            sessionController = SessionController.alloc().initWithSession_(session)
+            self._delegate.sessionControllers.append(sessionController)
+            sessionController.reject(488, 'Incompatible media')
+            return
+
+        # if call waiting is disabled and we have audio calls reject with busy
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self._delegate.sessionControllers)
+        if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
+            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity(session.remote_identity))
+            from SessionController import SessionController
+            sessionController = SessionController.alloc().initWithSession_(session)
+            self._delegate.sessionControllers.append(sessionController)
+            sessionController.reject(486, 'Busy Here')
+            return
+
+        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
+            BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity(session.remote_identity))
+            from SessionController import SessionController
+            sessionController = SessionController.alloc().initWithSession_(session)
+            self._delegate.sessionControllers.append(sessionController)
+            sessionController.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+            return
+
+        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
+            BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
+            from SessionController import SessionController
+            sessionController = SessionController.alloc().initWithSession_(session)
+            self._delegate.sessionControllers.append(sessionController)
+            sessionController.reject(403, 'Anonymous Not Acceptable')
+            return
+
+        # at this stage call is allowed and will alert the user
         self.incomingSessions.add(session)
 
         if self.pause_itunes:
@@ -1049,11 +1086,6 @@ class SIPManager(object):
             vlc_interface = VLCInterface()
             vlc_interface.mute()
 
-        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
-        if not streams:
-            BlinkLogger().log_info(u"Unsupported media type, session rejected")
-            session.reject(488, 'Incompatible media')
-            return
         self.ringer.add_incoming(session, streams)
         session.blink_supported_streams = streams
         self._delegate.handle_incoming_session(session, streams)
@@ -1072,6 +1104,9 @@ class SIPManager(object):
                 self._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
             self._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
             #NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+
+    def _NH_SIPSessionDidFail(self, session, data):
+        self.incomingSessions.discard(session)
 
     def _NH_SIPSessionDidStart(self, session, data):
         self.incomingSessions.discard(session)
@@ -1163,9 +1198,12 @@ class SIPManager(object):
                 self.log_incoming_session_answered_elsewhere(session_controller, data)
             else:
                 self.log_incoming_session_missed(session_controller, data)
-            if data.code == 487 and data.failure_reason != 'Call completed elsewhere':
-                if data.streams == ['file-transfer']:
-                    return
+
+            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
+                pass
+            elif data.streams == ['file-transfer']:
+                pass
+            else:
                 growl_data = TimestampedNotificationData()
                 growl_data.caller = format_identity_simple(session.remote_identity, check_contact=True)
                 growl_data.timestamp = data.timestamp

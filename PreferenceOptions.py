@@ -325,6 +325,19 @@ class NonNegativeIntegerOption(StringOption):
         self.text.setIntegerValue_(value)
 
 
+class NegativeSIPCodeOption(NonNegativeIntegerOption):
+    def _store(self):
+        current = self.get(0)
+        new = self.text.integerValue()
+        if (new >= 400 and new < 500) or (new >= 600 and new < 700):
+            if current != new:
+                self.set(new)
+        else:
+            NSRunAlertPanel("Invalid Code", "Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for Busy Here or 603 code for Busy Everywhere", "OK", None, None)
+            self.restore()
+            return
+
+
 class DigitsOption(StringOption):
     def _store(self):
         current = self.get()
@@ -1512,6 +1525,7 @@ PreferenceOptionTypes = {
 "server.enrollment_url" : HiddenOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
+"sip.do_not_disturb_code": NegativeSIPCodeOption,
 "tls.ca_list": TLSCAListPathOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.protocol" : HiddenOption,
@@ -1626,7 +1640,7 @@ AccountSettingsOrder = {
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'prefix'],
-                       'sip': ['register']
+                       'sip': ['register', 'always_use_my_proxy', 'outbound_proxy', 'register_interval', 'subscribe_interval', 'do_not_disturb_code']
                        }
 
 UnitOptions = {
