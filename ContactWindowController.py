@@ -1442,12 +1442,19 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
     def startSessionWithSIPURI(self, text, session_type="audio"):
-        account = self.activeAccount()
+        if not text:
+            return None
+
+        try:
+            contact = (contact for contact in self.model.bonjour_group.contacts if contact.uri == text).next()
+        except StopIteration:
+            account = self.activeAccount()
+        else:
+            account = BonjourAccount()
+
         if not account:
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
                             "OK", None, None)
-            return None
-        if not text:
             return None
 
         target_uri = self.backend.parse_sip_uri(text, account)
