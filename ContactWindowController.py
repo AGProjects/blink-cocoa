@@ -717,7 +717,6 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkChatWindowClosed(self, notification):
-        # TODO: avoid opening drawer if no audio session is connected -adi
         self.showAudioDrawer()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
@@ -831,8 +830,15 @@ class ContactWindowController(NSWindowController):
             self.showAudioDrawer()
 
     def showAudioDrawer(self):
-        count = self.sessionListView.numberOfItems()
-        if not self.drawer.isOpen() and count > 0:
+        has_audio = False
+        for v in self.sessionListView.subviews():
+            if v.delegate.sessionController.session is not None and v.delegate.sessionController.session.state in ('terminating', 'terminated'):
+                continue
+            else:
+                has_audio = True
+                break
+
+        if not self.drawer.isOpen() and has_audio:
             #self.drawer.setContentSize_(self.window().frame().size)
             self.drawer.open()
             # TODO: enable adds
