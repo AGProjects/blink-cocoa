@@ -235,6 +235,7 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
         if session.mustShowDrawer:
             self.drawer.open()
+            NSApp.delegate().windowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
     def selectSession_(self, session):
@@ -1201,6 +1202,7 @@ class ChatWindowController(NSWindowController):
             if session.mustShowDrawer:
                 self.refreshDrawer()
                 self.drawer.open()
+                NSApp.delegate().windowController.drawer.close()
                 self.participantsTableView.deselectAll_(self)
                 self.conferenceFilesTableView.deselectAll_(self)
             else:
