@@ -124,9 +124,11 @@ class iCloudManager(NSObject):
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
-            BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
-            json_data = self.getJsonAccountData(account)
-            self.cloud_storage.setString_forKey_(json_data, account.id)
+            must_update = any(key for key in data.modified.keys() if key not in ('certificate', 'order'))
+            if must_update:
+                BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
+                json_data = self.getJsonAccountData(account)
+                self.cloud_storage.setString_forKey_(json_data, account.id)
 
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.sync()
@@ -193,7 +195,7 @@ class iCloudManager(NSObject):
                         d.pop(k)
                 elif v is DefaultValue:
                     d.pop(k)
-                elif k == 'certificate':
+                elif k in ('certificate', 'order'):
                     d.pop(k)
 
         data = account.__getstate__()
