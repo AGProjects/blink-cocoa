@@ -1017,7 +1017,7 @@
 											</object>
 											<object class="NSButton" id="797806448">
 												<reference key="NSNextResponder" ref="350117869"/>
-												<int key="NSvFlags">-2147483380</int>
+												<int key="NSvFlags">-2147483356</int>
 												<string key="NSFrame">{{193, 6}, {111, 18}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
