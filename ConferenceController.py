@@ -244,8 +244,9 @@ class JoinConferenceWindowController(NSObject):
             if SIPManager().bonjour_conference_services.servers:
                 # TODO: filter by available transport, show only one entry
                 # settings.sip.transport_list
-                for server in SIPManager().bonjour_conference_services.servers:
-                    self.bonjour_server_combolist.addItemWithTitle_('%s (%s)' % (server.host, server.uri))
+                servers = (server for server in SIPManager().bonjour_conference_services.servers if server.uri.transport == 'tls')
+                for server in servers:
+                    self.bonjour_server_combolist.addItemWithTitle_('%s (%s)' % (server.host, server.uri.host))
                     item = self.bonjour_server_combolist.lastItem()
                     item.setRepresentedObject_(server)
                     self.ok_button.setEnabled_(True)
