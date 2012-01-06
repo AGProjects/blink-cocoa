@@ -31,7 +31,7 @@ from FileTransferController import FileTransferController
 
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
-from interfaces.itunes import ITunesInterface, VLCInterface
+from interfaces.itunes import MusicApplications
 from util import *
 
 SessionIdentifierSerial = 0
@@ -464,12 +464,9 @@ class SessionController(NSObject):
                     if SIPManager().pause_itunes:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
-                            itunes_interface = ITunesInterface()
-                            self.notification_center.add_observer(self, sender=itunes_interface)
-                            self.log_info(u"Stopping iTunes playback and muting VLC")
-                            itunes_interface.pause()
-                            vlc_interface = VLCInterface()
-                            vlc_interface.mute()
+                            music_applications = MusicApplications()
+                            music_applications.pause()
+                            self.notification_center.add_observer(self, sender=music_applications)
                         else:
                             self.waitingForITunes = False
 
@@ -646,7 +643,7 @@ class SessionController(NSObject):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
-    def _NH_ITunesPauseDidExecute(self, sender, data):
+    def _NH_MusicPauseDidExecute(self, sender, data):
         if not self.waitingForITunes:
             return
         self.notification_center.remove_observer(self, sender=sender)
@@ -761,11 +758,8 @@ class SessionController(NSObject):
         elif SIPManager().pause_itunes:
             SIPManager().incomingSessions.discard(sender)
             if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
-                itunes_interface = ITunesInterface()
-                self.log_info(u"Resuming iTunes playback")
-                itunes_interface.resume()
-                vlc_interface = VLCInterface()
-                vlc_interface.unmute()
+                music_applications = MusicApplications()
+                music_applications.resume()
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
@@ -784,11 +778,9 @@ class SessionController(NSObject):
         if SIPManager().pause_itunes:
             SIPManager().incomingSessions.discard(sender)
             if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
-                itunes_interface = ITunesInterface()
-                self.log_info(u"Resuming iTunes playback")
-                itunes_interface.resume()
-                vlc_interface = VLCInterface()
-                vlc_interface.unmute()
+                music_applications = MusicApplications()
+                music_applications.resume()
+
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))

@@ -59,7 +59,7 @@ from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
 
-from interfaces.itunes import ITunesInterface, VLCInterface
+from interfaces.itunes import MusicApplications
 
 STATUS_PHONE = "phone"
 
@@ -1080,11 +1080,8 @@ class SIPManager(object):
         self.incomingSessions.add(session)
 
         if self.pause_itunes:
-            itunes_interface = ITunesInterface()
-            BlinkLogger().log_info(u"Stopping iTunes playback and muting VLC")
-            itunes_interface.pause()
-            vlc_interface = VLCInterface()
-            vlc_interface.mute()
+            music_applications = MusicApplications()
+            music_applications.pause()
 
         self.ringer.add_incoming(session, streams)
         session.blink_supported_streams = streams
@@ -1113,30 +1110,22 @@ class SIPManager(object):
         if self.pause_itunes:
             if all(stream.type != 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    itunes_interface = ITunesInterface()
-                    BlinkLogger().log_info(u"Resuming iTunes playback")
-                    itunes_interface.resume()
-                    vlc_interface = VLCInterface()
-                    vlc_interface.unmute()
+                    music_applications = MusicApplications()
+                    music_applications.resume()
 
     def _NH_SIPSessionGotProposal(self, session, data):
         if self.pause_itunes:
             if any(stream.type == 'audio' for stream in data.streams):
-                itunes_interface = ITunesInterface()
-                BlinkLogger().log_info(u"Stopping iTunes playback and muting VLC")
-                itunes_interface.pause()
-                vlc_interface = VLCInterface()
-                vlc_interface.mute()
+                music_applications = MusicApplications()
+                music_applications.pause()
+
 
     def _NH_SIPSessionGotRejectProposal(self, session, data):
         if self.pause_itunes:
             if any(stream.type == 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    itunes_interface = ITunesInterface()
-                    BlinkLogger().log_info(u"Resuming iTunes playback")
-                    itunes_interface.resume()
-                    vlc_interface = VLCInterface()
-                    vlc_interface.unmute()
+                    music_applications = MusicApplications()
+                    music_applications.resume()
 
 
     def _NH_MediaStreamDidInitialize(self, stream, data):
@@ -1145,28 +1134,22 @@ class SIPManager(object):
 
     def _NH_MediaStreamDidEnd(self, stream, data):
         if self.pause_itunes:
-            itunes_interface = ITunesInterface()
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
                 # TODO: check if session has other streams and if yes, resume itunes
                 # in case of session ends, resume is handled by the Session Controller
                 session_has_other_streams = False
                 if not self.activeAudioStreams and not self.incomingSessions and session_has_other_streams:
-                    BlinkLogger().log_info(u"Resuming iTunes playback")
-                    itunes_interface.resume()
-                    vlc_interface = VLCInterface()
-                    vlc_interface.unmute()
+                    music_applications = MusicApplications()
+                    music_applications.resume()
 
     def _NH_MediaStreamDidFail(self, stream, data):
         if self.pause_itunes:
-            itunes_interface = ITunesInterface()
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    BlinkLogger().log_info(u"Resuming iTunes playback")
-                    itunes_interface.resume()
-                    vlc_interface = VLCInterface()
-                    vlc_interface.unmute()
+                    music_applications = MusicApplications()
+                    music_applications.resume()
 
     @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):
