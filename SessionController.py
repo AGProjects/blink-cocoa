@@ -461,7 +461,7 @@ class SessionController(NSObject):
                         OUTBOUND_AUDIO_CALLS += 1
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
 
-                    if SIPManager().pause_itunes:
+                    if SIPManager().pause_music:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
                             music_applications = MusicApplications()
@@ -755,7 +755,7 @@ class SessionController(NSObject):
                 self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
             else:
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
-        elif SIPManager().pause_itunes:
+        elif SIPManager().pause_music:
             SIPManager().incomingSessions.discard(sender)
             if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
                 music_applications = MusicApplications()
@@ -775,7 +775,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
 
-        if SIPManager().pause_itunes:
+        if SIPManager().pause_music:
             SIPManager().incomingSessions.discard(sender)
             if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
                 music_applications = MusicApplications()

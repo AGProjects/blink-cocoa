@@ -161,7 +161,7 @@ class SIPManager(object):
         self.ringer = Ringer(self)
         self.incomingSessions = set()
         self.activeAudioStreams = set()
-        self.pause_itunes = True
+        self.pause_music = True
         self.bonjour_conference_services = BonjourConferenceServices()
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
@@ -820,7 +820,7 @@ class SIPManager(object):
         self.ringer.update_ringtones()
 
         settings = SIPSimpleSettings()
-        self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and NSApp.delegate().applicationName != 'Blink Lite' else False
+        self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
 
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
@@ -956,9 +956,9 @@ class SIPManager(object):
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
             settings.save()
 
-        if 'audio.pause_itunes' in data.modified:
+        if 'audio.pause_music' in data.modified:
             settings = SIPSimpleSettings()
-            self.pause_itunes = settings.audio.pause_itunes if settings.audio.pause_itunes and NSApp.delegate().applicationName != 'Blink Lite' else False
+            self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
         account = sender.account
@@ -1079,7 +1079,7 @@ class SIPManager(object):
         # at this stage call is allowed and will alert the user
         self.incomingSessions.add(session)
 
-        if self.pause_itunes:
+        if self.pause_music:
             music_applications = MusicApplications()
             music_applications.pause()
 
@@ -1107,21 +1107,21 @@ class SIPManager(object):
 
     def _NH_SIPSessionDidStart(self, session, data):
         self.incomingSessions.discard(session)
-        if self.pause_itunes:
+        if self.pause_music:
             if all(stream.type != 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     music_applications = MusicApplications()
                     music_applications.resume()
 
     def _NH_SIPSessionGotProposal(self, session, data):
-        if self.pause_itunes:
+        if self.pause_music:
             if any(stream.type == 'audio' for stream in data.streams):
                 music_applications = MusicApplications()
                 music_applications.pause()
 
 
     def _NH_SIPSessionGotRejectProposal(self, session, data):
-        if self.pause_itunes:
+        if self.pause_music:
             if any(stream.type == 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     music_applications = MusicApplications()
@@ -1133,7 +1133,7 @@ class SIPManager(object):
             self.activeAudioStreams.add(stream)
 
     def _NH_MediaStreamDidEnd(self, stream, data):
-        if self.pause_itunes:
+        if self.pause_music:
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
                 # TODO: check if session has other streams and if yes, resume itunes
@@ -1144,7 +1144,7 @@ class SIPManager(object):
                     music_applications.resume()
 
     def _NH_MediaStreamDidFail(self, stream, data):
-        if self.pause_itunes:
+        if self.pause_music:
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
                 if not self.activeAudioStreams and not self.incomingSessions:

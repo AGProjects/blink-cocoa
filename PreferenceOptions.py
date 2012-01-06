@@ -1550,7 +1550,7 @@ SettingDescription = {
                       'audio.reject_anonymous': 'Reject Anonymous Callers',
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
-                      'audio.pause_itunes': 'Pause iTunes During Audio Calls',
+                      'audio.pause_music': 'Pause Music Applications During Audio Calls',
                       'audio.automatic_device_switch': 'Switch to New Devices when Plugged-in',
                       'audio.enable_aec': 'Enable Acoustic Echo Cancellation',
                       'answering_machine.enabled': 'Enable Answering Machine',
@@ -1622,7 +1622,7 @@ SectionNames = {
                        }
 
 GeneralSettingsOrder = {
-                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'pause_itunes', 'directory'],
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'pause_music', 'directory'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
