@@ -382,7 +382,11 @@ class ChatViewController(NSObject):
         self.messageQueue = []
 
     def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, element, defaultItems):
-        return None
+        for item in defaultItems:
+            if item.title() == 'Reload':
+                del defaultItems[defaultItems.index(item)]
+                break
+        return defaultItems
         
     def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, info, request, frame, listener):
         # intercept when user clicks on links so that we process them in different ways
