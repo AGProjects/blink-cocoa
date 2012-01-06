@@ -1899,7 +1899,9 @@ class ContactListModel(CustomListModel):
                     blink_contact.uri += "." + account.id.domain
 
             if self.contactExistsInAccount(blink_contact.uri, blink_contact.stored_in_account):
-                NSRunAlertPanel("Add Contact", "Contact %s already exists"% blink_contact.uri, "OK", None, None)
+                message = "Contact %s already exists"% blink_contact.uri
+                message = re.sub("%", "%%", message)
+                NSRunAlertPanel("Add Contact", message, "OK", None, None)
                 return None
 
             try:
@@ -2002,7 +2004,9 @@ class ContactListModel(CustomListModel):
                 blink_contact.reference.preferred_media = blink_contact.preferred_media if blink_contact.preferred_media else None
                 blink_contact.reference.save()
             except DuplicateIDError:
-                NSRunAlertPanel("Edit Contact", "Contact %s already exists in account %s"% (blink_contact.uri, blink_contact.stored_in_account.id), "OK", None, None)
+                message = "Contact %s already exists in account %s"% (blink_contact.uri, blink_contact.stored_in_account.id)
+                message = re.sub("%", "%%", message)
+                NSRunAlertPanel("Edit Contact", message, "OK", None, None)
                 return None
 
     def deleteContact(self, blink_contact):
@@ -2015,8 +2019,9 @@ class ContactListModel(CustomListModel):
                 return
 
             name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
-
-            ret = NSRunAlertPanel(u"Delete Contact", u"Delete '%s' from the Contacts list?"%name, u"Delete", u"Cancel", None)
+            message = u"Delete Contact", u"Delete '%s' from the Contacts list?"%name
+            message = re.sub("%", "%%", message)
+            ret = NSRunAlertPanel(message, u"Delete", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
                 try:
                     group = (group for group in self.contactGroupsList if blink_contact in group.contacts).next()
@@ -2026,7 +2031,9 @@ class ContactListModel(CustomListModel):
                     blink_contact.reference.delete()
 
         elif isinstance(blink_contact, BlinkContactGroup) and blink_contact.deletable:
-            ret = NSRunAlertPanel(u"Delete Contact Group", u"Delete group '%s' and its contents from the Contacts list?"%blink_contact.name, u"Delete", u"Cancel", None)
+            message = u"Delete group '%s' and its contents from the Contacts list?"%blink_contact.name
+            message = re.sub("%", "%%", message)
+            ret = NSRunAlertPanel(u"Delete Contact Group", message, u"Delete", u"Cancel", None)
             if ret == NSAlertDefaultReturn and blink_contact in self.contactGroupsList:
                 blink_contact.reference.delete()
 

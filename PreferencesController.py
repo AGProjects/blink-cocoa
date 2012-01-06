@@ -1,6 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+import re
 import os
 import platform
 
@@ -384,7 +385,10 @@ class PreferencesController(NSWindowController, object):
         account_info = self.selectedAccount()
         if account_info:
             account = account_info.account
-            if NSRunAlertPanel("Remove Account", "Permanently remove account %s?" % account_info.name, "Remove", "Cancel", None) != NSAlertDefaultReturn:
+            text = "Permanently remove account %s?" % account_info.name
+            text = re.sub("%", "%%", text)
+            # http://stackoverflow.com/questions/4498709/problem-in-displaying-in-nsrunalertpanel
+            if NSRunAlertPanel("Remove Account", text, "Remove", "Cancel", None) != NSAlertDefaultReturn:
                 return
 
             if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':

@@ -1690,9 +1690,11 @@ class ContactWindowController(NSWindowController):
                     self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
 
     def sip_error(self, message):
+        message = re.sub("%", "%%", message)
         NSRunAlertPanel("Error", message, "OK", None, None)
 
     def sip_warning(self, message):
+        message = re.sub("%", "%%", message)
         NSRunAlertPanel("Warning", message, "OK", None, None)
 
     def handle_incoming_session(self, session, streams):
@@ -3058,7 +3060,9 @@ class ContactWindowController(NSWindowController):
                     display_name = unicode(conf_desc.display_text)
                 self.addContact(remote_uri, display_name)
             elif tag == PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
-                ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?" % display_name, u"Remove", u"Cancel", None)
+                message= u"You will request the conference server to remove %s from the room. Are your sure?" % display_name
+                message = re.sub("%", "%%", message)
+                ret = NSRunAlertPanel(u"Remove from conference", message, u"Remove", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
             elif tag == PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
