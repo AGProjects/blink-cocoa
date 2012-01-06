@@ -847,6 +847,9 @@ class CustomListModel(NSObject):
             if source.delegate is None or not source.delegate.canTransfer or not source.delegate.transferEnabled:
                 return NSDragOperationNone
 
+            if source.delegate.sessionController.account is not BonjourAccount() and type(proposed_item) == BonjourBlinkContact:
+                return NSDragOperationNone
+
             if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, BlinkContact):
                 return NSDragOperationNone
 

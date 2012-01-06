@@ -786,7 +786,7 @@ class AudioController(MediaStream):
         if menu == self.transferMenu:
             while menu.numberOfItems() > 1:
                 menu.removeItemAtIndex_(1)
-            for session_controller in (s for s in NSApp.delegate().windowController.sessionControllers if s is not self.sessionController and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
+            for session_controller in (s for s in NSApp.delegate().windowController.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
                 item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.getTitleFull(), "userClickedTransferMenuItem:", "")
                 item.setIndentationLevel_(1)
                 item.setTarget_(self)
