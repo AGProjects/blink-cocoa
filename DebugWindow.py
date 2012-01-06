@@ -125,6 +125,7 @@ class DebugWindow(NSObject):
         self.sipRadio.selectCellWithTag_(userdef.integerForKey_("SIPTrace") or Disabled)
         self.msrpRadio.selectCellWithTag_(userdef.integerForKey_("MSRPTrace") or Disabled)
         self.xcapRadio.selectCellWithTag_(userdef.integerForKey_("XCAPTrace") or Disabled)
+        self.pjsipCheckBox.setState_(NSOnState if userdef.boolForKey_("EnablePJSIPTrace") else NSOffState)
         
         rtpTimeoutTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "rtpTimeout:", None, True)
 
