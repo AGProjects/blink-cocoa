@@ -26,7 +26,7 @@ class iCloudManager(NSObject):
     implements(IObserver)
     cloud_storage = None
     sync_active = False
-    skip_settings = ('certificate', 'order', 'tls', 'audio_inbound')
+    skip_settings = ('certificate', 'order', 'tls', 'audio_inbound', 'discovered')
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -236,6 +236,8 @@ class iCloudManager(NSObject):
                     group = getattr(obj, name)
                     set_state(group, value)
                 elif isinstance(attribute, Setting):
+                    if issubclass(attribute.type, bool) and isinstance(value, bool):
+                        value = str(value)
                     try:
                         attribute.__setstate__(obj, value)
                     except ValueError:
