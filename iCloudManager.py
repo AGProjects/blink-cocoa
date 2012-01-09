@@ -10,7 +10,10 @@ import platform
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 
-from sipsimple.configuration import DefaultValue
+from configuration.account import LDAPSettingsExtension
+
+from sipsimple.account import AuthSettings
+from sipsimple.configuration import DefaultValue, SettingsGroupMeta, Setting
 from sipsimple.account import AccountManager, Account
 
 from zope.interface import implements
@@ -23,6 +26,7 @@ class iCloudManager(NSObject):
     implements(IObserver)
     cloud_storage = None
     sync_active = False
+    skip_settings = ('certificate', 'order', 'tls', 'audio_inbound')
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -104,13 +108,23 @@ class iCloudManager(NSObject):
         handler(notification.sender, notification.data)
 
     def cloudStorgeDidChange_(self, notification):
+        BlinkLogger().log_info(u"iCloud storage has changed")
         reason = notification.userInfo()["NSUbiquitousKeyValueStoreChangeReasonKey"]
         if reason == 2:
             BlinkLogger().log_info(u"iCloud quota exeeded")
         for key in notification.userInfo()["NSUbiquitousKeyValueStoreChangedKeysKey"]:
             if '@' in key:
-                BlinkLogger().log_info(u"Updating %s from iCloud" % key)
-                self.updateAccountFromCloud(key)
+                am = AccountManager()
+                try:
+                    account = am.get_account(key)
+                    local_json = self.getJsonAccountData(account)
+                    remote_json = self.cloud_storage.stringForKey_(key)
+                    if self.hasDifference(account, local_json, remote_json):
+                        BlinkLogger().log_info(u"Updating %s from iCloud" % key)
+                        self.updateAccountFromCloud(key)
+                except KeyError:
+                    BlinkLogger().log_info(u"Adding %s from iCloud" % key)
+                    self.updateAccountFromCloud(key)
 
     def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
         account = data.account
@@ -127,7 +141,7 @@ class iCloudManager(NSObject):
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
-            must_update = any(key for key in data.modified.keys() if key not in ('certificate', 'order'))
+            must_update = any(key for key in data.modified.keys() if key not in self.skip_settings)
             if must_update:
                 BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
                 json_data = self.getJsonAccountData(account)
@@ -156,8 +170,9 @@ class iCloudManager(NSObject):
                         self.cloud_storage.setString_forKey_(json_data, account.id)
                     changes +=  1
                 else:
-                    json_data = self.getJsonAccountData(account)
-                    if json_data != self.cloud_storage.stringForKey_(account.id):
+                    local_json = self.getJsonAccountData(account)
+                    remote_json = self.cloud_storage.stringForKey_(account.id)
+                    if self.hasDifference(account, local_json, remote_json):
                         BlinkLogger().log_info(u"Updating %s from iCloud" % account.id)
                         self.updateAccountFromCloud(account.id)
                         changes +=  1
@@ -180,33 +195,54 @@ class iCloudManager(NSObject):
         self.sync_active = False
 
     def getJsonAccountData(self, account):
-        def sanitize(d, account, section=None):
-            for k, v in d.items():
-                if k == 'password' and isinstance(account, Account):
-                    if section == 'auth':
-                        label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
-                    elif section == 'ldap':
-                        label = '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id)
-                    keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                    d[k] = unicode(keychain_item.password()) if keychain_item is not None else ''
-                elif k == 'web_password' and isinstance(account, Account):
-                    label = '%s WEB (%s)' % (NSApp.delegate().applicationName, account.id)
-                    keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                    d[k] = unicode(keychain_item.password()) if keychain_item is not None else ''
-                if isinstance(v, dict):
-                    sanitize(v, account, k)
-                    if not v:
-                        d.pop(k)
-                elif v is DefaultValue:
-                    d.pop(k)
-                elif k in ('certificate', 'order'):
-                    d.pop(k)
+        def get_state(account, obj=None, skip=[]):
+            state = {}
+            if obj is None:
+                obj = account
+            for name in dir(obj.__class__):
+                attribute = getattr(obj.__class__, name, None)
+                if name in skip:
+                    continue
+                if isinstance(attribute, SettingsGroupMeta):
+                    state[name] = get_state(account, getattr(obj, name), skip)
+                elif isinstance(attribute, Setting):
+                    value = attribute.__getstate__(obj)
+                    if value is DefaultValue:
+                        value = attribute.default
+                    if name == 'password':
+                        if isinstance(obj, AuthSettings):
+                            label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
+                            keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                            value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                        elif isinstance(obj, LDAPSettingsExtension):
+                            label = '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id)
+                            keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                            value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                    if name == 'web_password':
+                        label = '%s WEB (%s)' % (NSApp.delegate().applicationName, account.id)
+                        keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                        value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                    state[name] = value
+            return state
 
-        data = account.__getstate__()
-        sanitize(data, account)
+        data = get_state(account, skip=self.skip_settings)
         return cjson.encode(data)
 
     def updateAccountFromCloud(self, key):
+        def set_state(obj, state):
+            for name, value in state.iteritems():
+                attribute = getattr(obj.__class__, name, None)
+                if isinstance(attribute, SettingsGroupMeta):
+                    group = getattr(obj, name)
+                    set_state(group, value)
+                elif isinstance(attribute, Setting):
+                    try:
+                        attribute.__setstate__(obj, value)
+                    except ValueError:
+                        pass
+                    else:
+                        attribute.dirty[obj] = True
+
         json_data = self.cloud_storage.stringForKey_(key)
         am = AccountManager()
         if json_data:
@@ -215,7 +251,7 @@ class iCloudManager(NSObject):
                 account = am.get_account(key)
             except KeyError:
                 account = Account(key)
-            account.__setstate__(data)
+            set_state(account, data)
             account.save()
 
             # update keychain passwords
@@ -245,4 +281,50 @@ class iCloudManager(NSObject):
 
         self.notification_center.post_notification("iCloudStorageDidChange", sender=self)
 
+    def hasDifference(self, account, local_json, remote_json):
+        BlinkLogger().log_info(u"Computing differences from iCloud for %s" % account.id)
+        local_data = cjson.decode(local_json)
+        remote_data = cjson.decode(remote_json)
+        differences = DictDiffer(local_data, remote_data)
+
+        diffs = 0
+        for e in differences.changed():
+            if e in self.skip_settings:
+                continue
+            BlinkLogger().log_info('Setting %s has changed' % e)
+            BlinkLogger().log_info('Local: %s' % local_data[e])
+            BlinkLogger().log_info('Remote: %s' % remote_data[e])
+            diffs += 1
+
+        for e in differences.added():
+            if e in self.skip_settings:
+                continue
+
+            BlinkLogger().log_info('Setting %s has been added' % e)
+
+            if not local_data.has_key(e) and remote_data.has_key(e):
+                BlinkLogger().log_info('Remote added')
+            elif not remote_data.has_key(e) and local_data.has_key(e):
+                BlinkLogger().log_info('Local added')
+
+            diffs += 1
+
+        for e in differences.removed():
+            if e in self.skip_settings:
+                continue
+
+            BlinkLogger().log_info('Setting %s has been removed' % e)
+
+            try:
+                BlinkLogger().log_info('Local: %s' % local_data[e])                                 
+            except KeyError:
+                BlinkLogger().log_info('Local removed')
+
+            try:
+                BlinkLogger().log_info('Remote: %s' % remote_data[e])
+            except KeyError:
+                BlinkLogger().log_info('Remote removed')
+            diffs += 1
+
+        return bool(diffs)
 
