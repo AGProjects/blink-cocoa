@@ -292,8 +292,6 @@ class iCloudManager(NSObject):
             if e in self.skip_settings:
                 continue
             BlinkLogger().log_info('Setting %s has changed' % e)
-            BlinkLogger().log_info('Local: %s' % local_data[e])
-            BlinkLogger().log_info('Remote: %s' % remote_data[e])
             diffs += 1
 
         for e in differences.added():
@@ -302,9 +300,9 @@ class iCloudManager(NSObject):
 
             BlinkLogger().log_info('Setting %s has been added' % e)
 
-            if not local_data.has_key(e) and remote_data.has_key(e):
+            if not local_data.has_key(e):
                 BlinkLogger().log_info('Remote added')
-            elif not remote_data.has_key(e) and local_data.has_key(e):
+            elif not remote_data.has_key(e):
                 BlinkLogger().log_info('Local added')
 
             diffs += 1
@@ -315,15 +313,12 @@ class iCloudManager(NSObject):
 
             BlinkLogger().log_info('Setting %s has been removed' % e)
 
-            try:
-                BlinkLogger().log_info('Local: %s' % local_data[e])                                 
-            except KeyError:
+            if not local_data.has_key(e):
                 BlinkLogger().log_info('Local removed')
 
-            try:
-                BlinkLogger().log_info('Remote: %s' % remote_data[e])
-            except KeyError:
+            if not remote_data.has_key(e):
                 BlinkLogger().log_info('Remote removed')
+
             diffs += 1
 
         return bool(diffs)
