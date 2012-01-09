@@ -141,7 +141,9 @@ class iCloudManager(NSObject):
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
-            must_update = any(key for key in data.modified.keys() if key not in self.skip_settings)
+            local_json = self.getJsonAccountData(account)
+            remote_json = self.cloud_storage.stringForKey_(account.id)
+            must_update = any(key for key in data.modified.keys() if key not in self.skip_settings) and self.hasDifference(account, local_json, remote_json)
             if must_update:
                 BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
                 json_data = self.getJsonAccountData(account)
