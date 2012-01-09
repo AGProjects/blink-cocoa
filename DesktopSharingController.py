@@ -263,7 +263,7 @@ class DesktopSharingController(MediaStream):
         NotificationCenter().discard_observer(self, sender=self.stream)
 
     def _NH_MSRPTransportTrace(self, sender, data):
-        if hasattr(data, 'stream') and self.stream == data.stream:
+        if sender is self.stream.msrp:
             self.exhanged_bytes += len(data.data)
             if self.exhanged_bytes > 16000:
                 if self.statusWindow:
