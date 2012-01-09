@@ -1397,6 +1397,7 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def updatePresenceIndicator(self):
+        return
         groups_with_presence = (group for group in self.contactGroupsList if type(group) == BlinkContactGroup)
         change = False
         # TODO: remove random import enable presence -adi
