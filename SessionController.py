@@ -477,10 +477,10 @@ class SessionController(NSObject):
                     self.log_info("Proposing %s stream" % stream.type)
                     try:
                        self.session.add_stream(stream)
+                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
                         return False
-                self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
             else:
                 self.log_info("A stream proposal is already in progress")
                 return False
