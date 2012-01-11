@@ -57,7 +57,7 @@ class StatusItem(NSObject):
                 if state == STREAM_CONNECTED:
                     mitem.setTitle_("Disconnect %s" % name)
                     mitem.setEnabled_(True)
-                elif state in (STREAM_INCOMING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                elif state in (STREAM_INCOMING, STREAM_PROPOSING, STREAM_CONNECTING):
                     mitem.setTitle_("%s - Waiting" % name)
                     mitem.setEnabled_(True)
                 elif state in (STREAM_DISCONNECTING, STREAM_CANCELLING):
@@ -102,7 +102,7 @@ class DesktopSharingController(MediaStream):
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)            
             self.statusProgress.startAnimation_(None)
-            self.statusWindow.setTitle_("Screen Sharing")
+            self.statusWindow.setTitle_("Screen Sharing with %s" % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
         NotificationCenter().add_observer(self, sender=self.stream.handler)
         NotificationCenter().add_observer(self, sender=self.stream)
@@ -116,11 +116,11 @@ class DesktopSharingController(MediaStream):
             self.sessionController.log_info("Sharing local screen...")
             NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
             self.statusProgress.startAnimation_(None)
-            self.statusWindow.setTitle_("Screen Sharing")
+            self.statusWindow.setTitle_("Screen Sharing with %s" % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
         NotificationCenter().add_observer(self, sender=self.stream.handler)
         NotificationCenter().add_observer(self, sender=self.stream)
-        self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
+        self.changeStatus(STREAM_PROPOSING if is_update else STREAM_CONNECTING)
 
     @objc.IBAction
     def end_(self, sender):
@@ -173,14 +173,14 @@ class DesktopSharingController(MediaStream):
                     self.statusProgress.stopAnimation_(None)
 
     def changeStatus(self, newstate, fail_reason=None):
-        if newstate == STREAM_CONNECTED:
-            if self.direction == "active":
+        if self.direction == "active":
+            if newstate == STREAM_CONNECTED:
                 ip, port = self.stream.handler.address
                 self.sessionController.log_info("Connecting viewer to vnc://127.0.0.1:%s" % port)
                 url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
                 NSWorkspace.sharedWorkspace().openURL_(url)
-            else:
-                self.statusWindow.makeKeyAndOrderFront_(None)
+        else:
+            self.statusWindow.makeKeyAndOrderFront_(None)
 
         if self.direction == "passive":
             #self.statusItem.update(self, newstate)
@@ -190,21 +190,28 @@ class DesktopSharingController(MediaStream):
                     self.statusProgress.setHidden_(False)
                     self.statusProgress.startAnimation_(None)
                 elif newstate == STREAM_DISCONNECTING:
-                    self.statusLabel.setStringValue_("Disconnecting...")
+                    self.statusLabel.setStringValue_("Terminating Screen Sharing...")
                     self.statusProgress.setHidden_(True)
                     self.start_auto_close_timer()
                 elif newstate == STREAM_CANCELLING:
-                    self.statusLabel.setStringValue_("Cancelling...")
+                    self.statusLabel.setStringValue_("Cancelling Screen Sharing...")
                     self.statusProgress.setHidden_(True)
                     self.start_auto_close_timer()
+                elif newstate == STREAM_PROPOSING:
+                    self.statusProgress.setHidden_(True)
+                    self.stopButton.setHidden_(False)
+                    self.stopButton.setTitle_('Cancel Proposal')
                 elif newstate == STREAM_CONNECTING:
-                    self.statusLabel.setStringValue_("Waiting for connection...")
+                    self.statusLabel.setStringValue_("Offering Screen Sharing...")
                 elif newstate == STREAM_FAILED:
                     label = "Could not start screen sharing:\n%s" % (self.sessionController.failureReason or fail_reason) if self.sessionController.failureReason or fail_reason else "Could not start screen sharing"
-                    self.statusLabel.setStringValue_("Screen Sharing Ended")
+                    self.statusLabel.setStringValue_("Screen Sharing Failed")
                     self.statusProgress.setHidden_(True)
-                elif newstate == STREAM_IDLE and self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING):
-                    self.statusLabel.setStringValue_("Screen Sharing Ended")
+                elif newstate == STREAM_IDLE:
+                    if self.status in (STREAM_CONNECTING, STREAM_PROPOSING):
+                        self.statusLabel.setStringValue_("Screen Sharing Rejected")
+                    else:
+                        self.statusLabel.setStringValue_("Screen Sharing Ended")
                     self.statusProgress.setHidden_(True)
 
         if newstate == STREAM_IDLE:
@@ -271,6 +278,7 @@ class DesktopSharingController(MediaStream):
                     self.statusLabel.setStringValue_(label)
                     self.statusProgress.setHidden_(True)
                     self.stopButton.setHidden_(False)
+                    self.stopButton.setTitle_('Stop Screen Sharing')
                 NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
 
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):

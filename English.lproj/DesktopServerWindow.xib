@@ -61,7 +61,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="861257811">
 								<int key="NSCellFlags">67239424</int>
 								<int key="NSCellFlags2">272629760</int>
-								<string type="base64-UTF8" key="NSContents">SW5pdGlhbGl6aW5nIFNlc3Npb24uLi4KA</string>
+								<string key="NSContents">Screen Sharing proposal in progress... </string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">11</double>
@@ -101,7 +101,6 @@
 							<string key="NSFrame">{{134, 11}, {155, 17}}</string>
 							<reference key="NSSuperview" ref="326606870"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:2434</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="668459602">
