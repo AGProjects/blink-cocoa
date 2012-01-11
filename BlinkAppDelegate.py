@@ -285,28 +285,34 @@ class BlinkAppDelegate(NSObject):
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
     def getURL_withReplyEvent_(self, event, replyEvent):
+        participants = set()
+        media = set()
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
         if url.startswith('tel:'):
             url = re.sub("^tel:", "", url)
 
-        BlinkLogger().log_info(u"Will start session to %s from external link" % url)
+        BlinkLogger().log_info(u"Will start outgoing session to %s from external link" % url)
 
         _split = url.split(';')
         _url = []
         for item in _split[:]:
-            if not item.startswith("session-type"):
+            if item.startswith("participant="):
+                puri = item.split("=")[1]
+                participants.add(puri)
+            elif item.startswith("media="):
+                m = item.split("=")[1]
+                media.add(m)
+            else:
                 _url.append(item)
                 _split.remove(item)
+
         url = ";".join(_url)
-        try:
-            session_type = _split[0].split("=")[1]
-        except IndexError:
-            session_type = None
 
         if not self.ready:
-            self.urisToOpen.append((unicode(url), session_type))
+            self.urisToOpen.append((unicode(url), list(media), list(participants)))
         else:
-            self.windowController.startSessionWithSIPURI(unicode(url), session_type)
+            self.windowController.joinConference(unicode(url), list(media), list(participants))
+
 
     def registerURLHandler(self):
         event_class = event_id = fourcharToInt("GURL")
