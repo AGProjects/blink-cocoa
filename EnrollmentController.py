@@ -40,13 +40,12 @@ class EnrollmentController(NSObject):
     
     def init(self):
         if self:
+            self.backend = SIPManager()
             NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
             self.selectRadio_(self.radioMatrix)
-            if NSApp.delegate().applicationName == 'Blink Lite':
-                accounts = list(account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount))
-                if len(accounts) > 1:
-                    self.nextButton.setEnabled_(False)
-                    self.purchaseProLabel.setHidden_(False)
+            if not self.backend.validateAddAccountAction():
+                self.nextButton.setEnabled_(False)
+                self.purchaseProLabel.setHidden_(False)
 
         return self
 
@@ -60,7 +59,6 @@ class EnrollmentController(NSObject):
         self.newDisplayNameText.setStringValue_(NSFullUserName() or "")
         self.displayNameText.setStringValue_(NSFullUserName() or "")
         
-        self.backend = SIPManager()
         self.window.center()
         NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
