@@ -84,7 +84,7 @@ class FileTransferWindowController(NSObject, object):
         if count == 1:
             self.bottomLabel.setStringValue_(u"1 item")
         else:
-            self.bottomLabel.setStringValue_(u"%i items"%count)
+            self.bottomLabel.setStringValue_(u"%i items"%count if count else u"")
 
         h = self.listView.minimumHeight()
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
