@@ -326,6 +326,12 @@ class ContactWindowController(NSWindowController):
             item = self.statusMenu.itemWithTag_(55)
             item.setHidden_(True)
 
+            # History menu
+            item = self.windowMenu.itemWithTag_(3)
+            item.setHidden_(True)
+            item = self.historyMenu.itemWithTag_(1)
+            item.setHidden_(True)
+
             self.initAds()
             # TODO: enable adds
             #self.showContactsAdsView()
