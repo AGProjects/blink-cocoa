@@ -895,8 +895,8 @@ class MessageRecorder(NSObject):
         self.recording_time_left = 60
         self.label.setStringValue_("Recording will start in %is..." % self.counter)
         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "timerTick:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
         if NSApp.runModalForWindow_(self.window) == 0:
             self.window.close()
             timer.invalidate()

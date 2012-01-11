@@ -159,13 +159,13 @@ class AudioController(MediaStream):
 
             if not self.timer:
                 self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
             if not self.statistics_timer:
                 self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSModalPanelRunLoopMode)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSDefaultRunLoopMode)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
 
             loadImages()
 
@@ -1121,6 +1121,9 @@ class AudioController(MediaStream):
         self.updateTransferProgress("Transfer Rejected (%s)" % data.code if data.code in (486, 603) else "Transfer Failed (%s)" % data.code)
         self.transfer_in_progress = False
         self.transfer_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "transferFailed:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSEventTrackingRunLoopMode)
+
 
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
         self.updateTransferProgress("Transfer: %s" % data.reason.capitalize())
