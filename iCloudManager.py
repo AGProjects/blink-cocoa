@@ -250,7 +250,17 @@ class iCloudManager(NSObject):
         json_data = self.cloud_storage.stringForKey_(key)
         am = AccountManager()
         if json_data:
-            data = cjson.decode(json_data)
+            try:
+                data = cjson.decode(json_data)
+            except TypeError:
+                # account has been deleted in the mean time
+                try:
+                    account = am.get_account(key)
+                    if isinstance(account, Account):
+                        account.delete()
+                except KeyError:
+                    pass
+
             try:
                 account = am.get_account(key)
             except KeyError:
@@ -287,8 +297,16 @@ class iCloudManager(NSObject):
 
     def hasDifference(self, account, local_json, remote_json):
         BlinkLogger().log_info(u"Computing differences from iCloud for %s" % account.id)
-        local_data = cjson.decode(local_json)
-        remote_data = cjson.decode(remote_json)
+        try:
+            local_data = cjson.decode(local_json)
+        except TypeError:
+            return True
+
+        try:
+            remote_data = cjson.decode(remote_json)
+        except TypeError:
+            return True
+
         differences = DictDiffer(local_data, remote_data)
 
         diffs = 0
