@@ -162,7 +162,7 @@ class ConferenceScreenSharingHandler(object):
                         }
 
     def setDelegate(self, delegate):
-        self.delegate = None
+        self.delegate = delegate
 
     def setQuality(self, quality):
         if quality:
@@ -260,6 +260,8 @@ class ConferenceScreenSharingHandler(object):
                     self.window_id = None
                     if self.delegate:
                         self.delegate.toggleScreensharingWithConferenceParticipants()
+                    else:
+                        self.setDisconnected()
                     return
             else:
                 image = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
