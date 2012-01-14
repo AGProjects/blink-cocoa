@@ -4,9 +4,21 @@
 from Foundation import *
 from AppKit import *
 
-from SIPManager import SIPManager
-from sipsimple.account import Account, AccountManager, BonjourAccount
+import cjson
+import datetime
 import re
+import urllib
+import urllib2
+
+from collections import defaultdict
+from dateutil.tz import tzlocal
+
+from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.account import Account, AccountManager, BonjourAccount
+
+from BlinkLogger import BlinkLogger
+from SIPManager import SIPManager
+
 
 ALLOWED_DOMAINS = []
 
@@ -35,34 +47,24 @@ class EnrollmentController(NSObject):
     nextButton = objc.IBOutlet()
     purchaseProLabel = objc.IBOutlet()
     
-    backend = None
-    
     
     def init(self):
         if self:
-            self.backend = SIPManager()
             NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
             self.selectRadio_(self.radioMatrix)
-            if not self.backend.validateAddAccountAction():
+            if not SIPManager().validateAddAccountAction():
                 self.nextButton.setEnabled_(False)
                 self.purchaseProLabel.setHidden_(False)
 
         return self
 
-
-    def setCreateAccount(self):
-        self.radioMatrix.selectCellWithTag_(2)
-        self.selectRadio_(self.radioMatrix)
-
-
-    def runModal(self, backend= None):
+    def runModal(self):
         self.newDisplayNameText.setStringValue_(NSFullUserName() or "")
         self.displayNameText.setStringValue_(NSFullUserName() or "")
         
         self.window.center()
         NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
-    
     
     @objc.IBAction
     def selectRadio_(self, sender):
@@ -81,7 +83,6 @@ class EnrollmentController(NSObject):
             frame.size = self.window.maxSize()
         
         self.window.setFrame_display_animate_(frame, True, True)
-
 
     def validate(self):
         if self.radioMatrix.selectedCell().tag() == 1:
@@ -144,7 +145,7 @@ class EnrollmentController(NSObject):
 
             return True
 
-    def setupAccount(self):
+    def addExistingAccount(self):
         try:
             display_name = unicode(self.displayNameText.stringValue())
             address = unicode(self.addressText.stringValue())
@@ -163,7 +164,6 @@ class EnrollmentController(NSObject):
 
         return True
 
-
     def setupForAdditionalAccounts(self):
         self.window.setTitle_("Add Account")
         
@@ -181,9 +181,8 @@ class EnrollmentController(NSObject):
 
         cancel = self.window.contentView().viewWithTag_(111)
         cancel.setTitle_("Add")
-        
 
-    def createAccount(self):
+    def createNewAccount(self):
         display_name = unicode(self.newDisplayNameText.stringValue())
         username = unicode(self.newUsernameText.stringValue())
         password = unicode(self.newPasswordText.stringValue())
@@ -195,46 +194,166 @@ class EnrollmentController(NSObject):
         self.progressIndicator.startAnimation_(None)
         self.window.display()
 
+        url = SIPSimpleSettings().server.enrollment_url
+
+        tzname = datetime.datetime.now(tzlocal()).tzname() or ""
+        if not tzname:
+            BlinkLogger().log_warning(u"Unable to determine timezone")
+
+        values = {'password'     : password.encode("utf8"),
+                  'username'     : username.encode("utf8"),
+                  'email'        : email.encode("utf8"),
+                  'display_name' : display_name.encode("utf8"),
+                  'tzinfo'       : tzname }
+
+        BlinkLogger().log_info(u"Requesting creation of a new SIP account at %s" % url)
+
+        data = urllib.urlencode(values)
+        req = urllib2.Request(url, data)
+        raw_response = urllib2.urlopen(req)
+        json_data = raw_response.read()
+
         try:
-            new_address, tls_path, outbound_proxy, xcap_root, msrp_relay, settings_url = self.backend.enroll(display_name, username, password, email)
-            exc = None
-        except Exception, exc:
-            new_address = None
-            tls_path = None
-            outbound_proxy = None
-            xcap_root = None
-            msrp_relay = None
+            response = cjson.decode(json_data.replace('\\/', '/'))
+        except TypeError:
+            error_message = 'Cannot decode json data from enrollment server'
+
+        if response:
+            if not response["success"]:
+                BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)
+                error_message = response["error_message"]
+            else:
+                BlinkLogger().log_info(u"Enrollment Server successfully created SIP account %(sip_address)s" % response)
+                data = defaultdict(lambda: None, response)
+                tls_path = None if data['passport'] is None else SIPManager().save_certificates(data)
+
+                try:
+                    sip_address = data['sip_address']
+                    try:
+                        outbound_proxy = data['outbound_proxy']
+                    except KeyError:
+                        outbound_proxy = None
+
+                    try:
+                        xcap_root = data['xcap_root']
+                    except KeyError:
+                        xcap_root = None
+
+                    try:
+                        msrp_relay = data['msrp_relay']
+                    except KeyError:
+                        msrp_relay = None
+
+                    try:
+                        settings_url = data['settings_url']
+                    except KeyError:
+                        settings_url = None
+
+                    try:
+                        web_alert_url = data['web_alert_url']
+                    except KeyError:
+                        web_alert_url = None
+
+                    try:
+                        web_password = data['web_password']
+                    except KeyError:
+                        web_password = None
+
+                    try:
+                        conference_server = data['conference_server']
+                    except KeyError:
+                        conference_server = None
+
+                    try:
+                        ldap_hostname = data['ldap_hostname']
+                    except KeyError:
+                        ldap_hostname = None
+
+                    try:
+                        ldap_transport = data['ldap_transport']
+                    except KeyError:
+                        ldap_transport = None
+
+                    try:
+                        ldap_port = data['ldap_port']
+                    except KeyError:
+                        ldap_port = None
+
+                    try:
+                        ldap_username = data['ldap_username']
+                    except KeyError:
+                        ldap_username = None
+
+                    try:
+                        ldap_password = data['ldap_password']
+                    except KeyError:
+                        ldap_password = None
+
+                    try:
+                        ldap_dn = data['ldap_dn']
+                    except KeyError:
+                        ldap_dn = None
+
+                except KeyError:
+                    sip_address = None
+        else:
+            sip_address = None
+            error_message = "No response received from %s" % url
 
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
         self.progressText.setHidden_(True)
         
-        if not new_address:
+        if not sip_address:
             NSRunAlertPanel("Sign Up to SIP Account", 
-                            "Error creating account: %s"%exc, "OK", None, None)
+                            "Error creating account: %s" % error_message, "OK", None, None)
             return False
         
         try:
-            account = Account(str(new_address))
+            account = Account(str(sip_address))
         except ValueError, e:
             NSRunAlertPanel("Sign Up to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
             return False
         
-        account.sip.outbound_proxy = outbound_proxy
-        account.nat_traversal.msrp_relay = msrp_relay
-        account.xcap.xcap_root = xcap_root
-        if tls_path:
-            account.tls.certificate = tls_path
-        account.server.settings_url = settings_url
         account.display_name = display_name
         account.auth.password = password
-        account.nat_traversal.use_ice = False
-        account.ldap.hostname = "ldap.sipthor.net"
-        account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
-        account.ldap.enabled = True
+
+        if tls_path:
+            account.tls.certificate = tls_path
+
+        account.sip.outbound_proxy = outbound_proxy
+        account.xcap.xcap_root = xcap_root
+        account.nat_traversal.msrp_relay = msrp_relay
+
+        if settings_url:
+            account.server.settings_url = settings_url
+
+        if web_alert_url:
+            account.server.alert_url = web_alert_url
+
+        if web_password: 
+            account.server.web_password = web_password
+
+        if conference_server:
+            account.server.conference_server = conference_server
+
+        if ldap_hostname:
+            account.ldap.enabled = True
+            account.ldap.hostname = ldap_hostname
+            account.ldap.dn = ldap_dn
+            account.ldap.username = ldap_username
+            if ldap_password:
+                account.ldap.password = ldap_password
+
+            if ldap_transport:
+                account.ldap.transport = ldap_transport
+
+            if ldap_port:
+                account.ldap.port = ldap_port
+
         account.save()
                 
-        NSRunAlertPanel("SIP Account Created", "Your new SIP Address is:\n\n%s"%new_address, "Continue", None, None)
+        NSRunAlertPanel("SIP Account Created", "Your new SIP Address is:\n\n%s"%sip_address, "Continue", None, None)
 
         # enable account only after Continue pressed to give server time to update 
         account.enabled = True
@@ -248,10 +367,10 @@ class EnrollmentController(NSObject):
         if sender == self.nextButton:
             if self.validate():
                 if self.radioMatrix.selectedCell().tag() == 1:
-                    if self.setupAccount():
+                    if self.addExistingAccount():
                         NSApp.stopModalWithCode_(NSOKButton)
                 else:
-                    if self.createAccount():
+                    if self.createNewAccount():
                         NSApp.stopModalWithCode_(NSOKButton)
         else:
             NSApp.stopModalWithCode_(NSCancelButton)

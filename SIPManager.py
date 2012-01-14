@@ -13,7 +13,6 @@ import platform
 import re
 import socket
 import urllib
-import urllib2
 import uuid
 
 from application.notification import NotificationCenter, IObserver
@@ -325,11 +324,14 @@ class SIPManager(object):
             return
         finally:
             unlink(filename)
+
         data = defaultdict(lambda: None, data)
         account_id = data['sip_address']
         if account_id is None:
             return
+
         account_manager = AccountManager()
+
         try:
             account = account_manager.get_account(account_id)
         except KeyError:
@@ -338,61 +340,47 @@ class SIPManager(object):
             default_account = account
         else:
             default_account = account_manager.default_account
-        account.auth.username = data['auth_username']
-        account.auth.password = data['password'] or ''
-        account.sip.outbound_proxy = data['outbound_proxy']
-        account.xcap.xcap_root = data['xcap_root']
+
+        account.auth.username            = data['auth_username']
+        account.auth.password            = data['password'] or ''
+        account.sip.outbound_proxy       = data['outbound_proxy']
+        account.xcap.xcap_root           = data['xcap_root']
         account.nat_traversal.msrp_relay = data['msrp_relay']
+        account.server.settings_url      = data['settings_url']
+        account.server.alert_url         = data['web_alert_url']
+        account.server.web_password      = data['web_password']
         account.server.conference_server = data['conference_server']
-        account.server.settings_url = data['settings_url']
-        account.server.web_password = data['web_password']
+
+        if data['ldap_hostname']:
+            account.ldap.enabled  = True
+            account.ldap.hostname = data['ldap_hostname']
+            account.ldap.dn       = data['ldap_dn']
+            account.ldap.username = data['ldap_username']
+
+            if data['ldap_password']:
+                account.ldap.password = data['ldap_password']
+
+            if data['ldap_transport']:
+                account.ldap.transport = data['ldap_transport']
+
+            if data['ldap_port']:
+                account.ldap.port = data['ldap_port']
+
         if data['passport'] is not None:
             cert_path = self.save_certificates(data)
             if cert_path:
                 account.tls.certificate = cert_path
+
         account.enabled = True
         account.save()
+
         account_manager.default_account = default_account
+
         settings = SIPSimpleSettings()
-        settings.service_provider.name = data['service_provider_name']
-        settings.service_provider.help_url = data['service_provider_help_url']
+        settings.service_provider.name      = data['service_provider_name']
+        settings.service_provider.help_url  = data['service_provider_help_url']
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
-
-    def enroll(self, display_name, username, password, email):
-        url = SIPSimpleSettings().server.enrollment_url
-
-        tzname = datetime.datetime.now(tzlocal()).tzname() or ""
-        if not tzname:
-            BlinkLogger().log_warning(u"Unable to determine timezone")
-
-        values = {'password' : password.encode("utf8"),
-                  'username' : username.encode("utf8"),
-                  'email' : email.encode("utf8"),
-                  'display_name' : display_name.encode("utf8"),
-                  'tzinfo' : tzname }
-
-        BlinkLogger().log_info(u"Requesting creation of a new SIP account at %s" % url)
-
-        data = urllib.urlencode(values)
-        req = urllib2.Request(url, data)
-        raw_response = urllib2.urlopen(req)
-        json_data = raw_response.read()
-
-        response = cjson.decode(json_data.replace('\\/', '/'))
-        if response:
-            if not response["success"]:
-                BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)
-                raise Exception(response["error_message"])
-            else:
-                BlinkLogger().log_info(u"Enrollment Server successfully created SIP account %(sip_address)s" % response)
-                data = defaultdict(lambda: None, response)
-                certificate_path = None if data['passport'] is None else self.save_certificates(data)
-                return data['sip_address'], certificate_path, data['outbound_proxy'], data['xcap_root'], data['msrp_relay'], data['settings_url']
-        else:
-            BlinkLogger().log_info(u"Enrollment Server returned no response")
-
-        raise Exception("No response received from %s"%url)
 
     def lookup_sip_proxies(self, account, target_uri, session_controller):
         assert isinstance(target_uri, SIPURI)
