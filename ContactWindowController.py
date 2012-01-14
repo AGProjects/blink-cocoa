@@ -2078,7 +2078,7 @@ class ContactWindowController(NSWindowController):
 
     def getAccountWitDialPlan(self, uri):
         try:
-            account = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.pstn.dial_plan and any(prefix for prefix in account.pstn.dial_plan.split(" ") if uri.startswith(prefix))).next()
+            account = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.pstn.dial_plan and any(prefix for prefix in account.pstn.dial_plan.split(" ") if uri.startswith(prefix))).next()
             BlinkLogger().log_info(u"Auto-selecting account %s based on dial-plan match for %s" % (account.id, uri))
         except StopIteration:
             account = AccountManager().default_account
