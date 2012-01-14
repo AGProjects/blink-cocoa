@@ -104,7 +104,6 @@ def validateToolbarButtonWhileDisconnected(sessionController, item):
         valid_items.append(NSToolbarPrintItemIdentifier)
 
     valid_items.append('connect_button')
-    valid_items.append('sendfile')
     valid_items.append('smileys')
     if sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
         valid_items.append('editor')
@@ -130,6 +129,10 @@ def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
         elif identifier == 'video':
             item.setImage_(NSImage.imageNamed_("video"))
         elif identifier == 'desktop':
+            item.setEnabled_(False)
+        elif identifier == 'screenshot':
+            item.setEnabled_(False)
+        elif identifier == 'sendfile':
             item.setEnabled_(False)
 
 kCGWindowListOptionOnScreenOnly = 1 << 0
@@ -1141,6 +1144,10 @@ class ChatController(MediaStream):
                 item.setEnabled_(True)
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
+            elif identifier == 'screenshot':
+                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('file-transfer') else False)
+            elif identifier == 'sendfile':
+                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('file-transfer') else False)
 
     def validateToolbarButton(self, item):
         """
@@ -1190,7 +1197,7 @@ class ChatController(MediaStream):
                         return True if self.sessionController.canProposeMediaStreamChanges() else False
                 else:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-            elif identifier == 'sendfile' and self.backend.isMediaTypeSupported('file-transfer'):
+            elif identifier == 'sendfile' and self.backend.isMediaTypeSupported('file-transfer') and self.status == STREAM_CONNECTED:
                 return True
             elif identifier == 'smileys':
                 return True
@@ -1199,8 +1206,6 @@ class ChatController(MediaStream):
                 if not settings.chat.disable_collaboration_editor:
                     return True
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
-                return True
-            elif identifier == 'screenshot':
                 return True
         elif item.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL:
             if not self.sessionController.remote_focus:
