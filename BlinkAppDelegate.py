@@ -143,7 +143,7 @@ class BlinkAppDelegate(NSObject):
     def enroll(self):
         enroll = EnrollmentController.alloc().init()
         enroll.setCreateAccount()
-        enroll.runModal(self.backend)
+        enroll.runModal()
 
     def updateDockTile(self):
         if self.missedCalls > 0 or self.missedChats > 0:

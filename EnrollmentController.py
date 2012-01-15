@@ -164,6 +164,10 @@ class EnrollmentController(NSObject):
 
         return True
 
+    def setCreateAccount(self):
+        self.radioMatrix.selectCellWithTag_(2)
+        self.selectRadio_(self.radioMatrix)
+
     def setupForAdditionalAccounts(self):
         self.window.setTitle_("Add Account")
         
