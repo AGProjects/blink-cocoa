@@ -15,6 +15,7 @@ from configuration.account import LDAPSettingsExtension
 from sipsimple.account import AuthSettings
 from sipsimple.configuration import DefaultValue, SettingsGroupMeta, Setting
 from sipsimple.account import AccountManager, Account
+from sipsimple.threading import run_in_thread
 
 from zope.interface import implements
 from util import *
@@ -102,11 +103,13 @@ class iCloudManager(NSObject):
         for key in self.storage_keys:
             self.cloud_storage.removeObjectForKey_(key)
 
+    @run_in_thread('file-io')
     @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @run_in_thread('file-io')
     def cloudStorgeDidChange_(self, notification):
         BlinkLogger().log_info(u"iCloud storage has changed")
         reason = notification.userInfo()["NSUbiquitousKeyValueStoreChangeReasonKey"]
@@ -152,6 +155,7 @@ class iCloudManager(NSObject):
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.sync()
 
+    @run_in_thread('file-io')
     def sync(self):
         if self.sync_active:
             return
