@@ -9,7 +9,7 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
 from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
-from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption
+from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption, SIPProxyAddress
 
 from configuration import KeychainPasswordSetting
 from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername
@@ -64,6 +64,9 @@ class BonjourRTPSettingsExtension(RTPSettings):
 
 
 class SIPSettingsExtension(SIPSettings):
+    selected_proxy = Setting(type=NonNegativeInteger, default=0, nillable=False)
+    primary_proxy = Setting(type=SIPProxyAddress, default=None, nillable=True)
+    alternative_proxy = Setting(type=SIPProxyAddress, default=None, nillable=True)
     always_use_my_proxy = Setting(type=bool, default=True)
     register = Setting(type=bool, default=True)
     do_not_disturb_code = Setting(type=NonNegativeInteger, default=486, nillable=False)

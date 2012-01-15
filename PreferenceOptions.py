@@ -1523,6 +1523,8 @@ PreferenceOptionTypes = {
 "rtp.timeout": HiddenOption,
 "server.collaboration_url" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
+"sip.primary_proxy": HiddenOption,
+"sip.selected_proxy": HiddenOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
 "sip.do_not_disturb_code": NegativeSIPCodeOption,
@@ -1580,6 +1582,7 @@ SettingDescription = {
                       'rtp.port_range': 'UDP Port Range',
                       'rtp.srtp_encryption': 'sRTP Encryption',
                       'sip.invite_timeout': 'Session Timeout',
+                      'sip.outbound_proxy': 'Primary Proxy',
                       'sip.register': 'Receive Incoming Calls',
                       'sip.transport_list': 'Protocols',
                       'sounds.audio_inbound': 'Inbound Ringtone',
@@ -1640,7 +1643,7 @@ AccountSettingsOrder = {
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'prefix'],
-                       'sip': ['register', 'always_use_my_proxy', 'outbound_proxy', 'register_interval', 'subscribe_interval', 'do_not_disturb_code']
+                       'sip': ['register', 'always_use_my_proxy', 'outbound_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'do_not_disturb_code']
                        }
 
 UnitOptions = {

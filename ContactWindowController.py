@@ -2042,6 +2042,35 @@ class ContactWindowController(NSWindowController):
         item = menu.itemWithTag_(44) # Join Conference
         item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
 
+        # outbound proxy
+        if not isinstance(account, BonjourAccount) and (account.sip.primary_proxy or account.sip.alternative_proxy):
+            menu.addItem_(NSMenuItem.separatorItem())
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outbound Proxy", "", "")
+            lastItem.setEnabled_(False)
+
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_('None', "selectOutboundProxyClicked:", "")
+            lastItem.setIndentationLevel_(2)
+            lastItem.setState_(NSOffState if account.sip.always_use_my_proxy else NSOnState)
+            lastItem.setTag_(700)
+            lastItem.setTarget_(self)
+            lastItem.setRepresentedObject_(account)
+
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(unicode(account.sip.primary_proxy) if account.sip.primary_proxy is not None else 'Discovered using DNS Lookup', "selectOutboundProxyClicked:", "")
+            lastItem.setIndentationLevel_(2)
+            lastItem.setState_(NSOnState if not account.sip.selected_proxy and account.sip.always_use_my_proxy else NSOffState)
+            lastItem.setTag_(701)
+            lastItem.setTarget_(self)
+            lastItem.setRepresentedObject_(account)
+
+            if account.sip.alternative_proxy:
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_(unicode(account.sip.alternative_proxy), "selectOutboundProxyClicked:", "")
+                lastItem.setIndentationLevel_(2)
+                lastItem.setState_(NSOnState if account.sip.selected_proxy and account.sip.always_use_my_proxy else NSOffState)
+                lastItem.setTag_(702)
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(account)
+
+        # voicemail
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
             normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -2057,10 +2086,10 @@ class ContactWindowController(NSWindowController):
             return a
 
         mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
+                                                               NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
         mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.redColor(), NSForegroundColorAttributeName)
-       
+                                                              NSColor.redColor(), NSForegroundColorAttributeName)
+
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail", "", "")
         lastItem.setEnabled_(False)
@@ -2075,6 +2104,24 @@ class ContactWindowController(NSWindowController):
                 lastItem.setTag_(555)
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(account)
+
+    def selectOutboundProxyClicked_(self, sender):
+        account = sender.representedObject()
+        if sender.tag() == 700:
+            account.sip.always_use_my_proxy = False
+            account.save()
+
+        elif sender.tag() == 701:
+            account.sip.outbound_proxy = account.sip.primary_proxy
+            account.sip.always_use_my_proxy = True
+            account.sip.selected_proxy = 0
+            account.save()
+
+        elif sender.tag() == 702:
+            account.sip.outbound_proxy = account.sip.alternative_proxy
+            account.sip.always_use_my_proxy = True
+            account.sip.selected_proxy = 1
+            account.save()
 
     def getAccountWitDialPlan(self, uri):
         try:
