@@ -13,8 +13,14 @@ import urllib2
 from collections import defaultdict
 from dateutil.tz import tzlocal
 
+from application.notification import NotificationCenter, IObserver
+from application.python import Null
+
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import Account, AccountManager, BonjourAccount
+
+from util import allocate_autorelease_pool
+from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
@@ -23,6 +29,8 @@ from SIPManager import SIPManager
 ALLOWED_DOMAINS = []
 
 class EnrollmentController(NSObject):
+    implements(IObserver)
+
     window = objc.IBOutlet()
 
     loginView = objc.IBOutlet()
@@ -56,6 +64,9 @@ class EnrollmentController(NSObject):
                 self.nextButton.setEnabled_(False)
                 self.purchaseProLabel.setHidden_(False)
 
+            if NSApp.delegate().windowController.first_run:
+                NotificationCenter().add_observer(self, name='SIPAccountManagerDidAddAccount')
+
         return self
 
     def runModal(self):
@@ -65,7 +76,17 @@ class EnrollmentController(NSObject):
         self.window.center()
         NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
-    
+
+    @allocate_autorelease_pool
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
+        NotificationCenter().remove_observer(self, name='SIPAccountManagerDidAddAccount')
+        if self.window.isVisible():
+            NSApp.stopModalWithCode_(NSCancelButton)
+
     @objc.IBAction
     def selectRadio_(self, sender):
         frame = self.window.frame()
