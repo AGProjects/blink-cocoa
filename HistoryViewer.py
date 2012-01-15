@@ -7,7 +7,7 @@ import datetime
 
 from application.notification import IObserver, NotificationCenter
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import Timestamp, TimestampedNotificationData
 from util import *
 from zope.interface import implements
 
@@ -29,7 +29,7 @@ class MyTableView(NSTableView):
             NSTableView.keyDown_(self, event)
 
     def mouseDown_(self, event):
-        NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self)
+        NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self, data=TimestampedNotificationData())
         NSTableView.mouseDown_(self, event)
 
 

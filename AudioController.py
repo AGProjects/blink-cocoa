@@ -304,7 +304,7 @@ class AudioController(MediaStream):
                 self.session.hold()
             self.holdByLocal = True
             self.changeStatus(self.status)
-            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self, data=TimestampedNotificationData())
 
     def unhold(self):
         if self.session and self.holdByLocal and self.status not in (STREAM_IDLE, STREAM_FAILED):
@@ -313,7 +313,7 @@ class AudioController(MediaStream):
                 self.session.unhold()
             self.holdByLocal = False
             self.changeStatus(self.status)
-            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self, data=TimestampedNotificationData())
 
     def sessionBoxKeyPressEvent(self, sender, event):
         s = event.characters()
@@ -1012,7 +1012,7 @@ class AudioController(MediaStream):
         if data.originator != "local":
             self.holdByRemote = data.on_hold
             self.changeStatus(self.status)
-            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self, data=TimestampedNotificationData())
         else:
             if data.on_hold:
                 tip = "Activate"

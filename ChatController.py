@@ -695,7 +695,7 @@ class ChatController(MediaStream):
             self.toggleVideoMirror()
         elif sender.itemIdentifier() == 'mute':
             self.backend.mute(False if self.backend.is_muted() else True)
-            self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
+            self.notification_center.post_notification("BlinkMuteChangedState", sender=self, data=TimestampedNotificationData())
         elif sender.itemIdentifier() == 'hold':
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -814,7 +814,7 @@ class ChatController(MediaStream):
         window.window().setFrame_display_animate_(fullframe, True, True)
         window.window().setMovable_(False)
 
-        self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
+        self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self, data=TimestampedNotificationData())
        
         self.showFullScreenVideoPanel()
         self.showVideoMirror()
@@ -842,7 +842,7 @@ class ChatController(MediaStream):
         # Restore Dock and other desktop items
         SetSystemUIMode(kUIModeNormal, kUIOptionAutoShowMenuBar)
 
-        self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self)
+        self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self, data=TimestampedNotificationData())
 
     def showFullScreenVideoPanel(self):
         if not self.fullScreenVideoPanel:
@@ -1600,7 +1600,7 @@ class ChatController(MediaStream):
         self.handler.setConnected(self.stream)
 
         # needed to set the Audio button state after session has started
-        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
 
         self.changeStatus(STREAM_CONNECTED)
 

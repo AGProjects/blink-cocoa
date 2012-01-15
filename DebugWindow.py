@@ -401,7 +401,7 @@ class DebugWindow(NSObject):
             return
 
         # notifications text view
-        if not notification.name.startswith("Blink") and self.notificationsCheckBox.state() == NSOnState:
+        if self.notificationsCheckBox.state() == NSOnState:
             attribs = notification.data.__dict__.copy()
 
             # remove information we do not need

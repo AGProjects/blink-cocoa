@@ -16,6 +16,7 @@ from sipsimple.account import AuthSettings
 from sipsimple.configuration import DefaultValue, SettingsGroupMeta, Setting
 from sipsimple.account import AccountManager, Account
 from sipsimple.threading import run_in_thread
+from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 from util import *
@@ -297,7 +298,7 @@ class iCloudManager(NSObject):
             except KeyError:
                 pass
 
-        self.notification_center.post_notification("iCloudStorageDidChange", sender=self)
+        self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData())
 
     def hasDifference(self, account, local_json, remote_json):
         BlinkLogger().log_info(u"Computing differences from iCloud for %s" % account.id)

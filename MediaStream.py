@@ -6,6 +6,7 @@ __all__ = ['MediaStream', 'STATE_IDLE', 'STATE_DNS_LOOKUP', 'STATE_DNS_FAILED', 
            'STREAM_CONNECTING', 'STREAM_PROPOSING', 'STREAM_CONNECTED', 'STREAM_DISCONNECTING', 'STREAM_CANCELLING', 'STREAM_FAILED', 'STREAM_INCOMING']
 
 from application.notification import NotificationCenter
+from sipsimple.util import TimestampedNotificationData
 
 from Foundation import NSObject
 
@@ -47,8 +48,7 @@ class MediaStream(NSObject):
         return self
 
     def changeStatus(self, newstate, fail_reason=None):
-        data = {"state": newstate, "detail": fail_reason}
-        NotificationCenter().post_notification("BlinkStreamHandlerChangedState", sender=self, data=data)
+        NotificationCenter().post_notification("BlinkStreamHandlerChangedState", sender=self, data=TimestampedNotificationData(state=newstate, detail=fail_reason))
 
     @property
     def isConnecting(self):

@@ -1216,7 +1216,7 @@ class ContactWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-        NotificationCenter().post_notification("BlinkMuteChangedState", sender=self)
+        NotificationCenter().post_notification("BlinkMuteChangedState", sender=self, data=TimestampedNotificationData())
 
     @objc.IBAction
     def toggleAnsweringMachine_(self, sender):
@@ -2943,7 +2943,7 @@ class ContactWindowController(NSWindowController):
         if image and path:
             self.photoImage.setImage_(image)
             NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
         self.picker = None
         
     def getSelectedParticipant(self):

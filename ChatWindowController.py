@@ -11,6 +11,7 @@ from application.notification import NotificationCenter, IObserver
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
+from sipsimple.util import TimestampedNotificationData
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
 
@@ -374,8 +375,8 @@ class ChatWindowController(NSWindowController):
             self.refreshDrawer()
 
             # Update drawer status when not connected
-            state = notification.data['state']
-            detail = notification.data['reason']
+            state = notification.data.state
+            detail = notification.data.reason
             if state == STATE_CONNECTING:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(False)
@@ -499,7 +500,7 @@ class ChatWindowController(NSWindowController):
 
             self.removeSession_(s)
 
-        self.notification_center.post_notification("BlinkChatWindowClosed", sender=self)
+        self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
         self.removeTimer()
 
         return True
@@ -990,7 +991,7 @@ class ChatWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-        self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
+        self.notification_center.post_notification("BlinkMuteChangedState", sender=self, data=TimestampedNotificationData())
 
     def revalidateToolbar(self, got_proposal=False):
         # update the toolbar buttons depending on session and stream state

@@ -290,7 +290,7 @@ class SessionController(NSObject):
                     self.log_info("Removing %s stream" % streamHandler.stream.type)
                     try:
                         self.session.remove_stream(streamHandler.stream)
-                        self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
+                        self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self, data=TimestampedNotificationData())
                         return True
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
@@ -319,7 +319,7 @@ class SessionController(NSObject):
                 self.cancelledStream = stream
                 try:
                     self.session.cancel_proposal()
-                    self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session)
+                    self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session, data=TimestampedNotificationData())
 
                 except IllegalStateError, e:
                     self.log_info("IllegalStateError: %s" % e)
@@ -337,7 +337,7 @@ class SessionController(NSObject):
         self.streamHandlers.remove(streamHandler)
 
         # notify Chat Window controller to update the toolbar buttons
-        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -347,7 +347,7 @@ class SessionController(NSObject):
         # This is very bad behavior and should be fixed. -Dan
         for handler in self.streamHandlers[:]:
             handler.sessionStateChanged(newstate, fail_reason)
-        self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=dict(state=newstate, reason=fail_reason))
+        self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=TimestampedNotificationData(state=newstate, reason=fail_reason))
 
     def resetSession(self):
         self.notification_center.discard_observer(self, sender=self.session)
@@ -477,7 +477,7 @@ class SessionController(NSObject):
                     self.log_info("Proposing %s stream" % stream.type)
                     try:
                        self.session.add_stream(stream)
-                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self, data=TimestampedNotificationData())
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
                         return False
@@ -598,7 +598,7 @@ class SessionController(NSObject):
             self.session.connect(ToHeader(target_uri), self.routes, streams)
             self.changeSessionState(STATE_CONNECTING)
             self.log_info("Connecting session to %s" % self.routes[0])
-            self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
+            self.notification_center.post_notification("BlinkSessionWillStart", sender=self, data=TimestampedNotificationData())
 
     def transferSession(self, target, replaced_session_controller=None):
         if self.session:
@@ -654,7 +654,7 @@ class SessionController(NSObject):
     def _NH_SIPSessionGotRingIndication(self, sender, data):
         for sc in self.streamHandlers:
             sc.sessionRinging()
-        self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self)
+        self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPSessionWillStart(self, sender, data):
         self.log_info("Session will start")
@@ -689,7 +689,7 @@ class SessionController(NSObject):
         hash.update(id)
         self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
-        self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
+        self.notification_center.post_notification("BlinkSessionDidStart", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPSessionWillEnd(self, sender, data):
         self.log_info("Session will end %sly"%data.originator)
@@ -725,7 +725,7 @@ class SessionController(NSObject):
         oldSession = self.session
         self.resetSession()
 
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
 
         # redirect
         if data.code in (301, 302) and data.redirect_identities:
@@ -772,8 +772,8 @@ class SessionController(NSObject):
 
         self.resetSession()
 
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
-        self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=TimestampedNotificationData())
 
         if SIPManager().pause_music:
             SIPManager().incomingSessions.discard(sender)
@@ -786,7 +786,7 @@ class SessionController(NSObject):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
         if data.code != 180:
             log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
-            self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
+            self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=sel, data=log_data)
 
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True
@@ -797,7 +797,7 @@ class SessionController(NSObject):
             self.owner.handle_incoming_proposal(sender, data.streams)
 
             # needed to temporarily disable the Chat Window toolbar buttons
-            self.notification_center.post_notification("BlinkGotProposal", sender=self)
+            self.notification_center.post_notification("BlinkGotProposal", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPSessionGotRejectProposal(self, sender, data):
         self.inProposal = False
@@ -830,7 +830,7 @@ class SessionController(NSObject):
                     self.log_info("Got reject proposal for unhandled stream type: %r" % stream)
 
             # notify Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPSessionGotAcceptProposal(self, sender, data):
         self.inProposal = False
@@ -847,7 +847,7 @@ class SessionController(NSObject):
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
             # notify by Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
@@ -867,7 +867,7 @@ class SessionController(NSObject):
                     handler.changeStatus(STREAM_FAILED, data.failure_reason)
 
             # notify Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPInvitationChangedState(self, sender, data):
         self.notification_center.post_notification("BlinkInvitationChangedState", sender=self, data=data)
@@ -926,7 +926,7 @@ class SessionController(NSObject):
         else:
             self.invited_participants.remove(contact)
             # notify controllers who need conference information
-            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
@@ -940,7 +940,7 @@ class SessionController(NSObject):
             self.failed_to_join_participants[uri]=time.time()
             if data.code >= 400 or data.code == 0:
                 contact.setDetail('Invite Failed: %s (%s)' % (data.reason, data.code))
-                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = re.sub("^(sip:|sips:)", "", str(data.participant))
@@ -959,7 +959,7 @@ class SessionController(NSObject):
                 contact.setDetail('%s (%s)' % (data.reason, data.code))
 
             # notify controllers who need conference information
-            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
         target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)

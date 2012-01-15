@@ -4,6 +4,7 @@
 from AppKit import *
 
 from application.notification import NotificationCenter
+from sipsimple.util import TimestampedNotificationData
 
 
 class ParticipantsTableView(NSTableView):
@@ -19,6 +20,6 @@ class ParticipantsTableView(NSTableView):
             return self.menu()
 
     def mouseDown_(self, event):
-        NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self)
+        NotificationCenter().post_notification("BlinkTableViewSelectionChaged", sender=self, data=TimestampedNotificationData())
         NSTableView.mouseDown_(self, event)
 
