@@ -298,7 +298,7 @@ class iCloudManager(NSObject):
             except KeyError:
                 pass
 
-        self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData(account=key))
 
     def hasDifference(self, account, local_json, remote_json):
         BlinkLogger().log_info(u"Computing differences from iCloud for %s" % account.id)

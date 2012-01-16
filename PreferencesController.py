@@ -600,18 +600,15 @@ class PreferencesController(NSWindowController, object):
             sender.ldap.port = 389 if sender.ldap.transport == 'tcp' else 636
             sender.save()
 
-        if 'sip.alternative_proxy' in notification.data.modified:
-            if sender.sip.alternative_proxy and sender.sip.alternative_proxy != sender.sip.primary_proxy:
-                sender.sip.primary_proxy = sender.sip.outbound_proxy
-            else:
+        if 'sip.primary_proxy' in notification.data.modified:
+            if not sender.sip.selected_proxy:
                 sender.sip.outbound_proxy = sender.sip.primary_proxy
-                sender.sip.primary_proxy = None
-                sender.sip.selected_proxy = 0
-            sender.save()
+                sender.save()
 
-        if 'sip.outbound_proxy' in notification.data.modified:
-            sender.sip.primary_proxy = sender.sip.outbound_proxy
-            sender.save()
+        if 'sip.alternative_proxy' in notification.data.modified:
+            if sender.sip.selected_proxy:
+                sender.sip.outbound_proxy = sender.sip.alternative_proxy
+                sender.save()
 
         if 'ldap.port' in notification.data.modified:
             if sender.ldap.port ==  389 and sender.ldap.transport != 'tcp':
