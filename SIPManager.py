@@ -790,6 +790,10 @@ class SIPManager(object):
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
+            if account.sip.primary_proxy is None and account.sip.outbound_proxy:
+                account.sip.primary_proxy = account.sip.outbound_proxy
+                account.save()
+
             if account.id.domain == "sip2sip.info":
                 if account.server.settings_url is None:
                     account.server.settings_url = "https://blink.sipthor.net/settings.phtml"

@@ -1523,7 +1523,7 @@ PreferenceOptionTypes = {
 "rtp.timeout": HiddenOption,
 "server.collaboration_url" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
-"sip.primary_proxy": HiddenOption,
+"sip.outbound_proxy": HiddenOption,
 "sip.selected_proxy": HiddenOption,
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
@@ -1600,7 +1600,7 @@ Placeholders = {
                  'nat_traversal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'server.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
                  'server.conference_server': 'conference.sip2sip.info',
-                 'sip.outbound_proxy' : 'sip.example.com:5061;transport=tls',
+                 'sip.primary_proxy' : 'sip.example.com:5061;transport=tls',
                  'voicemail_uri': 'user@example.com',
                  'xcap.xcap_root': 'https://xcap.example.com/xcap-root/',
                   }
@@ -1643,7 +1643,7 @@ AccountSettingsOrder = {
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'prefix'],
-                       'sip': ['register', 'always_use_my_proxy', 'outbound_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'do_not_disturb_code']
+                       'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'do_not_disturb_code']
                        }
 
 UnitOptions = {
@@ -1671,7 +1671,7 @@ ToolTips = {
              'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
-             'sip.outbound_proxy': 'Overwrite the address of the SIP Outbound Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
+             'sip.primary_proxy': 'Overwrite the address of the SIP Outbound Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
              'sip.alternative_proxy': 'When set, it can be manually selected as SIP Outbound Proxy in the Call menu',
              'sip.register': 'When enabled, the account will register to the SIP server and is able to receive incoming calls',
              'tls.certificate': 'X.509 certificate and unencrypted private key concatenated in the same file',
