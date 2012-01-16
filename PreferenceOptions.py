@@ -1601,6 +1601,7 @@ Placeholders = {
                  'server.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
                  'server.conference_server': 'conference.sip2sip.info',
                  'sip.primary_proxy' : 'sip.example.com:5061;transport=tls',
+                 'sip.alternative_proxy' : 'sip2.example.com:5060;transport=tcp',
                  'voicemail_uri': 'user@example.com',
                  'xcap.xcap_root': 'https://xcap.example.com/xcap-root/',
                   }
