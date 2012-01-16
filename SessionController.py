@@ -786,7 +786,7 @@ class SessionController(NSObject):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
         if data.code != 180:
             log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
-            self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=sel, data=log_data)
+            self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 
     def _NH_SIPSessionGotProposal(self, sender, data):
         self.inProposal = True
