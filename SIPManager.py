@@ -790,7 +790,7 @@ class SIPManager(object):
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
-            if account.sip.primary_proxy is None and account.sip.outbound_proxy:
+            if account is not BonjourAccount() and account.sip.primary_proxy is None and account.sip.outbound_proxy:
                 account.sip.primary_proxy = account.sip.outbound_proxy
                 account.save()
 
