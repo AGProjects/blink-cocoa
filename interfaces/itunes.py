@@ -106,7 +106,7 @@ class ITunesInterface(object):
     def pause(self):
         notification_center = NotificationCenter()
         if self.paused:
-            notification_center.post_notification('%PauseDidExecute' % self.application, sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self, data=TimestampedNotificationData())
         else:
             script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
             result, error_info = script.executeAndReturnError_(None)
