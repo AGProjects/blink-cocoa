@@ -123,7 +123,7 @@ class iCloudManager(NSObject):
                     account = am.get_account(key)
                     local_json = self.getJsonAccountData(account)
                     remote_json = self.cloud_storage.stringForKey_(key)
-                    if self.hasDifference(account, local_json, remote_json):
+                    if self.hasDifference(account, local_json, remote_json, True):
                         BlinkLogger().log_info(u"Updating %s from iCloud" % key)
                         self.updateAccountFromCloud(key)
                 except KeyError:
@@ -179,7 +179,7 @@ class iCloudManager(NSObject):
                 else:
                     local_json = self.getJsonAccountData(account)
                     remote_json = self.cloud_storage.stringForKey_(account.id)
-                    if self.hasDifference(account, local_json, remote_json):
+                    if self.hasDifference(account, local_json, remote_json, True):
                         BlinkLogger().log_info(u"Updating %s from iCloud" % account.id)
                         self.updateAccountFromCloud(account.id)
                         changes +=  1
@@ -298,9 +298,10 @@ class iCloudManager(NSObject):
             except KeyError:
                 pass
 
-        self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData(account=key))
+        self.notification_center.post_notification("SIPAccountChangedByICloud", sender=self, data=TimestampedNotificationData(account=key))
 
-    def hasDifference(self, account, local_json, remote_json):
+    def hasDifference(self, account, local_json, remote_json, icloud=False):
+        changed_keys = set()
         BlinkLogger().log_info(u"Computing differences from iCloud for %s" % account.id)
         try:
             local_data = cjson.decode(local_json)
@@ -319,6 +320,7 @@ class iCloudManager(NSObject):
             if e in self.skip_settings:
                 continue
             BlinkLogger().log_info('Setting %s has changed' % e)
+            changed_keys.add(e)
             diffs += 1
 
         for e in differences.added():
@@ -332,6 +334,7 @@ class iCloudManager(NSObject):
             elif not remote_data.has_key(e):
                 BlinkLogger().log_info('Local added')
 
+            changed_keys.add(e)
             diffs += 1
 
         for e in differences.removed():
@@ -346,7 +349,11 @@ class iCloudManager(NSObject):
             if not remote_data.has_key(e):
                 BlinkLogger().log_info('Remote removed')
 
+            changed_keys.add(e)
             diffs += 1
+
+        if diffs and icloud:
+            self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData(account=key, changed_keys=changed_keys))
 
         return bool(diffs)
 
