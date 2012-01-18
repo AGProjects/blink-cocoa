@@ -353,7 +353,7 @@ class iCloudManager(NSObject):
             diffs += 1
 
         if diffs and icloud:
-            self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData(account=key, changed_keys=changed_keys))
+            self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData(account=account.id, changed_keys=changed_keys))
 
         return bool(diffs)
 
