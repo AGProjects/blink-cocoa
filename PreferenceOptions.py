@@ -1583,6 +1583,7 @@ SettingDescription = {
                       'rtp.srtp_encryption': 'sRTP Encryption',
                       'sip.invite_timeout': 'Session Timeout',
                       'sip.outbound_proxy': 'Primary Proxy',
+                      'sip.alternative_proxy': 'Alternate Proxy',
                       'sip.register': 'Receive Incoming Calls',
                       'sip.transport_list': 'Protocols',
                       'sounds.audio_inbound': 'Inbound Ringtone',
