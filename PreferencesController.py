@@ -681,6 +681,12 @@ class PreferencesController(NSWindowController, object):
                 cell.setImage_(None)
                 cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration disabled'), NSAccessibilityTitleAttribute)
 
+    def diplay_outbound_proxy_radio_if_needed(self, account):
+        tab = self.advancedTabView.selectedTabViewItem()
+        self.selected_proxy_radio_button.setHidden_(False if tab.identifier() == 'sip' and self.advancedToggle.state() == NSOnState else True)
+        self.selected_proxy_radio_button.setEnabled_(True if account.sip.always_use_my_proxy and account.sip.alternative_proxy is not None else False)
+        self.selected_proxy_radio_button.selectCellWithTag_(account.sip.selected_proxy)
+
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if not self.updating:
             account_info = self.selectedAccount()
@@ -692,10 +698,7 @@ class PreferencesController(NSWindowController, object):
             if account is not BonjourAccount():
                 userdef.setInteger_forKey_(section, "SelectedAdvancedSection")
                 if tabView == self.advancedTabView:
-                    tab = self.advancedTabView.selectedTabViewItem()
-                    self.selected_proxy_radio_button.setHidden_(False if tab.identifier() == 'sip' else True)
-                    self.selected_proxy_radio_button.setEnabled_(True if account.sip.always_use_my_proxy and account.sip.alternative_proxy is not None else False)
-                    self.selected_proxy_radio_button.selectCellWithTag_(account.sip.selected_proxy)
+                    self.diplay_outbound_proxy_radio_if_needed(account)
             else:
                 userdef.setInteger_forKey_(section, "SelectedAdvancedBonjourSection")
 
@@ -703,7 +706,6 @@ class PreferencesController(NSWindowController, object):
         sv = self.passwordText.superview()
         account_info = self.selectedAccount()
         if account_info:
-
             account = account_info.account
             self.showOptionsForAccount(account)
 
@@ -726,10 +728,7 @@ class PreferencesController(NSWindowController, object):
                 self.addressText.setHidden_(False)
                 sv.viewWithTag_(20).setHidden_(False)
                 sv.viewWithTag_(21).setHidden_(False)
-                tab = self.advancedTabView.selectedTabViewItem()
-                self.selected_proxy_radio_button.setHidden_(False if tab.identifier() == 'sip' else True)
-                self.selected_proxy_radio_button.setEnabled_(True if account.sip.always_use_my_proxy and account.sip.alternative_proxy is not None else False)
-                self.selected_proxy_radio_button.selectCellWithTag_(account.sip.selected_proxy)
+                self.diplay_outbound_proxy_radio_if_needed(account)
 
         else:
             self.addressText.setStringValue_("Please select an account")
@@ -810,7 +809,10 @@ class PreferencesController(NSWindowController, object):
                 self.advancedTabView.setHidden_(False) 
             else:
                 self.advancedPop.setHidden_(True) 
-                self.advancedTabView.setHidden_(True)  
+                self.advancedTabView.setHidden_(True)
+            account_info = self.selectedAccount()
+            if account_info:
+                self.diplay_outbound_proxy_radio_if_needed(account_info.account)
         elif sender == self.addButton:
             self.addAccount()
         elif sender == self.removeButton:
