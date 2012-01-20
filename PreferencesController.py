@@ -683,9 +683,12 @@ class PreferencesController(NSWindowController, object):
 
     def diplay_outbound_proxy_radio_if_needed(self, account):
         tab = self.advancedTabView.selectedTabViewItem()
-        self.selected_proxy_radio_button.setHidden_(False if tab.identifier() == 'sip' and self.advancedToggle.state() == NSOnState else True)
-        self.selected_proxy_radio_button.setEnabled_(True if account.sip.always_use_my_proxy and account.sip.alternative_proxy is not None else False)
-        self.selected_proxy_radio_button.selectCellWithTag_(account.sip.selected_proxy)
+        if account is not BonjourAccount():
+            self.selected_proxy_radio_button.setHidden_(False if tab.identifier() == 'sip' and self.advancedToggle.state() == NSOnState else True)
+            self.selected_proxy_radio_button.setEnabled_(True if account.sip.always_use_my_proxy and account.sip.alternative_proxy is not None else False)
+            self.selected_proxy_radio_button.selectCellWithTag_(account.sip.selected_proxy)
+        else:
+            self.selected_proxy_radio_button.setHidden_(True)
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if not self.updating:
@@ -728,7 +731,7 @@ class PreferencesController(NSWindowController, object):
                 self.addressText.setHidden_(False)
                 sv.viewWithTag_(20).setHidden_(False)
                 sv.viewWithTag_(21).setHidden_(False)
-                self.diplay_outbound_proxy_radio_if_needed(account)
+            self.diplay_outbound_proxy_radio_if_needed(account)
 
         else:
             self.addressText.setStringValue_("Please select an account")
