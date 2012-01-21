@@ -248,8 +248,10 @@ class SessionController(NSObject):
                 self.log_info(u"Error initializing additional streams: %s" % exc)
             else:
                 self.log_info(u"Error initializing incoming session, rejecting it: %s" % exc)
-                self.session.reject(500)
-            NSRunAlertPanel("Error Accepting Session", "An error occurred while initiating the session:\n %s" % exc, "OK", None, None)
+                try:
+                    self.session.reject(500)
+                except IllegalDirectionError:
+                    pass
 
     def setAnsweringMachineMode_(self, flag):
         self.answeringMachineMode = flag
