@@ -219,8 +219,14 @@ class SessionController(NSObject):
         try:
             # give priority to chat stream so that we do not open audio drawer for composite streams
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream.type=='chat' else 1)
+            handled_types = set()
             for s in sorted_streams:
                 if SIPManager().isMediaTypeSupported(s.type):
+                    if s.type in handled_types:
+                        self.log_info(u"Stream type %s has already been handled" % s.type)
+                        continue
+
+                    handled_types.add(s.type)
                     handler = StreamHandlerForType.get(s.type, None)
                     controller = handler(self, s)
                     self.streamHandlers.append(controller)
