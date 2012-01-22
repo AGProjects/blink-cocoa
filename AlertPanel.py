@@ -68,13 +68,7 @@ class AlertPanel(NSObject, object):
             self.speech_recognizer = NSSpeechRecognizer.alloc().init()
             self.speech_recognizer.setDelegate_(self)
             self.speech_recognizer.setListensInForegroundOnly_(False)
-            commands = NSArray.arrayWithObjects_(NSString.stringWithString_("Accept"),
-                                                 NSString.stringWithString_("Answer"),
-                                                 NSString.stringWithString_("Busy"),
-                                                 NSString.stringWithString_("Reject"),
-                                                 NSString.stringWithString_("Voicemail"),
-                                                 NSString.stringWithString_("Answering machine")
-                                                 )
+            commands = ("Accept", "Answer", "Busy", "Reject", "Voicemail", "Answering machine")
             self.speech_recognizer.setCommands_(commands)
 
     @run_in_gui_thread
@@ -195,7 +189,7 @@ class AlertPanel(NSObject, object):
         if len(self.sessions) == 1:
             self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity, check_contact=True))
             if SIPSimpleSettings().sounds.enable_speech_synthesizer:
-                self.speak_text = NSString.stringWithString_("Call from %s" % format_identity_simple(session.remote_identity, check_contact=True))
+                self.speak_text = "Call from %s" % format_identity_simple(session.remote_identity, check_contact=True)
                 self.startSpeechSynthesizerTimer()
         else:
             self.panel.setTitle_(u"Multiple Incoming Calls")
