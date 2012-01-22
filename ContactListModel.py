@@ -2020,9 +2020,9 @@ class ContactListModel(CustomListModel):
                 return
 
             name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
-            message = u"Delete Contact", u"Delete '%s' from the Contacts list?"%name
+            message = u"Delete '%s' from the Contacts list?"%name
             message = re.sub("%", "%%", message)
-            ret = NSRunAlertPanel(message, u"Delete", u"Cancel", None)
+            ret = NSRunAlertPanel(u"Delete Contact", message, u"Delete", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
                 try:
                     group = (group for group in self.contactGroupsList if blink_contact in group.contacts).next()
