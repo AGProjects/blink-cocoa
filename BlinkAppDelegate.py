@@ -185,6 +185,14 @@ class BlinkAppDelegate(NSObject):
         self.missedChats = 0
         self.updateDockTile()
 
+    def applicationWillFinishLaunching_(self, sender):
+        receiptPath = NSBundle.mainBundle().appStoreReceiptURL().path()
+        return
+        # TODO: receipt validation
+        if  not NSFileManager.defaultManager().fileExistsAtPath_(receiptPath):
+            exit(173)
+        #https://github.com/roddi/ValidateStoreReceipt
+
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationName)
 
