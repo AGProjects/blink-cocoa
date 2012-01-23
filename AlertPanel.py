@@ -61,7 +61,6 @@ class AlertPanel(NSObject, object):
         if self.speech_recognizer is not None and not self.use_speech_recognition:
             self.speech_recognizer.stopListening()
 
-    @run_in_gui_thread
     def init_speech_recognition(self):
         self.use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
         if self.use_speech_recognition:
@@ -71,7 +70,6 @@ class AlertPanel(NSObject, object):
             commands = ("Accept", "Answer", "Busy", "Reject", "Voicemail", "Answering machine")
             self.speech_recognizer.setCommands_(commands)
 
-    @run_in_gui_thread
     def startSpeechRecognition(self):
         if self.speech_recognizer is None:
             self.init_speech_recognition()
@@ -79,13 +77,11 @@ class AlertPanel(NSObject, object):
         if self.speech_recognizer is not None and len(self.sessions):
             self.speech_recognizer.startListening()
 
-    @run_in_gui_thread
     def stopSpeechRecognition(self):
         if self.speech_recognizer:
             self.speech_recognizer.stopListening()
             self.speech_recognizer = None
 
-    @run_in_gui_thread
     def speechRecognizer_didRecognizeCommand_(self, recognizer, command):
         if command == u'Reject':
             self.decideForAllSessionRequests(REJECT)
@@ -103,18 +99,15 @@ class AlertPanel(NSObject, object):
             if settings.answering_machine.enabled:
                 self.stopSpeechRecognition()
 
-    @run_in_gui_thread
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         self.unMuteAfterSpeechDidEnd()
 
-    @run_in_gui_thread
     def init_speech_synthesis(self):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
         self.speak_text = None
         self.speech_synthesizer_timer = None
 
-    @run_in_gui_thread
     def stopSpeechSynthesizer(self):
         self.speech_synthesizer.stopSpeaking()
         if self.speech_synthesizer_timer and self.speech_synthesizer_timer.isValid():
@@ -122,13 +115,11 @@ class AlertPanel(NSObject, object):
         self.speak_text = None
         self.unMuteAfterSpeechDidEnd()
 
-    @run_in_gui_thread
     def startSpeechSynthesizerTimer(self):
         self.speech_synthesizer_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(2, self, "startSpeaking:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.speech_synthesizer_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.speech_synthesizer_timer, NSEventTrackingRunLoopMode)
 
-    @run_in_gui_thread
     def startSpeaking_(self, timer):
         if self.speak_text:
             self.muteBeforeSpeechWillStart()
