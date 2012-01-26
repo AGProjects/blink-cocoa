@@ -43,6 +43,8 @@ class iCloudManager(NSObject):
 
     def __init__(self):
         major, minor = platform.mac_ver()[0].split('.')[0:2]
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
         if (int(major) == 10 and int(minor) >= 7) or int(major) > 10:
             self.notification_center = NotificationCenter()
             enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")

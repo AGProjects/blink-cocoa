@@ -150,9 +150,10 @@ class PreferencesController(NSWindowController, object):
                     self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
                 except StopIteration:
                     pass
-
-        major, minor = platform.mac_ver()[0].split('.')[0:2]
-        self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
+            self.sync_with_icloud_checkbox.setHidden_(True)
+        else:
+            major, minor = platform.mac_ver()[0].split('.')[0:2]
+            self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
 
         self.userDefaultsDidChange_(None)
 
