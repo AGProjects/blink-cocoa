@@ -237,7 +237,7 @@ class SMSViewController(NSObject):
         handler(notification.sender, notification.data)
 
     def _NH_SIPMessageDidSucceed(self, sender, data):
-        BlinkLogger().log_warning(u"SMS message delivery suceeded")
+        BlinkLogger().log_info(u"SMS message delivery suceeded")
 
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
@@ -254,7 +254,7 @@ class SMSViewController(NSObject):
         NotificationCenter().remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
-        BlinkLogger().log_warning(u"SMS message delivery failed: %s" % data.reason)
+        BlinkLogger().log_info(u"SMS message delivery failed: %s" % data.reason)
 
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
