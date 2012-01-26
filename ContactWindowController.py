@@ -1482,9 +1482,9 @@ class ContactWindowController(NSWindowController):
             return None
 
     def joinConference(self, target, media, participants=[]):
-        BlinkLogger().log_error(u"Join conference %s with media %s" % (target, media))
+        BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media))
         if participants:
-            BlinkLogger().log_error(u"Inviting participants: %s" % participants)
+            BlinkLogger().log_info(u"Inviting participants: %s" % participants)
 
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
