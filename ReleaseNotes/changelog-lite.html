@@ -5,6 +5,47 @@
 </head>
 
 <body>
+<h2>Version 1.6.0</h2>
+
+<p>January 26th, 2012
+
+<ul>
+<li>Added selection of alternative SIP outbound proxies
+<li>Added start sessions with multiple media and participants from urls:
+    sip:user@example.com;participant=abcd@example.com;media=audio;media=chat
+<li>Added support for droping files over audio sessions
+<li>Added do not disturb setting
+<li>Added pause/resume support for Spotify
+<li>Improved handling of desktop sharing negotiations
+<li>Close audio drawer when opening chat window
+<li>Fixed display of bonjour contact in drawer
+<li>Fixed lookup of bonjour contacts in contacts list
+<li>Fixed validating toolbar buttons in Chat window
+<li>Fixed stopping Screensharing when shared window is closed
+<li>Fixed removing a stream if a negative response was received
+<li>Fixed blocking of internal timers when menus are being displayed
+<li>Fixed checks for private Chat messages
+<li>Do not handle the same media stream type twice
+<li>Do not use the dial plan of disabled accounts
+<li>Reply with 200 OK to in-dialog OPTIONS requests
+<li>Allow conferencing of bonjour contacts with normal contacts
+<li>Avoid opening drawer if no audio session is active
+<li>Fixed handling of rejected and missed calls
+<li>Shut Blink down if a fatal error occurs in the Engine
+<li>Check for an attribute in sms viewer as the view is shared with chat
+<li>Open external links from account page in system web browser
+<li>Avoid printing chat ended message if stream failed
+<li>Fixed reacting to MediaStreamDidFail on ChatController
+<li>Don't start speech recognition if audio call is in progress
+<li>Use display name if found than tel number when format uri
+<li>Improve reason text when invite to conference fails
+<li>Fixed crash on overflow error
+<li>Fixed crash when bogus G722 payload is received
+<li>Fixed building sipfrag payloads
+<li>Fixed performing DNS lookups within a SIP transaction
+</ul>
+
+
 <h2>Version 1.5.0</h2>
 
 <p>December 23rd, 2011
