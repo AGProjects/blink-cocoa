@@ -1351,7 +1351,7 @@ class ObjectTupleOption(Option):
 
 class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option, description=None):
-        ObjectTupleOption.__init__(self, object, name, option, [("IP Address", 142), ("Port",50)], description)
+        ObjectTupleOption.__init__(self, object, name, option, [("Hostname or IP Address", 142), ("Port",50)], description)
 
         self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add new")
 
@@ -1386,7 +1386,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
                 address = STUNServerAddress(self.values[row][0], int(object))
                 self.values[row] = (address.host, address.port)
         except Exception, e:
-            NSRunAlertPanel("Invalid Address", "Entered value is not a valid STUN Address: %s"%e, "OK", None, None)
+            NSRunAlertPanel("Invalid Server Address", "Entered value is not a valid STUN server address: %s"%e, "OK", None, None)
             return
         self.store()
         table.reloadData()
@@ -1497,7 +1497,7 @@ PreferenceOptionTypes = {
 "AudioCodecList" : AudioCodecListOption,
 "AudioCodecList:account" : AccountAudioCodecListOption,
 "CountryCode" : CountryCodeOption,
-#"STUNServerAddressList" : STUNServerAddressListOption,
+"STUNServerAddressList" : STUNServerAddressListOption,
 "SIPProxyAddress" : SIPProxyAddressOption,
 "Digits" : DigitsOption,
 "HTTPURL": NullableUnicodeOption,
@@ -1518,7 +1518,7 @@ PreferenceOptionTypes = {
 "logs.directory": HiddenOption,
 "logs.trace_xcap": HiddenOption,
 "msrp.connection_model" : HiddenOption,
-"nat_traversal.stun_server_list" : HiddenOption,
+"nat_traversal.stun_server_list" : STUNServerAddressListOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
 "rtp.timeout": HiddenOption,
 "server.collaboration_url" : HiddenOption,
@@ -1566,7 +1566,6 @@ SettingDescription = {
                       'contacts.enable_outgoing_calls_group': 'Show Outgoing Calls',
                       'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
-                      'message_summary.voicemail_uri': 'Mailbox URI',
                       'ldap.hostname': 'Server Address',
                       'ldap.dn': 'Search Base',
                       'logs.trace_msrp': 'Trace MSRP Media',
@@ -1574,6 +1573,8 @@ SettingDescription = {
                       'logs.trace_xcap': 'Trace XCAP (used for storage of contacts and presence policy)',
                       'logs.trace_pjsip': 'Trace Core Library',
                       'logs.pjsip_level': 'Core Level',
+                      'message_summary.voicemail_uri': 'Mailbox URI',
+                      'nat_traversal.stun_server_list': 'STUN Servers',
                       'presence.use_rls': 'Use Resource List Server',
                       'pstn.idd_prefix': 'Replace Starting +',
                       'pstn.prefix': 'External Line Prefix',
