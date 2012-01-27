@@ -403,20 +403,6 @@ class SIPManager(object):
             session_controller.log_info(u"Starting DNS lookup for %s" % target_uri.host)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
-    def lookup_stun_servers(self, account):
-        lookup = DNSLookup()
-        lookup.type = 'stun_servers'
-        lookup.owner = account
-        self.notification_center.add_observer(self, sender=lookup)
-        if not isinstance(account, BonjourAccount):
-            # lookup STUN servers, as we don't support doing this asynchronously yet
-            if account.nat_traversal.stun_server_list:
-                account.nat_traversal.stun_server_list = [STUNServerAddress(gethostbyname(address.host), address.port) for address in account.nat_traversal.stun_server_list]
-                address = account.nat_traversal.stun_server_list[0]
-            else:
-                lookup.lookup_service(SIPURI(host=account.id.domain), "stun")
-                BlinkLogger().log_info(u"Starting DNS lookup for STUN servers of domain %s" % account.id.domain)
-
     def parse_sip_uri(self, target_uri, account):
         try:
             target_uri = str(target_uri)
@@ -821,8 +807,6 @@ class SIPManager(object):
                     BlinkLogger().log_info(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
                 except KeyError:
                     pass
-
-        self.lookup_stun_servers(self._selected_account)
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()
