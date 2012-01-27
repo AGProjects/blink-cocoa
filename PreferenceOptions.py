@@ -1353,7 +1353,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option, description=None):
         ObjectTupleOption.__init__(self, object, name, option, [("Hostname or IP Address", 142), ("Port",50)], description)
 
-        self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add new")
+        self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add")
 
         f = self.swin.frame()
         f.size.height = 55
@@ -1363,21 +1363,21 @@ class STUNServerAddressListOption(ObjectTupleOption):
         f.size.height = 55
         self.setFrame_(f)
 
-
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
-        if object is None and column is None: # delete row
-            if row < len(self.values):
-                del self.values[row]
-                self.store()
-                table.reloadData()
-            return
-
-        if object == "": return
+        column = int(column.identifier())
+        if not object:
+            if column == 0: # delete row
+                if row < len(self.values):
+                    del self.values[row]
+                    self.store()
+                    table.reloadData()
+                    return
+            else:
+                return
 
         if row >= len(self.values):
             self.values.append(("", STUNServerAddress.default_port))
 
-        column = int(column.identifier())
         try:
             if column == 0:
                 address = STUNServerAddress(str(object), self.values[row][1])
@@ -1386,7 +1386,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
                 address = STUNServerAddress(self.values[row][0], int(object))
                 self.values[row] = (address.host, address.port)
         except Exception, e:
-            NSRunAlertPanel("Invalid Server Address", "Entered value is not a valid STUN server address: %s"%e, "OK", None, None)
+            NSRunAlertPanel("Enter STUN server", "Invalid server address: %s" % e, "OK", None, None)
             return
         self.store()
         table.reloadData()
