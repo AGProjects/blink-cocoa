@@ -86,6 +86,7 @@ class SoundsSettings(SettingsGroup):
 
 class TLSSettingsExtension(TLSSettings):
     certificate = Setting(type=AccountTLSCertificate, default=AccountTLSCertificate(AccountTLSCertificate.DefaultTLSCertificate('default.crt')))
+    verify_server = Setting(type=bool, default=True)
 
 
 class XCAPSettingsExtension(XCAPSettings):
