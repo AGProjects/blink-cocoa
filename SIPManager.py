@@ -216,7 +216,7 @@ class SIPManager(object):
     def init(self):
         self._version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
 
-        first_start = not os.path.exists(ApplicationData.get('config'))
+        #first_start = not os.path.exists(ApplicationData.get('config'))
 
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
@@ -225,12 +225,12 @@ class SIPManager(object):
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         self._app.start(FileStorage(ApplicationData.directory))
-        self.init_configurations(first_start)
+        self.init_configurations()
 
         # start session mgr
         SessionManager()
 
-    def init_configurations(self, first_time=False):
+    def init_configurations(self):
         account_manager = AccountManager()
         settings = SIPSimpleSettings()
 
