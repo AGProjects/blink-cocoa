@@ -1571,7 +1571,7 @@ SettingDescription = {
                       'logs.trace_msrp': 'Trace MSRP Media',
                       'logs.trace_sip': 'Trace SIP Signaling',
                       'logs.trace_xcap': 'Trace XCAP (used for storage of contacts and presence policy)',
-                      'logs.trace_pjsip': 'Trace Core Library',
+                      'logs.trace_pjsip': 'Trace Core Engine',
                       'logs.pjsip_level': 'Core Level',
                       'message_summary.voicemail_uri': 'Mailbox URI',
                       'nat_traversal.stun_server_list': 'STUN Servers',
@@ -1600,6 +1600,9 @@ SettingDescription = {
 
 Placeholders = {
                  'nat_traversal.msrp_relay': 'relay.example.com:2855;transport=tls',
+                 'pstn.idd_prefix': '00',
+                 'pstn.prefix': '9',
+                 'pstn.dial_plan': '0049 0031',
                  'server.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
                  'server.conference_server': 'conference.sip2sip.info',
                  'sip.primary_proxy' : 'sip.example.com:5061;transport=tls',
