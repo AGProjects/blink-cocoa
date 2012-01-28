@@ -241,28 +241,19 @@ class SIPManager(object):
         if self._selected_account is None:
             self._selected_account = account_manager.get_accounts()[0]
 
-        #if options.no_relay:
-        #    account.msrp.use_relay_for_inbound = False
-        #    account.msrp.use_relay_for_outbound = False
-        #if options.msrp_tcp:
-        #    settings.msrp.transport = 'tcp'
+        default_ca = open(Resources.get('ca.crt'), "r").read().strip()
+        self.add_certificate_authority(default_ca)
 
-    def save_certificates(self, response):
-        passport = response["passport"]
-        address = response["sip_address"]
+    def add_certificate_authority(self, ca):
+        settings = SIPSimpleSettings()
+        if settings.tls.ca_list:
+            ca_path = settings.tls.ca_list.normalized
+        else:
+            tls_folder = ApplicationData.get('tls')
+            if not os.path.exists(tls_folder):
+                os.mkdir(tls_folder, 0700)
+            ca_path = os.path.join(tls_folder, 'ca.crt')
 
-        tls_folder = ApplicationData.get('tls')
-        if not os.path.exists(tls_folder):
-            os.mkdir(tls_folder, 0700)
-
-        ca = passport["ca"].strip() + os.linesep
-        try:
-            X509Certificate(ca)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
-            return None
-
-        ca_path = os.path.join(tls_folder, 'ca.crt')
         try:
             existing_cas = open(ca_path, "r").read().strip() + os.linesep
         except:
@@ -280,9 +271,23 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             settings.tls.ca_list = ca_path
             settings.save()
-        else:
-            BlinkLogger().log_info(u"Certificate Authority already present in %s" % ca_path)
 
+    def save_certificates(self, response):
+        passport = response["passport"]
+        address = response["sip_address"]
+
+        tls_folder = ApplicationData.get('tls')
+        if not os.path.exists(tls_folder):
+            os.mkdir(tls_folder, 0700)
+
+        ca = passport["ca"].strip() + os.linesep
+        try:
+            X509Certificate(ca)
+        except GNUTLSError, e:
+            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
+            return None
+
+        self.add_certificate_authority(ca)
 
         crt = passport["crt"].strip() + os.linesep
         try:
@@ -949,7 +954,6 @@ class SIPManager(object):
                                'status_icon_supported',
                                'offline_status_supported')
         BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported) is True))
-
 
     def isRemoteDesktopSharingActive(self):
         try:
