@@ -601,6 +601,9 @@
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1FEC3E9114D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
+		1FEC3E9214D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
+		1FEC3E9314D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FF2F5B213AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5B313AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5B413AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
@@ -1223,6 +1226,7 @@
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
@@ -1991,6 +1995,7 @@
 		DE3A672E13A8A987006EEB0F /* TLS */ = {
 			isa = PBXGroup;
 			children = (
+				1FEC3E9014D41678003745B9 /* ca.crt */,
 				DE3A672F13A8A987006EEB0F /* default.crt */,
 			);
 			includeInIndex = 1;
@@ -2306,6 +2311,7 @@
 				1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 				1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */,
+				1FEC3E9214D41678003745B9 /* ca.crt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2513,6 +2519,7 @@
 				1FF6C4011498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 				1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */,
+				1FEC3E9314D41678003745B9 /* ca.crt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2718,6 +2725,7 @@
 				1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 				1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */,
+				1FEC3E9114D41678003745B9 /* ca.crt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
