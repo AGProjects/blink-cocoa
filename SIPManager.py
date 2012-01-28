@@ -246,13 +246,15 @@ class SIPManager(object):
 
     def add_certificate_authority(self, ca):
         settings = SIPSimpleSettings()
-        if settings.tls.ca_list:
+        must_save_ca = False
+        if settings.tls.ca_list is not None:
             ca_path = settings.tls.ca_list.normalized
         else:
             tls_folder = ApplicationData.get('tls')
             if not os.path.exists(tls_folder):
                 os.mkdir(tls_folder, 0700)
             ca_path = os.path.join(tls_folder, 'ca.crt')
+            must_save_ca = True
 
         try:
             existing_cas = open(ca_path, "r").read().strip() + os.linesep
@@ -268,7 +270,9 @@ class SIPManager(object):
             f.write(ca_list)
             f.close()
             BlinkLogger().log_info(u"Added new Certificate Authority to %s" % ca_path)
-            settings = SIPSimpleSettings()
+            must_save_ca = True
+
+        if must_save_ca:
             settings.tls.ca_list = ca_path
             settings.save()
 
