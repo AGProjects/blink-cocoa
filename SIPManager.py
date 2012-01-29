@@ -245,6 +245,12 @@ class SIPManager(object):
         self.add_certificate_authority(default_ca)
 
     def add_certificate_authority(self, ca):
+        try:
+            X509Certificate(ca)
+        except GNUTLSError, e:
+            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
+            return False
+
         settings = SIPSimpleSettings()
         must_save_ca = False
         if settings.tls.ca_list is not None:
@@ -276,6 +282,8 @@ class SIPManager(object):
             settings.tls.ca_list = ca_path
             settings.save()
 
+        return True
+
     def save_certificates(self, response):
         passport = response["passport"]
         address = response["sip_address"]
@@ -285,12 +293,6 @@ class SIPManager(object):
             os.mkdir(tls_folder, 0700)
 
         ca = passport["ca"].strip() + os.linesep
-        try:
-            X509Certificate(ca)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
-            return None
-
         self.add_certificate_authority(ca)
 
         crt = passport["crt"].strip() + os.linesep
