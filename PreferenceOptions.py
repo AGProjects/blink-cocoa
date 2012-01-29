@@ -1681,6 +1681,7 @@ ToolTips = {
              'sip.alternative_proxy': 'When set, it can be manually selected as SIP Outbound Proxy in the Call menu',
              'sip.register': 'When enabled, the account will register to the SIP server and is able to receive incoming calls',
              'tls.certificate': 'X.509 certificate and unencrypted private key concatenated in the same file',
-             'tls.verify_server': 'Verify the validity of TLS certificate for SIP and MSRP servers',
+             'tls.verify_server': 'Verify the validity of TLS certificates presented by remote parties',
+             'tls.ca_list': 'File that contains a list of Certificate Autorities (CA) additional to the ones provided by MacOSX. Each CA must be in PEM format, multiple CA can be concantenated.',
              'xcap.xcap_root': 'If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain'
            }
