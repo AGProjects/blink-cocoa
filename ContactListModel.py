@@ -1369,12 +1369,24 @@ class ContactListModel(CustomListModel):
                 if group:
                     for pickled_contact in group_item["contacts"]:
                         uri = unicode(pickled_contact["uri"].strip())
+                        contact = Contact(uri, group=group)
+                        try:
+                            contact.name = pickled_contact["display_name"]
+                        except KeyError:
+                            pass
+
+                        try:
+                            contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
+                        except KeyError:
+                            pass
+
                         try:
                             new_aliases = ";".join(pickled_contact["aliases"])
-                            contact = Contact(uri, group=group)
-                            contact.name = pickled_contact["display_name"]
-                            contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
                             contact.aliases =  new_aliases if new_aliases else None
+                        except KeyError:
+                            pass
+
+                        try:
                             contact.save()
                         except DuplicateIDError:
                             pass
