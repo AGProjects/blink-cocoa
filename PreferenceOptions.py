@@ -1276,7 +1276,7 @@ class ObjectTupleOption(Option):
         
         self.addSubview_(self.caption)
 
-        self.swin = NSScrollView.alloc().initWithFrame_(NSMakeRect(120, 0, 200, 80))
+        self.swin = NSScrollView.alloc().initWithFrame_(NSMakeRect(120, 0, 230, 80))
         self.swin.setHasVerticalScroller_(True)
         self.swin.setHasHorizontalScroller_(True)
         self.swin.setAutohidesScrollers_(True)
@@ -1351,7 +1351,7 @@ class ObjectTupleOption(Option):
 
 class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option, description=None):
-        ObjectTupleOption.__init__(self, object, name, option, [("Hostname or IP Address", 142), ("Port",50)], description)
+        ObjectTupleOption.__init__(self, object, name, option, [("Hostname or IP Address", 172), ("Port",50)], description)
 
         self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add")
 
