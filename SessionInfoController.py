@@ -31,6 +31,7 @@ class SessionInfoController(NSObject):
     chatBox = objc.IBOutlet()
      
     remote_party = objc.IBOutlet()
+    account = objc.IBOutlet()
     duration = objc.IBOutlet()
     remote_ua = objc.IBOutlet()
     status = objc.IBOutlet()
@@ -206,6 +207,7 @@ class SessionInfoController(NSObject):
         else:
             self.updateSessionStatus()
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
+            self.account.setStringValue_(str(self.sessionController.account.id))
             self.conference.setStringValue_('%d Participants' % len(self.sessionController.conference_info.users) if self.sessionController.conference_info is not None and self.sessionController.remote_focus else '')
 
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:
