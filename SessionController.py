@@ -708,7 +708,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidFail(self, sender, data):
         if data.failure_reason == 'Unknown error 61':
-            status = u"TLS connection error"
+            status = u"Connection refused"
             self.failureReason = data.failure_reason
         elif data.failure_reason != 'user request':
             status = u"%s" % data.failure_reason
