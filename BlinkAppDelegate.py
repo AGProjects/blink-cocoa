@@ -186,8 +186,8 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationWillFinishLaunching_(self, sender):
-        receiptPath = NSBundle.mainBundle().appStoreReceiptURL().path()
         return
+        receiptPath = NSBundle.mainBundle().appStoreReceiptURL().path()
         # TODO: receipt validation
         if  not NSFileManager.defaultManager().fileExistsAtPath_(receiptPath):
             exit(173)
