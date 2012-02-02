@@ -8,6 +8,7 @@ from Quartz import *
 
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
+from application.python import Null
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
@@ -349,79 +350,104 @@ class ChatWindowController(NSWindowController):
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
-        name = notification.name
-        sender = notification.sender
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
 
-        if name == "BlinkStreamHandlerChangedState":
-            session = sender.sessionController
-            if session:
-                chat_stream = session.streamHandlerOfType("chat")
-                if chat_stream:
-                    index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
-                    if index != NSNotFound:
-                        tabItem = self.tabView.tabViewItemAtIndex_(index)
-                        self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
-            self.revalidateToolbar()
-        elif name == "BlinkSessionChangedState":
-            session = sender
-            if session:
-                chat_stream = session.streamHandlerOfType("chat")
-                if chat_stream:
-                    index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
-                    if index != NSNotFound:
-                        tabItem = self.tabView.tabViewItemAtIndex_(index)
-                        self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
-            self.revalidateToolbar()
-            self.refreshDrawer()
+    def _NH_BlinkStreamHandlerChangedState(self, sender, data):
+        session = sender.sessionController
+        if session:
+            chat_stream = session.streamHandlerOfType("chat")
+            if chat_stream:
+                index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
+                if index != NSNotFound:
+                    tabItem = self.tabView.tabViewItemAtIndex_(index)
+                    self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
+        self.revalidateToolbar()
 
-            # Update drawer status when not connected
-            state = notification.data.state
-            detail = notification.data.reason
-            if state == STATE_CONNECTING:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                self.audioStatus.setHidden_(False)
-                self.audioStatus.setStringValue_(u"Connecting...")
-            elif state == STATE_CONNECTED:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                self.audioStatus.setHidden_(False)
-                self.audioStatus.setStringValue_(u"Connected")
-            elif state == STATE_FINISHED:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                self.audioStatus.setHidden_(True)
-                self.audioStatus.setStringValue_('')
+    def _NH_BlinkSessionChangedState(self, sender, data):
+        session = sender
+        if session:
+            chat_stream = session.streamHandlerOfType("chat")
+            if chat_stream:
+                index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
+                if index != NSNotFound:
+                    tabItem = self.tabView.tabViewItemAtIndex_(index)
+                    self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
+        self.revalidateToolbar()
+        self.refreshDrawer()
 
-        elif name == "BlinkAudioStreamChangedHoldState":
-            self.revalidateToolbar()
-            self.refreshDrawer()
-        elif name == "BlinkStreamHandlersChanged":
-            self.revalidateToolbar()
-            self.refreshDrawer()
-        elif name == "BlinkVideoEnteredFullScreen":
-            self.toolbar.setVisible_(False)
-        elif name == "BlinkVideoExitedFullScreen":
-            self.toolbar.setVisible_(True)
-        elif name in( "AudioStreamDidStartRecordingAudio", "AudioStreamDidStopRecordingAudio"):
-            self.revalidateToolbar()
-        elif name in ("BlinkGotProposal", "BlinkProposalGotRejected", "BlinkSentAddProposal", "BlinkSentRemoveProposal"):
-            self.revalidateToolbar()
-            self.refreshDrawer()
-        elif name == "BlinkConferenceGotUpdate":
-            self.refreshDrawer()
-        elif name == "BlinkContactsHaveChanged":
-            self.setOwnIcon()
-            self.refreshDrawer()
-        elif name == "BlinkMuteChangedState":
-            if self.backend.is_muted():
-                self.muteButton.setImage_(NSImage.imageNamed_("muted"))
-                self.muteButton.setState_(NSOnState)
-            else:
-                self.muteButton.setState_(NSOffState)
-                self.muteButton.setImage_(NSImage.imageNamed_("mute"))
-        elif name == "BlinkColaborativeEditorContentHasChanged":
-            session = self.selectedSessionController()
-            if not sender.editorStatus:
-                self.noteSession_isComposing_(sender.delegate.sessionController, True)
-            self.revalidateToolbar()
+        # Update drawer status when not connected
+        state = data.state
+        detail = data.reason
+        if state == STATE_CONNECTING:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setHidden_(False)
+            self.audioStatus.setStringValue_(u"Connecting...")
+        elif state == STATE_CONNECTED:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setHidden_(False)
+            self.audioStatus.setStringValue_(u"Connected")
+        elif state == STATE_FINISHED:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setHidden_(True)
+            self.audioStatus.setStringValue_('')
+
+    def _NH_BlinkAudioStreamChangedHoldState(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkStreamHandlersChanged(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkVideoEnteredFullScreen(self, sender, data):
+        self.toolbar.setVisible_(False)
+
+    def _NH_BlinkVideoExitedFullScreen(self, sender, data):
+        self.toolbar.setVisible_(True)
+        
+    def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
+        self.revalidateToolbar()
+
+    def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
+        self.revalidateToolbar()
+
+    def _NH_BlinkGotProposal(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkProposalGotRejected(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkSentAddProposal(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkSentRemoveProposal(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkConferenceGotUpdate(self, sender, data):
+        self.refreshDrawer()
+
+    def _NH_BlinkContactsHaveChanged(self, sender, data):
+        self.setOwnIcon()
+        self.refreshDrawer()
+
+    def _NH_BlinkMuteChangedState(self, sender, data):
+        if self.backend.is_muted():
+            self.muteButton.setImage_(NSImage.imageNamed_("muted"))
+            self.muteButton.setState_(NSOnState)
+        else:
+            self.muteButton.setState_(NSOffState)
+            self.muteButton.setImage_(NSImage.imageNamed_("mute"))
+
+    def _NH_BlinkColaborativeEditorContentHasChanged(self, sender, data):
+        session = self.selectedSessionController()
+        if not sender.editorStatus:
+            self.noteSession_isComposing_(sender.delegate.sessionController, True)
+        self.revalidateToolbar()
 
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
