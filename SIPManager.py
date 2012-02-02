@@ -35,6 +35,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.account import bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
 from sipsimple.contact import Contact, ContactGroup
+from sipsimple.configuration import DefaultValue
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.datatypes import STUNServerAddress
@@ -787,19 +788,28 @@ class SIPManager(object):
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
+            must_save = False
             if account is not BonjourAccount() and account.sip.primary_proxy is None and account.sip.outbound_proxy and not account.sip.selected_proxy:
                 account.sip.primary_proxy = account.sip.outbound_proxy
-                account.save()
+                must_save = True
+
+            if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
+                account.tls.certificate = DefaultValue
+                must_save = True
 
             if account.id.domain == "sip2sip.info":
                 if account.server.settings_url is None:
                     account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
-                    account.save()
+                    must_save = True
                 if not account.ldap.hostname:
                     account.ldap.hostname = "ldap.sipthor.net"
                     account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
                     account.ldap.enabled = True
-                    account.save()
+                    must_save = True
+
+            if must_save:
+                account.save()
+
         logger = FileLogger()
         logger.start()
         self.ip_address_monitor.start()
