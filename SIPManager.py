@@ -1428,9 +1428,8 @@ class BonjourConferenceServices(object):
         for file in (f for f in command.files if not f.closed):
             try:
                 bonjour.DNSServiceProcessResult(file.file)
-            except:
-                # Should we close the file? The documentation doesn't say anything about this. -Luci
-                log.err()
+            except Exception:
+                pass
         for file in command.files:
             file.active = False
         self._files = [f for f in self._files if not f.closed]
