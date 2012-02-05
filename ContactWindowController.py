@@ -527,12 +527,7 @@ class ContactWindowController(NSWindowController):
             outline = self.searchOutline
 
             if outline.selectedRowIndexes().count() == 0:
-                try:
-                    text = str(self.searchBox.stringValue())
-                except:
-                    self.sip_error("SIP address must not contain unicode characters (%s)" % unicode(self.searchBox.stringValue()))
-                    return []
-
+                text = self.searchBox.stringValue()
                 if not text:
                     return []
                 contact = BlinkContact(text, name=text)
@@ -3384,7 +3379,7 @@ class LdapSearch(object):
         if self.ldap_directory:
             self.ldap_directory.connect()
             if self.ldap_directory.connected:
-                filter = "cn=" + "*" + keyword + "*"
+                filter = "cn=" + "*" + keyword.encode("utf-8") + "*"
                 try:
                     self.ldap_query_id = self.ldap_directory.l.search(self.ldap_directory.dn, ldap.SCOPE_SUBTREE, filter)
                 except ldap.LDAPError:
