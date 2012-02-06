@@ -243,9 +243,43 @@ class SIPManager(object):
             self._selected_account = account_manager.get_accounts()[0]
 
         default_ca = open(Resources.get('ca.crt'), "r").read().strip()
-        self.add_certificate_authority(default_ca)
+        self.set_default_certificate_authority(default_ca)
+
+    def set_default_certificate_authority(self, ca):
+        try:
+            X509Certificate(ca)
+        except GNUTLSError, e:
+            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
+            return False
+
+        settings = SIPSimpleSettings()
+        must_save_ca = False
+        tls_folder = ApplicationData.get('tls')
+        if not os.path.exists(tls_folder):
+            os.mkdir(tls_folder, 0700)
+        ca_path = os.path.join(tls_folder, 'ca.crt')
+
+        try:
+            existing_cas = open(ca_path, "r").read().strip()
+        except:
+            existing_cas = None
+
+        if ca != existing_cas:
+            f = open(ca_path, "w")
+            os.chmod(ca_path, 0600)
+            f.write(ca)
+            f.close()
+            BlinkLogger().log_info(u"Added default Certificate Authority to %s" % ca_path)
+            must_save_ca = True
+
+        if must_save_ca:
+            settings.tls.ca_list = ca_path
+            settings.save()
+
+        return True
 
     def add_certificate_authority(self, ca):
+        # not used anymore, let users add CAs in keychain instead
         try:
             X509Certificate(ca)
         except GNUTLSError, e:
