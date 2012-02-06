@@ -1302,16 +1302,21 @@ class ContactWindowController(NSWindowController):
                 NotificationCenter().add_observer(self, name="LDAPDirectorySearchFoundContact", sender=self.ldap_search)
                 self.ldap_search.search(text)
 
-            # create a syntetic contact with what we typed 
-            if " " not in text:
-                input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
-                input_contact = SearchResultContact(input_text, name=unicode(input_text))
-                exists = text in (contact.uri for contact in self.local_found_contacts)
+            # create a syntetic contact with what we typed
+            try:
+                str(text)
+            except UnicodeEncodeError:
+                pass
+            else:
+                if " " not in text:
+                    input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
+                    input_contact = SearchResultContact(input_text, name=unicode(input_text))
+                    exists = text in (contact.uri for contact in self.local_found_contacts)
 
-                if not exists:
-                    self.local_found_contacts.append(input_contact)
+                    if not exists:
+                        self.local_found_contacts.append(input_contact)
 
-                self.addContactButtonSearch.setEnabled_(not exists)
+                    self.addContactButtonSearch.setEnabled_(not exists)
 
             self.searchResultsModel.contactGroupsList = self.local_found_contacts
             self.searchOutline.reloadData()
