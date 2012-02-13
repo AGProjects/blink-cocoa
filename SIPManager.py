@@ -827,6 +827,10 @@ class SIPManager(object):
                 account.sip.primary_proxy = account.sip.outbound_proxy
                 must_save = True
 
+            if account is not BonjourAccount() and settings.tls.verify_server != account.tls.verify_server:
+                account.tls.verify_server = settings.tls.verify_server
+                must_save = True
+
             if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
                 account.tls.certificate = DefaultValue
                 must_save = True
