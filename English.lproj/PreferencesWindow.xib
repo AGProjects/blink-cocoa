@@ -397,7 +397,6 @@
 							<string key="NSFrame">{{614, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="993445270"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<int key="NSTag">10</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="648449520">
@@ -424,7 +423,6 @@
 							<string key="NSFrame">{{-8, 45}, {740, 445}}</string>
 							<reference key="NSSuperview" ref="993445270"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="350117869"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="627498078">
 									<string key="NSIdentifier">accounts</string>
@@ -498,7 +496,7 @@
 																<string key="NSFrameSize">{283, 351}</string>
 																<reference key="NSSuperview" ref="610364781"/>
 																<reference key="NSWindow"/>
-																<reference key="NSNextKeyView" ref="398299239"/>
+																<reference key="NSNextKeyView" ref="736749453"/>
 																<bool key="NSEnabled">YES</bool>
 																<object class="NSTableHeaderView" key="NSHeaderView" id="76249930">
 																	<reference key="NSNextResponder" ref="27080014"/>
@@ -715,7 +713,7 @@
 												<string key="NSFrame">{{17, 34}, {285, 369}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="736749453"/>
+												<reference key="NSNextKeyView" ref="610364781"/>
 												<int key="NSsFlags">133650</int>
 												<reference key="NSVScroller" ref="398299239"/>
 												<reference key="NSHScroller" ref="736749453"/>
@@ -1047,7 +1045,7 @@
 											<object class="NSMatrix" id="358367844">
 												<reference key="NSNextResponder" ref="350117869"/>
 												<int key="NSvFlags">-2147483380</int>
-												<string key="NSFrame">{{344, 148}, {20, 57}}</string>
+												<string key="NSFrame">{{343, 157}, {13, 48}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="472687226"/>
@@ -1132,7 +1130,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 														<int key="NSPeriodicInterval">75</int>
 													</object>
 												</array>
-												<string key="NSCellSize">{20, 27}</string>
+												<string key="NSCellSize">{13, 23}</string>
 												<string key="NSIntercellSpacing">{4, 2}</string>
 												<int key="NSMatrixFlags">1151868928</int>
 												<string key="NSCellClass">NSActionCell</string>
