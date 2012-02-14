@@ -70,6 +70,7 @@ class SessionController(NSObject):
     transfer_window = None
     outbound_audio_calls = 0
     valid_dtmf = re.compile(r"^[0-9*#,]+$")
+    pending_chat_messages = {}
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial

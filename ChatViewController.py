@@ -191,6 +191,7 @@ class ChatViewController(NSObject):
     editorStatus = False
 
     rendered_messages = set()
+    pending_messages = {}
 
     video_source = None
     video_visible = False

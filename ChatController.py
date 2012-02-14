@@ -337,21 +337,18 @@ class MessageHandler(NSObject):
     remote_uri = None
     local_uri = None
 
-    def initWithSession_(self, session):
+    def initWithView_(self, chatView):
         self = super(MessageHandler, self).init()
         if self:
-            self.session = session
             self.stream = None
             self.connected = None
             self.messages = {}
             self.pending = []
             self.history = ChatHistory()
+            self.delegate = chatView
+            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
+            self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
         return self
-
-    def setDelegate(self, delegate):
-        self.delegate = delegate
-        self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
-        self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
 
     def _send(self, msgid):
         message = self.messages.pop(msgid)
@@ -580,8 +577,8 @@ class ChatController(MediaStream):
             self.chatViewController.setAccount_(self.sessionController.account)
             self.chatViewController.resetRenderedMessages()
 
-            self.handler = MessageHandler.alloc().initWithSession_(self.sessionController.session)
-            self.handler.setDelegate(self.chatViewController)
+            self.handler = MessageHandler.alloc().initWithView_(self.chatViewController)
+
             self.screensharing_handler = ConferenceScreenSharingHandler()
             self.screensharing_handler.setDelegate(self)
 
@@ -749,12 +746,15 @@ class ChatController(MediaStream):
                     identity = None
                 if not self.handler.send(text, recipient=identity):
                     textView.setString_(original)
-                NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                else:
+                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 BlinkLogger().log_info(u"Session not established, starting it")
+                if self.handler.messages:
+                    # save unsend messages and pass them to the newly spawned handler
+                    self.sessionController.pending_chat_messages = self.handler.messages
                 self.sessionController.startChatSession()
-
             self.chatViewController.resetTyping()
             return True
         return False
@@ -984,30 +984,30 @@ class ChatController(MediaStream):
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self):
-        if self.sessionController.account is BonjourAccount():
-            return
-        try:
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
-        except Exception, e:
-            self.sessionController.log_info(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))            
-            return
+        if self.sessionController.account is not BonjourAccount():
+            try:
+                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
+            except Exception, e:
+                self.sessionController.log_info(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))
+                return
 
-        # build a list of previously failed messages
-        last_failed_messages=[]
-        for row in results:
-            if row.status == 'delivered':
-                break
-            last_failed_messages.append(row)    
-        last_failed_messages.reverse()
+            # build a list of previously failed messages
+            last_failed_messages=[]
+            for row in results:
+                if row.status == 'delivered':
+                    break
+                last_failed_messages.append(row)
+            last_failed_messages.reverse()
+            self.history_msgid_list = [row.msgid for row in reversed(list(results))]
 
-        self.history_msgid_list = [row.msgid for row in reversed(list(results))]
+            # render last delievered messages except those due to be resent
+            messages_to_render = [row for row in reversed(list(results)) if row not in last_failed_messages]
+            self.render_history_messages(messages_to_render)
 
-        # render last delievered messages except those due to be resent
-        messages_to_render = [row for row in reversed(list(results)) if row.msgid not in last_failed_messages]
-        self.render_history_messages(messages_to_render)
+            self.resend_last_failed_message(last_failed_messages)
 
-        self.resend_last_failed_message(last_failed_messages)
-            
+        self.resend_pending_message()
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def render_history_messages(self, messages):
@@ -1042,6 +1042,14 @@ class ChatController(MediaStream):
 
             private = True if message.private == "1" else False
             self.handler.resend(message.msgid, message.body, recipient, private)    
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def resend_pending_message(self):
+        if self.sessionController.pending_chat_messages:
+            for message in reversed(self.sessionController.pending_chat_messages.values()):
+                self.handler.resend(message.msgid, message.text, message.recipient, message.private)
+            self.sessionController.pending_chat_messages = {}
 
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
