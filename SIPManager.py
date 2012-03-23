@@ -806,6 +806,7 @@ class SIPManager(object):
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
         BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s" % sdk_version)
         BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
+        BlinkLogger().log_info(u"SIP Device ID %s" % settings.instance_id)
 
         build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
         date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
@@ -936,6 +937,12 @@ class SIPManager(object):
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         BlinkLogger().log_info(message)
+        if account.contact.public_gruu is not None:
+            message = u'%s public GRUU %s' % (account, account.contact.public_gruu)
+            BlinkLogger().log_info(message)
+        if account.contact.temporary_gruu is not None:
+            message = u'%s temporary GRUU %s' % (account, account.contact.temporary_gruu)
+            BlinkLogger().log_info(message)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info(u"%s was unregistered" % account)
