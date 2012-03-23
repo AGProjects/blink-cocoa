@@ -187,7 +187,7 @@ class AccountSettings(NSObject):
     def webView_decidePolicyForNewWindowAction_request_newFrameName_decisionListener_(self, webView, info, request, frame, listener):
         try:
             theURL = info[WebActionOriginalURLKey]
-            if theURL.host() != self._account.server.settings_url.hostname:
+            if theURL.host() not in (self._account.server.settings_url.hostname, self._account.server.alert_url.hostname):
                 # use system wide web browser
                 NSWorkspace.sharedWorkspace().openURL_(theURL)
                 listener.ignore()
@@ -200,7 +200,7 @@ class AccountSettings(NSObject):
         # intercept when user clicks on links so that we process them in different ways
         try:
             theURL = info[WebActionOriginalURLKey]
-            if theURL.host() != self._account.server.settings_url.hostname:
+            if theURL.host() not in (self._account.server.settings_url.hostname, self._account.server.alert_url.hostname):
                 # use system wide web browser
                 NSWorkspace.sharedWorkspace().openURL_(theURL)
                 listener.ignore()
