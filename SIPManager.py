@@ -1121,6 +1121,11 @@ class SIPManager(object):
         session.blink_supported_streams = streams
         self._delegate.handle_incoming_session(session, streams)
 
+        settings = SIPSimpleSettings()
+        if not settings.server.show_web_alert_page_after_connect:
+            self.show_web_alert_page(session)
+
+    def show_web_alert_page(self, session):
         # open web page with caller information
         if NSApp.delegate().applicationName != 'Blink Lite' and session.account is not BonjourAccount() and session.account.server.alert_url:
             url = unicode(session.account.server.alert_url)
@@ -1146,6 +1151,11 @@ class SIPManager(object):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     music_applications = MusicApplications()
                     music_applications.resume()
+
+        if session.direction == 'incoming':
+            settings = SIPSimpleSettings()
+            if settings.server.show_web_alert_page_after_connect:
+                self.show_web_alert_page(session)
 
     def _NH_SIPSessionGotProposal(self, session, data):
         if self.pause_music:

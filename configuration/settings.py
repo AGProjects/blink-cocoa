@@ -66,6 +66,7 @@ class ServerSettings(SettingsGroup):
     enrollment_url = Setting(type=HTTPURL, default="https://blink.sipthor.net/enrollment.phtml")
     # Collaboration editor taken from http://code.google.com/p/google-mobwrite/
     collaboration_url = Setting(type=HTTPURL, default='http://mobwrite3.appspot.com/scripts/q.py', nillable=True)
+    show_web_alert_page_after_connect = Setting(type=bool, default=False)
 
 
 class ServiceProviderSettings(SettingsGroup):
