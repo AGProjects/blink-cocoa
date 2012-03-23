@@ -351,6 +351,18 @@ class DigitsOption(StringOption):
 
         self.set(nvalue)
 
+class DTMFDelimiterOption(StringOption):
+    def _store(self):
+        current = self.get()
+        nvalue = str(self.text.stringValue())
+        match_dtmf = re.match('^[#*]?$', nvalue)
+
+        if current != nvalue and match_dtmf is None:
+            NSRunAlertPanel("Invalid DTMF delimiter", "Only * or # are allowed.", "OK", None, None)
+            self.restore()
+            return
+
+        self.set(nvalue)
 
 class PortOption(NonNegativeIntegerOption):
     def __init__(self, object, name, option, description=None):
@@ -1519,6 +1531,7 @@ PreferenceOptionTypes = {
 "logs.trace_xcap": HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : STUNServerAddressListOption,
+"pstn.dtmf_delimiter": DTMFDelimiterOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
 "rtp.timeout": HiddenOption,
 "server.collaboration_url" : HiddenOption,
@@ -1579,6 +1592,7 @@ SettingDescription = {
                       'presence.use_rls': 'Use Resource List Server',
                       'pstn.idd_prefix': 'Replace Starting +',
                       'pstn.prefix': 'External Line Prefix',
+                      'pstn.dtmf_delimiter': 'DTMF Delimiter',
                       'rtp.inband_dtmf': 'Send Inband DTMF',
                       'rtp.audio_codec_list': 'Audio Codecs',
                       'rtp.port_range': 'UDP Port Range',
@@ -1674,6 +1688,7 @@ ToolTips = {
              'pstn.idd_prefix': 'You may replace the starting + from telephone numbers with 00 or other numeric prefix required by your SIP service provider',
              'pstn.prefix': 'Always add a numeric prefix when dialing telephone numbers, typically required by a PBX to obtain an outside line',
              'pstn.dial_plan': 'List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)',
+             'pstn.dtmf_delimiter': 'Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *',
              'server.alert_url': 'Web page that is opened when an incoming call is received. $caller_party and $called_party are replaced with the SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party',
              'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',

@@ -597,9 +597,8 @@ class SessionController(NSObject):
         if self.session:
             streams = [s.stream for s in self.streamHandlers]
             target_uri = SIPURI.new(self.target_uri)
-
-            if '#' in target_uri.user:
-                hash_parts = target_uri.user.partition('#')
+            if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
+                hash_parts = target_uri.user.partition(self.account.pstn.dtmf_delimiter)
                 if self.valid_dtmf.match(hash_parts[2]):
                     target_uri.user = hash_parts[0]
                     self.postdial_string = hash_parts[2]
