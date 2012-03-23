@@ -90,7 +90,7 @@ class TLSSettingsExtension(TLSSettings):
 
 
 class ContactsSettings(SettingsGroup):
-    enable_address_book = Setting(type=bool, default=False)
+    enable_address_book = Setting(type=bool, default=True)
     enable_incoming_calls_group = Setting(type=bool, default=False)
     enable_missed_calls_group = Setting(type=bool, default=True)
     enable_outgoing_calls_group = Setting(type=bool, default=False)
