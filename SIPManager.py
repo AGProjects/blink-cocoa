@@ -1129,7 +1129,7 @@ class SIPManager(object):
         self._delegate.handle_incoming_session(session, streams)
 
         settings = SIPSimpleSettings()
-        if not settings.server.show_web_alert_page_after_connect:
+        if not settings.gui.show_web_alert_page_after_connect:
             self.show_web_alert_page(session)
 
     def show_web_alert_page(self, session):
@@ -1141,12 +1141,15 @@ class SIPManager(object):
             url = url.replace('$caller_party', caller_key)
             replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
             url = url.replace('$called_party', replace_account[5:])
-            BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
-            from AccountSettings import AccountSettings
-            if not self._delegate.accountSettingsPanels.has_key(caller_key):
-                self._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
-            self._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
-            #NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+            if settings.gui.use_default_web_browser_for_alerts:
+                BlinkLogger().log_info(u"Opening HTTP URL in default browser %s"% url)
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+            else:
+                BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
+                from AccountSettings import AccountSettings
+                if not self._delegate.accountSettingsPanels.has_key(caller_key):
+                    self._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
+                self._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
 
     def _NH_SIPSessionDidFail(self, session, data):
         self.incomingSessions.discard(session)
@@ -1161,7 +1164,7 @@ class SIPManager(object):
 
         if session.direction == 'incoming':
             settings = SIPSimpleSettings()
-            if settings.server.show_web_alert_page_after_connect:
+            if settings.gui.show_web_alert_page_after_connect:
                 self.show_web_alert_page(session)
 
     def _NH_SIPSessionGotProposal(self, session, data):

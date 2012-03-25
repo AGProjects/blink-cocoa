@@ -66,8 +66,11 @@ class ServerSettings(SettingsGroup):
     enrollment_url = Setting(type=HTTPURL, default="https://blink.sipthor.net/enrollment.phtml")
     # Collaboration editor taken from http://code.google.com/p/google-mobwrite/
     collaboration_url = Setting(type=HTTPURL, default='http://mobwrite3.appspot.com/scripts/q.py', nillable=True)
-    show_web_alert_page_after_connect = Setting(type=bool, default=False)
 
+
+class GUISettings(SettingsGroup):
+    show_web_alert_page_after_connect = Setting(type=bool, default=False)
+    use_default_web_browser_for_alerts = Setting(type=bool, default=False)
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
@@ -110,5 +113,6 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     sounds = SoundsSettings
     tls = TLSSettingsExtension
     contacts = ContactsSettings
+    gui = GUISettings
 
 

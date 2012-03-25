@@ -1630,6 +1630,7 @@ SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
                        'dialog_event': 'Dialog',
+                       'gui': 'GUI Settings',
                        'logs': 'File Logging',
                        'message_summary': 'Message Summary',
                        'msrp': 'MSRP Media',
@@ -1656,6 +1657,8 @@ GeneralSettingsOrder = {
                        }
 
 AccountSectionOrder = ('auth', 'audio', 'sounds', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
+
+AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'ldap')
 

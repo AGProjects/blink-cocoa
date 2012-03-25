@@ -17,7 +17,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, SectionNames, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, ToolTips, Placeholders, formatName
+from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
@@ -227,29 +227,40 @@ class PreferencesController(NSWindowController, object):
             self.generalTabView.removeTabViewItem_(self.generalTabView.tabViewItemAtIndex_(0))
 
         settings = SIPSimpleSettings()
-
         sections = [section for section in dir(SIPSimpleSettings) if isinstance(getattr(SIPSimpleSettings, section, None), SettingsGroupMeta)]
         frame = self.generalTabView.frame()
         frame.origin.x = 0
         frame.origin.y = 0
 
-        for section in (section for section in sections if section not in DisabledPreferenceSections):
-            #if section in ('server'):
-            #    continue
-            view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
-            tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
+        if type == 'advanced':
+            for section in AdvancedGeneralSectionOrder:
+                view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
+                tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
 
-            try:
-                label = SectionNames[section]
-            except KeyError:
-                label = formatName(section)
+                try:
+                    label = SectionNames[section]
+                except KeyError:
+                    label = formatName(section)
 
-            tabItem.setLabel_(label)
-            tabItem.setView_(view)
-            if type == 'advanced' and section not in StaticPreferenceSections:
-                self.generalTabView.addTabViewItem_(tabItem)
-            elif type == 'basic' and section in StaticPreferenceSections:
-                self.generalTabView.addTabViewItem_(tabItem)
+                tabItem.setLabel_(label)
+                tabItem.setView_(view)
+                if section not in StaticPreferenceSections:
+                    self.generalTabView.addTabViewItem_(tabItem)
+
+        if type == 'basic':
+            for section in (section for section in sections if section not in DisabledPreferenceSections):
+                view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
+                tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
+
+                try:
+                    label = SectionNames[section]
+                except KeyError:
+                    label = formatName(section)
+
+                tabItem.setLabel_(label)
+                tabItem.setView_(view)
+                if section in StaticPreferenceSections:
+                    self.generalTabView.addTabViewItem_(tabItem)
 
     def createAccountOptionsUI(self, account):
         self.advancedPop.removeAllItems()
