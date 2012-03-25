@@ -1554,7 +1554,7 @@ PreferenceOptionTypes = {
 DisabledAccountPreferenceSections = []
 
 # These general sections are always hidden
-DisabledPreferenceSections = ['service_provider']
+DisabledPreferenceSections = ['service_provider', 'server']
 
 # These section are rendered staticaly in their own view
 StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts']
