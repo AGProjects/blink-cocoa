@@ -1134,7 +1134,10 @@ class SIPManager(object):
 
     def show_web_alert_page(self, session):
         # open web page with caller information
-        if NSApp.delegate().applicationName != 'Blink Lite' and session.account is not BonjourAccount() and session.account.server.alert_url:
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+
+        if session.account is not BonjourAccount() and session.account.server.alert_url:
             url = unicode(session.account.server.alert_url)
             replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
             caller_key = replace_caller[5:]
