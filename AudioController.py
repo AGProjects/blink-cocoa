@@ -791,9 +791,20 @@ class AudioController(MediaStream):
                 item.setIndentationLevel_(1)
                 item.setTarget_(self)
                 item.setRepresentedObject_(session_controller)
+
             item = menu.addItemWithTitle_action_keyEquivalent_(u'A Contact by Dragging this Session over it', "", "")
             item.setIndentationLevel_(1)
             item.setEnabled_(False)
+
+            # use typed search text as blind transfer destination
+            target = NSApp.delegate().windowController.searchBox.stringValue()
+            if target:
+                parsed_target = SIPManager().parse_sip_uri(target, self.sessionController.account)
+                if parsed_target:
+                    item = menu.addItemWithTitle_action_keyEquivalent_(format_identity_address(parsed_target), "userClickedBlindTransferMenuItem:", "")
+                    item.setIndentationLevel_(1)
+                    item.setTarget_(self)
+                    item.setRepresentedObject_(parsed_target)
         else:
             can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
@@ -869,6 +880,12 @@ class AudioController(MediaStream):
         target_session_controller = sender.representedObject()
         self.sessionController.log_info(u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
         self.sessionController.transferSession(target_session_controller.target_uri, target_session_controller)
+
+    @objc.IBAction
+    def userClickedBlindTransferMenuItem_(self, sender):
+        uri = sender.representedObject()
+        self.sessionController.log_info(u'Initiating blind call transfer from %s to %s' % (self.sessionController.getTitleFull(), uri))
+        self.transferSession(uri)
 
     @objc.IBAction
     def userClickedSessionInfoButton_(self, sender):
