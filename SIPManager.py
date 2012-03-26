@@ -805,8 +805,6 @@ class SIPManager(object):
         settings = SIPSimpleSettings()
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
         BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s" % sdk_version)
-        BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
-        BlinkLogger().log_info(u"SIP Device ID %s" % settings.instance_id)
 
         build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
         date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
@@ -858,6 +856,9 @@ class SIPManager(object):
         self.ringer.update_ringtones()
 
         settings = SIPSimpleSettings()
+        BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
+        BlinkLogger().log_info(u"SIP Device ID %s" % settings.instance_id)
+
         self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
 
         bonjour_account = BonjourAccount()
