@@ -1692,7 +1692,7 @@ ToolTips = {
              'pstn.prefix': 'Always add a numeric prefix when dialing telephone numbers, typically required by a PBX to obtain an outside line',
              'pstn.dial_plan': 'List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)',
              'pstn.dtmf_delimiter': 'Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *',
-             'server.alert_url': 'Web page that is opened when an incoming call is received. $caller_party and $called_party are replaced with the SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party',
+             'server.alert_url': 'Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username',
              'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
