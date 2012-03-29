@@ -674,6 +674,9 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
         self.contacts = []
 
         book = AddressBook.ABAddressBook.sharedAddressBook()
+        if book is None:
+            return
+
         default_icon = NSImage.imageNamed_("NSUser")
         labelNames = {
             AddressBook.kABPhoneWorkLabel:   "work",
