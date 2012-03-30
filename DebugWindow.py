@@ -141,61 +141,62 @@ class DebugWindow(NSObject):
 
     def userDefaultsDidChange_(self, notification):
         userdef = NSUserDefaults.standardUserDefaults()
+        notification_center = NotificationCenter()
         trace = userdef.integerForKey_("SIPTrace")
         if trace == Disabled:
-            NotificationCenter().discard_observer(self, name="SIPEngineSIPTrace")
-            NotificationCenter().discard_observer(self, name="DNSLookupTrace")
+            notification_center.discard_observer(self, name="SIPEngineSIPTrace")
+            notification_center.discard_observer(self, name="DNSLookupTrace")
             self.sipTraceType = None
         elif trace == Simplified:
-            NotificationCenter().add_observer(self, name="SIPEngineSIPTrace")
-            NotificationCenter().add_observer(self, name="DNSLookupTrace")
+            notification_center.add_observer(self, name="SIPEngineSIPTrace")
+            notification_center.add_observer(self, name="DNSLookupTrace")
             self.sipTraceType = "simple"
         elif trace == Full:
-            NotificationCenter().add_observer(self, name="SIPEngineSIPTrace")
-            NotificationCenter().add_observer(self, name="DNSLookupTrace")
+            notification_center.add_observer(self, name="SIPEngineSIPTrace")
+            notification_center.add_observer(self, name="DNSLookupTrace")
             self.sipTraceType = "full"
 
         trace = userdef.integerForKey_("MSRPTrace")
         if trace == Disabled:
-            NotificationCenter().discard_observer(self, name="MSRPLibraryLog")
-            NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+            notification_center.discard_observer(self, name="MSRPLibraryLog")
+            notification_center.discard_observer(self, name="MSRPTransportTrace")
             self.msrpTraceType = None
         elif trace == Simplified:
-            NotificationCenter().add_observer(self, name="MSRPLibraryLog")
-            NotificationCenter().add_observer(self, name="MSRPTransportTrace")
+            notification_center.add_observer(self, name="MSRPLibraryLog")
+            notification_center.add_observer(self, name="MSRPTransportTrace")
             self.msrpTraceType = "simple"
         elif trace == Full:
-            NotificationCenter().add_observer(self, name="MSRPLibraryLog")
-            NotificationCenter().add_observer(self, name="MSRPTransportTrace")
+            notification_center.add_observer(self, name="MSRPLibraryLog")
+            notification_center.add_observer(self, name="MSRPTransportTrace")
             self.msrpTraceType = "full"
         
         trace = userdef.integerForKey_("XCAPTrace")
         if trace == Disabled:
-            NotificationCenter().discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            NotificationCenter().discard_observer(self, name="XCAPSubscriptionGotNotify")
-            NotificationCenter().discard_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
+            notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
             self.xcapTraceType = None
         elif trace == Simplified:
-            NotificationCenter().add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            NotificationCenter().add_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.add_observer(self, name="XCAPManagerDidChangeState")
             self.xcapTraceType = "simple"
         elif trace == Full:
-            NotificationCenter().add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            NotificationCenter().add_observer(self, name="XCAPManagerDidChangeState")
-            NotificationCenter().add_observer(self, name="XCAPSubscriptionGotNotify")
+            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.add_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.add_observer(self, name="XCAPSubscriptionGotNotify")
             self.xcapTraceType = "full"
 
         trace = userdef.boolForKey_("EnablePJSIPTrace")
         if trace:
-            NotificationCenter().add_observer(self, name="SIPEngineLog")
+            notification_center.add_observer(self, name="SIPEngineLog")
         else:        
-            NotificationCenter().discard_observer(self, name="SIPEngineLog")
+            notification_center.discard_observer(self, name="SIPEngineLog")
 
         trace = userdef.boolForKey_("EnableNotificationsTrace")
         if trace:
-            NotificationCenter().add_observer(self)
+            notification_center.add_observer(self)
         else:        
-            NotificationCenter().discard_observer(self)
+            notification_center.discard_observer(self)
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         pass
