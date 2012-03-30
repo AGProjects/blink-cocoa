@@ -421,6 +421,9 @@ class DebugWindow(NSObject):
     def _NH_SIPSessionDidStart(self, notification):
         self.renderRTP(notification.sender)
 
+    def _NH_SIPSessionDidRenegotiateStreams(self, notification):
+        if notification.data.action == 'add':
+            self.renderRTP(notification.sender)
 
     def _NH_MSRPTransportTrace(self, notification):
         if self.msrpTraceType is None:
