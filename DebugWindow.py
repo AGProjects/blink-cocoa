@@ -118,7 +118,10 @@ class DebugWindow(NSObject):
 
         BlinkLogger().set_gui_logger(self.renderActivity)
 
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults()) 
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, name="SIPSessionDidStart")
+        notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
 
         userdef = NSUserDefaults.standardUserDefaults()
         self.sipRadio.selectCellWithTag_(userdef.integerForKey_("SIPTrace") or Disabled)
@@ -256,9 +259,25 @@ class DebugWindow(NSObject):
         self.notificationsTextView.scrollRowToVisible_(len(self.notifications)-1)
         self.notificationsInfoLabel.setStringValue_('%d notifications, %sytes' % (len(self.notifications), format_size(self.notificationsBytes)) if not text else '%d notifications matched' % len(self.notifications))
 
-    def __del__(self):
+    def dealloc(self):
+        # Observers added in init
         NSNotificationCenter.defaultCenter().removeObserver_(self)
-        NotificationCenter().remove_observer(self)
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, name="SIPSessionDidStart")
+        notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
+
+        # Observers added when settings change
+        notification_center.discard_observer(self, name="SIPEngineSIPTrace")
+        notification_center.discard_observer(self, name="DNSLookupTrace")
+        notification_center.discard_observer(self, name="MSRPLibraryLog")
+        notification_center.discard_observer(self, name="MSRPTransportTrace")
+        notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+        notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
+        notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
+        notification_center.discard_observer(self, name="SIPEngineLog")
+        notification_center.discard_observer(self)
+
+        super(DebugWindow, self).dealloc()
 
     def append_line(self, textView, line):
         if isinstance(line, NSAttributedString):
