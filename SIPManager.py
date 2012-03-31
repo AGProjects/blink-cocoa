@@ -1142,13 +1142,16 @@ class SIPManager(object):
             url = unicode(session.account.server.alert_url)
 
             replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
-            url = url.replace('$caller_party', replace_caller[5:])
+            caller_key = replace_caller[5:]
+            url = url.replace('$caller_party', caller_key)
 
             replace_username = urllib.urlencode({'x:': '%s' % session.remote_identity.uri.user})
             url = url.replace('$caller_username', replace_username[5:])
 
             replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
             url = url.replace('$called_party', replace_account[5:])
+
+            settings = SIPSimpleSettings()
 
             if settings.gui.use_default_web_browser_for_alerts:
                 BlinkLogger().log_info(u"Opening HTTP URL in default browser %s"% url)
