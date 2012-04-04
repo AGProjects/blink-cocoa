@@ -187,12 +187,14 @@ class AccountSettings(NSObject):
     def webView_decidePolicyForNewWindowAction_request_newFrameName_decisionListener_(self, webView, info, request, frame, listener):
         try:
             theURL = info[WebActionOriginalURLKey]
-            if theURL.host() not in (self._account.server.settings_url.hostname, self._account.server.alert_url.hostname):
+            if self._account.server.settings_url is not None and theURL.host() == self._account.server.settings_url.hostname:
+                listener.use()
+            elif self._account.server.alert_url is not None and theURL.host() == self._account.server.alert_url.hostname:
+                listener.use()
+            else:
                 # use system wide web browser
                 NSWorkspace.sharedWorkspace().openURL_(theURL)
                 listener.ignore()
-            else:
-                listener.use()
         except KeyError:
             pass
 
@@ -200,14 +202,17 @@ class AccountSettings(NSObject):
         # intercept when user clicks on links so that we process them in different ways
         try:
             theURL = info[WebActionOriginalURLKey]
-            if theURL.host() not in (self._account.server.settings_url.hostname, self._account.server.alert_url.hostname):
+            if self._account.server.settings_url is not None and theURL.host() == self._account.server.settings_url.hostname:
+                listener.use()
+            elif self._account.server.alert_url is not None and theURL.host() == self._account.server.alert_url.hostname:
+                listener.use()
+            else:
                 # use system wide web browser
                 NSWorkspace.sharedWorkspace().openURL_(theURL)
                 listener.ignore()
-            else:
-                listener.use()
         except KeyError:
             pass
+
 
     def webView_resource_didCancelAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         BlinkLogger().log_info(u"Cancelled authentication request")
