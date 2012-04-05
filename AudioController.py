@@ -879,7 +879,13 @@ class AudioController(MediaStream):
     def userClickedTransferMenuItem_(self, sender):
         target_session_controller = sender.representedObject()
         self.sessionController.log_info(u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
-        self.sessionController.transferSession(target_session_controller.target_uri, target_session_controller)
+        try:
+            target_contact_uri = target_session_controller.session._invitation.remote_contact_header.uri
+        except AttributeError:
+            target_uri = target_session_controller.target_uri
+        else:
+            target_uri = target_contact_uri if 'gr' in target_contact_uri.parameters else target_session_controller.target_uri
+        self.sessionController.transferSession(target_uri, target_session_controller)
 
     @objc.IBAction
     def userClickedBlindTransferMenuItem_(self, sender):
