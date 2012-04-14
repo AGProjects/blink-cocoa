@@ -162,6 +162,7 @@ class SIPManager(object):
         self.incomingSessions = set()
         self.activeAudioStreams = set()
         self.pause_music = True
+        self.bonjour_disabled_on_sleep = False
         self.bonjour_conference_services = BonjourConferenceServices()
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
@@ -187,6 +188,8 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='MediaStreamDidEnd')
         self.notification_center.add_observer(self, name='MediaStreamDidFail')
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
+        self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
 
     def set_delegate(self, delegate):
         self._delegate = delegate
@@ -1002,6 +1005,22 @@ class SIPManager(object):
         if 'audio.pause_music' in data.modified:
             settings = SIPSimpleSettings()
             self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
+
+    @run_in_green_thread
+    def _NH_SystemWillSleep(self, sender, data):
+        bonjour_account = BonjourAccount()
+        if bonjour_account.enabled:
+            BlinkLogger().log_info(u"Disabling Bonjour discovery during sleep")
+            bonjour_account.enabled=False
+            self.bonjour_disabled_on_sleep=True
+
+    @run_in_green_thread
+    def _NH_SystemDidWakeUpFromSleep(self, sender, data):
+        bonjour_account = BonjourAccount()
+        if not bonjour_account.enabled and self.bonjour_disabled_on_sleep:
+            BlinkLogger().log_info(u"Enabling Bonjour discovery after wake")
+            bonjour_account.enabled=True
+            self.bonjour_disabled_on_sleep=False
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
         account = sender.account

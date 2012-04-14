@@ -76,6 +76,8 @@ class BlinkAppDelegate(NSObject):
         if self:
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
+            NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerWillSleep:", NSWorkspaceWillSleepNotification, None)
+
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
@@ -271,6 +273,9 @@ class BlinkAppDelegate(NSObject):
 
     def computerDidWake_(self, notification):
         NotificationCenter().post_notification("SystemDidWakeUpFromSleep", None, TimestampedNotificationData())
+
+    def computerWillSleep_(self, notification):
+        NotificationCenter().post_notification("SystemWillSleep", None, TimestampedNotificationData())
 
     @objc.IBAction
     def orderFrontAboutPanel_(self, sender):
