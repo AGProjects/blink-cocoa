@@ -624,7 +624,7 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.code > 200:
             self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = notification.data.reason
+            self.accounts[position].failure_reason = 'Connection Failed' if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
             self.accounts[position].failure_code = None
             self.accounts[position].failure_reason = None
@@ -639,7 +639,7 @@ class ContactWindowController(NSWindowController):
             if notification.data.error.startswith('DNS'):
                 self.accounts[position].failure_reason = 'DNS failure'
             else:
-                self.accounts[position].failure_reason = notification.data.error
+                self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' else notification.data.error
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
