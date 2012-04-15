@@ -87,6 +87,7 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.streamHandlers = []
         self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='SystemWillSleep')
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -125,6 +126,7 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self.session)
+        self.notification_center.add_observer(self, name='SystemWillSleep')
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -163,6 +165,7 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self.session)
+        self.notification_center.add_observer(self, name='SystemWillSleep')
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -360,6 +363,7 @@ class SessionController(NSObject):
 
     def resetSession(self):
         self.notification_center.discard_observer(self, sender=self.session)
+        self.notification_center.discard_observer(self, name='SystemWillSleep')
         self.streamHandlers = []
         self.state = STATE_IDLE
         self.session = None
@@ -652,6 +656,9 @@ class SessionController(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
+
+    def _NH_SystemWillSleep(self, sender, data):
+        self.end()
 
     def _NH_MusicPauseDidExecute(self, sender, data):
         if not self.waitingForITunes:
