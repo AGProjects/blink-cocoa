@@ -520,6 +520,8 @@ class PreferencesController(NSWindowController, object):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
+
+        self.accounts[position].registration_state = ''
         self.accounts[position].failure_code = None
         self.accounts[position].failure_reason = None
         self.updateRegistrationStatus()
@@ -553,7 +555,7 @@ class PreferencesController(NSWindowController, object):
 
         if notification.data.code > 200:
             self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = notification.data.reason
+            self.accounts[position].failure_reason = 'Connection Failed' if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
             self.accounts[position].failure_code = None
             self.accounts[position].failure_reason = None
@@ -569,7 +571,7 @@ class PreferencesController(NSWindowController, object):
         self.accounts[position].registration_state = 'failed'
 
         if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
-            self.accounts[position].failure_reason = notification.data.error
+            self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' else notification.data.error
 
         self.refresh_account_table()
         self.updateRegistrationStatus()
