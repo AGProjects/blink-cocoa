@@ -121,7 +121,8 @@ class AlertPanel(NSObject, object):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.speech_synthesizer_timer, NSEventTrackingRunLoopMode)
 
     def startSpeaking_(self, timer):
-        if self.speak_text:
+        settings = SIPSimpleSettings()
+        if self.speak_text and not settings.audio.silent:
             self.muteBeforeSpeechWillStart()
             self.speech_synthesizer.startSpeakingString_(self.speak_text)
 
