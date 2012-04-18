@@ -1154,6 +1154,7 @@ class SIPManager(object):
         if not settings.gui.show_web_alert_page_after_connect:
             self.show_web_alert_page(session)
 
+    @run_in_gui_thread
     def show_web_alert_page(self, session):
         # open web page with caller information
         if NSApp.delegate().applicationName == 'Blink Lite':
