@@ -330,7 +330,7 @@ class AudioController(MediaStream):
                         self.toggleHold()
                 elif key == chr(27):
                     if not self.isConferencing:
-                        self.end();
+                        self.end()
                 elif key in string.digits+string.uppercase+'#*':
                     self.send_dtmf(key)
 
@@ -1006,6 +1006,13 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
         self.ice_negotiation_status = data.reason
+
+    @run_in_gui_thread
+    def _NH_AudioStreamDidReallyTimeout(self, sender, data):
+        # TODO: fix middleware to not reset statistics -adi
+        if self.sessionController.account.rtp.hangup_on_timeout:
+            self.sessionController.log_info(u'Audio stream timeout, ending audio stream')
+            self.end()
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
         self.ice_negotiation_status = 'Success'

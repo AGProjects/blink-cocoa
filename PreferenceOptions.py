@@ -1533,7 +1533,6 @@ PreferenceOptionTypes = {
 "nat_traversal.stun_server_list" : STUNServerAddressListOption,
 "pstn.dtmf_delimiter": DTMFDelimiterOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
-"rtp.timeout": HiddenOption,
 "server.collaboration_url" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
 "sip.outbound_proxy": HiddenOption,
@@ -1673,6 +1672,7 @@ AccountSettingsOrder = {
 UnitOptions = {
                'answer_delay': 'seconds',
                'invite_timeout': 'seconds',
+               'timeout': 'seconds',
                'max_recording_duration': 'seconds',
                'publish_interval': 'seconds',
                'register_interval': 'seconds',
