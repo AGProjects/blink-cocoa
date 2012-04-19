@@ -1607,6 +1607,7 @@ SettingDescription = {
                       'sounds.enable_speech_synthesizer': 'Say Incoming Caller Name',
                       'server.alert_url': 'Web Alert Page',
                       'server.settings_url': 'Settings Web Page',
+                      'server.web_password': 'Settings Password',
                       'tls.certificate': 'X.509 Certificate File',
                       'tls.ca_list': 'Certificate Authority File',
                       'xcap.xcap_root' : 'Root URI'
@@ -1694,7 +1695,7 @@ ToolTips = {
              'pstn.dtmf_delimiter': 'Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *',
              'server.alert_url': 'Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username',
              'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
-             'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider',
+             'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
              'sip.primary_proxy': 'Overwrite the address of the SIP Outbound Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
              'sip.alternative_proxy': 'When set, it can be manually selected as SIP Outbound Proxy in the Call menu',
