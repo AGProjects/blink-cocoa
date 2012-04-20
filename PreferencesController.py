@@ -302,16 +302,21 @@ class PreferencesController(NSWindowController, object):
 
     def createUIForSection(self, object, frame, section_name, section, forAccount=False):
         section_object = getattr(object, section_name)
-        swin = NSScrollView.alloc().initWithFrame_(frame)
-        swin.setDrawsBackground_(False)
-        swin.setAutohidesScrollers_(True)
-        vbox = VerticalBoxView.alloc().initWithFrame_(frame)
-        swin.setDocumentView_(vbox)
-        swin.setHasVerticalScroller_(True)
-        swin.setAutoresizingMask_(NSViewWidthSizable|NSViewHeightSizable)
-        vbox.setAutoresizingMask_(NSViewWidthSizable|NSViewHeightSizable)
-        vbox.setSpacing_(8)
-        vbox.setBorderWidth_(8)
+
+        section_view = NSScrollView.alloc().initWithFrame_(frame)
+        section_view.setDrawsBackground_(False)
+        section_view.setAutohidesScrollers_(True)
+        # TODO: we will need a scrollbar if the number of settings cause the box to become to high -adi
+        section_view.setHasVerticalScroller_(False)
+        section_view.setAutoresizingMask_(NSViewWidthSizable|NSViewHeightSizable)
+
+        settings_box_view = VerticalBoxView.alloc().initWithFrame_(frame)
+        settings_box_view.setAutoresizingMask_(NSViewWidthSizable|NSViewHeightSizable)
+        settings_box_view.setSpacing_(8)
+        settings_box_view.setBorderWidth_(8)
+
+        section_view.setDocumentView_(settings_box_view)
+
         unordered_options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
         assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
         try:
@@ -346,10 +351,12 @@ class PreferencesController(NSWindowController, object):
                 continue
 
             description_key = '%s.%s' % (section_name, option_name)
+
             try:
                 description = SettingDescription[description_key]
             except KeyError:
                 description = None
+
             control = controlFactory(section_object, option_name, option, description)
 
             try:
@@ -365,12 +372,14 @@ class PreferencesController(NSWindowController, object):
                 pass
 
             self.settingViews[section_name+"."+option_name] = control
-            vbox.addSubview_(control)
+
+            settings_box_view.addSubview_(control)
 
             control.delegate = self
             control.owner = object
             control.restore()
-        return swin
+
+        return section_view
 
     def optionDidChange(self, option):
         self.saving = True
