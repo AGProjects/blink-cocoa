@@ -51,11 +51,11 @@ sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
 
-class DialWithBlinkDelegate (NSObject):
+class BlinkProTelephoneNumberDialerDelegate (NSObject):
     blink_bundle_id = 'com.agprojects.Blink'
 
     def init(self):
-        self = super(DialWithBlinkDelegate, self).init()
+        self = super(BlinkProTelephoneNumberDialerDelegate, self).init()
         if self:
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "workspaceDidLaunchApplication:", NSWorkspaceDidLaunchApplicationNotification, None)
             self.selected_number = None
@@ -74,7 +74,7 @@ class DialWithBlinkDelegate (NSObject):
             NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("DialNumberWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
 
     def titleForPerson_identifier_(self, person, identifier):
-        return u"Dial with Blink"
+        return u"Call with Blink Pro"
 
     def shouldEnableActionForPerson_identifier_(self, person, identifier):
         return True
@@ -112,7 +112,7 @@ class DialWithBlinkDelegate (NSObject):
             userInfo = {'PhoneNumber': number,
                         'DisplayName': name
                         }
-            NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("DialNumberWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
+            NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
         else:
             print 'Starting Blink Pro...'
             self.selected_number = number
