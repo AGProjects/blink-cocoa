@@ -77,7 +77,8 @@ class BlinkAppDelegate(NSObject):
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerWillSleep:", NSWorkspaceWillSleepNotification, None)
-            NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callTelephoneNumberFromAddressBook:", "CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
+            NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
+            NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
@@ -278,8 +279,8 @@ class BlinkAppDelegate(NSObject):
     def computerWillSleep_(self, notification):
         NotificationCenter().post_notification("SystemWillSleep", None, TimestampedNotificationData())
 
-    def callTelephoneNumberFromAddressBook_(self, notification):
-        url = notification.userInfo()["PhoneNumber"]
+    def callFromAddressBook_(self, notification):
+        url = notification.userInfo()["URI"]
         name = notification.userInfo()["DisplayName"]
         BlinkLogger().log_info(u"Will start outgoing session to %s %s from Address Book" % (name, url))
         if not self.ready:

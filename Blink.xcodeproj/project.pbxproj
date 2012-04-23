@@ -588,6 +588,12 @@
 		1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1FCFF5221545B95500AE3EA7 /* AddressBookSip-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FCFF5201545B95500AE3EA7 /* AddressBookSip-plugin-setup.py */; };
+		1FCFF5231545B95500AE3EA7 /* AddressBookSip-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FCFF5201545B95500AE3EA7 /* AddressBookSip-plugin-setup.py */; };
+		1FCFF5241545B95500AE3EA7 /* AddressBookSip-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FCFF5201545B95500AE3EA7 /* AddressBookSip-plugin-setup.py */; };
+		1FCFF5251545B95500AE3EA7 /* AddressBookSip-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FCFF5211545B95500AE3EA7 /* AddressBookSip-plugin.py */; };
+		1FCFF5261545B95500AE3EA7 /* AddressBookSip-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FCFF5211545B95500AE3EA7 /* AddressBookSip-plugin.py */; };
+		1FCFF5271545B95500AE3EA7 /* AddressBookSip-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FCFF5211545B95500AE3EA7 /* AddressBookSip-plugin.py */; };
 		1FD2EF911439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
 		1FD2EF921439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
 		1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
@@ -1237,6 +1243,8 @@
 		1FCF160812B5639F00F71BE5 /* Info-pro.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-pro.plist"; sourceTree = "<group>"; };
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FCFF5201545B95500AE3EA7 /* AddressBookSip-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "AddressBookSip-plugin-setup.py"; sourceTree = "<group>"; };
+		1FCFF5211545B95500AE3EA7 /* AddressBookSip-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "AddressBookSip-plugin.py"; sourceTree = "<group>"; };
 		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
 		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
@@ -1503,6 +1511,8 @@
 			children = (
 				1F0F2AB115456E3A00ECB98E /* AddressBookTel-plugin-setup.py */,
 				1F0F2A8F15456C5C00ECB98E /* AddressBookTel-plugin.py */,
+				1FCFF5201545B95500AE3EA7 /* AddressBookSip-plugin-setup.py */,
+				1FCFF5211545B95500AE3EA7 /* AddressBookSip-plugin.py */,
 			);
 			name = Plugins;
 			sourceTree = "<group>";
@@ -2377,6 +2387,8 @@
 				1FEC3E9214D41678003745B9 /* ca.crt in Resources */,
 				1F0F2A9115456C5C00ECB98E /* AddressBookTel-plugin.py in Resources */,
 				1F0F2AB315456E3A00ECB98E /* AddressBookTel-plugin-setup.py in Resources */,
+				1FCFF5231545B95500AE3EA7 /* AddressBookSip-plugin-setup.py in Resources */,
+				1FCFF5261545B95500AE3EA7 /* AddressBookSip-plugin.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2587,6 +2599,8 @@
 				1FEC3E9314D41678003745B9 /* ca.crt in Resources */,
 				1F0F2A9215456C5C00ECB98E /* AddressBookTel-plugin.py in Resources */,
 				1F0F2AB415456E3A00ECB98E /* AddressBookTel-plugin-setup.py in Resources */,
+				1FCFF5241545B95500AE3EA7 /* AddressBookSip-plugin-setup.py in Resources */,
+				1FCFF5271545B95500AE3EA7 /* AddressBookSip-plugin.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2795,6 +2809,8 @@
 				1FEC3E9114D41678003745B9 /* ca.crt in Resources */,
 				1F0F2A9015456C5C00ECB98E /* AddressBookTel-plugin.py in Resources */,
 				1F0F2AB215456E3A00ECB98E /* AddressBookTel-plugin-setup.py in Resources */,
+				1FCFF5221545B95500AE3EA7 /* AddressBookSip-plugin-setup.py in Resources */,
+				1FCFF5251545B95500AE3EA7 /* AddressBookSip-plugin.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

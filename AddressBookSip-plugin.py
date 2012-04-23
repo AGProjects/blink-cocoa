@@ -51,27 +51,27 @@ sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
 
-class BlinkProTelephoneNumberDialerDelegate (NSObject):
+class BlinkProSipAddressDialerDelegate (NSObject):
     blink_bundle_id = 'com.agprojects.Blink'
 
     def init(self):
-        self = super(BlinkProTelephoneNumberDialerDelegate, self).init()
+        self = super(BlinkProSipAddressDialerDelegate, self).init()
         if self:
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "workspaceDidLaunchApplication:", NSWorkspaceDidLaunchApplicationNotification, None)
-            self.selected_number = None
+            self.selected_address = None
             self.selected_name = None
         return self
 
     def actionProperty(self):
-       return kABPhoneProperty
+       return kABEmailProperty
 
     def workspaceDidLaunchApplication_(self, notification):
         bundle = notification.userInfo()["NSApplicationBundleIdentifier"]
-        if bundle == self.blink_bundle_id and self.selected_number and self.selected_name:
-            print 'Calling %s at %s from AddressBook using Blink' % (self.selected_name, self.selected_number)
-            userInfo = {'URI': self.selected_number,
+        if bundle == self.blink_bundle_id and self.selected_address and self.selected_name:
+            print 'Calling %s at %s from AddressBook using Blink' % (self.selected_name, self.selected_address)
+            userInfo = {'URI': self.selected_address,
                         'DisplayName': self.selected_name}
-            NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("DialNumberWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
+            NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
 
     def titleForPerson_identifier_(self, person, identifier):
         return u"Call with Blink Pro"
@@ -104,17 +104,17 @@ class BlinkProTelephoneNumberDialerDelegate (NSObject):
         if company:
             name += " ("+unicode(company)+")" if name else unicode(company)
 
-        phones = person.valueForProperty_(AddressBook.kABPhoneProperty)
-        number = phones.valueForIdentifier_(identifier)
+        emails = person.valueForProperty_(AddressBook.kABEmailProperty)
+        address = emails.valueForIdentifier_(identifier)
 
         if isBlinkRunning:
-            print 'Calling %s at %s from AddressBook using Blink Pro' % (name, number)
-            userInfo = {'URI': number,
+            print 'Calling %s at %s from AddressBook using Blink Pro' % (name, address)
+            userInfo = {'URI': address,
                         'DisplayName': name
                         }
-            NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
+            NSDistributedNotificationCenter.defaultCenter().postNotificationName_object_userInfo_("CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", userInfo)
         else:
             print 'Starting Blink Pro...'
-            self.selected_number = number
+            self.selected_address = address
             self.selected_name = name
             NSWorkspace.sharedWorkspace().launchApplication_("Blink Pro")
