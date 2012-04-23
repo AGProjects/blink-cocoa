@@ -20,6 +20,12 @@
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
+		1F0F2A9015456C5C00ECB98E /* AddressBook-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F2A8F15456C5C00ECB98E /* AddressBook-plugin.py */; };
+		1F0F2A9115456C5C00ECB98E /* AddressBook-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F2A8F15456C5C00ECB98E /* AddressBook-plugin.py */; };
+		1F0F2A9215456C5C00ECB98E /* AddressBook-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F2A8F15456C5C00ECB98E /* AddressBook-plugin.py */; };
+		1F0F2AB215456E3A00ECB98E /* AddressBook-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F2AB115456E3A00ECB98E /* AddressBook-plugin-setup.py */; };
+		1F0F2AB315456E3A00ECB98E /* AddressBook-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F2AB115456E3A00ECB98E /* AddressBook-plugin-setup.py */; };
+		1F0F2AB415456E3A00ECB98E /* AddressBook-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F2AB115456E3A00ECB98E /* AddressBook-plugin-setup.py */; };
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F17C25E137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F17C25F137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
@@ -1127,6 +1133,18 @@
 		1F0D0EC1132D231C00614205 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0E260C1402F097004AED9C /* blink-crypto.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-crypto.icns"; sourceTree = "<group>"; };
+		1F0F2A8F15456C5C00ECB98E /* AddressBook-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "AddressBook-plugin.py"; sourceTree = "<group>"; };
+		1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
+		1F0F2A9E15456DAD00ECB98E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		1F0F2AA115456DAD00ECB98E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		1F0F2AA215456DAD00ECB98E /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		1F0F2AA315456DAD00ECB98E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		1F0F2AA615456DAD00ECB98E /* BlinkPlugin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BlinkPlugin-Info.plist"; sourceTree = "<group>"; };
+		1F0F2AA815456DAD00ECB98E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1F0F2AAA15456DAD00ECB98E /* BlinkPlugin-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlinkPlugin-Prefix.pch"; sourceTree = "<group>"; };
+		1F0F2AAB15456DAD00ECB98E /* BlinkPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlinkPlugin.h; sourceTree = "<group>"; };
+		1F0F2AAC15456DAD00ECB98E /* BlinkPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlinkPlugin.m; sourceTree = "<group>"; };
+		1F0F2AB115456E3A00ECB98E /* AddressBook-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "AddressBook-plugin-setup.py"; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
@@ -1438,6 +1456,7 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				1F0F2A8E15456C1300ECB98E /* Plugins */,
 				2BEFC1BD0FD1C93F00447EFB /* Common */,
 				2B11B0B10FF55C3A007FC176 /* Logging */,
 				2B5DE51D0FFC5C5D00701821 /* Preferences */,
@@ -1477,6 +1496,45 @@
 				1F8DC412135084FA0034815C /* Blink Lite.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1F0F2A8E15456C1300ECB98E /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				1F0F2AB115456E3A00ECB98E /* AddressBook-plugin-setup.py */,
+				1F0F2A8F15456C5C00ECB98E /* AddressBook-plugin.py */,
+			);
+			name = Plugins;
+			sourceTree = "<group>";
+		};
+		1F0F2AA015456DAD00ECB98E /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1F0F2AA115456DAD00ECB98E /* AppKit.framework */,
+				1F0F2AA215456DAD00ECB98E /* CoreData.framework */,
+				1F0F2AA315456DAD00ECB98E /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		1F0F2AA415456DAD00ECB98E /* BlinkPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				1F0F2AAB15456DAD00ECB98E /* BlinkPlugin.h */,
+				1F0F2AAC15456DAD00ECB98E /* BlinkPlugin.m */,
+				1F0F2AA515456DAD00ECB98E /* Supporting Files */,
+			);
+			path = BlinkPlugin;
+			sourceTree = "<group>";
+		};
+		1F0F2AA515456DAD00ECB98E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				1F0F2AA615456DAD00ECB98E /* BlinkPlugin-Info.plist */,
+				1F0F2AA715456DAD00ECB98E /* InfoPlist.strings */,
+				1F0F2AAA15456DAD00ECB98E /* BlinkPlugin-Prefix.pch */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		1F226DE312B54FBE0010A8B2 /* Dependencies */ = {
@@ -1573,6 +1631,7 @@
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
+				1F0F2AA415456DAD00ECB98E /* BlinkPlugin */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
@@ -1598,6 +1657,9 @@
 			isa = PBXGroup;
 			children = (
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */,
+				1F0F2A9E15456DAD00ECB98E /* Cocoa.framework */,
+				1F0F2AA015456DAD00ECB98E /* Other Frameworks */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -2092,6 +2154,7 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* MacSip */;
 			projectDirPath = "";
@@ -2312,6 +2375,8 @@
 				1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 				1FEC3E9214D41678003745B9 /* ca.crt in Resources */,
+				1F0F2A9115456C5C00ECB98E /* AddressBook-plugin.py in Resources */,
+				1F0F2AB315456E3A00ECB98E /* AddressBook-plugin-setup.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2520,6 +2585,8 @@
 				1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 				1FEC3E9314D41678003745B9 /* ca.crt in Resources */,
+				1F0F2A9215456C5C00ECB98E /* AddressBook-plugin.py in Resources */,
+				1F0F2AB415456E3A00ECB98E /* AddressBook-plugin-setup.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2726,6 +2793,8 @@
 				1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 				1FEC3E9114D41678003745B9 /* ca.crt in Resources */,
+				1F0F2A9015456C5C00ECB98E /* AddressBook-plugin.py in Resources */,
+				1F0F2AB215456E3A00ECB98E /* AddressBook-plugin-setup.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2784,6 +2853,14 @@
 				1F0D0EC1132D231C00614205 /* English */,
 			);
 			name = ConferenceConfigurationPanel.xib;
+			sourceTree = "<group>";
+		};
+		1F0F2AA715456DAD00ECB98E /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F0F2AA815456DAD00ECB98E /* en */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 		1F2489DE13FE781F007CDFD5 /* AudioSession.xib */ = {

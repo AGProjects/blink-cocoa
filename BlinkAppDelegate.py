@@ -77,6 +77,7 @@ class BlinkAppDelegate(NSObject):
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerWillSleep:", NSWorkspaceWillSleepNotification, None)
+            NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "dialPhoneNumberFromAddressBook:", "DialNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
@@ -276,6 +277,15 @@ class BlinkAppDelegate(NSObject):
 
     def computerWillSleep_(self, notification):
         NotificationCenter().post_notification("SystemWillSleep", None, TimestampedNotificationData())
+
+    def dialPhoneNumberFromAddressBook_(self, notification):
+        url = notification.userInfo()["PhoneNumber"]
+        name = notification.userInfo()["DisplayName"]
+        BlinkLogger().log_info(u"Will start outgoing session to %s %s from Address Book" % (name, url))
+        if not self.ready:
+            self.urisToOpen.append((unicode(url), ('audio'), list()))
+        else:
+            self.windowController.joinConference(unicode(url), ('audio'))
 
     @objc.IBAction
     def orderFrontAboutPanel_(self, sender):
