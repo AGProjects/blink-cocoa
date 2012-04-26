@@ -54,7 +54,7 @@ sys.stderr = NSLogger()
 
 class BlinkProURLAddressDialerDelegate (NSObject):
     blink_bundle_id = 'com.agprojects.Blink'
-    valid_pattern = "((sip:|sips:)?[\w\-\.+]+@(\w[\w\-]+\.)+[\w\-]+)"
+    valid_pattern = re.compile("((sip:|sips:)?[\w\-\.+]+@(\w[\w\-]+\.)+[\w\-]+)")
 
     def init(self):
         self = super(BlinkProURLAddressDialerDelegate, self).init()
@@ -81,10 +81,7 @@ class BlinkProURLAddressDialerDelegate (NSObject):
     def shouldEnableActionForPerson_identifier_(self, person, identifier):
         urls = person.valueForProperty_(AddressBook.kABURLsProperty)
         address = urls.valueForIdentifier_(identifier)
-        if self.valid_pattern.match(address):
-            return True
-        else:
-            return False
+        return self.valid_pattern.match(address) is not None
 
     def performActionForPerson_identifier_(self, person, identifier):
         applications = NSWorkspace.sharedWorkspace().launchedApplications()
