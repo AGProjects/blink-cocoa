@@ -1,5 +1,5 @@
 """
-This plugin adds an 'Dial With Blink' label action to "phone" properties in
+This plugin adds an 'Dial With Blink' label action to "url" properties in
 the AddressBook application.
 
 To install this plugin you have to build it (using 'python setup.py py2app')
@@ -10,6 +10,7 @@ not exist yet.
 import AddressBook
 from AddressBook import *
 from AppKit import *
+import re
 import sys
 
 class NSLogger(object):
@@ -51,11 +52,12 @@ sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
 
-class BlinkProSipAddressDialerDelegate (NSObject):
+class BlinkProURLAddressDialerDelegate (NSObject):
     blink_bundle_id = 'com.agprojects.Blink'
+    valid_pattern = "((sip:|sips:)?[\w\-\.+]+@(\w[\w\-]+\.)+[\w\-]+)"
 
     def init(self):
-        self = super(BlinkProSipAddressDialerDelegate, self).init()
+        self = super(BlinkProURLAddressDialerDelegate, self).init()
         if self:
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "workspaceDidLaunchApplication:", NSWorkspaceDidLaunchApplicationNotification, None)
             self.selected_address = None
@@ -63,7 +65,7 @@ class BlinkProSipAddressDialerDelegate (NSObject):
         return self
 
     def actionProperty(self):
-       return kABEmailProperty
+       return kABURLsProperty
 
     def workspaceDidLaunchApplication_(self, notification):
         bundle = notification.userInfo()["NSApplicationBundleIdentifier"]
@@ -77,7 +79,12 @@ class BlinkProSipAddressDialerDelegate (NSObject):
         return u"Call with Blink Pro"
 
     def shouldEnableActionForPerson_identifier_(self, person, identifier):
-        return True
+        urls = person.valueForProperty_(AddressBook.kABURLsProperty)
+        address = urls.valueForIdentifier_(identifier)
+        if self.valid_pattern.match(address):
+            return True
+        else:
+            return False
 
     def performActionForPerson_identifier_(self, person, identifier):
         applications = NSWorkspace.sharedWorkspace().launchedApplications()
@@ -104,8 +111,8 @@ class BlinkProSipAddressDialerDelegate (NSObject):
         if company:
             name += " ("+unicode(company)+")" if name else unicode(company)
 
-        emails = person.valueForProperty_(AddressBook.kABEmailProperty)
-        address = emails.valueForIdentifier_(identifier)
+        urls = person.valueForProperty_(AddressBook.kABURLsProperty)
+        address = urls.valueForIdentifier_(urls)
 
         if isBlinkRunning:
             print 'Calling %s at %s from AddressBook using Blink Pro' % (name, address)
