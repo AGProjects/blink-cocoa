@@ -624,7 +624,7 @@ class SessionController(NSObject):
             try:
                 target_uri = SIPURI.parse(target_uri)
             except SIPCoreError:
-                self.log_info("Bogus SIP URI for transfer" % target_uri)
+                self.log_info("Bogus SIP URI for transfer %s" % target_uri)
             else:
                 self.session.transfer(target_uri, replaced_session_controller.session if replaced_session_controller is not None else None)
                 self.log_info("Outgoing transfer request to %s" % re.sub("^(sip:|sips:)", "", str(target_uri)))
