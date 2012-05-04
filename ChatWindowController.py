@@ -293,8 +293,7 @@ class ChatWindowController(NSWindowController):
                         icon.setSize_(NSMakeSize(12, 12))
                 except AttributeError:
                     pass
-
-        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(icon)
+            self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(icon)
 
     def window_shouldDragDocumentWithEvent_from_withPasteboard_(self, window, event, point, pasteboard):
         return False
