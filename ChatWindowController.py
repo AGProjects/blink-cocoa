@@ -85,6 +85,7 @@ class ChatWindowController(NSWindowController):
     def init(self):
         self = super(ChatWindowController, self).init()
         if self:
+            self.closing = False
             self.participants = []
             self.conference_shared_files = []
             self.remote_screens_closed_by_user = set()
@@ -129,11 +130,33 @@ class ChatWindowController(NSWindowController):
                 for identifier in ('video', 'maximize'):
                     try:
                         item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
-                        self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
                     except StopIteration:
                         pass
+                    else:
+                        item.setEnabled_(False)
 
         return self
+
+    def dealloc(self):
+        self.notification_center = NotificationCenter()
+        self.notification_center.remove_observer(self, name="AudioStreamDidStartRecordingAudio")
+        self.notification_center.remove_observer(self, name="AudioStreamDidStopRecordingAudio")
+        self.notification_center.remove_observer(self, name="BlinkAudioStreamChangedHoldState")
+        self.notification_center.remove_observer(self, name="BlinkColaborativeEditorContentHasChanged")
+        self.notification_center.remove_observer(self, name="BlinkConferenceGotUpdate")
+        self.notification_center.remove_observer(self, name="BlinkContactsHaveChanged")
+        self.notification_center.remove_observer(self, name="BlinkGotProposal")
+        self.notification_center.remove_observer(self, name="BlinkSentAddProposal")
+        self.notification_center.remove_observer(self, name="BlinkSentRemoveProposal")
+        self.notification_center.remove_observer(self, name="BlinkProposalGotRejected")
+        self.notification_center.remove_observer(self, name="BlinkMuteChangedState")
+        self.notification_center.remove_observer(self, name="BlinkSessionChangedState")
+        self.notification_center.remove_observer(self, name="BlinkStreamHandlerChangedState")
+        self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
+        self.notification_center.remove_observer(self, name="BlinkVideoEnteredFullScreen")
+        self.notification_center.remove_observer(self, name="BlinkVideoExitedFullScreen")
+
+        super(ChatWindowController, self).dealloc()
 
     def addTimer(self):
         if not self.timer:
@@ -492,18 +515,27 @@ class ChatWindowController(NSWindowController):
             if ret != NSAlertDefaultReturn:
                 return False
 
+        # Increase refcount so self stays alive after the last tab is closed
+        self.retain()
 
-        self.window().close()
+        self.closing = True
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
                 chat_stream.exitFullScreen()
-
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
         self.removeTimer()
+
+        ns_nc = NSNotificationCenter.defaultCenter()
+        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.participantsTableView)
+        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.conferenceFilesTableView)
+        ns_nc.removeObserver_name_object_(self, u"NSSplitViewDidResizeSubviewsNotification", self.drawerSplitView)
+
+        # Balance refcount
+        self.release()
 
         return True
 
@@ -1194,7 +1226,7 @@ class ChatWindowController(NSWindowController):
             session.mustShowDrawer = False
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
-        if tabView.numberOfTabViewItems() == 0:
+        if tabView.numberOfTabViewItems() == 0 and not self.closing:
             self.window().performClose_(None)
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
