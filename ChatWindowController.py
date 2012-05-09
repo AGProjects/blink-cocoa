@@ -518,7 +518,9 @@ class ChatWindowController(NSWindowController):
         # Increase refcount so self stays alive after the last tab is closed
         self.retain()
 
+        self.window().close()
         self.closing = True
+
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
