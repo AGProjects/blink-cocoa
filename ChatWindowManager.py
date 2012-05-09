@@ -36,8 +36,7 @@ class ChatWindowManager(object):
         for window in self.chatWindows:
             if window.hasSession_(sessionController):
                 return window
-        else:
-            return None
+        return None
 
     def removeChatWindow(self, sessionController):
         window = self.getChatWindow(sessionController)
@@ -49,18 +48,17 @@ class ChatWindowManager(object):
                 window.release()
 
     def dettachChatWindow(self, sessionController):
-        for window in self.chatWindows:
-            if window.hasSession_(sessionController):
-                remoteScreens = window.remoteScreens
-                view = window.detachWindow_(sessionController)
-                if not window.sessions:
-                    window.window().orderOut_(None)
-                    self.chatWindows.remove(window)
-                if view:
-                    new_window = self.addChatWindow(sessionController, True, view)
-                    new_window.remoteScreens = remoteScreens
-                    return new_window
-                break
-        else:
-            return None
+        window = self.getChatWindow(sessionController)
+        if window is not None:
+            remoteScreens = window.remoteScreens
+            view = window.detachWindow_(sessionController)
+            if not window.sessions:
+                window.window().orderOut_(None)
+                self.chatWindows.remove(window)
+                window.release()
+            if view:
+                new_window = self.addChatWindow(sessionController, True, view)
+                new_window.remoteScreens = remoteScreens
+                return new_window
+        return None
 
