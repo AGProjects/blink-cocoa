@@ -30,7 +30,6 @@ from sipsimple.util import TimestampedNotificationData, Timestamp
 
 from util import *
 
-import SessionController
 import ChatWindowManager
 
 from BlinkLogger import BlinkLogger

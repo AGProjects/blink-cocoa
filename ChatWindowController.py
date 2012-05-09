@@ -23,7 +23,6 @@ from ContactListModel import BlinkConferenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
-import SessionController
 import ChatWindowManager
 from ChatPrivateMessageController import ChatPrivateMessageController
 from SIPManager import SIPManager
