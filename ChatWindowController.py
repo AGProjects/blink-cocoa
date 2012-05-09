@@ -482,29 +482,6 @@ class ChatWindowController(NSWindowController):
                     item.setState_(NSOnState if item.representedObject()['id'] == id else NSOffState)
                     i += 1
 
-    @objc.IBAction
-    def close_(self, sender):
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            if len(self.sessions) == 1:
-                self.window().close()
-                self.notification_center.remove_observer(self, name="AudioStreamDidStartRecordingAudio")
-                self.notification_center.remove_observer(self, name="AudioStreamDidStopRecordingAudio")
-                self.notification_center.remove_observer(self, name="BlinkAudioStreamChangedHoldState")
-                self.notification_center.remove_observer(self, name="BlinkColaborativeEditorContentHasChanged")
-                self.notification_center.remove_observer(self, name="BlinkConferenceGotUpdate")
-                self.notification_center.remove_observer(self, name="BlinkContactsHaveChanged")
-                self.notification_center.remove_observer(self, name="BlinkGotProposal")
-                self.notification_center.remove_observer(self, name="BlinkMuteChangedState")
-                self.notification_center.remove_observer(self, name="BlinkSessionChangedState")
-                self.notification_center.remove_observer(self, name="BlinkStreamHandlerChangedState")
-                self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
-            chat_stream = selectedSession.streamHandlerOfType("chat")
-            if chat_stream:
-                chat_stream.closeTab()
-            else:
-                self.detachWindow_(selectedSession)
-
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
 
