@@ -311,7 +311,7 @@ class Ringer(object):
         if name == "SIPSessionWillStart":
             self.active_sessions.add(session)
             self.stop_ringing(session)
-        elif name in ("SIPSessionWillEnd", "SIPSessionDidFail"):
+        elif name in ("SIPSessionWillEnd", "SIPSessionDidEnd", "SIPSessionDidFail"):
             streams = session.streams or session.proposed_streams
             if not streams:
                 # not connected
