@@ -204,14 +204,7 @@ class SessionController(NSObject):
 
     def canProposeMediaStreamChanges(self):
         # TODO: hold is not handled by this, how to deal with it
-
-        #if self.session is not None and self.session.state in ('received_proposal', 'sending_proposal', 'accepting_proposal', 'rejecting_proposal', 'cancelling_proposal'):
-        #    return False
-
-        if self.inProposal:
-            return False
-
-        return True
+        return not self.inProposal
 
     def canCancelProposal(self):
         if self.session is not None and self.session.state == 'cancelling_proposal':
