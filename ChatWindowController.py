@@ -1046,9 +1046,10 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
 
         session = self.selectedSessionController()
-        if session:
+        if session is not None and session.session is not None:
             if session.account is BonjourAccount():
-                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+                _session = session.session
+                own_uri = str(_session.account.contact[_session.transport])[4:]  # skip leading 'sip:'
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
@@ -1112,8 +1113,11 @@ class ChatWindowController(NSWindowController):
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
                         contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
                     else:
-                        display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
-                        contact = BlinkConferenceContact(uri, name=display_name)
+                        if session.account is BonjourAccount() and uri == own_uri:
+                            contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
+                        else:
+                            display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
+                            contact = BlinkConferenceContact(uri, name=display_name)
 
                     active_media = []
 
