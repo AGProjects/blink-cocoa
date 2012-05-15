@@ -242,9 +242,19 @@ class JoinConferenceWindowController(NSObject):
         if isinstance(account, BonjourAccount):
             self.bonjour_server_combolist.removeAllItems()
             if SIPManager().bonjour_conference_services.servers:
-                # TODO: filter by available local transport, show only one entry, in this order of preference: TLS, TCP, UDP
-                # settings.sip.transport_list
-                servers = (server for server in SIPManager().bonjour_conference_services.servers if server.uri.transport == 'tls')
+                servers = set()
+                servers_dict = {}
+                for server in (server for server in SIPManager().bonjour_conference_services.servers if server.uri.transport in settings.sip.transport_list):
+                    servers_dict.setdefault("%s@%s" % (server.uri.user, server.uri.host), []).append(server)
+                for transport in (transport for transport in ('tls', 'tcp', 'udp') if transport in settings.sip.transport_list):
+                    for k, v in servers_dict.iteritems():
+                        try:
+                            server = (server for server in v if server.uri.transport == transport).next()
+                        except StopIteration:
+                            pass
+                        else:
+                            servers.add(server)
+                            break
                 for server in servers:
                     self.bonjour_server_combolist.addItemWithTitle_('%s (%s)' % (server.host, server.uri.host))
                     item = self.bonjour_server_combolist.lastItem()
