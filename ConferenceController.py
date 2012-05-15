@@ -242,7 +242,7 @@ class JoinConferenceWindowController(NSObject):
         if isinstance(account, BonjourAccount):
             self.bonjour_server_combolist.removeAllItems()
             if SIPManager().bonjour_conference_services.servers:
-                # TODO: filter by available transport, show only one entry
+                # TODO: filter by available local transport, show only one entry, in this order of preference: TLS, TCP, UDP
                 # settings.sip.transport_list
                 servers = (server for server in SIPManager().bonjour_conference_services.servers if server.uri.transport == 'tls')
                 for server in servers:
