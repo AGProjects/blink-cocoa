@@ -9,7 +9,6 @@ from AppKit import *
 import cjson
 import datetime
 import os
-import platform
 import re
 import socket
 import urllib
@@ -26,7 +25,6 @@ from eventlet import api, coros, proc
 from eventlet.green import select
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
-from socket import gethostbyname
 from twisted.internet import reactor
 from zope.interface import implements
 
@@ -38,7 +36,6 @@ from sipsimple.contact import Contact, ContactGroup
 from sipsimple.configuration import DefaultValue
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
-from sipsimple.configuration.datatypes import STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.lookup import DNSLookup
