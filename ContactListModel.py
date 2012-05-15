@@ -389,7 +389,7 @@ class BonjourBlinkContact(BlinkContact):
         self.name = NSString.stringWithString_(name or self.uri)
         self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or self.uri)
-        self.icon = icon
+        self.icon = NSImage.imageNamed_("NSUserGroup") if icon is None and ";isfocus" in self.uri else icon
 
         self.presence_indicator = None
         self.presence_note = None
