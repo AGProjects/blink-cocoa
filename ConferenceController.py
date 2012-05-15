@@ -432,9 +432,14 @@ class JoinConferenceWindowController(NSObject):
         else:
             account = AccountManager().default_account
             if isinstance(account, BonjourAccount):
-                item = self.bonjour_server_combolist.selectedItem().representedObject()
-                if hasattr(item, 'host'):
-                    self.target = u'%s@%s:%s;transport=%s' % (room, item.uri.host, item.uri.port, item.uri.parameters.get('transport','udp'))
+                item = self.bonjour_server_combolist.selectedItem()
+                if item is None:
+                    NSRunAlertPanel('Start a new Conference', 'No SylkServer in the Neighbourhood', "OK", None, None)
+                    return False
+
+                object = item.representedObject()
+                if hasattr(object, 'host'):
+                    self.target = u'%s@%s:%s;transport=%s' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
                 else:
                     NSRunAlertPanel('Start a new Conference', 'No SylkServer in the Neighbourhood', "OK", None, None)
                     return False
