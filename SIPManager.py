@@ -1337,11 +1337,15 @@ class BonjourConferenceServices(object):
     def __init__(self):
         self._stopped = True
         self._files = []
+        self._servers = {}
         self._command_channel = coros.queue()
         self._select_proc = None
         self._discover_timer = None
         self._wakeup_timer = None
-        self.servers = set()
+
+    @property
+    def servers(self):
+        return self._servers.values()
 
     def start(self):
         notification_center = NotificationCenter()
@@ -1409,8 +1413,8 @@ class BonjourConferenceServices(object):
                 self._select_proc.kill(RestartSelect)
                 resolution_file.close()
                 service_description = resolution_file.service_description
-                if service_description in self.servers:
-                    self.servers.remove(service_description)
+                if service_description in self._servers:
+                    del self._servers[service_description]
                     notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
 
     def _resolve_cb(self, file, flags, interface_index, error_code, fullname, host_target, port, txtrecord):
@@ -1431,8 +1435,8 @@ class BonjourConferenceServices(object):
                 service_description = file.service_description
                 transport = uri.transport
                 supported_transport = transport in settings.sip.transport_list and (transport!='tls' or account.tls.certificate is not None)
-                if not supported_transport and service_description in self.servers:
-                    self.servers.remove(service_description)
+                if not supported_transport and service_description in self._servers:
+                    del self._servers[service_description]
                     notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
                 elif supported_transport:
                     try:
@@ -1440,10 +1444,10 @@ class BonjourConferenceServices(object):
                     except KeyError:
                         return
                     if uri != contact_uri:
-                        notification_name = 'BonjourConferenceServicesDidUpdateServer' if service_description in self.servers else 'BonjourConferenceServicesDidAddServer'
+                        notification_name = 'BonjourConferenceServicesDidUpdateServer' if service_description in self._servers else 'BonjourConferenceServicesDidAddServer'
                         notification_data = TimestampedNotificationData(server=service_description, name=name, host=host, uri=uri)
                         server_description = BonjourConferenceServerDescription(uri, host, name)
-                        self.servers.add(server_description)
+                        self._servers[service_description] = server_description
                         notification_center.post_notification(notification_name, sender=self, data=notification_data)
         else:
             self._files.remove(file)
@@ -1487,8 +1491,8 @@ class BonjourConferenceServices(object):
         self._select_proc.kill(RestartSelect)
         for file in old_files:
             file.close()
-        for service_description in (service for service in self.servers if service.uri.transport not in supported_transports):
-            self.servers.remove(service_description)
+        for service_description in [service for service, description in self._servers.iteritems() if description.uri.transport not in supported_transports]:
+            del self._servers[service_description]
             notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
         discovered_transports = set(file.transport for file in self._files if isinstance(file, BonjourDiscoveryFile))
         missing_transports = discoverable_transports - discovered_transports
@@ -1530,7 +1534,7 @@ class BonjourConferenceServices(object):
         old_files = self._files
         self._files = []
         self._select_proc.kill(RestartSelect)
-        self.servers = set()
+        self._servers = {}
         for file in old_files:
             file.close()
         command.signal()
