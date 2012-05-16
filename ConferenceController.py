@@ -102,28 +102,21 @@ class JoinConferenceWindowController(NSObject):
 
         self.updatePopupButtons()
 
-    @run_in_twisted_thread
+    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
     def _NH_BonjourConferenceServicesDidRemoveServer(self, notification):
         self.updateBonjourServersPopupButton()
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
     def _NH_BonjourConferenceServicesDidUpdateServer(self, notification):
         self.updateBonjourServersPopupButton()
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
     def _NH_BonjourConferenceServicesDidAddServer(self, notification):
         self.updateBonjourServersPopupButton()
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.room.setStringValue_('')
         self.updatePopupButtons()
