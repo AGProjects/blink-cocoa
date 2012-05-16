@@ -374,7 +374,7 @@ class JoinConferenceWindowController(NSObject):
             participant = participant + '@' + self.default_domain
 
         if not participant or not validateParticipant(participant):
-            NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
+            NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP address.", "OK", None, None)
             return
 
         if participant not in self._participants:
