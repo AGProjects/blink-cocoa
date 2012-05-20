@@ -330,7 +330,7 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['sip.publish_interval'] = HiddenOption
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            PreferenceOptionTypes['server.alert_url'] = HiddenOption
+            PreferenceOptionTypes['web_alert.alert_url'] = HiddenOption
 
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':

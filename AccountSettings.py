@@ -189,7 +189,7 @@ class AccountSettings(NSObject):
             theURL = info[WebActionOriginalURLKey]
             if self._account.server.settings_url is not None and theURL.host() == self._account.server.settings_url.hostname:
                 listener.use()
-            elif self._account.server.alert_url is not None and theURL.host() == self._account.server.alert_url.hostname:
+            elif self._account.web_alert.alert_url is not None and theURL.host() == self._account.web_alert.alert_url.hostname:
                 listener.use()
             else:
                 # use system wide web browser
@@ -204,7 +204,7 @@ class AccountSettings(NSObject):
             theURL = info[WebActionOriginalURLKey]
             if self._account.server.settings_url is not None and theURL.host() == self._account.server.settings_url.hostname:
                 listener.use()
-            elif self._account.server.alert_url is not None and theURL.host() == self._account.server.alert_url.hostname:
+            elif self._account.web_alert.alert_url is not None and theURL.host() == self._account.web_alert.alert_url.hostname:
                 listener.use()
             else:
                 # use system wide web browser

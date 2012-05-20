@@ -393,7 +393,7 @@ class SIPManager(object):
         account.xcap.xcap_root           = data['xcap_root']
         account.nat_traversal.msrp_relay = data['msrp_relay']
         account.server.settings_url      = data['settings_url']
-        account.server.alert_url         = data['web_alert_url']
+        account.web_alert.alert_url         = data['web_alert_url']
         account.server.web_password      = data['web_password']
         account.server.conference_server = data['conference_server']
 
@@ -1147,8 +1147,7 @@ class SIPManager(object):
         session.blink_supported_streams = streams
         self._delegate.handle_incoming_session(session, streams)
 
-        settings = SIPSimpleSettings()
-        if not settings.gui.show_web_alert_page_after_connect:
+        if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
             self.show_web_alert_page(session)
 
     @run_in_gui_thread
@@ -1157,8 +1156,8 @@ class SIPManager(object):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
 
-        if session.account is not BonjourAccount() and session.account.server.alert_url:
-            url = unicode(session.account.server.alert_url)
+        if session.account is not BonjourAccount() and session.account.web_alert.alert_url:
+            url = unicode(session.account.web_alert.alert_url)
 
             replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
             caller_key = replace_caller[5:]
@@ -1194,8 +1193,7 @@ class SIPManager(object):
                     music_applications.resume()
 
         if session.direction == 'incoming':
-            settings = SIPSimpleSettings()
-            if settings.gui.show_web_alert_page_after_connect:
+            if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
                 self.show_web_alert_page(session)
 
     def _NH_SIPSessionGotProposal(self, session, data):

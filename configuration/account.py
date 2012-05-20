@@ -80,7 +80,11 @@ class ServerSettings(SettingsGroup):
     settings_url = Setting(type=HTTPURL, default=None, nillable=True)
     conference_server = Setting(type=Hostname, default=None, nillable=True)
     web_password = KeychainPasswordSetting(type=str, default='', nillable=True, label='WEB')
+
+
+class WebAlertSettings(SettingsGroup):
     alert_url = Setting(type=HTTPURL, default=None, nillable=True)
+    show_alert_page_after_connect = Setting(type=bool, default=False)
 
 
 class SoundsSettings(SettingsGroup):
@@ -122,6 +126,7 @@ class AccountExtension(SettingsObjectExtension):
     sounds = SoundsSettings
     tls = TLSSettingsExtension
     xcap = XCAPSettingsExtension
+    web_alert = WebAlertSettings
 
 
 class BonjourAccountExtension(SettingsObjectExtension):

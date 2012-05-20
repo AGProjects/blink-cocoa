@@ -69,13 +69,14 @@ class ServerSettings(SettingsGroup):
 
 
 class GUISettings(SettingsGroup):
-    show_web_alert_page_after_connect = Setting(type=bool, default=False)
     use_default_web_browser_for_alerts = Setting(type=bool, default=False)
+
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
     about_url = Setting(type=HTTPURL, default=None, nillable=True)
     help_url = Setting(type=HTTPURL, default=None, nillable=True)
+
 
 class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=SoundFile, default=SoundFile("ring_inbound.wav"), nillable=True)
@@ -86,6 +87,7 @@ class SoundsSettings(SettingsGroup):
     message_sent = Setting(type=SoundFile, default=SoundFile("message_sent.wav", volume=10), nillable=True)
     night_volume = Setting(type=NightVolume, default=NightVolume(start_hour=22, end_hour=8, volume=10), nillable=True)
     enable_speech_synthesizer = Setting(type=bool, default=True)
+
 
 class TLSSettingsExtension(TLSSettings):
     ca_list = Setting(type=UserDataPath, default=None, nillable=True)

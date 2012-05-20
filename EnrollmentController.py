@@ -354,7 +354,7 @@ class EnrollmentController(NSObject):
             account.server.settings_url = settings_url
 
         if web_alert_url:
-            account.server.alert_url = web_alert_url
+            account.web_alert.alert_url = web_alert_url
 
         if web_password: 
             account.server.web_password = web_password
