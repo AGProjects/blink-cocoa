@@ -88,7 +88,6 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.streamHandlers = []
         self.notification_center = NotificationCenter()
-        self.notification_center.add_observer(self, name='SystemWillSleep')
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -125,7 +124,6 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self.session)
-        self.notification_center.add_observer(self, name='SystemWillSleep')
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -162,7 +160,6 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self.session)
-        self.notification_center.add_observer(self, name='SystemWillSleep')
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -351,7 +348,6 @@ class SessionController(NSObject):
 
     def resetSession(self):
         self.notification_center.discard_observer(self, sender=self.session)
-        self.notification_center.discard_observer(self, name='SystemWillSleep')
         self.streamHandlers = []
         self.state = STATE_IDLE
         self.session = None
@@ -671,6 +667,8 @@ class SessionController(NSObject):
         self.log_info("Session will start")
 
     def _NH_SIPSessionDidStart(self, sender, data):
+        self.notification_center.add_observer(self, name='SystemWillSleep')
+
         self.remoteParty = format_identity(self.session.remote_identity)
         if self.session.remote_focus:
             self.remote_focus = True
@@ -777,6 +775,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.log_info("Session ended")
+        self.notification_center.remove_observer(self, name='SystemWillSleep')
         self.changeSessionState(STATE_FINISHED, data.originator)
         log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
