@@ -83,7 +83,7 @@ class SessionInfoController(NSObject):
         NSBundle.loadNibNamed_owner_("SessionInfoPanel", self)
 
         sessionBoxTitle = NSAttributedString.alloc().initWithString_attributes_("SIP Session", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
-        self.sessionBox.setTitle_(sessionBoxTitle)       
+        self.sessionBox.setTitle_(sessionBoxTitle)
 
         audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Audio RTP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.audioBox.setTitle_(audioBoxTitle)       
@@ -442,6 +442,12 @@ class SessionInfoController(NSObject):
             self.timer.invalidate()
             self.timer = None
 
+    def dealloc(self):
+        self.audio_packet_loss_graph.removeFromSuperview()
+        self.audio_jitter_graph.removeFromSuperview()
+        self.audio_rtt_graph.removeFromSuperview()
+        super(SessionInfoController, self).dealloc()
+
 
 class CBGraphView(NSView):
     #
@@ -476,7 +482,7 @@ class CBGraphView(NSView):
             self.grad.retain()
 
         return self
-        
+
     def setDataQueue_needsDisplay_(self, dq, needs_display=False):
         """ set the data object we are graphig """
         self.dataQueue = dq
@@ -519,6 +525,7 @@ class CBGraphView(NSView):
     def dealloc(self):
         """ default destructor """
         self.grad.release()
+        self.dataQueue = None
         super(CBGraphView, self).dealloc()
 
     def drawRect_(self, rect):
