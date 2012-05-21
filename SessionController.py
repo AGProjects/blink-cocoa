@@ -71,6 +71,7 @@ class SessionController(NSObject):
     outbound_audio_calls = 0
     valid_dtmf = re.compile(r"^[0-9*#,]+$")
     pending_chat_messages = {}
+    info_panel = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -96,11 +97,9 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
-        self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
         self.try_next_hop = False
-        self.info_panel_was_visible = False
-        self.info_panel_last_frame = False
+        self.initInfoPanel()
 
         # used for accounting
         self.streams_log = []
@@ -135,11 +134,9 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
-        self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
         self.try_next_hop = False
-        self.info_panel_was_visible = False
-        self.info_panel_last_frame = False
+        self.initInfoPanel()
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -174,12 +171,10 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
-        self.info_panel = SessionInfoController(self)
         self.open_chat_window_only = False
         self.owner = owner
         self.try_next_hop = False
-        self.info_panel_was_visible = False
-        self.info_panel_last_frame = False
+        self.initInfoPanel()
 
         # used for accounting
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
@@ -374,7 +369,15 @@ class SessionController(NSObject):
         self.streams_log = []
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
+        self.destroyInfoPanel()
 
+    def initInfoPanel(self):
+        if self.info_panel is None:
+            self.info_panel = SessionInfoController(self)
+            self.info_panel_was_visible = False
+            self.info_panel_last_frame = False
+
+    def destroyInfoPanel(self):
         if self.info_panel is not None:
             self.info_panel.close()
             self.info_panel = None
@@ -391,13 +394,14 @@ class SessionController(NSObject):
         if self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED):
             self.resetSession()
 
+        self.initInfoPanel()
+
         new_session = False
         add_streams = []
         if self.session is None:
             # no session yet, initiate it
             self.initializeSessionWithAccount(self.account)
             new_session = True
-            self.info_panel = SessionInfoController(self)
 
         for stype in stype_tuple:
             if type(stype) == tuple:
@@ -571,10 +575,7 @@ class SessionController(NSObject):
 
         self.changeSessionState(STATE_DNS_FAILED, msg)
         self.end()
-
-        if self.info_panel is not None:
-            self.info_panel.close()
-            self.info_panel = None
+        self.destroyInfoPanel()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
