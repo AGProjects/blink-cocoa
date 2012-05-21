@@ -249,7 +249,6 @@ class ChatWindowController(NSWindowController):
         tabItem = NSTabViewItem.alloc().initWithIdentifier_(session.identifier)
         tabItem.setView_(view)
         tabItem.setLabel_(session.getTitleShort())
-
         self.tabSwitcher.addTabViewItem_(tabItem)
         self.tabSwitcher.selectLastTabViewItem_(None)
 
@@ -261,6 +260,17 @@ class ChatWindowController(NSWindowController):
             self.drawer.open()
             NSApp.delegate().windowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
+
+    def purgeWindow_(self, session):
+        index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
+        if index == NSNotFound:
+            return None
+        tabItem = self.tabView.tabViewItemAtIndex_(index)
+        view = tabItem.view()
+        self.tabSwitcher.removeTabViewItem_(tabItem)
+        view.removeFromSuperview()
+        tabItem.setView_(None)
+        del self.sessions[session.identifier]
 
     def selectSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -278,7 +288,6 @@ class ChatWindowController(NSWindowController):
         tabItem = self.tabView.tabViewItemAtIndex_(index)
         view = tabItem.view()
         view.removeFromSuperview()
-        #self.tabView.removeTabViewItem_(tabItem)
         self.tabSwitcher.removeTabViewItem_(tabItem)
         del self.sessions[session.identifier]
         return view

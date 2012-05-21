@@ -41,7 +41,7 @@ class ChatWindowManager(object):
     def removeChatWindow(self, sessionController):
         window = self.getChatWindow(sessionController)
         if window is not None:
-            window.detachWindow_(sessionController)
+            window.purgeWindow_(sessionController)
             if not window.sessions:
                 window.window().orderOut_(None)
                 self.chatWindows.remove(window)

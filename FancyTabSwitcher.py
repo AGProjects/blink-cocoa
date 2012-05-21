@@ -270,7 +270,6 @@ class FancyTabSwitcher(NSView):
 
     def setTabView_(self, tabView):
         self.tabView = tabView
-        
 
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
@@ -294,14 +293,12 @@ class FancyTabSwitcher(NSView):
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         self.delegate.tabViewDidChangeNumberOfTabViewItems_(tabView)
-    
-    
+
     def setTabViewItem_busy_(self, item, busy):
         for i in self.items:
             if i.item == item:
                 i.setBusy_(busy)
                 break
-    
     
     def addTabViewItem_(self, item):
         label = item.label()
@@ -316,16 +313,13 @@ class FancyTabSwitcher(NSView):
         titem.closeButton.setTarget_(self)
         titem.closeButton.setAction_("closeItemClicked:")
     
-    
     def removeTabViewItem_(self, item):
         self.tabView.removeTabViewItem_(item)
-        
         titem = self.itemForTabViewItem_(item)
         if titem:
             self.items.remove(titem)
             titem.removeFromSuperview()
         self.rearrange()
-    
     
     def selectLastTabViewItem_(self, sender):
         self.tabView.selectLastTabViewItem_(sender)
@@ -336,7 +330,6 @@ class FancyTabSwitcher(NSView):
         resp = self.delegate.tabView_shouldCloseTabViewItem_(self.tabView, item.item)
         if resp:
             self.removeTabViewItem_(item.item)
-
 
     def reorderByPosition_(self, sender):
         def centerx(rect):
