@@ -349,6 +349,12 @@ class MessageHandler(NSObject):
             self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
         return self
 
+    def close(self):
+        self.stream = None
+        self.connected = None
+        self.delegate = None
+        self.history = None
+
     def _send(self, msgid):
         message = self.messages.pop(msgid)
         if message.private and message.recipient is not None:
@@ -581,7 +587,7 @@ class ChatController(MediaStream):
             self.screensharing_handler = ConferenceScreenSharingHandler()
             self.screensharing_handler.setDelegate(self)
 
-            self.history=ChatHistory()
+            self.history = ChatHistory()
             self.backend = SIPManager()
 
         return self
@@ -1490,6 +1496,7 @@ class ChatController(MediaStream):
 
                 tab = self.chatViewController.outputView.window()
                 tab_is_key = tab.isKeyWindow() if tab else False
+                tab = None
 
                 # FancyTabViewSwitcher will set unfocused tab item views as Hidden
                 if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
@@ -1653,6 +1660,7 @@ class ChatController(MediaStream):
             self.handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
         else:
+            self.handler.close()
             self.handler = None
 
     def disconnectScreensharingHandler(self):
