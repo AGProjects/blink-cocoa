@@ -268,6 +268,7 @@ class ChatWindowController(NSWindowController):
         tabItem = self.tabView.tabViewItemAtIndex_(index)
         view = tabItem.view()
         view.removeFromSuperview()
+        tabItem.setView_(None)
         self.tabSwitcher.removeTabViewItem_(tabItem)
         del self.sessions[session.identifier]
         if returnView:
