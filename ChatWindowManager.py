@@ -41,8 +41,9 @@ class ChatWindowManager(object):
     def removeChatWindow(self, sessionController):
         window = self.getChatWindow(sessionController)
         if window is not None:
-            window.purgeWindow_(sessionController)
+            window.detachWindow_returnView_(sessionController, False)
             if not window.sessions:
+                window.tabSwitcher.removeFromSuperview()
                 window.window().orderOut_(None)
                 self.chatWindows.remove(window)
                 window.release()
@@ -51,7 +52,7 @@ class ChatWindowManager(object):
         window = self.getChatWindow(sessionController)
         if window is not None:
             remoteScreens = window.remoteScreens
-            view = window.detachWindow_(sessionController)
+            view = window.detachWindow_returnView_(sessionController, True)
             if not window.sessions:
                 window.window().orderOut_(None)
                 self.chatWindows.remove(window)

@@ -516,9 +516,6 @@ class ChatController(MediaStream):
     chatViewController = objc.IBOutlet()
     smileyButton = objc.IBOutlet()
 
-    addContactView = objc.IBOutlet()
-    addContactLabel = objc.IBOutlet()
-
     splitView = objc.IBOutlet()
     splitViewFrame = None
     video_frame_visible = False
@@ -642,7 +639,7 @@ class ChatController(MediaStream):
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
-        
+        NSNotificationCenter.defaultCenter().removeObserver_(self)
         super(ChatController, self).dealloc()
 
     def getContentView(self):
@@ -1655,13 +1652,23 @@ class ChatController(MediaStream):
             window.noteSession_isScreenSharing_(self.sessionController, False)
 
     def disconnectChatViewHandler(self):
+        view = self.getContentView()
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
             self.handler.setDisconnected()
             window.noteSession_isComposing_(self.sessionController, False)
         else:
-            self.handler.close()
-            self.handler = None
+            self.close()
+
+    def close(self):
+        # memory clean up
+        self.handler.close()
+        self.handler = None
+        self.chatViewController.close()
+        self.chatViewController.release()
+        self.chatViewController = None
+        self.smileyButton.removeFromSuperview()
+        self.splitView.removeFromSuperview()
 
     def disconnectScreensharingHandler(self):
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)

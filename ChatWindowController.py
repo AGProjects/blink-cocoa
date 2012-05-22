@@ -261,16 +261,17 @@ class ChatWindowController(NSWindowController):
             NSApp.delegate().windowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
-    def purgeWindow_(self, session):
+    def detachWindow_returnView_(self, session, returnView):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
         if index == NSNotFound:
             return None
         tabItem = self.tabView.tabViewItemAtIndex_(index)
         view = tabItem.view()
-        self.tabSwitcher.removeTabViewItem_(tabItem)
         view.removeFromSuperview()
-        tabItem.setView_(None)
+        self.tabSwitcher.removeTabViewItem_(tabItem)
         del self.sessions[session.identifier]
+        if returnView:
+            return view
 
     def selectSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -281,19 +282,8 @@ class ChatWindowController(NSWindowController):
     def hasSession_(self, session):
         return self.sessions.has_key(session.identifier)
 
-    def detachWindow_(self, session):
-        index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
-        if index == NSNotFound:
-            return None
-        tabItem = self.tabView.tabViewItemAtIndex_(index)
-        view = tabItem.view()
-        view.removeFromSuperview()
-        self.tabSwitcher.removeTabViewItem_(tabItem)
-        del self.sessions[session.identifier]
-        return view
-
     def removeSession_(self, session):
-        if not self.detachWindow_(session):
+        if not self.detachWindow_returnView_(session, True):
             return False
 
         chat_stream = session.streamHandlerOfType("chat")

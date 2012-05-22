@@ -1950,6 +1950,7 @@
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
 				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
+				2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
@@ -2008,7 +2009,6 @@
 			isa = PBXGroup;
 			children = (
 				DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */,
-				2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */,
 				2B5DE9EA100447D700701821 /* VerticalBoxView.py */,
 				2B2DF5EC105D467000F267F9 /* ListView.py */,
 				2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */,

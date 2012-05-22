@@ -79,6 +79,9 @@ class ChatInputTextView(NSTextView):
     owner = None
     maxLength = None
 
+    def dealloc(self):
+        super(ChatInputTextView, self).dealloc()
+
     def initWithRect_(self, rect):
         self = NSTextView.initWithRect_(self, rect)
         if self:
@@ -153,6 +156,9 @@ class ChatInputTextView(NSTextView):
 
 
 class ChatWebView(WebView):
+    def dealloc(self):
+        super(ChatWebView, self).dealloc()
+
     def draggingEntered_(self, sender):
         pboard = sender.draggingPasteboard()
         if pboard.types().containsObject_(NSFilenamesPboardType) and hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
@@ -178,7 +184,6 @@ class ChatViewController(NSObject):
     outputView = objc.IBOutlet()
     inputText = objc.IBOutlet()
     inputView = objc.IBOutlet()
-    videoView = objc.IBOutlet()
 
     splitterHeight = None
 
@@ -217,6 +222,7 @@ class ChatViewController(NSObject):
         super(ChatViewController, self).dealloc()
 
     def awakeFromNib(self):
+        self.outputView.setShouldCloseWithWindow_(True)
         self.outputView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "webviewFinishedLoading:", WebViewProgressFinishedNotification, self.outputView)
         if self.inputText:
@@ -231,11 +237,16 @@ class ChatViewController(NSObject):
         self.outputView.mainFrame().loadRequest_(request)
         assert self.outputView.preferences().isJavaScriptEnabled()
 
-
     def close(self):
+        # memory clean up
+        self.rendered_messages = set()
+        self.pending_messages = {}
+        self.view.removeFromSuperview()
         self.inputText.setOwner(None)
+        self.inputText.removeFromSuperview()
         self.outputView.close()
-        self.videoView.close()
+        self.outputView.removeFromSuperview()
+        self.outputView.release()
 
     def appendAttributedString_(self, text):
         storage = self.inputText.textStorage()

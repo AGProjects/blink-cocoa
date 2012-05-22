@@ -35,7 +35,12 @@ class FancyTabItem(NSView):
                                 NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName,
                                 paraStyle, NSParagraphStyleAttributeName)
 
+    def close(self):
+        self.switcher = None
+        self.item = None
 
+    def dealloc(self):
+        super(FancyTabItem, self).dealloc()
 
     def initWithSwitcher_item_(self, switcher, item):
         self = NSView.initWithFrame_(self, NSMakeRect(0, 2, 100, 18))
@@ -66,6 +71,8 @@ class FancyTabItem(NSView):
         self.addTrackingArea_(tarea)
         self.trackingArea = tarea
 
+    def setItem_(self, item):
+        self.item = item
 
     def setLabel_(self, label):
         if type(label) == NSString:
@@ -267,10 +274,11 @@ class FancyTabSwitcher(NSView):
 
         return self
 
+    def dealloc(self):
+        super(FancyTabSwitcher, self).dealloc()
 
     def setTabView_(self, tabView):
         self.tabView = tabView
-
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         index = 0
@@ -306,7 +314,6 @@ class FancyTabSwitcher(NSView):
         titem.setLabel_(label)
         self.addSubview_(titem)
         self.items.append(titem)
-        
         self.tabView.addTabViewItem_(item)
         self.rearrange()
         
@@ -317,6 +324,7 @@ class FancyTabSwitcher(NSView):
         self.tabView.removeTabViewItem_(item)
         titem = self.itemForTabViewItem_(item)
         if titem:
+            titem.close()
             self.items.remove(titem)
             titem.removeFromSuperview()
         self.rearrange()
