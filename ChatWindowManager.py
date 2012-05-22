@@ -43,7 +43,6 @@ class ChatWindowManager(object):
         if window is not None:
             window.detachWindow_returnView_(sessionController, False)
             if not window.sessions:
-                window.tabSwitcher.removeFromSuperview()
                 window.window().orderOut_(None)
                 self.chatWindows.remove(window)
                 window.release()
