@@ -281,7 +281,8 @@ class FancyTabSwitcher(NSView):
         index = 0
         j = 0
         for i in self.tabView.tabViewItems():
-            i.view().setHidden_(i != item)
+            if i.view() is not None:
+                i.view().setHidden_(i != item)
             if item == i:
                 index = j
             j += 1
