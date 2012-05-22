@@ -504,6 +504,9 @@ class ChatWindowController(NSWindowController):
                     item.setState_(NSOnState if item.representedObject()['id'] == id else NSOffState)
                     i += 1
 
+    def windowWillClose_(self, sender):
+        self.removeTimer()
+
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
 
@@ -528,7 +531,6 @@ class ChatWindowController(NSWindowController):
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
-        self.removeTimer()
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.participantsTableView)
@@ -537,7 +539,6 @@ class ChatWindowController(NSWindowController):
 
         # Balance refcount
         self.release()
-
         return True
 
     def joinConferenceWindow(self, session, participants=[]):
