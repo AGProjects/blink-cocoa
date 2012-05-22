@@ -71,9 +71,6 @@ class FancyTabItem(NSView):
         self.addTrackingArea_(tarea)
         self.trackingArea = tarea
 
-    def setItem_(self, item):
-        self.item = item
-
     def setLabel_(self, label):
         if type(label) == NSString:
             self.label = label
