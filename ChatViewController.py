@@ -215,12 +215,6 @@ class ChatViewController(NSObject):
     def setAccount_(self, account):
         self.account = account
 
-    def dealloc(self):
-        if self.typingTimer:
-            self.typingTimer.invalidate()
-        NSNotificationCenter.defaultCenter().removeObserver_(self)
-        super(ChatViewController, self).dealloc()
-
     def awakeFromNib(self):
         self.outputView.setShouldCloseWithWindow_(True)
         self.outputView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
@@ -236,17 +230,6 @@ class ChatViewController(NSObject):
         request = NSURLRequest.alloc().initWithURL_(NSURL.alloc().initFileURLWithPath_(path))
         self.outputView.mainFrame().loadRequest_(request)
         assert self.outputView.preferences().isJavaScriptEnabled()
-
-    def close(self):
-        # memory clean up
-        self.rendered_messages = set()
-        self.pending_messages = {}
-        self.view.removeFromSuperview()
-        self.inputText.setOwner(None)
-        self.inputText.removeFromSuperview()
-        self.outputView.close()
-        self.outputView.removeFromSuperview()
-        self.outputView.release()
 
     def appendAttributedString_(self, text):
         storage = self.inputText.textStorage()
@@ -432,3 +415,20 @@ class ChatViewController(NSObject):
     def webView_didClearWindowObject_forFrame_(self, sender, windowObject, frame):
         windowObject.setValue_forKey_(self, "blink")
 
+    def close(self):
+        # memory clean up
+        self.rendered_messages = set()
+        self.pending_messages = {}
+        self.view.removeFromSuperview()
+        self.inputText.setOwner(None)
+        self.inputText.removeFromSuperview()
+        self.outputView.close()
+        self.outputView.removeFromSuperview()
+        self.outputView.release()
+        self.release()
+
+    def dealloc(self):
+        if self.typingTimer:
+            self.typingTimer.invalidate()
+        NSNotificationCenter.defaultCenter().removeObserver_(self)
+        super(ChatViewController, self).dealloc()

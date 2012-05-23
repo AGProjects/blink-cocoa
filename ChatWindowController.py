@@ -173,7 +173,6 @@ class ChatWindowController(NSWindowController):
         if path:
             self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
 
-
     def updateTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
         session = self.selectedSessionController()

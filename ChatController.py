@@ -349,6 +349,9 @@ class MessageHandler(NSObject):
             self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
         return self
 
+    def dealloc(self):
+        super(MessageHandler, self).dealloc()
+
     def close(self):
         self.stream = None
         self.connected = None
@@ -635,12 +638,6 @@ class ChatController(MediaStream):
                 self.videoContainer.setFrame_(self.mainViewSplitterPosition['video_frame'])
             self.outputContainer.setFrame_(self.mainViewSplitterPosition['output_frame'])
             self.inputContainer.setFrame_(self.mainViewSplitterPosition['input_frame'])
-
-    def dealloc(self):
-        if self.remoteTypingTimer:
-            self.remoteTypingTimer.invalidate()
-        NSNotificationCenter.defaultCenter().removeObserver_(self)
-        super(ChatController, self).dealloc()
 
     def getContentView(self):
         return self.chatViewController.view
@@ -1625,7 +1622,7 @@ class ChatController(MediaStream):
         self.notification_center.remove_observer(self, sender=sender)
         self.stream = None
 
-        self.resetChatViewToIdleStatus()
+        self.reset()
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.mediastream_failed = True # used to avoid double printing chat disconnect message
@@ -1651,25 +1648,6 @@ class ChatController(MediaStream):
             window.noteSession_isComposing_(self.sessionController, False)
             window.noteSession_isScreenSharing_(self.sessionController, False)
 
-    def disconnectChatViewHandler(self):
-        view = self.getContentView()
-        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
-        if window:
-            self.handler.setDisconnected()
-            window.noteSession_isComposing_(self.sessionController, False)
-        else:
-            self.close()
-
-    def close(self):
-        # memory clean up
-        self.handler.close()
-        self.handler = None
-        self.chatViewController.close()
-        self.chatViewController.release()
-        self.chatViewController = None
-        self.smileyButton.removeFromSuperview()
-        self.splitView.removeFromSuperview()
-
     def disconnectScreensharingHandler(self):
         window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
         if window:
@@ -1678,19 +1656,6 @@ class ChatController(MediaStream):
             self.screensharing_handler = None
 
         self.share_screen_in_conference = False
-
-    def resetChatViewToIdleStatus(self):
-        # save the view so we can print it when chat is idle
-        self.sessionController.lastChatOutputView = self.chatViewController.outputView
-
-        self.removeFromSession()
-        self.videoContainer.hideVideo()
-        self.exitFullScreen()
-        self.setScreenSharingToolbarIcon()
-        self.resetEditorToolbarIcon()
-        self.resetFancyTabIcons()
-        self.disconnectChatViewHandler()
-        self.disconnectScreensharingHandler()
 
     def endStream(self):
         if self.status != STREAM_DISCONNECTING:
@@ -1710,7 +1675,7 @@ class ChatController(MediaStream):
         # executed when user clicks close tab button or indirectly when user closes the whole window
         self.endStream()
 
-        self.resetChatViewToIdleStatus()
+        self.reset()
 
         # remove held reference needed for printing
         self.sessionController.lastChatOutputView = None
@@ -1724,4 +1689,36 @@ class ChatController(MediaStream):
 
         # remove allocated tab/window
         ChatWindowManager.ChatWindowManager().removeChatWindow(self.sessionController)
+
+    def reset(self):
+        # save the view so we can print it when chat is idle
+        self.sessionController.lastChatOutputView = self.chatViewController.outputView
+
+        self.removeFromSession()
+        self.videoContainer.hideVideo()
+        self.exitFullScreen()
+        self.setScreenSharingToolbarIcon()
+        self.resetEditorToolbarIcon()
+        self.resetFancyTabIcons()
+        self.disconnectScreensharingHandler()
+
+        view = self.getContentView()
+        window = ChatWindowManager.ChatWindowManager().getChatWindow(self.sessionController)
+        if window:
+            self.handler.setDisconnected()
+            window.noteSession_isComposing_(self.sessionController, False)
+        else:
+            # clean up memory
+            self.handler.close()
+            self.handler = None
+            self.chatViewController.close()
+            self.release()
+
+    def dealloc(self):
+        self.smileyButton.removeFromSuperview()
+        self.splitView.removeFromSuperview()
+        if self.remoteTypingTimer:
+            self.remoteTypingTimer.invalidate()
+        NSNotificationCenter.defaultCenter().removeObserver_(self)
+        super(ChatController, self).dealloc()
 
