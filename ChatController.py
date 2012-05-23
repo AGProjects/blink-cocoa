@@ -557,8 +557,8 @@ class ChatController(MediaStream):
     def createStream(self, account):
         return ChatStream(account)
 
-    def initWithOwner_stream_(self, scontroller, stream):
-        self = super(ChatController, self).initWithOwner_stream_(scontroller, stream)
+    def initWithOwner_stream_(self, sessionController, stream):
+        self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
         self.mediastream_failed = False
         self.session_failed = False
         self.share_screen_in_conference = False
