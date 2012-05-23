@@ -197,6 +197,8 @@ class AudioController(MediaStream):
         if self.timer is not None and self.timer.isValid():
             self.timer.invalidate()
         self.timer = None
+        self.view.removeFromSuperview()
+        self.view.release()
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False):

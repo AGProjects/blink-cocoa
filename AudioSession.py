@@ -20,6 +20,9 @@ class AudioSession(NSView):
     draggedOut = False
     dragPos = NSZeroPoint
 
+    def dealloc(self):
+        super(AudioSession, self).dealloc()
+
     def acceptsFirstResponder(self):
         return True
 
