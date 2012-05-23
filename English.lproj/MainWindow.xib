@@ -3406,7 +3406,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">sessionListView</string>
+						<string key="label">audioSessionsListView</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="989716831"/>
 					</object>
@@ -7623,7 +7623,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="searchBox">id</string>
 						<string key="searchOutline">id</string>
 						<string key="searchResultsModel">id</string>
-						<string key="sessionListView">id</string>
+						<string key="audioSessionsListView">id</string>
 						<string key="sessionsView">id</string>
 						<string key="silentButton">id</string>
 						<string key="statusMenu">id</string>
@@ -7799,8 +7799,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">searchResultsModel</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBToOneOutletInfo" key="sessionListView">
-							<string key="name">sessionListView</string>
+						<object class="IBToOneOutletInfo" key="audioSessionsListView">
+							<string key="name">audioSessionsListView</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="sessionsView">

@@ -468,7 +468,7 @@ class AudioController(MediaStream):
             cleanup_delay = TRANSFERRED_CLEANUP_DELAY if self.transferred else AUDIO_CLEANUP_DELAY
             if self.audioEndTime and (time.time() - self.audioEndTime > cleanup_delay):
                 self.removeFromSession()
-                self.sessionManager.finalizeSession(self)
+                self.sessionManager.finalizeAudioSession(self)
                 timer.invalidate()
                 self.audioEndTime = None
     

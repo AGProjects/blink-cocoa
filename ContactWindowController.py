@@ -139,7 +139,7 @@ class ContactWindowController(NSWindowController):
     audioAdsView = objc.IBOutlet()
     contactsAdsView = objc.IBOutlet()
     sessionsView = objc.IBOutlet()
-    sessionListView = objc.IBOutlet()
+    audioSessionsListView = objc.IBOutlet()
     drawerSplitterPosition = None
 
     searchBox = objc.IBOutlet()
@@ -244,7 +244,7 @@ class ContactWindowController(NSWindowController):
 
         self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
 
-        self.sessionListView.setSpacing_(0)
+        self.audioSessionsListView.setSpacing_(0)
 
         self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
         self.participantsTableView.setTarget_(self)
@@ -821,7 +821,7 @@ class ContactWindowController(NSWindowController):
             self.setSpeechSynthesis()
 
     def showAudioSession(self, streamController):
-        self.sessionListView.addItemView_(streamController.view)
+        self.audioSessionsListView.addItemView_(streamController.view)
         self.updateAudioButtons()
         streamController.view.setSelected_(True)
 
@@ -832,7 +832,7 @@ class ContactWindowController(NSWindowController):
 
     def showAudioDrawer(self):
         has_audio = False
-        for v in self.sessionListView.subviews():
+        for v in self.audioSessionsListView.subviews():
             if v.delegate is not None and v.delegate.sessionController is not None and v.delegate.sessionController.session is not None and v.delegate.sessionController.session.state in ('terminating', 'terminated'):
                 continue
             else:
@@ -851,7 +851,7 @@ class ContactWindowController(NSWindowController):
         # all other conferenced sessions already at the top and before anything else
         last = None
         found = False
-        for v in self.sessionListView.subviews():
+        for v in self.audioSessionsListView.subviews():
             last = v
             if not v.conferencing:
                 found = True
@@ -861,7 +861,7 @@ class ContactWindowController(NSWindowController):
         if found and last != audioSessionView:
             audioSessionView.retain()
             audioSessionView.removeFromSuperview()
-            self.sessionListView.insertItemView_before_(audioSessionView, last)
+            self.audioSessionsListView.insertItemView_before_(audioSessionView, last)
             audioSessionView.release()
             audioSessionView.setNeedsDisplay_(True)
 
@@ -870,7 +870,7 @@ class ContactWindowController(NSWindowController):
         # all other conferenced sessions
         audioSessionView.retain()
         audioSessionView.removeFromSuperview()
-        self.sessionListView.addItemView_(audioSessionView)
+        self.audioSessionsListView.addItemView_(audioSessionView)
         audioSessionView.release()
 
     def addAudioSessionToConference(self, stream):
@@ -881,7 +881,7 @@ class ContactWindowController(NSWindowController):
         self.conference.add(stream.stream)
 
         stream.view.setConferencing_(True)
-        subviews = self.sessionListView.subviews()
+        subviews = self.audioSessionsListView.subviews()
         selected = subviews.count() > 0 and subviews.objectAtIndex_(0).selected
         self.shuffleUpAudioSession(stream.view)
         self.conferenceButton.setState_(NSOnState)
@@ -928,18 +928,18 @@ class ContactWindowController(NSWindowController):
         self.conferenceButton.setState_(NSOffState)
         BlinkLogger().log_info(u"Audio conference ended")
 
-    def finalizeSession(self, streamController):
+    def finalizeAudioSession(self, streamController):
         if streamController.isConferencing and self.conference is not None:
             self.removeAudioSessionFromConference(streamController)
 
-        self.sessionListView.removeItemView_(streamController.view)
+        self.audioSessionsListView.removeItemView_(streamController.view)
         self.updateAudioButtons()
-        count = self.sessionListView.numberOfItems()
+        count = self.audioSessionsListView.numberOfItems()
         if self.drawer.isOpen() and count == 0:
             self.drawer.close()
 
     def updateAudioButtons(self):
-        c = self.sessionListView.subviews().count()
+        c = self.audioSessionsListView.subviews().count()
         cview = self.drawer.contentView()
         hangupAll = cview.viewWithTag_(10)
         conference = cview.viewWithTag_(11)
@@ -1694,7 +1694,7 @@ class ContactWindowController(NSWindowController):
     def toggleAudioSessionsDrawer_(self, sender):
         self.drawer.toggle_(sender)
         if self.drawer.isOpen():
-            sessionBoxes = self.sessionListView.subviews()
+            sessionBoxes = self.audioSessionsListView.subviews()
             if sessionBoxes.count() > 0:
                 selected = [session for session in sessionBoxes if session.selected]
                 if selected:
@@ -3016,7 +3016,7 @@ class ContactWindowController(NSWindowController):
     def getSelectedAudioSession(self):
         session = None
         try:
-            selected_audio_view = (view for view in self.sessionListView.subviews() if view.selected is True).next()
+            selected_audio_view = (view for view in self.audioSessionsListView.subviews() if view.selected is True).next()
         except StopIteration:
             pass
         else:
