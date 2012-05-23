@@ -408,38 +408,42 @@ class SessionController(NSObject):
             if not self.hasStreamOfType(stype):
                 if stype not in self.streams_log:
                     self.streams_log.append(stype)
+
                 stream = None
+
                 if SIPManager().isMediaTypeSupported(stype):
                     handlerClass = StreamHandlerForType[stype]
                     stream = handlerClass.createStream(self.account)
+
                 if not stream:
                     self.log_info("Cancelled session")
                     return False
-                controller = handlerClass(self, stream)
-                self.streamHandlers.append(controller)
+
+                streamController = handlerClass(self, stream)
+                self.streamHandlers.append(streamController)
 
                 if stype == 'chat':
                     if (len(stype_tuple) == 1 and self.open_chat_window_only) or (not new_session and not self.canProposeMediaStreamChanges()):
                         # just show the window and wait for user to type before starting the outgoing session
-                        controller.openChatWindow()
+                        streamController.openChatWindow()
                     else:
                         # starts outgoing chat session
-                        controller.startOutgoing(not new_session, **kwargs)
+                        streamController.startOutgoing(not new_session, **kwargs)
                 else:
-                    controller.startOutgoing(not new_session, **kwargs)
+                    streamController.startOutgoing(not new_session, **kwargs)
 
                 if not new_session:
                     # there is already a session, add audio stream to it
-                    add_streams.append(controller.stream)
+                    add_streams.append(streamController.stream)
 
             else:
                 self.log_info("Stream already exists: %s"%self.streamHandlers)
                 if stype == 'chat':
-                    controller = self.streamHandlerOfType('chat')
-                    if controller.status == STREAM_IDLE and len(stype_tuple) == 1:
+                    streamController = self.streamHandlerOfType('chat')
+                    if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:
                         # starts outgoing chat session
                         new_session = True
-                        controller.startOutgoing(not new_session, **kwargs)
+                        streamController.startOutgoing(not new_session, **kwargs)
 
         if new_session:
             if not self.open_chat_window_only:
