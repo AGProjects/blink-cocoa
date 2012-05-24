@@ -559,7 +559,7 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
         contacts = []
         settings = SIPSimpleSettings()
         count = settings.contacts.maximum_calls
-        for result in list(results):
+        for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
 
             if seen.has_key(target_uri):

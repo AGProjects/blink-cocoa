@@ -263,7 +263,7 @@ class HistoryViewer(NSWindowController):
 
             # cache message for pagination
             self.messages=[]
-            for e in reversed(list(results)):
+            for e in reversed(results):
                 self.messages.append(e)
 
             # reset pagination

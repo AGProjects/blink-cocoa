@@ -2179,7 +2179,7 @@ class ContactWindowController(NSWindowController):
         session_history = SessionHistory()
         results = session_history.get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
 
-        for result in list(results):
+        for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
 
             item = {
@@ -2198,7 +2198,7 @@ class ContactWindowController(NSWindowController):
 
         results = session_history.get_entries(direction='outgoing', count=count, remote_focus="0")
 
-        for result in list(results):
+        for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
             item = {
             "streams": result.media_types.split(","),
@@ -2216,7 +2216,7 @@ class ContactWindowController(NSWindowController):
 
         results = session_history.get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
 
-        for result in list(results):
+        for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
             item = {
             "streams": result.media_types.split(","),
@@ -2234,7 +2234,7 @@ class ContactWindowController(NSWindowController):
 
         results = session_history.get_entries(count=count, remote_focus="1")
 
-        for result in list(results):
+        for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
             item = {
             "streams": result.media_types.split(","),
@@ -2393,7 +2393,7 @@ class ContactWindowController(NSWindowController):
     def get_last_outgoing_session_from_history(self):
         results = SessionHistory().get_entries(direction='outgoing', count=1)
         try:
-            session_info = list(results)[0]
+            session_info = results[0]
         except IndexError:
             pass
         else:
