@@ -621,7 +621,7 @@ class SessionController(NSObject):
                 self.log_info("Bogus SIP URI for transfer %s" % target_uri)
             else:
                 self.session.transfer(target_uri, replaced_session_controller.session if replaced_session_controller is not None else None)
-                self.log_info("Outgoing transfer request to %s" % re.sub("^(sip:|sips:)", "", str(target_uri)))
+                self.log_info("Outgoing transfer request to %s" % sip_prefix_pattern.sub("", str(target_uri)))
 
     def _acceptTransfer(self):
         self.log_info("Transfer request accepted by user")
@@ -910,7 +910,7 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = remote_conference_has_audio
          
         for user in data.conference_info.users:
-            uri = re.sub("^(sip:|sips:)", "", str(user.entity))
+            uri = sip_prefix_pattern.sub("", str(user.entity))
             # save uri for accounting purposes
             if uri != self.account.id:
                 self.participants_log.add(uri)
@@ -932,7 +932,7 @@ class SessionController(NSObject):
 
     def _NH_SIPConferenceDidAddParticipant(self, sender, data):
         self.log_info(u"Added participant to conference: %s" % data.participant)
-        uri = re.sub("^(sip:|sips:)", "", str(data.participant))
+        uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
             contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
         except StopIteration:
@@ -944,7 +944,7 @@ class SessionController(NSObject):
 
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
-        uri = re.sub("^(sip:|sips:)", "", str(data.participant))
+        uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
             contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
         except StopIteration:
@@ -957,7 +957,7 @@ class SessionController(NSObject):
                 self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
-        uri = re.sub("^(sip:|sips:)", "", str(data.participant))
+        uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
             contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
         except StopIteration:

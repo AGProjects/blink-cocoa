@@ -19,7 +19,7 @@ from BlinkLogger import BlinkLogger
 
 import SIPManager
 from resources import ApplicationData
-from util import allocate_autorelease_pool
+from util import allocate_autorelease_pool, sip_prefix_pattern
 
 from ContactListModel import BlinkContact, BlinkContactGroup
 
@@ -193,7 +193,7 @@ class PresencePolicy(NSWindowController):
         watchers = notification.data.pending
         for w in watchers:
             if w.status in ("pending", "waiting"):
-                uri = re.sub("^(sip:|sips:)", "", str(w.sipuri))
+                uri = sip_prefix_pattern.sub("", str(w.sipuri))
                 pendingWatcher = PendingWatcher(address=uri, account=str(account.id), event='presence', confirm=True)
                 hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.account == pendingWatcher.account and watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
                 if not hasWatcher:
@@ -781,7 +781,7 @@ class PresencePolicy(NSWindowController):
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
-                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                uri = sip_prefix_pattern.sub("", str(uri))
             return NSDragOperationAll
 
         return NSDragOperationNone
@@ -800,7 +800,7 @@ class PresencePolicy(NSWindowController):
                         for contact in g.contacts:
                             uri = contact.uri
                             if uri:
-                                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                                uri = sip_prefix_pattern.sub("", str(uri))
                             self.updatePolicyAction(self.account, self.event, uri, self.defaultPolicy)
                         return True
                 except KeyError:
@@ -809,7 +809,7 @@ class PresencePolicy(NSWindowController):
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
-                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                uri = sip_prefix_pattern.sub("", str(uri))
             self.updatePolicyAction(self.account, self.event, uri, self.defaultPolicy)
             return True
 

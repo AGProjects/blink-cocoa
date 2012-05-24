@@ -139,7 +139,7 @@ class BlinkContact(NSObject):
         uri_string = self.uri
         if '@' in uri_string:
             self.username = uri_string.partition("@")[0]
-            self.username = re.sub("^(sip:|sips:)", "", self.username)
+            self.username = sip_prefix_pattern.sub("", self.username)
             domain = uri_string.partition("@")[-1]
             self.domain = domain if ':' not in domain else domain.partition(":")[0]
         else:
@@ -175,7 +175,7 @@ class BlinkContact(NSObject):
         if isinstance(uri, (FrozenSIPURI, SIPURI)):
             return (uri.user or '', uri.host or '')
         elif '@' in uri:
-            uri = re.sub("^(sip:|sips:)", "", uri)
+            uri = sip_prefix_pattern.sub("", uri)
             user, _, host = uri.partition("@")
             host = host.partition(":")[0]
             return (user, host)
@@ -711,7 +711,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
                     if labelNames.get(label, None) != 'fax':
-                        sip_addresses.append((labelNames.get(label, label), re.sub("^(sip:|sips:)", "", uri)))
+                        sip_addresses.append((labelNames.get(label, label), sip_prefix_pattern.sub("", uri)))
 
             # get SIP addresses from the Email section
             value = match.valueForProperty_(AddressBook.kABEmailProperty)
@@ -720,7 +720,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
                     if label == 'sip' or uri.startswith(("sip:", "sips:")):
-                        sip_addresses.append(('sip', re.sub("^(sip:|sips:)", "", uri)))
+                        sip_addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
 
             # get SIP addresses from the URLs section
             value = match.valueForProperty_(AddressBook.kABURLsProperty)
@@ -729,7 +729,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
                     label = value.labelAtIndex_(n)
                     uri = unicode(value.valueAtIndex_(n))
                     if label == 'sip' or uri.startswith(("sip:", "sips:")):
-                        sip_addresses.append(('sip', re.sub("^(sip:|sips:)", "", uri)))
+                        sip_addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
 
             if not sip_addresses:
                 continue

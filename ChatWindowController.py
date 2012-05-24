@@ -555,7 +555,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session and hasattr(session.conference_info, "users"):
             for user in session.conference_info.users:
-                participant = re.sub("^(sip:|sips:)", "", user.entity)
+                participant = sip_prefix_pattern.sub("", user.entity)
                 if participant == uri:
                     return True
 
@@ -960,7 +960,7 @@ class ChatWindowController(NSWindowController):
             except StopIteration:
                 pass
             else:
-                uri = re.sub("^(sip:|sips:)", "", user.entity)
+                uri = sip_prefix_pattern.sub("", user.entity)
                 getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
 
                 contact = getContactMatchingURI(uri)
@@ -1098,7 +1098,7 @@ class ChatWindowController(NSWindowController):
             # Add conference participants if any
             if session.conference_info is not None:
                 for user in session.conference_info.users:
-                    uri = re.sub("^(sip:|sips:)", "", user.entity)
+                    uri = sip_prefix_pattern.sub("", user.entity)
                     contact = getContactMatchingURI(uri)
                     if contact:
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
@@ -1319,7 +1319,7 @@ class ChatWindowController(NSWindowController):
                 if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                     uri = str(pboard.stringForType_("x-blink-sip-uri"))
                     if uri:
-                        uri = re.sub("^(sip:|sips:)", "", str(uri))
+                        uri = sip_prefix_pattern.sub("", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
                         
@@ -1334,7 +1334,7 @@ class ChatWindowController(NSWindowController):
                         # do not invite users already present in the conference
                         if session.conference_info is not None:
                             for user in session.conference_info.users:
-                                if uri == re.sub("^(sip:|sips:)", "", user.entity):
+                                if uri == sip_prefix_pattern.sub("", user.entity):
                                     return NSDragOperationNone
                     except:
                         return NSDragOperationNone
@@ -1356,7 +1356,7 @@ class ChatWindowController(NSWindowController):
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
-                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                uri = sip_prefix_pattern.sub("", str(uri))
                 if "@" not in uri:
                     uri = '%s@%s' % (uri, session.account.id.domain)
 
@@ -1401,6 +1401,6 @@ class ConferenceFile(NSObject):
 
     @property
     def sender(self):
-        return NSString.stringWithString_(re.sub("^(sip:|sips:)", "", self.file.sender))
+        return NSString.stringWithString_(sip_prefix_pattern.sub("", self.file.sender))
 
 

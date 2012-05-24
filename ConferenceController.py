@@ -16,7 +16,7 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPCoreError, SIPURI
 from sipsimple.threading import run_in_twisted_thread
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import allocate_autorelease_pool, run_in_gui_thread, sip_prefix_pattern
 from zope.interface import implements
 
 from SIPManager import SIPManager
@@ -290,7 +290,7 @@ class JoinConferenceWindowController(NSObject):
             if participant and "@" not in participant and self.default_domain:
                 participant = '%s@%s' % (participant, self.default_domain)
             if participant:
-                participant = re.sub("^(sip:|sips:)", "", str(participant))
+                participant = sip_prefix_pattern.sub("", str(participant))
             try:
                 if participant not in self._participants:
                     self._participants.append(participant)
@@ -306,7 +306,7 @@ class JoinConferenceWindowController(NSObject):
         if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
             participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
             if participant:
-                participant = re.sub("^(sip:|sips:)", "", str(participant))
+                participant = sip_prefix_pattern.sub("", str(participant))
             if participant and "@" not in participant and self.default_domain:
                 participant = '%s@%s' % (participant, self.default_domain)
             if participant is None or not validateParticipant(participant):
@@ -351,7 +351,7 @@ class JoinConferenceWindowController(NSObject):
         if sender.selectedSegment() == 0:
             participant = self.participant.stringValue().strip().lower()
             if participant:
-                participant = re.sub("^(sip:|sips:)", "", str(participant))
+                participant = sip_prefix_pattern.sub("", str(participant))
             self.addParticipant(participant)
         elif sender.selectedSegment() == 1:
             participant = self.selectedParticipant()
@@ -498,7 +498,7 @@ class AddParticipantsWindowController(NSObject):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
         if participant:
-            participant = re.sub("^(sip:|sips:)", "", str(participant))
+            participant = sip_prefix_pattern.sub("", str(participant))
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
@@ -514,7 +514,7 @@ class AddParticipantsWindowController(NSObject):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
         if participant:
-            participant = re.sub("^(sip:|sips:)", "", str(participant))
+            participant = sip_prefix_pattern.sub("", str(participant))
         try:
             if participant is None or not validateParticipant(participant):
                 return NSDragOperationNone
@@ -553,7 +553,7 @@ class AddParticipantsWindowController(NSObject):
                 participant = '%s@%s' % (participant, self.default_domain)
 
             if participant:
-                participant = re.sub("^(sip:|sips:)", "", str(participant))
+                participant = sip_prefix_pattern.sub("", str(participant))
 
             if not participant or not validateParticipant(participant):
                 NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)

@@ -3042,7 +3042,7 @@ class ContactWindowController(NSWindowController):
             own_icon = NSImage.alloc().initWithContentsOfFile_(path) if path else None
 
             for user in session.conference_info.users:
-                uri = re.sub("^(sip:|sips:)", "", user.entity)
+                uri = sip_prefix_pattern.sub("", user.entity)
                 active_media = []
 
                 chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
@@ -3163,7 +3163,7 @@ class ContactWindowController(NSWindowController):
         session = self.getSelectedAudioSession()
         if session and hasattr(session.conference_info, "users"):
             for user in session.conference_info.users:
-                participant = re.sub("^(sip:|sips:)", "", user.entity)
+                participant = sip_prefix_pattern.sub("", user.entity)
                 if participant == uri:
                     return True
         return False
@@ -3251,7 +3251,7 @@ class ContactWindowController(NSWindowController):
                 if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                     uri = str(pboard.stringForType_("x-blink-sip-uri"))
                     if uri:
-                        uri = re.sub("^(sip:|sips:)", "", str(uri))
+                        uri = sip_prefix_pattern.sub("", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
                         
@@ -3266,7 +3266,7 @@ class ContactWindowController(NSWindowController):
                         # do not invite users already present in the conference
                         if session.conference_info is not None:
                             for user in session.conference_info.users:
-                                if uri == re.sub("^(sip:|sips:)", "", user.entity):
+                                if uri == sip_prefix_pattern.sub("", user.entity):
                                     return NSDragOperationNone
                     except:
                         return NSDragOperationNone
@@ -3288,7 +3288,7 @@ class ContactWindowController(NSWindowController):
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
-                uri = re.sub("^(sip:|sips:)", "", str(uri))
+                uri = sip_prefix_pattern.sub("", str(uri))
                 if "@" not in uri:
                     uri = '%s@%s' % (uri, session.account.id.domain)
 
@@ -3416,7 +3416,7 @@ class LdapSearch(object):
                                         uris.append(address)
                                 if entry.has_key('SIPIdentitySIPURI'):
                                     for _entry in entry['SIPIdentitySIPURI']:
-                                        address = ('sip', re.sub("^(sip:|sips:)", "", str(_entry)))
+                                        address = ('sip', sip_prefix_pattern.sub("", str(_entry)))
                                         uris.append(address)
                                 if uris:
                                     data = TimestampedNotificationData(timestamp=datetime.now(), name=entry['cn'][0], uris=uris)

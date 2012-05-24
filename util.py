@@ -3,7 +3,8 @@
 
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt',
-           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool', 'image_file_extension_pattern', 'video_file_extension_pattern', 'translate_alpha2digit',
+           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool',
+           'image_file_extension_pattern', 'video_file_extension_pattern', 'sip_prefix_pattern', 'translate_alpha2digit',
            'AccountInfo', 'DictDiffer']
 
 import re
@@ -19,6 +20,8 @@ from sipsimple.core import SIPURI, FrozenSIPURI
 
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 image_file_extension_pattern = re.compile("\.(png|tiff|jpg|jpeg|gif)$", re.I)
+sip_prefix_pattern = re.compie("^(sip:|sips:)")
+
 
 def format_identity(identity, check_contact=False):
     """
@@ -31,7 +34,7 @@ def format_identity(identity, check_contact=False):
         user = identity.user
         host = identity.host
         display_name = None
-        uri = re.sub("^(sip:|sips:)", "", str(identity))
+        uri = sip_prefix_pattern.sub("", str(identity))
         contact = NSApp.delegate().windowController.getContactMatchingURI(uri) if check_contact else None
         if identity.port is not None and identity.port != 5060:
             port = identity.port
@@ -45,7 +48,7 @@ def format_identity(identity, check_contact=False):
         if identity.uri.transport != 'udp':
             transport = identity.uri.transport
         display_name = identity.display_name
-        uri = re.sub("^(sip:|sips:)", "", str(identity.uri))
+        uri = sip_prefix_pattern.sub("", str(identity.uri))
         contact = NSApp.delegate().windowController.getContactMatchingURI(uri) if check_contact else None
 
     if port == 5060 and transport == 'udp':
