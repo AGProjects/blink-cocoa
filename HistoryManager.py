@@ -79,7 +79,6 @@ class SessionHistory(object):
                     BlinkLogger().log_info(u"Created table %s" % SessionHistoryEntry.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
-
         except Exception, e:
             BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
 
@@ -100,6 +99,7 @@ class SessionHistory(object):
                           remote_focus        = remote_focus,
                           participants        = participants
                           )
+            return True
         except Exception, e:
             BlinkLogger().log_error(u"Error adding record %s to sessions table: %s" % (session_id, e))
             return False
@@ -114,7 +114,11 @@ class SessionHistory(object):
         if remote_focus:
             query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
         query += " order by start_time desc limit %d" % count
-        return SessionHistoryEntry.select(query)
+        try:
+            return list(SessionHistoryEntry.select(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting entries from sessions history table: %s" % e)
+            return []
 
     def get_entries(self, direction=None, status=None, remote_focus=None, count=12):
         return block_on(self._get_entries(direction, status, remote_focus, count))
@@ -122,7 +126,11 @@ class SessionHistory(object):
     @run_in_db_thread
     def delete_entries(self):
         query = "delete from sessions"
-        return self.db.queryAll(query)
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error deleting entries from sessions history table: %s" % e)
+            return False
 
 
 class ChatMessage(SQLObject):
@@ -175,7 +183,6 @@ class ChatHistory(object):
                     BlinkLogger().log_info(u"Created history table %s" % ChatMessage.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
-
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
@@ -198,6 +205,7 @@ class ChatHistory(object):
                           private             = private,
                           status              = status
                           )
+            return True
         except dberrors.DuplicateEntryError:
             try:
                 results = ChatMessage.selectBy(msgid=msgid, local_uri=local_uri, remote_uri=remote_uri)
@@ -207,10 +215,9 @@ class ChatHistory(object):
                 return True
             except Exception, e:
                 BlinkLogger().log_error(u"Error updating record %s: %s" % (msgid, e))
-                return False
         except Exception, e:
             BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (msgid, e))
-            return False
+        return False
 
     @run_in_db_thread
     def _get_contacts(self, media_type, search_text, after_date, before_date):
@@ -224,7 +231,11 @@ class ChatHistory(object):
         if before_date:
             query += " and date < %s" % ChatMessage.sqlrepr(before_date)
         query += " order by remote_uri asc"
-        return self.db.queryAll(query)
+        try:
+            return list(self.db.queryAll(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting contacts from chat history table: %s" % e)
+            return []
 
     def get_contacts(self, media_type=None, search_text=None, after_date=None, before_date=None):
         return block_on(self._get_contacts(media_type, search_text, after_date, before_date))
@@ -280,8 +291,12 @@ class ChatHistory(object):
                 query += " order by %s" % order_text
             else:
                 query += " order by date DESC"
-                
-        return self.db.queryAll(query)
+
+        try:
+            return list(self.db.queryAll(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting daily entries from chat history table: %s" % e)
+            return []
 
     def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None, before_date=None):
         return block_on(self._get_daily_entries(local_uri, remote_uri, media_type, search_text, order_text, after_date, before_date))
@@ -306,7 +321,11 @@ class ChatHistory(object):
         if before_date:
             query += " and date < %s" % ChatMessage.sqlrepr(before_date)
         query += " order by %s %s limit %d" % (orderBy, orderType, count)
-        return ChatMessage.select(query)
+        try:
+            return list(ChatMessage.select(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting chat messages from chat history table: %s" % e)
+            return []
 
     def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=50):
         return block_on(self._get_messages(msgid, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
@@ -326,8 +345,11 @@ class ChatHistory(object):
             query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
             query += " and date < %s" % ChatMessage.sqlrepr(before_date)
-
-        return self.db.queryAll(query)
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error deleting messages from chat history table: %s" % e)
+            return False
 
 class FileTransfer(SQLObject):
     class sqlmeta:
@@ -375,7 +397,6 @@ class FileTransferHistory(object):
                     BlinkLogger().log_info(u"Created file history table %s" % FileTransfer.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (FileTransfer.sqlmeta.table, e))
-
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
 
@@ -394,32 +415,32 @@ class FileTransferHistory(object):
                         bytes_transfered  = bytes_transfered,
                         status            = status
                         )
+            return True
         except dberrors.DuplicateEntryError:
             try:
                 results = FileTransfer.selectBy(transfer_id=transfer_id)
                 ft = results.getOne()
-
                 if ft.status != status:
                     ft.status = status
-
                 if ft.bytes_transfered != bytes_transfered:
                     ft.bytes_transfered = bytes_transfered
-
                 if ft.bytes_transfered != bytes_transfered or ft.status != status:
                     ft.time             = datetime.datetime.utcnow()
                     ft.date             = datetime.datetime.utcnow().date()
-
                 return True
             except Exception, e:
                 BlinkLogger().log_error(u"Error updating record %s: %s" % (transfer_id, e))
-                return False
         except Exception, e:
             BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (transfer_id, e))
-            return False
+        return False
 
     @run_in_db_thread
     def _get_transfers(self):
-        return FileTransfer.selectBy()
+        try:
+            return list(FileTransfer.selectBy())
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting transfers from history table: %s" % e)
+            return []
 
     def get_transfers(self):
         return block_on(self._get_transfers())
@@ -427,5 +448,9 @@ class FileTransferHistory(object):
     @run_in_db_thread
     def delete_transfers(self):
         query = "delete from file_transfers"
-        return self.db.queryAll(query)
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error deleting transfers from history table: %s" % e)
+            return False
 
