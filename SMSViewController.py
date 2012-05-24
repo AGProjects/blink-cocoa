@@ -107,8 +107,6 @@ class SMSViewController(NSObject):
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_("%i chars left" % MAX_MESSAGE_LENGTH)
 
-            #if isinstance(self.account, Account) and not NSApp.delegate().windowController.hasContactMatchingURI(self.target_uri):
-            #    self.enableAddContactPanel()
         return self
 
     def dealloc(self):
@@ -158,19 +156,6 @@ class SMSViewController(NSObject):
         frame.size = self.outputContainer.frame().size
         self.chatViewController.outputView.setFrame_(frame)
     
-    def enableAddContactPanel(self):
-        text = u"%s is not in your contacts list. Would you like to add it now?" % format_identity_simple(self.target_uri)
-        self.addContactLabel.setStringValue_(text)
-    
-        frame = self.chatViewController.outputView.frame()
-        frame.size.height -= NSHeight(self.addContactView.frame())
-        frame.origin.y += NSHeight(self.addContactView.frame())
-        self.chatViewController.outputView.setFrame_(frame)
-        self.outputContainer.addSubview_(self.addContactView)
-        frame = self.addContactView.frame()
-        frame.origin = NSZeroPoint
-        self.addContactView.setFrame_(frame)
-
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)

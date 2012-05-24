@@ -712,28 +712,6 @@ class ChatController(MediaStream):
         elif sender.itemIdentifier() == 'exit':
             self.exitFullScreen()
 
-    @objc.IBAction
-    def addContactPanelClicked_(self, sender):
-        if sender.tag() == 1:
-            NSApp.delegate().windowController.addContact(self.sessionController.target_uri)
-        self.addContactView.removeFromSuperview()
-        frame = self.chatViewController.outputView.frame()
-        frame.origin.y = 0
-        frame.size = self.outputContainer.frame().size
-        self.chatViewController.outputView.setFrame_(frame)
-    
-    def enableAddContactPanel(self):
-        text = u"%s is not in your Contacts List. Would you like to add it now?" % self.sessionController.getTitleShort()
-        self.addContactLabel.setStringValue_(text)
-        frame = self.chatViewController.outputView.frame()
-        frame.size.height -= NSHeight(self.addContactView.frame())
-        frame.origin.y += NSHeight(self.addContactView.frame())
-        self.chatViewController.outputView.setFrame_(frame)
-        self.outputContainer.addSubview_(self.addContactView)
-        frame = self.addContactView.frame()
-        frame.origin = NSZeroPoint
-        self.addContactView.setFrame_(frame)
-
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
             original = textView.string()
