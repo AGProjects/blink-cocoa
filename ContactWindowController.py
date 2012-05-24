@@ -468,7 +468,9 @@ class ContactWindowController(NSWindowController):
         super(ContactWindowController, self).showWindow_(sender)
 
     def refreshAccountList(self):
-        grayAttrs = NSDictionary.dictionaryWithObject_forKey_(NSColor.disabledControlTextColor(), NSForegroundColorAttributeName)
+        style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
+        style.setLineBreakMode_(NSLineBreakByTruncatingTail)
+        grayAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.disabledControlTextColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
         self.accountPopUp.removeAllItems()
         self.accounts.sort(key=attrgetter('order'))
 
