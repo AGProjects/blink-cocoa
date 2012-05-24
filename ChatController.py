@@ -1676,6 +1676,7 @@ class ChatController(MediaStream):
     def closeTab(self):
         # executed when user clicks close tab button or indirectly when user closes the whole window
         self.endStream()
+        self.notification_center.remove_observer(self, sender=self.sessionController)
 
         self.reset()
 
