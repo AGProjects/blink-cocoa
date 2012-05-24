@@ -527,7 +527,6 @@ class ChatWindowController(NSWindowController):
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
-                chat_stream.exitFullScreen()
             self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
