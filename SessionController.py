@@ -19,8 +19,8 @@ from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 
-from AppKit import objc, NSApp, NSBundle, NSRunAlertPanel, NSAlertDefaultReturn
-from Foundation import NSObject
+from AppKit import *
+from Foundation import *
 from AudioController import AudioController
 from VideoController import VideoController
 from MediaStream import *
@@ -72,6 +72,7 @@ class SessionController(NSObject):
     valid_dtmf = re.compile(r"^[0-9*#,]+$")
     pending_chat_messages = {}
     info_panel = None
+    dealloc_timer = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -106,6 +107,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
 
         self.log_info('Starting outgoing session to %s' % format_identity_simple(target_uri))
+
         return self
 
     def initWithSession_(self, session):
@@ -187,6 +189,11 @@ class SessionController(NSObject):
 
         self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
         return self
+
+    def dealloc(self):
+        self.owner.sessionControllers.remove(self)
+        # TODO: how to release the controllers?   
+        #super(SessionController, self).dealloc()
 
     def log_info(self, text):
         BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
@@ -366,6 +373,11 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
         self.destroyInfoPanel()
+        self.release()
+
+        #self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, False)
+        #NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+        #NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def initInfoPanel(self):
         if self.info_panel is None:

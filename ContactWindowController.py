@@ -763,12 +763,6 @@ class ContactWindowController(NSWindowController):
         self.menuWillOpen_(self.devicesMenu)
 
     def _NH_BlinkSessionChangedState(self, notification):
-        sender = notification.sender
-        if sender.ended:
-            self.sessionControllers.remove(sender)
-        else:
-            if sender not in self.sessionControllers:
-                self.sessionControllers.append(sender)
         self.updatePresenceStatus()
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
