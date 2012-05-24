@@ -11,21 +11,25 @@
 <p>May 24th, 2012
 
 <ul>
-<li>Fixed handling for Min-Expires header for REGISTER requests
+<li>Fixed handling for Min-Expires header for REGISTER methods
 <li>Fixed handling for incoming INVITE with inactive audio offer
-<li>Increased default REGISTER expiration period to 3600 seconds
-<li>Fixed handling re-INVITEs with empty body
+<li>Fixed handling re-INVITEs with an empty body
 <li>Fixed displaying our own contact on Bonjour conferencing
 <li>Fixed discovery of Bonjour announced Conference servers
-<li>Fixed for a situation when outgoing ringtones were not stopped
-<li>Fixed using refresh interval from Min-Expires for SUBSCRIBE
-<li>Fixed a parsing error for SIP URIs
+<li>Fixed stopping outgoing ringtones
+<li>Fixed handling refresh interval from Min-Expires for SUBSCRIBE methods
+<li>Fixed parsing errors for SIP URIs
 <li>Fixed crash when the realm field is empty in authentication headers
-<li>Fixed memory leak in Session info panel
-<li>Fixed memory leaks in Chat window
-<li>Reinit Session Info panel when re-connect chat session
-<li>Move web alert settings under a separate section
-</ul>
+<li>Fixed memory leaks in Session Info panel
+<li>Fixed memory leaks in Chat Windows
+<li>Fixed History Manager to be more resilient to DB errors
+<li>Increased default REGISTER expiration period to 3600 seconds
+<li>Re-init Session Info panel when re-connect chat session
+<li>Moved web alert settings under a separate section
+<li>Improved display of account popup button text
+<li>Changed default history search period to Last Week
+<li>Don't use latin1 encoding from the history database
+ </ul>
 
 <h2>Version 1.8.2</h2>
 
