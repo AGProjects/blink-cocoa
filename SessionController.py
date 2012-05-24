@@ -192,7 +192,8 @@ class SessionController(NSObject):
 
     def dealloc(self):
         self.owner.sessionControllers.remove(self)
-        # TODO: how to release the controllers?   
+
+        # TODO: how to release the controllers?
         #super(SessionController, self).dealloc()
 
     def log_info(self, text):
@@ -373,6 +374,8 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
         self.destroyInfoPanel()
+        self.owner.updatePresenceStatus()
+
         self.release()
 
         #self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, False)
