@@ -177,11 +177,17 @@ class AlertPanel(NSObject, object):
     def _addIncomingSession(self, session, streams, is_update_proposal):
         view = self.getItemView()
         self.sessions[session] = view
+        settings = SIPSimpleSettings()
+        stream_type_list = list(set(stream.type for stream in streams))
 
         if len(self.sessions) == 1:
             self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity, check_contact=True))
-            if SIPSimpleSettings().sounds.enable_speech_synthesizer:
-                self.speak_text = "Call from %s" % format_identity_simple(session.remote_identity, check_contact=True)
+            if settings.sounds.enable_speech_synthesizer:
+                if stream_type_list == ["chat"]:
+                    base_text = "Chat from %s"
+                else:
+                    base_text = "Call from %s"
+                self.speak_text = base_text % format_identity_simple(session.remote_identity, check_contact=True)
                 self.startSpeechSynthesizerTimer()
         else:
             self.panel.setTitle_(u"Multiple Incoming Calls")
