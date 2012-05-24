@@ -1233,8 +1233,7 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_BlinkSessionDidEnd(self, session_controller, data):
-        session = session_controller.session
-        if session.direction == "incoming":
+        if session_controller.session.direction == "incoming":
             self.log_incoming_session_ended(session_controller, data)
         else:
             self.log_outgoing_session_ended(session_controller, data)
