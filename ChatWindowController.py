@@ -1033,7 +1033,27 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
 
         session = self.selectedSessionController()
-        if session is not None and session.session is not None:
+        if session is not None and session.session is None:
+            if session.account is BonjourAccount():
+                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+            else:
+                own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
+
+            # Add ourselves
+            contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
+            self.participants.append(contact)
+
+            # Add remote party
+            contact = getContactMatchingURI(session.remoteSIPAddress)
+            if contact:
+                contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=contact.icon)
+            else:
+                uri = format_identity_address(session.remotePartyObject)
+                display_name = session.getTitleShort()
+                contact = BlinkConferenceContact(uri, name=display_name)
+                contact.setDetail(uri)
+            self.participants.append(contact)
+        elif session is not None and session.session is not None:
             if session.account is BonjourAccount():
                 _session = session.session
                 if _session.transport is not None:
