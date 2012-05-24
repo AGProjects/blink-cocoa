@@ -552,6 +552,7 @@ class ChatController(MediaStream):
     mainViewSplitterPosition = None
 
     screenshot_task = None
+    dealloc_timer = None
 
     @classmethod
     def createStream(self, account):
@@ -1714,7 +1715,13 @@ class ChatController(MediaStream):
             self.handler = None
             self.chatViewController.close()
             self.sessionController = None
-            self.release()
+            self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+
+    def deallocTimer_(self, timer):
+        self.dealloc_timer.invalidate()
+        self.release()
 
     def dealloc(self):
         self.smileyButton.removeFromSuperview()
