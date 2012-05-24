@@ -190,11 +190,15 @@ class SessionController(NSObject):
         self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
         return self
 
-    def dealloc(self):
-        self.owner.sessionControllers.remove(self)
+    def deallocTimer_(self, timer):
+        self.dealloc_timer.invalidate()
+        self.dealloc_timer = None
+        self.release()
 
-        # TODO: how to release the controllers?
+    def dealloc(self):
+        # TODO: sombody still keeps a reference to this controller and we cannot dealloc it
         #super(SessionController, self).dealloc()
+        pass
 
     def log_info(self, text):
         BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
@@ -375,12 +379,10 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.destroyInfoPanel()
         self.owner.updatePresenceStatus()
-
-        self.release()
-
-        #self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, False)
-        #NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
-        #NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+        self.owner.sessionControllers.remove(self)
+        self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def initInfoPanel(self):
         if self.info_panel is None:
