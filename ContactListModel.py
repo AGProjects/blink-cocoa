@@ -173,19 +173,15 @@ class BlinkContact(NSObject):
 
     def split_uri(self, uri):
         if isinstance(uri, (FrozenSIPURI, SIPURI)):
-            return (uri.user, uri.host)
+            return (uri.user or '', uri.host or '')
         elif '@' in uri:
-            user = uri.partition("@")[0]
-            host = uri.partition("@")[-1]
-            if ':' in host:
-                host = host.partition(":")[0]
-            if ':' in user:
-                user = host.partition(":")[1]
+            uri = re.sub("^(sip:|sips:)", "", uri)
+            user, _, host = uri.partition("@")
+            host = host.partition(":")[0]
             return (user, host)
         else:
-            if ':' in uri:
-                uri = uri.partition(":")[0]
-            return (uri, '')
+            user = uri.partition(":")[0]
+            return (user, '')
 
     def matchesURI(self, uri):
 
