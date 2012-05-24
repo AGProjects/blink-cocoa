@@ -259,10 +259,7 @@ class SMSViewController(NSObject):
         cpim_timestamp = str(message.timestamp)
         content_type="html" if "html" in message.content_type else "text"
 
-        try:
-            self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status)
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to add message to history: %s" % e)
+        self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status)
 
     def composeReplicationMessage(self, sent_message, response_code):
         if isinstance(self.account, Account):
@@ -386,12 +383,8 @@ class SMSViewController(NSObject):
 
     @run_in_green_thread
     def replay_history(self):
-        try:
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries)
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to retrive sms history for %s: %s" % (self.remote_uri, e))
-            return
-        messages = [row for row in reversed(list(results))]
+        results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries)
+        messages = [row for row in reversed(results)]
         self.render_history_messages(messages)
 
     @allocate_autorelease_pool

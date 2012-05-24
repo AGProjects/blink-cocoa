@@ -507,11 +507,7 @@ class MessageHandler(NSObject):
         cpim_from = format_identity(message.sender) if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         private = "1" if message.private else "0"
-
-        try:
-            self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, "text", private, message.status)
-        except Exception, e:
-            BlinkLogger().log_error(u"Failed to add message to history: %s" % e)
+        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, "text", private, message.status)
 
 
 class ChatController(MediaStream):
@@ -964,11 +960,7 @@ class ChatController(MediaStream):
     @allocate_autorelease_pool
     def replay_history(self):
         if self.sessionController.account is not BonjourAccount():
-            try:
-                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
-            except Exception, e:
-                self.sessionController.log_info(u"Failed to retrive chat history for %s: %s" % (self.remote_uri, e))
-                return
+            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
 
             # build a list of previously failed messages
             last_failed_messages=[]
