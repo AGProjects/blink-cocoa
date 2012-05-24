@@ -20,7 +20,7 @@ from sipsimple.core import SIPURI, FrozenSIPURI
 
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 image_file_extension_pattern = re.compile("\.(png|tiff|jpg|jpeg|gif)$", re.I)
-sip_prefix_pattern = re.compie("^(sip:|sips:)")
+sip_prefix_pattern = re.compile("^(sip:|sips:)")
 
 
 def format_identity(identity, check_contact=False):
