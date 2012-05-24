@@ -2344,7 +2344,7 @@ class ContactWindowController(NSWindowController):
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
-        lastItem.setEnabled_(True if entries['conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
+        lastItem.setEnabled_(True)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
 
