@@ -282,18 +282,6 @@ class ChatWindowController(NSWindowController):
     def hasSession_(self, session):
         return self.sessions.has_key(session.identifier)
 
-    def removeSession_(self, session):
-        if not self.detachWindow_returnView_(session, True):
-            return False
-
-        chat_stream = session.streamHandlerOfType("chat")
-        if chat_stream:
-            chat_stream.chatViewController.close()
-            chat_stream.removeFromSession()
-            chat_stream.handler.setDisconnected()
-
-        return True
-
     def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
         if activeTab and self.sessions.has_key(activeTab.identifier()):
@@ -527,7 +515,6 @@ class ChatWindowController(NSWindowController):
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
-            self.removeSession_(s)
 
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
 
