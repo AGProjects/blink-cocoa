@@ -379,7 +379,10 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.destroyInfoPanel()
         self.owner.updatePresenceStatus()
-        self.owner.sessionControllers.remove(self)
+        try:
+            self.owner.sessionControllers.remove(self)
+        except ValueError:
+            pass
         self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
