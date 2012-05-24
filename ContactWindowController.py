@@ -2176,7 +2176,8 @@ class ContactWindowController(NSWindowController):
 
         entries = {'incoming': [], 'outgoing': [], 'missed': [], 'conferences': []}
 
-        results = SessionHistory().get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
+        session_history = SessionHistory()
+        results = session_history.get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -2195,7 +2196,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['incoming'].append(item)
 
-        results = SessionHistory().get_entries(direction='outgoing', count=count, remote_focus="0")
+        results = session_history.get_entries(direction='outgoing', count=count, remote_focus="0")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -2213,7 +2214,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['outgoing'].append(item)
 
-        results = SessionHistory().get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
+        results = session_history.get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
@@ -2231,7 +2232,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['missed'].append(item)
 
-        results = SessionHistory().get_entries(count=count, remote_focus="1")
+        results = session_history.get_entries(count=count, remote_focus="1")
 
         for result in list(results):
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
