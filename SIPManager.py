@@ -1104,36 +1104,24 @@ class SIPManager(object):
         stream_type_list = list(set(stream.type for stream in streams))
         if not streams:
             BlinkLogger().log_info(u"Rejecting session for unsupported media type")
-            from SessionController import SessionController
-            sessionController = SessionController.alloc().initWithSession_(session)
-            self._delegate.sessionControllers.append(sessionController)
-            sessionController.reject(488, 'Incompatible media')
+            session.reject(488, 'Incompatible media')
             return
 
         # if call waiting is disabled and we have audio calls reject with busy
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self._delegate.sessionControllers)
         if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
             BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity(session.remote_identity))
-            from SessionController import SessionController
-            sessionController = SessionController.alloc().initWithSession_(session)
-            self._delegate.sessionControllers.append(sessionController)
-            sessionController.reject(486, 'Busy Here')
+            session.reject(486, 'Busy Here')
             return
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
             BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity(session.remote_identity))
-            from SessionController import SessionController
-            sessionController = SessionController.alloc().initWithSession_(session)
-            self._delegate.sessionControllers.append(sessionController)
-            sessionController.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+            session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
             return
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
             BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
-            from SessionController import SessionController
-            sessionController = SessionController.alloc().initWithSession_(session)
-            self._delegate.sessionControllers.append(sessionController)
-            sessionController.reject(403, 'Anonymous Not Acceptable')
+            session.reject(403, 'Anonymous Not Acceptable')
             return
 
         # at this stage call is allowed and will alert the user
