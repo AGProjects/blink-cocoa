@@ -193,6 +193,7 @@ class AudioController(MediaStream):
         self.transfer_timer = None
 
     def dealloc(self):
+        self.sessionController = None
         self.invalidateTimers()
         if self.timer is not None and self.timer.isValid():
             self.timer.invalidate()

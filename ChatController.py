@@ -1713,6 +1713,7 @@ class ChatController(MediaStream):
             self.handler.close()
             self.handler = None
             self.chatViewController.close()
+            self.sessionController = None
             self.release()
 
     def dealloc(self):
