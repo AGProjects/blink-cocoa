@@ -24,12 +24,66 @@ pool = ThreadPool(minthreads=1, maxthreads=1, name='db-ops')
 pool.start()
 reactor.addSystemEventTrigger('before', 'shutdown', pool.stop)
 
+
 @decorator
 def run_in_db_thread(func):
     @preserve_signature(func)
     def wrapper(*args, **kw):
         return deferToThreadPool(reactor, pool, func, *args, **kw)
     return wrapper
+
+
+class TableVersionEntry(SQLObject):
+    class sqlmeta:
+        table = 'versions'
+    table_name        = StringCol(alternateID=True)
+    version           = IntCol()
+
+
+class TableVersions(object):
+    __metaclass__ = Singleton
+
+    def __init__(self):
+        path = ApplicationData.get('history')
+        makedirs(path)
+        db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        self._initialize(db_uri)
+
+    @run_in_db_thread
+    def _initialize(self, db_uri):
+        self.db = connectionForURI(db_uri)
+        TableVersionEntry._connection = self.db
+        try:
+            TableVersionEntry.createTable(ifNotExists=True)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error checking table %s: %s" % (TableVersionEntry.sqlmeta.table, e))
+
+    def get_table_version(self, table):
+        # Caller needs to be in the db thread
+        try:
+            result = list(TableVersionEntry.selectBy(table_name=table))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting %s table version: %s" % (table, e))
+            return None
+        else:
+            return result[0] if result else None
+
+    def set_table_version(self, table, version):
+        # Caller needs to be in the db thread
+        try:
+            TableVersionEntry(table_name=table, version=version)
+            return True
+        except dberrors.DuplicateEntryError:
+            try:
+                results = TableVersionEntry.selectBy(table_name=table)
+                record = results.getOne()
+                record.version = version
+                return True
+            except Exception, e:
+                BlinkLogger().log_error(u"Error updating record: %s" % e)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error adding record to versions table: %s" % e)
+        return False
 
 
 class SessionHistoryEntry(SQLObject):
@@ -57,11 +111,13 @@ class SessionHistoryEntry(SQLObject):
 
 class SessionHistory(object):
     __metaclass__ = Singleton
+    __version__ = 2
 
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path)
         db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        TableVersions()    # initialize versions table
         self._initialize(db_uri)
 
     @run_in_db_thread
@@ -71,8 +127,9 @@ class SessionHistory(object):
 
         try:
             if SessionHistoryEntry.tableExists():
-                # change here schema in the future as necessary
-                pass
+                version = TableVersions().get_table_version(SessionHistoryEntry.sqlmeta.table)
+                if version != self.__version__:
+                    self._migrate_version(version)
             else:
                 try:
                     SessionHistoryEntry.createTable()
@@ -81,6 +138,25 @@ class SessionHistory(object):
                     BlinkLogger().log_error(u"Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
         except Exception, e:
             BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
+
+    def _migrate_version(self, previous_version):
+        transaction = self.db.transaction()
+        try:
+            if previous_version is None and self.__version__ == 2:
+                query = "SELECT id, local_uri, remote_uri FROM sessions"
+                results = list(self.db.queryAll(query))
+                for result in results:
+                    id, local_uri, remote_uri = result
+                    local_uri = local_uri.decode('latin1').encode('utf-8')
+                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                    query = "UPDATE sessions SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
+                    self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (SessionHistoryEntry.sqlmeta.table, previous_version, self.__version__, e))
+            transaction.rollback()
+        else:
+            TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
+            transaction.commit()
 
     @run_in_db_thread
     def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
@@ -161,11 +237,13 @@ class ChatMessage(SQLObject):
 
 class ChatHistory(object):
     __metaclass__ = Singleton
+    __version__ = 2
 
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path)
         db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        TableVersions()    # initialize versions table
         self._initialize(db_uri)
 
     @run_in_db_thread
@@ -175,8 +253,9 @@ class ChatHistory(object):
 
         try:
             if ChatMessage.tableExists():
-                # change here schema in the future as necessary
-                pass
+                version = TableVersions().get_table_version(ChatMessage.sqlmeta.table)
+                if version != self.__version__:
+                    self._migrate_version(version)
             else:
                 try:
                     ChatMessage.createTable()
@@ -185,6 +264,27 @@ class ChatHistory(object):
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
+
+    def _migrate_version(self, previous_version):
+        transaction = self.db.transaction()
+        try:
+            if previous_version is None and self.__version__ == 2:
+                query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
+                results = list(self.db.queryAll(query))
+                for result in results:
+                    id, local_uri, remote_uri, cpim_from, cpim_to = result
+                    local_uri = local_uri.decode('latin1').encode('utf-8')
+                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                    cpim_from = cpim_from.decode('latin1').encode('utf-8')
+                    cpim_to = cpim_to.decode('latin1').encode('utf-8')
+                    query = "UPDATE chat_messages SET local_uri='%s', remote_uri='%s', cpim_from='%s', cpim_to='%s' WHERE id='%s'" % (local_uri, remote_uri, cpim_from, cpim_to, id)
+                    self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (ChatMessage.sqlmeta.table, previous_version, self.__version__, e))
+            transaction.rollback()
+        else:
+            TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
+            transaction.commit()
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status):
@@ -375,11 +475,13 @@ class FileTransfer(SQLObject):
 
 class FileTransferHistory(object):
     __metaclass__ = Singleton
+    __version__ = 2
 
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path)
         db_uri = "sqlite://" + os.path.join(path,"history.sqlite")
+        TableVersions()    # initialize versions table
         self._initialize(db_uri)
 
     @run_in_db_thread
@@ -389,8 +491,9 @@ class FileTransferHistory(object):
 
         try:
             if FileTransfer.tableExists():
-                # change here schema in the future as necessary
-                pass
+                version = TableVersions().get_table_version(FileTransfer.sqlmeta.table)
+                if version != self.__version__:
+                    self._migrate_version(version)
             else:
                 try:
                     FileTransfer.createTable()
@@ -399,6 +502,25 @@ class FileTransferHistory(object):
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (FileTransfer.sqlmeta.table, e))
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
+
+    def _migrate_version(self, previous_version):
+        transaction = self.db.transaction()
+        try:
+            if previous_version is None and self.__version__ == 2:
+                query = "SELECT id, local_uri, remote_uri FROM file_transfers"
+                results = list(self.db.queryAll(query))
+                for result in results:
+                    id, local_uri, remote_uri = result
+                    local_uri = local_uri.decode('latin1').encode('utf-8')
+                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                    query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
+                    self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (FileTransfer.sqlmeta.table, previous_version, self.__version__, e))
+            transaction.rollback()
+        else:
+            TableVersions().set_table_version(FileTransfer.sqlmeta.table, self.__version__)
+            transaction.commit()
 
     @run_in_db_thread
     def add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
