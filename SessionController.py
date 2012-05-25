@@ -106,8 +106,6 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
-        self.log_info('Starting outgoing session to %s' % format_identity_simple(target_uri))
-
         return self
 
     def initWithSession_(self, session):
@@ -187,7 +185,6 @@ class SessionController(NSObject):
                 self.streamHandlers.append(stream_controller)
                 stream_controller.startOutgoing(False)
 
-        self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
         return self
 
     def deallocTimer_(self, timer):
@@ -287,7 +284,7 @@ class SessionController(NSObject):
                 # if session is desktop-sharing end it 
                 self.end()
                 return True
-            elif self.streamHandlers == [streamHandler]:
+            elif self.session.streams is not None and self.streamHandlers == [streamHandler]:
                 # session established, streamHandler is the only stream
                 self.log_info("Ending session with %s stream"% streamHandler.stream.type)
                 # end the whole session
@@ -316,7 +313,6 @@ class SessionController(NSObject):
             else:
                 # session not yet established
                 if self.session.streams is None:
-                    self.log_info("Ending session that did not start yet")
                     self.end()
                     return True
                 return False
@@ -615,6 +611,7 @@ class SessionController(NSObject):
 
     def connectSession(self):
         if self.session:
+            self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
             streams = [s.stream for s in self.streamHandlers]
             target_uri = SIPURI.new(self.target_uri)
             if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
