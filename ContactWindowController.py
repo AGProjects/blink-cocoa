@@ -190,6 +190,7 @@ class ContactWindowController(NSWindowController):
     desktopShareMenu = objc.IBOutlet()
 
     historyViewer = None
+    chatWindow = None
 
     picker = None
 

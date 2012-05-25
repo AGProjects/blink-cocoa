@@ -23,7 +23,6 @@ from ContactListModel import BlinkConferenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
-import ChatWindowManager
 from ChatPrivateMessageController import ChatPrivateMessageController
 from SIPManager import SIPManager
 
@@ -89,10 +88,10 @@ class ChatWindowController(NSWindowController):
             self.conference_shared_files = []
             self.remote_screens_closed_by_user = set()
             self.sessions = {}
+            self.stream_controllers = {}
             self.unreadMessageCounts = {}
             self.remoteScreens = {}
             # keep a reference to the controller object  because it may be used later by cocoa
-            self.chat_controllers = set()
 
             NSBundle.loadNibNamed_owner_("ChatWindow", self)
 
@@ -245,6 +244,7 @@ class ChatWindowController(NSWindowController):
     def addSession_withView_(self, session, view):
         self.sessions[session.identifier] = session
         tabItem = NSTabViewItem.alloc().initWithIdentifier_(session.identifier)
+        self.stream_controllers[tabItem] = session.streamHandlerOfType("chat")
         tabItem.setView_(view)
         tabItem.setLabel_(session.getTitleShort())
         self.tabSwitcher.addTabViewItem_(tabItem)
@@ -259,7 +259,7 @@ class ChatWindowController(NSWindowController):
             NSApp.delegate().windowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
-    def detachWindow_returnView_(self, session, returnView):
+    def removeSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
         if index == NSNotFound:
             return None
@@ -268,9 +268,8 @@ class ChatWindowController(NSWindowController):
         view.removeFromSuperview()
         tabItem.setView_(None)
         self.tabSwitcher.removeTabViewItem_(tabItem)
+        del self.stream_controllers[tabItem]
         del self.sessions[session.identifier]
-        if returnView:
-            return view
 
     def selectSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -509,11 +508,24 @@ class ChatWindowController(NSWindowController):
         self.window().close()
         self.closing = True
 
+        #close active sessions 
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
 
+        for chat_stream in self.stream_controllers.values():
+            chat_stream.reset()
+
+        #close idle tabs
+        for item in self.tabView.tabViewItems().copy():
+            view = item.view()
+            view.removeFromSuperview()
+            item.setView_(None)
+            self.tabSwitcher.removeTabViewItem_(item)
+
+        self.sessions = {}
+        self.stream_controllers = {}
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
 
         ns_nc = NSNotificationCenter.defaultCenter()
@@ -1276,15 +1288,6 @@ class ChatWindowController(NSWindowController):
                 chat_stream.closeTab()
                 return False
         return True
-
-    def tabView_didDettachTabViewItem_atPosition_(self, tabView, item, pos):
-        if len(self.sessions) > 1:
-            session = self.sessions[item.identifier()]
-
-            window = ChatWindowManager.ChatWindowManager().dettachChatWindow(session)
-            if window:
-                window.window().setFrameOrigin_(pos)
-                self.refreshDrawer()
 
     # TableView dataSource
     def numberOfRowsInTableView_(self, tableView):

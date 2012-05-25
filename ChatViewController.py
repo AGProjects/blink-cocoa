@@ -426,7 +426,6 @@ class ChatViewController(NSObject):
         self.inputText.removeFromSuperview()
         self.outputView.close()
         self.outputView.removeFromSuperview()
-        self.outputView.release()
         self.release()
 
     def dealloc(self):
