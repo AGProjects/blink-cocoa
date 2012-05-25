@@ -151,6 +151,8 @@ class ChatInputTextView(NSTextView):
             keys = event.characters()
             if keys[0] == 'i' and self.owner.delegate.sessionController.info_panel is not None:
                 self.owner.delegate.sessionController.info_panel.toggle()
+            elif keys[0] == 'w':
+                self.owner.delegate.getWindow().close()
         else:
             super(ChatInputTextView, self).keyDown_(event)
 
