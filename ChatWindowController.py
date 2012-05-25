@@ -154,7 +154,6 @@ class ChatWindowController(NSWindowController):
         self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
         self.notification_center.remove_observer(self, name="BlinkVideoEnteredFullScreen")
         self.notification_center.remove_observer(self, name="BlinkVideoExitedFullScreen")
-
         super(ChatWindowController, self).dealloc()
 
     def addTimer(self):
@@ -493,7 +492,6 @@ class ChatWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.removeTimer()
-        self.tabSwitcher.removeFromSuperview()
 
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])

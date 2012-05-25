@@ -1685,7 +1685,6 @@ class ChatController(MediaStream):
             self.handler.close()
             self.handler = None
             self.chatViewController.close()
-            self.sessionController = None
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
@@ -1695,10 +1694,11 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
-        self.smileyButton.removeFromSuperview()
-        self.splitView.removeFromSuperview()
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         NSNotificationCenter.defaultCenter().removeObserver_(self)
+        self.smileyButton.removeFromSuperview()
+        self.chatViewController = None
+        self.sessionController = None
         super(ChatController, self).dealloc()
 

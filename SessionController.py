@@ -72,7 +72,6 @@ class SessionController(NSObject):
     valid_dtmf = re.compile(r"^[0-9*#,]+$")
     pending_chat_messages = {}
     info_panel = None
-    dealloc_timer = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -186,16 +185,6 @@ class SessionController(NSObject):
                 stream_controller.startOutgoing(False)
 
         return self
-
-    def deallocTimer_(self, timer):
-        self.dealloc_timer.invalidate()
-        self.dealloc_timer = None
-        self.release()
-
-    def dealloc(self):
-        # TODO: sombody still keeps a reference to this controller and we cannot dealloc it
-        #super(SessionController, self).dealloc()
-        pass
 
     def log_info(self, text):
         BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
@@ -356,6 +345,8 @@ class SessionController(NSObject):
 
     def resetSession(self):
         self.notification_center.discard_observer(self, sender=self.session)
+        self.notification_center.discard_observer(self, name='SystemWillSleep')
+
         self.streamHandlers = []
         self.state = STATE_IDLE
         self.session = None
@@ -379,9 +370,6 @@ class SessionController(NSObject):
             self.owner.sessionControllers.remove(self)
         except ValueError:
             pass
-        self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, False)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def initInfoPanel(self):
         if self.info_panel is None:
@@ -796,7 +784,6 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.log_info("Session ended")
-        self.notification_center.remove_observer(self, name='SystemWillSleep')
         self.changeSessionState(STATE_FINISHED, data.originator)
         log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
