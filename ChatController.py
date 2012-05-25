@@ -1520,7 +1520,8 @@ class ChatController(MediaStream):
                 image = NSImage.alloc().initWithContentsOfFile_(data.file_path)
                 w = image.size().width
                 width = w if w and w < 600 else '100%'
-            except:
+                image.release()
+            except Exception:
                 width = '100%'
 
             text += "<p><img src='%s' border='0' width='%s'>" % (data.file_path, width)
@@ -1544,7 +1545,6 @@ class ChatController(MediaStream):
                     self.chatViewController.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
         self.notification_center.remove_observer(self, sender=sender)
-        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         # toggle collaborative editor to initialize the java script to be able to receive is-composing
@@ -1569,7 +1569,6 @@ class ChatController(MediaStream):
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
-        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.last_failure_reason = None
@@ -1696,6 +1695,9 @@ class ChatController(MediaStream):
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
+        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
+        self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
+        self.notification_center = None
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         self.smileyButton.removeFromSuperview()
         self.chatViewController = None
