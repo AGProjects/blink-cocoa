@@ -102,6 +102,13 @@ class JoinConferenceWindowController(NSObject):
 
         self.updatePopupButtons()
 
+    def dealloc(self):
+        self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidRemoveServer')
+        self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidUpdateServer')
+        self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidAddServer')
+        self.notification_center.remove_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
+        super(JoinConferenceWindowController, self).dealloc()
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -150,6 +157,7 @@ class JoinConferenceWindowController(NSObject):
                 else:
                     configurationPanel = ConferenceConfigurationPanel.alloc().init()
                     configuration_name = configurationPanel.runModal()
+                    configurationPanel.release()
 
                 if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
                     media_types = ("chat", "audio")
@@ -176,6 +184,7 @@ class JoinConferenceWindowController(NSObject):
         elif sender.selectedItem() == sender.itemWithTitle_(u"Rename configuration..."):
             configurationPanel = ConferenceConfigurationPanel.alloc().init()
             configuration_name = configurationPanel.runModalForRename_(self.selected_configuration)
+            configurationPanel.release()
             if configuration_name and configuration_name != self.selected_configuration:
                 old_configuration = self.conference_configurations[self.selected_configuration]
                 old_configuration.name = configuration_name
@@ -477,7 +486,7 @@ class AddParticipantsWindowController(NSObject):
         if target is not None:
             self.target.setStringValue_(target)
             self.target.setHidden_(False)
-            
+
     def numberOfRowsInTableView_(self, table):
         try:
             return len(self._participants)

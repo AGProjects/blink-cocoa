@@ -1099,6 +1099,9 @@ class ContactWindowController(NSWindowController):
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
 
+        self.joinConferenceWindow.release()
+        self.joinConferenceWindow = None
+
     def showJoinConferenceWindow(self, target=None, participants=None, media=None, default_domain=None):
         self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media=media, default_domain=default_domain)
         conference = self.joinConferenceWindow.run()
@@ -2138,6 +2141,9 @@ class ContactWindowController(NSWindowController):
         conference = self.showJoinConferenceWindow(target=target, participants=participants, media=media, default_domain=account.id.domain)
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
+
+        self.joinConferenceWindow.release()
+        self.joinConferenceWindow = None
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -3208,6 +3214,8 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.remote_focus:
                 participants = self.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
+                self.addParticipantsWindow.release()
+                self.addParticipantsWindow = None
                 if participants is not None:
                     remote_uri = format_identity_address(session.remotePartyObject)
                     # prevent loops
