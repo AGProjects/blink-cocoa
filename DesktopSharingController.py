@@ -283,6 +283,7 @@ class DesktopSharingController(MediaStream):
 
     def dealloc(self):
         self.stream = None
+        self.sessionController = None
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
         super(DesktopSharingController, self).dealloc()
 
