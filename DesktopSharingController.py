@@ -252,9 +252,6 @@ class DesktopSharingController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_info("Screen sharing failed")
         self.changeStatus(STREAM_IDLE)
-        NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
-        NotificationCenter().discard_observer(self, sender=self.stream.handler)
-        NotificationCenter().discard_observer(self, sender=self.stream)
         if self.statusWindow:
             self.stopButton.setHidden_(True)
 
@@ -265,9 +262,8 @@ class DesktopSharingController(MediaStream):
             self.stopButton.setHidden_(True)
             self.statusProgress.setHidden_(True)
 
-        NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
-        NotificationCenter().discard_observer(self, sender=self.stream.handler)
-        NotificationCenter().discard_observer(self, sender=self.stream)
+        NotificationCenter().remove_observer(self, sender=self.stream.handler)
+        NotificationCenter().remove_observer(self, sender=self.stream)
 
     def _NH_MSRPTransportTrace(self, sender, data):
         if sender is self.stream.msrp:
@@ -284,6 +280,11 @@ class DesktopSharingController(MediaStream):
     def _NH_DesktopSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
             self.sessionController.log_info("%s" % data.reason.title())
+
+    def dealloc(self):
+        self.stream = None
+        NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+        super(DesktopSharingController, self).dealloc()
 
 class DesktopSharingViewerController(DesktopSharingController):
     @classmethod
