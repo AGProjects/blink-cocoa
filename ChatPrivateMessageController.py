@@ -75,3 +75,6 @@ class ChatPrivateMessageController(NSObject):
     def cancelClicked_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
 
+    def dealloc(self):
+        super(ChatPrivateMessageController, self).dealloc()
+

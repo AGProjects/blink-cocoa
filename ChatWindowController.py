@@ -663,6 +663,7 @@ class ChatWindowController(NSWindowController):
 
             controller = ChatPrivateMessageController(contact)
             message = controller.runModal()
+            controller.release()
 
             if message:
                 chat_stream = session.streamHandlerOfType("chat")
