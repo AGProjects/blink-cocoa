@@ -268,8 +268,15 @@ class ChatWindowController(NSWindowController):
         view.removeFromSuperview()
         tabItem.setView_(None)
         self.tabSwitcher.removeTabViewItem_(tabItem)
-        del self.stream_controllers[tabItem]
-        del self.sessions[session.identifier]
+        try:
+            del self.stream_controllers[tabItem]
+        except KeyError:
+            pass
+
+        try:
+            del self.sessions[session.identifier]
+        except KeyError:
+            pass
 
     def selectSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
