@@ -282,6 +282,8 @@ class BlinkAppDelegate(NSObject):
     def callFromAddressBook_(self, notification):
         url = notification.userInfo()["URI"]
         name = notification.userInfo()["DisplayName"]
+        url = self.normalizeExternalURL(url)
+
         BlinkLogger().log_info(u"Will start outgoing session to %s %s from Address Book" % (name, url))
         if not self.ready:
             self.urisToOpen.append((unicode(url), ('audio'), list()))
@@ -308,12 +310,32 @@ class BlinkAppDelegate(NSObject):
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
+    def normalizeExternalURL(self, url):
+        if url.startswith('tel:'):
+            url = re.sub("^tel:", "", url)
+
+        if url.startswith('//'):
+            url = re.sub("^//", "", url)
+
+        if url.startswith('mailto:'):
+            url = re.sub("^mailto:", "", url)
+
+        if url.startswith('xmpp:'):
+            url = re.sub("^xmpp:", "", url)
+
+        if url.startswith('callto://'):
+            url = re.sub("^callto://", "", url)
+
+        if url.startswith('callto:'):
+            url = re.sub("^callto:", "", url)
+
+        return url
+
     def getURL_withReplyEvent_(self, event, replyEvent):
         participants = set()
         media = set()
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
-        if url.startswith('tel:'):
-            url = re.sub("^tel:", "", url)
+        url = self.normalizeExternalURL(url)
 
         BlinkLogger().log_info(u"Will start outgoing session to %s from external link" % url)
 

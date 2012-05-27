@@ -117,6 +117,10 @@ class FileTransferItemView(NSView):
             self.originalHeight = NSHeight(frame)
         return self
 
+    def dealloc(self):
+        print 'dealloc file transfer view'
+        super(FileTransferItemView, self).dealloc()
+
     def updateIcon(self, icon):
         image = NSImage.alloc().initWithSize_(NSMakeSize(48,48))
         image.lockFocus()
