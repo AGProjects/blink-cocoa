@@ -416,6 +416,7 @@ class PreferencesController(NSWindowController, object):
         enroll = EnrollmentController.alloc().init()
         enroll.setupForAdditionalAccounts()
         enroll.runModal()
+        enroll.release()
 
     def removeSelectedAccount(self):
         account_info = self.selectedAccount()

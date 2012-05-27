@@ -69,6 +69,9 @@ class EnrollmentController(NSObject):
 
         return self
 
+    def dealloc(self):
+        super(EnrollmentController, self).dealloc()
+
     def runModal(self):
         self.newDisplayNameText.setStringValue_(NSFullUserName() or "")
         self.displayNameText.setStringValue_(NSFullUserName() or "")
