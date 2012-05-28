@@ -36,7 +36,7 @@ from EnrollmentController import EnrollmentController
 import PreferencesController
 from DesktopSharingController import DesktopSharingController
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, call_in_gui_thread
+from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread
 
 
 def fourcharToInt(fourCharCode):
@@ -58,6 +58,7 @@ class BlinkAppDelegate(NSObject):
     windowController = objc.IBOutlet()
     aboutPanel = objc.IBOutlet()
     migrationPanel = objc.IBOutlet()
+    migrationText = objc.IBOutlet()
     migrationProgressWheel = objc.IBOutlet()
     aboutVersion = objc.IBOutlet()
     aboutBundle = objc.IBOutlet()
@@ -112,10 +113,7 @@ class BlinkAppDelegate(NSObject):
             else:
                 migration_path = None
             if self.applicationName == 'Blink Pro' and not os.path.exists(pro_path) and migration_path:
-
-                NSBundle.loadNibNamed_owner_("MigrationPanel", self)
-                self.migrationPanel.orderFront_(None)
-                self.migrationProgressWheel.startAnimation_(None)
+                self.showMigrationPanel()
 
                 try:
                     shutil.copytree(migration_path, pro_path)
@@ -133,9 +131,24 @@ class BlinkAppDelegate(NSObject):
                             data = re.sub('%s.app/Contents/Resources' % name, '%s/Contents/Resources' % str(app_dir_name), data)
                         f.write(data)
 
-                self.migrationPanel.close()
+                self.hideMigrationPanel()
 
         return self
+
+    @run_in_gui_thread
+    def showMigrationPanel(self, text=None):
+        NSBundle.loadNibNamed_owner_("MigrationPanel", self)
+        self.migrationPanel.makeKeyAndOrderFront_(None)
+        self.migrationProgressWheel.startAnimation_(None)
+
+        if text is not None:
+            self.migrationText.setStringValue_(text)
+        else:
+            self.migrationText.setStringValue_('Migrating configuration and data from the previous version. Please wait...')
+
+    @run_in_gui_thread
+    def hideMigrationPanel(self):
+        self.migrationPanel.close()
 
     # Needed by run_in_gui_thread and call_in_gui_thread
     def callObject_(self, callable):

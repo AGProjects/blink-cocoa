@@ -1,6 +1,8 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
+from AppKit import NSApp
+
 import datetime
 import os
 
@@ -18,6 +20,7 @@ from twisted.python.threadpool import ThreadPool
 
 from BlinkLogger import BlinkLogger
 from resources import ApplicationData
+from util import run_in_gui_thread, allocate_autorelease_pool
 
 
 pool = ThreadPool(minthreads=1, maxthreads=1, name='db-ops')
@@ -139,10 +142,12 @@ class SessionHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
 
+    @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
         transaction = self.db.transaction()
         try:
             if previous_version is None and self.__version__ == 2:
+                NSApp.delegate().showMigrationPanel('Migrating history session table to a new version')
                 query = "SELECT id, local_uri, remote_uri FROM sessions"
                 results = list(self.db.queryAll(query))
                 for result in results:
@@ -151,6 +156,7 @@ class SessionHistory(object):
                     remote_uri = remote_uri.decode('latin1').encode('utf-8')
                     query = "UPDATE sessions SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     self.db.queryAll(query)
+                NSApp.delegate().hideMigrationPanel()
         except Exception, e:
             BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (SessionHistoryEntry.sqlmeta.table, previous_version, self.__version__, e))
             transaction.rollback()
@@ -265,10 +271,12 @@ class ChatHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
+    @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
         transaction = self.db.transaction()
         try:
             if previous_version is None and self.__version__ == 2:
+                NSApp.delegate().showMigrationPanel('Migrating history chat messages table to a new version')
                 query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
                 results = list(self.db.queryAll(query))
                 for result in results:
@@ -279,6 +287,7 @@ class ChatHistory(object):
                     cpim_to = cpim_to.decode('latin1').encode('utf-8')
                     query = "UPDATE chat_messages SET local_uri='%s', remote_uri='%s', cpim_from='%s', cpim_to='%s' WHERE id='%s'" % (local_uri, remote_uri, cpim_from, cpim_to, id)
                     self.db.queryAll(query)
+                NSApp.delegate().hideMigrationPanel()
         except Exception, e:
             BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (ChatMessage.sqlmeta.table, previous_version, self.__version__, e))
             transaction.rollback()
@@ -503,10 +512,12 @@ class FileTransferHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
 
+    @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
         transaction = self.db.transaction()
         try:
             if previous_version is None and self.__version__ == 2:
+                NSApp.delegate().showMigrationPanel('Migrating history file transfers table to a new version')
                 query = "SELECT id, local_uri, remote_uri FROM file_transfers"
                 results = list(self.db.queryAll(query))
                 for result in results:
@@ -515,6 +526,7 @@ class FileTransferHistory(object):
                     remote_uri = remote_uri.decode('latin1').encode('utf-8')
                     query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     self.db.queryAll(query)
+                NSApp.delegate().hideMigrationPanel()
         except Exception, e:
             BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (FileTransfer.sqlmeta.table, previous_version, self.__version__, e))
             transaction.rollback()
