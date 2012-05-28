@@ -8,7 +8,7 @@
 
 <h2>Version 1.8.3</h2>
 
-<p>May 27th, 2012
+<p>May 28th, 2012
 
 <ul>
 <li>Fixed handling for Min-Expires header for REGISTER methods
@@ -16,7 +16,7 @@
 <li>Fixed handling re-INVITEs with an empty body
 <li>Fixed displaying our own contact on Bonjour conferencing
 <li>Fixed discovery of Bonjour announced Conference servers
-<li>Fixed stopping outgoing ringtones
+<li>Fixed stopping outgoing ringtones in some situations
 <li>Fixed handling refresh interval from Min-Expires for SUBSCRIBE methods
 <li>Fixed parsing errors for SIP URIs
 <li>Fixed crash when the realm field is empty in authentication headers
@@ -28,11 +28,13 @@
 <li>Increased default REGISTER expiration period to 3600 seconds
 <li>Re-init Session Info panel when re-connect chat session
 <li>Moved web alert settings under a separate section
-<li>Improved display of account popup button text
+<li>Improved display of SIP account in the account popup button
 <li>Changed default history search period to Last Week
 <li>Don't use latin1 encoding from the history database
-<li>Get rid of non-SIP URL schemes when dialing addresses from externals apps
- </ul>
+<li>Handle callto: URLs dialled from external applications
+<li>Handle Command-W shortut in Chat window to close the window
+<li>Do not play dtmf tones for digits typed in the Search box
+</ul>
 
 <h2>Version 1.8.2</h2>
 
