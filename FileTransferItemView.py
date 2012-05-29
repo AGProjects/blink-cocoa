@@ -118,7 +118,6 @@ class FileTransferItemView(NSView):
         return self
 
     def dealloc(self):
-        print 'dealloc file transfer view'
         super(FileTransferItemView, self).dealloc()
 
     def updateIcon(self, icon):
