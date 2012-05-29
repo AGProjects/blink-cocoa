@@ -134,6 +134,11 @@ class BlinkContact(NSObject):
         self.stored_in_account = stored_in_account
         self.setUsernameAndDomain()
 
+    def dealloc(self):
+        self.icon = None
+        self.nc = None
+        super(BlinkContact, self).dealloc()
+
     def setUsernameAndDomain(self):
         # save username and domain to speed up name lookups in the contacts list
         uri_string = self.uri
