@@ -4,7 +4,7 @@
 __all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
            'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt',
            'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool',
-           'image_file_extension_pattern', 'video_file_extension_pattern', 'sip_prefix_pattern', 'translate_alpha2digit',
+           'image_file_extension_pattern', 'video_file_extension_pattern', 'sip_prefix_pattern', 'external_url_pattern', 'translate_alpha2digit',
            'AccountInfo', 'DictDiffer']
 
 import re
@@ -20,7 +20,8 @@ from sipsimple.core import SIPURI, FrozenSIPURI
 
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 image_file_extension_pattern = re.compile("\.(png|tiff|jpg|jpeg|gif)$", re.I)
-sip_prefix_pattern = re.compile("^(sip:|sips:)")
+sip_prefix_pattern           = re.compile("^(sip:|sips:)")
+external_url_pattern         = re.compile("^(tel:|//|mailto:|xmpp:|callto://|callto:)")
 
 
 def format_identity(identity, check_contact=False):

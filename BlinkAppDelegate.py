@@ -36,7 +36,7 @@ from EnrollmentController import EnrollmentController
 import PreferencesController
 from DesktopSharingController import DesktopSharingController
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread
+from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread, external_url_pattern
 
 
 def fourcharToInt(fourCharCode):
@@ -324,25 +324,7 @@ class BlinkAppDelegate(NSObject):
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
     def normalizeExternalURL(self, url):
-        if url.startswith('tel:'):
-            url = re.sub("^tel:", "", url)
-
-        if url.startswith('//'):
-            url = re.sub("^//", "", url)
-
-        if url.startswith('mailto:'):
-            url = re.sub("^mailto:", "", url)
-
-        if url.startswith('xmpp:'):
-            url = re.sub("^xmpp:", "", url)
-
-        if url.startswith('callto://'):
-            url = re.sub("^callto://", "", url)
-
-        if url.startswith('callto:'):
-            url = re.sub("^callto:", "", url)
-
-        return url
+        return external_url_pattern.sub("", url)
 
     def getURL_withReplyEvent_(self, event, replyEvent):
         participants = set()
