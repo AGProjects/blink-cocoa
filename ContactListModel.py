@@ -1557,39 +1557,6 @@ class ContactListModel(CustomListModel):
 
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
-    def _NH_AddressBookFavoriteWasChanged(self, notification):
-        contact = notification.sender
-        if notification.data.favorite:
-            try:
-                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
-            except StopIteration:
-                blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, detail=contact.detail, icon=contact.icon, reference=contact.addressbook_id)
-                blink_contact.setType('addressbook')
-                self.favorites_group.contacts.append(blink_contact)
-                self.favorites_group.sortContacts()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        else:
-            try:
-                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
-            except StopIteration:
-                pass
-            else:
-                self.favorites_group.contacts.remove(blink_contact)
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-
-    def _NH_FavoriteContactWasRemoved(self, notification):
-        contact = notification.sender
-        if contact.type == 'presence':
-            contact.reference.favorite = False
-            contact.reference.save()
-        elif contact.type == 'addressbook':
-            try:
-                ab_contact = (ab_contact for ab_contact in self.addressbook_group.contacts if ab_contact.addressbook_id == contact.reference).next()
-            except StopIteration:
-                pass
-            else:
-                ab_contact.setFavorite(False)
-
     def _NH_ContactWasDeleted(self, notification):
         contact = notification.sender
         try:
@@ -1815,6 +1782,39 @@ class ContactListModel(CustomListModel):
 
     def _NH_ContactGroupWasCreated(self, notification):
         self.saveGroupPosition()
+
+    def _NH_AddressBookFavoriteWasChanged(self, notification):
+        contact = notification.sender
+        if notification.data.favorite:
+            try:
+                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
+            except StopIteration:
+                blink_contact = FavoriteBlinkContact(contact.uri, name=contact.name, detail=contact.detail, icon=contact.icon, reference=contact.addressbook_id)
+                blink_contact.setType('addressbook')
+                self.favorites_group.contacts.append(blink_contact)
+                self.favorites_group.sortContacts()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        else:
+            try:
+                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.reference == contact.addressbook_id).next()
+            except StopIteration:
+                pass
+            else:
+                self.favorites_group.contacts.remove(blink_contact)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+
+    def _NH_FavoriteContactWasRemoved(self, notification):
+        contact = notification.sender
+        if contact.type == 'presence':
+            contact.reference.favorite = False
+            contact.reference.save()
+        elif contact.type == 'addressbook':
+            try:
+                ab_contact = (ab_contact for ab_contact in self.addressbook_group.contacts if ab_contact.addressbook_id == contact.reference).next()
+            except StopIteration:
+                pass
+            else:
+                ab_contact.setFavorite(False)
 
     def saveGroupPosition(self):
         # save group expansion and position
