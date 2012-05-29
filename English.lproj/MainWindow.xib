@@ -2,13 +2,13 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1070</int>
-		<string key="IBDocument.SystemVersion">11C74</string>
-		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1138.23</string>
-		<string key="IBDocument.HIToolboxVersion">567.00</string>
+		<string key="IBDocument.SystemVersion">11E53</string>
+		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
+		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">1938</string>
+			<string key="NS.object.0">2182</string>
 		</object>
 		<array key="IBDocument.IntegratedClassDependencies">
 			<string>NSScroller</string>
@@ -1085,6 +1085,17 @@
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">4</int>
 								</object>
+								<object class="NSMenuItem" id="752258809">
+									<reference key="NSMenu" ref="835318025"/>
+									<bool key="NSIsDisabled">YES</bool>
+									<string key="NSTitle">Chat Window</string>
+									<string key="NSKeyEquiv">5</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">5</int>
+								</object>
 								<object class="NSMenuItem" id="299356726">
 									<reference key="NSMenu" ref="835318025"/>
 									<bool key="NSIsDisabled">YES</bool>
@@ -1107,6 +1118,7 @@
 								</object>
 							</array>
 							<string key="NSName">_NSWindowsMenu</string>
+							<bool key="NSNoAutoenable">YES</bool>
 						</object>
 					</object>
 					<object class="NSMenuItem" id="391199113">
@@ -1164,6 +1176,7 @@
 							<int key="NSvFlags">266</int>
 							<string key="NSFrame">{{5, 452}, {264, 26}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="945249183"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSPopUpButtonCell" key="NSCell" id="855812974">
@@ -1234,6 +1247,7 @@
 							<int key="NSvFlags">266</int>
 							<string key="NSFrame">{{8, 430}, {258, 22}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="264699322"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSSearchFieldCell" key="NSCell" id="1040046009">
@@ -1316,6 +1330,7 @@
 							</set>
 							<string key="NSFrame">{{8, 390}, {32, 32}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="614789485"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSImageCell" key="NSCell" id="703824277">
@@ -1342,6 +1357,7 @@
 							<int key="NSvFlags">266</int>
 							<string key="NSFrame">{{45, 407}, {116, 14}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="954942554"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="822982546">
@@ -1367,6 +1383,7 @@
 							<int key="NSvFlags">265</int>
 							<string key="NSFrame">{{155, 408}, {112, 15}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1049294170"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSPopUpButtonCell" key="NSCell" id="293982666">
@@ -1432,6 +1449,7 @@
 							<int key="NSvFlags">266</int>
 							<string key="NSFrame">{{45, 390}, {224, 16}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1053838733"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="1008148782">
@@ -1453,6 +1471,8 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 32}, {274, 350}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="384228997"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="954578565">
 									<string key="NSIdentifier">contacts</string>
@@ -1473,6 +1493,7 @@
 																<int key="NSvFlags">256</int>
 																<string key="NSFrameSize">{272, 346}</string>
 																<reference key="NSSuperview" ref="257109644"/>
+																<reference key="NSWindow"/>
 																<reference key="NSNextKeyView" ref="9775178"/>
 																<int key="NSViewLayerContentsRedrawPolicy">2</int>
 																<bool key="NSEnabled">YES</bool>
@@ -1563,6 +1584,7 @@
 														</array>
 														<string key="NSFrame">{{1, 1}, {272, 346}}</string>
 														<reference key="NSSuperview" ref="787736654"/>
+														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="788885680"/>
 														<int key="NSViewLayerContentsRedrawPolicy">2</int>
 														<reference key="NSDocView" ref="788885680"/>
@@ -1574,6 +1596,7 @@
 														<int key="NSvFlags">-2147483392</int>
 														<string key="NSFrame">{{230, 1}, {15, 281}}</string>
 														<reference key="NSSuperview" ref="787736654"/>
+														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="771442678"/>
 														<int key="NSViewLayerContentsRedrawPolicy">2</int>
 														<reference key="NSTarget" ref="787736654"/>
@@ -1586,6 +1609,7 @@
 														<int key="NSvFlags">-2147483392</int>
 														<string key="NSFrame">{{1, 282}, {229, 15}}</string>
 														<reference key="NSSuperview" ref="787736654"/>
+														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="147249893"/>
 														<int key="NSViewLayerContentsRedrawPolicy">2</int>
 														<int key="NSsFlags">1</int>
@@ -1596,6 +1620,7 @@
 												</array>
 												<string key="NSFrameSize">{274, 348}</string>
 												<reference key="NSSuperview" ref="384228997"/>
+												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="257109644"/>
 												<int key="NSViewLayerContentsRedrawPolicy">2</int>
 												<int key="NSsFlags">133682</int>
@@ -1609,12 +1634,14 @@
 												<int key="NSvFlags">-2147483382</int>
 												<string key="NSFrame">{{0, 288}, {274, 60}}</string>
 												<reference key="NSSuperview" ref="384228997"/>
+												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="954251869"/>
 												<string key="NSClassName">NSView</string>
 											</object>
 										</array>
 										<string key="NSFrameSize">{274, 350}</string>
 										<reference key="NSSuperview" ref="1053838733"/>
+										<reference key="NSWindow"/>
 										<reference key="NSNextKeyView" ref="787736654"/>
 										<int key="NSViewLayerContentsRedrawPolicy">2</int>
 									</object>
@@ -2201,6 +2228,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<int key="NSvFlags">292</int>
 							<string key="NSFrame">{{13, 6}, {29, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="114099132"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="128354849">
@@ -2226,6 +2254,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<int key="NSvFlags">293</int>
 							<string key="NSFrame">{{90, 6}, {94, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="355170089"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSSegmentedCell" key="NSCell" id="439898397">
@@ -2275,6 +2304,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<int key="NSvFlags">289</int>
 							<string key="NSFrame">{{232, 6}, {29, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="722602892">
 								<int key="NSCellFlags">67239424</int>
@@ -2301,6 +2331,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</array>
 					<string key="NSFrameSize">{274, 480}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="485186698"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
@@ -3283,6 +3314,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="684397367"/>
 					</object>
 					<int key="connectionID">971</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="835318025"/>
+						<reference key="destination" ref="900429702"/>
+					</object>
+					<int key="connectionID">1678</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -4333,6 +4372,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1674</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showChatWindow:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="752258809"/>
+					</object>
+					<int key="connectionID">1677</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
 						<string key="label">link</string>
 						<reference key="source" ref="954251869"/>
@@ -4909,6 +4956,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="796498937"/>
 							<reference ref="988421837"/>
 							<reference ref="1006093330"/>
+							<reference ref="752258809"/>
 						</array>
 						<reference key="parent" ref="713487014"/>
 					</object>
@@ -6458,6 +6506,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="784709548"/>
 						<reference key="parent" ref="1038306992"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1675</int>
+						<reference key="object" ref="752258809"/>
+						<reference key="parent" ref="835318025"/>
+						<string key="objectName">Menu Item (File Transfers..)</string>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -6631,6 +6685,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="1660.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1669.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1671.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1675.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="19.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="197.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="198.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7001,7 +7056,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1674</int>
+			<int key="maxID">1678</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7029,6 +7084,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="blinkMenu">id</string>
 						<string key="migrationPanel">id</string>
 						<string key="migrationProgressWheel">id</string>
+						<string key="migrationText">id</string>
 						<string key="windowController">id</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
@@ -7068,6 +7124,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">migrationProgressWheel</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBToOneOutletInfo" key="migrationText">
+							<string key="name">migrationText</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBToOneOutletInfo" key="windowController">
 							<string key="name">windowController</string>
 							<string key="candidateClassName">id</string>
@@ -7076,182 +7136,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/BlinkAppDelegate.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ChatWindowController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="close:">id</string>
-						<string key="doubleClickReceived:">id</string>
-						<string key="muteClicked:">id</string>
-						<string key="printDocument:">id</string>
-						<string key="selectScreenSharingWindow:">id</string>
-						<string key="useClickedRemoveFromConference:">id</string>
-						<string key="userClickedActionsButton:">id</string>
-						<string key="userClickedParticipantMenu:">id</string>
-						<string key="userClickedSharedFileMenu:">id</string>
-						<string key="userClickedToolbarButton:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="close:">
-							<string key="name">close:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="doubleClickReceived:">
-							<string key="name">doubleClickReceived:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="muteClicked:">
-							<string key="name">muteClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="printDocument:">
-							<string key="name">printDocument:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="selectScreenSharingWindow:">
-							<string key="name">selectScreenSharingWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="useClickedRemoveFromConference:">
-							<string key="name">useClickedRemoveFromConference:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedActionsButton:">
-							<string key="name">userClickedActionsButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedParticipantMenu:">
-							<string key="name">userClickedParticipantMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedSharedFileMenu:">
-							<string key="name">userClickedSharedFileMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedToolbarButton:">
-							<string key="name">userClickedToolbarButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="actionsButton">id</string>
-						<string key="audioStatus">id</string>
-						<string key="conferenceFilesTableView">id</string>
-						<string key="conferenceFilesView">id</string>
-						<string key="conferenceScreenSharingQualityMenu">id</string>
-						<string key="conferenceScreenSharingWindowsMenu">id</string>
-						<string key="conferenceScreeningSharingMenu">id</string>
-						<string key="desktopShareMenu">id</string>
-						<string key="drawer">id</string>
-						<string key="drawerScrollView">id</string>
-						<string key="drawerSplitView">id</string>
-						<string key="editorButton">id</string>
-						<string key="muteButton">id</string>
-						<string key="participantMenu">id</string>
-						<string key="participantsTableView">id</string>
-						<string key="participantsView">id</string>
-						<string key="recordButton">id</string>
-						<string key="screenshotShareMenu">id</string>
-						<string key="sharedFileMenu">id</string>
-						<string key="tabSwitcher">id</string>
-						<string key="tabView">id</string>
-						<string key="toolbar">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="actionsButton">
-							<string key="name">actionsButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="audioStatus">
-							<string key="name">audioStatus</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceFilesTableView">
-							<string key="name">conferenceFilesTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceFilesView">
-							<string key="name">conferenceFilesView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceScreenSharingQualityMenu">
-							<string key="name">conferenceScreenSharingQualityMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceScreenSharingWindowsMenu">
-							<string key="name">conferenceScreenSharingWindowsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceScreeningSharingMenu">
-							<string key="name">conferenceScreeningSharingMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="desktopShareMenu">
-							<string key="name">desktopShareMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawer">
-							<string key="name">drawer</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawerScrollView">
-							<string key="name">drawerScrollView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawerSplitView">
-							<string key="name">drawerSplitView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="editorButton">
-							<string key="name">editorButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="muteButton">
-							<string key="name">muteButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantMenu">
-							<string key="name">participantMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsTableView">
-							<string key="name">participantsTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsView">
-							<string key="name">participantsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="recordButton">
-							<string key="name">recordButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="screenshotShareMenu">
-							<string key="name">screenshotShareMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sharedFileMenu">
-							<string key="name">sharedFileMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="tabSwitcher">
-							<string key="name">tabSwitcher</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="tabView">
-							<string key="name">tabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolbar">
-							<string key="name">toolbar</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ChatWindowController.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
@@ -7279,14 +7163,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/ContactListModel.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ContactOutlineView</string>
-					<string key="superclassName">NSOutlineView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactOutlineView.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
@@ -7330,6 +7206,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="showAccountSettings:">id</string>
 						<string key="showBlinkPro:">id</string>
 						<string key="showChangelog:">id</string>
+						<string key="showChatWindow:">id</string>
 						<string key="showDebugWindow:">id</string>
 						<string key="showDonate:">id</string>
 						<string key="showHelp:">id</string>
@@ -7500,6 +7377,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">showChangelog:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="showChatWindow:">
+							<string key="name">showChatWindow:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="showDebugWindow:">
 							<string key="name">showDebugWindow:</string>
 							<string key="candidateClassName">id</string>
@@ -7590,6 +7471,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="addContactToConferenceDialPad">id</string>
 						<string key="alwaysOnTopMenuItem">id</string>
 						<string key="audioAdsView">id</string>
+						<string key="audioSessionsListView">id</string>
 						<string key="blinkMenu">id</string>
 						<string key="callMenu">id</string>
 						<string key="chatMenu">id</string>
@@ -7623,7 +7505,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="searchBox">id</string>
 						<string key="searchOutline">id</string>
 						<string key="searchResultsModel">id</string>
-						<string key="audioSessionsListView">id</string>
 						<string key="sessionsView">id</string>
 						<string key="silentButton">id</string>
 						<string key="statusMenu">id</string>
@@ -7665,6 +7546,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="audioAdsView">
 							<string key="name">audioAdsView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="audioSessionsListView">
+							<string key="name">audioSessionsListView</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="blinkMenu">
@@ -7799,10 +7684,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">searchResultsModel</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBToOneOutletInfo" key="audioSessionsListView">
-							<string key="name">audioSessionsListView</string>
-							<string key="candidateClassName">id</string>
-						</object>
 						<object class="IBToOneOutletInfo" key="sessionsView">
 							<string key="name">sessionsView</string>
 							<string key="candidateClassName">id</string>
@@ -7854,65 +7735,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">FileTransferWindowController</string>
-					<string key="superclassName">NSObject</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="clearList:">id</string>
-						<string key="close:">id</string>
-						<string key="showWindow:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="clearList:">
-							<string key="name">clearList:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="close:">
-							<string key="name">close:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showWindow:">
-							<string key="name">showWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="bottomLabel">id</string>
-						<string key="listView">id</string>
-						<string key="transferSpeed">id</string>
-						<string key="window">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="bottomLabel">
-							<string key="name">bottomLabel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="listView">
-							<string key="name">listView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="transferSpeed">
-							<string key="name">transferSpeed</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="window">
-							<string key="name">window</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/FileTransferWindowController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ListView</string>
-					<string key="superclassName">VerticalBoxView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ListView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">ParticipantsTableView</string>
 					<string key="superclassName">NSTableView</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
@@ -7929,286 +7751,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">PreferencesController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="buttonClicked:">id</string>
-						<string key="openSite:">id</string>
-						<string key="userClickedToolbarButton:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="buttonClicked:">
-							<string key="name">buttonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="openSite:">
-							<string key="name">openSite:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedToolbarButton:">
-							<string key="name">userClickedToolbarButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="accountTable">id</string>
-						<string key="addButton">id</string>
-						<string key="addressText">id</string>
-						<string key="advancedPop">id</string>
-						<string key="advancedTabView">id</string>
-						<string key="advancedToggle">id</string>
-						<string key="displayNameText">id</string>
-						<string key="generalTabView">id</string>
-						<string key="mainTabView">id</string>
-						<string key="passwordText">id</string>
-						<string key="registration_status">id</string>
-						<string key="registration_tls_icon">id</string>
-						<string key="removeButton">id</string>
-						<string key="sectionDescription">id</string>
-						<string key="toolbar">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="accountTable">
-							<string key="name">accountTable</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addButton">
-							<string key="name">addButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addressText">
-							<string key="name">addressText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedPop">
-							<string key="name">advancedPop</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedTabView">
-							<string key="name">advancedTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedToggle">
-							<string key="name">advancedToggle</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="displayNameText">
-							<string key="name">displayNameText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="generalTabView">
-							<string key="name">generalTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="mainTabView">
-							<string key="name">mainTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="passwordText">
-							<string key="name">passwordText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="registration_status">
-							<string key="name">registration_status</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="registration_tls_icon">
-							<string key="name">registration_tls_icon</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="removeButton">
-							<string key="name">removeButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sectionDescription">
-							<string key="name">sectionDescription</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolbar">
-							<string key="name">toolbar</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PreferencesController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">PresencePolicy</string>
-					<string key="superclassName">Policy</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="decideLater:">id</string>
-						<string key="offlineWindowConfirm:">id</string>
-						<string key="saveNewWatcher:">id</string>
-						<string key="searchContacts:">id</string>
-						<string key="showPresenceOfflineStatus:">id</string>
-						<string key="togglePresenceOfflineStatus:">id</string>
-						<string key="userButtonClicked:">id</string>
-						<string key="userClickedApplyAllCheckBox:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="decideLater:">
-							<string key="name">decideLater:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="offlineWindowConfirm:">
-							<string key="name">offlineWindowConfirm:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="saveNewWatcher:">
-							<string key="name">saveNewWatcher:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="searchContacts:">
-							<string key="name">searchContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showPresenceOfflineStatus:">
-							<string key="name">showPresenceOfflineStatus:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="togglePresenceOfflineStatus:">
-							<string key="name">togglePresenceOfflineStatus:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userButtonClicked:">
-							<string key="name">userButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedApplyAllCheckBox:">
-							<string key="name">userClickedApplyAllCheckBox:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="accountPop">id</string>
-						<string key="addButton">id</string>
-						<string key="applyToAll">id</string>
-						<string key="contactExists">id</string>
-						<string key="createContact">id</string>
-						<string key="delButton">id</string>
-						<string key="dialogPolicyTableView">id</string>
-						<string key="disabled_label">id</string>
-						<string key="eventTabView">id</string>
-						<string key="groupCombo">id</string>
-						<string key="newWatcherLabel">id</string>
-						<string key="newWatcherPop">id</string>
-						<string key="newWatcherWindow">id</string>
-						<string key="newWatchers">id</string>
-						<string key="offlineActivity">id</string>
-						<string key="offlineNote">id</string>
-						<string key="offlineWindow">id</string>
-						<string key="pendingWatchersList">id</string>
-						<string key="pendingWatchersView">id</string>
-						<string key="presencePolicyTableView">id</string>
-						<string key="searchSubscriberBox">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="accountPop">
-							<string key="name">accountPop</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addButton">
-							<string key="name">addButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="applyToAll">
-							<string key="name">applyToAll</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactExists">
-							<string key="name">contactExists</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="createContact">
-							<string key="name">createContact</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="delButton">
-							<string key="name">delButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="dialogPolicyTableView">
-							<string key="name">dialogPolicyTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="disabled_label">
-							<string key="name">disabled_label</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="eventTabView">
-							<string key="name">eventTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="groupCombo">
-							<string key="name">groupCombo</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="newWatcherLabel">
-							<string key="name">newWatcherLabel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="newWatcherPop">
-							<string key="name">newWatcherPop</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="newWatcherWindow">
-							<string key="name">newWatcherWindow</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="newWatchers">
-							<string key="name">newWatchers</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="offlineActivity">
-							<string key="name">offlineActivity</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="offlineNote">
-							<string key="name">offlineNote</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="offlineWindow">
-							<string key="name">offlineWindow</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="pendingWatchersList">
-							<string key="name">pendingWatchersList</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="pendingWatchersView">
-							<string key="name">pendingWatchersView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presencePolicyTableView">
-							<string key="name">presencePolicyTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchSubscriberBox">
-							<string key="name">searchSubscriberBox</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PresencePolicy.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">SearchContactListModel</string>
 					<string key="superclassName">CustomListModel</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/SearchContactListModel.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">VerticalBoxView</string>
-					<string key="superclassName">NSView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/VerticalBoxView.h</string>
 					</object>
 				</object>
 			</array>
@@ -8219,8 +7766,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 		<int key="IBDocument.defaultPropertyAccessControl">3</int>
 		<dictionary class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">
 			<string key="NSAddTemplate">{8, 8}</string>
-			<string key="NSMenuCheckmark">{9, 8}</string>
-			<string key="NSMenuMixedState">{7, 2}</string>
+			<string key="NSMenuCheckmark">{11, 11}</string>
+			<string key="NSMenuMixedState">{10, 3}</string>
 			<string key="NSUser">{32, 32}</string>
 			<string key="audio">{239.11438777804796, 239.11438777804796}</string>
 			<string key="bell">{14, 12}</string>

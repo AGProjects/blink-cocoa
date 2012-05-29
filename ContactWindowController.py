@@ -468,6 +468,11 @@ class ContactWindowController(NSWindowController):
     def showWindow_(self, sender):
         super(ContactWindowController, self).showWindow_(sender)
 
+    @objc.IBAction
+    def showChatWindow_(self, sender):
+        if self.chatWindow:
+            self.chatWindow.window().makeKeyAndOrderFront_(None)
+
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         style.setLineBreakMode_(NSLineBreakByTruncatingTail)
@@ -2145,6 +2150,10 @@ class ContactWindowController(NSWindowController):
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
 
+    def updateWindowMenu(self):
+        item = self.windowMenu.itemWithTag_(5)
+        item.setEnabled_(any(sess.hasStreamOfType("chat") for sess in self.sessionControllers))
+
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
             self.chatMenu.removeItemAtIndex_(0)
@@ -2855,6 +2864,8 @@ class ContactWindowController(NSWindowController):
             self.updateToolsMenu()
         elif menu == self.chatMenu:
             self.updateChatMenu()
+        elif menu == self.windowMenu:
+            self.updateWindowMenu()
         elif menu == self.restoreContactsMenu:
             self.updateRestoreContactsMenu()
         elif menu == self.desktopShareMenu:
