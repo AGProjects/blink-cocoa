@@ -935,14 +935,8 @@ class AudioController(MediaStream):
         elif seg == record_segment:
             if self.stream.recording_active:
                 self.stream.stop_recording()
-                self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
-                self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
-                self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
             else:
                 self.startAudioRecording()
-                self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
-                self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
-                self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
         elif seg == stop_segment:
             self.end()
             if sender == self.audioSegmented:
@@ -1030,9 +1024,15 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
+        self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
+        self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
+        self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
+        self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
+        self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
+        self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.addRecordingToHistory(data.filename)
         growl_data = TimestampedNotificationData()
         growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
