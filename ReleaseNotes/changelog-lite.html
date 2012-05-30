@@ -6,6 +6,49 @@
 
 <body>
 
+<h2>Version 1.7.0</h2>
+
+<p>May 30th, 2012
+
+<ul>
+<li>Fixed handling for Min-Expires header for REGISTER methods
+<li>Fixed handling for incoming INVITE with inactive audio offer
+<li>Fixed handling re-INVITEs with an empty body
+<li>Fixed displaying our own contact on Bonjour conferencing
+<li>Fixed discovery of Bonjour announced Conference servers
+<li>Fixed stopping outgoing ringtones in some situations
+<li>Fixed handling refresh interval from Min-Expires for SUBSCRIBE methods
+<li>Fixed parsing errors for SIP URIs
+<li>Fixed crash when the realm field is empty in authentication headers
+<li>Fixed memory leaks in Session Info panel
+<li>Fixed memory leaks in Chat Windows
+<li>Fixed memory leaks in Conference Panel
+<li>Fixed setting session failure reason on local transport error
+<li>Fixed selecting audio recording icon
+<li>Fixed timestamp display in Chat sessions
+<li>Fixed Engine failure on bogus incoming REFER requests
+<li>Fixed crash on RTCP decryption when using SRTP
+<li>Fixed some Subscribe method related exceptions
+<li>Fixed exception when logging a failed Call Transfer
+<li>Fixed setting Chat Window title when there is none to be set
+<li>Fixed a race-condition when adding or removing a Stream
+<li>Re-init Session Info panel when re-connect chat session
+<li>Improved display of SIP account in the account popup button
+<li>Handle callto: URLs dialled from external applications
+<li>Handle Command-W shortut in Chat window to close the window
+<li>Added Show Chat Window menu item in Window menu
+<li>Terminate all Sessions when going to sleep
+<li>Improved printing of SIP Registration errors
+<li>Improved handling of ringtones when in Silent mode
+<li>Turn off speech synthesis when in Silent mode
+<li>Prevent waking up the computer by Bonjour events
+<li>Hide unnecessary scrollbar in settings section view
+<li>Added general advanced GUI section
+<li>Added typed text in Search Bar to the list of transfer destinations
+<li>Print audio stream info in Debug Window also if added later
+</ul>
+
+
 <h2>Version 1.6.2</h2>
 
 <p>February 14th, 2012
