@@ -297,7 +297,7 @@ class ConferenceScreenSharingHandler(object):
 
 
 class MessageInfo(object):
-    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None):
+    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text'):
         self.msgid = msgid 
         self.direction = direction
         self.sender = sender
@@ -306,6 +306,7 @@ class MessageInfo(object):
         self.text = text
         self.private = private
         self.status = status
+        self.content_type = content_type
 
 
 class MessageHandler(NSObject):
@@ -507,7 +508,7 @@ class MessageHandler(NSObject):
         cpim_from = format_identity(message.sender) if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         private = "1" if message.private else "0"
-        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, "text", private, message.status)
+        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status)
 
 
 class ChatController(MediaStream):
@@ -1475,12 +1476,13 @@ class ChatController(MediaStream):
             private = data.private
             text = message.body
             timestamp = message.timestamp
+            is_html = True if message.content_type == 'text/html' else False
             if window:
                 name = format_identity(sender)
                 icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
                 recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
                 if self.chatViewController:
-                    self.chatViewController.showMessage(msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered")
+                    self.chatViewController.showMessage(msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered", is_html=is_html)
 
                 tab = self.chatViewController.outputView.window()
                 tab_is_key = tab.isKeyWindow() if tab else False
@@ -1497,7 +1499,7 @@ class ChatController(MediaStream):
                 NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # save to history
-            message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered")
+            message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text')
             self.handler.add_to_history(message)
 
     def _NH_ChatStreamGotComposingIndication(self, stream, data):

@@ -60,7 +60,7 @@ def processHTMLText(text, usesmileys=True, is_html=False):
     result = []
     tokens = _url_pattern.split(text)
     for token in tokens:
-        if _url_pattern_exact.match(token):
+        if not is_html and _url_pattern_exact.match(token):
             type, d, rest = token.partition(":")
             url = type + d + urllib.quote(rest, "/%?&=;:,@+$#")
             token = r'<a href=\"%s\">%s</a>' % (url, escape_html(token))
