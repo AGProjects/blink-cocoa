@@ -470,7 +470,8 @@ class AudioController(MediaStream):
             if self.audioEndTime and (time.time() - self.audioEndTime > cleanup_delay):
                 self.removeFromSession()
                 self.sessionManager.finalizeAudioSession(self)
-                timer.invalidate()
+                if timer.isValid():
+                    timer.invalidate()
                 self.audioEndTime = None
     
         if self.stream and self.stream.recording_active and (self.audioSegmented or self.transferSegmented):
