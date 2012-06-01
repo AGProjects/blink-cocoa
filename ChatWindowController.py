@@ -522,7 +522,8 @@ class ChatWindowController(NSWindowController):
                 chat_stream.closeTab()
 
         for chat_stream in self.stream_controllers.values():
-            chat_stream.reset()
+            if chat_stream:
+                chat_stream.reset()
 
         #close idle tabs
         for item in self.tabView.tabViewItems().copy():
