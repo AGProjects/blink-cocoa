@@ -1186,8 +1186,6 @@ class ChatWindowController(NSWindowController):
                 for contact in session.invited_participants:
                     self.participants.append(contact)
  
-            self.participantsTableView.reloadData()
-
             # Update drawer status
             if session.hasStreamOfType("audio"):
                 if audio_stream.holdByLocal:
@@ -1248,6 +1246,8 @@ class ChatWindowController(NSWindowController):
             self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
 
             self.resizeDrawerSplitter()
+
+        self.participantsTableView.reloadData()
 
     def drawerDidOpen_(self, notification):
         session = self.selectedSessionController()
