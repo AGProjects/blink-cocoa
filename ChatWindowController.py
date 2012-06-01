@@ -1268,8 +1268,8 @@ class ChatWindowController(NSWindowController):
             self.revalidateToolbar()
             self.updateTitle()
             session = self.sessions[item.identifier()]
+            self.refreshDrawer()
             if session.mustShowDrawer:
-                self.refreshDrawer()
                 self.drawer.open()
                 NSApp.delegate().windowController.drawer.close()
                 self.participantsTableView.deselectAll_(self)
