@@ -304,6 +304,7 @@ class HistoryViewer(NSWindowController):
             icon = NSApp.delegate().windowController.iconPathForSelf()
         else:
             sender_uri = format_identity_from_text(message.cpim_from)[0]
+            # TODO: How to render the icons from Address Book? Especially in sandbox mode we do not have access to other folders
             icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
 
         timestamp=Timestamp.parse(message.cpim_timestamp)
