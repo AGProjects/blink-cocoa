@@ -12,6 +12,7 @@ import os
 import re
 import socket
 import urllib
+import urlparse
 import uuid
 
 from application.notification import NotificationCenter, IObserver
@@ -158,6 +159,8 @@ class SIPManager(object):
         self.ringer = Ringer(self)
         self.incomingSessions = set()
         self.activeAudioStreams = set()
+        self.last_calls_connections = {}
+        self.last_calls_connections_authRequestCount = {}
         self.pause_music = True
         self.bonjour_disabled_on_sleep = False
         self.bonjour_conference_services = BonjourConferenceServices()
@@ -944,11 +947,74 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Forcing termination of Blink, fatal error occurred")
         os.kill(os.getpid(), signal.SIGTERM)
 
+    # NSURLConnection delegate method
+    def connection_didReceiveData_(self, conection, data):
+        try:
+            calls = cjson.decode(str(data))
+        except TypeError:
+            pass
+        else:
+            pass
+            # TODO: synchronize local history database
+
+    # NSURLConnection delegate method
+    def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
+        try:
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account] == connection).next()
+        except StopIteration:
+            pass
+        else:
+            try:
+                account = AccountManager().get_account(key)
+            except KeyError:
+                pass
+            else:
+                try:
+                    self.last_calls_connections_authRequestCount[account.id] += 1
+                except KeyError:
+                    self.last_calls_connections_authRequestCount[account.id] = 1
+
+                if self.last_calls_connections_authRequestCount[account.id] < 2:
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
+                    challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info(u"%s activated" % account)
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
             self.bonjour_conference_services.start()
+        else:
+            self.get_last_calls(account)
+
+    @run_in_gui_thread
+    def get_last_calls(self, account):
+        if not account.server.settings_url:
+            return
+        query_string = "action=get_calls"
+        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        BlinkLogger().log_info(u"Retrieve call history of account %s from %s" % (account, url))
+        url = NSURL.URLWithString_(url)
+        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+        connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
+        self.last_calls_connections[account.id] = connection
+
+    @run_in_gui_thread
+    def close_last_call_connection(self, account):
+        try:
+            connection = self.last_calls_connections[account.id]
+        except KeyError:
+            return
+
+        connection.cancel()
+        try:
+            del self.last_calls_connections[account.id]
+        except KeyError:
+            pass
+
+        try:
+            del self.last_calls_connections_authRequestCount[account.id]
+        except KeyError:
+            pass
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info(u"%s deactivated" % account)
@@ -956,6 +1022,8 @@ class SIPManager(object):
         # Deactivate BonjourConferenceServer discovery
         if account is BonjourAccount():
             self.bonjour_conference_services.stop()
+        else:
+            self.close_last_call_connection(account)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
