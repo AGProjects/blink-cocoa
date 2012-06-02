@@ -1386,6 +1386,7 @@ class ContactWindowController(NSWindowController):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
 
+        account = None
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
@@ -1396,8 +1397,12 @@ class ContactWindowController(NSWindowController):
         else:
             target = contact.uri
             display_name = contact.display_name
+            if ((type(media) is tuple and "chat" in media) or media == "chat") and contact.stored_in_account is not None:
+                account = contact.stored_in_account
 
-        account = self.getAccountWitDialPlan(target)
+        if not account:
+            account = self.getAccountWitDialPlan(target)
+
         if not account:
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
             return
