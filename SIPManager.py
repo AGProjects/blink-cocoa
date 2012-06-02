@@ -967,6 +967,11 @@ class SIPManager(object):
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
 
+    # NSURLConnection delegate method
+    def connection_didFailWithError_(self, connection, error):
+        # TODO: add a timer and retry later
+        pass
+
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
         try:
