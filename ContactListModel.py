@@ -1084,9 +1084,29 @@ class ContactListModel(CustomListModel):
             group.reference.save()
 
     def reloadAddressbook_(self, notification):
+        try:
+            inserted = notification.userInfo()[AddressBook.kABInsertedRecords]
+        except KeyError:
+            inserted = None
+        try:
+            deleted = notification.userInfo()[AddressBook.kABDeletedRecords]
+        except KeyError:
+            deleted = None
+        try:
+            updated = notification.userInfo()[AddressBook.kABUpdatedRecords]
+        except KeyError:
+            updated = None
+        book = AddressBook.ABAddressBook.sharedAddressBook()
         settings = SIPSimpleSettings()
         if settings.contacts.enable_address_book:
-            BlinkLogger().log_info(u"Address Book has changed")
+            for entries in (inserted, deleted, updated):
+                if entries:
+                    for id in entries:
+                        match = book.recordForUniqueId_(id)
+                        if type(match) == AddressBook.ABPerson:
+                            name = formatABPersonName(match)
+                            BlinkLogger().log_info(u"Address Book entry for %s has changed" % name)
+
             self.addressbook_group.loadAddressBook()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
