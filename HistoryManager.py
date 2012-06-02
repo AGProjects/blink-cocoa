@@ -165,7 +165,7 @@ class SessionHistory(object):
             transaction.commit()
 
     @run_in_db_thread
-    def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
+    def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
@@ -179,7 +179,10 @@ class SessionHistory(object):
                           local_uri           = local_uri,
                           remote_uri          = remote_uri,
                           remote_focus        = remote_focus,
-                          participants        = participants
+                          participants        = participants,
+                          sip_callid          = call_id,
+                          sip_fromtag         = from_tag,
+                          sip_totag           = to_tag
                           )
             return True
         except Exception, e:

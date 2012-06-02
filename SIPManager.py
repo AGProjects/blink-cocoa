@@ -510,12 +510,16 @@ class SIPManager(object):
         remote_uri = format_identity_address(controller.target_uri)
         focus = "1" if data.focus else "0"
         failure_reason = ''
-        duration = 0 
+        duration = 0
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
+            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'missed-call'
             direction = 'incoming'
             status = 'delivered'
@@ -544,13 +548,17 @@ class SIPManager(object):
             session.start_time = session.end_time
 
         duration = session.end_time - session.start_time
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message = '<h3>Incoming Audio Call</h3>'
             message += '<p>Call duration: %s' % duration
+            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
             direction = 'incoming'
             status = 'delivered'
@@ -573,12 +581,16 @@ class SIPManager(object):
         remote_uri = format_identity_address(controller.target_uri)
         focus = "1" if data.focus else "0"
         failure_reason = 'Answered elsewhere'
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
             message += '<p>The call has been answered elsewhere'
+            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
             local_uri = local_uri
             remote_uri = remote_uri
@@ -603,12 +615,16 @@ class SIPManager(object):
         local_uri = format_identity_address(account)
         remote_uri = format_identity_address(controller.target_uri)
         failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
             message += '<p>Reason: %s (%s)' % (data.reason or data.failure_reason, data.code) 
+            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
             local_uri = local_uri
             remote_uri = remote_uri
@@ -633,11 +649,15 @@ class SIPManager(object):
         local_uri = format_identity_address(account)
         remote_uri = format_identity_address(controller.target_uri)
         failure_reason = ''
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
+            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
             direction = 'incoming'
             status = 'delivered'
@@ -663,18 +683,23 @@ class SIPManager(object):
         direction = 'incoming'
         status = 'delivered'
         failure_reason = ''
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
+
         if session.start_time is None and session.end_time is not None:
             # Session could have ended before it was completely started
             session.start_time = session.end_time
 
         duration = session.end_time - session.start_time
 
-        self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants)
+        self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message= '<h3>Outgoing Audio Call</h3>'
             message += '<p>Call duration: %s' % duration
+            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
             cpim_from = data.target_uri
             cpim_to = local_uri
@@ -683,8 +708,8 @@ class SIPManager(object):
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
-    def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants):
-        SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants)
+    def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
+        SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
 
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)

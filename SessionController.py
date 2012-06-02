@@ -72,6 +72,9 @@ class SessionController(NSObject):
     valid_dtmf = re.compile(r"^[0-9*#,]+$")
     pending_chat_messages = {}
     info_panel = None
+    call_id = None
+    from_tag = None
+    to_tag = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -133,6 +136,8 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
+        self.call_id = session._invitation.call_id
+
         self.initInfoPanel()
 
         # used for accounting
@@ -366,6 +371,10 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.destroyInfoPanel()
         self.owner.updatePresenceStatus()
+        call_id = None
+        from_tag = None
+        to_tag = None
+
         try:
             self.owner.sessionControllers.remove(self)
         except ValueError:
@@ -609,6 +618,7 @@ class SessionController(NSObject):
                     self.postdial_string = hash_parts[2]
 
             self.session.connect(ToHeader(target_uri), self.routes, streams)
+
             self.changeSessionState(STATE_CONNECTING)
             self.log_info("Connecting session to %s" % self.routes[0])
             self.notification_center.post_notification("BlinkSessionWillStart", sender=self, data=TimestampedNotificationData())
@@ -717,6 +727,16 @@ class SessionController(NSObject):
             self.transfer_window = None
 
     def _NH_SIPSessionDidFail(self, sender, data):
+        self.call_id = sender._invitation.call_id
+        try:
+            self.to_tag = sender._invitation.to_header.parameters['tag']
+        except KeyError:
+            pass
+        try:
+            self.from_tag = sender._invitation.from_header.parameters['tag']
+        except KeyError:
+            pass
+
         if data.failure_reason == 'Unknown error 61':
             status = u"Connection refused"
             self.failureReason = data.failure_reason
@@ -731,7 +751,7 @@ class SessionController(NSObject):
             self.failureReason = "failed"
 
         self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
-        log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
+        log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_FAILED, status)
@@ -783,9 +803,19 @@ class SessionController(NSObject):
         self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
 
     def _NH_SIPSessionDidEnd(self, sender, data):
+        self.call_id = sender._invitation.call_id
+        try:
+            self.to_tag = sender._invitation.to_header.parameters['tag']
+        except KeyError:
+            pass
+        try:
+            self.from_tag = sender._invitation.from_header.parameters['tag']
+        except KeyError:
+            pass
+
         self.log_info("Session ended")
         self.changeSessionState(STATE_FINISHED, data.originator)
-        log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
+        log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
 
         self.resetSession()
