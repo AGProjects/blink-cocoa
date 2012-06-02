@@ -110,6 +110,21 @@ def loadContactIcon(contact):
     else:
         return None
 
+def formatABPersonName(person):
+    first = person.valueForProperty_(AddressBook.kABFirstNameProperty)
+    last = person.valueForProperty_(AddressBook.kABLastNameProperty)
+    middle = person.valueForProperty_(AddressBook.kABMiddleNameProperty)
+    name = u""
+    if first and last and middle:
+        name += unicode(first) + " " + unicode(middle) + " " + unicode(last)
+    elif first and last:
+        name += unicode(first) + " " + unicode(last)
+    elif last:
+        name += unicode(last)
+    elif first:
+        name += unicode(first)
+    return name
+
 
 class BlinkContact(NSObject):
     """Basic Contact representation in Blink UI"""
@@ -691,19 +706,7 @@ class AddressBookBlinkContactGroup(BlinkContactGroup):
 
         for match in book.people():
             person_id = match.uniqueId()
-
-            first = match.valueForProperty_(AddressBook.kABFirstNameProperty)
-            last = match.valueForProperty_(AddressBook.kABLastNameProperty)
-            middle = match.valueForProperty_(AddressBook.kABMiddleNameProperty)
-            name = u""
-            if first and last and middle:
-                name += unicode(first) + " " + unicode(middle) + " " + unicode(last)
-            elif first and last:
-                name += unicode(first) + " " + unicode(last)
-            elif last:
-                name += unicode(last)
-            elif first:
-                name += unicode(first)
+            name = formatABPersonName(match)
             display_name = name
             company = match.valueForProperty_(AddressBook.kABOrganizationProperty)
             if company:
