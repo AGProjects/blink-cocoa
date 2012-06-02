@@ -586,6 +586,10 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
                 seen[target_uri] += 1
             else:
                 seen[target_uri] = 1
+                getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+                contact = getContactMatchingURI(target_uri)
+                if contact:
+                    display_name = contact.display_name
                 blink_contact = HistoryBlinkContact(target_uri, icon=loadContactIconFromFile(target_uri), name=display_name)
                 blink_contact.setDetail(u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time)))
                 contacts.append(blink_contact)

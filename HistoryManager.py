@@ -190,8 +190,14 @@ class SessionHistory(object):
             return False
 
     @run_in_db_thread
-    def _get_entries(self, direction, status, remote_focus, count):
+    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag):
         query='1=1'
+        if call_id:
+            query += " and sip_callid = %s" % SessionHistoryEntry.sqlrepr(call_id)
+        if from_tag:
+            query += " and sip_fromtag = %s" % SessionHistoryEntry.sqlrepr(from_tag)
+        if to_tag:
+            query += " and sip_to_tag = %s" % SessionHistoryEntry.sqlrepr(to_tag)
         if direction:
             query += " and direction = %s" % SessionHistoryEntry.sqlrepr(direction)
         if status:
@@ -205,8 +211,8 @@ class SessionHistory(object):
             BlinkLogger().log_error(u"Error getting entries from sessions history table: %s" % e)
             return []
 
-    def get_entries(self, direction=None, status=None, remote_focus=None, count=12):
-        return block_on(self._get_entries(direction, status, remote_focus, count))
+    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None):
+        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag))
 
     @run_in_db_thread
     def delete_entries(self):

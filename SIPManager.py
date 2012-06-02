@@ -6,8 +6,8 @@ from __future__ import with_statement
 from Foundation import *
 from AppKit import *
 
+
 import cjson
-import datetime
 import os
 import re
 import socket
@@ -21,6 +21,7 @@ from application.python.types import Singleton
 from application.system import host, makedirs, unlink
 
 from collections import defaultdict
+from datetime import datetime, timedelta
 from dateutil.tz import tzlocal
 from eventlet import api, coros, proc
 from eventlet.green import select
@@ -528,7 +529,7 @@ class SIPManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -567,7 +568,7 @@ class SIPManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = format_identity_address(account)
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -601,7 +602,7 @@ class SIPManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -635,7 +636,7 @@ class SIPManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -666,7 +667,7 @@ class SIPManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -706,7 +707,7 @@ class SIPManager(object):
             media_type = 'audio'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -760,7 +761,7 @@ class SIPManager(object):
                             remote_party = format_identity(identity, check_contact=True)
                         except SIPCoreError:
                             remote_party = file[:-4]
-                        timestamp = datetime.datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
+                        timestamp = datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
 
                     stat = os.stat(file)
                     result.append((timestamp, remote_party, file))
@@ -948,14 +949,87 @@ class SIPManager(object):
         os.kill(os.getpid(), signal.SIGTERM)
 
     # NSURLConnection delegate method
-    def connection_didReceiveData_(self, conection, data):
+    def connection_didReceiveData_(self, connection, data):
         try:
-            calls = cjson.decode(str(data))
-        except TypeError:
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account] == connection).next()
+        except StopIteration:
             pass
         else:
+            try:
+                account = AccountManager().get_account(key)
+            except KeyError:
+                pass
+            else:
+                try:
+                    calls = cjson.decode(str(data))
+                except TypeError:
+                    pass
+                else:
+                    self.syncServerHistoryWithLocalHistory(account, calls)
+
+    @run_in_green_thread
+    def syncServerHistoryWithLocalHistory(self, account, calls):
+        try:
+            for call in calls['received']:
+                direction = 'incoming'
+                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
+                if not len(local_entry):
+                    id=str(uuid.uuid1())
+                    media_types = "audio"
+                    participants = ""
+                    focus = "0"
+                    status = 'delivered'
+                    local_uri = str(account.id)
+                    try:
+                        date = call['date']
+                        remote_uri = call['from']
+                        failure_reason = call['status']
+                        duration = call['duration']
+                        call_id = call['sessionId']
+                        from_tag = call['fromTag']
+                        to_tag = call['toTag']
+                    except KeyError:
+                        continue
+                    
+                    start_time = datetime.strptime(date, "%Y-%m-%d  %H:%M:%S")
+                    end_time = start_time + timedelta(seconds=duration)
+                    success = 'completed' if duration > 0 else 'missed'
+                    BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (call['date'], remote_uri))
+                    self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                    NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+        except KeyError:
             pass
-            # TODO: synchronize local history database
+
+        try:
+            for call in calls['placed']:
+                direction = 'outgoing'
+                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
+                if not len(local_entry):
+                    id=str(uuid.uuid1())
+                    media_types = "audio"
+                    participants = ""
+                    focus = "0"
+                    status = 'delivered'
+                    local_uri = str(account.id)
+                    try:
+                        date = call['date']
+                        remote_uri = call['to']
+                        failure_reason = call['status']
+                        duration = call['duration']
+                        call_id = call['sessionId']
+                        from_tag = call['fromTag']
+                        to_tag = call['toTag']
+                    except KeyError:
+                        continue
+
+                    start_time = datetime.strptime(date, "%Y-%m-%d  %H:%M:%S")
+                    end_time = start_time + timedelta(seconds=duration)
+                    success = 'completed' if duration > 0 else 'failed'
+                    BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (call['date'], remote_uri))
+                    self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                    NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+        except KeyError:
+            pass
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
@@ -1078,7 +1152,7 @@ class SIPManager(object):
             status = 'delivered'
             cpim_from = format_identity_address(account)
             cpim_to = format_identity_address(account)
-            timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+            timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             id=str(uuid.uuid1())
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
