@@ -1053,7 +1053,14 @@ class SIPManager(object):
 
                     start_time = datetime.strptime(date, "%Y-%m-%d  %H:%M:%S")
                     end_time = start_time + timedelta(seconds=duration)
-                    success = 'completed' if duration > 0 else 'failed'
+                    if duration > 0:
+                        success = 'completed'
+                    else:
+                        if failure_reason == "487":
+                            success = 'cancelled'
+                        else:
+                            success = 'failed'
+
                     BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (call['date'], remote_uri))
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
