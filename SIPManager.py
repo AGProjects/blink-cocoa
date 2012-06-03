@@ -1013,6 +1013,7 @@ class SIPManager(object):
 
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
+        growl_notifications = {}
         try:
             for call in calls['received']:
                 direction = 'incoming'
@@ -1042,7 +1043,7 @@ class SIPManager(object):
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
 
-                    if success == 'missed':
+                    if success == 'missed' and remote_uri not in growl_notifications.keys():
                         now = datetime(*time.localtime()[:6])
                         elapsed = now - start_time
                         elapsed_hours = elapsed.seconds / (60*60)
@@ -1058,6 +1059,7 @@ class SIPManager(object):
                                 growl_data.streams = media_types
                                 growl_data.account = str(account.id)
                                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
+                                growl_notifications[remote_uri] = True
         except (KeyError, TypeError):
             pass
 
