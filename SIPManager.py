@@ -982,7 +982,7 @@ class SIPManager(object):
             else:
                 try:
                     calls = cjson.decode(str(data))
-                except TypeError, DecodeError:
+                except (TypeError, cjson.DecodeError):
                     BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
