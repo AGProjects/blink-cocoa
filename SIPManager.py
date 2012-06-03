@@ -964,11 +964,25 @@ class SIPManager(object):
                     connection.cancel()
                 request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
                 connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
+                self.last_calls_connections[key]['data'] = ''
                 self.last_calls_connections[key]['authRequestCount'] = 0
                 self.last_calls_connections[key]['connection'] = connection
 
     # NSURLConnection delegate method
     def connection_didReceiveData_(self, connection, data):
+        try:
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
+        except StopIteration:
+            pass
+        else:
+            try:
+                account = AccountManager().get_account(key)
+            except KeyError:
+                pass
+            else:
+                self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + str(data)
+
+    def connectionDidFinishLoading_(self, connection):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
         except StopIteration:
@@ -981,7 +995,7 @@ class SIPManager(object):
                 pass
             else:
                 try:
-                    calls = cjson.decode(str(data))
+                    calls = cjson.decode(self.last_calls_connections[key]['data'])
                 except (TypeError, cjson.DecodeError):
                     BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
@@ -1111,7 +1125,8 @@ class SIPManager(object):
         self.last_calls_connections[account.id] = {'connection': connection,
                                                    'authRequestCount': 0,
                                                    'timer': timer,
-                                                   'url': url
+                                                   'url': url,
+                                                   'data': ''
                                                     }
 
     @run_in_gui_thread
@@ -1473,7 +1488,6 @@ class SIPManager(object):
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                 self._delegate.sip_session_missed(session, data.streams)
-
 
     def _NH_AudioStreamGotDTMF(self, sender, data):
         key = data.digit
