@@ -1002,7 +1002,7 @@ class SIPManager(object):
                     BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (call['date'], remote_uri))
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-        except KeyError:
+        except KeyError, TypeError:
             pass
 
         try:
@@ -1033,7 +1033,7 @@ class SIPManager(object):
                     BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (call['date'], remote_uri))
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-        except KeyError:
+        except KeyError, TypeError:
             pass
 
     # NSURLConnection delegate method
