@@ -11,6 +11,7 @@ import cjson
 import os
 import re
 import socket
+import time
 import urllib
 import urlparse
 import uuid
@@ -1040,6 +1041,23 @@ class SIPManager(object):
                     BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (call['date'], remote_uri))
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+
+                    if success == 'missed':
+                        now = datetime(*time.localtime()[:6])
+                        elapsed = now - start_time
+                        elapsed_hours = elapsed.seconds / (60*60)
+                        if elapsed_hours < 48:
+                            growl_data = TimestampedNotificationData()
+                            try:
+                                uri = SIPURI.parse('sip:'+str(remote_uri))
+                            except Exception:
+                                pass
+                            else:
+                                growl_data.caller = format_identity_simple(uri, check_contact=True)
+                                growl_data.timestamp = start_time
+                                growl_data.streams = media_types
+                                growl_data.account = str(account.id)
+                                self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
         except (KeyError, TypeError):
             pass
 
