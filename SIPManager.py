@@ -948,13 +948,33 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Forcing termination of Blink, fatal error occurred")
         os.kill(os.getpid(), signal.SIGTERM)
 
+    def updateGetCallsTimer_(self, timer):
+        try:
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['timer'] == timer).next()
+        except StopIteration:
+            return
+        else:
+            try:
+                connection = self.last_calls_connections[key]['connection']
+                nsurl = NSURL.URLWithString_(self.last_calls_connections[key]['url'])
+            except KeyError:
+                pass
+            else:
+                if connection:
+                    connection.cancel()
+                request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+                connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
+                self.last_calls_connections[key]['authRequestCount'] = 0
+                self.last_calls_connections[key]['connection'] = connection
+
     # NSURLConnection delegate method
     def connection_didReceiveData_(self, connection, data):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account] == connection).next()
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
         except StopIteration:
             pass
         else:
+            BlinkLogger().log_info(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -962,15 +982,19 @@ class SIPManager(object):
             else:
                 try:
                     calls = cjson.decode(str(data))
-                except TypeError:
-                    pass
+                except TypeError, DecodeError:
+                    BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
 
     # NSURLConnection delegate method
     def connection_didFailWithError_(self, connection, error):
-        # TODO: add a timer and retry later
-        pass
+        try:
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
+        except StopIteration:
+            pass
+        else:
+            BlinkLogger().log_info(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
 
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
@@ -1002,7 +1026,7 @@ class SIPManager(object):
                     BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (call['date'], remote_uri))
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             pass
 
         try:
@@ -1033,13 +1057,13 @@ class SIPManager(object):
                     BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (call['date'], remote_uri))
                     self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             pass
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account] == connection).next()
+            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
         except StopIteration:
             pass
         else:
@@ -1049,11 +1073,11 @@ class SIPManager(object):
                 pass
             else:
                 try:
-                    self.last_calls_connections_authRequestCount[account.id] += 1
+                    self.last_calls_connections[key]['authRequestCount'] += 1
                 except KeyError:
-                    self.last_calls_connections_authRequestCount[account.id] = 1
+                    self.last_calls_connections[key]['authRequestCount'] = 1
 
-                if self.last_calls_connections_authRequestCount[account.id] < 2:
+                if self.last_calls_connections[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
@@ -1069,29 +1093,35 @@ class SIPManager(object):
     def get_last_calls(self, account):
         if not account.server.settings_url:
             return
-        query_string = "action=get_calls"
+        query_string = "action=get_history"
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        BlinkLogger().log_info(u"Retrieve call history of account %s from %s" % (account, url))
-        url = NSURL.URLWithString_(url)
-        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+        nsurl = NSURL.URLWithString_(url)
+        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-        self.last_calls_connections[account.id] = connection
+        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1200.0, self, "updateGetCallsTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
+        self.last_calls_connections[account.id] = {'connection': connection,
+                                                   'authRequestCount': 0,
+                                                   'timer': timer,
+                                                   'url': url
+                                                    }
 
     @run_in_gui_thread
     def close_last_call_connection(self, account):
         try:
-            connection = self.last_calls_connections[account.id]
-        except KeyError:
-            return
-
-        connection.cancel()
-        try:
-            del self.last_calls_connections[account.id]
+            connection = self.last_calls_connections[account.id]['connection']
         except KeyError:
             pass
-
+        else:
+            if connection:
+                connection.cancel()
         try:
-            del self.last_calls_connections_authRequestCount[account.id]
+            timer = self.last_calls_connections[account.id]['timer']
+            if timer and timer.isValid():
+                timer.invalidate()
+                timer = None
+            del self.last_calls_connections[account.id]
         except KeyError:
             pass
 
