@@ -1020,27 +1020,25 @@ class SIPManager(object):
                 local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
                 if not len(local_entry):
                     id=str(uuid.uuid1())
-                    media_types = "audio"
                     participants = ""
                     focus = "0"
-                    status = 'delivered'
                     local_uri = str(account.id)
                     try:
-                        date = call['date']
-                        remote_uri = call['from']
-                        failure_reason = call['status']
+                        remote_uri = call['remoteParty']
+                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
+                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
+                        status = call['status']
                         duration = call['duration']
                         call_id = call['sessionId']
                         from_tag = call['fromTag']
                         to_tag = call['toTag']
-                    except KeyError:
+                        media_types = call['media']
+                    except KeyError,e:
+                        print 'Exceptie %s' % e
                         continue
-                    
-                    start_time = datetime.strptime(date, "%Y-%m-%d  %H:%M:%S")
-                    end_time = start_time + timedelta(seconds=duration)
                     success = 'completed' if duration > 0 else 'missed'
-                    BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (call['date'], remote_uri))
-                    self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                    BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (start_time, remote_uri))
+                    self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
 
                     if success == 'missed' and remote_uri not in growl_notifications.keys():
@@ -1069,34 +1067,32 @@ class SIPManager(object):
                 local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
                 if not len(local_entry):
                     id=str(uuid.uuid1())
-                    media_types = "audio"
                     participants = ""
                     focus = "0"
-                    status = 'delivered'
                     local_uri = str(account.id)
                     try:
-                        date = call['date']
-                        remote_uri = call['to']
-                        failure_reason = call['status']
+                        remote_uri = call['remoteParty']
+                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
+                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
+                        status = call['status']
                         duration = call['duration']
                         call_id = call['sessionId']
                         from_tag = call['fromTag']
                         to_tag = call['toTag']
+                        media_types = call['media']
                     except KeyError:
                         continue
 
-                    start_time = datetime.strptime(date, "%Y-%m-%d  %H:%M:%S")
-                    end_time = start_time + timedelta(seconds=duration)
                     if duration > 0:
                         success = 'completed'
                     else:
-                        if failure_reason == "487":
+                        if status == "487":
                             success = 'cancelled'
                         else:
                             success = 'failed'
 
-                    BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (call['date'], remote_uri))
-                    self.add_to_history(id, media_types, direction, success, failure_reason, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                    BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (start_time, remote_uri))
+                    self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
         except (KeyError, TypeError):
             pass
