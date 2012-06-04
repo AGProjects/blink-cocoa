@@ -550,6 +550,18 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
     deletable = False
     contacts = []
 
+    def startTimer(self):
+        # contacts are not yet loaded when building this group so we cannot lookup contacts just yet
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "firstLoadTimer:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+
+    def firstLoadTimer_(self, timer):
+        self.load_history()
+        if self.timer and self.timer.isValid():
+            self.timer.invalidate()
+            self.timer = None
+
     def format_date(self, dt):
         if not dt:
             return "unknown"
@@ -612,6 +624,7 @@ class MissedCallsBlinkContactGroup(HistoryBlinkContactGroup):
     def __init__(self, name=u'Missed Calls'):
         self.name = NSString.stringWithString_(name)
         self.reference = None
+        self.startTimer()
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='missed', count=100, remote_focus="0")
@@ -623,6 +636,7 @@ class OutgoingCallsBlinkContactGroup(HistoryBlinkContactGroup):
     def __init__(self, name=u'Outgoing Calls'):
         self.name = NSString.stringWithString_(name)
         self.reference = None
+        self.startTimer()
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='outgoing', count=100, remote_focus="0")
@@ -634,6 +648,7 @@ class IncomingCallsBlinkContactGroup(HistoryBlinkContactGroup):
     def __init__(self, name=u'Incoming Calls'):
         self.name = NSString.stringWithString_(name)
         self.reference = None
+        self.startTimer()
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='completed', count=100, remote_focus="0")
