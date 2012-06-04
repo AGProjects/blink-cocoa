@@ -2204,6 +2204,12 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            contact = self.getContactMatchingURI(target_uri)
+            if contact and contact.display_name and contact.display_name != contact.uri:
+                display_name = contact.display_name
+                fancy_uri = '%s <%s>' % (display_name, target_uri)
+            elif display_name == target_uri:
+                fancy_uri = target_uri
 
             item = {
             "streams": result.media_types.split(","),
@@ -2223,6 +2229,13 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            contact = self.getContactMatchingURI(target_uri)
+            if contact and contact.display_name and contact.display_name != target_uri:
+                display_name = contact.display_name
+                fancy_uri = '%s <%s>' % (display_name, target_uri)
+            elif display_name == target_uri:
+                fancy_uri = target_uri
+
             item = {
             "streams": result.media_types.split(","),
             "account": result.local_uri,
@@ -2241,6 +2254,13 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            contact = self.getContactMatchingURI(target_uri)
+            if contact and contact.display_name and contact.display_name != target_uri:
+                display_name = contact.display_name
+                fancy_uri = '%s <%s>' % (display_name, target_uri)
+            elif display_name == target_uri:
+                fancy_uri = target_uri
+
             item = {
             "streams": result.media_types.split(","),
             "account": result.local_uri,
@@ -2259,6 +2279,10 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            contact = self.getContactMatchingURI(target_uri)
+            if contact and contact.display_name and contact.display_name != target_uri:
+                display_name = contact.display_name
+                fancy_uri = '%s <%s>' % (display_name, target_uri)
             item = {
             "streams": result.media_types.split(","),
             "account": result.local_uri,
