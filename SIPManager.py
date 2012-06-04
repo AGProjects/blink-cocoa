@@ -1032,16 +1032,34 @@ class SIPManager(object):
                         call_id = call['sessionId']
                         from_tag = call['fromTag']
                         to_tag = call['toTag']
-                        media_types = call['media']
+                        media_types = ", ".join(call['media']) or 'audio'
                     except KeyError,e:
                         print 'Exceptie %s' % e
                         continue
                     success = 'completed' if duration > 0 else 'missed'
-                    BlinkLogger().log_info(u"Adding incoming call at %s from %s from server history" % (start_time, remote_uri))
+                    BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                    if 'audio' in call['media']:
+                        direction = 'incoming'
+                        status = 'delivered'
+                        cpim_from = remote_uri
+                        cpim_to = local_uri
+                        timestamp = str(Timestamp(datetime.now(tzlocal())))
+                        if success == 'missed':
+                            message = '<h3>Missed Incoming Audio Call</h3>'
+                            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                            media_type = 'missed-call'
+                        else:
+                            duration = self.get_printed_duration(start_time, end_time)
+                            message = '<h3>Incoming Audio Call</h3>'
+                            message += '<p>The call has been answered elsewhere'
+                            message += '<p>Call duration: %s' % duration
+                            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                            media_type = 'audio'
+                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
 
-                    if success == 'missed' and remote_uri not in growl_notifications.keys():
+                    if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
                         now = datetime(*time.localtime()[:6])
                         elapsed = now - start_time
                         elapsed_hours = elapsed.seconds / (60*60)
@@ -1079,7 +1097,7 @@ class SIPManager(object):
                         call_id = call['sessionId']
                         from_tag = call['fromTag']
                         to_tag = call['toTag']
-                        media_types = call['media']
+                        media_types = ", ".join(call['media']) or 'audio'
                     except KeyError:
                         continue
 
@@ -1091,9 +1109,31 @@ class SIPManager(object):
                         else:
                             success = 'failed'
 
-                    BlinkLogger().log_info(u"Adding outgoing call at %s to %s from server history" % (start_time, remote_uri))
+                    BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                    if 'audio' in call['media']:
+                        local_uri = local_uri
+                        remote_uri = remote_uri
+                        direction = 'incoming'
+                        status = 'delivered'
+                        cpim_from = remote_uri
+                        cpim_to = local_uri
+                        timestamp = str(Timestamp(datetime.now(tzlocal())))
+                        media_type = 'audio'
+                        if success == 'failed':
+                            message = '<h3>Failed Outgoing Audio Call</h3>'
+                            message += '<p>Reason: %s' % status
+                            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                        elif success == 'cancelled':
+                            message= '<h3>Cancelled Outgoing Audio Call</h3>'
+                            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                        else:
+                            duration = self.get_printed_duration(start_time, end_time)
+                            message= '<h3>Outgoing Audio Call</h3>'
+                            message += '<p>Call duration: %s' % duration
+                            message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
         except (KeyError, TypeError):
             pass
 
