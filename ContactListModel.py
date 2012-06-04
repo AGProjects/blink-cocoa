@@ -1620,7 +1620,7 @@ class ContactListModel(CustomListModel):
 
             try:
                 group = (g for g in self.contactGroupsList if g.name == blink_contact.reference.group.name).next()
-            except StopIteration:
+            except (StopIteration, AttributeError):
                 pass
             else:
                 try:
