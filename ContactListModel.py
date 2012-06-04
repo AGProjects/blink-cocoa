@@ -611,7 +611,7 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
 
         for blink_contact in contacts:
             if seen[blink_contact.uri] > 1:
-                new_detail = blink_contact.detail + u' and other %d times' % seen[blink_contact.uri]
+                new_detail = blink_contact.detail + u' and %d other times' % seen[blink_contact.uri]
                 blink_contact.setDetail(new_detail)
             self.contacts.append(blink_contact)
 
