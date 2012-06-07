@@ -306,11 +306,14 @@ class HistoryViewer(NSWindowController):
             sender_uri = format_identity_from_text(message.cpim_from)[0]
             # TODO: How to render the icons from Address Book? Especially in sandbox mode we do not have access to other folders
             icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
-
-        timestamp=Timestamp.parse(message.cpim_timestamp)
-        is_html = False if message.content_type == 'text' else True
-        private = True if message.private == "1" else False
-        self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+        try:
+            timestamp=Timestamp.parse(message.cpim_timestamp)
+        except ValueError:
+            pass
+        else:
+            is_html = False if message.content_type == 'text' else True
+            private = True if message.private == "1" else False
+            self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
 
     @objc.IBAction
     def paginateResults_(self, sender):
