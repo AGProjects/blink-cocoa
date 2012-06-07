@@ -323,12 +323,14 @@ class SessionInfoController(NSObject):
             self.resetChat()
         else:
             self.chat_local_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_local_path[-1]))
-            if len(self.chat_stream.stream.msrp.full_local_path) > 1:
-                self.chat_remote_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_local_path[0]))
-            else:
-                self.chat_remote_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_remote_path[0]))
+            if self.chat_stream and self.chat_stream.stream and self.chat_stream.stream.msrp:
+                if len(self.chat_stream.stream.msrp.full_local_path) > 1:
+                    self.chat_remote_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_local_path[0]))
+                else:
+                    self.chat_remote_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_remote_path[0]))
 
-            self.chat_connection_mode.setStringValue_(self.chat_stream.stream.local_role.title())
+            if self.chat_stream and self.chat_stream.stream:
+                self.chat_connection_mode.setStringValue_(self.chat_stream.stream.local_role.title())
     
     def updateTimer_(self, timer):
         if self.sessionController is not None:
