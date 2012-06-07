@@ -727,15 +727,18 @@ class SessionController(NSObject):
             self.transfer_window = None
 
     def _NH_SIPSessionDidFail(self, sender, data):
-        self.call_id = sender._invitation.call_id
+        try:
+            self.call_id = sender._invitation.call_id
+        except Exception:
+            self.call_id = ''
         try:
             self.to_tag = sender._invitation.to_header.parameters['tag']
         except KeyError:
-            pass
+            self.to_tag = ''
         try:
             self.from_tag = sender._invitation.from_header.parameters['tag']
         except KeyError:
-            pass
+            self.from_tag = ''
 
         if data.failure_reason == 'Unknown error 61':
             status = u"Connection refused"
@@ -807,11 +810,11 @@ class SessionController(NSObject):
         try:
             self.to_tag = sender._invitation.to_header.parameters['tag']
         except KeyError:
-            pass
+            self.to_tag= ''
         try:
             self.from_tag = sender._invitation.from_header.parameters['tag']
         except KeyError:
-            pass
+            self.from_tag = ''
 
         self.log_info("Session ended")
         self.changeSessionState(STATE_FINISHED, data.originator)
