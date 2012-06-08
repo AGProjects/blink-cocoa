@@ -665,7 +665,7 @@ class PresencePolicy(NSWindowController):
             info = cPickle.load(open(storage_path, "r"))
             self.offlineNote.setStringValue_(info["note"])
             self.offlineActivity.selectItemWithTitle_(info["activity"])
-        except:
+        except (cPickle.UnpicklingError, IOError):
             pass
 
         self.offlineWindow.makeKeyAndOrderFront_(None)
