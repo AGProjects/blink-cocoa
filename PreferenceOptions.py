@@ -64,7 +64,7 @@ def formatName(name):
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
-SECURE_OPTIONS=('web_password')
+SECURE_OPTIONS=('web_password', 'replication_password')
 
 class HiddenOption(object):
     """Marker class to hide options in the preferences panel"""
@@ -1521,6 +1521,7 @@ PreferenceOptionTypes = {
 "audio.sample_rate": HiddenOption,
 "audio.tail_length": HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
+"chat.replication_password": HiddenOption,
 "chat.sms_replication": HiddenOption,
 "file_transfer.directory": HiddenOption,
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
@@ -1629,6 +1630,7 @@ Placeholders = {
 SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
+                       'chat': 'Chat Messages',
                        'dialog_event': 'Dialog',
                        'gui': 'GUI Settings',
                        'logs': 'File Logging',
@@ -1656,7 +1658,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'sounds', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'chat', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
@@ -1685,6 +1687,7 @@ ToolTips = {
              'audio.auto_transfer' : 'Automatically accept transfer requests from remote party',
              'audio.call_waiting' : 'If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress',
              'auth.username': 'Enter authentication username if different than the SIP Address username',
+             'chat.replication_password': 'Enter a password to encrypt the content of your messages on the replication server',
              'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
              'nat_traversal.msrp_relay': 'If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain',
              'nat_traversal.use_ice': 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays',

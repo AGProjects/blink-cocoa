@@ -34,6 +34,11 @@ class AudioSettingsExtension(SettingsGroup):
     reject_anonymous = Setting(type=bool, default=False)
 
 
+class ChatSettingsExtension(SettingsGroup):
+    disable_replication = Setting(type=bool, default=False)
+    replication_password = KeychainPasswordSetting(type=str, default='', label='ChatReplication')
+
+
 class MessageSummarySettingsExtension(MessageSummarySettings):
     enabled = Setting(type=bool, default=True)
 
@@ -115,6 +120,7 @@ class AccountExtension(SettingsObjectExtension):
 
     auth = AuthSettingsExtension
     audio = AudioSettingsExtension
+    chat = ChatSettingsExtension
     ldap = LDAPSettingsExtension
     message_summary = MessageSummarySettingsExtension
     msrp = MSRPSettingsExtension

@@ -7,6 +7,7 @@ import objc
 
 import os
 import re
+import random
 import string
 import ldap
 from datetime import datetime
@@ -36,7 +37,7 @@ from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
-from HistoryManager import SessionHistory
+from HistoryManager import SessionHistory, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
@@ -207,7 +208,7 @@ class ContactWindowController(NSWindowController):
     ldap_search = None
     ldap_found_contacts = []
     local_found_contacts = []
-
+    journal_replicator = None
     first_run = False
 
 
@@ -349,6 +350,7 @@ class ContactWindowController(NSWindowController):
 
         self.setAlwaysOnTop()
         self.setSpeechRecognition()
+        self.journal_replicator = ChatHistoryReplicator()
         self.loaded = True
 
     def userDefaultsDidChange_(self, notification):
@@ -599,6 +601,9 @@ class ContactWindowController(NSWindowController):
         self.refreshAccountList()
 
     def _NH_SIPAccountDidActivate(self, notification):
+        if notification.sender is not BonjourAccount() and not notification.sender.chat.replication_password:
+            notification.sender.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+            notification.sender.save()
         self.refreshAccountList()
 
     def _NH_SIPAccountDidDeactivate(self, notification):

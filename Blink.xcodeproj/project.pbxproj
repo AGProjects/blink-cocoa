@@ -604,6 +604,9 @@
 		1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
 		1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
 		1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
+		1FD614BA1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
+		1FD614BB1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
+		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD996FF142DEFC400EE171F /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
@@ -1252,6 +1255,7 @@
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
 		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
+		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
@@ -1610,6 +1614,7 @@
 				1FBBF2E612E9B3500077E766 /* HistoryManager.py */,
 				2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */,
 				2BB36D3510FE504600DA4577 /* HistoryViewer.xib */,
+				1FD614B91580C7F000FC809F /* EncryptionWrappers.py */,
 			);
 			name = History;
 			sourceTree = "<group>";
@@ -2403,6 +2408,7 @@
 				1FA4908B1549631A0011EE27 /* AddressBookTel-plugin.py in Resources */,
 				1FA4908E1549631A0011EE27 /* AddressBookURL-plugin-setup.py in Resources */,
 				1FA490911549631A0011EE27 /* AddressBookURL-plugin.py in Resources */,
+				1FD614BB1580C7F000FC809F /* EncryptionWrappers.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2616,6 +2622,7 @@
 				1FA4908C1549631A0011EE27 /* AddressBookTel-plugin.py in Resources */,
 				1FA4908F1549631A0011EE27 /* AddressBookURL-plugin-setup.py in Resources */,
 				1FA490921549631A0011EE27 /* AddressBookURL-plugin.py in Resources */,
+				1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2827,6 +2834,7 @@
 				1FA4908A1549631A0011EE27 /* AddressBookTel-plugin.py in Resources */,
 				1FA4908D1549631A0011EE27 /* AddressBookURL-plugin-setup.py in Resources */,
 				1FA490901549631A0011EE27 /* AddressBookURL-plugin.py in Resources */,
+				1FD614BA1580C7F000FC809F /* EncryptionWrappers.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

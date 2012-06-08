@@ -231,6 +231,10 @@ class iCloudManager(NSObject):
                         label = '%s WEB (%s)' % (NSApp.delegate().applicationName, account.id)
                         keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
                         value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                    if name == 'replication_password':
+                        label = '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id)
+                        keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                        value = unicode(keychain_item.password()) if keychain_item is not None else ''
                     state[name] = value
             return state
 
@@ -279,7 +283,8 @@ class iCloudManager(NSObject):
             if isinstance(account, Account):
                 passwords = {'auth': {'label': '%s (%s)'      % (NSApp.delegate().applicationName, account.id), 'value': account.auth.password},
                              'web':  {'label': '%s WEB (%s)'  % (NSApp.delegate().applicationName, account.id), 'value': account.server.web_password},
-                             'ldap': {'label': '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.ldap.password}
+                             'ldap': {'label': '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.ldap.password},
+                             'chat': {'label': '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.chat.replication_password}
                             }
                 for p in passwords.keys():
                     label = passwords[p]['label']
