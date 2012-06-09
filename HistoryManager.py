@@ -229,6 +229,23 @@ class SessionHistory(object):
         return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag))
 
     @run_in_db_thread
+    def _get_last_chat_conversations(self, count):
+        query="select local_uri, remote_uri from sessions where media_types = 'chat' and local_uri not like 'bonjour%'order by id desc limit 100"
+
+        rows = list(self.db.queryAll(query))
+        results = []
+        for row in rows:
+            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(row[1])
+            if target_uri not in results:
+                results.append((row[0], target_uri))
+                if len(results) == count:
+                    break
+        return reversed(results)
+
+    def get_last_chat_conversations(self, count=5):
+        return block_on(self._get_last_chat_conversations(count))
+
+    @run_in_db_thread
     def delete_entries(self):
         query = "delete from sessions"
         try:

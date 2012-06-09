@@ -534,6 +534,7 @@ class ChatController(MediaStream):
     stream = None
     finishedLoading = False
     showHistoryEntries = 20
+    mustShowUnreadMessages = False
 
     history = None
     handler = None
@@ -681,6 +682,7 @@ class ChatController(MediaStream):
             self.window.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.mustShowUnreadMessages = True
         self.openChatWindow()
         if is_update and self.sessionController.canProposeMediaStreamChanges():
             self.changeStatus(STREAM_PROPOSING)
@@ -688,6 +690,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.mustShowUnreadMessages = True
         self.openChatWindow()
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
@@ -1047,7 +1050,7 @@ class ChatController(MediaStream):
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
         window = NSApp.delegate().windowController.chatWindow
-        if window:
+        if window and self.mustShowUnreadMessages:
             window.noteNewMessageForSession_(self.sessionController)
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):

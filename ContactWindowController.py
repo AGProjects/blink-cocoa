@@ -1437,6 +1437,39 @@ class ContactWindowController(NSWindowController):
             if not session.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
+    @run_in_gui_thread
+    def startSessionWithLocalAndRemoteURI(self, local_uri, remote_uri, media="chat"):
+        NSApp.activateIgnoringOtherApps_(True)
+        try:
+            account = AccountManager().get_account(local_uri)
+        except KeyError:
+            return
+
+        target_uri = self.backend.parse_sip_uri(remote_uri, account)
+        if not target_uri:
+            return
+
+        contact = self.getContactMatchingURI(remote_uri)
+        display_name = contact.display_name if contact else ''
+
+        session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, unicode(display_name))
+        session.setOwner_(self)
+        self.sessionControllers.append(session)
+
+        if media == "video":
+            media = ("video", "audio")
+
+        if type(media) is not tuple:
+            if media == "chat" and account is not BonjourAccount():
+                # just show the window and wait for user to type before starting the outgoing session
+                session.open_chat_window_only = True
+
+            if not session.startSessionWithStreamOfType(media):
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
+        else:
+            if not session.startCompositeSessionWithStreamsOfTypes(media):
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
+
     def startSessionWithAccount(self, account, target, media):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
@@ -2184,6 +2217,16 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.backend.isMediaTypeSupported('chat'))
 
     @run_in_green_thread
+    def show_last_chat_conversations(self):
+        results = SessionHistory().get_last_chat_conversations(4)
+        self.open_last_chat_conversations(results)
+
+    @run_in_gui_thread
+    def open_last_chat_conversations(self, conversations=[]):
+        for parties in conversations:
+            self.startSessionWithLocalAndRemoteURI(parties[0], parties[1], "chat")
+
+    @run_in_green_thread
     @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
         def format_date(dt):
@@ -2309,7 +2352,7 @@ class ContactWindowController(NSWindowController):
             item = self.historyMenu.itemWithTag_(1)
             item.setHidden_(True)
         else:
-            if self.historyMenu.numberOfItems() < 3:
+            if self.historyMenu.numberOfItems() < 4:
                 self.historyMenu.addItem_(self.recordingsSubMenu)
                 self.historyMenu.addItem_(NSMenuItem.separatorItem())
             self.get_session_history_entries()
@@ -2321,8 +2364,8 @@ class ContactWindowController(NSWindowController):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
 
-        while menu.numberOfItems() > 4:
-            menu.removeItemAtIndex_(4)
+        while menu.numberOfItems() > 5:
+            menu.removeItemAtIndex_(5)
  
         mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
@@ -2492,6 +2535,10 @@ class ContactWindowController(NSWindowController):
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
             openFileTransferSelectionDialog(account, contact.uri)
+
+    @objc.IBAction
+    def showLastChatConversations_(self, sender):
+        self.show_last_chat_conversations()
 
     @objc.IBAction
     def viewHistory_(self, sender):
