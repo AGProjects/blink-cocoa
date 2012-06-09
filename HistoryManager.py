@@ -231,7 +231,6 @@ class SessionHistory(object):
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
         query="select local_uri, remote_uri from sessions where media_types like '%chat%' and local_uri <> 'bonjour'order by start_time desc limit 100"
-        print query
         rows = list(self.db.queryAll(query))
         results = []
         for row in rows:
