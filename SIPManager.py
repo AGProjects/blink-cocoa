@@ -989,7 +989,7 @@ class SIPManager(object):
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_info(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
+            #BlinkLogger().log_info(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -998,7 +998,8 @@ class SIPManager(object):
                 try:
                     calls = cjson.decode(self.last_calls_connections[key]['data'])
                 except (TypeError, cjson.DecodeError):
-                    BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+                    pass
+                    #BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
 
@@ -1008,8 +1009,7 @@ class SIPManager(object):
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
         except StopIteration:
             pass
-        else:
-            BlinkLogger().log_info(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+        #BlinkLogger().log_info(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
 
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
