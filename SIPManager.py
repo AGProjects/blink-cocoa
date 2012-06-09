@@ -1303,17 +1303,19 @@ class SIPManager(object):
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
         account = sender.account
-        if account.xcap.discovered:
-            BlinkLogger().log_info(u"Discovered XCAP root %s for account %s" % (sender.client.root, account.id))
-        else:
-            BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (sender.client.root, account.id))
+        xcap_root = sender.xcap_root
+        if xcap_root is None:
+            # The XCAP manager might be stopped because this notification is processed in a different
+            # thread from which it was posted
+            return
+        BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
 
         supported_features=(   'contactlist_supported',
                                'presence_policies_supported',
                                'dialoginfo_policies_supported',
                                'status_icon_supported',
                                'offline_status_supported')
-        BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported) is True))
+        BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported)))
 
     def isRemoteDesktopSharingActive(self):
         try:
