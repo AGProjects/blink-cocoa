@@ -583,7 +583,7 @@ class SessionController(NSObject):
     def setRoutesFailed(self, msg):
         self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
 
-        log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
+        log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_DNS_FAILED, msg)
@@ -600,7 +600,7 @@ class SessionController(NSObject):
             self.changeSessionState(STATE_DNS_FAILED, u"No routes found to SIP proxy")
             self.log_info("Session failed: No route found to SIP proxy")
 
-            log_data = TimestampedNotificationData(direction='outgoing', originator='local', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, reason='No route found to SIP proxy', failure_reason='No route found to SIP proxy', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log)
+            log_data = TimestampedNotificationData(direction='outgoing', originator='local', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, reason='No route found to SIP proxy', failure_reason='No route found to SIP proxy', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
             self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         elif not self.waitingForITunes:
