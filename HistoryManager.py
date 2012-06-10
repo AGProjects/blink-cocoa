@@ -1097,7 +1097,7 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                self.connections_for_outgoing_replication[account.id]['connection'] = None
+                self.connections_for_outgoing_replication[key]['connection'] = None
 
         try:
             key = (account for account in self.connections_for_incoming_replication.keys() if self.connections_for_incoming_replication[account]['connection'] == connection).next()
@@ -1109,7 +1109,7 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                self.connections_for_incoming_replication[account.id]['connection'] = None
+                self.connections_for_incoming_replication[key]['connection'] = None
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
