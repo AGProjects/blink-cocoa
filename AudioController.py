@@ -565,7 +565,7 @@ class AudioController(MediaStream):
     def changeStatus(self, newstate, fail_reason=None):
         if not NSThread.isMainThread():
             raise Exception("called from non-main thread")
-    
+
         oldstatus = self.status
     
         if self.status != newstate:
@@ -614,6 +614,7 @@ class AudioController(MediaStream):
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
                 self.updateAudioStatusWithSessionState(u"Audio removed")
+            self.updateAudioStatusWithSessionState(u"Cancelling Request...")
         elif status == STREAM_CANCELLING:
             self.updateAudioStatusWithSessionState(u"Cancelling Request...")
         elif status == STREAM_INCOMING:
