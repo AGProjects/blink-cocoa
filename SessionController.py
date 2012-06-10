@@ -64,7 +64,7 @@ class SessionController(NSObject):
     proposalOriginator = None
     waitingForITunes = False
     streamHandlers = None
-    lastChatOutputView = None
+    chatPrintView = None
     collaboration_form_id = None
     remote_conference_has_audio = False
     transfer_window = None
