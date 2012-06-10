@@ -75,6 +75,7 @@ class SessionController(NSObject):
     call_id = None
     from_tag = None
     to_tag = None
+    dealloc_timer = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -91,6 +92,8 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.streamHandlers = []
         self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, sender=self)
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -125,6 +128,8 @@ class SessionController(NSObject):
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
         self.cancelledStream = None
         self.remote_focus = False
@@ -163,6 +168,8 @@ class SessionController(NSObject):
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
         self.cancelledStream = None
         self.remote_focus = False
@@ -190,6 +197,25 @@ class SessionController(NSObject):
                 stream_controller.startOutgoing(False)
 
         return self
+
+    def startDeallocTimer(self):
+        self.notification_center.remove_observer(self, sender=self)
+        self.notification_center.remove_observer(self, name='SystemWillSleep')
+        self.destroyInfoPanel()
+
+        if self.dealloc_timer is None:
+            self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+
+    def deallocTimer_(self, timer):
+        if self.chatPrintView is None:
+            self.dealloc_timer.invalidate()
+            self.dealloc_timer = None
+
+    def dealloc(self):
+        self.notification_center = None
+        super(SessionController, self).dealloc()
 
     def log_info(self, text):
         BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
@@ -349,8 +375,6 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=TimestampedNotificationData(state=newstate, reason=fail_reason))
 
     def resetSession(self):
-        self.notification_center.discard_observer(self, sender=self.session)
-        self.notification_center.discard_observer(self, name='SystemWillSleep')
 
         self.streamHandlers = []
         self.state = STATE_IDLE
@@ -588,7 +612,6 @@ class SessionController(NSObject):
 
         self.changeSessionState(STATE_DNS_FAILED, msg)
         self.end()
-        self.destroyInfoPanel()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -607,6 +630,10 @@ class SessionController(NSObject):
             self.connectSession()
 
     def connectSession(self):
+        if self.dealloc_timer is not None and self.dealloc_timer.isValid():
+            self.dealloc_timer.invalidate()
+            self.dealloc_timer = None
+
         if self.session:
             self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
             streams = [s.stream for s in self.streamHandlers]
@@ -686,7 +713,6 @@ class SessionController(NSObject):
         self.log_info("Session will start")
 
     def _NH_SIPSessionDidStart(self, sender, data):
-        self.notification_center.add_observer(self, name='SystemWillSleep')
 
         self.remoteParty = format_identity(self.session.remote_identity)
         if self.session.remote_focus:
@@ -767,6 +793,7 @@ class SessionController(NSObject):
         self.resetSession()
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
+        self.notification_center.remove_observer(self, sender=sender)
 
         # redirect
         if data.code in (301, 302) and data.redirect_identities:
@@ -832,6 +859,7 @@ class SessionController(NSObject):
                 music_applications = MusicApplications()
                 music_applications.resume()
 
+        self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
@@ -1042,6 +1070,12 @@ class SessionController(NSObject):
     def _NH_SIPSessionTransferGotProgress(self, sender, data):
         self.log_info(u'Transfer got progress %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferGotProgress", sender=self, data=data)
+
+    def _NH_BlinkSessionDidFail(self, sender, data):
+        self.startDeallocTimer()
+
+    def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.startDeallocTimer()
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         # update Chat Window toolbar buttons depending on session and stream state
