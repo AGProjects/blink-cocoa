@@ -330,10 +330,10 @@ class SessionController(NSObject):
         return self.state in (STATE_FINISHED, STATE_FAILED, STATE_DNS_FAILED)
 
     def removeStreamHandler(self, streamHandler):
-        if streamHandler not in self.streamHandlers:
+        try:
+            self.streamHandlers.remove(streamHandler)
+        except ValueError:
             return
-
-        self.streamHandlers.remove(streamHandler)
 
         # notify Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
