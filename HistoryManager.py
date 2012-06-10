@@ -761,6 +761,8 @@ class ChatHistoryReplicator(object):
         except KeyError:
             return
         else:
+            if acc.chat.disable_replication:
+                return
             try:
                 entry = cjson.encode(data.entry)
             except (TypeError, cjson.EncodeError), e:
