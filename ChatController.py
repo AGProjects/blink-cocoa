@@ -574,7 +574,6 @@ class ChatController(MediaStream):
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, sender=stream)
-            self.notification_center.add_observer(self, sender=self.sessionController)
             self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
             self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
@@ -683,6 +682,7 @@ class ChatController(MediaStream):
             self.window.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.notification_center.add_observer(self, sender=self.sessionController)
         self.session_was_active = True
         self.mustShowUnreadMessages = True
         self.openChatWindow()
@@ -692,6 +692,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.notification_center.add_observer(self, sender=self.sessionController)
         self.session_was_active = True
         self.mustShowUnreadMessages = True
         self.openChatWindow()
@@ -1532,7 +1533,14 @@ class ChatController(MediaStream):
         if self.chatViewController:
             self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
+    def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.notification_center.remove_observer(self, sender=self.sessionController)
+
     def _NH_BlinkSessionDidFail(self, sender, data):
+        if data.failure_reason == 'DNS Lookup Failed':
+            self.notification_center.remove_observer(self, sender=self.stream)
+
+        self.notification_center.remove_observer(self, sender=self.sessionController)
         self.session_failed = True
         if not self.mediastream_failed:
             reason = data.failure_reason or data.reason
@@ -1609,13 +1617,15 @@ class ChatController(MediaStream):
             self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
     def endStream(self):
+        streamController = self.sessionController.streamHandlerOfType('chat')
+
         if self.status != STREAM_DISCONNECTING:
             self.backend.ringer.stop_ringing(self.sessionController.session)
 
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
-        elif self.session and self.stream and (self.session.streams == [self.stream] or self.session.remote_focus):
+        elif self.session and self.stream and (self.sessionController.streamHandlers == [self] or self.session.remote_focus):
             self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
         else:
@@ -1658,7 +1668,7 @@ class ChatController(MediaStream):
 
     def startDeallocTimer(self):
         if not self.session_was_active:
-            self.removeFromSession()
+            self.notification_center.remove_observer(self, sender=self.stream)
             self.sessionController.startDeallocTimer()
 
         if not self.dealloc_timer:
@@ -1672,7 +1682,6 @@ class ChatController(MediaStream):
     def dealloc(self):
 
         # remove middleware observers
-        self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
         self.notification_center = None
