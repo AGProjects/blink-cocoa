@@ -77,7 +77,6 @@ class SessionController(NSObject):
     from_tag = None
     to_tag = None
     dealloc_timer = None
-    dns_lookup = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -422,8 +421,8 @@ class SessionController(NSObject):
     def lookup_destination(self, target_uri):
         assert isinstance(target_uri, SIPURI)
 
-        self.dns_lookup = DNSLookup()
-        self.notification_center.add_observer(self, sender=self.dns_lookup)
+        lookup = DNSLookup()
+        self.notification_center.add_observer(self, sender=lookup)
         settings = SIPSimpleSettings()
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
@@ -437,7 +436,7 @@ class SessionController(NSObject):
             uri = target_uri
             self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
 
-        self.dns_lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
         if self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED):
@@ -716,7 +715,7 @@ class SessionController(NSObject):
         self.notification_center.remove_observer(self, sender=lookup)
         message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
-        self.dns_lookup = None
+        lookup = None
 
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
@@ -727,7 +726,7 @@ class SessionController(NSObject):
             self.setRoutesFailed("No routes found to SIP Proxy")
         else:
             self.setRoutesResolved(routes)
-        self.dns_lookup = None
+        lookup = None
 
     def _NH_SystemWillSleep(self, sender, data):
         self.end()
