@@ -86,6 +86,7 @@ class SMSViewController(NSObject):
     def initWithAccount_target_name_(self, account, target, display_name):
         self = super(SMSViewController, self).init()
         if self:
+            self.notification_center = NotificationCenter()
             self.account = account
             self.target_uri = target
             self.display_name = display_name
@@ -176,7 +177,7 @@ class SMSViewController(NSObject):
 
         self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
-        NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(sender), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+        self.notification_center().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(sender), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
         # save to history
         message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
@@ -221,6 +222,22 @@ class SMSViewController(NSObject):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    def _NH_DNSLookupDidFail(self, lookup, data):
+        self.notification_center.remove_observer(self, sender=lookup)
+        message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
+        self.setRoutesFailed(message)
+
+    def _NH_DNSLookupDidSucceed(self, lookup, data):
+        self.notification_center.remove_observer(self, sender=lookup)
+
+        result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
+        self.log_info(u"DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
+        routes = data.result
+        if not routes:
+            self.setRoutesFailed("No routes found to SIP Proxy")
+        else:
+            self.setRoutesResolved(routes)
+
     def _NH_SIPMessageDidSucceed(self, sender, data):
         BlinkLogger().log_info(u"SMS message delivery suceeded")
 
@@ -236,7 +253,7 @@ class SMSViewController(NSObject):
                 message.status='delivered'
             self.add_to_history(message)
 
-        NotificationCenter().remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
         BlinkLogger().log_info(u"SMS message delivery failed: %s" % data.reason)
@@ -249,7 +266,7 @@ class SMSViewController(NSObject):
             message.status='failed'
             self.add_to_history(message)
 
-        NotificationCenter().remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, sender=sender)
 
     @run_in_green_thread
     def add_to_history(self, message):
@@ -292,12 +309,16 @@ class SMSViewController(NSObject):
                                       RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
+    @allocate_autorelease_pool
+    @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.routes = routes
         for msgid, text, content_type in self.queue:
             self._sendMessage(msgid, text, content_type)
         self.queue = []
 
+    @allocate_autorelease_pool
+    @run_in_gui_thread
     def setRoutesFailed(self, msg):
         BlinkLogger().log_error(u"DNS Lookup failed: %s" % msg)
         self.chatViewController.showSystemMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
@@ -313,7 +334,7 @@ class SMSViewController(NSObject):
         utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
         message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                   RouteHeader(self.routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
-        NotificationCenter().add_observer(self, sender=message_request)
+        self.notification_center.add_observer(self, sender=message_request)
         message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
 
         id=str(message_request)
@@ -328,8 +349,28 @@ class SMSViewController(NSObject):
         self.messages[id] = message
         return message
 
+    def lookup_destination(self, target_uri):
+        assert isinstance(target_uri, SIPURI)
+
+        lookup = DNSLookup()
+        lookup.type = 'sip_proxies'
+        self.notification_center.add_observer(self, sender=lookup)
+        settings = SIPSimpleSettings()
+
+        if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
+            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, 
+                         parameters={'transport': self.account.sip.outbound_proxy.transport})
+            self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+        elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
+            uri = SIPURI(host=self.account.id.domain)
+            self.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+        else:
+            uri = target_uri
+            self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+
     def sendMessage(self, text, content_type="text/plain"):
-        SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
+        self.lookup_destination(self.target_uri)
 
         timestamp = Timestamp(datetime.datetime.now(tzlocal()))
         hash = hashlib.sha1()
@@ -356,7 +397,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient=CPIMIdentity(self.target_uri, self.display_name)
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(recipient), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(recipient), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             return True
         return False
