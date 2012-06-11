@@ -235,8 +235,9 @@ class SessionHistory(object):
         results = []
         for row in rows:
             target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(row[1])
-            if target_uri not in results:
-                results.append((row[0], target_uri))
+            pair = (row[0], target_uri)
+            if pair not in results:
+                results.append(pair)
                 if len(results) == count:
                     break
         return reversed(results)
