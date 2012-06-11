@@ -28,6 +28,7 @@ from sipsimple.util import Timestamp, TimestampedNotificationData
 import AudioSession
 
 from AnsweringMachine import AnsweringMachine
+from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
@@ -101,80 +102,80 @@ class AudioController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
+        BlinkLogger().log_info(u"Creating %s" % self)
 
-        if self:
-            self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
-            # 5 minutes of history data for Session Info graphs
-            self.loss_history = deque(maxlen=300)
-            self.rtt_history = deque(maxlen=300)
-            self.jitter_history = deque(maxlen=300)
+        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
+        # 5 minutes of history data for Session Info graphs
+        self.loss_history = deque(maxlen=300)
+        self.rtt_history = deque(maxlen=300)
+        self.jitter_history = deque(maxlen=300)
 
-            self.notification_center = NotificationCenter()
-            self.notification_center.add_observer(self, sender=stream)
-            self.notification_center.add_observer(self, sender=self.sessionController)
+        self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, sender=stream)
+        self.notification_center.add_observer(self, sender=self.sessionController)
 
-            self.ice_negotiation_status = u'Disabled' if not self.sessionController.account.nat_traversal.use_ice else None
+        self.ice_negotiation_status = u'Disabled' if not self.sessionController.account.nat_traversal.use_ice else None
 
-            NSBundle.loadNibNamed_owner_("AudioSession", self)
-            # TODO: hide zrtp area until implemented -adi
-            self.setNormalViewHeight(self.view.frame())
+        NSBundle.loadNibNamed_owner_("AudioSession", self)
+        # TODO: hide zrtp area until implemented -adi
+        self.setNormalViewHeight(self.view.frame())
 
-            item = self.view.menu().itemWithTag_(20) # add to contacts
-            item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
-            item.setTitle_("Add %s to Contacts" % format_identity(self.sessionController.remotePartyObject))
+        item = self.view.menu().itemWithTag_(20) # add to contacts
+        item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
+        item.setTitle_("Add %s to Contacts" % format_identity(self.sessionController.remotePartyObject))
 
-            self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
+        self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
 
-            segmentChildren = NSAccessibilityUnignoredDescendant(self.transferSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
-            segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Transfer Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren = NSAccessibilityUnignoredDescendant(self.transferSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Transfer Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
-            segmentChildren = NSAccessibilityUnignoredDescendant(self.conferenceSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
-            segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Mute Participant'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren = NSAccessibilityUnignoredDescendant(self.conferenceSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Mute Participant'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
-            segmentChildren = NSAccessibilityUnignoredDescendant(self.audioSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
-            segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
-            segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-            segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren = NSAccessibilityUnignoredDescendant(self.audioSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
-            self.elapsed.setStringValue_("")
-            self.info.setStringValue_("")
-            self.view.setDelegate_(self)
+        self.elapsed.setStringValue_("")
+        self.info.setStringValue_("")
+        self.view.setDelegate_(self)
 
-            if not self.timer:
-                self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+        if not self.timer:
+            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
-            loadImages()
+        loadImages()
 
-            self.transferEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
-            self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
+        self.transferEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
+        self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
 
-            if self.transferEnabled:
-                self.transferSegmented.setHidden_(False)
-                self.audioSegmented.setHidden_(True)
-            else:
-                self.transferSegmented.setHidden_(True)
-                self.audioSegmented.setHidden_(False)
+        if self.transferEnabled:
+            self.transferSegmented.setHidden_(False)
+            self.audioSegmented.setHidden_(True)
+        else:
+            self.transferSegmented.setHidden_(True)
+            self.audioSegmented.setHidden_(False)
 
-            self.sessionInfoButton.setEnabled_(True)
+        self.sessionInfoButton.setEnabled_(True)
 
         return self
 
@@ -188,6 +189,7 @@ class AudioController(MediaStream):
         self.transfer_timer = None
 
     def dealloc(self):
+        BlinkLogger().log_info(u"Disposing %s" % self)
         self.notification_center = None
         self.sessionController = None
         if self.timer is not None and self.timer.isValid():
