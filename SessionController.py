@@ -419,7 +419,7 @@ class SessionController(NSObject):
             self.info_panel = None
 
     def lookup_destination(self, target_uri):
-        assert isinstance(target_uri, SIPURI)
+        self.changeSessionState(STATE_DNS_LOOKUP)
 
         lookup = DNSLookup()
         self.notification_center.add_observer(self, sender=lookup)
@@ -509,7 +509,6 @@ class SessionController(NSObject):
                         self.info_panel.show()
                         self.info_panel.window.setFrame_display_animate_(self.info_panel_last_frame, True, True)
                 else:
-                    self.changeSessionState(STATE_DNS_LOOKUP)
                     self.lookup_destination(self.target_uri)
 
                     outdev = SIPSimpleSettings().audio.output_device
