@@ -11,10 +11,11 @@ from application.python import Null
 
 from datetime import datetime
 
-from sipsimple.account import BonjourAccount
+from sipsimple.account import Account, BonjourAccount
 from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
+from sipsimple.lookup import DNSLookup
 from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
@@ -416,6 +417,27 @@ class SessionController(NSObject):
             self.info_panel.close()
             self.info_panel = None
 
+    def lookup_destination(self, target_uri):
+        assert isinstance(target_uri, SIPURI)
+
+        lookup = DNSLookup()
+        lookup.type = 'sip_proxies'
+        self.notification_center.add_observer(self, sender=lookup)
+        settings = SIPSimpleSettings()
+
+        if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
+            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, 
+                         parameters={'transport': self.account.sip.outbound_proxy.transport})
+            self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+        elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
+            uri = SIPURI(host=self.account.id.domain)
+            self.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+        else:
+            uri = target_uri
+            self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
+
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+
     def initializeSessionWithAccount(self, account):
         if self.session is None:
             self.session = Session(account)
@@ -494,7 +516,7 @@ class SessionController(NSObject):
                         self.info_panel.window.setFrame_display_animate_(self.info_panel_last_frame, True, True)
                 else:
                     self.changeSessionState(STATE_DNS_LOOKUP)
-                    SIPManager().lookup_sip_proxies(self.account, self.target_uri, self)
+                    self.lookup_destination(self.target_uri)
 
                     outdev = SIPSimpleSettings().audio.output_device
                     indev = SIPSimpleSettings().audio.input_device
@@ -605,8 +627,11 @@ class SessionController(NSObject):
         else:
             return format_identity_simple(self.remotePartyObject)
 
+    @allocate_autorelease_pool
+    @run_in_gui_thread
     def setRoutesFailed(self, msg):
         self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
+        self.notification_center.remove_observer(self, sender=self.session)
 
         log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
@@ -694,6 +719,21 @@ class SessionController(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
+
+    def _NH_DNSLookupDidFail(self, lookup, data):
+        self.notification_center.remove_observer(self, sender=lookup)
+        message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
+        self.setRoutesFailed(message)
+
+    def _NH_DNSLookupDidSucceed(self, lookup, data):
+        self.notification_center.remove_observer(self, sender=lookup)
+        result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
+        self.log_info(u"DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
+        routes = data.result
+        if not routes:
+            self.setRoutesFailed("No routes found to SIP Proxy")
+        else:
+            self.setRoutesResolved(routes)
 
     def _NH_SystemWillSleep(self, sender, data):
         self.end()
