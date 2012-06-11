@@ -162,11 +162,6 @@ class AudioController(MediaStream):
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
-            if not self.statistics_timer:
-                self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
-
             loadImages()
 
             self.transferEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
@@ -193,8 +188,8 @@ class AudioController(MediaStream):
         self.transfer_timer = None
 
     def dealloc(self):
+        self.notification_center = None
         self.sessionController = None
-        self.invalidateTimers()
         if self.timer is not None and self.timer.isValid():
             self.timer.invalidate()
         self.timer = None
@@ -203,6 +198,7 @@ class AudioController(MediaStream):
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False):
+        self.notification_center.add_observer(self, sender=self.sessionController)
         self.label.setStringValue_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
         self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
@@ -222,6 +218,7 @@ class AudioController(MediaStream):
             self.answeringMachine.start()
 
     def startOutgoing(self, is_update):
+        self.notification_center.add_observer(self, sender=self.sessionController)
         display_name = self.sessionController.contactDisplayName if self.sessionController.contactDisplayName and not self.sessionController.contactDisplayName.startswith('sip:') and not self.sessionController.contactDisplayName.startswith('sips:') else None
         self.label.setStringValue_(display_name if display_name else format_identity_simple(self.sessionController.remotePartyObject))
         self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
@@ -1062,6 +1059,10 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
         self.sessionController.log_info("Audio stream started")
+        self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
+
         self.updateTileStatistics()
 
         self.changeStatus(STREAM_CONNECTED)
@@ -1103,7 +1104,6 @@ class AudioController(MediaStream):
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
         self.notification_center.remove_observer(self, sender=self.stream)
-        self.notification_center.remove_observer(self, sender=self.sessionController)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -1129,7 +1129,6 @@ class AudioController(MediaStream):
                 else:
                     self.changeStatus(STREAM_IDLE, "Session Ended")
         self.notification_center.remove_observer(self, sender=self.stream)
-        self.notification_center.remove_observer(self, sender=self.sessionController)
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
@@ -1139,6 +1138,14 @@ class AudioController(MediaStream):
             self.updateAudioStatusWithSessionState("Connecting...")
         elif data.state == 'ICE Negotiation In Progress':
             self.updateAudioStatusWithSessionState("Negotiating ICE...")
+
+    def _NH_BlinkSessionDidFail(self, sender, data):
+        self.notification_center.remove_observer(self, sender=self.sessionController)
+        if data.failure_reason == 'DNS Lookup Failed':
+            self.notification_center.remove_observer(self, sender=self.stream)
+
+    def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.notification_center.remove_observer(self, sender=self.sessionController)
 
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
@@ -1159,7 +1166,6 @@ class AudioController(MediaStream):
         self.transfer_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "transferFailed:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSEventTrackingRunLoopMode)
-
 
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
         self.updateTransferProgress("Transfer: %s" % data.reason.capitalize())
