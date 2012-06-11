@@ -611,7 +611,7 @@ class SessionController(NSObject):
         log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
-        self.changeSessionState(STATE_DNS_FAILED, msg)
+        self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
         self.end()
 
     @allocate_autorelease_pool
