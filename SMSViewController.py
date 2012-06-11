@@ -353,7 +353,6 @@ class SMSViewController(NSObject):
         assert isinstance(target_uri, SIPURI)
 
         lookup = DNSLookup()
-        lookup.type = 'sip_proxies'
         self.notification_center.add_observer(self, sender=lookup)
         settings = SIPSimpleSettings()
 

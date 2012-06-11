@@ -423,7 +423,6 @@ class SessionController(NSObject):
         assert isinstance(target_uri, SIPURI)
 
         self.dns_lookup = DNSLookup()
-        self.dns_lookup.type = 'sip_proxies'
         self.notification_center.add_observer(self, sender=self.dns_lookup)
         settings = SIPSimpleSettings()
 
