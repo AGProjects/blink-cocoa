@@ -1264,6 +1264,9 @@ class ChatWindowController(NSWindowController):
         if tabView.numberOfTabViewItems() == 0 and not self.closing:
             self.window().performClose_(None)
 
+    def tabView_didDettachTabViewItem_atPosition_(self, tabView, item, position):
+        pass
+
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if self.sessions.has_key(item.identifier()):
             self.revalidateToolbar()
