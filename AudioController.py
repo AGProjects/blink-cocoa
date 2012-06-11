@@ -614,7 +614,8 @@ class AudioController(MediaStream):
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
                 self.updateAudioStatusWithSessionState(u"Audio removed")
-            self.updateAudioStatusWithSessionState(u"Cancelling Request...")
+            elif oldstatus == STREAM_WAITING_DNS_LOOKUP:
+                self.updateAudioStatusWithSessionState(u"Session Cancelled")
         elif status == STREAM_CANCELLING:
             self.updateAudioStatusWithSessionState(u"Cancelling Request...")
         elif status == STREAM_INCOMING:
