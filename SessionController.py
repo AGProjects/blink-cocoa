@@ -77,6 +77,7 @@ class SessionController(NSObject):
     from_tag = None
     to_tag = None
     dealloc_timer = None
+    dns_lookup = None
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -210,6 +211,7 @@ class SessionController(NSObject):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def deallocTimer_(self, timer):
+        self.log_info('Retain count %d' % self.retainCount())
         if self.chatPrintView is None:
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
@@ -420,9 +422,9 @@ class SessionController(NSObject):
     def lookup_destination(self, target_uri):
         assert isinstance(target_uri, SIPURI)
 
-        lookup = DNSLookup()
-        lookup.type = 'sip_proxies'
-        self.notification_center.add_observer(self, sender=lookup)
+        self.dns_lookup = DNSLookup()
+        self.dns_lookup.type = 'sip_proxies'
+        self.notification_center.add_observer(self, sender=self.dns_lookup)
         settings = SIPSimpleSettings()
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
@@ -436,15 +438,7 @@ class SessionController(NSObject):
             uri = target_uri
             self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
 
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
-
-    def initializeSessionWithAccount(self, account):
-        if self.session is None:
-            self.session = Session(account)
-            self.notification_center.add_observer(self, sender=self.session)
-            if not self.try_next_hop:
-                self.routes = None
-            self.failureReason = None
+        self.dns_lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
         if self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED):
@@ -455,8 +449,10 @@ class SessionController(NSObject):
         new_session = False
         add_streams = []
         if self.session is None:
-            # no session yet, initiate it
-            self.initializeSessionWithAccount(self.account)
+            self.session = Session(self.account)
+            if not self.try_next_hop:
+                self.routes = None
+            self.failureReason = None
             new_session = True
 
         for stype in stype_tuple:
@@ -631,8 +627,6 @@ class SessionController(NSObject):
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
-        self.notification_center.remove_observer(self, sender=self.session)
-
         log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
@@ -661,21 +655,20 @@ class SessionController(NSObject):
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
 
-        if self.session:
-            self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
-            streams = [s.stream for s in self.streamHandlers]
-            target_uri = SIPURI.new(self.target_uri)
-            if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
-                hash_parts = target_uri.user.partition(self.account.pstn.dtmf_delimiter)
-                if self.valid_dtmf.match(hash_parts[2]):
-                    target_uri.user = hash_parts[0]
-                    self.postdial_string = hash_parts[2]
+        self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
+        streams = [s.stream for s in self.streamHandlers]
+        target_uri = SIPURI.new(self.target_uri)
+        if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
+            hash_parts = target_uri.user.partition(self.account.pstn.dtmf_delimiter)
+            if self.valid_dtmf.match(hash_parts[2]):
+                target_uri.user = hash_parts[0]
+                self.postdial_string = hash_parts[2]
 
-            self.session.connect(ToHeader(target_uri), self.routes, streams)
-
-            self.changeSessionState(STATE_CONNECTING)
-            self.log_info("Connecting session to %s" % self.routes[0])
-            self.notification_center.post_notification("BlinkSessionWillStart", sender=self, data=TimestampedNotificationData())
+        self.notification_center.add_observer(self, sender=self.session)
+        self.session.connect(ToHeader(target_uri), self.routes, streams)
+        self.changeSessionState(STATE_CONNECTING)
+        self.log_info("Connecting session to %s" % self.routes[0])
+        self.notification_center.post_notification("BlinkSessionWillStart", sender=self, data=TimestampedNotificationData())
 
     def transferSession(self, target, replaced_session_controller=None):
         if self.session:
@@ -724,6 +717,7 @@ class SessionController(NSObject):
         self.notification_center.remove_observer(self, sender=lookup)
         message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
+        self.dns_lookup = None
 
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
@@ -734,6 +728,7 @@ class SessionController(NSObject):
             self.setRoutesFailed("No routes found to SIP Proxy")
         else:
             self.setRoutesResolved(routes)
+        self.dns_lookup = None
 
     def _NH_SystemWillSleep(self, sender, data):
         self.end()
