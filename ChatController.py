@@ -1533,11 +1533,7 @@ class ChatController(MediaStream):
         if self.chatViewController:
             self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
-    def _NH_BlinkSessionDidEnd(self, sender, data):
-        self.notification_center.remove_observer(self, sender=self.sessionController)
-
     def _NH_BlinkSessionDidFail(self, sender, data):
-        self.notification_center.remove_observer(self, sender=self.sessionController)
         self.session_failed = True
         if not self.mediastream_failed:
             reason = data.failure_reason or data.reason
@@ -1585,6 +1581,7 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info(u"Chat stream ended")
         self.notification_center.remove_observer(self, sender=sender)
+        self.notification_center.remove_observer(self, sender=self.sessionController)
         if not self.session_failed and not self.mediastream_failed:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             if self.chatViewController:
