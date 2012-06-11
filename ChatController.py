@@ -560,35 +560,35 @@ class ChatController(MediaStream):
 
     def initWithOwner_stream_(self, sessionController, stream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
+        BlinkLogger().log_info(u"Creating %s" % self)
         self.mediastream_failed = False
         self.session_failed = False
         self.share_screen_in_conference = False
         self.last_failure_reason = None
 
-        if self:
-            self.history_msgid_list=set()
+        self.history_msgid_list=set()
 
-            self.remote_uri = format_identity_address(self.sessionController.remotePartyObject)
-            self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
+        self.remote_uri = format_identity_address(self.sessionController.remotePartyObject)
+        self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
 
-            self.notification_center = NotificationCenter()
-            self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
-            self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+        self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
+        self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
-            NSBundle.loadNibNamed_owner_("ChatView", self)
+        NSBundle.loadNibNamed_owner_("ChatView", self)
 
-            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+        self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
 
-            self.chatViewController.setAccount_(self.sessionController.account)
-            self.chatViewController.resetRenderedMessages()
+        self.chatViewController.setAccount_(self.sessionController.account)
+        self.chatViewController.resetRenderedMessages()
 
-            self.handler = MessageHandler.alloc().initWithView_(self.chatViewController)
+        self.handler = MessageHandler.alloc().initWithView_(self.chatViewController)
 
-            self.screensharing_handler = ConferenceScreenSharingHandler()
-            self.screensharing_handler.setDelegate(self)
+        self.screensharing_handler = ConferenceScreenSharingHandler()
+        self.screensharing_handler.setDelegate(self)
 
-            self.history = ChatHistory()
-            self.backend = SIPManager()
+        self.history = ChatHistory()
+        self.backend = SIPManager()
 
         return self
 
@@ -1676,6 +1676,7 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
+        BlinkLogger().log_info(u"Disposing %s" % self)
         # remove middleware observers
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
