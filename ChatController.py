@@ -572,7 +572,6 @@ class ChatController(MediaStream):
             self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
 
             self.notification_center = NotificationCenter()
-            self.notification_center.add_observer(self, sender=stream)
             self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
             self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
@@ -681,6 +680,7 @@ class ChatController(MediaStream):
             self.window.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.session_was_active = True
         self.mustShowUnreadMessages = True
@@ -691,6 +691,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.session_was_active = True
         self.mustShowUnreadMessages = True
@@ -1536,9 +1537,6 @@ class ChatController(MediaStream):
         self.notification_center.remove_observer(self, sender=self.sessionController)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        if data.failure_reason == 'DNS Lookup Failed':
-            self.notification_center.remove_observer(self, sender=self.stream)
-
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.session_failed = True
         if not self.mediastream_failed:
@@ -1586,13 +1584,13 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info(u"Chat stream ended")
+        self.notification_center.remove_observer(self, sender=sender)
         if not self.session_failed and not self.mediastream_failed:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             if self.chatViewController:
                 self.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.notification_center.remove_observer(self, sender=sender)
         self.stream = None
 
         self.reset()
@@ -1667,7 +1665,6 @@ class ChatController(MediaStream):
 
     def startDeallocTimer(self):
         if not self.session_was_active:
-            self.notification_center.remove_observer(self, sender=self.stream)
             self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController, data=TimestampedNotificationData())
 
         if not self.dealloc_timer:
