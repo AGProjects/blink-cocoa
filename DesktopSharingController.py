@@ -84,12 +84,11 @@ class DesktopSharingController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(DesktopSharingController, self).initWithOwner_stream_(scontroller, stream)
-        if self:
-            self.stream = stream
-            self.direction = stream.handler.type
-            self.vncViewerTask = None
-            self.close_timer = None
-
+        BlinkLogger().log_info(u"Creating %s" % self)
+        self.stream = stream
+        self.direction = stream.handler.type
+        self.vncViewerTask = None
+        self.close_timer = None
         return self
 
     def startIncoming(self, is_update):
@@ -282,6 +281,7 @@ class DesktopSharingController(MediaStream):
             self.sessionController.log_info("%s" % data.reason.title())
 
     def dealloc(self):
+        BlinkLogger().log_info(u"Disposing %s" % self)
         self.stream = None
         self.sessionController = None
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
