@@ -940,6 +940,7 @@ class ChatHistoryReplicator(object):
 
             self.last_journal_id[account] = journal_id
 
+    @allocate_autorelease_pool
     def updateTimer_(self, timer):
         if self.paused:
             return
@@ -998,6 +999,7 @@ class ChatHistoryReplicator(object):
         from_journal_id = self.last_journal_id[account.id]
         self.startConnectionForIncomingReplication(account, from_journal_id)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def startConnectionForIncomingReplication(self, account, from_journal_id=None):
         settings = SIPSimpleSettings()
