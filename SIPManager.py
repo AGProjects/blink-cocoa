@@ -980,7 +980,7 @@ class SIPManager(object):
                         print 'Exceptie %s' % e
                         continue
                     success = 'completed' if duration > 0 else 'missed'
-                    BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
+                    #BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     if 'audio' in call['media']:
                         direction = 'incoming'
@@ -1052,7 +1052,7 @@ class SIPManager(object):
                         else:
                             success = 'failed'
 
-                    BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
+                    #BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     if 'audio' in call['media']:
                         local_uri = local_uri
