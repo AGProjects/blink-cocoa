@@ -85,7 +85,6 @@ def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
             BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
             if sessionController.canProposeMediaStreamChanges():
                 BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
-                sessionController.initInfoPanel()
                 sessionController.startChatSession()
         elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
             contactWindow = sessionController.owner
