@@ -635,17 +635,8 @@ class SessionController(NSObject):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
-        if self.routes != routes:
-            self.routes = routes
-
-        if len(routes) == 0:
-            self.changeSessionState(STATE_DNS_FAILED, u"No routes found to SIP proxy")
-            self.log_info("Session failed: No route found to SIP proxy")
-
-            log_data = TimestampedNotificationData(direction='outgoing', originator='local', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, reason='No route found to SIP proxy', failure_reason='No route found to SIP proxy', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
-            self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
-
-        elif not self.waitingForITunes:
+        self.routes = routes
+        if not self.waitingForITunes:
             self.connectSession()
 
     def connectSession(self):
