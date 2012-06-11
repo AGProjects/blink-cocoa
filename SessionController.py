@@ -208,14 +208,13 @@ class SessionController(NSObject):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def deallocTimer_(self, timer):
-        self.log_info('Retain count %d' % self.retainCount())
+        self.resetSession()
         if self.chatPrintView is None:
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
 
     def dealloc(self):
         BlinkLogger().log_info(u"Disposing %s" % self)
-        self.log_info("has been disposed")
         self.notification_center = None
         super(SessionController, self).dealloc()
 
@@ -627,7 +626,6 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
-        self.resetSession()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1093,6 +1091,9 @@ class SessionController(NSObject):
     def _NH_SIPSessionTransferGotProgress(self, sender, data):
         self.log_info(u'Transfer got progress %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferGotProgress", sender=self, data=data)
+
+    def _NH_BlinkChatWindowWasClosed(self, sender, data):
+        self.startDeallocTimer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.startDeallocTimer()

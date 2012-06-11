@@ -1669,7 +1669,7 @@ class ChatController(MediaStream):
     def startDeallocTimer(self):
         if not self.session_was_active:
             self.notification_center.remove_observer(self, sender=self.stream)
-            self.sessionController.startDeallocTimer()
+            self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController, data=TimestampedNotificationData())
 
         if not self.dealloc_timer:
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)
@@ -1680,7 +1680,6 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
-
         # remove middleware observers
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
