@@ -82,6 +82,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         assert isinstance(target_uri, SIPURI)
         self = super(SessionController, self).init()
+        BlinkLogger().log_info(u"Creating %s" % self)
         self.contactDisplayName = display_name
         self.remoteParty = display_name or format_identity_simple(target_uri)
         self.remotePartyObject = target_uri
@@ -116,6 +117,7 @@ class SessionController(NSObject):
     def initWithSession_(self, session):
         global SessionIdentifierSerial
         self = super(SessionController, self).init()
+        BlinkLogger().log_info(u"Creating %s" % self)
         self.contactDisplayName = None
         self.remoteParty = format_identity_simple(session.remote_identity)
         self.remotePartyObject = session.remote_identity
@@ -155,6 +157,7 @@ class SessionController(NSObject):
     def initWithSessionTransfer_owner_(self, session, owner):
         global SessionIdentifierSerial
         self = super(SessionController, self).init()
+        BlinkLogger().log_info(u"Creating %s" % self)
         self.contactDisplayName = None
         self.remoteParty = format_identity_simple(session.remote_identity)
         self.remotePartyObject = session.remote_identity
