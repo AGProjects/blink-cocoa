@@ -515,12 +515,13 @@ class ChatWindowController(NSWindowController):
         self.window().close()
         self.closing = True
 
-        #close active sessions 
+        # close active sessions
         for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
 
+        # close idle sessions
         for chat_stream in self.stream_controllers.values():
             if chat_stream:
                 chat_stream.closeTab()
