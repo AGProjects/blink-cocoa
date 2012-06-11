@@ -523,14 +523,7 @@ class ChatWindowController(NSWindowController):
 
         for chat_stream in self.stream_controllers.values():
             if chat_stream:
-                chat_stream.reset()
-
-        #close idle tabs
-        for item in self.tabView.tabViewItems().copy():
-            view = item.view()
-            view.removeFromSuperview()
-            item.setView_(None)
-            self.tabSwitcher.removeTabViewItem_(item)
+                chat_stream.closeTab()
 
         self.sessions = {}
         self.stream_controllers = {}
