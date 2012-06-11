@@ -41,7 +41,6 @@ from sipsimple.audio import WavePlayer
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
-from sipsimple.lookup import DNSLookup
 from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
@@ -881,28 +880,6 @@ class SIPManager(object):
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()
         self.ringer.stop()
-
-    def _NH_DNSLookupDidFail(self, lookup, data):
-        self.notification_center.remove_observer(self, sender=lookup)
-
-        if lookup.type == 'stun_servers':
-            account = lookup.owner
-            message = u"DNS lookup of STUN servers for %s failed: %s" % (account.id.domain, data.error)
-            # stun lookup errors can be ignored
-        else:
-            # we should never get here
-            raise RuntimeError("DNS lookup failure for unknown request type: %s: %s" % (lookup.type, data.error))
-        BlinkLogger().log_error(message)
-
-    def _NH_DNSLookupDidSucceed(self, lookup, data):
-        self.notification_center.remove_observer(self, sender=lookup)
-
-        if lookup.type == 'stun_servers':
-            account = lookup.owner
-            BlinkLogger().log_info(u"DNS lookup of STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
-        else:
-            # we should never get here
-            raise RuntimeError("DNS lookup result for unknown request type: %s" % lookup.type)
 
     def _NH_SIPEngineGotException(self, sender, data):
         print "SIP Engine Exception", data
