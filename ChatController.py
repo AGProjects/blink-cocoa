@@ -542,6 +542,8 @@ class ChatController(MediaStream):
     handler = None
     screensharing_handler = None
 
+    session_was_active = False
+
     lastDeliveredTime = None
     undeliveredMessages = {} # id -> message
 
@@ -682,6 +684,7 @@ class ChatController(MediaStream):
             self.window.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.session_was_active = True
         self.mustShowUnreadMessages = True
         self.openChatWindow()
         if is_update and self.sessionController.canProposeMediaStreamChanges():
@@ -690,6 +693,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.session_was_active = True
         self.mustShowUnreadMessages = True
         self.openChatWindow()
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
@@ -1654,6 +1658,10 @@ class ChatController(MediaStream):
             self.screensharing_handler.setDisconnected()
 
     def startDeallocTimer(self):
+        if not self.session_was_active:
+            self.removeFromSession()
+            self.sessionController.startDeallocTimer()
+
         if not self.dealloc_timer:
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
