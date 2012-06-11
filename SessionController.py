@@ -613,6 +613,7 @@ class SessionController(NSObject):
 
         self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
         self.end()
+        self.resetSession()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
