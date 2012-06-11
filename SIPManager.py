@@ -433,27 +433,6 @@ class SIPManager(object):
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
 
-    def lookup_sip_proxies(self, account, target_uri, session_controller):
-        assert isinstance(target_uri, SIPURI)
-
-        lookup = DNSLookup()
-        lookup.type = 'sip_proxies'
-        lookup.owner = session_controller
-        self.notification_center.add_observer(self, sender=lookup)
-        settings = SIPSimpleSettings()
-
-        if isinstance(account, Account) and account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=account.sip.outbound_proxy.host, port=account.sip.outbound_proxy.port, 
-                parameters={'transport': account.sip.outbound_proxy.transport})
-            session_controller.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
-        elif isinstance(account, Account) and account.sip.always_use_my_proxy:
-            uri = SIPURI(host=account.id.domain)
-            session_controller.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, account.id))
-        else:
-            uri = target_uri
-            session_controller.log_info(u"Starting DNS lookup for %s" % target_uri.host)
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
-
     def parse_sip_uri(self, target_uri, account):
         try:
             target_uri = str(target_uri)
@@ -910,10 +889,6 @@ class SIPManager(object):
             account = lookup.owner
             message = u"DNS lookup of STUN servers for %s failed: %s" % (account.id.domain, data.error)
             # stun lookup errors can be ignored
-        elif lookup.type == 'sip_proxies':
-            session_controller = lookup.owner
-            message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(session_controller.target_uri.host), data.error)
-            call_in_gui_thread(session_controller.setRoutesFailed, message)
         else:
             # we should never get here
             raise RuntimeError("DNS lookup failure for unknown request type: %s: %s" % (lookup.type, data.error))
@@ -925,15 +900,6 @@ class SIPManager(object):
         if lookup.type == 'stun_servers':
             account = lookup.owner
             BlinkLogger().log_info(u"DNS lookup of STUN servers of domain %s succeeded: %s" % (account.id.domain, data.result))
-        elif lookup.type == 'sip_proxies':
-            session_controller = lookup.owner
-            result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
-            session_controller.log_info(u"DNS lookup for %s succeeded: %s" % (session_controller.target_uri.host, result_text))
-            routes = data.result
-            if not routes:
-                call_in_gui_thread(session_controller.setRoutesFailed, "No routes found to SIP Proxy")
-            else:
-                call_in_gui_thread(session_controller.setRoutesResolved, routes)
         else:
             # we should never get here
             raise RuntimeError("DNS lookup result for unknown request type: %s" % lookup.type)
