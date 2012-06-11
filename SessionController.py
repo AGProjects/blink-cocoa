@@ -105,7 +105,6 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
-        self.initInfoPanel()
 
         # used for accounting
         self.streams_log = []
@@ -143,7 +142,6 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.call_id = session._invitation.call_id
-
         self.initInfoPanel()
 
         # used for accounting
@@ -216,6 +214,7 @@ class SessionController(NSObject):
             self.dealloc_timer = None
 
     def dealloc(self):
+        BlinkLogger().log_info(u"Disposing %s" % self)
         self.log_info("has been disposed")
         self.notification_center = None
         super(SessionController, self).dealloc()
@@ -234,7 +233,7 @@ class SessionController(NSObject):
         if self.session is not None and self.session.state == 'cancelling_proposal':
             return False
 
-        return True    
+        return True
 
     def handleIncomingStreams(self, streams, is_update=False):
         try:
@@ -628,7 +627,6 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
-        self.end()
         self.resetSession()
 
     @allocate_autorelease_pool
