@@ -352,7 +352,6 @@ class MessageHandler(NSObject):
         return self
 
     def dealloc(self):
-        'dealloc message handler'
         super(MessageHandler, self).dealloc()
 
     def close(self):
