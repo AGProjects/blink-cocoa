@@ -232,7 +232,10 @@ class SessionController(NSObject):
         return not self.inProposal
 
     def canCancelProposal(self):
-        if self.session is not None and self.session.state == 'cancelling_proposal':
+        if self.session is None:
+            return False
+
+        if self.session.state in ('cancelling_proposal', 'received_proposal', 'accepting_proposal', 'rejecting_proposal', 'accepting', 'incoming'):
             return False
 
         return True

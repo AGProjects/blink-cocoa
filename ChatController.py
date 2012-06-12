@@ -621,15 +621,26 @@ class ChatController(MediaStream):
         for item in toolbar.visibleItems():
             identifier = item.itemIdentifier()
             if identifier == 'connect_button':
-                if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
+                    item.setEnabled_(True)
                     item.setToolTip_('Click to cancel the chat session')
                     item.setLabel_(u'Cancel')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
+                elif self.status == STREAM_PROPOSING:
+                    if self.sessionController.proposalOriginator == 'remote':
+                        item.setEnabled_(False)
+                    else:
+                        item.setToolTip_('Click to cancel the chat session')
+                        item.setLabel_(u'Cancel')
+                        item.setImage_(NSImage.imageNamed_("stop_chat"))
+                        item.setEnabled_(True)
                 elif self.status == STREAM_CONNECTED:
+                    item.setEnabled_(True)
                     item.setToolTip_('Click to stop the chat session')
                     item.setLabel_(u'Disconnect')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
+                    item.setEnabled_(True)
                     item.setToolTip_('Click to start a chat session')
                     item.setLabel_(u'Connect')
                     item.setImage_(NSImage.imageNamed_("start_chat"))
@@ -725,10 +736,10 @@ class ChatController(MediaStream):
                 return True
 
             if identifier == 'connect_button':
-                if self.status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
+                    return True
+                elif self.status in (STREAM_PROPOSING, STREAM_CONNECTED):
                     return True if self.sessionController.canCancelProposal() else False
-                elif self.status == STREAM_CONNECTED:
-                    return True if self.sessionController.canProposeMediaStreamChanges() else False
                 else:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
             elif identifier == 'audio' and self.status == STREAM_CONNECTED:
