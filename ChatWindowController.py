@@ -797,7 +797,9 @@ class ChatWindowController(NSWindowController):
         # dispatch the click to the active session
         selectedSession = self.selectedSessionController()
         if selectedSession:
-            selectedSession.userClickedToolbarButton(sender)
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                chatStream.userClickedToolbarButton(sender)
 
     @objc.IBAction
     def useClickedRemoveFromConference_(self, sender):

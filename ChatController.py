@@ -1304,16 +1304,16 @@ class ChatController(MediaStream):
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
 
             elif identifier == 'connect_button':
-                if self.status in (STREAM_IDLE, STREAM_FAILED):
-                    if self.sessionController.canProposeMediaStreamChanges():               
-                        self.sessionController.log_info(u"Re-establishing session to %s" % self.remoteParty)
-                        self.sessionController.mustShowDrawer = True
-                        self.sessionController.startChatSession()
-                    else:
-                        BlinkLogger().log_info(u"Session is pending a proposal")
-
-                elif self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                     self.endStream()
+                else:
+                    if self.sessionController.canProposeMediaStreamChanges():
+                        if len(self.sessionController.streamHandlers) > 1:
+                            self.sessionController.addChatToSession()
+                        elif self.status in (STREAM_IDLE, STREAM_FAILED):
+                            self.sessionController.startChatSession()
+                    else:
+                        BlinkLogger().log_info(u"Session has a pending proposal")
                 
             elif identifier == 'smileys':
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
@@ -1588,8 +1588,6 @@ class ChatController(MediaStream):
                 self.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.stream = None
-
         self.reset()
 
     def _NH_MediaStreamDidFail(self, sender, data):
@@ -1626,8 +1624,6 @@ class ChatController(MediaStream):
             self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
 
-        self.removeFromSession()
-
     # lifetime of a chat controler: possible deallocation paths
     # 1. User click on close tab: closeTab -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
     # 2. User clicks on close window: closeWindow -> for each tab -> closeTab -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
@@ -1661,6 +1657,8 @@ class ChatController(MediaStream):
             self.screensharing_handler.setDisconnected()
 
     def startDeallocTimer(self):
+        self.removeFromSession()
+
         if not self.session_was_active:
             self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController, data=TimestampedNotificationData())
 
@@ -1703,6 +1701,7 @@ class ChatController(MediaStream):
         self.sessionController.chatPrintView = None
 
         # reset variables
+        self.stream = None
         self.handler = None
         self.chatViewController = None
         self.sessionController = None

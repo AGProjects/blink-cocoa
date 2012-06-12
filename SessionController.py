@@ -26,7 +26,7 @@ from AudioController import AudioController
 from VideoController import VideoController
 from MediaStream import *
 from BlinkLogger import BlinkLogger
-from ChatController import ChatController, userClickedToolbarButtonWhileDisconnected, updateToolbarButtonsWhileDisconnected, validateToolbarButtonWhileDisconnected
+from ChatController import ChatController, updateToolbarButtonsWhileDisconnected, validateToolbarButtonWhileDisconnected
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
 from FileTransferController import FileTransferController
 
@@ -380,7 +380,6 @@ class SessionController(NSObject):
 
     def resetSession(self):
 
-        self.streamHandlers = []
         self.state = STATE_IDLE
         self.session = None
         self.endingBy = None
@@ -814,7 +813,6 @@ class SessionController(NSObject):
             self.info_panel_last_frame = self.info_panel.window.frame()
 
         oldSession = self.session
-        self.resetSession()
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
         self.notification_center.remove_observer(self, sender=sender)
@@ -871,9 +869,6 @@ class SessionController(NSObject):
         self.changeSessionState(STATE_FINISHED, data.originator)
         log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
-
-        self.resetSession()
-
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=TimestampedNotificationData())
 
@@ -1119,14 +1114,6 @@ class SessionController(NSObject):
             return chatStream.validateToolbarButton(item)
         else:
             return validateToolbarButtonWhileDisconnected(self, item)
-
-    def userClickedToolbarButton(self, sender):
-        # process clicks on Chat Window toolbar buttons depending on session and stream state
-        chatStream = self.streamHandlerOfType("chat")
-        if chatStream:
-            chatStream.userClickedToolbarButton(sender)
-        else:
-            userClickedToolbarButtonWhileDisconnected(self, sender)
 
 
 class CallTransferWindowController(NSObject):
