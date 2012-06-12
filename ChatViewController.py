@@ -350,25 +350,20 @@ class ChatViewController(NSObject):
 
     def showCollaborationEditor(self):
         settings = SIPSimpleSettings()
-        input_frame=self.inputView.frame()
-        output_frame=self.outputView.frame()
-        self.splitterHeight = input_frame.size.height
-        input_frame.size.height = 0
-        output_frame.size.height += self.splitterHeight
-        self.inputView.setFrame_(input_frame)
-        self.outputView.setFrame_(output_frame)
+
+        frame=self.inputView.frame()
+        self.splitterHeight = frame.size.height
+        frame.size.height = 0
+        self.inputView.setFrame_(frame)
 
         script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def hideCollaborationEditor(self):
         if self.splitterHeight is not None:
-            input_frame=self.inputView.frame()
-            output_frame=self.outputView.frame()
-            input_frame.size.height = self.splitterHeight
-            output_frame.size.height -= self.splitterHeight
-            self.inputView.setFrame_(input_frame)
-            self.outputView.setFrame_(output_frame)
+            frame=self.inputView.frame()
+            frame.size.height = self.splitterHeight
+            self.inputView.setFrame_(frame)
 
         script = "hideCollaborationEditor()"
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
