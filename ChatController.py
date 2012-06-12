@@ -80,378 +80,6 @@ kCGNullWindowID = 0
 kCGWindowImageDefault = 0
 
 
-class ConferenceScreenSharingHandler(object):
-    implements(IObserver)
-
-    delegate = None
-    connected = False
-    screenSharingTimer = None
-    stream = None
-    rect = None
-    frames = 0.0
-    last_time = None
-    current_framerate = None
-    log_first_frame = False
-    show_preview = False
-    may_send = True # wait until previous screen has been sent
-    framerate = 1
-    width = 1024
-    window_id = None
-    compression = 0.5 # jpeg compression
-    quality = 'medium'
-    quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'framerate': 1},
-                        'medium': {'compression': 0.5, 'width': 1024, 'framerate': 1},
-                        'high':   {'compression': 0.7, 'width': None, 'framerate': 1}
-                        }
-
-    def setDelegate(self, delegate):
-        self.delegate = delegate
-
-    def setQuality(self, quality):
-        if quality:
-            self.quality = quality
-        else:
-            self.quality = 'medium'
-        BlinkLogger().log_info('Set screen sharing quality to %s' % self.quality)
-        self.compression = self.quality_settings[self.quality]['compression']
-        self.width = self.quality_settings[self.quality]['width']
-        self.framerate = self.quality_settings[self.quality]['framerate']
-        self.log_first_frame = True
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(self.quality, "ScreensharingQuality")
-
-    def setShowPreview(self):
-        self.show_preview = True
-
-    def setWindowId(self, id):
-        self.window_id = id
-        self.show_preview = True
-
-    def setConnected(self, stream):
-        self.log_first_frame = True
-        self.connected = True
-        self.stream = stream
-        quality = NSUserDefaults.standardUserDefaults().stringForKey_("ScreensharingQuality")
-        self.setQuality(quality)
-        self.last_time = time.time()
-        self.show_preview = True
-        NotificationCenter().add_observer(self, sender=stream)
-
-        if self.screenSharingTimer is None:
-            self.screenSharingTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "sendScreenshotTimer:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSRunLoopCommonModes)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSEventTrackingRunLoopMode)
-            # use UITrackingRunLoopMode in iOS instead of NSEventTrackingRunLoopMode
-
-    def setDisconnected(self):
-        self.log_first_frame = False
-        self.delegate = None
-        self.connected = False
-        self.may_send = True
-        self.frames = 0
-        self.last_time = None
-        self.show_preview = False
-
-        if self.screenSharingTimer is not None:
-            self.screenSharingTimer.invalidate()
-            self.screenSharingTimer = None
-
-        if self.stream:
-            NotificationCenter().remove_observer(self, sender=self.stream)
-            self.stream = None
-
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification.sender, notification.data)
-
-    def _NH_ChatStreamDidDeliverMessage(self, sender, data):
-        self.may_send = True
-        self.last_snapshot_time = time.time()
-
-    def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
-        self.may_send = True
-        self.last_snapshot_time = time.time()
-
-    @allocate_autorelease_pool
-    def sendScreenshotTimer_(self, timer):
-        def screenSharingWindowExists(id):
-            listOptions = kCGWindowListExcludeDesktopElements
-            windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
-            i = 0
-            while i < windowList.count():
-                wob = windowList.objectAtIndex_(i)
-                if wob.objectForKey_(kCGWindowNumber) == id:
-                    del windowList
-                    return True
-                i += 1
-            return False
-
-        dt = time.time() - self.last_time
-        if dt >= 1:
-            self.current_framerate = self.frames / dt
-            self.frames = 0.0
-            self.last_time = time.time()
-
-        if self.may_send and dt >= 1/self.framerate:
-            self.frames = self.frames + 1
-            rect = CGDisplayBounds(CGMainDisplayID())
-            if self.window_id:
-                if screenSharingWindowExists(self.window_id):
-                    image = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
-                else:
-                    self.window_id = None
-                    if self.delegate:
-                        self.delegate.toggleScreensharingWithConferenceParticipants()
-                    else:
-                        self.setDisconnected()
-                    return
-            else:
-                image = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
-            if CGImageGetWidth(image) <= 1:
-                return
-            image = NSImage.alloc().initWithCGImage_size_(image, NSZeroSize)
-            originalSize = image.size()
-            if self.width is not None and originalSize.width > self.width:
-                resizeWidth = self.width
-                resizeHeight = self.width * originalSize.height/originalSize.width
-                scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
-                scaled_image.lockFocus()
-                image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
-                scaled_image.unlockFocus()
-                image = scaled_image
-
-            if self.show_preview:
-                ScreensharingPreviewPanel(image)
-                self.show_preview = False
-
-            jpeg = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
-            # this also works and produces the same result, but it's not documented anywhere
-            #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
-
-            if self.log_first_frame:
-                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(jpeg), image.size().width))
-                self.log_first_frame = False
-            self.may_send = False
-            if self.stream:
-                self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
-
-
-class MessageInfo(object):
-    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text'):
-        self.msgid = msgid 
-        self.direction = direction
-        self.sender = sender
-        self.recipient = recipient
-        self.timestamp = timestamp
-        self.text = text
-        self.private = private
-        self.status = status
-        self.content_type = content_type
-
-
-class MessageHandler(NSObject):
-    """
-    Until the stream is connected, all messages typed will be queued and
-    marked internally as queued.  Once the stream is connected, queued
-    messages will be sent.
-
-    Sent messages are internally marked as unconfirmed. In the UI they are
-    marked with Sending...  When a delivery confirmation arrives, they will
-    be internally marked as delivered and in the UI the Sending...  will be
-    replaced by the delivery timestamp and the messages will be removed from
-    the internal queue.  If a failed delivery confirmation is received or no
-    confirmation is received before timeout, all unconfirmed messages will
-    be marked as undelivered with red in the UI.
-
-    The last undelivered messages will be resent the next time the stream is
-    connected.
-    """
-
-    implements(IObserver)
-
-    session = None
-    stream = None
-    connected = False
-    delegate = None
-    messages = None
-    pending = None
-    remote_uri = None
-    local_uri = None
-
-    def initWithView_(self, chatView):
-        self = super(MessageHandler, self).init()
-        if self:
-            self.stream = None
-            self.connected = None
-            self.messages = {}
-            self.pending = []
-            self.history = ChatHistory()
-            self.delegate = chatView
-            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
-            self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
-        return self
-
-    def dealloc(self):
-        super(MessageHandler, self).dealloc()
-
-    def close(self):
-        self.stream = None
-        self.connected = None
-        self.delegate = None
-        self.history = None
-
-    def _send(self, msgid):
-        message = self.messages.pop(msgid)
-        if message.private and message.recipient is not None:
-            try:
-                id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
-            except ChatStreamError, e:
-                BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
-                message.status='failed'
-                self.add_to_history(message)
-                return False
-        else:
-            try:
-                id = self.stream.send_message(message.text, timestamp=message.timestamp)
-            except ChatStreamError, e:
-                BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
-                message.status='failed'
-                self.add_to_history(message)
-                return False
-
-        message.status = "sent"
-        self.messages[id] = message
-
-        return True
-
-    def send(self, text, recipient=None, private=False):
-        now = datetime.datetime.now(tzlocal())
-        timestamp = Timestamp(now)
-        icon = NSApp.delegate().windowController.iconPathForSelf()
-        recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
-        
-        leftover = text
-        while leftover:
-            # if the text is too big, break it in a smaller size without corrupting
-            # utf-8 character sequences
-            if len(leftover) > MAX_MESSAGE_LENGTH:
-                text = leftover[:MAX_MESSAGE_LENGTH]
-                while len(text.encode("utf-8")) > MAX_MESSAGE_LENGTH:
-                    text = text[:-1]
-                leftover = leftover[len(text):]
-            else:
-                text = leftover
-                leftover = ""
-
-            hash = hashlib.sha1()
-            hash.update(text.encode("utf-8")+str(timestamp))
-            msgid = hash.hexdigest()
-
-            self.messages[msgid] = MessageInfo(msgid, sender=self.delegate.account, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
-
-            if self.connected:
-                try:
-                    self._send(msgid)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error sending message: %s" % e)
-                    self.delegate.showSystemMessage("Error sending message",now, True)
-                else:
-                    self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
-            else:
-                self.pending.append(msgid)
-                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
-
-        return True
-
-    def resend(self, msgid, text, recipient=None, private=False):
-        now = datetime.datetime.now(tzlocal())
-        timestamp = Timestamp(now)
-        recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
-        icon = NSApp.delegate().windowController.iconPathForSelf()
-
-        self.messages[msgid] = MessageInfo(msgid=msgid, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
-
-        if self.connected:
-            try:
-                self._send(msgid)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.showSystemMessage("Error sending message",now, True)
-            else:
-                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
-        else:
-            self.pending.append(msgid)
-            self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
-
-    def setConnected(self, stream):
-        self.connected = True
-        self.stream = stream
-        NotificationCenter().add_observer(self, sender=stream)
-        for msgid in self.pending:
-            private = self.messages[msgid].private
-            sent = self._send(msgid)
-            if not sent:
-                BlinkLogger().log_error(u"Error sending queued message: %s" % msgid)
-            else:
-                self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
-        self.pending = []
-
-    def setDisconnected(self):
-        self.connected = False
-        for msgid in self.pending:
-            message = self.messages.pop(msgid)
-            message.status='failed'
-            self.delegate.markMessage(msgid, MSG_STATE_FAILED)
-            self.add_to_history(message)
-        if self.stream:
-            NotificationCenter().remove_observer(self, sender=self.stream)
-            self.stream = None
-
-    def markMessage(self, message, state):
-        message.state = state
-        self.delegate.markMessage(message.msgid, state, message.private)
-
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification.sender, notification.data)
-
-    def _NH_ChatStreamDidDeliverMessage(self, sender, data):
-        try:
-            message = self.messages.pop(data.message_id)
-            if message:
-                message.status='delivered'
-                self.markMessage(message, MSG_STATE_DELIVERED)
-                self.add_to_history(message)
-                self.lastDeliveredTime = time.time()
-        except KeyError:
-            pass
-
-    def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
-        try:
-            message = self.messages.pop(data.message_id)
-            if message:
-                message.status='failed'
-                self.markMessage(message, MSG_STATE_FAILED)
-                self.add_to_history(message)
-        except KeyError:
-            pass
-
-    @allocate_autorelease_pool
-    @run_in_green_thread
-    def add_to_history(self, message):
-        # writes the record to the sql database
-        cpim_to = "%s <%s@%s>" % (message.recipient.display_name, message.recipient.uri.user, message.recipient.uri.host) if message.recipient else ''
-        cpim_from = format_identity(message.sender) if message.sender else ''
-        cpim_timestamp = str(message.timestamp)
-        private = "1" if message.private else "0"
-        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status)
-
-
 class ChatController(MediaStream):
     implements(IObserver)
 
@@ -1651,4 +1279,376 @@ class ChatController(MediaStream):
         self.backend = None
 
         super(ChatController, self).dealloc()
+
+
+class MessageInfo(object):
+    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text'):
+        self.msgid = msgid 
+        self.direction = direction
+        self.sender = sender
+        self.recipient = recipient
+        self.timestamp = timestamp
+        self.text = text
+        self.private = private
+        self.status = status
+        self.content_type = content_type
+
+
+class MessageHandler(NSObject):
+    """
+        Until the stream is connected, all messages typed will be queued and
+        marked internally as queued.  Once the stream is connected, queued
+        messages will be sent.
+        
+        Sent messages are internally marked as unconfirmed. In the UI they are
+        marked with Sending...  When a delivery confirmation arrives, they will
+        be internally marked as delivered and in the UI the Sending...  will be
+        replaced by the delivery timestamp and the messages will be removed from
+        the internal queue.  If a failed delivery confirmation is received or no
+        confirmation is received before timeout, all unconfirmed messages will
+        be marked as undelivered with red in the UI.
+        
+        The last undelivered messages will be resent the next time the stream is
+        connected.
+        """
+    
+    implements(IObserver)
+    
+    session = None
+    stream = None
+    connected = False
+    delegate = None
+    messages = None
+    pending = None
+    remote_uri = None
+    local_uri = None
+    
+    def initWithView_(self, chatView):
+        self = super(MessageHandler, self).init()
+        if self:
+            self.stream = None
+            self.connected = None
+            self.messages = {}
+            self.pending = []
+            self.history = ChatHistory()
+            self.delegate = chatView
+            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
+            self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
+        return self
+    
+    def dealloc(self):
+        super(MessageHandler, self).dealloc()
+    
+    def close(self):
+        self.stream = None
+        self.connected = None
+        self.delegate = None
+        self.history = None
+    
+    def _send(self, msgid):
+        message = self.messages.pop(msgid)
+        if message.private and message.recipient is not None:
+            try:
+                id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
+            except ChatStreamError, e:
+                BlinkLogger().log_error(u"Error sending message: %s" % e)
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
+                message.status='failed'
+                self.add_to_history(message)
+                return False
+        else:
+            try:
+                id = self.stream.send_message(message.text, timestamp=message.timestamp)
+            except ChatStreamError, e:
+                BlinkLogger().log_error(u"Error sending message: %s" % e)
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
+                message.status='failed'
+                self.add_to_history(message)
+                return False
+        
+        message.status = "sent"
+        self.messages[id] = message
+        
+        return True
+    
+    def send(self, text, recipient=None, private=False):
+        now = datetime.datetime.now(tzlocal())
+        timestamp = Timestamp(now)
+        icon = NSApp.delegate().windowController.iconPathForSelf()
+        recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
+        
+        leftover = text
+        while leftover:
+            # if the text is too big, break it in a smaller size without corrupting
+            # utf-8 character sequences
+            if len(leftover) > MAX_MESSAGE_LENGTH:
+                text = leftover[:MAX_MESSAGE_LENGTH]
+                while len(text.encode("utf-8")) > MAX_MESSAGE_LENGTH:
+                    text = text[:-1]
+                leftover = leftover[len(text):]
+            else:
+                text = leftover
+                leftover = ""
+            
+            hash = hashlib.sha1()
+            hash.update(text.encode("utf-8")+str(timestamp))
+            msgid = hash.hexdigest()
+            
+            self.messages[msgid] = MessageInfo(msgid, sender=self.delegate.account, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
+            
+            if self.connected:
+                try:
+                    self._send(msgid)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error sending message: %s" % e)
+                    self.delegate.showSystemMessage("Error sending message",now, True)
+                else:
+                    self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
+            else:
+                self.pending.append(msgid)
+                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
+        
+        return True
+    
+    def resend(self, msgid, text, recipient=None, private=False):
+        now = datetime.datetime.now(tzlocal())
+        timestamp = Timestamp(now)
+        recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
+        icon = NSApp.delegate().windowController.iconPathForSelf()
+        
+        self.messages[msgid] = MessageInfo(msgid=msgid, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
+        
+        if self.connected:
+            try:
+                self._send(msgid)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error sending message: %s" % e)
+                self.delegate.showSystemMessage("Error sending message",now, True)
+            else:
+                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
+        else:
+            self.pending.append(msgid)
+            self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
+    
+    def setConnected(self, stream):
+        self.connected = True
+        self.stream = stream
+        NotificationCenter().add_observer(self, sender=stream)
+        for msgid in self.pending:
+            private = self.messages[msgid].private
+            sent = self._send(msgid)
+            if not sent:
+                BlinkLogger().log_error(u"Error sending queued message: %s" % msgid)
+            else:
+                self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
+        self.pending = []
+    
+    def setDisconnected(self):
+        self.connected = False
+        for msgid in self.pending:
+            message = self.messages.pop(msgid)
+            message.status='failed'
+            self.delegate.markMessage(msgid, MSG_STATE_FAILED)
+            self.add_to_history(message)
+        if self.stream:
+            NotificationCenter().remove_observer(self, sender=self.stream)
+            self.stream = None
+    
+    def markMessage(self, message, state):
+        message.state = state
+        self.delegate.markMessage(message.msgid, state, message.private)
+    
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+    
+    def _NH_ChatStreamDidDeliverMessage(self, sender, data):
+        try:
+            message = self.messages.pop(data.message_id)
+            if message:
+                message.status='delivered'
+                self.markMessage(message, MSG_STATE_DELIVERED)
+                self.add_to_history(message)
+                self.lastDeliveredTime = time.time()
+        except KeyError:
+            pass
+    
+    def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
+        try:
+            message = self.messages.pop(data.message_id)
+            if message:
+                message.status='failed'
+                self.markMessage(message, MSG_STATE_FAILED)
+                self.add_to_history(message)
+        except KeyError:
+            pass
+    
+    @allocate_autorelease_pool
+    @run_in_green_thread
+    def add_to_history(self, message):
+        # writes the record to the sql database
+        cpim_to = "%s <%s@%s>" % (message.recipient.display_name, message.recipient.uri.user, message.recipient.uri.host) if message.recipient else ''
+        cpim_from = format_identity(message.sender) if message.sender else ''
+        cpim_timestamp = str(message.timestamp)
+        private = "1" if message.private else "0"
+        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status)
+
+
+class ConferenceScreenSharingHandler(object):
+    implements(IObserver)
+    
+    delegate = None
+    connected = False
+    screenSharingTimer = None
+    stream = None
+    rect = None
+    frames = 0.0
+    last_time = None
+    current_framerate = None
+    log_first_frame = False
+    show_preview = False
+    may_send = True # wait until previous screen has been sent
+    framerate = 1
+    width = 1024
+    window_id = None
+    compression = 0.5 # jpeg compression
+    quality = 'medium'
+    quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'framerate': 1},
+        'medium': {'compression': 0.5, 'width': 1024, 'framerate': 1},
+        'high':   {'compression': 0.7, 'width': None, 'framerate': 1}
+    }
+    
+    def setDelegate(self, delegate):
+        self.delegate = delegate
+    
+    def setQuality(self, quality):
+        if quality:
+            self.quality = quality
+        else:
+            self.quality = 'medium'
+        BlinkLogger().log_info('Set screen sharing quality to %s' % self.quality)
+        self.compression = self.quality_settings[self.quality]['compression']
+        self.width = self.quality_settings[self.quality]['width']
+        self.framerate = self.quality_settings[self.quality]['framerate']
+        self.log_first_frame = True
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(self.quality, "ScreensharingQuality")
+    
+    def setShowPreview(self):
+        self.show_preview = True
+    
+    def setWindowId(self, id):
+        self.window_id = id
+        self.show_preview = True
+    
+    def setConnected(self, stream):
+        self.log_first_frame = True
+        self.connected = True
+        self.stream = stream
+        quality = NSUserDefaults.standardUserDefaults().stringForKey_("ScreensharingQuality")
+        self.setQuality(quality)
+        self.last_time = time.time()
+        self.show_preview = True
+        NotificationCenter().add_observer(self, sender=stream)
+        
+        if self.screenSharingTimer is None:
+            self.screenSharingTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "sendScreenshotTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.screenSharingTimer, NSEventTrackingRunLoopMode)
+    # use UITrackingRunLoopMode in iOS instead of NSEventTrackingRunLoopMode
+    
+    def setDisconnected(self):
+        self.log_first_frame = False
+        self.delegate = None
+        self.connected = False
+        self.may_send = True
+        self.frames = 0
+        self.last_time = None
+        self.show_preview = False
+        
+        if self.screenSharingTimer is not None:
+            self.screenSharingTimer.invalidate()
+            self.screenSharingTimer = None
+        
+        if self.stream:
+            NotificationCenter().remove_observer(self, sender=self.stream)
+            self.stream = None
+    
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+    
+    def _NH_ChatStreamDidDeliverMessage(self, sender, data):
+        self.may_send = True
+        self.last_snapshot_time = time.time()
+    
+    def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
+        self.may_send = True
+        self.last_snapshot_time = time.time()
+    
+    @allocate_autorelease_pool
+    def sendScreenshotTimer_(self, timer):
+        def screenSharingWindowExists(id):
+            listOptions = kCGWindowListExcludeDesktopElements
+            windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
+            i = 0
+            while i < windowList.count():
+                wob = windowList.objectAtIndex_(i)
+                if wob.objectForKey_(kCGWindowNumber) == id:
+                    del windowList
+                    return True
+                i += 1
+            return False
+        
+        dt = time.time() - self.last_time
+        if dt >= 1:
+            self.current_framerate = self.frames / dt
+            self.frames = 0.0
+            self.last_time = time.time()
+        
+        if self.may_send and dt >= 1/self.framerate:
+            self.frames = self.frames + 1
+            rect = CGDisplayBounds(CGMainDisplayID())
+            if self.window_id:
+                if screenSharingWindowExists(self.window_id):
+                    image = CGWindowListCreateImage(rect, kCGWindowListOptionIncludingWindow, self.window_id, kCGWindowImageBoundsIgnoreFraming)
+                else:
+                    self.window_id = None
+                    if self.delegate:
+                        self.delegate.toggleScreensharingWithConferenceParticipants()
+                    else:
+                        self.setDisconnected()
+                    return
+            else:
+                image = CGWindowListCreateImage(rect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault)
+            if CGImageGetWidth(image) <= 1:
+                return
+            image = NSImage.alloc().initWithCGImage_size_(image, NSZeroSize)
+            originalSize = image.size()
+            if self.width is not None and originalSize.width > self.width:
+                resizeWidth = self.width
+                resizeHeight = self.width * originalSize.height/originalSize.width
+                scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
+                scaled_image.lockFocus()
+                image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
+                scaled_image.unlockFocus()
+                image = scaled_image
+            
+            if self.show_preview:
+                ScreensharingPreviewPanel(image)
+                self.show_preview = False
+            
+            jpeg = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
+            # this also works and produces the same result, but it's not documented anywhere
+            #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
+            
+            if self.log_first_frame:
+                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(jpeg), image.size().width))
+                self.log_first_frame = False
+            self.may_send = False
+            if self.stream:
+                self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
 
