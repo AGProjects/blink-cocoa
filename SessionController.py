@@ -242,25 +242,30 @@ class SessionController(NSObject):
             # give priority to chat stream so that we do not open audio drawer for composite streams
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream.type=='chat' else 1)
             handled_types = set()
-            for s in sorted_streams:
-                if SIPManager().isMediaTypeSupported(s.type):
-                    if s.type in handled_types:
-                        self.log_info(u"Stream type %s has already been handled" % s.type)
+            for stream in sorted_streams:
+                if SIPManager().isMediaTypeSupported(stream.type):
+                    if stream.type in handled_types:
+                        self.log_info(u"Stream type %s has already been handled" % stream.type)
                         continue
 
-                    handled_types.add(s.type)
-                    handler = StreamHandlerForType.get(s.type, None)
-                    controller = handler(self, s)
-                    self.streamHandlers.append(controller)
-                    if s.type not in self.streams_log:
-                        self.streams_log.append(s.type)
-                    if self.answeringMachineMode and s.type == "audio":
+                    controller = self.streamHandlerOfType(stream.type)
+                    if controller is None:
+                        handled_types.add(stream.type)
+                        handler = StreamHandlerForType.get(stream.type, None)
+                        controller = handler(self, stream)
+                        self.streamHandlers.append(controller)
+                        if stream.type not in self.streams_log:
+                            self.streams_log.append(stream.type)
+                    else:
+                        controller.stream = stream
+
+                    if self.answeringMachineMode and stream.type == "audio":
                         controller.startIncoming(is_update=is_update, is_answering_machine=True)
                     else:
                         controller.startIncoming(is_update=is_update)
                 else:
-                    self.log_info(u"Unknown incoming Stream type: %s (%s)" % (s, s.type))
-                    raise TypeError("Unsupported stream type %s" % s.type)
+                    self.log_info(u"Unknown incoming Stream type: %s (%s)" % (stream, stream.type))
+                    raise TypeError("Unsupported stream type %s" % stream.type)
 
             if not is_update:
                 self.session.accept(streams)
