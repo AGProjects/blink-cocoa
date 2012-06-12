@@ -496,7 +496,10 @@ class SessionController(NSObject):
                     streamController = self.streamHandlerOfType('chat')
                     if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:
                         # starts outgoing chat session
-                        new_session = True
+                        if self.streamHandlers == [streamController]:
+                            new_session = True
+                        else:
+                            add_streams.append(streamController.stream)
                         streamController.startOutgoing(not new_session, **kwargs)
 
         if new_session:
@@ -576,6 +579,8 @@ class SessionController(NSObject):
 
     def addChatToSession(self):
         if not self.hasStreamOfType("chat"):
+            self.startSessionWithStreamOfType("chat")
+        else:
             self.startSessionWithStreamOfType("chat")
 
     def removeChatFromSession(self):
