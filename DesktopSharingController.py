@@ -10,6 +10,7 @@ from zope.interface import implements
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
+from BlinkLogger import BlinkLogger
 from MediaStream import *
 from util import allocate_autorelease_pool, run_in_gui_thread
 
