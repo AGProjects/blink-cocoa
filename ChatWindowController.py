@@ -110,6 +110,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkSessionChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlerChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlersChanged")
+            self.notification_center.add_observer(self, name="BlinkDidRenegotiateStreams")
             self.notification_center.add_observer(self, name="BlinkVideoEnteredFullScreen")
             self.notification_center.add_observer(self, name="BlinkVideoExitedFullScreen")
 
@@ -410,6 +411,10 @@ class ChatWindowController(NSWindowController):
         self.refreshDrawer()
 
     def _NH_BlinkStreamHandlersChanged(self, sender, data):
+        self.revalidateToolbar()
+        self.refreshDrawer()
+
+    def _NH_BlinkDidRenegotiateStreams(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
