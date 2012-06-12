@@ -465,7 +465,9 @@ class ChatWindowController(NSWindowController):
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
         if selectedSession:
-            return selectedSession.validateToolbarButton(item)
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                return chatStream.validateToolbarButton(item)
         else:
             return False
 
@@ -1035,9 +1037,14 @@ class ChatWindowController(NSWindowController):
         if self.tabView.selectedTabViewItem():
             identifier = self.tabView.selectedTabViewItem().identifier()
             try:
-                self.sessions[identifier].updateToolbarButtons(self.toolbar, got_proposal)
+                selectedSession = self.sessions[identifier]
             except KeyError:
                 pass
+            else:
+                chatStream = selectedSession.streamHandlerOfType("chat")
+                if chatStream:
+                    chatStream.updateToolbarButtons(self.toolbar, got_proposal)
+
             self.toolbar.validateVisibleItems()
 
     def refreshDrawer(self):

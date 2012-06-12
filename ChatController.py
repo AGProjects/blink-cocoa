@@ -75,65 +75,6 @@ bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
 
 
-def userClickedToolbarButtonWhileDisconnected(sessionController, sender):
-    """
-    Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab.
-    """
-    if hasattr(sender, 'itemIdentifier'):
-        identifier = sender.itemIdentifier()
-        if identifier == 'connect_button':
-            BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
-            if sessionController.canProposeMediaStreamChanges():
-                BlinkLogger().log_info(u"Re-establishing session to %s" % sessionController.remoteParty)
-                sessionController.startChatSession()
-        elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
-            contactWindow = sessionController.owner
-            contactWindow.showHistoryViewer_(None)
-            if sessionController.account is BonjourAccount():
-                contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
-            else:
-                contactWindow.historyViewer.filterByContact(format_identity(sessionController.target_uri), media_type='chat')
-
-def validateToolbarButtonWhileDisconnected(sessionController, item):
-    settings = SIPSimpleSettings()
-    valid_items = []
-
-    if NSApp.delegate().applicationName != 'Blink Lite':
-        valid_items.append('history')
-        valid_items.append(NSToolbarPrintItemIdentifier)
-
-    valid_items.append('connect_button')
-    valid_items.append('smileys')
-    if sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
-        valid_items.append('editor')
-
-    return item.itemIdentifier() in valid_items
-
-def updateToolbarButtonsWhileDisconnected(sessionController, toolbar):
-    settings = SIPSimpleSettings()
-    for item in toolbar.visibleItems():
-        identifier = item.itemIdentifier()
-        if identifier == 'connect_button':
-            item.setEnabled_(True if sessionController.account is not BonjourAccount() else False)
-            item.setToolTip_('Click to start a chat session')
-            item.setLabel_(u'Connect')
-            item.setImage_(NSImage.imageNamed_("start_chat"))
-        elif identifier == 'audio':
-            item.setToolTip_('Click to add audio to this session')
-            item.setImage_(NSImage.imageNamed_("audio"))
-        elif identifier == 'record':
-            item.setImage_(NSImage.imageNamed_("record"))
-        elif identifier == 'hold':
-            item.setImage_(NSImage.imageNamed_("pause"))
-        elif identifier == 'video':
-            item.setImage_(NSImage.imageNamed_("video"))
-        elif identifier == 'desktop':
-            item.setEnabled_(False)
-        elif identifier == 'screenshot':
-            item.setEnabled_(False)
-        elif identifier == 'sendfile':
-            item.setEnabled_(False)
-
 kCGWindowListOptionOnScreenOnly = 1 << 0
 kCGNullWindowID = 0
 kCGWindowImageDefault = 0

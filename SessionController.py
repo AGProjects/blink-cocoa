@@ -26,7 +26,7 @@ from AudioController import AudioController
 from VideoController import VideoController
 from MediaStream import *
 from BlinkLogger import BlinkLogger
-from ChatController import ChatController, updateToolbarButtonsWhileDisconnected, validateToolbarButtonWhileDisconnected
+from ChatController import ChatController
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
 from FileTransferController import FileTransferController
 
@@ -1098,22 +1098,6 @@ class SessionController(NSObject):
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.startDeallocTimer()
-
-    def updateToolbarButtons(self, toolbar, got_proposal=False):
-        # update Chat Window toolbar buttons depending on session and stream state
-        chatStream = self.streamHandlerOfType("chat")
-        if chatStream:
-            chatStream.updateToolbarButtons(toolbar, got_proposal)
-        else:
-            updateToolbarButtonsWhileDisconnected(self, toolbar)
-
-    def validateToolbarButton(self, item):
-        # validate the Chat Window toolbar buttons depending on session and stream state
-        chatStream = self.streamHandlerOfType("chat")
-        if chatStream:
-            return chatStream.validateToolbarButton(item)
-        else:
-            return validateToolbarButtonWhileDisconnected(self, item)
 
 
 class CallTransferWindowController(NSObject):
