@@ -734,7 +734,6 @@ class ChatHistoryReplicator(object):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
-
     @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -898,6 +897,7 @@ class ChatHistoryReplicator(object):
         else:
             self.last_journal_id[account] = 0
 
+        i = 0
         for entry in results:
             try:
                 data           = entry['data']
@@ -927,6 +927,7 @@ class ChatHistoryReplicator(object):
 
             try:
                 ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id)
+                i += 1
                 if data['direction'] == 'incoming':
                     if self.debug:
                         BlinkLogger().log_info(u"Replicate %s chat message %s from %s to %s" % (data['direction'], journal_id, data['remote_uri'], account))
@@ -940,6 +941,14 @@ class ChatHistoryReplicator(object):
                     return
 
             self.last_journal_id[account] = journal_id
+
+        if i:
+            # notify growl
+            growl_data = TimestampedNotificationData()
+            growl_data.sender = 'Chat Replication Server'
+            growl_data.content = '%d new chat messages have been retrieved and saved to local chat history database' % i
+            NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
+
 
     @allocate_autorelease_pool
     def updateTimer_(self, timer):
