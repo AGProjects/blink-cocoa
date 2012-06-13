@@ -85,65 +85,6 @@ PresenceStatusList =  [(1, "Available", None),
                        (-1, "Holiday", None)]
 
 
-class IPAddressMonitor(object):
-    def __init__(self):
-        self.greenlet = None
-
-    @run_in_green_thread
-    def start(self):
-        notification_center = NotificationCenter()
-
-        if self.greenlet is not None:
-            return
-        self.greenlet = api.getcurrent()
-
-        current_address = host.default_ip
-        while True:
-            new_address = host.default_ip
-            # make sure the address stabilized
-            api.sleep(5)
-            if new_address != host.default_ip:
-                continue
-            if new_address != current_address:
-                notification_center.post_notification(name='SystemIPAddressDidChange', sender=self, data=TimestampedNotificationData(old_ip_address=current_address, new_ip_address=new_address))
-                current_address = new_address
-            api.sleep(5)
-
-    @run_in_twisted_thread
-    def stop(self):
-        if self.greenlet is not None:
-            api.kill(self.greenlet, api.GreenletExit())
-            self.greenlet = None
-
-
-_pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
-_pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
-_pstn_match_regexp = re.compile("^\+?([0-9]|%s)+$" % _pstn_addressbook_chars)
-_pstn_plus_regexp = re.compile("^\+")
-
-def format_uri(uri, default_domain, idd_prefix = None, prefix = None):
-    if default_domain is not None:
-        if "@" not in uri:
-            if _pstn_match_regexp.match(uri):
-                username = strip_addressbook_special_characters(uri)
-                if idd_prefix:
-                    username = _pstn_plus_regexp.sub(idd_prefix, username)
-                if prefix:
-                    username = prefix + username
-            else:
-                username = uri
-            uri = "%s@%s" % (username, default_domain)
-        elif "." not in uri.split("@", 1)[1]:
-            uri += "." + default_domain
-    if not uri.startswith("sip:") and not uri.startswith("sips:"):
-        uri = "sip:%s" % uri
-    return uri
-
-
-def strip_addressbook_special_characters(contact):  
-    return _pstn_addressbook_chars_substract_regexp.sub("", contact)
-
-
 class SIPManager(object):
     __metaclass__ = Singleton
 
@@ -432,31 +373,11 @@ class SIPManager(object):
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
 
-    def parse_sip_uri(self, target_uri, account):
-        try:
-            target_uri = str(target_uri)
-        except:
-            self._delegate.sip_error("SIP address must not contain unicode characters (%s)" % target_uri)
-            return None
-
-        if '@' not in target_uri and isinstance(account, BonjourAccount):
-            self._delegate.sip_error("SIP address must contain host in bonjour mode (%s)" % target_uri)
-            return None
-
-        target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
-
-        try:
-            target_uri = SIPURI.parse(target_uri)
-        except SIPCoreError:
-            self._delegate.sip_error('Illegal SIP URI: %s' % target_uri)
-            return None
-        return target_uri
-
     def send_files_to_contact(self, account, contact_uri, filenames):
         if not self.isMediaTypeSupported('file-transfer'):
             return
 
-        target_uri = self.parse_sip_uri(contact_uri, self.get_default_account())
+        target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, self.get_default_account())
 
         for file in filenames:
             try:
@@ -489,8 +410,8 @@ class SIPManager(object):
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_address(account)
-        remote_uri = format_identity_address(controller.target_uri)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri)
         focus = "1" if data.focus else "0"
         failure_reason = ''
         duration = 0
@@ -511,7 +432,7 @@ class SIPManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_ended(self, controller, data):
         account = controller.account
@@ -522,8 +443,8 @@ class SIPManager(object):
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_address(account)
-        remote_uri = format_identity_address(controller.target_uri)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri)
         focus = "1" if data.focus else "0"
         failure_reason = ''
         if session.start_time is None and session.end_time is not None:
@@ -546,11 +467,11 @@ class SIPManager(object):
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
-            cpim_to = format_identity_address(account)
+            cpim_to = format_identity_to_string(account)
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
         account = controller.account
@@ -560,8 +481,8 @@ class SIPManager(object):
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_address(account)
-        remote_uri = format_identity_address(controller.target_uri)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri)
         focus = "1" if data.focus else "0"
         failure_reason = 'Answered elsewhere'
         call_id = data.call_id if data.call_id is not None else ''
@@ -584,7 +505,7 @@ class SIPManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_failed(self, controller, data):
         account = controller.account
@@ -595,8 +516,8 @@ class SIPManager(object):
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = format_identity_address(account)
-        remote_uri = format_identity_address(controller.target_uri)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri)
         failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
@@ -618,7 +539,7 @@ class SIPManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_cancelled(self, controller, data):
         account = controller.account
@@ -629,8 +550,8 @@ class SIPManager(object):
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = format_identity_address(account)
-        remote_uri = format_identity_address(controller.target_uri)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri)
         failure_reason = ''
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
@@ -649,7 +570,7 @@ class SIPManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
         account = controller.account
@@ -661,8 +582,8 @@ class SIPManager(object):
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = format_identity_address(account)
-        remote_uri = format_identity_address(controller.target_uri)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri)
         direction = 'incoming'
         status = 'delivered'
         failure_reason = ''
@@ -689,7 +610,7 @@ class SIPManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
         SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
@@ -730,14 +651,14 @@ class SIPManager(object):
                             remote = rest
                         try:
                             identity = SIPURI.parse('sip:'+str(remote))
-                            remote_party = format_identity(identity, check_contact=True)
+                            remote_party = format_identity_to_string(identity, check_contact=True)
                         except SIPCoreError:
                             remote_party = "%s" % (remote)
 
                     else:
                         try:
                             identity = SIPURI.parse('sip:'+str(file[:-4]))
-                            remote_party = format_identity(identity, check_contact=True)
+                            remote_party = format_identity_to_string(identity, check_contact=True)
                         except SIPCoreError:
                             remote_party = file[:-4]
                         timestamp = datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
@@ -1013,7 +934,7 @@ class SIPManager(object):
                             except Exception:
                                 pass
                             else:
-                                growl_data.caller = format_identity_simple(uri, check_contact=True)
+                                growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
                                 growl_data.timestamp = start_time
                                 growl_data.streams = media_types
                                 growl_data.account = str(account.id)
@@ -1202,12 +1123,12 @@ class SIPManager(object):
             if account.voicemail_uri:
                 message += "<p>To listen to the messages call %s" % account.voicemail_uri
             media_type = 'voicemail'
-            local_uri = format_identity_address(account)
-            remote_uri = format_identity_address(account)
+            local_uri = format_identity_to_string(account)
+            remote_uri = format_identity_to_string(account)
             direction = 'incoming'
             status = 'delivered'
-            cpim_from = format_identity_address(account)
-            cpim_to = format_identity_address(account)
+            cpim_from = format_identity_to_string(account)
+            cpim_to = format_identity_to_string(account)
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             id=str(uuid.uuid1())
@@ -1335,12 +1256,12 @@ class SIPManager(object):
         # if call waiting is disabled and we have audio calls reject with busy
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self._delegate.sessionControllers)
         if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
-            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity(session.remote_identity))
+            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
             session.reject(486, 'Busy Here')
             return
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
-            BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity(session.remote_identity))
+            BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity_to_string(session.remote_identity))
             session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
             return
 
@@ -1454,7 +1375,7 @@ class SIPManager(object):
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:
-            call_in_gui_thread(self._delegate.sip_nat_detected, data.nat_type)
+            BlinkLogger().log_info(u"Detected NAT Type: %s" % data.nat_type)
 
     @run_in_gui_thread
     def _NH_BlinkSessionDidEnd(self, session_controller, data):
@@ -1483,7 +1404,7 @@ class SIPManager(object):
                 pass
             else:
                 growl_data = TimestampedNotificationData()
-                growl_data.caller = format_identity_simple(session.remote_identity, check_contact=True)
+                growl_data.caller = format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
                 growl_data.timestamp = data.timestamp
                 growl_data.streams = ",".join(data.streams)
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
@@ -1764,5 +1685,37 @@ class BonjourConferenceServices(object):
                     self.restart_discovery()
                 self._wakeup_timer = None
             self._wakeup_timer = reactor.callLater(5, wakeup_action) # wait for system to stabilize
+
+
+class IPAddressMonitor(object):
+    def __init__(self):
+        self.greenlet = None
+
+    @run_in_green_thread
+    def start(self):
+        notification_center = NotificationCenter()
+
+        if self.greenlet is not None:
+            return
+        self.greenlet = api.getcurrent()
+
+        current_address = host.default_ip
+        while True:
+            new_address = host.default_ip
+            # make sure the address stabilized
+            api.sleep(5)
+            if new_address != host.default_ip:
+                continue
+            if new_address != current_address:
+                notification_center.post_notification(name='SystemIPAddressDidChange', sender=self, data=TimestampedNotificationData(old_ip_address=current_address, new_ip_address=new_address))
+                current_address = new_address
+            api.sleep(5)
+
+    @run_in_twisted_thread
+    def stop(self):
+        if self.greenlet is not None:
+            api.kill(self.greenlet, api.GreenletExit())
+            self.greenlet = None
+
 
 

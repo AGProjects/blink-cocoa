@@ -303,7 +303,7 @@ class HistoryViewer(NSWindowController):
         if message.direction == 'outgoing':
             icon = NSApp.delegate().windowController.iconPathForSelf()
         else:
-            sender_uri = format_identity_from_text(message.cpim_from)[0]
+            sender_uri = sipuri_components_from_string(message.cpim_from)[0]
             # TODO: How to render the icons from Address Book? Especially in sandbox mode we do not have access to other folders
             icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
         try:

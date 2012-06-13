@@ -48,9 +48,9 @@ class SMSWindowController(NSWindowController):
         if session:
             sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
             if display_name and display_name != sip_address:
-                title = u"SMS to %s <%s>" % (display_name, format_identity(session.target_uri))
+                title = u"SMS to %s <%s>" % (display_name, format_identity_to_string(session.target_uri))
             else:
-                title = u"SMS to %s" %  format_identity(session.target_uri)
+                title = u"SMS to %s" %  format_identity_to_string(session.target_uri)
         else:
             title = u"SMS"
         self.window().setTitle_(title)
@@ -84,7 +84,7 @@ class SMSWindowController(NSWindowController):
         if viewer.display_name and viewer.display_name != sip_address:
             tabItem.setLabel_("%s" % viewer.display_name)
         else:
-            tabItem.setLabel_(format_identity(viewer.target_uri))
+            tabItem.setLabel_(format_identity_to_string(viewer.target_uri))
         self.tabSwitcher.addTabViewItem_(tabItem)
         self.tabSwitcher.selectLastTabViewItem_(None)
         self.updateTitle(viewer.display_name)
@@ -148,7 +148,7 @@ class SMSWindowController(NSWindowController):
             contactWindow = self._owner._owner
             contactWindow.showHistoryViewer_(None)
             session = self.selectedSessionController()
-            contactWindow.historyViewer.filterByContact(format_identity(session.target_uri), media_type='sms')
+            contactWindow.historyViewer.filterByContact(format_identity_to_string(session.target_uri), media_type='sms')
 
     @objc.IBAction
     def printDocument_(self, sender):
@@ -262,7 +262,7 @@ class SMSWindowManagerClass(NSObject):
             try:
                 cpim_message = CPIMMessage.parse(data.body)
             except CPIMParserError:
-                BlinkLogger().log_warning(u"SMS from %s has invalid CPIM content" % format_identity(data.from_header))
+                BlinkLogger().log_warning(u"SMS from %s has invalid CPIM content" % format_identity_to_string(data.from_header))
                 return
             else:
                 is_cpim = True
@@ -283,7 +283,7 @@ class SMSWindowManagerClass(NSObject):
         is_html = content_type == 'text/html'
 
         if content_type in ('text/plain', 'text/html'):
-            BlinkLogger().log_info(u"Got SMS from %s" % format_identity(sender_identity))
+            BlinkLogger().log_info(u"Got SMS from %s" % format_identity_to_string(sender_identity))
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
             body = cpim_message.body if is_cpim else data.body
@@ -298,7 +298,7 @@ class SMSWindowManagerClass(NSObject):
                 viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         else:
-            BlinkLogger().log_warning(u"SMS from %s has unknown content-type %s" % (format_identity(data.from_header), data.content_type))
+            BlinkLogger().log_warning(u"SMS from %s has unknown content-type %s" % (format_identity_to_string(data.from_header), data.content_type))
             return
 
         # display the message
@@ -335,7 +335,7 @@ class SMSWindowManagerClass(NSObject):
                 growl_data.content = html2txt(body)
             else:
                 growl_data.content = body
-            growl_data.sender = format_identity_simple(sender_identity)
+            growl_data.sender = format_identity_to_string(sender_identity, format='compact')
             self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
 
 

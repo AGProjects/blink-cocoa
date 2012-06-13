@@ -319,7 +319,7 @@ class ChatWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                title = u"%s <%s>" % (conf_desc.display_text, format_identity_address(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+                title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
             else:
                 title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
         return title
@@ -553,8 +553,8 @@ class ChatWindowController(NSWindowController):
         if session.hasStreamOfType("audio"):
             media.append("audio")
 
-        if format_identity_address(session.remotePartyObject) not in participants:
-            participants.append(format_identity_address(session.remotePartyObject))
+        if format_identity_to_string(session.remotePartyObject) not in participants:
+            participants.append(format_identity_to_string(session.remotePartyObject))
 
         conference = NSApp.delegate().windowController.showJoinConferenceWindow(participants=participants, media=media)
         if conference is not None:
@@ -604,7 +604,7 @@ class ChatWindowController(NSWindowController):
 
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
-            remote_uri = format_identity_address(session.remotePartyObject)
+            remote_uri = format_identity_to_string(session.remotePartyObject)
 
             hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
@@ -718,7 +718,7 @@ class ChatWindowController(NSWindowController):
                 participants = NSApp.delegate().windowController.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
                 if participants is not None:
                     getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
-                    remote_uri = format_identity_address(session.remotePartyObject)
+                    remote_uri = format_identity_to_string(session.remotePartyObject)
                     # prevent loops
                     if remote_uri in participants:
                         participants.remove(remote_uri)
@@ -931,7 +931,7 @@ class ChatWindowController(NSWindowController):
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:
                 NSApp.delegate().windowController.addContact(uri, display_name)
             elif tag == PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
-                remote_uri = format_identity_address(session.remotePartyObject)
+                remote_uri = format_identity_to_string(session.remotePartyObject)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
@@ -1075,7 +1075,7 @@ class ChatWindowController(NSWindowController):
             if contact:
                 contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=contact.icon)
             else:
-                uri = format_identity_address(session.remotePartyObject)
+                uri = format_identity_to_string(session.remotePartyObject)
                 display_name = session.getTitleShort()
                 contact = BlinkConferenceContact(uri, name=display_name)
                 contact.setDetail(uri)
@@ -1115,7 +1115,7 @@ class ChatWindowController(NSWindowController):
                 if contact:
                     contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=contact.icon)
                 else:
-                    uri = format_identity_address(session.remotePartyObject)
+                    uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()
                     contact = BlinkConferenceContact(uri, name=display_name)
 
@@ -1222,7 +1222,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
             hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
-            remote_uri = format_identity_address(session.remotePartyObject)
+            remote_uri = format_identity_to_string(session.remotePartyObject)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
             column_header_title = u'Participants'
@@ -1365,7 +1365,7 @@ class ChatWindowController(NSWindowController):
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
                         
                         # do not invite remote party itself
-                        remote_uri = format_identity_address(session.remotePartyObject)
+                        remote_uri = format_identity_to_string(session.remotePartyObject)
                         if uri == remote_uri:
                             return NSDragOperationNone
                         # do not invite users already invited

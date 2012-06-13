@@ -137,7 +137,7 @@ class ChatController(MediaStream):
 
         self.history_msgid_list=set()
 
-        self.remote_uri = format_identity_address(self.sessionController.remotePartyObject)
+        self.remote_uri = format_identity_to_string(self.sessionController.remotePartyObject)
         self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
 
         self.notification_center = NotificationCenter()
@@ -309,7 +309,7 @@ class ChatController(MediaStream):
             text = unicode(original)
             textView.setString_("")
             if text:
-                recipient = '%s <sip:%s>' % (self.sessionController.contactDisplayName, format_identity_address(self.sessionController.remotePartyObject))
+                recipient = '%s <sip:%s>' % (self.sessionController.contactDisplayName, format_identity_to_string(self.sessionController.remotePartyObject))
                 try:
                     identity = CPIMIdentity.parse(recipient)
                 except ValueError:
@@ -317,7 +317,7 @@ class ChatController(MediaStream):
                 if not self.handler.send(text, recipient=identity):
                     textView.setString_(original)
                 else:
-                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 BlinkLogger().log_info(u"Session not established, starting it")
@@ -569,7 +569,7 @@ class ChatController(MediaStream):
             if message.direction == 'outgoing':
                 icon = NSApp.delegate().windowController.iconPathForSelf()
             else:
-                sender_uri = format_identity_from_text(message.cpim_from)[0]
+                sender_uri = sipuri_components_from_string(message.cpim_from)[0]
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
 
             timestamp=Timestamp.parse(message.cpim_timestamp)
@@ -587,7 +587,7 @@ class ChatController(MediaStream):
 
         for message in messages:
             if message.cpim_to:
-                address, display_name, full_uri, fancy_uri = format_identity_from_text(message.cpim_to)
+                address, display_name, full_uri, fancy_uri = sipuri_components_from_string(message.cpim_to)
                 try:
                     recipient = CPIMIdentity.parse('%s <sip:%s>' % (display_name, address))
                 except ValueError:
@@ -910,7 +910,7 @@ class ChatController(MediaStream):
                 if self.sessionController.account is BonjourAccount():
                     contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
                 else:
-                    contactWindow.historyViewer.filterByContact(format_identity(self.sessionController.target_uri), media_type='chat')
+                    contactWindow.historyViewer.filterByContact(format_identity_to_string(self.sessionController.target_uri), media_type='chat')
 
         elif sender.tag() in (TOOLBAR_SCREENSHOT_MENU_WINDOW, TOOLBAR_SCREENSHOT_MENU_AREA):
             screenshots_folder = ApplicationData.get('.tmp_screenshots')
@@ -1037,8 +1037,8 @@ class ChatController(MediaStream):
             text = message.body
             timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
-            name = format_identity(sender)
-            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
+            name = format_identity_to_string(sender)
+            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(sender))
             recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             if self.chatViewController:
                 self.chatViewController.showMessage(msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered", is_html=is_html)
@@ -1051,11 +1051,11 @@ class ChatController(MediaStream):
             if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
                 # notify growl
                 growl_data = TimestampedNotificationData()
-                growl_data.sender = format_identity_simple(sender)
+                growl_data.sender = format_identity_to_string(sender, format='compact')
                 growl_data.content = html2txt(message.body[0:400]) if message.content_type == 'text/html' else message.body[0:400]
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(self.sessionController.remotePartyObject), local_party=format_identity_address(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # save to history
             message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text')
@@ -1106,8 +1106,8 @@ class ChatController(MediaStream):
         else:
             return
 
-        name = format_identity(self.sessionController.session.remote_identity)
-        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(self.sessionController.session.remote_identity))
+        name = format_identity_to_string(self.sessionController.session.remote_identity)
+        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
         now = datetime.datetime.now(tzlocal())
         timestamp = Timestamp(now)
         if self.chatViewController:
@@ -1344,7 +1344,7 @@ class MessageHandler(NSObject):
             self.history = ChatHistory()
             self.delegate = chatView
             self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
-            self.remote_uri = format_identity_address(self.delegate.delegate.sessionController.remotePartyObject)
+            self.remote_uri = format_identity_to_string(self.delegate.delegate.sessionController.remotePartyObject)
         return self
     
     def dealloc(self):
@@ -1501,7 +1501,7 @@ class MessageHandler(NSObject):
     def add_to_history(self, message):
         # writes the record to the sql database
         cpim_to = "%s <%s@%s>" % (message.recipient.display_name, message.recipient.uri.user, message.recipient.uri.host) if message.recipient else ''
-        cpim_from = format_identity(message.sender) if message.sender else ''
+        cpim_from = format_identity_to_string(message.sender) if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         private = "1" if message.private else "0"
         self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status)

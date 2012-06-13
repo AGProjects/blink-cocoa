@@ -122,9 +122,9 @@ class AudioController(MediaStream):
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
-        item.setTitle_("Add %s to Contacts" % format_identity(self.sessionController.remotePartyObject))
+        item.setTitle_("Add %s to Contacts" % format_identity_to_string(self.sessionController.remotePartyObject))
 
-        self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
+        self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity_to_string(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.transferSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Transfer Call'), NSAccessibilityDescriptionAttribute)
@@ -201,9 +201,9 @@ class AudioController(MediaStream):
 
     def startIncoming(self, is_update, is_answering_machine=False):
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.label.setStringValue_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
-        self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
-        self.view.setSessionInfo_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
+        self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
+        self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
+        self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.updateTLSIcon()
         self.sessionManager.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
@@ -222,9 +222,9 @@ class AudioController(MediaStream):
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.sessionController)
         display_name = self.sessionController.contactDisplayName if self.sessionController.contactDisplayName and not self.sessionController.contactDisplayName.startswith('sip:') and not self.sessionController.contactDisplayName.startswith('sips:') else None
-        self.label.setStringValue_(display_name if display_name else format_identity_simple(self.sessionController.remotePartyObject))
-        self.label.setToolTip_(format_identity(self.sessionController.remotePartyObject, check_contact=True))
-        self.view.setSessionInfo_(format_identity_simple(self.sessionController.remotePartyObject, check_contact=True))
+        self.label.setStringValue_(display_name if display_name else format_identity_to_string(self.sessionController.remotePartyObject, format='compact'))
+        self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
+        self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.sessionManager.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
@@ -804,9 +804,9 @@ class AudioController(MediaStream):
             # use typed search text as blind transfer destination
             target = NSApp.delegate().windowController.searchBox.stringValue()
             if target:
-                parsed_target = SIPManager().parse_sip_uri(target, self.sessionController.account)
+                parsed_target = normalize_sip_uri_for_outgoing_session(target, self.sessionController.account)
                 if parsed_target:
-                    item = menu.addItemWithTitle_action_keyEquivalent_(format_identity_address(parsed_target), "userClickedBlindTransferMenuItem:", "")
+                    item = menu.addItemWithTitle_action_keyEquivalent_(format_identity_to_string(parsed_target), "userClickedBlindTransferMenuItem:", "")
                     item.setIndentationLevel_(1)
                     item.setTarget_(self)
                     item.setRepresentedObject_(parsed_target)
@@ -981,12 +981,12 @@ class AudioController(MediaStream):
         message += "<p>%s" % filename
         message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
         media_type = 'audio-recording'
-        local_uri = format_identity_address(self.sessionController.account)
-        remote_uri = format_identity_address(self.sessionController.target_uri)
+        local_uri = format_identity_to_string(self.sessionController.account)
+        remote_uri = format_identity_to_string(self.sessionController.target_uri)
         direction = 'incoming'
         status = 'delivered'
-        cpim_from = format_identity_address(self.sessionController.target_uri)
-        cpim_to = format_identity_address(self.sessionController.target_uri)
+        cpim_from = format_identity_to_string(self.sessionController.target_uri)
+        cpim_to = format_identity_to_string(self.sessionController.target_uri)
         timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
@@ -1037,7 +1037,7 @@ class AudioController(MediaStream):
         self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.addRecordingToHistory(data.filename)
         growl_data = TimestampedNotificationData()
-        growl_data.remote_party = format_identity_simple(self.sessionController.remotePartyObject, check_contact=True)
+        growl_data.remote_party = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact')
         growl_data.timestamp = datetime.datetime.now(tzlocal())
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 

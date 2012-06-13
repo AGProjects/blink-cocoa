@@ -84,12 +84,12 @@ class SessionController(NSObject):
         self = super(SessionController, self).init()
         BlinkLogger().log_info(u"Creating %s" % self)
         self.contactDisplayName = display_name
-        self.remoteParty = display_name or format_identity_simple(target_uri)
+        self.remoteParty = display_name or format_identity_to_string(target_uri, format='compact')
         self.remotePartyObject = target_uri
         self.account = account
         self.target_uri = target_uri
         self.postdial_string = None
-        self.remoteSIPAddress = format_identity_address(target_uri)
+        self.remoteSIPAddress = format_identity_to_string(target_uri)
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
         self.streamHandlers = []
@@ -119,13 +119,13 @@ class SessionController(NSObject):
         self = super(SessionController, self).init()
         BlinkLogger().log_info(u"Creating %s" % self)
         self.contactDisplayName = None
-        self.remoteParty = format_identity_simple(session.remote_identity)
+        self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
         self.remotePartyObject = session.remote_identity
         self.account = session.account
         self.session = session
         self.target_uri = SIPURI.new(session.remote_identity.uri if session.account is not BonjourAccount() else session._invitation.remote_contact_header.uri)
         self.postdial_string = None
-        self.remoteSIPAddress = format_identity_address(self.target_uri)
+        self.remoteSIPAddress = format_identity_to_string(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
@@ -159,13 +159,13 @@ class SessionController(NSObject):
         self = super(SessionController, self).init()
         BlinkLogger().log_info(u"Creating %s" % self)
         self.contactDisplayName = None
-        self.remoteParty = format_identity_simple(session.remote_identity)
+        self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
         self.remotePartyObject = session.remote_identity
         self.account = session.account
         self.session = session
         self.target_uri = SIPURI.new(session.remote_identity.uri)
         self.postdial_string = None
-        self.remoteSIPAddress = format_identity_address(self.target_uri)
+        self.remoteSIPAddress = format_identity_to_string(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
@@ -619,11 +619,11 @@ class SessionController(NSObject):
             self.endStream(desktopStream)
 
     def getTitle(self):
-        return format_identity(self.remotePartyObject)
+        return format_identity_to_string(self.remotePartyObject)
 
     def getTitleFull(self):
         if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
-            return "%s <%s>" % (self.contactDisplayName, format_identity_address(self.remotePartyObject))
+            return "%s <%s>" % (self.contactDisplayName, format_identity_to_string(self.remotePartyObject))
         else:
             return self.getTitle()
 
@@ -631,13 +631,13 @@ class SessionController(NSObject):
         if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
             return self.contactDisplayName
         else:
-            return format_identity_simple(self.remotePartyObject)
+            return format_identity_to_string(self.remotePartyObject, format='compact')
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
-        log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
+        log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
@@ -654,7 +654,7 @@ class SessionController(NSObject):
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
 
-        self.log_info('Starting outgoing session to %s' % format_identity_simple(self.target_uri))
+        self.log_info('Starting outgoing session to %s' % format_identity_to_string(self.target_uri, format='compact'))
         streams = [s.stream for s in self.streamHandlers]
         target_uri = SIPURI.new(self.target_uri)
         if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
@@ -750,7 +750,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidStart(self, sender, data):
 
-        self.remoteParty = format_identity(self.session.remote_identity)
+        self.remoteParty = format_identity_to_string(self.session.remote_identity)
         if self.session.remote_focus:
             self.remote_focus = True
             self.remote_focus_log = True
@@ -816,7 +816,7 @@ class SessionController(NSObject):
             self.failureReason = "failed"
 
         self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
-        log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
+        log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_FAILED, status)
@@ -842,7 +842,7 @@ class SessionController(NSObject):
 
                 self.remotePartyObject = target_uri
                 self.target_uri = target_uri
-                self.remoteSIPAddress = format_identity_address(target_uri)
+                self.remoteSIPAddress = format_identity_to_string(target_uri)
 
                 if len(oldSession.proposed_streams) == 1:
                     self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
@@ -880,7 +880,7 @@ class SessionController(NSObject):
 
         self.log_info("Session ended")
         self.changeSessionState(STATE_FINISHED, data.originator)
-        log_data = TimestampedNotificationData(target_uri=format_identity(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
+        log_data = TimestampedNotificationData(target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=TimestampedNotificationData())

@@ -983,11 +983,11 @@ class ContactWindowController(NSWindowController):
         if account is not None:
             if tabItem == "contacts":
                 audioOk = len(contacts) > 0
-                if contacts and account is BonjourAccount() and not is_full_sip_uri(contacts[0].uri):
+                if contacts and account is BonjourAccount() and not is_sip_aor_format(contacts[0].uri):
                     chatOk = False
                 else:
                     chatOk = audioOk
-                if contacts and not is_full_sip_uri(contacts[0].uri):
+                if contacts and not is_sip_aor_format(contacts[0].uri):
                     desktopOk = False
                 else:
                     desktopOk = audioOk
@@ -1046,7 +1046,7 @@ class ContactWindowController(NSWindowController):
     def accountSelectionChanged_(self, sender):
         account = sender.selectedItem().representedObject()
         if account:
-            name = format_identity_simple(account)
+            name = format_identity_to_string(account, format='compact')
             self.nameText.setStringValue_(name)
             AccountManager().default_account = account
 
@@ -1412,7 +1412,7 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
             return
 
-        target = self.backend.parse_sip_uri(target, account)
+        target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
 
@@ -1445,7 +1445,7 @@ class ContactWindowController(NSWindowController):
         except KeyError:
             return
 
-        target_uri = self.backend.parse_sip_uri(remote_uri, account)
+        target_uri = normalize_sip_uri_for_outgoing_session(remote_uri, account)
         if not target_uri:
             return
 
@@ -1477,7 +1477,7 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
             return
 
-        target_uri = self.backend.parse_sip_uri(target, account)
+        target_uri = normalize_sip_uri_for_outgoing_session(target, account)
         if not target_uri:
             return
 
@@ -1513,7 +1513,7 @@ class ContactWindowController(NSWindowController):
                             "OK", None, None)
             return None
 
-        target_uri = self.backend.parse_sip_uri(text, account)
+        target_uri = normalize_sip_uri_for_outgoing_session(text, account)
         if target_uri:
             session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, displayName)
             self.sessionControllers.append(session)
@@ -1541,7 +1541,7 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
             return
 
-        target = self.backend.parse_sip_uri(target, account)
+        target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
 
@@ -1605,7 +1605,7 @@ class ContactWindowController(NSWindowController):
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
 
-        target = self.backend.parse_sip_uri(target, account)
+        target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
 
@@ -1750,34 +1750,26 @@ class ContactWindowController(NSWindowController):
                 else:
                     self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
 
-    def sip_error(self, message):
-        message = re.sub("%", "%%", message)
-        NSRunAlertPanel("Error", message, "OK", None, None)
-
-    def sip_warning(self, message):
-        message = re.sub("%", "%%", message)
-        NSRunAlertPanel("Warning", message, "OK", None, None)
-
     def handle_incoming_session(self, session, streams):
         settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
 
         if self.model.hasContactMatchingURI(session.remote_identity.uri):
             if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity(session.remote_identity))
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
             elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity(session.remote_identity))
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
         elif session.account is BonjourAccount() and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity(session.remote_identity))
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
 
         if stream_type_list == ['file-transfer'] and streams[0].file_selector.name.decode("utf8").startswith('xscreencapture'):
-            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity(session.remote_identity))
+            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
             self.startIncomingSession(session, streams)
             return
 
@@ -1808,12 +1800,12 @@ class ContactWindowController(NSWindowController):
             session.reject_proposal()
             return
         elif stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
-            BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % format_identity(session.remote_identity))
+            BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % format_identity_to_string(session.remote_identity))
             self.acceptIncomingProposal(session, streams)
             return
         elif session.account is BonjourAccount():
             if stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity(session.remote_identity))
+                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptIncomingProposal(session, streams)
                 return
             elif 'audio' in stream_type_list and session.account.audio.auto_accept:
@@ -1821,17 +1813,17 @@ class ContactWindowController(NSWindowController):
                 have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                 if not have_audio_call:
                     accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
-                    BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % format_identity(session.remote_identity))
+                    BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(session, accepted_streams)
                     return
         elif self.model.hasContactMatchingURI(session.remote_identity.uri):
             settings = SIPSimpleSettings()
             if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity(session.remote_identity))
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptIncomingProposal(session, streams)
                 return
             elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity(session.remote_identity))
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptIncomingProposal(session, streams)
                 return
         try:
@@ -1851,12 +1843,9 @@ class ContactWindowController(NSWindowController):
             self.sessionControllers.append(controller)
 
     def sip_session_missed(self, session, stream_types):
-        BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity(session.remote_identity))
+        BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
         if 'audio' in stream_types:
             NSApp.delegate().noteMissedCall()
-
-    def sip_nat_detected(self, nat_type):
-        BlinkLogger().log_info(u"Detected NAT Type: %s" % nat_type)
 
     def setCollapsed(self, flag):
         if self.loaded:
@@ -2211,7 +2200,7 @@ class ContactWindowController(NSWindowController):
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
-            item.setEnabled_((is_full_sip_uri(contact.uri) or no_contact_selected) and self.backend.isMediaTypeSupported('chat'))
+            item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.backend.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.backend.isMediaTypeSupported('chat'))
@@ -2251,7 +2240,7 @@ class ContactWindowController(NSWindowController):
         results = session_history.get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
 
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
             if contact and contact.display_name and contact.display_name != contact.uri:
                 display_name = contact.display_name
@@ -2276,7 +2265,7 @@ class ContactWindowController(NSWindowController):
         results = session_history.get_entries(direction='outgoing', count=count, remote_focus="0")
 
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
             if contact and contact.display_name and contact.display_name != target_uri:
                 display_name = contact.display_name
@@ -2301,7 +2290,7 @@ class ContactWindowController(NSWindowController):
         results = session_history.get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
 
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
             if contact and contact.display_name and contact.display_name != target_uri:
                 display_name = contact.display_name
@@ -2326,7 +2315,7 @@ class ContactWindowController(NSWindowController):
         results = session_history.get_entries(count=count, remote_focus="1")
 
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
             if contact and contact.display_name and contact.display_name != target_uri:
                 display_name = contact.display_name
@@ -2456,7 +2445,7 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_info(u"Voicemail option pressed for account %s" % account.id)
             if account.voicemail_uri is None:
                 return
-            target_uri = self.backend.parse_sip_uri(account.voicemail_uri, account)
+            target_uri = normalize_sip_uri_for_outgoing_session(account.voicemail_uri, account)
             session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
             self.sessionControllers.append(session)
             session.setOwner_(self)
@@ -2501,13 +2490,13 @@ class ContactWindowController(NSWindowController):
         except:
             account = None
 
-        target_uri = format_identity_from_text(session_info.remote_uri)[0]
+        target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
         streams = session_info.media_types.split(",")
 
         BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account, target_uri, streams))
         if not account:
             account = self.activeAccount()
-        target_uri = self.backend.parse_sip_uri(target_uri, account)
+        target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
         session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
         self.sessionControllers.append(session)
         session.setOwner_(self)
@@ -2772,7 +2761,7 @@ class ContactWindowController(NSWindowController):
             self.contactContextMenu.removeItemAtIndex_(0)
 
         if isinstance(item, BlinkContact):
-            has_full_sip_uri = is_full_sip_uri(item.uri)
+            has_full_sip_uri = is_sip_aor_format(item.uri)
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
             chat_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('chat'))
@@ -3066,7 +3055,7 @@ class ContactWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
-            remote_uri = format_identity_address(session.remotePartyObject)
+            remote_uri = format_identity_to_string(session.remotePartyObject)
 
             hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
@@ -3209,7 +3198,7 @@ class ContactWindowController(NSWindowController):
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:
                 self.addContact(uri, display_name)
             elif tag == PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
-                remote_uri = format_identity_address(session.remotePartyObject)
+                remote_uri = format_identity_to_string(session.remotePartyObject)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
@@ -3309,7 +3298,7 @@ class ContactWindowController(NSWindowController):
                 self.addParticipantsWindow.release()
                 self.addParticipantsWindow = None
                 if participants is not None:
-                    remote_uri = format_identity_address(session.remotePartyObject)
+                    remote_uri = format_identity_to_string(session.remotePartyObject)
                     # prevent loops
                     if remote_uri in participants:
                         participants.remove(remote_uri)
@@ -3334,7 +3323,7 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                title = u"%s <%s>" % (conf_desc.display_text, format_identity_address(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+                title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
             else:
                 title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
         return title
@@ -3354,7 +3343,7 @@ class ContactWindowController(NSWindowController):
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
                         
                         # do not invite remote party itself
-                        remote_uri = format_identity_address(session.remotePartyObject)
+                        remote_uri = format_identity_to_string(session.remotePartyObject)
                         if uri == remote_uri:
                             return NSDragOperationNone
                         # do not invite users already invited

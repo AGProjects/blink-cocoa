@@ -35,7 +35,7 @@ from AddGroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
-from SIPManager import SIPManager, strip_addressbook_special_characters, PresenceStatusList
+from SIPManager import SIPManager, PresenceStatusList
 
 from resources import ApplicationData
 from util import *
@@ -592,7 +592,7 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
         settings = SIPSimpleSettings()
         count = settings.contacts.maximum_calls
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(result.remote_uri)
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
 
             if seen.has_key(target_uri):
                 seen[target_uri] += 1

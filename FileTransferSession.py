@@ -183,7 +183,7 @@ class FileTransfer(object):
 
     def log_info(self, text):
         if self.session:
-            BlinkLogger().log_info(u"[Session with %s] %s" % (format_identity_address(self.session.remote_identity), text))
+            BlinkLogger().log_info(u"[Session with %s] %s" % (format_identity_to_string(self.session.remote_identity), text))
 
 
 class IncomingFileTransferHandler(FileTransfer):
@@ -195,7 +195,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.file_selector = stream.file_selector
         self.finished_transfer = False
         self.hash = hashlib.sha1()
-        self.remote_identity = format_identity_address(session.remote_identity)
+        self.remote_identity = format_identity_to_string(session.remote_identity)
         self.session = session
         self.session_ended = False
         self.started = False
@@ -226,7 +226,7 @@ class IncomingFileTransferHandler(FileTransfer):
                 self.file_path = name + '.download'
                 break
 
-        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
+        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
 
         BlinkLogger().log_info(u"Will write file to %s" % self.file_path)
         self.file_selector.fd = open(self.file_path, "w+")
@@ -396,7 +396,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.file_selector = None
         self.finished_transfer = False
         self.interrupted = False
-        self.remote_identity = format_identity_address(target_uri)
+        self.remote_identity = format_identity_to_string(target_uri)
         self.session = None
         self.stream = None
         self.started = False
@@ -430,7 +430,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.start(restart=True)
 
     def start(self, restart=False):
-        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='outgoing', file_size=self.file_size, local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', remote_uri=self.remote_identity, file_path=self.file_path)
+        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='outgoing', file_size=self.file_size, local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', remote_uri=self.remote_identity, file_path=self.file_path)
         self.ft_info.status = "pending"
         self.status = "Pending"
 
@@ -624,7 +624,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.finished_transfer = False
         self.hash = hashlib.sha1()
         self.interrupted = False
-        self.remote_identity = format_identity_address(target_uri)
+        self.remote_identity = format_identity_to_string(target_uri)
         self.session = None
         self.session_ended = False
         self.started = False
@@ -657,7 +657,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         BlinkLogger().log_info(u"File will be written to %s" % self.file_path)
         self.file_selector.fd = open(self.file_path, "w+")
 
-        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
+        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='incoming', local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour' , file_size=self.file_size, remote_uri=self.remote_identity, file_path=self.file_path)
 
         BlinkLogger().log_info("Pull File Transfer Request started %s" % self.file_path)
 

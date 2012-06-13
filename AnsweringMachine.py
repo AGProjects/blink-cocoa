@@ -136,12 +136,12 @@ class AnsweringMachine(object):
         message += "<br>Duration: %s seconds" % duration
         message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
         media_type = 'voicemail'
-        local_uri = format_identity_address(self.session.account)
-        remote_uri = format_identity_address(self.session.remote_identity)
+        local_uri = format_identity_to_string(self.session.account)
+        remote_uri = format_identity_to_string(self.session.remote_identity)
         direction = 'incoming'
         status = 'delivered'
-        cpim_from = format_identity_address(self.session.remote_identity)
-        cpim_to = format_identity_address(self.session.remote_identity)
+        cpim_from = format_identity_to_string(self.session.remote_identity)
+        cpim_to = format_identity_to_string(self.session.remote_identity)
         timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)

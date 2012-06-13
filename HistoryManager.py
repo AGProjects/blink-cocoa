@@ -234,7 +234,7 @@ class SessionHistory(object):
         rows = list(self.db.queryAll(query))
         results = []
         for row in rows:
-            target_uri, display_name, full_uri, fancy_uri = format_identity_from_text(row[1])
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
             pair = (row[0], target_uri)
             if pair not in results:
                 results.append(pair)

@@ -181,13 +181,13 @@ class AlertPanel(NSObject, object):
         stream_type_list = list(set(stream.type for stream in streams))
 
         if len(self.sessions) == 1:
-            self.panel.setTitle_(u"Incoming Call from %s" % format_identity_simple(session.remote_identity, check_contact=True))
+            self.panel.setTitle_(u"Incoming Call from %s" % format_identity_to_string(session.remote_identity, check_contact=True, format='compact'))
             if settings.sounds.enable_speech_synthesizer:
                 if stream_type_list == ["chat"]:
                     base_text = "Chat from %s"
                 else:
                     base_text = "Call from %s"
-                self.speak_text = base_text % format_identity_simple(session.remote_identity, check_contact=True)
+                self.speak_text = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
                 self.startSpeechSynthesizerTimer()
         else:
             self.panel.setTitle_(u"Multiple Incoming Calls")
@@ -310,7 +310,7 @@ class AlertPanel(NSObject, object):
                 BlinkLogger().log_info(u"Auto answer enabled for this contact")
                 self.enableAutoAnswer(view, session)
 
-        fromT.setStringValue_(u"%s" % format_identity(session.remote_identity, check_contact=True))
+        fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True))
         fromT.sizeToFit()
 
         has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
@@ -343,7 +343,7 @@ class AlertPanel(NSObject, object):
             if isinstance(session.account, BonjourAccount):
                 destT.setStringValue_(u"To Bonjour account")
             else:
-                destT.setStringValue_(u"To %s" % format_identity(session.account))
+                destT.setStringValue_(u"To %s" % format_identity_to_string(session.account))
             destT.sizeToFit()
 
         if len(self.sessions) == 1:
@@ -690,10 +690,10 @@ class AlertPanel(NSObject, object):
                 is_proposal = self.proposals.has_key(s)
                 try:
                     if is_proposal:
-                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_address(s.remote_identity))
+                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_to_string(s.remote_identity))
                         self.acceptProposedStreams(s)
                     else:
-                        BlinkLogger().log_info(u"Accepting session from %s" % format_identity_address(s.remote_identity))
+                        BlinkLogger().log_info(u"Accepting session from %s" % format_identity_to_string(s.remote_identity))
                         self.acceptStreams(s)
                 except Exception, exc:
                     BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
@@ -702,7 +702,7 @@ class AlertPanel(NSObject, object):
             NSApp.activateIgnoringOtherApps_(True)
             for s in self.sessions.keys():
                 try:
-                    BlinkLogger().log_info(u"Accepting chat stream to session with %s" % format_identity_address(s.remote_identity))
+                    BlinkLogger().log_info(u"Accepting chat stream to session with %s" % format_identity_to_string(s.remote_identity))
                     self.acceptChatStream(s)
                 except Exception, exc:
                     BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
@@ -714,14 +714,14 @@ class AlertPanel(NSObject, object):
                 is_proposal = self.proposals.has_key(s)
                 try:
                     if is_proposal:
-                        BlinkLogger().log_info(u"Rejecting proposed streams from %s" % format_identity_address(s.remote_identity))
+                        BlinkLogger().log_info(u"Rejecting proposed streams from %s" % format_identity_to_string(s.remote_identity))
                         try:
                             self.rejectProposal(s)
                         except Exception, exc:
                             BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
                             self.removeSession(session)
                     else:
-                        BlinkLogger().log_info(u"Rejecting session from %s with Busy " % format_identity_address(s.remote_identity))
+                        BlinkLogger().log_info(u"Rejecting session from %s with Busy " % format_identity_to_string(s.remote_identity))
                         self.rejectSession(s, 486)
                 except Exception, exc:
                     BlinkLogger().log_warning(u"Error rejecting session: %s" % exc)
@@ -783,14 +783,14 @@ class AlertPanel(NSObject, object):
             is_proposal = self.proposals.has_key(s)
             try:
                 if is_proposal:
-                    BlinkLogger().log_info(u"Rejecting %s proposal from %s"%([stream.type for stream in s.proposed_streams], format_identity_address(s.remote_identity)))
+                    BlinkLogger().log_info(u"Rejecting %s proposal from %s"%([stream.type for stream in s.proposed_streams], format_identity_to_string(s.remote_identity)))
                     try:
                         self.rejectProposal(s)
                     except Exception, exc:
                         BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
                         self.removeSession(s)
                 else:
-                    BlinkLogger().log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_address(s.remote_identity))
+                    BlinkLogger().log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_to_string(s.remote_identity))
                     self.rejectSession(s, 603, "Busy Everywhere")
             except Exception, exc:
                 self.removeSession(s)

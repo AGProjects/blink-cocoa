@@ -1,10 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-__all__ = ['compare_identity_addresses', 'format_identity', 'format_identity_address', 'format_identity_from_text',
-           'format_identity_simple', 'is_full_sip_uri', 'format_size', 'format_size_rounded','escape_html', 'html2txt',
-           'call_in_gui_thread', 'run_in_gui_thread', 'allocate_autorelease_pool',
-           'image_file_extension_pattern', 'video_file_extension_pattern', 'sip_prefix_pattern', 'external_url_pattern', 'translate_alpha2digit',
+__all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_identity_to_string', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 
+           'run_in_gui_thread', 'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit',
            'AccountInfo', 'DictDiffer']
 
 import re
@@ -12,26 +10,84 @@ import shlex
 
 from application.python.decorator import decorator, preserve_signature
 
-from AppKit import NSApp
+from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSThread
 
 from sipsimple.account import Account, BonjourAccount
-from sipsimple.core import SIPURI, FrozenSIPURI
+from sipsimple.core import SIPURI, FrozenSIPURI, SIPCoreError
+
 
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 image_file_extension_pattern = re.compile("\.(png|tiff|jpg|jpeg|gif)$", re.I)
 sip_prefix_pattern           = re.compile("^(sip:|sips:)")
 external_url_pattern         = re.compile("^(tel:|//|mailto:|xmpp:|callto://|callto:)")
 
+_pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
+_pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
+_pstn_match_regexp = re.compile("^\+?([0-9]|%s)+$" % _pstn_addressbook_chars)
+_pstn_plus_regexp = re.compile("^\+")
 
-def format_identity(identity, check_contact=False):
+
+def strip_addressbook_special_characters(contact):
+    return _pstn_addressbook_chars_substract_regexp.sub("", contact)
+
+
+def show_error_panel(message):
+    message = re.sub("%", "%%", message)
+    NSRunAlertPanel("Error", message, "OK", None, None)
+
+
+def normalize_sip_uri_for_outgoing_session(target_uri, account):
+    def format_uri(uri, default_domain, idd_prefix = None, prefix = None):
+        if default_domain is not None:
+            if "@" not in uri:
+                if _pstn_match_regexp.match(uri):
+                    username = strip_addressbook_special_characters(uri)
+                    if idd_prefix:
+                        username = _pstn_plus_regexp.sub(idd_prefix, username)
+                    if prefix:
+                        username = prefix + username
+                else:
+                    username = uri
+                uri = "%s@%s" % (username, default_domain)
+            elif "." not in uri.split("@", 1)[1]:
+                uri += "." + default_domain
+        if not uri.startswith("sip:") and not uri.startswith("sips:"):
+            uri = "sip:%s" % uri
+        return uri
+
+
+    try:
+        target_uri = str(target_uri)
+    except:
+        show_error_panel("SIP address must not contain unicode characters (%s)" % target_uri)
+        return None
+
+    if '@' not in target_uri and isinstance(account, BonjourAccount):
+        show_error_panel("SIP address must contain host in bonjour mode (%s)" % target_uri)
+        return None
+
+    target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
+
+    try:
+        target_uri = SIPURI.parse(target_uri)
+    except SIPCoreError:
+        show_error_panel('Illegal SIP URI: %s' % target_uri)
+        return None
+    return target_uri
+
+
+def format_identity_to_string(identity, check_contact=False, format='AOR'):
     """
     Takes a SIPURI, Account, FromHeader, ToHeader, CPIMIdentity object and
-    returns a formatted string for it, either a telephone number, display name plus uri or uri
+    returns either an AOR (user@domain), compact (username of phone number) or full (Display Name <user@domain>)
     """
     port = 5060
     transport = 'udp'
     if isinstance(identity, (SIPURI, FrozenSIPURI)):
+        if format == 'AOR':
+            return u"%s@%s" % (identity.user, identity.host)
+
         user = identity.user
         host = identity.host
         display_name = None
@@ -42,6 +98,9 @@ def format_identity(identity, check_contact=False):
         if identity.transport != 'udp':
             transport = identity.transport
     else:
+        if format == 'AOR':
+            return u"%s@%s" % (identity.uri.user, identity.uri.host)
+
         user = identity.uri.user
         host = identity.uri.host
         if identity.uri.port is not None and identity.uri.port != 5060:
@@ -61,61 +120,30 @@ def format_identity(identity, check_contact=False):
 
     match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
     if contact:
-        if display_name == user or not display_name:
-            return "%s <%s>" % (contact.name, address)
+        if format == 'compact':
+            if display_name == user or not display_name:
+                return contact.name
+            else:
+                return display_name
         else:
-            return "%s <%s>" % (display_name, address)
+            if display_name == user or not display_name:
+                return "%s <%s>" % (contact.name, address)
+            else:
+                return "%s <%s>" % (display_name, address)
     elif match is not None:
-        return "%s <%s>" % (display_name, match.group('number')) if display_name else match.group('number')
+        if format == 'compact':
+            return match.group('number')
+        else:
+            return "%s <%s>" % (display_name, match.group('number')) if display_name else match.group('number')
     elif display_name:
         return "%s <%s>" % (display_name, address)
     else:
         return address
 
 
-def format_identity_simple(identity, check_contact=False):
-    """
-    Takes a SIPURI, FromHeader, ToHeader, CPIMIdentity object and
-    returns a short summarized formatted string for it, either phone number, display name or sip uri
-    """
-    if isinstance(identity, (SIPURI, FrozenSIPURI)):
-        user = identity.user
-        host = identity.host
-        display_name = None
-        contact = NSApp.delegate().windowController.getContactMatchingURI(str(identity)) if check_contact else None
-    else:
-        user = identity.uri.user
-        host = identity.uri.host
-        display_name = identity.display_name
-        contact = NSApp.delegate().windowController.getContactMatchingURI(identity.uri) if check_contact else None
-
-    address = u"%s@%s" % (user, host)
-    match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
-
-    if contact:
-        if display_name == user or not display_name:
-            return contact.name
-        else:
-            return display_name
-    elif display_name:
-        return display_name
-    elif match is not None:
-        return match.group('number')
-    else:
-        return address
-
-
-def format_identity_address(identity):
-    if isinstance(identity, (SIPURI, FrozenSIPURI)):
-        return u"%s@%s" % (identity.user, identity.host)
-    else:
-        return u"%s@%s" % (identity.uri.user, identity.uri.host)
-
-
-def format_identity_from_text(text):
+def sipuri_components_from_string(text):
     """
     Takes a SIP URI in text format and returns formatted strings with various sub-parts
-    It returns a fancy_uri that displays in a friendly way telephone numbers for the History entries
     """
     display_name = ""
     address = ""
@@ -170,7 +198,7 @@ def format_identity_from_text(text):
         return address, display_name, full_uri, fancy_uri
 
 
-def is_full_sip_uri(uri):
+def is_sip_aor_format(uri):
     """
     Check if the given URI is a full SIP URI with username and host.
     """
@@ -249,7 +277,7 @@ def escape_html(text):
 
 
 def compare_identity_addresses(id1, id2):
-    return format_identity_address(id1) == format_identity_address(id2)
+    return format_identity_to_string(id1) == format_identity_to_string(id2)
 
 
 def html2txt(s):

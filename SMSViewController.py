@@ -168,16 +168,16 @@ class SMSViewController(NSObject):
 
     def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
         self.enableIsComposing = True
-        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_address(sender))
+        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or Timestamp(datetime.datetime.now(tzlocal()))
 
         hash = hashlib.sha1()
         hash.update(message.encode('utf-8')+str(timestamp)+str(sender))
         msgid = hash.hexdigest()
 
-        self.chatViewController.showMessage(msgid, 'incoming', format_identity(sender), icon, message, timestamp, is_html=is_html, state="delivered")
+        self.chatViewController.showMessage(msgid, 'incoming', format_identity_to_string(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
-        self.notification_center().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity(sender), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+        self.notification_center().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
         # save to history
         message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
@@ -271,8 +271,8 @@ class SMSViewController(NSObject):
     @run_in_green_thread
     def add_to_history(self, message):
         # writes the record to the sql database
-        cpim_to = format_identity(message.recipient) if message.recipient else ''
-        cpim_from = format_identity(message.sender) if message.sender else ''
+        cpim_to = format_identity_to_string(message.recipient) if message.recipient else ''
+        cpim_from = format_identity_to_string(message.sender) if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         content_type="html" if "html" in message.content_type else "text"
 
@@ -396,7 +396,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient=CPIMIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity(recipient), local_party=format_identity_address(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             return True
         return False
@@ -434,7 +434,7 @@ class SMSViewController(NSObject):
             if message.direction == 'outgoing':
                 icon = NSApp.delegate().windowController.iconPathForSelf()
             else:
-                sender_uri = format_identity_from_text(message.cpim_from)[0]
+                sender_uri = sipuri_components_from_string(message.cpim_from)[0]
                 icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
 
             timestamp=Timestamp.parse(message.cpim_timestamp)
