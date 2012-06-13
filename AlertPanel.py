@@ -15,6 +15,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
+
 from util import *
 
 ACCEPT = 0
@@ -38,10 +39,13 @@ class AlertPanel(NSObject, object):
     speech_synthesizer = None
     muted_by_synthesizer = False
 
-    def initWithOwner_(self, owner):
+    @property
+    def sessionControllersManager(self):
+        return NSApp.delegate().windowController.sessionControllersManager
+
+    def init(self):
         self = super(AlertPanel, self).init()
         if self:
-            self.owner = owner
             NSBundle.loadNibNamed_owner_("AlertPanel", self)
             self.panel.setLevel_(NSStatusWindowLevel)
             self.panel.setWorksWhenModal_(True)
@@ -301,7 +305,7 @@ class AlertPanel(NSObject, object):
         frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
         captionT.setFrame_(frame)
 
-        caller_contact = self.owner.getContactMatchingURI(session.remote_identity.uri)
+        caller_contact = NSApp.delegate().windowController.getContactMatchingURI(session.remote_identity.uri)
         if caller_contact:
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)
@@ -453,7 +457,7 @@ class AlertPanel(NSObject, object):
         return subject, default_action, alt_action
 
     def removeSession(self, session):
-        SIPManager().ringer.stop_ringing(session)
+        self.sessionControllersManager.ringer.stop_ringing(session)
 
         if not self.sessions.has_key(session):
             return
@@ -596,7 +600,7 @@ class AlertPanel(NSObject, object):
                     self.disableAutoAnswer(view, session)
 
     def muteBeforeSpeechWillStart(self):
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers)
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         if hasAudio:
             if not SIPManager().is_muted():
                 NSApp.delegate().windowController.muteClicked_(None)
@@ -728,31 +732,44 @@ class AlertPanel(NSObject, object):
                     self.removeSession(s)
 
     def acceptStreams(self, session):
-        self.owner.startIncomingSession(session, session.blink_supported_streams)
+        self.sessionControllersManager.startIncomingSession(session, session.blink_supported_streams)
         self.removeSession(session)
 
     def acceptProposedStreams(self, session):
-        self.owner.acceptIncomingProposal(session, session.proposed_streams)
+        try:
+            session_controller = (controller for controller in self.sessionControllersManager.sessionControllers if controller.session == session).next()
+        except StopIteration:
+            session.reject_proposal()
+            session.log_info("Cannot find session controller for session: %s" % session)
+        else:
+            session_controller.acceptIncomingProposal(session.proposed_streams)
+
         self.removeSession(session)
 
     def acceptChatStream(self, session):
         streams = [s for s in session.proposed_streams if s.type== "chat"]
-        self.owner.startIncomingSession(session, streams)
+        self.sessionControllersManager.startIncomingSession(session, streams)
         self.removeSession(session)
 
     def acceptAudioStreamAnsweringMachine(self, session):
         # accept audio only
         streams = [s for s in session.proposed_streams if s.type == "audio"]
-        self.owner.startIncomingSession(session, streams, answeringMachine=True)
+        self.sessionControllersManager.startIncomingSession(session, streams, answeringMachine=True)
         self.removeSession(session)
 
     def acceptAudioStream(self, session):
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
-        if self.proposals.has_key(session):
-            self.owner.acceptIncomingProposal(session, streams)
+        try:
+            session_controller = (controller for controller in self.sessionControllersManager.sessionControllers if controller.session == session).next()
+        except StopIteration:
+            session.reject_proposal()
+            session.log_info("Cannot find session controller for session: %s" % session)
         else:
-            self.owner.startIncomingSession(session, streams)
+            if self.proposals.has_key(session):
+                session_controller.acceptIncomingProposal(streams)
+            else:
+                self.sessionControllersManager.startIncomingSession(session, streams)
         self.removeSession(session)
 
     def rejectProposal(self, session):

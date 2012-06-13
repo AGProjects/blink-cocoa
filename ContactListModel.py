@@ -791,6 +791,10 @@ class CustomListModel(NSObject):
     """Contacts List Model behaviour, display and drag an drop actions"""
     contactGroupsList = []
 
+    @property
+    def sessionControllersManager(self):
+        return NSApp.delegate().windowController.sessionControllersManager
+
     # data source methods
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
         if item is None:
@@ -944,8 +948,8 @@ class CustomListModel(NSObject):
             ws = NSWorkspace.sharedWorkspace()
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
-            if filenames and account and SIPManager().isMediaTypeSupported('file-transfer'):
-                SIPManager().send_files_to_contact(account, item.uri, filenames)
+            if filenames and account and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                self.sessionControllersManager.send_files_to_contact(account, item.uri, filenames)
                 return True
             return False
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):

@@ -9,6 +9,7 @@ from application.notification import NotificationCenter
 from sipsimple.util import TimestampedNotificationData
 
 from Foundation import NSObject
+from AppKit import NSApp
 
 
 STATE_IDLE = "IDLE"
@@ -59,12 +60,12 @@ class MediaStream(NSObject):
         return self.sessionController.session
 
     @property
-    def remoteParty(self):
-        return self.sessionController.remoteParty if self.sessionController else '?'
+    def sessionControllersManager(self):
+        return NSApp.delegate().windowController.sessionControllersManager
 
     @property
-    def sessionManager(self):
-        return self.sessionController.owner
+    def remoteParty(self):
+        return self.sessionController.remoteParty if self.sessionController else '?'
 
     def removeFromSession(self):
         self.sessionController.removeStreamHandler(self)

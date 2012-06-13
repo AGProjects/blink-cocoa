@@ -10,7 +10,6 @@ from AppKit import *
 import cjson
 import os
 import re
-import socket
 import time
 import urllib
 import urlparse
@@ -48,8 +47,6 @@ from sipsimple.threading.green import run_in_green_thread, Command
 from sipsimple.util import TimestampedNotificationData, Timestamp
 
 from HistoryManager import ChatHistory, SessionHistory
-from SessionRinger import Ringer
-from FileTransferSession import OutgoingPushFileTransferHandler
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
@@ -57,8 +54,6 @@ from configuration.contact import BlinkContactExtension, BlinkContactGroupExtens
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
-
-from interfaces.itunes import MusicApplications
 
 STATUS_PHONE = "phone"
 
@@ -95,15 +90,10 @@ class SIPManager(object):
         self._app = SIPApplication()
         self._delegate = None
         self._selected_account = None
-        self._active_transfers = []
         self._version = None
         self.ip_address_monitor = IPAddressMonitor()
-        self.ringer = Ringer(self)
-        self.incomingSessions = set()
-        self.activeAudioStreams = set()
         self.last_calls_connections = {}
         self.last_calls_connections_authRequestCount = {}
-        self.pause_music = True
         self.bonjour_disabled_on_sleep = False
         self.bonjour_conference_services = BonjourConferenceServices()
         self.notification_center = NotificationCenter()
@@ -120,15 +110,6 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidFail')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationGotAnswer')
         self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
-        self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
-        self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
-        self.notification_center.add_observer(self, name='SIPSessionDidStart')
-        self.notification_center.add_observer(self, name='SIPSessionDidFail')
-        self.notification_center.add_observer(self, name='SIPSessionGotProposal')
-        self.notification_center.add_observer(self, name='SIPSessionGotRejectProposal')
-        self.notification_center.add_observer(self, name='MediaStreamDidInitialize')
-        self.notification_center.add_observer(self, name='MediaStreamDidEnd')
-        self.notification_center.add_observer(self, name='MediaStreamDidFail')
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
@@ -372,22 +353,6 @@ class SIPManager(object):
         settings.service_provider.help_url  = data['service_provider_help_url']
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
-
-    def send_files_to_contact(self, account, contact_uri, filenames):
-        if not self.isMediaTypeSupported('file-transfer'):
-            return
-
-        target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, self.get_default_account())
-
-        for file in filenames:
-            try:
-                xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
-                self._active_transfers.append(xfer)
-                xfer.start()
-            except Exception, exc:
-                import traceback
-                traceback.print_exc()
-                BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
 
     def get_printed_duration(self, start_time, end_time):
         duration = end_time - start_time
@@ -711,14 +676,6 @@ class SIPManager(object):
         SIPSimpleSettings().audio.silent = flag
         SIPSimpleSettings().save()
 
-    def get_default_account(self):
-        return AccountManager().default_account
-
-    def set_default_account(self, account):
-        if account != AccountManager().default_account:
-            AccountManager().default_account = account
-        self.ringer.update_ringtones()
-    
     def account_for_contact(self, contact):
         return AccountManager().find_account(contact)
 
@@ -781,8 +738,6 @@ class SIPManager(object):
         self.ip_address_monitor.start()
 
     def _NH_SIPApplicationDidStart(self, sender, data):
-        self.ringer.start()
-        self.ringer.update_ringtones()
 
         settings = SIPSimpleSettings()
         BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
@@ -800,7 +755,6 @@ class SIPManager(object):
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()
-        self.ringer.stop()
 
     def _NH_SIPEngineGotException(self, sender, data):
         print "SIP Engine Exception", data
@@ -1022,14 +976,6 @@ class SIPManager(object):
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
-    def _NH_SIPAccountDidActivate(self, account, data):
-        BlinkLogger().log_info(u"%s activated" % account)
-        # Activate BonjourConferenceServer discovery
-        if account is BonjourAccount():
-            self.bonjour_conference_services.start()
-        else:
-            self.get_last_calls(account)
-
     @run_in_gui_thread
     def get_last_calls(self, account):
         if not account.server.settings_url:
@@ -1066,6 +1012,14 @@ class SIPManager(object):
             del self.last_calls_connections[account.id]
         except KeyError:
             pass
+
+    def _NH_SIPAccountDidActivate(self, account, data):
+        BlinkLogger().log_info(u"%s activated" % account)
+        # Activate BonjourConferenceServer discovery
+        if account is BonjourAccount():
+            self.bonjour_conference_services.start()
+        else:
+            self.get_last_calls(account)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info(u"%s deactivated" % account)
@@ -1181,109 +1135,6 @@ class SIPManager(object):
                                'offline_status_supported')
         BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported)))
 
-    def isRemoteDesktopSharingActive(self):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('127.0.0.1', 5900))
-            s.close()
-            return True
-        except socket.error, msg:
-            s.close()
-            return False
-
-
-    def isProposedMediaTypeSupported(self, streams):
-        settings = SIPSimpleSettings()
-
-        stream_type_list = list(set(stream.type for stream in streams))
-
-        if 'desktop-sharing' in stream_type_list:
-            ds = [s for s in streams if s.type == "desktop-sharing"]
-            if ds and ds[0].handler.type != "active":
-                if settings.desktop_sharing.disabled:
-                    BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
-                    return False
-                if not self.isRemoteDesktopSharingActive():
-                    BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
-                    return False
-
-        if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
-            BlinkLogger().log_info(u"File Transfers are disabled")
-            return False
-
-        if settings.chat.disabled and 'chat' in stream_type_list:
-            BlinkLogger().log_info(u"Chat sessions are disabled")
-            return False
-
-        if 'video' in stream_type_list:
-            # TODO: enable Video -adi
-            return False
-
-        return True
-
-    def isMediaTypeSupported(self, type):
-        settings = SIPSimpleSettings()
-
-        if type == 'desktop-server':
-            if settings.desktop_sharing.disabled:
-                return False
-            if not self.isRemoteDesktopSharingActive():
-                return False
-
-        if settings.file_transfer.disabled and type == 'file-transfer':
-            BlinkLogger().log_info(u"File Transfers are disabled")
-            return False
-
-        if settings.chat.disabled and type == 'chat':
-            BlinkLogger().log_info(u"Chat sessions are disabled")
-            return False
-
-        if type == 'video':
-            # TODO: enable Video -adi
-            return False
-
-        return True
-
-    @run_in_gui_thread
-    def _NH_SIPSessionNewIncoming(self, session, data):
-        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
-        stream_type_list = list(set(stream.type for stream in streams))
-        if not streams:
-            BlinkLogger().log_info(u"Rejecting session for unsupported media type")
-            session.reject(488, 'Incompatible media')
-            return
-
-        # if call waiting is disabled and we have audio calls reject with busy
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in self._delegate.sessionControllers)
-        if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
-            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
-            session.reject(486, 'Busy Here')
-            return
-
-        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
-            BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity_to_string(session.remote_identity))
-            session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
-            return
-
-        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
-            BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
-            session.reject(403, 'Anonymous Not Acceptable')
-            return
-
-        # at this stage call is allowed and will alert the user
-        self.incomingSessions.add(session)
-
-        if self.pause_music:
-            music_applications = MusicApplications()
-            music_applications.pause()
-
-        self.ringer.add_incoming(session, streams)
-        session.blink_supported_streams = streams
-        self._delegate.handle_incoming_session(session, streams)
-
-        if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
-            self.show_web_alert_page(session)
-
     @run_in_gui_thread
     def show_web_alert_page(self, session):
         # open web page with caller information
@@ -1314,64 +1165,6 @@ class SIPManager(object):
                 if not self._delegate.accountSettingsPanels.has_key(caller_key):
                     self._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
                 self._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
-
-    def _NH_SIPSessionDidFail(self, session, data):
-        self.incomingSessions.discard(session)
-
-    def _NH_SIPSessionDidStart(self, session, data):
-        self.incomingSessions.discard(session)
-        if self.pause_music:
-            if all(stream.type != 'audio' for stream in data.streams):
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
-
-        if session.direction == 'incoming':
-            if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
-                self.show_web_alert_page(session)
-
-    def _NH_SIPSessionGotProposal(self, session, data):
-        if self.pause_music:
-            if any(stream.type == 'audio' for stream in data.streams):
-                music_applications = MusicApplications()
-                music_applications.pause()
-
-
-    def _NH_SIPSessionGotRejectProposal(self, session, data):
-        if self.pause_music:
-            if any(stream.type == 'audio' for stream in data.streams):
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
-
-
-    def _NH_MediaStreamDidInitialize(self, stream, data):
-        if stream.type == 'audio':
-            self.activeAudioStreams.add(stream)
-
-    def _NH_MediaStreamDidEnd(self, stream, data):
-        if self.pause_music:
-            if stream.type == "audio":
-                self.activeAudioStreams.discard(stream)
-                # TODO: check if session has other streams and if yes, resume itunes
-                # in case of session ends, resume is handled by the Session Controller
-                session_has_other_streams = False
-                if not self.activeAudioStreams and not self.incomingSessions and session_has_other_streams:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
-
-    def _NH_MediaStreamDidFail(self, stream, data):
-        if self.pause_music:
-            if stream.type == "audio":
-                self.activeAudioStreams.discard(stream)
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
-
-    @run_in_gui_thread
-    def _NH_SIPSessionNewOutgoing(self, session, data):
-        self.ringer.add_outgoing(session, data.streams)
-        self._delegate.handle_outgoing_session(session)
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:
@@ -1410,20 +1203,6 @@ class SIPManager(object):
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                 self._delegate.sip_session_missed(session, data.streams)
-
-    def _NH_AudioStreamGotDTMF(self, sender, data):
-        key = data.digit
-        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
-        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
-        self.notification_center.add_observer(self, sender=wave_player)
-        SIPApplication.voice_audio_bridge.add(wave_player)
-        wave_player.start()
-
-    def _NH_WavePlayerDidFail(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender)
-
-    def _NH_WavePlayerDidEnd(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender)
 
     def validateAddAccountAction(self):
         if NSApp.delegate().applicationName == 'Blink Lite':

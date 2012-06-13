@@ -125,7 +125,7 @@ class ChatWindowController(NSWindowController):
 
             self.setOwnIcon()
 
-            if not SIPManager().isMediaTypeSupported('video'):
+            if not self.sessionControllersManager.isMediaTypeSupported('video'):
                 for identifier in ('video', 'maximize'):
                     try:
                         item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
@@ -155,6 +155,10 @@ class ChatWindowController(NSWindowController):
         self.notification_center.remove_observer(self, name="BlinkVideoEnteredFullScreen")
         self.notification_center.remove_observer(self, name="BlinkVideoExitedFullScreen")
         super(ChatWindowController, self).dealloc()
+
+    @property
+    def sessionControllersManager(self):
+        return NSApp.delegate().windowController.sessionControllersManager
 
     def addTimer(self):
         if not self.timer:

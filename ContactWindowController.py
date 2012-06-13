@@ -45,7 +45,7 @@ from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
-from SessionController import SessionController
+from SessionController import SessionControllersManager
 from SIPManager import SIPManager, MWIData
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import ApplicationData, Resources
@@ -108,7 +108,6 @@ class ContactWindowController(NSWindowController):
     model = objc.IBOutlet()
     backend = None
     loggerModel = None
-    sessionControllers = []
     participants = []
 
     searchResultsModel = objc.IBOutlet()
@@ -209,6 +208,7 @@ class ContactWindowController(NSWindowController):
     ldap_found_contacts = []
     local_found_contacts = []
     journal_replicator = None
+    sessionControllersManager = None
     first_run = False
 
 
@@ -284,6 +284,8 @@ class ContactWindowController(NSWindowController):
         ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
         ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
         ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
+
+        self.sessionControllersManager = SessionControllersManager()
 
         self.refreshContactsList()
         self.updateActionButtons()
@@ -557,26 +559,6 @@ class ContactWindowController(NSWindowController):
 
         return contacts
 
-    def startIncomingSession(self, session, streams, answeringMachine=False):
-        try:
-            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
-        except StopIteration:
-            session_controller = SessionController.alloc().initWithSession_(session)
-            session_controller.setOwner_(self)
-            self.sessionControllers.append(session_controller)
-        session_controller.setAnsweringMachineMode_(answeringMachine)
-        session_controller.handleIncomingStreams(streams, False)
-
-    def acceptIncomingProposal(self, session, streams):
-        try:
-            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
-        except StopIteration:
-            session.reject_proposal()
-            session.log_info("Cannot find session controller for session: %s" % session)
-        else:
-            session_controller.handleIncomingStreams(streams, True)
-            session.accept_proposal(streams)
-
     def windowShouldClose_(self, sender):
         ev = NSApp.currentEvent()
         if ev.type() == NSKeyDown:
@@ -747,7 +729,7 @@ class ContactWindowController(NSWindowController):
             settings.audio.output_device = unicode(device)
             settings.save()
 
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         settings = SIPSimpleSettings()
         if hasAudio or settings.audio.automatic_device_switch:
             BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
@@ -903,7 +885,7 @@ class ContactWindowController(NSWindowController):
         self.shuffleDownAudioSession(stream.view)
 
         count = 0
-        for session in self.sessionControllers:
+        for session in self.sessionControllersManager.sessionControllers:
             if session.hasStreamOfType("audio"):
                 s = session.streamHandlerOfType("audio")
                 if s.isConferencing:
@@ -925,7 +907,7 @@ class ContactWindowController(NSWindowController):
 
     def disbandConference(self):
         self.disbandingConference = True
-        for session in self.sessionControllers:
+        for session in self.sessionControllersManager.sessionControllers:
             if session.hasStreamOfType("audio"):
                 stream = session.streamHandlerOfType("audio")
                 if stream.isConferencing:
@@ -953,12 +935,12 @@ class ContactWindowController(NSWindowController):
         hangupAll.setEnabled_(c > 0)
 
         # number of sessions that can be conferenced
-        c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
+        c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         conference.setEnabled_(c > 1)
 
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
 
         status = self.statusPopUp.selectedItem().representedObject()
         if status == "phone":
@@ -1000,10 +982,10 @@ class ContactWindowController(NSWindowController):
                 chatOk = audioOk
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
-        self.actionButtons.setEnabled_forSegment_(chatOk and self.backend.isMediaTypeSupported('chat'), 1)
+        self.actionButtons.setEnabled_forSegment_(chatOk and self.sessionControllersManager.isMediaTypeSupported('chat'), 1)
         self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
 
-        c = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
+        c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
 
     def isJoinConferenceWindowOpen(self):
@@ -1347,7 +1329,7 @@ class ContactWindowController(NSWindowController):
     
     @objc.IBAction
     def addContactToConference_(self, sender):
-        active_sessions = [s for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
+        active_sessions = [s for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
 
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             target = unicode(self.searchBox.stringValue()).strip()
@@ -1384,7 +1366,7 @@ class ContactWindowController(NSWindowController):
                 handler.addToConference()
 
     def closeAllSessions(self):
-        for session in self.sessionControllers[:]:
+        for session in self.sessionControllersManager.sessionControllers[:]:
             session.end()
 
     def startSessionToSelectedContact(self, media):
@@ -1419,9 +1401,7 @@ class ContactWindowController(NSWindowController):
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
 
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(display_name))
-        session.setOwner_(self)
-        self.sessionControllers.append(session)
+        session = self.sessionControllersManager.addWithAccount_target_displayName_(account, target, unicode(display_name))
 
         if media == "video":
             media = ("video", "audio")
@@ -1452,9 +1432,7 @@ class ContactWindowController(NSWindowController):
         contact = self.getContactMatchingURI(remote_uri)
         display_name = contact.display_name if contact else ''
 
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, unicode(display_name))
-        session.setOwner_(self)
-        self.sessionControllers.append(session)
+        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
         if media == "video":
             media = ("video", "audio")
@@ -1462,12 +1440,12 @@ class ContactWindowController(NSWindowController):
         if type(media) is not tuple:
             if media == "chat" and account is not BonjourAccount():
                 # just show the window and wait for user to type before starting the outgoing session
-                session.open_chat_window_only = True
+                session_controller.open_chat_window_only = True
 
-            if not session.startSessionWithStreamOfType(media):
+            if not session_controller.startSessionWithStreamOfType(media):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
-            if not session.startCompositeSessionWithStreamsOfTypes(media):
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
     def startSessionWithAccount(self, account, target, media):
@@ -1484,15 +1462,13 @@ class ContactWindowController(NSWindowController):
         contact = self.getContactMatchingURI(target_uri)
         display_name = contact.display_name if contact else ''
 
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, unicode(display_name))
-        session.setOwner_(self)
-        self.sessionControllers.append(session)
+        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
         if type(media) is not tuple:
-            if not session.startSessionWithStreamOfType(media):
+            if not session_controller.startSessionWithStreamOfType(media):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
         else:
-            if not session.startCompositeSessionWithStreamsOfTypes(media):
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
 
     def startSessionWithSIPURI(self, text, session_type="audio", invite_participants=[]):
@@ -1515,16 +1491,14 @@ class ContactWindowController(NSWindowController):
 
         target_uri = normalize_sip_uri_for_outgoing_session(text, account)
         if target_uri:
-            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, displayName)
-            self.sessionControllers.append(session)
-            session.setOwner_(self)
+            session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, displayName)
             if session_type == "audio":
-                session.startAudioSession()
+                session_controller.startAudioSession()
             elif session_type == "chat":
-                session.startChatSession()
+                session_controller.startChatSession()
             else:
-                session.startAudioSession()
-            return session
+                session_controller.startAudioSession()
+            return session_controller
         else:
             BlinkLogger().log_error(u"Error parsing URI %s"%text)
             return None
@@ -1545,13 +1519,11 @@ class ContactWindowController(NSWindowController):
         if not target:
             return
 
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target, unicode(target))
-        session.setOwner_(self)
-        self.sessionControllers.append(session)
+        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target, unicode(target))
 
         if participants:
             # Add invited participants to the drawer
-            session.mustShowDrawer = True
+            session_controller.mustShowDrawer = True
             for uri in participants:
                 contact = self.getContactMatchingURI(uri)
                 if contact:
@@ -1559,17 +1531,17 @@ class ContactWindowController(NSWindowController):
                 else:
                     contact = BlinkConferenceContact(uri=uri, name=uri)
                 contact.setDetail('Invitation sent...')
-                session.invited_participants.append(contact)
-                session.participants_log.add(uri)
+                session_controller.invited_participants.append(contact)
+                session_controller.participants_log.add(uri)
 
         if not media:
             media = 'audio'
 
         if type(media) in (tuple, list):
-            if not session.startCompositeSessionWithStreamsOfTypes(media):
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
         else:
-            if not session.startSessionWithStreamOfType(media):
+            if not session_controller.startSessionWithStreamOfType(media):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
 
     @objc.IBAction
@@ -1691,7 +1663,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def hangupAllClicked_(self, sender):
-        for session in self.sessionControllers:
+        for session in self.sessionControllersManager.sessionControllers:
             if session.hasStreamOfType("audio"):
                 if len(session.streamHandlers) == 1:
                     session.end()
@@ -1703,7 +1675,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def conferenceClicked_(self, sender):
-        count = sum(s and 1 or 0 for s in self.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
+        count = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
 
         if self.conferenceButton.state() == NSOnState:
             if count < 2:
@@ -1717,7 +1689,7 @@ class ContactWindowController(NSWindowController):
                 return
 
             conference_streams = []
-            for session in self.sessionControllers:
+            for session in self.sessionControllersManager.sessionControllers:
                 if session.hasStreamOfType("audio"):
                     stream = session.streamHandlerOfType("audio")
                     if stream.canConference:
@@ -1749,98 +1721,6 @@ class ContactWindowController(NSWindowController):
                     self.window().makeFirstResponder_(selected[0])
                 else:
                     self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
-
-    def handle_incoming_session(self, session, streams):
-        settings = SIPSimpleSettings()
-        stream_type_list = list(set(stream.type for stream in streams))
-
-        if self.model.hasContactMatchingURI(session.remote_identity.uri):
-            if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
-                self.startIncomingSession(session, streams)
-                return
-            elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
-                self.startIncomingSession(session, streams)
-                return
-        elif session.account is BonjourAccount() and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
-                self.startIncomingSession(session, streams)
-                return
-
-        if stream_type_list == ['file-transfer'] and streams[0].file_selector.name.decode("utf8").startswith('xscreencapture'):
-            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
-            self.startIncomingSession(session, streams)
-            return
-
-        try:
-            session.send_ring_indication()
-        except IllegalStateError, e:
-            BlinkLogger().log_error(u"IllegalStateError: %s" % e)
-        else:
-            if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
-                self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
-            else:
-                sessionController = SessionController.alloc().initWithSession_(session)
-                sessionController.setOwner_(self)
-                self.sessionControllers.append(sessionController)
-
-                if not self.alertPanel:
-                    self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
-
-                self.alertPanel.addIncomingSession(session)
-                self.alertPanel.show()
-
-    def handle_incoming_proposal(self, session, streams):
-        settings = SIPSimpleSettings()
-        stream_type_list = list(set(stream.type for stream in streams))
-
-        if not self.backend.isProposedMediaTypeSupported(streams):
-            BlinkLogger().log_info(u"Unsupported media type, proposal rejected")
-            session.reject_proposal()
-            return
-        elif stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
-            BlinkLogger().log_info(u"Automatically accepting chat for established audio session from %s" % format_identity_to_string(session.remote_identity))
-            self.acceptIncomingProposal(session, streams)
-            return
-        elif session.account is BonjourAccount():
-            if stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
-                self.acceptIncomingProposal(session, streams)
-                return
-            elif 'audio' in stream_type_list and session.account.audio.auto_accept:
-                session_manager = SessionManager()
-                have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
-                if not have_audio_call:
-                    accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
-                    BlinkLogger().log_info(u"Automatically accepting Bonjour audio and chat session from %s" % format_identity_to_string(session.remote_identity))
-                    self.acceptIncomingProposal(session, accepted_streams)
-                    return
-        elif self.model.hasContactMatchingURI(session.remote_identity.uri):
-            settings = SIPSimpleSettings()
-            if settings.chat.auto_accept and stream_type_list == ['chat']:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
-                self.acceptIncomingProposal(session, streams)
-                return
-            elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
-                self.acceptIncomingProposal(session, streams)
-                return
-        try:
-            session.send_ring_indication()
-        except IllegalStateError:
-            BlinkLogger().log_error(u"IllegalStateError: %s" % e)
-        else:
-            if not self.alertPanel:
-                self.alertPanel = AlertPanel.alloc().initWithOwner_(self)
-            self.alertPanel.addIncomingStreamProposal(session, streams)
-            self.alertPanel.show()
-
-    def handle_outgoing_session(self, session):
-        if session.transfer_info is not None:
-            # This Session was created as a result of a transfer
-            controller = SessionController.alloc().initWithSessionTransfer_owner_(session, self)
-            self.sessionControllers.append(controller)
 
     def sip_session_missed(self, session, stream_types):
         BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
@@ -2031,18 +1911,18 @@ class ContactWindowController(NSWindowController):
 
         item = self.statusMenu.itemWithTag_(51) # chat
         item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
-        item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
+        item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('chat'))
 
         item = self.statusMenu.itemWithTag_(52) # file
         item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
-        item.setEnabled_(self.backend.isMediaTypeSupported('file-transfer'))
+        item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
 
         item = self.statusMenu.itemWithTag_(60) # my video delimiter
-        item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
+        item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
 
         item = self.statusMenu.itemWithTag_(61) # my video
         item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
-        item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
+        item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
 
     def updateToolsMenu(self):
         account = self.activeAccount()
@@ -2077,7 +1957,7 @@ class ContactWindowController(NSWindowController):
         account = self.activeAccount()
 
         item = menu.itemWithTag_(44) # Join Conference
-        item.setEnabled_(self.backend.isMediaTypeSupported('chat'))
+        item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('chat'))
 
         # outbound proxy
         if not isinstance(account, BonjourAccount) and (account.sip.primary_proxy or account.sip.alternative_proxy):
@@ -2184,7 +2064,7 @@ class ContactWindowController(NSWindowController):
 
     def updateWindowMenu(self):
         item = self.windowMenu.itemWithTag_(5)
-        item.setEnabled_(any(sess.hasStreamOfType("chat") for sess in self.sessionControllers))
+        item.setEnabled_(any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers))
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -2200,10 +2080,10 @@ class ContactWindowController(NSWindowController):
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
-            item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.backend.isMediaTypeSupported('chat'))
+            item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
-            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.backend.isMediaTypeSupported('chat'))
+            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
 
     @run_in_green_thread
     def show_last_chat_conversations(self):
@@ -2446,10 +2326,8 @@ class ContactWindowController(NSWindowController):
             if account.voicemail_uri is None:
                 return
             target_uri = normalize_sip_uri_for_outgoing_session(account.voicemail_uri, account)
-            session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
-            self.sessionControllers.append(session)
-            session.setOwner_(self)
-            session.startAudioSession()
+            session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, None)
+            session_controller.startAudioSession()
         else:
             item = sender.representedObject()
             target_uri = item["target_uri"]
@@ -2497,18 +2375,17 @@ class ContactWindowController(NSWindowController):
         if not account:
             account = self.activeAccount()
         target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
-        session = SessionController.alloc().initWithAccount_target_displayName_(account, target_uri, None)
-        self.sessionControllers.append(session)
-        session.setOwner_(self)
+
+        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, None)
 
         if 'audio' in streams and 'chat' in streams:
             # give priority to chat stream so that we do not open audio drawer for composite streams
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream=='chat' else 1)
-            session.startCompositeSessionWithStreamsOfTypes(sorted_streams)
+            session_controller.startCompositeSessionWithStreamsOfTypes(sorted_streams)
         elif 'audio' in streams:
-            session.startAudioSession()
+            session_controller.startAudioSession()
         elif 'chat' in streams:
-            session.startChatSession()
+            session_controller.startChatSession()
 
     @objc.IBAction
     def sendFile_(self, sender):
@@ -2659,7 +2536,7 @@ class ContactWindowController(NSWindowController):
 
     def playSilence(self):
         # used to keep the audio device open
-        audio_active = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        audio_active = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         if not audio_active and SIPApplication.voice_audio_bridge:
             if self.silence_player is None:
                 self.silence_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get('silence.wav'), volume=0, loop_count=15)
@@ -2764,14 +2641,14 @@ class ContactWindowController(NSWindowController):
             has_full_sip_uri = is_sip_aor_format(item.uri)
             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
-            chat_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('chat'))
+            chat_item.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('chat'))
             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
-            video_item.setHidden_(False if SIPManager().isMediaTypeSupported('video') else True)
+            video_item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
-            sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.backend.isMediaTypeSupported('chat'))
+            sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
             sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
-            sf_item.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('file-transfer'))
+            sf_item.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
             if item not in self.model.bonjour_group.contacts:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
@@ -2780,10 +2657,10 @@ class ContactWindowController(NSWindowController):
             contact = item.display_name
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(1)
-            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-client'))
+            mitem.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('desktop-client'))
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startDesktopToSelected:", "")
             mitem.setTag_(2)
-            mitem.setEnabled_(has_full_sip_uri and self.backend.isMediaTypeSupported('desktop-server'))
+            mitem.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('desktop-server'))
 
             if ENABLE_PRESENCE:
                 if item.stored_in_account is not None:
@@ -2946,10 +2823,10 @@ class ContactWindowController(NSWindowController):
             else:
                 item = self.desktopShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Screen from %s" % contact.display_name)
-                item.setEnabled_(self.backend.isMediaTypeSupported('desktop-client'))
+                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('desktop-client'))
 
                 item = self.desktopShareMenu.itemWithTag_(2)
-                if not self.backend.isMediaTypeSupported('desktop-server'):
+                if not self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
                     item.setHidden_(True)
                 else:
                     item.setHidden_(False)

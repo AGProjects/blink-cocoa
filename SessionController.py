@@ -4,27 +4,34 @@
 import hashlib
 import re
 import time
+import socket
+
 from itertools import chain
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
+from application.python.types import Singleton
 
 from datetime import datetime
 
-from sipsimple.account import Account, BonjourAccount
-from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
+from sipsimple.account import Account, AccountManager, BonjourAccount
+from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
+from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
 from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 
 from AppKit import *
 from Foundation import *
+from AlertPanel import AlertPanel
 from AudioController import AudioController
+from FileTransferSession import OutgoingPushFileTransferHandler
 from VideoController import VideoController
 from MediaStream import *
+from SessionRinger import Ringer
 from BlinkLogger import BlinkLogger
 from ChatController import ChatController
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
@@ -33,6 +40,7 @@ from FileTransferController import FileTransferController
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from interfaces.itunes import MusicApplications
+
 from util import *
 
 SessionIdentifierSerial = 0
@@ -41,7 +49,7 @@ OUTBOUND_AUDIO_CALLS = 0
 StreamHandlerForType = {
     "chat" : ChatController,
     "audio" : AudioController,
-#    "video" : VideoController,  TODO: add video -adi
+#    "video" : VideoController,
     "video" : ChatController,
     "file-transfer" : FileTransferController,
     "desktop-sharing" : DesktopSharingController,
@@ -49,10 +57,315 @@ StreamHandlerForType = {
     "desktop-viewer" : DesktopSharingViewerController
 }
 
+
+class SessionControllersManager(object):
+    __metaclass__ = Singleton
+
+    implements(IObserver)
+
+    def __init__(self):
+        self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, name='SIPApplicationDidStart')
+        self.notification_center.add_observer(self, name='SIPApplicationWillEnd')
+        self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
+        self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
+        self.notification_center.add_observer(self, name='SIPSessionDidStart')
+        self.notification_center.add_observer(self, name='SIPSessionDidFail')
+        self.notification_center.add_observer(self, name='SIPSessionDidEnd')
+        self.notification_center.add_observer(self, name='SIPSessionGotProposal')
+        self.notification_center.add_observer(self, name='SIPSessionGotRejectProposal')
+        self.notification_center.add_observer(self, name='MediaStreamDidInitialize')
+        self.notification_center.add_observer(self, name='MediaStreamDidEnd')
+        self.notification_center.add_observer(self, name='MediaStreamDidFail')
+
+        self.sessionControllers = []
+        self.ringer = Ringer(self)
+        self.incomingSessions = set()
+        self.activeAudioStreams = set()
+        self.pause_music = True
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_SIPApplicationDidStart(self, sender, data):
+        self.ringer.start()
+        self.ringer.update_ringtones()
+
+    def _NH_SIPApplicationWillEnd(self, sender, data):
+        self.ringer.stop()
+
+    def _NH_SIPSessionDidFail(self, session, data):
+        self.incomingSessions.discard(session)
+        if self.pause_music:
+            self.incomingSessions.discard(session)
+            if not self.activeAudioStreams and not self.incomingSessions:
+                music_applications = MusicApplications()
+                music_applications.resume()
+
+    def _NH_SIPSessionDidStart(self, session, data):
+        self.incomingSessions.discard(session)
+        if self.pause_music:
+            if all(stream.type != 'audio' for stream in data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    music_applications = MusicApplications()
+                    music_applications.resume()
+
+        if session.direction == 'incoming':
+            if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
+                SIPManager().show_web_alert_page(session)
+
+    def _NH_SIPSessionDidEnd(self, session, data):
+        if self.pause_music:
+            self.incomingSessions.discard(session)
+            if not self.activeAudioStreams and not self.incomingSessions:
+                music_applications = MusicApplications()
+                music_applications.resume()
+
+    def _NH_SIPSessionGotProposal(self, session, data):
+        if self.pause_music:
+            if any(stream.type == 'audio' for stream in data.streams):
+                music_applications = MusicApplications()
+                music_applications.pause()
+
+    def _NH_SIPSessionGotRejectProposal(self, session, data):
+        if self.pause_music:
+            if any(stream.type == 'audio' for stream in data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    music_applications = MusicApplications()
+                    music_applications.resume()
+
+    def _NH_MediaStreamDidInitialize(self, stream, data):
+        if stream.type == 'audio':
+            self.activeAudioStreams.add(stream)
+
+    def _NH_MediaStreamDidEnd(self, stream, data):
+        if self.pause_music:
+            if stream.type == "audio":
+                self.activeAudioStreams.discard(stream)
+                # TODO: check if session has other streams and if yes, resume itunes
+                # in case of session ends, resume is handled by the Session Controller
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    music_applications = MusicApplications()
+                    music_applications.resume()
+
+    def _NH_MediaStreamDidFail(self, stream, data):
+        if self.pause_music:
+            if stream.type == "audio":
+                self.activeAudioStreams.discard(stream)
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    music_applications = MusicApplications()
+                    music_applications.resume()
+
+
+    @run_in_gui_thread
+    def _NH_SIPSessionNewIncoming(self, session, data):
+        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
+        stream_type_list = list(set(stream.type for stream in streams))
+        if not streams:
+            BlinkLogger().log_info(u"Rejecting session for unsupported media type")
+            session.reject(488, 'Incompatible media')
+            return
+
+        # if call waiting is disabled and we have audio calls reject with busy
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
+            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
+            session.reject(486, 'Busy Here')
+            return
+
+        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
+            BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity_to_string(session.remote_identity))
+            session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+            return
+
+        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
+            BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
+            session.reject(403, 'Anonymous Not Acceptable')
+            return
+
+        # at this stage call is allowed and will alert the user
+        self.incomingSessions.add(session)
+
+        if self.pause_music:
+            music_applications = MusicApplications()
+            music_applications.pause()
+
+        self.ringer.add_incoming(session, streams)
+        session.blink_supported_streams = streams
+
+        settings = SIPSimpleSettings()
+        stream_type_list = list(set(stream.type for stream in streams))
+
+        if NSApp.delegate().windowController.hasContactMatchingURI(session.remote_identity.uri):
+            if settings.chat.auto_accept and stream_type_list == ['chat']:
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
+                self.startIncomingSession(session, streams)
+                return
+            elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
+                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
+                self.startIncomingSession(session, streams)
+                return
+        elif session.account is BonjourAccount() and stream_type_list == ['chat']:
+            BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
+            self.startIncomingSession(session, streams)
+            return
+
+        if stream_type_list == ['file-transfer'] and streams[0].file_selector.name.decode("utf8").startswith('xscreencapture'):
+            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
+            self.startIncomingSession(session, streams)
+            return
+
+        try:
+            session.send_ring_indication()
+        except IllegalStateError, e:
+            BlinkLogger().log_info(u"IllegalStateError: %s" % e)
+        else:
+            if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
+                self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
+            else:
+                sessionController = self.addWithSession_(session)
+
+                if not NSApp.delegate().windowController.alertPanel:
+                    NSApp.delegate().windowController.alertPanel = AlertPanel.alloc().init()
+                NSApp.delegate().windowController.alertPanel.addIncomingSession(session)
+                NSApp.delegate().windowController.alertPanel.show()
+
+        if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
+            SIPManager().show_web_alert_page(session)
+
+    @run_in_gui_thread
+    def _NH_SIPSessionNewOutgoing(self, session, data):
+        self.ringer.add_outgoing(session, data.streams)
+        if session.transfer_info is not None:
+            # This Session was created as a result of a transfer
+            self.addWithSessionTransfer_(session)
+
+    def addWithSession_(self, session):
+        sessionController = SessionController.alloc().initWithSession_(session)
+        self.sessionControllers.append(sessionController)
+        return sessionController
+
+    def addWithAccount_target_displayName_(self, account, target, display_name):
+        sessionController = SessionController.alloc().initWithAccount_target_displayName_(account, target, display_name)
+        self.sessionControllers.append(sessionController)
+        return sessionController
+
+    def addWithSessionTransfer_(self, session):
+        sessionController = SessionController.alloc().initWithSessionTransfer_(session)
+        self.sessionControllers.append(sessionController)
+        return sessionController
+
+    def remove(self, controller):
+        try:
+            self.sessionControllers.remove(controller)
+        except ValueError:
+            pass
+
+    def send_files_to_contact(self, account, contact_uri, filenames):
+        if not self.isMediaTypeSupported('file-transfer'):
+            return
+
+        target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, AccountManager().default_account)
+
+        for file in filenames:
+            try:
+                xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
+                xfer.start()
+            except Exception, exc:
+                BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
+
+    def startIncomingSession(self, session, streams, answeringMachine=False):
+        try:
+            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+        except StopIteration:
+            session_controller = self.addWithSession_(session)
+        session_controller.setAnsweringMachineMode_(answeringMachine)
+        session_controller.handleIncomingStreams(streams, False)
+
+    def isRemoteDesktopSharingActive(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('127.0.0.1', 5900))
+            s.close()
+            return True
+        except socket.error, msg:
+            s.close()
+            return False
+
+    def isProposedMediaTypeSupported(self, streams):
+        settings = SIPSimpleSettings()
+
+        stream_type_list = list(set(stream.type for stream in streams))
+
+        if 'desktop-sharing' in stream_type_list:
+            ds = [s for s in streams if s.type == "desktop-sharing"]
+            if ds and ds[0].handler.type != "active":
+                if settings.desktop_sharing.disabled:
+                    BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
+                    return False
+                if not self.isRemoteDesktopSharingActive():
+                    BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
+                    return False
+
+        if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
+            BlinkLogger().log_info(u"File Transfers are disabled")
+            return False
+
+        if settings.chat.disabled and 'chat' in stream_type_list:
+            BlinkLogger().log_info(u"Chat sessions are disabled")
+            return False
+
+        if 'video' in stream_type_list:
+            # TODO: enable Video -adi
+            return False
+
+        return True
+
+    def isMediaTypeSupported(self, type):
+        settings = SIPSimpleSettings()
+
+        if type == 'desktop-server':
+            if settings.desktop_sharing.disabled:
+                return False
+            if not self.isRemoteDesktopSharingActive():
+                return False
+
+        if settings.file_transfer.disabled and type == 'file-transfer':
+            BlinkLogger().log_info(u"File Transfers are disabled")
+            return False
+
+        if settings.chat.disabled and type == 'chat':
+            BlinkLogger().log_info(u"Chat sessions are disabled")
+            return False
+
+        if type == 'video':
+            # TODO: enable Video -adi
+            return False
+
+        return True
+
+    def _NH_AudioStreamGotDTMF(self, sender, data):
+        key = data.digit
+        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
+        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
+        self.notification_center.add_observer(self, sender=wave_player)
+        SIPApplication.voice_audio_bridge.add(wave_player)
+        wave_player.start()
+
+    def _NH_WavePlayerDidFail(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
+
+    def _NH_WavePlayerDidEnd(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
+
+
 class SessionController(NSObject):
     implements(IObserver)
 
-    owner = None
     session = None
     state = STATE_IDLE
     routes = None
@@ -77,6 +390,10 @@ class SessionController(NSObject):
     from_tag = None
     to_tag = None
     dealloc_timer = None
+
+    @property
+    def sessionControllersManager(self):
+        return NSApp.delegate().windowController.sessionControllersManager
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -154,7 +471,7 @@ class SessionController(NSObject):
         self.log_info(u'Invite from: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
         return self
 
-    def initWithSessionTransfer_owner_(self, session, owner):
+    def initWithSessionTransfer_(self, session):
         global SessionIdentifierSerial
         self = super(SessionController, self).init()
         BlinkLogger().log_info(u"Creating %s" % self)
@@ -182,7 +499,6 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.mustShowDrawer = True
         self.open_chat_window_only = False
-        self.owner = owner
         self.try_next_hop = False
         self.initInfoPanel()
 
@@ -192,7 +508,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
 
         for stream in session.proposed_streams:
-            if SIPManager().isMediaTypeSupported(stream.type) and not self.hasStreamOfType(stream.type):
+            if self.sessionControllersManager.isMediaTypeSupported(stream.type) and not self.hasStreamOfType(stream.type):
                 handlerClass = StreamHandlerForType[stream.type]
                 stream_controller = handlerClass(self, stream)
                 self.streamHandlers.append(stream_controller)
@@ -240,13 +556,17 @@ class SessionController(NSObject):
 
         return True
 
+    def acceptIncomingProposal(self, streams):
+        self.handleIncomingStreams(streams, True)
+        self.session.accept_proposal(streams)
+
     def handleIncomingStreams(self, streams, is_update=False):
         try:
             # give priority to chat stream so that we do not open audio drawer for composite streams
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream.type=='chat' else 1)
             handled_types = set()
             for stream in sorted_streams:
-                if SIPManager().isMediaTypeSupported(stream.type):
+                if self.sessionControllersManager.isMediaTypeSupported(stream.type):
                     if stream.type in handled_types:
                         self.log_info(u"Stream type %s has already been handled" % stream.type)
                         continue
@@ -285,9 +605,6 @@ class SessionController(NSObject):
 
     def setAnsweringMachineMode_(self, flag):
         self.answeringMachineMode = flag
-
-    def setOwner_(self, owner):
-        self.owner = owner
 
     def hasStreamOfType(self, stype):
         return any(s for s in self.streamHandlers if s.stream and s.stream.type==stype)
@@ -405,15 +722,12 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
         self.destroyInfoPanel()
-        self.owner.updatePresenceStatus()
+        NSApp.delegate().windowController.updatePresenceStatus()
         call_id = None
         from_tag = None
         to_tag = None
 
-        try:
-            self.owner.sessionControllers.remove(self)
-        except ValueError:
-            pass
+        SessionControllersManager().remove(self)
 
     def initInfoPanel(self):
         if self.info_panel is None:
@@ -473,7 +787,7 @@ class SessionController(NSObject):
 
                 stream = None
 
-                if SIPManager().isMediaTypeSupported(stype):
+                if self.sessionControllersManager.isMediaTypeSupported(stype):
                     handlerClass = StreamHandlerForType[stype]
                     stream = handlerClass.createStream(self.account)
 
@@ -535,7 +849,7 @@ class SessionController(NSObject):
                         OUTBOUND_AUDIO_CALLS += 1
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
 
-                    if SIPManager().pause_music:
+                    if self.sessionControllersManager.pause_music:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
                             music_applications = MusicApplications()
@@ -858,11 +1172,6 @@ class SessionController(NSObject):
                 self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
             else:
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
-        elif SIPManager().pause_music:
-            SIPManager().incomingSessions.discard(sender)
-            if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
-                music_applications = MusicApplications()
-                music_applications.resume()
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
@@ -885,12 +1194,6 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=TimestampedNotificationData())
 
-        if SIPManager().pause_music:
-            SIPManager().incomingSessions.discard(sender)
-            if not SIPManager().activeAudioStreams and not SIPManager().incomingSessions:
-                music_applications = MusicApplications()
-                music_applications.resume()
-
         self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
@@ -899,13 +1202,62 @@ class SessionController(NSObject):
             log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 
-    def _NH_SIPSessionGotProposal(self, sender, data):
+    def _NH_SIPSessionGotProposal(self, session, data):
         self.inProposal = True
         self.proposalOriginator = 'remote'
+
         if data.originator != "local":
             stream_names = ', '.join(stream.type for stream in data.streams)
             self.log_info(u"Received %s proposal" % stream_names)
-            self.owner.handle_incoming_proposal(sender, data.streams)
+            streams = data.streams
+        
+            settings = SIPSimpleSettings()
+            stream_type_list = list(set(stream.type for stream in streams))
+            
+            if not self.sessionControllersManager.isProposedMediaTypeSupported(streams):
+                self.log_info(u"Unsupported media type, proposal rejected")
+                session.reject_proposal()
+                return
+            
+            if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
+                self.log_info(u"Automatically accepting chat for established audio session from %s" % format_identity_to_string(session.remote_identity))
+                self.acceptIncomingProposal(streams)
+                return
+
+            if session.account is BonjourAccount():
+                if stream_type_list == ['chat']:
+                    self.log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
+                    self.acceptIncomingProposal(streams)
+                    return
+                elif 'audio' in stream_type_list and session.account.audio.auto_accept:
+                    session_manager = SessionManager()
+                    have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
+                    if not have_audio_call:
+                        accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
+                        self.log_info(u"Automatically accepting Bonjour audio and chat session from %s" % format_identity_to_string(session.remote_identity))
+                        self.acceptIncomingProposal(accepted_streams)
+                        return
+
+            if NSApp.delegate().windowController.hasContactMatchingURI(session.remote_identity.uri):
+                if settings.chat.auto_accept and stream_type_list == ['chat']:
+                    self.log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
+                    self.acceptIncomingProposal(streams)
+                    return
+                elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
+                    self.log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
+                    self.acceptIncomingProposal(streams)
+                    return
+
+            try:
+                session.send_ring_indication()
+            except IllegalStateError, e:
+                self.log_info(u"IllegalStateError: %s" % e)
+                return
+            else:
+                if not NSApp.delegate().windowController.alertPanel:
+                    NSApp.delegate().windowController.alertPanel = AlertPanel.alloc().init()
+                NSApp.delegate().windowController.alertPanel.addIncomingStreamProposal(session, streams)
+                NSApp.delegate().windowController.alertPanel.show()
 
             # needed to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self, data=TimestampedNotificationData())

@@ -11,6 +11,7 @@ from application.python import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
+from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
 from sipsimple.util import TimestampedNotificationData
 from sipsimple.payloads.iscomposing import IsComposingMessage
@@ -252,7 +253,7 @@ class SMSWindowManagerClass(NSObject):
         account = SIPManager.SIPManager().account_for_contact(data.request_uri)
         if not account:
             BlinkLogger().log_warning(u"Could not find recipient account for message to %s, using default" % data.request_uri)
-            account = SIPManager.SIPManager().get_default_account()
+            account = AccountManager().default_account
 
         is_cpim = False
         cpim_message = None

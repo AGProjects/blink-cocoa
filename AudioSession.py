@@ -20,6 +20,10 @@ class AudioSession(NSView):
     draggedOut = False
     dragPos = NSZeroPoint
 
+    @property
+    def sessionControllersManager(self):
+        return NSApp.delegate().windowController.sessionControllersManager
+
     def dealloc(self):
         super(AudioSession, self).dealloc()
 
@@ -85,7 +89,7 @@ class AudioSession(NSView):
             NSString.stringWithString_("Drop outside to remove from conference").drawAtPoint_withAttributes_(point, 
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         else:
-            audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllers]
+            audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllersManager.sessionControllers]
             if self.delegate.transferEnabled:
                 text = "Drop this over a session or contact" if len(audio_sessions) > 1 else "Drop this over a contact to transfer"
             else:
@@ -224,7 +228,7 @@ class AudioSession(NSView):
             ws = NSWorkspace.sharedWorkspace()
             filenames = [unicodedata.normalize('NFC', file) for file in pboard.propertyListForType_(NSFilenamesPboardType) if os.path.isfile(file)]
             if filenames:
-                SIPManager().send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
+                self.sessionControllersManager.send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
             return
 
         def unhighlight(view):

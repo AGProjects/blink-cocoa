@@ -205,7 +205,7 @@ class AudioController(MediaStream):
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.updateTLSIcon()
-        self.sessionManager.showAudioSession(self)
+        NSApp.delegate().windowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
         if is_answering_machine:
             self.sessionController.log_info("Sending session to answering machine")
@@ -222,10 +222,10 @@ class AudioController(MediaStream):
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.sessionController)
         display_name = self.sessionController.contactDisplayName if self.sessionController.contactDisplayName and not self.sessionController.contactDisplayName.startswith('sip:') and not self.sessionController.contactDisplayName.startswith('sips:') else None
-        self.label.setStringValue_(display_name if display_name else format_identity_to_string(self.sessionController.remotePartyObject, format='compact'))
+        self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        self.sessionManager.showAudioSession(self)
+        NSApp.delegate().windowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def sessionStateChanged(self, state, detail):
@@ -248,7 +248,7 @@ class AudioController(MediaStream):
     def end(self):
         status = self.status
 
-        SIPManager().ringer.stop_ringing(self.session)
+        self.sessionControllersManager.ringer.stop_ringing(self.session)
 
         if status in [STREAM_IDLE, STREAM_FAILED]:
             self.hangedUp = True
@@ -358,10 +358,10 @@ class AudioController(MediaStream):
 
     def sessionBoxDidActivate(self, sender):
         if self.isConferencing:
-            self.sessionManager.unholdConference()
+            NSApp.delegate().windowController.unholdConference()
             self.updateLabelColor()
         else:
-            self.sessionManager.holdConference()
+            NSApp.delegate().windowController.holdConference()
             self.unhold()
 
         data = TimestampedNotificationData()
@@ -371,7 +371,7 @@ class AudioController(MediaStream):
     def sessionBoxDidDeactivate(self, sender):
         if self.isConferencing:
             if not sender.conferencing: # only hold if the sender is a non-conference session
-                self.sessionManager.holdConference()
+                NSApp.delegate().windowController.holdConference()
             self.updateLabelColor()
         else:
             self.hold()
@@ -385,7 +385,7 @@ class AudioController(MediaStream):
                   peer))
             # start audio session to peer and add it to conference
             self.view.setConferencing_(True)
-            session = self.sessionManager.startSessionWithSIPURI(peer)
+            session = NSApp.delegate().windowController.startSessionWithSIPURI(peer)
             if session:
                 peer = session.streamHandlerOfType("audio")
                 peer.view.setConferencing_(True)
@@ -419,7 +419,7 @@ class AudioController(MediaStream):
         if self.holdByLocal:
             self.unhold()
         self.mutedInConference = False
-        self.sessionManager.addAudioSessionToConference(self)
+        NSApp.delegate().windowController.addAudioSessionToConference(self)
         self.audioSegmented.setHidden_(True)
         self.transferSegmented.setHidden_(True)
         self.conferenceSegmented.setHidden_(False)
@@ -427,7 +427,7 @@ class AudioController(MediaStream):
         self.updateLabelColor()
     
     def removeFromConference(self):
-        self.sessionManager.removeAudioSessionFromConference(self)
+        NSApp.delegate().windowController.removeAudioSessionFromConference(self)
         if self.transferEnabled:
             self.transferSegmented.setHidden_(False)
             self.audioSegmented.setHidden_(True)
@@ -468,7 +468,7 @@ class AudioController(MediaStream):
             cleanup_delay = TRANSFERRED_CLEANUP_DELAY if self.transferred else AUDIO_CLEANUP_DELAY
             if self.audioEndTime and (time.time() - self.audioEndTime > cleanup_delay):
                 self.removeFromSession()
-                self.sessionManager.finalizeAudioSession(self)
+                NSApp.delegate().windowController.finalizeAudioSession(self)
                 if timer.isValid():
                     timer.invalidate()
                 self.audioEndTime = None
@@ -609,7 +609,7 @@ class AudioController(MediaStream):
             self.updateTLSIcon()
             self.updateSRTPIcon()
 
-            self.sessionManager.updateAudioButtons()
+            NSApp.delegate().windowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
                 self.updateAudioStatusWithSessionState(u"Audio removed")
@@ -791,7 +791,7 @@ class AudioController(MediaStream):
         if menu == self.transferMenu:
             while menu.numberOfItems() > 1:
                 menu.removeItemAtIndex_(1)
-            for session_controller in (s for s in NSApp.delegate().windowController.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
+            for session_controller in (s for s in self.sessionControllersManager.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
                 item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.getTitleFull(), "userClickedTransferMenuItem:", "")
                 item.setIndentationLevel_(1)
                 item.setTarget_(self)
@@ -815,21 +815,21 @@ class AudioController(MediaStream):
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             item = menu.itemWithTag_(10) # add Chat
-            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and SIPManager().isMediaTypeSupported('chat'))
+            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat'))
 
             item = menu.itemWithTag_(40) # add Video
-            item.setEnabled_(can_propose and SIPManager().isMediaTypeSupported('video'))
-            item.setHidden_(not(SIPManager().isMediaTypeSupported('video')))
+            item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
+            item.setHidden_(not(self.sessionControllersManager.isMediaTypeSupported('video')))
 
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("desktop-sharing")
             item = menu.itemWithTag_(11) # request remote desktop
             item.setTitle_("Request Screen from %s" % title)
-            item.setEnabled_(not have_screensharing and can_propose_screensharing and SIPManager().isMediaTypeSupported('desktop-client'))
+            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('desktop-client'))
 
             item = menu.itemWithTag_(12) # share local desktop
             item.setTitle_("Share My Screen with %s" % title)
-            item.setEnabled_(not have_screensharing and can_propose_screensharing and SIPManager().isMediaTypeSupported('desktop-server'))
+            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('desktop-server'))
 
             item = menu.itemWithTag_(13) # cancel
             item.setEnabled_(False)
@@ -1020,7 +1020,7 @@ class AudioController(MediaStream):
         if sender is self or (sender.isConferencing and self.isConferencing):
             return
         if self.isConferencing:
-            self.sessionManager.holdConference()
+            NSApp.delegate().windowController.holdConference()
         elif not sender.isConferencing:
             self.hold()
 

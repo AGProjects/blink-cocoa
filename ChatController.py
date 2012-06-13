@@ -271,7 +271,7 @@ class ChatController(MediaStream):
         ws = NSWorkspace.sharedWorkspace()
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file)]
         if filenames:
-            self.backend.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
+            self.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
             return True
         return False
 
@@ -670,7 +670,7 @@ class ChatController(MediaStream):
                     item.setImage_(NSImage.imageNamed_("pause"))
             elif identifier == 'record':
                 item.setImage_(NSImage.imageNamed_("recording1" if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recording_active else "record"))
-            elif identifier == 'video' and self.backend.isMediaTypeSupported('video'):
+            elif identifier == 'video' and self.sessionControllersManager.isMediaTypeSupported('video'):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
@@ -718,9 +718,9 @@ class ChatController(MediaStream):
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
             elif identifier == 'screenshot':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('file-transfer') else False)
+                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
             elif identifier == 'sendfile':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('file-transfer') else False)
+                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
 
     def validateToolbarButton(self, item):
         """
@@ -759,7 +759,7 @@ class ChatController(MediaStream):
                 return True if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and NSApp.delegate().applicationName != 'Blink Lite' else False
             elif identifier == 'maximize' and self.video_frame_visible:
                 return True
-            elif identifier == 'video' and self.status == STREAM_CONNECTED and self.backend.isMediaTypeSupported('video'):
+            elif identifier == 'video' and self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('video'):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_CONNECTED:
@@ -770,7 +770,7 @@ class ChatController(MediaStream):
                         return True if self.sessionController.canProposeMediaStreamChanges() else False
                 else:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-            elif identifier == 'sendfile' and self.backend.isMediaTypeSupported('file-transfer') and self.status == STREAM_CONNECTED:
+            elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer') and self.status == STREAM_CONNECTED:
                 return True
             elif identifier == 'smileys':
                 return True
@@ -1106,12 +1106,13 @@ class ChatController(MediaStream):
         else:
             return
 
-        name = format_identity_to_string(self.sessionController.session.remote_identity)
-        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
-        now = datetime.datetime.now(tzlocal())
-        timestamp = Timestamp(now)
-        if self.chatViewController:
-            self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
+        if self.status == STREAM_CONNECTED:
+            name = format_identity_to_string(self.sessionController.session.remote_identity)
+            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+            now = datetime.datetime.now(tzlocal())
+            timestamp = Timestamp(now)
+            if self.chatViewController:
+                self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.session_failed = True
@@ -1192,7 +1193,7 @@ class ChatController(MediaStream):
         streamController = self.sessionController.streamHandlerOfType('chat')
 
         if self.status != STREAM_DISCONNECTING:
-            self.backend.ringer.stop_ringing(self.sessionController.session)
+            self.sessionControllersManager.ringer.stop_ringing(self.sessionController.session)
 
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self.stream)
