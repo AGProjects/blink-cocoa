@@ -161,7 +161,6 @@ class SessionHistory(object):
         transaction = self.db.transaction()
         try:
             if previous_version is None and self.__version__ == 2:
-                NSApp.delegate().showMigrationPanel('Migrating history session table to a new version')
                 query = "SELECT id, local_uri, remote_uri FROM sessions"
                 results = list(self.db.queryAll(query))
                 for result in results:
@@ -170,7 +169,6 @@ class SessionHistory(object):
                     remote_uri = remote_uri.decode('latin1').encode('utf-8')
                     query = "UPDATE sessions SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     self.db.queryAll(query)
-                NSApp.delegate().hideMigrationPanel()
         except Exception, e:
             BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (SessionHistoryEntry.sqlmeta.table, previous_version, self.__version__, e))
             transaction.rollback()
@@ -633,7 +631,6 @@ class FileTransferHistory(object):
         transaction = self.db.transaction()
         try:
             if previous_version is None and self.__version__ == 2:
-                NSApp.delegate().showMigrationPanel('Migrating history file transfers table to a new version')
                 query = "SELECT id, local_uri, remote_uri FROM file_transfers"
                 results = list(self.db.queryAll(query))
                 for result in results:
@@ -642,7 +639,6 @@ class FileTransferHistory(object):
                     remote_uri = remote_uri.decode('latin1').encode('utf-8')
                     query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     self.db.queryAll(query)
-                NSApp.delegate().hideMigrationPanel()
         except Exception, e:
             BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (FileTransfer.sqlmeta.table, previous_version, self.__version__, e))
             transaction.rollback()
