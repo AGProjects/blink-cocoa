@@ -1401,7 +1401,7 @@ class ContactWindowController(NSWindowController):
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
 
-        session = self.sessionControllersManager.addWithAccount_target_displayName_(account, target, unicode(display_name))
+        session = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(display_name))
 
         if media == "video":
             media = ("video", "audio")
@@ -1432,7 +1432,7 @@ class ContactWindowController(NSWindowController):
         contact = self.getContactMatchingURI(remote_uri)
         display_name = contact.display_name if contact else ''
 
-        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, unicode(display_name))
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
         if media == "video":
             media = ("video", "audio")
@@ -1462,7 +1462,7 @@ class ContactWindowController(NSWindowController):
         contact = self.getContactMatchingURI(target_uri)
         display_name = contact.display_name if contact else ''
 
-        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, unicode(display_name))
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
         if type(media) is not tuple:
             if not session_controller.startSessionWithStreamOfType(media):
@@ -1491,7 +1491,7 @@ class ContactWindowController(NSWindowController):
 
         target_uri = normalize_sip_uri_for_outgoing_session(text, account)
         if target_uri:
-            session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, displayName)
+            session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, displayName)
             if session_type == "audio":
                 session_controller.startAudioSession()
             elif session_type == "chat":
@@ -1519,7 +1519,7 @@ class ContactWindowController(NSWindowController):
         if not target:
             return
 
-        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target, unicode(target))
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(target))
 
         if participants:
             # Add invited participants to the drawer
@@ -2326,7 +2326,7 @@ class ContactWindowController(NSWindowController):
             if account.voicemail_uri is None:
                 return
             target_uri = normalize_sip_uri_for_outgoing_session(account.voicemail_uri, account)
-            session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, None)
+            session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, None)
             session_controller.startAudioSession()
         else:
             item = sender.representedObject()
@@ -2376,7 +2376,7 @@ class ContactWindowController(NSWindowController):
             account = self.activeAccount()
         target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
 
-        session_controller = self.sessionControllersManager.addWithAccount_target_displayName_(account, target_uri, None)
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, None)
 
         if 'audio' in streams and 'chat' in streams:
             # give priority to chat stream so that we do not open audio drawer for composite streams

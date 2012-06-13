@@ -11,8 +11,6 @@ import cjson
 import os
 import re
 import time
-import urllib
-import urlparse
 import uuid
 
 from application.notification import NotificationCenter, IObserver
@@ -21,8 +19,7 @@ from application.python.types import Singleton
 from application.system import host, makedirs, unlink
 
 from collections import defaultdict
-from datetime import datetime, timedelta
-from dateutil.tz import tzlocal
+from datetime import datetime
 from eventlet import api, coros, proc
 from eventlet.green import select
 from gnutls.crypto import X509Certificate, X509PrivateKey
@@ -46,7 +43,6 @@ from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread, Command
 from sipsimple.util import TimestampedNotificationData, Timestamp
 
-from HistoryManager import ChatHistory, SessionHistory
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
@@ -92,16 +88,11 @@ class SIPManager(object):
         self._selected_account = None
         self._version = None
         self.ip_address_monitor = IPAddressMonitor()
-        self.last_calls_connections = {}
-        self.last_calls_connections_authRequestCount = {}
         self.bonjour_disabled_on_sleep = False
         self.bonjour_conference_services = BonjourConferenceServices()
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self._app)
         self.notification_center.add_observer(self, sender=self._app.engine)
-        self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
-        self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
-        self.notification_center.add_observer(self, name='BlinkSessionDidFail')
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='SIPAccountDidActivate')
         self.notification_center.add_observer(self, name='SIPAccountDidDeactivate')
@@ -354,235 +345,6 @@ class SIPManager(object):
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
 
-    def get_printed_duration(self, start_time, end_time):
-        duration = end_time - start_time
-        if (duration.days > 0 or duration.seconds > 0):
-            duration_print = ""
-            if duration.days > 0 or duration.seconds > 3600:
-                duration_print  += "%i hours, " % (duration.days*24 + duration.seconds/3600)
-            seconds = duration.seconds % 3600
-            duration_print += "%02i:%02i" % (seconds/60, seconds%60)
-        else:
-            duration_print = "00:00"
-
-        return duration_print
-
-    def log_incoming_session_missed(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
-        id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
-        participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
-        focus = "1" if data.focus else "0"
-        failure_reason = ''
-        duration = 0
-        call_id = data.call_id if data.call_id is not None else ''
-        from_tag = data.from_tag if data.from_tag is not None else ''
-        to_tag = data.to_tag if data.to_tag is not None else ''
-
-        self.add_to_history(id, media_types, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-
-        if 'audio' in data.streams:
-            message = '<h3>Missed Incoming Audio Call</h3>'
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'missed-call'
-            direction = 'incoming'
-            status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
-
-    def log_incoming_session_ended(self, controller, data):
-        account = controller.account
-        session = controller.session
-        if account is BonjourAccount():
-            return
-
-        id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
-        participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
-        focus = "1" if data.focus else "0"
-        failure_reason = ''
-        if session.start_time is None and session.end_time is not None:
-            # Session could have ended before it was completely started
-            session.start_time = session.end_time
-
-        duration = session.end_time - session.start_time
-        call_id = data.call_id if data.call_id is not None else ''
-        from_tag = data.from_tag if data.from_tag is not None else ''
-        to_tag = data.to_tag if data.to_tag is not None else ''
-
-        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-
-        if 'audio' in data.streams:
-            duration = self.get_printed_duration(session.start_time, session.end_time)
-            message = '<h3>Incoming Audio Call</h3>'
-            message += '<p>Call duration: %s' % duration
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
-            direction = 'incoming'
-            status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = format_identity_to_string(account)
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
-
-    def log_incoming_session_answered_elsewhere(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
-        id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
-        participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
-        focus = "1" if data.focus else "0"
-        failure_reason = 'Answered elsewhere'
-        call_id = data.call_id if data.call_id is not None else ''
-        from_tag = data.from_tag if data.from_tag is not None else ''
-        to_tag = data.to_tag if data.to_tag is not None else ''
-
-        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-
-        if 'audio' in data.streams:
-            message= '<h3>Incoming Audio Call</h3>'
-            message += '<p>The call has been answered elsewhere'
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
-            local_uri = local_uri
-            remote_uri = remote_uri
-            direction = 'incoming'
-            status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
-
-    def log_outgoing_session_failed(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
-        id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
-        participants = ",".join(data.participants)
-        focus = "1" if data.focus else "0"
-        local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
-        failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
-        call_id = data.call_id if data.call_id is not None else ''
-        from_tag = data.from_tag if data.from_tag is not None else ''
-        to_tag = data.to_tag if data.to_tag is not None else ''
-
-        self.add_to_history(id, media_types, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-
-        if 'audio' in data.streams:
-            message = '<h3>Failed Outgoing Audio Call</h3>'
-            message += '<p>Reason: %s (%s)' % (data.reason or data.failure_reason, data.code) 
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
-            local_uri = local_uri
-            remote_uri = remote_uri
-            direction = 'incoming'
-            status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
-
-    def log_outgoing_session_cancelled(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
-        id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
-        participants = ",".join(data.participants)
-        focus = "1" if data.focus else "0"
-        local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
-        failure_reason = ''
-        call_id = data.call_id if data.call_id is not None else ''
-        from_tag = data.from_tag if data.from_tag is not None else ''
-        to_tag = data.to_tag if data.to_tag is not None else ''
-
-        self.add_to_history(id, media_types, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-
-        if 'audio' in data.streams:
-            message= '<h3>Cancelled Outgoing Audio Call</h3>'
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
-            direction = 'incoming'
-            status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
-
-    def log_outgoing_session_ended(self, controller, data):
-        account = controller.account
-        session = controller.session
-        if account is BonjourAccount():
-            return
-
-        id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
-        participants = ",".join(data.participants)
-        focus = "1" if data.focus else "0"
-        local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
-        direction = 'incoming'
-        status = 'delivered'
-        failure_reason = ''
-        call_id = data.call_id if data.call_id is not None else ''
-        from_tag = data.from_tag if data.from_tag is not None else ''
-        to_tag = data.to_tag if data.to_tag is not None else ''
-
-        if session.start_time is None and session.end_time is not None:
-            # Session could have ended before it was completely started
-            session.start_time = session.end_time
-
-        duration = session.end_time - session.start_time
-
-        self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-
-        if 'audio' in data.streams:
-            duration = self.get_printed_duration(session.start_time, session.end_time)
-            message= '<h3>Outgoing Audio Call</h3>'
-            message += '<p>Call duration: %s' % duration
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
-
-    def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
-        SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
-
-    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
-
     def get_audio_recordings_directory(self):
         return ApplicationData.get('history')
 
@@ -660,9 +422,6 @@ class SIPManager(object):
         result.sort(lambda a,b: cmp(a[0],b[0]))
         return result
 
-    def add_contact_to_call_session(self, session, contact):
-        pass
-
     def is_muted(self):
         return self._app.voice_audio_mixer and self._app.voice_audio_mixer.muted
 
@@ -675,9 +434,6 @@ class SIPManager(object):
     def silent(self, flag):
         SIPSimpleSettings().audio.silent = flag
         SIPSimpleSettings().save()
-
-    def account_for_contact(self, contact):
-        return AccountManager().find_account(contact)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -743,8 +499,6 @@ class SIPManager(object):
         BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
         BlinkLogger().log_info(u"SIP Device ID %s" % settings.instance_id)
 
-        self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
-
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
             for transport in settings.sip.transport_list:
@@ -767,259 +521,11 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Forcing termination of Blink, fatal error occurred")
         os.kill(os.getpid(), signal.SIGTERM)
 
-    def updateGetCallsTimer_(self, timer):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['timer'] == timer).next()
-        except StopIteration:
-            return
-        else:
-            try:
-                connection = self.last_calls_connections[key]['connection']
-                nsurl = NSURL.URLWithString_(self.last_calls_connections[key]['url'])
-            except KeyError:
-                pass
-            else:
-                if connection:
-                    connection.cancel()
-                request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-                connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-                self.last_calls_connections[key]['data'] = ''
-                self.last_calls_connections[key]['authRequestCount'] = 0
-                self.last_calls_connections[key]['connection'] = connection
-
-    # NSURLConnection delegate method
-    def connection_didReceiveData_(self, connection, data):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        else:
-            try:
-                account = AccountManager().get_account(key)
-            except KeyError:
-                pass
-            else:
-                self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + str(data)
-
-    def connectionDidFinishLoading_(self, connection):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        else:
-            #BlinkLogger().log_info(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
-            try:
-                account = AccountManager().get_account(key)
-            except KeyError:
-                pass
-            else:
-                try:
-                    calls = cjson.decode(self.last_calls_connections[key]['data'])
-                except (TypeError, cjson.DecodeError):
-                    pass
-                    #BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
-                else:
-                    self.syncServerHistoryWithLocalHistory(account, calls)
-
-    # NSURLConnection delegate method
-    def connection_didFailWithError_(self, connection, error):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        #BlinkLogger().log_info(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
-
-    @run_in_green_thread
-    def syncServerHistoryWithLocalHistory(self, account, calls):
-        growl_notifications = {}
-        try:
-            for call in calls['received']:
-                direction = 'incoming'
-                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
-                if not len(local_entry):
-                    id=str(uuid.uuid1())
-                    participants = ""
-                    focus = "0"
-                    local_uri = str(account.id)
-                    try:
-                        remote_uri = call['remoteParty']
-                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
-                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
-                        status = call['status']
-                        duration = call['duration']
-                        call_id = call['sessionId']
-                        from_tag = call['fromTag']
-                        to_tag = call['toTag']
-                        media_types = ", ".join(call['media']) or 'audio'
-                    except KeyError,e:
-                        print 'Exceptie %s' % e
-                        continue
-                    success = 'completed' if duration > 0 else 'missed'
-                    #BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
-                    self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in call['media']:
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(Timestamp(datetime.now(tzlocal())))
-                        if success == 'missed':
-                            message = '<h3>Missed Incoming Audio Call</h3>'
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                            media_type = 'missed-call'
-                        else:
-                            duration = self.get_printed_duration(start_time, end_time)
-                            message = '<h3>Incoming Audio Call</h3>'
-                            message += '<p>The call has been answered elsewhere'
-                            message += '<p>Call duration: %s' % duration
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                            media_type = 'audio'
-                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-
-                    if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
-                        now = datetime(*time.localtime()[:6])
-                        elapsed = now - start_time
-                        elapsed_hours = elapsed.seconds / (60*60)
-                        if elapsed_hours < 48:
-                            growl_data = TimestampedNotificationData()
-                            try:
-                                uri = SIPURI.parse('sip:'+str(remote_uri))
-                            except Exception:
-                                pass
-                            else:
-                                growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
-                                growl_data.timestamp = start_time
-                                growl_data.streams = media_types
-                                growl_data.account = str(account.id)
-                                self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                                growl_notifications[remote_uri] = True
-        except (KeyError, TypeError):
-            pass
-
-        try:
-            for call in calls['placed']:
-                direction = 'outgoing'
-                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
-                if not len(local_entry):
-                    id=str(uuid.uuid1())
-                    participants = ""
-                    focus = "0"
-                    local_uri = str(account.id)
-                    try:
-                        remote_uri = call['remoteParty']
-                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
-                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
-                        status = call['status']
-                        duration = call['duration']
-                        call_id = call['sessionId']
-                        from_tag = call['fromTag']
-                        to_tag = call['toTag']
-                        media_types = ", ".join(call['media']) or 'audio'
-                    except KeyError:
-                        continue
-
-                    if duration > 0:
-                        success = 'completed'
-                    else:
-                        if status == "487":
-                            success = 'cancelled'
-                        else:
-                            success = 'failed'
-
-                    #BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
-                    self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in call['media']:
-                        local_uri = local_uri
-                        remote_uri = remote_uri
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(Timestamp(datetime.now(tzlocal())))
-                        media_type = 'audio'
-                        if success == 'failed':
-                            message = '<h3>Failed Outgoing Audio Call</h3>'
-                            message += '<p>Reason: %s' % status
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                        elif success == 'cancelled':
-                            message= '<h3>Cancelled Outgoing Audio Call</h3>'
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                        else:
-                            duration = self.get_printed_duration(start_time, end_time)
-                            message= '<h3>Outgoing Audio Call</h3>'
-                            message += '<p>Call duration: %s' % duration
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-        except (KeyError, TypeError):
-            pass
-
-    # NSURLConnection delegate method
-    def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        else:
-            try:
-                account = AccountManager().get_account(key)
-            except KeyError:
-                pass
-            else:
-                try:
-                    self.last_calls_connections[key]['authRequestCount'] += 1
-                except KeyError:
-                    self.last_calls_connections[key]['authRequestCount'] = 1
-
-                if self.last_calls_connections[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
-                    challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
-
-    @run_in_gui_thread
-    def get_last_calls(self, account):
-        if not account.server.settings_url:
-            return
-        query_string = "action=get_history"
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        nsurl = NSURL.URLWithString_(url)
-        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-        connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(60, self, "updateGetCallsTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
-        self.last_calls_connections[account.id] = {'connection': connection,
-                                                   'authRequestCount': 0,
-                                                   'timer': timer,
-                                                   'url': url,
-                                                   'data': ''
-                                                    }
-
-    @run_in_gui_thread
-    def close_last_call_connection(self, account):
-        try:
-            connection = self.last_calls_connections[account.id]['connection']
-        except KeyError:
-            pass
-        else:
-            if connection:
-                connection.cancel()
-        try:
-            timer = self.last_calls_connections[account.id]['timer']
-            if timer and timer.isValid():
-                timer.invalidate()
-                timer = None
-            del self.last_calls_connections[account.id]
-        except KeyError:
-            pass
-
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info(u"%s activated" % account)
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
             self.bonjour_conference_services.start()
-        else:
-            self.get_last_calls(account)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info(u"%s deactivated" % account)
@@ -1027,8 +533,6 @@ class SIPManager(object):
         # Deactivate BonjourConferenceServer discovery
         if account is BonjourAccount():
             self.bonjour_conference_services.stop()
-        else:
-            self.close_last_call_connection(account)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
@@ -1069,25 +573,6 @@ class SIPManager(object):
         if summary.messages_waiting and growl_data.new_messages > 0:
             self.notification_center.post_notification("GrowlGotMWI", sender=self, data=growl_data)
 
-            message = '<h3>New Voicemail Available on the Server</h3>'
-            if growl_data.new_messages:
-                message += '<p>New messages: %s' % growl_data.new_messages
-            if growl_data.old_messages:
-                message += '<br>Old messages: %s' % growl_data.old_messages
-            if account.voicemail_uri:
-                message += "<p>To listen to the messages call %s" % account.voicemail_uri
-            media_type = 'voicemail'
-            local_uri = format_identity_to_string(account)
-            remote_uri = format_identity_to_string(account)
-            direction = 'incoming'
-            status = 'delivered'
-            cpim_from = format_identity_to_string(account)
-            cpim_to = format_identity_to_string(account)
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
-
-            id=str(uuid.uuid1())
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
-
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'message_summary.enabled' in data.modified:
@@ -1098,10 +583,6 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
             settings.save()
-
-        if 'audio.pause_music' in data.modified:
-            settings = SIPSimpleSettings()
-            self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
 
     @run_in_green_thread
     def _NH_SystemWillSleep(self, sender, data):
@@ -1135,74 +616,9 @@ class SIPManager(object):
                                'offline_status_supported')
         BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported)))
 
-    @run_in_gui_thread
-    def show_web_alert_page(self, session):
-        # open web page with caller information
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            return
-
-        if session.account is not BonjourAccount() and session.account.web_alert.alert_url:
-            url = unicode(session.account.web_alert.alert_url)
-
-            replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
-            caller_key = replace_caller[5:]
-            url = url.replace('$caller_party', caller_key)
-
-            replace_username = urllib.urlencode({'x:': '%s' % session.remote_identity.uri.user})
-            url = url.replace('$caller_username', replace_username[5:])
-
-            replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
-            url = url.replace('$called_party', replace_account[5:])
-
-            settings = SIPSimpleSettings()
-
-            if settings.gui.use_default_web_browser_for_alerts:
-                BlinkLogger().log_info(u"Opening HTTP URL in default browser %s"% url)
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
-            else:
-                BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
-                from AccountSettings import AccountSettings
-                if not self._delegate.accountSettingsPanels.has_key(caller_key):
-                    self._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
-                self._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
-
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:
             BlinkLogger().log_info(u"Detected NAT Type: %s" % data.nat_type)
-
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidEnd(self, session_controller, data):
-        if session_controller.session.direction == "incoming":
-            self.log_incoming_session_ended(session_controller, data)
-        else:
-            self.log_outgoing_session_ended(session_controller, data)
-
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidFail(self, session_controller, data):
-        if data.direction == "outgoing":
-            if data.code == 487:
-                self.log_outgoing_session_cancelled(session_controller, data)
-            else:
-                self.log_outgoing_session_failed(session_controller, data)
-        elif data.direction == "incoming":
-            session = session_controller.session
-            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
-                self.log_incoming_session_answered_elsewhere(session_controller, data)
-            else:
-                self.log_incoming_session_missed(session_controller, data)
-
-            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
-                pass
-            elif data.streams == ['file-transfer']:
-                pass
-            else:
-                growl_data = TimestampedNotificationData()
-                growl_data.caller = format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
-                growl_data.timestamp = data.timestamp
-                growl_data.streams = ",".join(data.streams)
-                growl_data.account = session.account.id.username + '@' + session.account.id.domain
-                self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                self._delegate.sip_session_missed(session, data.streams)
 
     def validateAddAccountAction(self):
         if NSApp.delegate().applicationName == 'Blink Lite':

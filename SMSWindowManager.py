@@ -250,7 +250,7 @@ class SMSWindowManagerClass(NSObject):
         handler(notification.sender, notification.data)
 
     def _NH_SIPEngineGotMessage(self, sender, data):
-        account = SIPManager.SIPManager().account_for_contact(data.request_uri)
+        account = AccountManager().find_account(data.request_uri)
         if not account:
             BlinkLogger().log_warning(u"Could not find recipient account for message to %s, using default" % data.request_uri)
             account = AccountManager().default_account
