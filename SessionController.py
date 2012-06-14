@@ -303,13 +303,16 @@ class SessionControllersManager(object):
             elif data.streams == ['file-transfer']:
                 pass
             else:
+                session_controller.log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
+                if 'audio' in data.streams:
+                    NSApp.delegate().noteMissedCall()
+
                 growl_data = TimestampedNotificationData()
                 growl_data.caller = format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
                 growl_data.timestamp = data.timestamp
                 growl_data.streams = ",".join(data.streams)
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                self._delegate.sip_session_missed(session, data.streams)
 
     def _NH_SIPAccountDidActivate(self, account, data):
         if account is not BonjourAccount():
