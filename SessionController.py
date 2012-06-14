@@ -135,7 +135,7 @@ class SessionControllersManager(object):
 
         if session.direction == 'incoming':
             if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
-                SIPManager().show_web_alert_page(session)
+                self.show_web_alert_page(session)
 
     def _NH_SIPSessionDidEnd(self, session, data):
         if self.pause_music:
@@ -254,7 +254,7 @@ class SessionControllersManager(object):
                 NSApp.delegate().windowController.alertPanel.show()
 
         if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
-            SIPManager().show_web_alert_page(session)
+            self.show_web_alert_page(session)
 
     @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):
@@ -870,7 +870,12 @@ class SessionControllersManager(object):
         # open web page with caller information
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
-        
+
+        try:
+            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+        except StopIteration:
+            return
+
         if session.account is not BonjourAccount() and session.account.web_alert.alert_url:
             url = unicode(session.account.web_alert.alert_url)
             
@@ -887,10 +892,10 @@ class SessionControllersManager(object):
             settings = SIPSimpleSettings()
             
             if settings.gui.use_default_web_browser_for_alerts:
-                BlinkLogger().log_info(u"Opening HTTP URL in default browser %s"% url)
+                session_controller.log_info(u"Opening HTTP URL in default browser %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             else:
-                BlinkLogger().log_info(u"Opening HTTP URL %s"% url)
+                session_controller.log_info(u"Opening HTTP URL %s"% url)
                 if not SIPManager()._delegate.accountSettingsPanels.has_key(caller_key):
                     SIPManager()._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
                 SIPManager()._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
