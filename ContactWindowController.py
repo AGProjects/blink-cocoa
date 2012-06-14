@@ -1503,7 +1503,7 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_error(u"Error parsing URI %s"%text)
             return None
 
-    def joinConference(self, target, media, participants=[]):
+    def joinConference(self, target, media, participants=[], nickname=None):
         BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media))
         if participants:
             BlinkLogger().log_info(u"Inviting participants: %s" % participants)
@@ -1533,6 +1533,7 @@ class ContactWindowController(NSWindowController):
                 contact.setDetail('Invitation sent...')
                 session_controller.invited_participants.append(contact)
                 session_controller.participants_log.add(uri)
+                session_controller.nickname = nickname
 
         if not media:
             media = 'audio'

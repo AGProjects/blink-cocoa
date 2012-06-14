@@ -562,7 +562,7 @@ class ChatWindowController(NSWindowController):
 
         conference = NSApp.delegate().windowController.showJoinConferenceWindow(participants=participants, media=media)
         if conference is not None:
-            NSApp.delegate().windowController.joinConference(conference.target, conference.media_types, conference.participants)
+            NSApp.delegate().windowController.joinConference(conference.target, conference.media_types, conference.participants, conference.nickname)
 
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()

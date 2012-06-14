@@ -995,6 +995,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.conference_info = None
         self.invited_participants = []
+        self.nickname = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1032,6 +1033,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.conference_info = None
         self.invited_participants = []
+        self.nickname = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1072,6 +1074,7 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.conference_info = None
         self.invited_participants = []
+        self.nickname = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1292,6 +1295,7 @@ class SessionController(NSObject):
         self.remote_focus_log = False
         self.conference_info = None
         self.invited_participants = []
+        self.nickname = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}

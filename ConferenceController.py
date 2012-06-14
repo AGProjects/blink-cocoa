@@ -24,18 +24,20 @@ from ConferenceConfigurationPanel import ConferenceConfigurationPanel
 
 
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_types, participants):
+    def __init__(self, target, media_types=None, participants=None, nickname=None):
         self.target = target
         self.media_types = media_types
         self.participants = participants
+        self.nickname = nickname
 
 
 class ConferenceConfiguration(object):
-    def __init__(self, name, target, participants=None, media_types=None):
+    def __init__(self, name, target, participants=None, media_types=None, nickname=None):
         self.name = name
         self.target = target
         self.participants = participants
         self.media_types = media_types
+        self.nickname = nickname
 
 
 def validateParticipant(uri):
@@ -54,6 +56,7 @@ class JoinConferenceWindowController(NSObject):
 
     window = objc.IBOutlet()
     room = objc.IBOutlet()
+    nickname_textfield = objc.IBOutlet()
     addRemove = objc.IBOutlet()
     participant = objc.IBOutlet()
     participantsTable = objc.IBOutlet()
@@ -82,11 +85,16 @@ class JoinConferenceWindowController(NSObject):
 
         self.default_domain = default_domain
 
+        self.nickname = None
+
         if target is not None and "@" not in target and self.default_domain:
             target = '%s@%s' % (target, self.default_domain)
 
         if target is not None and validateParticipant(target):
             self.room.setStringValue_(target)
+
+        account = AccountManager().default_account
+        self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
 
         if participants:
             self._participants = participants
@@ -126,6 +134,9 @@ class JoinConferenceWindowController(NSObject):
 
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.room.setStringValue_('')
+        self.nickname_textfield.setStringValue_('')
+        account = AccountManager().default_account
+        self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
         self.updatePopupButtons()
 
     def loadConfigurations(self):
@@ -157,7 +168,6 @@ class JoinConferenceWindowController(NSObject):
                 else:
                     configurationPanel = ConferenceConfigurationPanel.alloc().init()
                     configuration_name = configurationPanel.runModal()
-                    configurationPanel.release()
 
                 if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
                     media_types = ("chat", "audio")
@@ -172,8 +182,9 @@ class JoinConferenceWindowController(NSObject):
                         self.conference_configurations[configuration_name].target = self.target
                         self.conference_configurations[configuration_name].participants = self._participants
                         self.conference_configurations[configuration_name].media_types = media_types
+                        self.conference_configurations[configuration_name].nickname = self.nickname
                     else:
-                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_types=media_types)
+                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_types=media_types, nickname=self.nickname)
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
@@ -184,7 +195,6 @@ class JoinConferenceWindowController(NSObject):
         elif sender.selectedItem() == sender.itemWithTitle_(u"Rename configuration..."):
             configurationPanel = ConferenceConfigurationPanel.alloc().init()
             configuration_name = configurationPanel.runModalForRename_(self.selected_configuration)
-            configurationPanel.release()
             if configuration_name and configuration_name != self.selected_configuration:
                 old_configuration = self.conference_configurations[self.selected_configuration]
                 old_configuration.name = configuration_name
@@ -201,6 +211,10 @@ class JoinConferenceWindowController(NSObject):
             configuration = sender.selectedItem().representedObject()
             if configuration:
                 self.room.setStringValue_(configuration.target)
+                try:
+                    self.nickname_textfield.setStringValue_(configuration.nickname)
+                except AttributeError:
+                    self.nickname_textfield.setStringValue_('')
                 self.selected_configuration = configuration.name
                 self._participants = configuration.participants
                 self.participantsTable.reloadData() 
@@ -272,6 +286,7 @@ class JoinConferenceWindowController(NSObject):
     def setDefaults(self):
         self.selected_configuration = None
         self.room.setStringValue_(u'')
+        self.nickname_textfield.setStringValue_(u'')
         self._participants = []
         self.removeAllParticipants.setHidden_(True)
         self.participantsTable.reloadData()
@@ -351,7 +366,7 @@ class JoinConferenceWindowController(NSObject):
             # prevent loops
             if self.target in participants:
                 participants.remove(self.target)
-            return ServerConferenceRoom(self.target, media_types, participants)
+            return ServerConferenceRoom(self.target, media_types=media_types, participants=participants, nickname=self.nickname)
         else:
             return None
 
@@ -430,6 +445,7 @@ class JoinConferenceWindowController(NSObject):
             return room
 
     def validateConference(self, allow_random_room=True):
+        self.nickname = self.nickname_textfield.stringValue().strip()
         room = self.validateRoom(allow_random_room)
         if not room:
             return False
