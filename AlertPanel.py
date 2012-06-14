@@ -314,7 +314,7 @@ class AlertPanel(NSObject, object):
                 BlinkLogger().log_info(u"Auto answer enabled for this contact")
                 self.enableAutoAnswer(view, session)
 
-        fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True))
+        fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
         fromT.sizeToFit()
 
         has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
