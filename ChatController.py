@@ -1458,10 +1458,13 @@ class MessageHandler(NSObject):
     def setDisconnected(self):
         self.connected = False
         for msgid in self.pending:
-            message = self.messages.pop(msgid)
-            message.status='failed'
-            self.delegate.markMessage(msgid, MSG_STATE_FAILED)
-            self.add_to_history(message)
+            try:
+                message = self.messages.pop(msgid)
+                message.status = 'failed'
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED)
+                self.add_to_history(message)
+            except KeyError:
+                pass
         if self.stream:
             NotificationCenter().remove_observer(self, sender=self.stream)
             self.stream = None
