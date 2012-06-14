@@ -460,7 +460,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
             
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_ended(self, controller, data):
@@ -499,7 +499,7 @@ class SessionControllersManager(object):
         cpim_to = format_identity_to_string(account)
         timestamp = str(Timestamp(datetime.now(tzlocal())))
         
-        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
@@ -533,7 +533,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
             
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_failed(self, controller, data):
@@ -567,7 +567,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
             
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_cancelled(self, controller, data):
@@ -598,7 +598,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
             
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
@@ -638,7 +638,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
             
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def get_printed_duration(self, start_time, end_time):
@@ -657,8 +657,8 @@ class SessionControllersManager(object):
     def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
         SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
 
-    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
+    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
+        ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
 
     def updateGetCallsTimer_(self, timer):
         try:
@@ -747,7 +747,7 @@ class SessionControllersManager(object):
                     except KeyError:
                         continue
                     success = 'completed' if duration > 0 else 'missed'
-                    BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
+                    #BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     if 'audio' in call['media']:
                         direction = 'incoming'
@@ -766,7 +766,7 @@ class SessionControllersManager(object):
                             message += '<p>Call duration: %s' % duration
                             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                             media_type = 'audio'
-                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, time=start_time, skip_replication=True)
                         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
                     
                     if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
@@ -819,7 +819,7 @@ class SessionControllersManager(object):
                         else:
                             success = 'failed'
                     
-                    BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
+                    #BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     if 'audio' in call['media']:
                         local_uri = local_uri
@@ -833,16 +833,13 @@ class SessionControllersManager(object):
                         if success == 'failed':
                             message = '<h3>Failed Outgoing Audio Call</h3>'
                             message += '<p>Reason: %s' % status
-                        #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                         elif success == 'cancelled':
                             message= '<h3>Cancelled Outgoing Audio Call</h3>'
-                        #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                         else:
                             duration = self.get_printed_duration(start_time, end_time)
                             message= '<h3>Outgoing Audio Call</h3>'
                             message += '<p>Call duration: %s' % duration
-                        #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, time=start_time, skip_replication=True)
                         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
         except (KeyError, TypeError):
             pass

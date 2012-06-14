@@ -347,9 +347,9 @@ class ChatHistory(object):
             transaction.commit()
 
     @run_in_db_thread
-    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id=''):
+    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False):
         try:
-            if not journal_id:
+            if not journal_id and not skip_replication:
                 settings = SIPSimpleSettings()
                 uuid = settings.instance_id
                 time_entry          = datetime.utcnow()
@@ -803,6 +803,13 @@ class ChatHistoryReplicator(object):
         else:
             return None
 
+    def save_journal_on_disk(self):
+        try:
+            storage_path = ApplicationData.get('chat_journal.pickle')
+            cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
+
     def updateLocalHistoryWithRemoteJournalPutREsults(self, journal, account):
         try:
             success = journal['success']
@@ -840,13 +847,6 @@ class ChatHistoryReplicator(object):
                     BlinkLogger().log_info(u"Failed to update journal id from history replication server of %s" % account)
             else:
                 ChatHistory().update_from_journal_put_results(msgid, journal_id)
-
-    def save_journal_on_disk(self):
-        try:
-            storage_path = ApplicationData.get('chat_journal.pickle')
-            cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
-        except (cPickle.PickleError, IOError):
-            pass
 
     @run_in_green_thread
     def updateLocalHistoryWithRemoteJournalEntries(self, journal, account):
@@ -893,7 +893,7 @@ class ChatHistoryReplicator(object):
         else:
             self.last_journal_id[account] = 0
 
-        i = 0
+        notify_data = {}
         for entry in results:
             try:
                 data           = entry['data']
@@ -923,7 +923,13 @@ class ChatHistoryReplicator(object):
 
             try:
                 ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id)
-                i += 1
+                try:
+                    log = notify_data[data['remote_uri']]
+                except KeyError:
+                    notify_data[data['remote_uri']] = 1
+                else:
+                    notify_data[data['remote_uri']] += 1
+                    
                 if data['direction'] == 'incoming':
                     if self.debug:
                         BlinkLogger().log_info(u"Replicate %s chat message %s from %s to %s" % (data['direction'], journal_id, data['remote_uri'], account))
@@ -938,12 +944,13 @@ class ChatHistoryReplicator(object):
 
             self.last_journal_id[account] = journal_id
 
-        if i:
-            # notify growl
-            growl_data = TimestampedNotificationData()
-            growl_data.sender = 'Chat Replication Server'
-            growl_data.content = '%d new chat messages have been retrieved and saved to local chat history database' % i
-            NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
+        if notify_data:
+            for key in notify_data.keys():
+                # notify growl
+                growl_data = TimestampedNotificationData()
+                growl_data.sender = key
+                growl_data.content = '%d new chat messages retrieved from replication server' % notify_data[key]
+                NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
 
     @allocate_autorelease_pool
