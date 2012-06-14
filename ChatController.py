@@ -1150,7 +1150,7 @@ class ChatController(MediaStream):
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
-        self.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
+        #self.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
 
         self.handler.setConnected(self.stream)
 
