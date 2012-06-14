@@ -1363,10 +1363,10 @@ class SessionController(NSObject):
             else:
                 kwargs = {}
 
-            if not self.hasStreamOfType(stype):
-                if stype not in self.streams_log:
-                    self.streams_log.append(stype)
+            if stype not in self.streams_log:
+                self.streams_log.append(stype)
 
+            if not self.hasStreamOfType(stype):
                 stream = None
 
                 if self.sessionControllersManager.isMediaTypeSupported(stype):
