@@ -907,7 +907,7 @@ class ChatController(MediaStream):
                 sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
                 self.toggleEditor()
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
-                contactWindow = self.sessionController.owner
+                contactWindow = NSApp.delegate().windowController
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
                     contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
