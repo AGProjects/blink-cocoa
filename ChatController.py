@@ -557,12 +557,12 @@ class ChatController(MediaStream):
             self.history_msgid_list = [row.msgid for row in reversed(list(results))]
 
             # render last delievered messages except those due to be resent
-            messages_to_render = [row for row in reversed(list(results)) if row not in last_failed_messages]
+            # messages_to_render = [row for row in reversed(list(results)) if row not in last_failed_messages]
+            messages_to_render = [row for row in reversed(list(results))]
+            #self.resend_last_failed_message(last_failed_messages)
             self.render_history_messages(messages_to_render)
 
-            self.resend_last_failed_message(last_failed_messages)
-
-        self.resend_pending_message()
+        self.send_pending_message()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -602,7 +602,7 @@ class ChatController(MediaStream):
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def resend_pending_message(self):
+    def send_pending_message(self):
         if self.sessionController.pending_chat_messages:
             for message in reversed(self.sessionController.pending_chat_messages.values()):
                 self.handler.resend(message.msgid, message.text, message.recipient, message.private)
