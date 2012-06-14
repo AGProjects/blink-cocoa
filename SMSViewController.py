@@ -177,7 +177,7 @@ class SMSViewController(NSObject):
 
         self.chatViewController.showMessage(msgid, 'incoming', format_identity_to_string(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
-        self.notification_center().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
         # save to history
         message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
