@@ -7,6 +7,7 @@ import cjson
 import cPickle
 from datetime import datetime
 import os
+import time
 import urlparse
 import urllib
 
@@ -923,12 +924,17 @@ class ChatHistoryReplicator(object):
 
             try:
                 ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id)
-                try:
-                    log = notify_data[data['remote_uri']]
-                except KeyError:
-                    notify_data[data['remote_uri']] = 1
-                else:
-                    notify_data[data['remote_uri']] += 1
+                now = datetime(*time.localtime()[:6])
+                start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
+                elapsed = now - start_time
+                elapsed_hours = elapsed.seconds / (60*60)
+                if elapsed_hours < 72:
+                    try:
+                        log = notify_data[data['remote_uri']]
+                    except KeyError:
+                        notify_data[data['remote_uri']] = 1
+                    else:
+                        notify_data[data['remote_uri']] += 1
                     
                 if data['direction'] == 'incoming':
                     if self.debug:
