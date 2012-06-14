@@ -225,6 +225,8 @@ class ChatController(MediaStream):
     def changeStatus(self, newstate, fail_reason=None):
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
+        if self.status == STREAM_FAILED:
+            self.reset()
 
     def openChatWindow(self):
         if self.window is None:
