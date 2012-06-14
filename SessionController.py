@@ -369,7 +369,7 @@ class SessionControllersManager(object):
         session_controller.setAnsweringMachineMode_(answeringMachine)
         session_controller.handleIncomingStreams(streams, False)
 
-    def isRemoteDesktopSharingActive(self):
+    def isScreenSharingEnabled(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('127.0.0.1', 5900))
@@ -390,7 +390,7 @@ class SessionControllersManager(object):
                 if settings.desktop_sharing.disabled:
                     BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
                     return False
-                if not self.isRemoteDesktopSharingActive():
+                if not self.isScreenSharingEnabled():
                     BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
                     return False
 
@@ -414,7 +414,7 @@ class SessionControllersManager(object):
         if type == 'desktop-server':
             if settings.desktop_sharing.disabled:
                 return False
-            if not self.isRemoteDesktopSharingActive():
+            if not self.isScreenSharingEnabled():
                 return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
