@@ -165,6 +165,7 @@ class ChatController(MediaStream):
     def screensharing_allowed(self):
         return 'com.ag-projects.screen-sharing' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
 
+
     @property
     def window(self):
         return NSApp.delegate().windowController.chatWindow

@@ -25,6 +25,8 @@ from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
 from ChatPrivateMessageController import ChatPrivateMessageController
 from SIPManager import SIPManager
+from NicknameController import NicknameController
+
 
 import FancyTabSwitcher
 from util import *
@@ -38,6 +40,7 @@ PARTICIPANTS_MENU_ADD_CONTACT = 301
 PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
 PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE = 311
 PARTICIPANTS_MENU_MUTE = 315
+PARTICIPANTS_MENU_NICKNAME = 316
 PARTICIPANTS_MENU_INVITE_TO_CONFERENCE = 312
 PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE = 313
 PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
@@ -600,6 +603,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_MUTE).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_NICKNAME).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
@@ -618,9 +622,11 @@ class ChatWindowController(NSWindowController):
                 chat_stream = session.streamHandlerOfType("chat")
                 stream_supports_screen_sharing = chat_stream.screensharing_allowed
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_NICKNAME).setEnabled_(True if chat_stream.stream.nickname_allowed and 'message' in contact.active_media else False)
             else:
                 stream_supports_screen_sharing = False
                 self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
+                self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_NICKNAME).setEnabled_(False)
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).setEnabled_(True if stream_supports_screen_sharing and contact.uri != own_uri and not isinstance(session.account, BonjourAccount) and (contact.screensharing_url is not None or self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_VIEW_SCREEN).state == NSOnState) else False)
 
@@ -681,6 +687,17 @@ class ChatWindowController(NSWindowController):
             if message:
                 chat_stream = session.streamHandlerOfType("chat")
                 chat_stream.handler.send(message, recipient, True)
+
+    def setNickname(self):
+        session = self.selectedSessionController()
+        if session:
+            chat_handler = session.streamHandlerOfType("chat")
+            if chat_handler:
+                controller = NicknameController(session.nickname)
+                nickname = controller.runModal()
+                if nickname or (not nickname and session.nickname):
+                    session.nickname = nickname if nickname else None
+                    chat_handler.stream.set_local_nickname(nickname)
 
     def canGoToConferenceWebsite(self):
         session = self.selectedSessionController()
@@ -949,6 +966,8 @@ class ChatWindowController(NSWindowController):
                 self.addParticipants()
             elif tag == PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE:
                 self.sendPrivateMessage()
+            elif tag == PARTICIPANTS_MENU_NICKNAME:
+                self.setNickname()
             elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
             elif tag == PARTICIPANTS_MENU_START_AUDIO_SESSION:
