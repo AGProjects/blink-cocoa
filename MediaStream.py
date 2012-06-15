@@ -61,7 +61,7 @@ class MediaStream(NSObject):
 
     @property
     def sessionControllersManager(self):
-        return NSApp.delegate().windowController.sessionControllersManager
+        return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     @property
     def remoteParty(self):

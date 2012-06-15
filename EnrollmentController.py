@@ -64,7 +64,7 @@ class EnrollmentController(NSObject):
                 self.nextButton.setEnabled_(False)
                 self.purchaseProLabel.setHidden_(False)
 
-            if NSApp.delegate().windowController.first_run:
+            if NSApp.delegate().contactsWindowController.first_run:
                 NotificationCenter().add_observer(self, name='SIPAccountManagerDidAddAccount')
 
         return self

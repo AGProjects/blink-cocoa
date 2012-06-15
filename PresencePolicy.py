@@ -262,7 +262,7 @@ class PresencePolicy(NSWindowController):
                 i = 0
                 for item in self.policy_data[self.account][self.event]:
                     uri = item.uri
-                    contact = NSApp.delegate().windowController.model.getContactMatchingURI(uri)
+                    contact = NSApp.delegate().contactsWindowController.model.getContactMatchingURI(uri)
                     contact = BlinkContact(uri, name=contact.name) if contact else BlinkContact(uri, name=uri)
                     if filter in contact:
                         self.filtered_contacts_map[i] = self.policy_data[self.account][self.event].index(item)
@@ -491,7 +491,7 @@ class PresencePolicy(NSWindowController):
  
                     self.newWatcherWindow.setFrame_display_animate_(frame, True, True)
         
-                    if not NSApp.delegate().windowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
+                    if not NSApp.delegate().contactsWindowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
                         self.showGroupsCombo()
                     else:
                         self.hideGroupsCombo()
@@ -524,7 +524,7 @@ class PresencePolicy(NSWindowController):
         self.groupCombo.setHidden_(False)
         self.createContact.setHidden_(False)
         self.contactExists.setHidden_(True)
-        groups = [g.name for g in NSApp.delegate().windowController.model.contactGroupsList if g.editable]
+        groups = [g.name for g in NSApp.delegate().contactsWindowController.model.contactGroupsList if g.editable]
         first_group = groups and groups[0] or None
         group = NSUserDefaults.standardUserDefaults().stringForKey_("LastGroupForWatcher")
         self.groupCombo.setStringValue_(group or "")
@@ -553,7 +553,7 @@ class PresencePolicy(NSWindowController):
             except StopIteration:
                 # insert after last editable group
                 index = 0
-                for g in NSApp.delegate().windowController.model.contactGroupsList:
+                for g in NSApp.delegate().contactsWindowController.model.contactGroupsList:
                     if not g.editable:
                         break
                     index += 1
@@ -571,7 +571,7 @@ class PresencePolicy(NSWindowController):
         if sender.state() == NSOnState:
             self.showGroupsCombo()
         else:
-            if not NSApp.delegate().windowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
+            if not NSApp.delegate().contactsWindowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
                 self.showGroupsCombo()
             else:
                 self.hideGroupsCombo()
@@ -705,7 +705,7 @@ class PresencePolicy(NSWindowController):
         if tableColumn.identifier() == "address":
             if row >=0 and row < len(self.policyDatasource):
                 uri = self.policyDatasource[row].objectForKey_("address")
-                contact = NSApp.delegate().windowController.model.getContactMatchingURI(uri)
+                contact = NSApp.delegate().contactsWindowController.model.getContactMatchingURI(uri)
                 contact = BlinkContact(contact.name, name=uri, icon=contact.icon) if contact else BlinkContact(uri, name=uri)
                 cell.setContact_(contact)
 
@@ -795,7 +795,7 @@ class PresencePolicy(NSWindowController):
             group, contact = eval(pboard.stringForType_("dragged-contact"))
             if contact is None and group is not None:
                 try:
-                    g = NSApp.delegate().windowController.model.contactGroupsList[group]
+                    g = NSApp.delegate().contactsWindowController.model.contactGroupsList[group]
                     if type(g) == BlinkContactGroup:
                         for contact in g.contacts:
                             uri = contact.uri

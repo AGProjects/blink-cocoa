@@ -161,7 +161,7 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderContacts(self, results):
-        getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+        getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
 
         self.contacts = [self.all_contacts, self.bonjour_contact]
         self.allContacts = []
@@ -224,7 +224,7 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderDailyEntries(self, results):
-        getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+        getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
         self.dayly_entries = NSMutableArray.array()
         for result in results:
             contact = getContactMatchingURI(result[2])
@@ -301,11 +301,11 @@ class HistoryViewer(NSWindowController):
     @run_in_gui_thread
     def renderMessage(self, message):
         if message.direction == 'outgoing':
-            icon = NSApp.delegate().windowController.iconPathForSelf()
+            icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
         else:
             sender_uri = sipuri_components_from_string(message.cpim_from)[0]
             # TODO: How to render the icons from Address Book? Especially in sandbox mode we do not have access to other folders
-            icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+            icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
         try:
             timestamp=Timestamp.parse(message.cpim_timestamp)
         except ValueError:
@@ -567,7 +567,7 @@ class HistoryViewer(NSWindowController):
             self.toolbar.validateVisibleItems()
 
     def contactSelectionChanged_(self, notification):
-        hasContactMatchingURI = NSApp.delegate().windowController.hasContactMatchingURI
+        hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
         try:
             row = self.contactTable.selectedRow()
             remote_uri=self.contacts[row].uri
@@ -595,7 +595,7 @@ class HistoryViewer(NSWindowController):
         except IndexError:
             return
 
-        NSApp.delegate().windowController.startSessionWithSIPURI(contact.uri)
+        NSApp.delegate().contactsWindowController.startSessionWithSIPURI(contact.uri)
 
     @objc.IBAction
     def userClickedContactMenu_(self, sender):
@@ -612,15 +612,15 @@ class HistoryViewer(NSWindowController):
         tag = sender.tag()
 
         if tag == 1:
-            NSApp.delegate().windowController.addContact(contact.uri, contact.display_name)
+            NSApp.delegate().contactsWindowController.addContact(contact.uri, contact.display_name)
         elif tag == 2:
             self.showDeleteConfirmationDialog(row)
         elif tag == 3:
-            NSApp.delegate().windowController.searchBox.setStringValue_(contact.uri)
-            NSApp.delegate().windowController.searchContacts()
-            NSApp.delegate().windowController.window().makeFirstResponder_(NSApp.delegate().windowController.searchBox)
-            NSApp.delegate().windowController.window().deminiaturize_(sender)
-            NSApp.delegate().windowController.window().makeKeyWindow()
+            NSApp.delegate().contactsWindowController.searchBox.setStringValue_(contact.uri)
+            NSApp.delegate().contactsWindowController.searchContacts()
+            NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
+            NSApp.delegate().contactsWindowController.window().deminiaturize_(sender)
+            NSApp.delegate().contactsWindowController.window().makeKeyWindow()
 
     @objc.IBAction
     def userClickedActionsButton_(self, sender):

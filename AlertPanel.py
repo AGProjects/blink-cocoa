@@ -41,7 +41,7 @@ class AlertPanel(NSObject, object):
 
     @property
     def sessionControllersManager(self):
-        return NSApp.delegate().windowController.sessionControllersManager
+        return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     def init(self):
         self = super(AlertPanel, self).init()
@@ -305,7 +305,7 @@ class AlertPanel(NSObject, object):
         frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
         captionT.setFrame_(frame)
 
-        caller_contact = NSApp.delegate().windowController.getContactMatchingURI(session.remote_identity.uri)
+        caller_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(session.remote_identity.uri)
         if caller_contact:
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)
@@ -603,14 +603,14 @@ class AlertPanel(NSObject, object):
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         if hasAudio:
             if not SIPManager().is_muted():
-                NSApp.delegate().windowController.muteClicked_(None)
+                NSApp.delegate().contactsWindowController.muteClicked_(None)
                 self.muted_by_synthesizer = True
         if self.speech_recognizer:
             self.speech_recognizer.stopListening()
 
     def unMuteAfterSpeechDidEnd(self):
         if self.muted_by_synthesizer and SIPManager().is_muted():
-            NSApp.delegate().windowController.muteClicked_(None)
+            NSApp.delegate().contactsWindowController.muteClicked_(None)
             self.muted_by_synthesizer = False
         if self.speech_recognizer:
             self.speech_recognizer.startListening()

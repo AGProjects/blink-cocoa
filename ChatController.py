@@ -168,7 +168,7 @@ class ChatController(MediaStream):
 
     @property
     def chatWindowController(self):
-        return NSApp.delegate().windowController.chatWindowController
+        return NSApp.delegate().contactsWindowController.chatWindowController
 
     def awakeFromNib(self):
         # setup smiley popup 
@@ -231,7 +231,7 @@ class ChatController(MediaStream):
 
     def openChatWindow(self):
         if self.chatWindowController is None:
-            NSApp.delegate().windowController.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
+            NSApp.delegate().contactsWindowController.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
 
         old_session = self.chatWindowController.replaceInactiveWithCompatibleSession_(self.sessionController)
         if not old_session:
@@ -426,13 +426,13 @@ class ChatController(MediaStream):
         self.updateToolbarMuteIcon()
 
     def showVideoMirror(self):
-        NSApp.delegate().windowController.mirrorWindow.show()
+        NSApp.delegate().contactsWindowController.mirrorWindow.show()
 
     def hideVideoMirror(self):
-        NSApp.delegate().windowController.mirrorWindow.hide()
+        NSApp.delegate().contactsWindowController.mirrorWindow.hide()
 
     def toggleVideoMirror(self):
-        if NSApp.delegate().windowController.mirrorWindow.visible:
+        if NSApp.delegate().contactsWindowController.mirrorWindow.visible:
             self.hideVideoMirror()
         else:
             self.showVideoMirror()
@@ -570,10 +570,10 @@ class ChatController(MediaStream):
     def render_history_messages(self, messages):
         for message in messages: 
             if message.direction == 'outgoing':
-                icon = NSApp.delegate().windowController.iconPathForSelf()
+                icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             else:
                 sender_uri = sipuri_components_from_string(message.cpim_from)[0]
-                icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+                icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
 
             timestamp=Timestamp.parse(message.cpim_timestamp)
             is_html = False if message.content_type == 'text' else True
@@ -908,7 +908,7 @@ class ChatController(MediaStream):
                 sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
                 self.toggleEditor()
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
-                contactWindow = NSApp.delegate().windowController
+                contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
                     contactWindow.historyViewer.filterByContact('bonjour', media_type='chat')
@@ -1041,7 +1041,7 @@ class ChatController(MediaStream):
             timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
             name = format_identity_to_string(sender, format='full')
-            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(sender))
+            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
             recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             if self.chatViewController:
                 self.chatViewController.showMessage(msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered", is_html=is_html)
@@ -1093,7 +1093,7 @@ class ChatController(MediaStream):
             return
 
         if self.sessionController.remoteSIPAddress != sender.remote_identity:
-            NSApp.delegate().windowController.fileTransfersWindow.showWindow_(None)
+            NSApp.delegate().contactsWindowController.fileTransfersWindow.showWindow_(None)
             return
 
         if image_file_extension_pattern.search(data.file_path):
@@ -1111,7 +1111,7 @@ class ChatController(MediaStream):
 
         if self.status == STREAM_CONNECTED:
             name = format_identity_to_string(self.sessionController.session.remote_identity, format='full')
-            icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
             now = datetime.datetime.now(tzlocal())
             timestamp = Timestamp(now)
             if self.chatViewController:
@@ -1398,7 +1398,7 @@ class MessageHandler(NSObject):
     def send(self, text, recipient=None, private=False):
         now = datetime.datetime.now(tzlocal())
         timestamp = Timestamp(now)
-        icon = NSApp.delegate().windowController.iconPathForSelf()
+        icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
         
         leftover = text
@@ -1438,7 +1438,7 @@ class MessageHandler(NSObject):
         now = datetime.datetime.now(tzlocal())
         timestamp = Timestamp(now)
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
-        icon = NSApp.delegate().windowController.iconPathForSelf()
+        icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
         
         self.messages[msgid] = MessageInfo(msgid=msgid, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
         

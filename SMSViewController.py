@@ -149,7 +149,7 @@ class SMSViewController(NSObject):
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
         if sender.tag() == 1:
-            NSApp.delegate().windowController.addContact(self.target_uri)
+            NSApp.delegate().contactsWindowController.addContact(self.target_uri)
         
         self.addContactView.removeFromSuperview()
         frame = self.chatViewController.outputView.frame()
@@ -162,13 +162,13 @@ class SMSViewController(NSObject):
         self.chatViewController.appendAttributedString_(smiley)
 
     def matchesTargetAccount(self, target, account):
-        that_contact = NSApp.delegate().windowController.getContactMatchingURI(target)
-        this_contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
+        that_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(target)
+        this_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.target_uri)
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
     def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
         self.enableIsComposing = True
-        icon = NSApp.delegate().windowController.iconPathForURI(format_identity_to_string(sender))
+        icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or Timestamp(datetime.datetime.now(tzlocal()))
 
         hash = hashlib.sha1()
@@ -282,7 +282,7 @@ class SMSViewController(NSObject):
         if isinstance(self.account, Account):
             settings = SIPSimpleSettings()
             if settings.chat.sms_replication:
-                contact = NSApp.delegate().windowController.getContactMatchingURI(self.target_uri)
+                contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.target_uri)
                 msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
                 self.sendReplicationMessage(response_code, str(msg), content_type='message/cpim')
 
@@ -377,7 +377,7 @@ class SMSViewController(NSObject):
         msgid = hash.hexdigest()
  
         if content_type != "application/im-iscomposing+xml":
-            icon = NSApp.delegate().windowController.iconPathForSelf()
+            icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="sent")
         
             recipient=CPIMIdentity(self.target_uri, self.display_name)
@@ -432,10 +432,10 @@ class SMSViewController(NSObject):
     def render_history_messages(self, messages):
         for message in messages:
             if message.direction == 'outgoing':
-                icon = NSApp.delegate().windowController.iconPathForSelf()
+                icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             else:
                 sender_uri = sipuri_components_from_string(message.cpim_from)[0]
-                icon = NSApp.delegate().windowController.iconPathForURI(sender_uri)
+                icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
 
             timestamp=Timestamp.parse(message.cpim_timestamp)
             is_html = False if message.content_type == 'text' else True

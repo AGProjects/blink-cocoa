@@ -55,7 +55,7 @@ class BlinkAppDelegate(NSObject):
 
     implements(IObserver)
 
-    windowController = objc.IBOutlet()
+    contactsWindowController = objc.IBOutlet()
     aboutPanel = objc.IBOutlet()
     migrationPanel = objc.IBOutlet()
     migrationText = objc.IBOutlet()
@@ -202,7 +202,7 @@ class BlinkAppDelegate(NSObject):
 
     def applicationShouldHandleReopen_hasVisibleWindows_(self, sender, flag):
         if not flag:
-            self.windowController.showWindow_(None)
+            self.contactsWindowController.showWindow_(None)
         self.missedCalls = 0
         self.missedChats = 0
         self.updateDockTile()
@@ -228,12 +228,12 @@ class BlinkAppDelegate(NSObject):
         self.icloud_manager = iCloudManager()
         self.backend = SIPManager()
 
-        self.windowController.setup(self.backend)
+        self.contactsWindowController.setup(self.backend)
 
         while True:
             try:
                 first_run = not os.path.exists(config_file)
-                self.windowController.first_run = first_run
+                self.contactsWindowController.first_run = first_run
 
                 self.backend.init()
                 self.backend.fetch_account()
@@ -261,9 +261,9 @@ class BlinkAppDelegate(NSObject):
 
 
         # window should be shown only after enrollment check
-        self.windowController.showWindow_(None)
+        self.contactsWindowController.showWindow_(None)
 
-        self.windowController.setupFinished()
+        self.contactsWindowController.setupFinished()
 
         smileys = SmileyManager()
         smileys.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
@@ -278,8 +278,8 @@ class BlinkAppDelegate(NSObject):
         os.kill(os.getpid(), signal.SIGTERM)
 
     def applicationShouldTerminate_(self, sender):
-        self.windowController.closeAllSessions()
-        self.windowController.journal_replicator.save_journal_on_disk()
+        self.contactsWindowController.closeAllSessions()
+        self.contactsWindowController.journal_replicator.save_journal_on_disk()
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
 
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
@@ -313,7 +313,7 @@ class BlinkAppDelegate(NSObject):
         if not self.ready:
             self.urisToOpen.append((unicode(url), ('audio'), list()))
         else:
-            self.windowController.joinConference(unicode(url), ('audio'))
+            self.contactsWindowController.joinConference(unicode(url), ('audio'))
 
     @objc.IBAction
     def orderFrontAboutPanel_(self, sender):
@@ -364,7 +364,7 @@ class BlinkAppDelegate(NSObject):
         if not self.ready:
             self.urisToOpen.append((unicode(url), list(media), list(participants)))
         else:
-            self.windowController.joinConference(unicode(url), list(media), list(participants))
+            self.contactsWindowController.joinConference(unicode(url), list(media), list(participants))
 
 
     def registerURLHandler(self):

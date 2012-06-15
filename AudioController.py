@@ -121,7 +121,7 @@ class AudioController(MediaStream):
         self.setNormalViewHeight(self.view.frame())
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
-        item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri))
+        item.setEnabled_(not NSApp.delegate().contactsWindowController.hasContactMatchingURI(self.sessionController.target_uri))
         item.setTitle_("Add %s to Contacts" % format_identity_to_string(self.sessionController.remotePartyObject))
 
         self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity_to_string(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
@@ -205,7 +205,7 @@ class AudioController(MediaStream):
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.updateTLSIcon()
-        NSApp.delegate().windowController.showAudioSession(self)
+        NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
         if is_answering_machine:
             self.sessionController.log_info("Sending session to answering machine")
@@ -225,7 +225,7 @@ class AudioController(MediaStream):
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        NSApp.delegate().windowController.showAudioSession(self)
+        NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
     def sessionStateChanged(self, state, detail):
@@ -358,10 +358,10 @@ class AudioController(MediaStream):
 
     def sessionBoxDidActivate(self, sender):
         if self.isConferencing:
-            NSApp.delegate().windowController.unholdConference()
+            NSApp.delegate().contactsWindowController.unholdConference()
             self.updateLabelColor()
         else:
-            NSApp.delegate().windowController.holdConference()
+            NSApp.delegate().contactsWindowController.holdConference()
             self.unhold()
 
         data = TimestampedNotificationData()
@@ -371,7 +371,7 @@ class AudioController(MediaStream):
     def sessionBoxDidDeactivate(self, sender):
         if self.isConferencing:
             if not sender.conferencing: # only hold if the sender is a non-conference session
-                NSApp.delegate().windowController.holdConference()
+                NSApp.delegate().contactsWindowController.holdConference()
             self.updateLabelColor()
         else:
             self.hold()
@@ -385,7 +385,7 @@ class AudioController(MediaStream):
                   peer))
             # start audio session to peer and add it to conference
             self.view.setConferencing_(True)
-            session = NSApp.delegate().windowController.startSessionWithSIPURI(peer)
+            session = NSApp.delegate().contactsWindowController.startSessionWithSIPURI(peer)
             if session:
                 peer = session.streamHandlerOfType("audio")
                 peer.view.setConferencing_(True)
@@ -419,7 +419,7 @@ class AudioController(MediaStream):
         if self.holdByLocal:
             self.unhold()
         self.mutedInConference = False
-        NSApp.delegate().windowController.addAudioSessionToConference(self)
+        NSApp.delegate().contactsWindowController.addAudioSessionToConference(self)
         self.audioSegmented.setHidden_(True)
         self.transferSegmented.setHidden_(True)
         self.conferenceSegmented.setHidden_(False)
@@ -427,7 +427,7 @@ class AudioController(MediaStream):
         self.updateLabelColor()
     
     def removeFromConference(self):
-        NSApp.delegate().windowController.removeAudioSessionFromConference(self)
+        NSApp.delegate().contactsWindowController.removeAudioSessionFromConference(self)
         if self.transferEnabled:
             self.transferSegmented.setHidden_(False)
             self.audioSegmented.setHidden_(True)
@@ -468,7 +468,7 @@ class AudioController(MediaStream):
             cleanup_delay = TRANSFERRED_CLEANUP_DELAY if self.transferred else AUDIO_CLEANUP_DELAY
             if self.audioEndTime and (time.time() - self.audioEndTime > cleanup_delay):
                 self.removeFromSession()
-                NSApp.delegate().windowController.finalizeAudioSession(self)
+                NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
                 if timer.isValid():
                     timer.invalidate()
                 self.audioEndTime = None
@@ -609,7 +609,7 @@ class AudioController(MediaStream):
             self.updateTLSIcon()
             self.updateSRTPIcon()
 
-            NSApp.delegate().windowController.updateAudioButtons()
+            NSApp.delegate().contactsWindowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
                 self.updateAudioStatusWithSessionState(u"Audio removed")
@@ -802,7 +802,7 @@ class AudioController(MediaStream):
             item.setEnabled_(False)
 
             # use typed search text as blind transfer destination
-            target = NSApp.delegate().windowController.searchBox.stringValue()
+            target = NSApp.delegate().contactsWindowController.searchBox.stringValue()
             if target:
                 parsed_target = normalize_sip_uri_for_outgoing_session(target, self.sessionController.account)
                 if parsed_target:
@@ -844,7 +844,7 @@ class AudioController(MediaStream):
             else:
                 item.setTitle_("Cancel Screen Sharing Proposal")
             item = menu.itemWithTag_(20) # add to contacts
-            item.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
+            item.setEnabled_(not NSApp.delegate().contactsWindowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
             item = menu.itemWithTag_(30)
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
             item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
@@ -853,10 +853,10 @@ class AudioController(MediaStream):
     def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 10: # add chat
-            NSApp.delegate().windowController.drawer.close()
+            NSApp.delegate().contactsWindowController.drawer.close()
             self.sessionController.addChatToSession()
         elif tag == 40: # add video
-            NSApp.delegate().windowController.drawer.close()
+            NSApp.delegate().contactsWindowController.drawer.close()
             self.sessionController.addVideoToSession()
         elif tag == 11: # share remote screen
             self.sessionController.addRemoteDesktopToSession()
@@ -874,8 +874,8 @@ class AudioController(MediaStream):
                 display_name = self.sessionController.remotePartyObject.display_name
             else:
                 display_name = None
-            NSApp.delegate().windowController.addContact(self.sessionController.target_uri, display_name)
-            sender.setEnabled_(not NSApp.delegate().windowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
+            NSApp.delegate().contactsWindowController.addContact(self.sessionController.target_uri, display_name)
+            sender.setEnabled_(not NSApp.delegate().contactsWindowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
         elif tag == 30: #
             if self.sessionController.info_panel is not None:
                 self.sessionController.info_panel.toggle()
@@ -1020,7 +1020,7 @@ class AudioController(MediaStream):
         if sender is self or (sender.isConferencing and self.isConferencing):
             return
         if self.isConferencing:
-            NSApp.delegate().windowController.holdConference()
+            NSApp.delegate().contactsWindowController.holdConference()
         elif not sender.isConferencing:
             self.hold()
 

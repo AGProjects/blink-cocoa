@@ -21,7 +21,7 @@ from FileTransferSession import IncomingFileTransferHandler, OutgoingPushFileTra
 from util import format_size
 
 def openFileTransferSelectionDialog(account, dest_uri):
-    if not NSApp.delegate().windowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+    if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
         return
 
     panel = NSOpenPanel.openPanel()
@@ -30,7 +30,7 @@ def openFileTransferSelectionDialog(account, dest_uri):
     if panel.runModal() != NSOKButton:
         return
     filenames = [unicodedata.normalize('NFC', file) for file in panel.filenames()]
-    NSApp.delegate().windowController.sessionControllersManager.send_files_to_contact(account, dest_uri, filenames)
+    NSApp.delegate().contactsWindowController.sessionControllersManager.send_files_to_contact(account, dest_uri, filenames)
 
 
 class FileTransferWindowController(NSObject, object):
@@ -135,7 +135,7 @@ class FileTransferWindowController(NSObject, object):
 
     @objc.IBAction
     def showWindow_(self, sender):
-        if NSApp.delegate().windowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
             self.window.makeKeyAndOrderFront_(None)
 
     @run_in_green_thread

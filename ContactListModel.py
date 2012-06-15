@@ -598,7 +598,7 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
                 seen[target_uri] += 1
             else:
                 seen[target_uri] = 1
-                getContactMatchingURI = NSApp.delegate().windowController.getContactMatchingURI
+                getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
                 contact = getContactMatchingURI(target_uri)
                 if contact:
                     display_name = contact.display_name
@@ -793,7 +793,7 @@ class CustomListModel(NSObject):
 
     @property
     def sessionControllersManager(self):
-        return NSApp.delegate().windowController.sessionControllersManager
+        return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     # data source methods
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
@@ -1284,7 +1284,7 @@ class ContactListModel(CustomListModel):
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
-        if NSApp.delegate().windowController.first_run:
+        if NSApp.delegate().contactsWindowController.first_run:
             self.createInitialGroupAndContacts()
 
         self._migrateContacts()
@@ -2038,7 +2038,7 @@ class ContactListModel(CustomListModel):
                 group = None
 
             if "@" not in blink_contact.uri:
-                account = NSApp.delegate().windowController.activeAccount()
+                account = NSApp.delegate().contactsWindowController.activeAccount()
                 if account:
                     blink_contact.uri = blink_contact.uri + "@" + account.id.domain
 

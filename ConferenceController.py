@@ -340,7 +340,7 @@ class JoinConferenceWindowController(NSObject):
             return NSDragOperationNone
 
     def run(self):
-        contactsWindow = NSApp.delegate().windowController.window()
+        contactsWindow = NSApp.delegate().contactsWindowController.window()
         worksWhenModal = contactsWindow.worksWhenModal()
         contactsWindow.setWorksWhenModal_(True)
         self.window.makeKeyAndOrderFront_(None)
@@ -549,7 +549,7 @@ class AddParticipantsWindowController(NSObject):
 
     def run(self):
         self._participants = []
-        contactsWindow = NSApp.delegate().windowController.window()
+        contactsWindow = NSApp.delegate().contactsWindowController.window()
         worksWhenModal = contactsWindow.worksWhenModal()
         contactsWindow.setWorksWhenModal_(True)
         self.window.makeKeyAndOrderFront_(None)

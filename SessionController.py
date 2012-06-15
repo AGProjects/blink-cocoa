@@ -219,7 +219,7 @@ class SessionControllersManager(object):
         settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
 
-        if NSApp.delegate().windowController.hasContactMatchingURI(session.remote_identity.uri):
+        if NSApp.delegate().contactsWindowController.hasContactMatchingURI(session.remote_identity.uri):
             if settings.chat.auto_accept and stream_type_list == ['chat']:
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
@@ -248,10 +248,10 @@ class SessionControllersManager(object):
             else:
                 sessionController = self.addControllerWithSession_(session)
 
-                if not NSApp.delegate().windowController.alertPanel:
-                    NSApp.delegate().windowController.alertPanel = AlertPanel.alloc().init()
-                NSApp.delegate().windowController.alertPanel.addIncomingSession(session)
-                NSApp.delegate().windowController.alertPanel.show()
+                if not NSApp.delegate().contactsWindowController.alertPanel:
+                    NSApp.delegate().contactsWindowController.alertPanel = AlertPanel.alloc().init()
+                NSApp.delegate().contactsWindowController.alertPanel.addIncomingSession(session)
+                NSApp.delegate().contactsWindowController.alertPanel.show()
 
         if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
             self.show_web_alert_page(session)
@@ -967,7 +967,7 @@ class SessionController(NSObject):
 
     @property
     def sessionControllersManager(self):
-        return NSApp.delegate().windowController.sessionControllersManager
+        return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
@@ -1300,7 +1300,7 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
         self.destroyInfoPanel()
-        NSApp.delegate().windowController.updatePresenceStatus()
+        NSApp.delegate().contactsWindowController.updatePresenceStatus()
         call_id = None
         from_tag = None
         to_tag = None
@@ -1816,7 +1816,7 @@ class SessionController(NSObject):
                         self.acceptIncomingProposal(accepted_streams)
                         return
 
-            if NSApp.delegate().windowController.hasContactMatchingURI(session.remote_identity.uri):
+            if NSApp.delegate().contactsWindowController.hasContactMatchingURI(session.remote_identity.uri):
                 if settings.chat.auto_accept and stream_type_list == ['chat']:
                     self.log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(streams)
@@ -1832,10 +1832,10 @@ class SessionController(NSObject):
                 self.log_info(u"IllegalStateError: %s" % e)
                 return
             else:
-                if not NSApp.delegate().windowController.alertPanel:
-                    NSApp.delegate().windowController.alertPanel = AlertPanel.alloc().init()
-                NSApp.delegate().windowController.alertPanel.addIncomingStreamProposal(session, streams)
-                NSApp.delegate().windowController.alertPanel.show()
+                if not NSApp.delegate().contactsWindowController.alertPanel:
+                    NSApp.delegate().contactsWindowController.alertPanel = AlertPanel.alloc().init()
+                NSApp.delegate().contactsWindowController.alertPanel.addIncomingStreamProposal(session, streams)
+                NSApp.delegate().contactsWindowController.alertPanel.show()
 
             # needed to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self, data=TimestampedNotificationData())

@@ -92,7 +92,7 @@ def format_identity_to_string(identity, check_contact=False, format='AOR'):
         host = identity.host
         display_name = None
         uri = sip_prefix_pattern.sub("", str(identity))
-        contact = NSApp.delegate().windowController.getContactMatchingURI(uri) if check_contact else None
+        contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(uri) if check_contact else None
         if identity.port is not None and identity.port != 5060:
             port = identity.port
         if identity.transport != 'udp':
@@ -109,7 +109,7 @@ def format_identity_to_string(identity, check_contact=False, format='AOR'):
             transport = identity.uri.transport
         display_name = identity.display_name
         uri = sip_prefix_pattern.sub("", str(identity.uri))
-        contact = NSApp.delegate().windowController.getContactMatchingURI(uri) if check_contact else None
+        contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(uri) if check_contact else None
 
     if port == 5060 and transport == 'udp':
         address = u"%s@%s" % (user, host)

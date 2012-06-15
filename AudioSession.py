@@ -22,7 +22,7 @@ class AudioSession(NSView):
 
     @property
     def sessionControllersManager(self):
-        return NSApp.delegate().windowController.sessionControllersManager
+        return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     def dealloc(self):
         super(AudioSession, self).dealloc()
@@ -89,7 +89,7 @@ class AudioSession(NSView):
             NSString.stringWithString_("Drop outside to remove from conference").drawAtPoint_withAttributes_(point, 
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         else:
-            audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().windowController.sessionControllersManager.sessionControllers]
+            audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers]
             if self.delegate.transferEnabled:
                 text = "Drop this over a session or contact" if len(audio_sessions) > 1 else "Drop this over a contact to transfer"
             else:
