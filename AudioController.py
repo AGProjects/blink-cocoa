@@ -102,7 +102,7 @@ class AudioController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
-        BlinkLogger().log_info(u"Creating %s" % self)
+        BlinkLogger().log_debug(u"Creating %s" % self)
 
         self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
         # 5 minutes of history data for Session Info graphs

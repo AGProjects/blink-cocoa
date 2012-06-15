@@ -66,6 +66,8 @@ class BlinkAppDelegate(NSObject):
     aboutCopyright = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
 
+    debug = False
+    
     blinkMenu = objc.IBOutlet()
     ready = False
     missedCalls = 0
@@ -81,6 +83,9 @@ class BlinkAppDelegate(NSObject):
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
+            ns_nc = NSNotificationCenter.defaultCenter()
+            ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
+            
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
@@ -92,6 +97,9 @@ class BlinkAppDelegate(NSObject):
                         shutil.rmtree(screenshots_folder)
                     except EnvironmentError:
                         pass
+
+            userdef = NSUserDefaults.standardUserDefaults()
+            self.debug = userdef.boolForKey_("debug")
 
             call_in_thread('file-io', purge_screenshots)
 
@@ -134,6 +142,9 @@ class BlinkAppDelegate(NSObject):
                 self.hideMigrationPanel()
 
         return self
+
+    def userDefaultsDidChange_(self, notification):
+        self.debug = NSUserDefaults.standardUserDefaults().boolForKey_("debug")
 
     @run_in_gui_thread
     def showMigrationPanel(self, text=None):

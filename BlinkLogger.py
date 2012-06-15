@@ -1,11 +1,14 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
 #
 
+
 from __future__ import with_statement
 
 import datetime
 import os
 import sys
+
+from AppKit import NSApp
 
 from application import log
 from application.notification import IObserver, NotificationCenter
@@ -50,8 +53,9 @@ class BlinkLogger(object):
         self.gui_logger(message)
 
     def log_debug(self, message):
-        print message
-        self.gui_logger(message)
+        if NSApp.delegate().debug:
+            print message
+            self.gui_logger(message)
 
     def get_status_messages(self):
         return self.messages

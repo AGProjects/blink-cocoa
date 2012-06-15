@@ -129,7 +129,7 @@ class ChatController(MediaStream):
 
     def initWithOwner_stream_(self, sessionController, stream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
-        BlinkLogger().log_info(u"Creating %s" % self)
+        BlinkLogger().log_debug(u"Creating %s" % self)
         self.mediastream_failed = False
         self.session_failed = False
         self.share_screen_in_conference = False

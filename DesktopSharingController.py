@@ -85,7 +85,7 @@ class DesktopSharingController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(DesktopSharingController, self).initWithOwner_stream_(scontroller, stream)
-        BlinkLogger().log_info(u"Creating %s" % self)
+        BlinkLogger().log_debug(u"Creating %s" % self)
         self.stream = stream
         self.direction = stream.handler.type
         self.vncViewerTask = None

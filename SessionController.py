@@ -700,7 +700,7 @@ class SessionControllersManager(object):
         except StopIteration:
             pass
         else:
-            #BlinkLogger().log_info(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
+            BlinkLogger().log_debug(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -709,8 +709,7 @@ class SessionControllersManager(object):
                 try:
                     calls = cjson.decode(self.last_calls_connections[key]['data'])
                 except (TypeError, cjson.DecodeError):
-                    pass
-                #BlinkLogger().log_info(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+                    BlinkLogger().log_debug(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
     
@@ -719,8 +718,8 @@ class SessionControllersManager(object):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
         except StopIteration:
-            pass
-    #BlinkLogger().log_info(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+            return
+        BlinkLogger().log_debug(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
     
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
@@ -747,7 +746,7 @@ class SessionControllersManager(object):
                     except KeyError:
                         continue
                     success = 'completed' if duration > 0 else 'missed'
-                    #BlinkLogger().log_info(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
+                    BlinkLogger().log_debug(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     if 'audio' in call['media']:
                         direction = 'incoming'
@@ -819,7 +818,7 @@ class SessionControllersManager(object):
                         else:
                             success = 'failed'
                     
-                    #BlinkLogger().log_info(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
+                    BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
                     self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                     if 'audio' in call['media']:
                         local_uri = local_uri
@@ -974,7 +973,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         assert isinstance(target_uri, SIPURI)
         self = super(SessionController, self).init()
-        BlinkLogger().log_info(u"Creating %s" % self)
+        BlinkLogger().log_debug(u"Creating %s" % self)
         self.contactDisplayName = display_name
         self.remoteParty = display_name or format_identity_to_string(target_uri, format='compact')
         self.remotePartyObject = target_uri
@@ -1010,7 +1009,7 @@ class SessionController(NSObject):
     def initWithSession_(self, session):
         global SessionIdentifierSerial
         self = super(SessionController, self).init()
-        BlinkLogger().log_info(u"Creating %s" % self)
+        BlinkLogger().log_debug(u"Creating %s" % self)
         self.contactDisplayName = None
         self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
         self.remotePartyObject = session.remote_identity
@@ -1051,7 +1050,7 @@ class SessionController(NSObject):
     def initWithSessionTransfer_(self, session):
         global SessionIdentifierSerial
         self = super(SessionController, self).init()
-        BlinkLogger().log_info(u"Creating %s" % self)
+        BlinkLogger().log_debug(u"Creating %s" % self)
         self.contactDisplayName = None
         self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
         self.remotePartyObject = session.remote_identity
