@@ -1089,7 +1089,7 @@ class ContactWindowController(NSWindowController):
         account = self.activeAccount()
         conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
-            self.joinConference(conference.target, conference.media_types, conference.participants)
+            self.joinConference(conference.target, conference.media_types, conference.participants, conference.nickname)
 
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
@@ -1520,6 +1520,7 @@ class ContactWindowController(NSWindowController):
             return
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(target))
+        session_controller.nickname = nickname
 
         if participants:
             # Add invited participants to the drawer
@@ -1533,7 +1534,6 @@ class ContactWindowController(NSWindowController):
                 contact.setDetail('Invitation sent...')
                 session_controller.invited_participants.append(contact)
                 session_controller.participants_log.add(uri)
-                session_controller.nickname = nickname
 
         if not media:
             media = 'audio'

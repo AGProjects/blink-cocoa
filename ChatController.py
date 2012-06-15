@@ -1458,7 +1458,14 @@ class MessageHandler(NSObject):
             else:
                 self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
         self.pending = []
-    
+        # Set previously saved nickname
+        nickname = self.delegate.delegate.sessionController.nickname
+        if stream.nickname_allowed:
+            try:
+                stream.set_local_nickname(nickname or '')
+            except ChatStreamError:
+                pass
+
     def setDisconnected(self):
         self.connected = False
         for msgid in self.pending:
