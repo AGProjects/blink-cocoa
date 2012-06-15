@@ -1630,7 +1630,7 @@ Placeholders = {
 SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
-                       'chat': 'Chat Messages',
+                       'chat': 'Chat Conversations',
                        'dialog_event': 'Dialog',
                        'gui': 'GUI Settings',
                        'logs': 'File Logging',
