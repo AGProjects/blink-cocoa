@@ -83,8 +83,12 @@ class SIPSettingsExtension(SIPSettings):
 
 class ServerSettings(SettingsGroup):
     settings_url = Setting(type=HTTPURL, default=None, nillable=True)
-    conference_server = Setting(type=Hostname, default=None, nillable=True)
     web_password = KeychainPasswordSetting(type=str, default='', nillable=True, label='WEB')
+
+
+class ConferenceSettings(SettingsGroup):
+    server_address = Setting(type=Hostname, default=None, nillable=True)
+    nickname = Setting(type=str, default='', nillable=True)
 
 
 class WebAlertSettings(SettingsGroup):
@@ -128,6 +132,7 @@ class AccountExtension(SettingsObjectExtension):
     presence = PresenceSettingsExtension
     rtp = RTPSettingsExtension
     server = ServerSettings
+    conference = ConferenceSettings
     sip = SIPSettingsExtension
     sounds = SoundsSettings
     tls = TLSSettingsExtension

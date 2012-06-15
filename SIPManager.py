@@ -310,9 +310,9 @@ class SIPManager(object):
         account.xcap.xcap_root           = data['xcap_root']
         account.nat_traversal.msrp_relay = data['msrp_relay']
         account.server.settings_url      = data['settings_url']
-        account.web_alert.alert_url         = data['web_alert_url']
+        account.web_alert.alert_url      = data['web_alert_url']
         account.server.web_password      = data['web_password']
-        account.server.conference_server = data['conference_server']
+        account.conference.server_address = data['conference_server']
 
         if data['ldap_hostname']:
             account.ldap.enabled  = True

@@ -1620,7 +1620,7 @@ Placeholders = {
                  'pstn.prefix': '9',
                  'pstn.dial_plan': '0049 0031',
                  'web_alert.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
-                 'server.conference_server': 'conference.sip2sip.info',
+                 'conference.server_address': 'conference.sip2sip.info',
                  'sip.primary_proxy' : 'sip.example.com:5061;transport=tls',
                  'sip.alternative_proxy' : 'sip2.example.com:5060;transport=tcp',
                  'voicemail_uri': 'user@example.com',
@@ -1658,7 +1658,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'sounds', 'chat', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'chat', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
@@ -1697,7 +1697,7 @@ ToolTips = {
              'pstn.dial_plan': 'List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)',
              'pstn.dtmf_delimiter': 'Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *',
              'web_alert.alert_url': 'Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username',
-             'server.conference_server': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
+             'conference.server_address': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
              'sip.primary_proxy': 'Overwrite the address of the SIP Outbound Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',

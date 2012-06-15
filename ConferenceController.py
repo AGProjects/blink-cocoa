@@ -472,8 +472,8 @@ class JoinConferenceWindowController(NSObject):
                     NSRunAlertPanel('Start a new Conference', 'No SylkServer in the Neighbourhood', "OK", None, None)
                     return False
             else:
-                if account.server.conference_server:
-                    self.target = u'%s@%s' % (room, account.server.conference_server)
+                if account.conference.server_address:
+                    self.target = u'%s@%s' % (room, account.conference.server_address)
                 else:
                     self.target = u'%s@%s' % (room, self.default_conference_server)
 

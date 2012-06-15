@@ -363,7 +363,7 @@ class EnrollmentController(NSObject):
             account.server.web_password = web_password
 
         if conference_server:
-            account.server.conference_server = conference_server
+            account.conference.server_address = conference_server
 
         if ldap_hostname:
             account.ldap.enabled = True
