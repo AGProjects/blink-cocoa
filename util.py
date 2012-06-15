@@ -136,7 +136,10 @@ def format_identity_to_string(identity, check_contact=False, format='AOR'):
         else:
             return "%s <%s>" % (display_name, match.group('number')) if display_name else match.group('number')
     elif display_name:
-        return "%s <%s>" % (display_name, address)
+        if format == 'compact':
+            return display_name
+        else:
+            return "%s <%s>" % (display_name, address)
     else:
         return address
 

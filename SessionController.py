@@ -1511,11 +1511,11 @@ class SessionController(NSObject):
             self.endStream(desktopStream)
 
     def getTitle(self):
-        return format_identity_to_string(self.remotePartyObject)
+        return format_identity_to_string(self.remotePartyObject, format='full')
 
     def getTitleFull(self):
         if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
-            return "%s <%s>" % (self.contactDisplayName, format_identity_to_string(self.remotePartyObject))
+            return "%s <%s>" % (self.contactDisplayName, format_identity_to_string(self.remotePartyObject, format='aor'))
         else:
             return self.getTitle()
 
