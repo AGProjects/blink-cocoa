@@ -1631,6 +1631,7 @@ SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
                        'chat': 'Chat Conversations',
+                       'conference': 'Conference Server',
                        'dialog_event': 'Dialog',
                        'gui': 'GUI Settings',
                        'logs': 'File Logging',
