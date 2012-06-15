@@ -9,6 +9,7 @@ from Quartz import *
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from itertools import chain
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
@@ -1115,7 +1116,7 @@ class ChatWindowController(NSWindowController):
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
             chat_stream = session.streamHandlerOfType("chat")
-                
+
             if session.hasStreamOfType("audio"):
                 audio_stream = session.streamHandlerOfType("audio")
 
@@ -1164,34 +1165,30 @@ class ChatWindowController(NSWindowController):
 
                 contact.setActiveMedia(active_media)
                 self.participants.append(contact)
-
-            # Add conference participants if any
-            if session.conference_info is not None:
+            elif session.conference_info is not None:
+                # Add conference participants if any
                 for user in session.conference_info.users:
                     uri = sip_prefix_pattern.sub("", user.entity)
-                    contact = getContactMatchingURI(uri)
-                    if contact:
-                        display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                        contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
+                    if uri == own_uri:
+                        display_name = user.display_text.value if user.display_text is not None and user.display_text.value else session.account.display_name
+                        contact = BlinkConferenceContact(own_uri, name=display_name, icon=self.own_icon)
                     else:
-                        if session.account is BonjourAccount() and uri == own_uri:
-                            contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
+                        contact = getContactMatchingURI(uri)
+                        if contact:
+                            display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
+                            contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
                         else:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                             contact = BlinkConferenceContact(uri, name=display_name)
 
                     active_media = []
 
-                    chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
-                    if chat_endpoints:
+                    if any(media.media_type == 'message' for media in chain(*user)):
                         active_media.append('message')
 
                     if user.screen_image_url is not None:
                         active_media.append('screen')
                         contact.setScreensharingUrl(user.screen_image_url.value)
-                        if own_uri != uri:
-                            pass
-                            #self.showRemoteScreenIfNecessary(contact)
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
@@ -1205,11 +1202,7 @@ class ChatWindowController(NSWindowController):
                     if uri in session.pending_removal_participants:
                         contact.setDetail('Removal requested...')
 
-                    if own_uri and self.own_icon and contact.uri == own_uri:
-                        contact.setIcon(self.own_icon)
-
-                    if contact not in self.participants:
-                        self.participants.append(contact)
+                    self.participants.append(contact)
 
             self.participants.sort(key=attrgetter('name'))
 
@@ -1217,7 +1210,7 @@ class ChatWindowController(NSWindowController):
             if session.invited_participants:
                 for contact in session.invited_participants:
                     self.participants.append(contact)
- 
+
             # Update drawer status
             if session.hasStreamOfType("audio"):
                 if audio_stream.holdByLocal:
