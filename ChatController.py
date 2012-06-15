@@ -1155,6 +1155,14 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
         self.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
 
+        # Set nickname if available
+        nickname = self.sessionController.nickname
+        if self.stream.nickname_allowed and nickname is not None:
+            try:
+                self.stream.set_local_nickname(nickname)
+            except ChatStreamError:
+                pass
+
         self.handler.setConnected(self.stream)
 
         # needed to set the Audio button state after session has started
@@ -1458,13 +1466,6 @@ class MessageHandler(NSObject):
             else:
                 self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
         self.pending = []
-        # Set previously saved nickname
-        nickname = self.delegate.delegate.sessionController.nickname
-        if stream.nickname_allowed:
-            try:
-                stream.set_local_nickname(nickname or '')
-            except ChatStreamError:
-                pass
 
     def setDisconnected(self):
         self.connected = False
