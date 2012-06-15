@@ -19,7 +19,8 @@ class NicknameController(NSObject):
 
     def runModal(self, nickname=''):
         self.window.makeKeyAndOrderFront_(None)
-        self.nameText.setStringValue_(nickname)
+        if nickname is not None:
+            self.nameText.setStringValue_(nickname)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
