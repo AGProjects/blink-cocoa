@@ -104,7 +104,6 @@ class ContactWindowController(NSWindowController):
     implements(IObserver)
 
     accounts = []
-    chatWindows = []
     model = objc.IBOutlet()
     backend = None
     loggerModel = None
