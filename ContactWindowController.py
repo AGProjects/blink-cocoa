@@ -189,7 +189,7 @@ class ContactWindowController(NSWindowController):
     desktopShareMenu = objc.IBOutlet()
 
     historyViewer = None
-    chatWindow = None
+    chatWindowController = None
 
     picker = None
 
@@ -473,8 +473,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatWindow_(self, sender):
-        if self.chatWindow:
-            self.chatWindow.window().makeKeyAndOrderFront_(None)
+        if self.chatWindowController:
+            self.chatWindowController.window().makeKeyAndOrderFront_(None)
 
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()

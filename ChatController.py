@@ -167,8 +167,8 @@ class ChatController(MediaStream):
 
 
     @property
-    def window(self):
-        return NSApp.delegate().windowController.chatWindow
+    def chatWindowController(self):
+        return NSApp.delegate().windowController.chatWindowController
 
     def awakeFromNib(self):
         # setup smiley popup 
@@ -230,26 +230,26 @@ class ChatController(MediaStream):
             self.reset()
 
     def openChatWindow(self):
-        if self.window is None:
-            NSApp.delegate().windowController.chatWindow = ChatWindowController.ChatWindowController.alloc().init()
+        if self.chatWindowController is None:
+            NSApp.delegate().windowController.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
 
-        old_session = self.window.replaceInactiveWithCompatibleSession_(self.sessionController)
+        old_session = self.chatWindowController.replaceInactiveWithCompatibleSession_(self.sessionController)
         if not old_session:
             view = self.getContentView()
-            self.window.addSession_withView_(self.sessionController, view)
+            self.chatWindowController.addSession_withView_(self.sessionController, view)
         else:
-            self.window.selectSession_(self.sessionController)
+            self.chatWindowController.selectSession_(self.sessionController)
 
-        self.window.window().makeKeyAndOrderFront_(None)
-        self.window.closing = False
-        self.window.addTimer()
+        self.chatWindowController.window().makeKeyAndOrderFront_(None)
+        self.chatWindowController.closing = False
+        self.chatWindowController.addTimer()
 
         self.changeStatus(STREAM_IDLE)
 
     def closeWindow(self):
-        self.window.removeSession_(self.sessionController)
-        if not self.window.sessions:
-            self.window.window().orderOut_(None)
+        self.chatWindowController.removeSession_(self.sessionController)
+        if not self.chatWindowController.sessions:
+            self.chatWindowController.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.stream)
@@ -302,7 +302,7 @@ class ChatController(MediaStream):
                         sender.setImage_(NSImage.imageNamed_("paused"))
                         audio_stream.hold()
         elif sender.itemIdentifier() == 'participants':
-            self.window.window().performZoom_(None)
+            self.chatWindowController.window().performZoom_(None)
         elif sender.itemIdentifier() == 'exit':
             self.exitFullScreen()
 
@@ -358,9 +358,9 @@ class ChatController(MediaStream):
         self.exitFullScreen()
 
     def enterFullScreen(self):
-        self.window.drawer.open()
+        self.chatWindowController.drawer.open()
 
-        self.splitViewFrame = self.window.window().frame()
+        self.splitViewFrame = self.chatWindowController.window().frame()
 
         self.saveSplitterPosition()
 
@@ -375,27 +375,27 @@ class ChatController(MediaStream):
         # Hide Dock and other desktop items
         SetSystemUIMode(kUIModeAllHidden, 0)
 
-        self.window.window().makeFirstResponder_(self.videoContainer)
+        self.chatWindowController.window().makeFirstResponder_(self.videoContainer)
 
-        self.window.window().setMovableByWindowBackground_(True)
+        self.chatWindowController.window().setMovableByWindowBackground_(True)
         fullframe = NSScreen.mainScreen().frame()
         fullframe.size.height += 20
-        self.window.window().setFrame_display_animate_(fullframe, True, True)
-        self.window.window().setMovable_(False)
+        self.chatWindowController.window().setFrame_display_animate_(fullframe, True, True)
+        self.chatWindowController.window().setMovable_(False)
 
         self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self, data=TimestampedNotificationData())
        
         self.showFullScreenVideoPanel()
         self.showVideoMirror()
 
-        self.window.window().setInitialFirstResponder_(self.videoContainer)
+        self.chatWindowController.window().setInitialFirstResponder_(self.videoContainer)
 
     def exitFullScreen(self):
         self.hideVideoMirror()
 
         if self.splitViewFrame:
-            self.window.window().setFrame_display_(self.splitViewFrame, True)
-            self.window.window().setMovable_(True)
+            self.chatWindowController.window().setFrame_display_(self.splitViewFrame, True)
+            self.chatWindowController.window().setMovable_(True)
 
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
             self.restoreSplitterPosition()
@@ -525,7 +525,7 @@ class ChatController(MediaStream):
             self.video_frame_visible = True
 
         else:
-            self.window.drawer.open()
+            self.chatWindowController.drawer.open()
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
             splitter_height = 10
             self.videoContainer.hideVideo()
@@ -612,7 +612,7 @@ class ChatController(MediaStream):
     def chatViewDidGetNewMessage_(self, chatView):
         NSApp.delegate().noteNewMessage(self.chatViewController.outputView.window())
         if self.mustShowUnreadMessages:
-            self.window.noteNewMessageForSession_(self.sessionController)
+            self.chatWindowController.noteNewMessageForSession_(self.sessionController)
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
@@ -980,19 +980,19 @@ class ChatController(MediaStream):
 
     def setScreenSharingToolbarIcon(self):
         try:
-            item = (item for item in self.window.toolbar.visibleItems() if item.tag() == TOOLBAR_SCREENSHARING_BUTTON).next()
+            item = (item for item in self.chatWindowController.toolbar.visibleItems() if item.tag() == TOOLBAR_SCREENSHARING_BUTTON).next()
         except StopIteration:
             pass
         else:
             item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
 
-        menu = self.window.toolbar.delegate().conferenceScreeningSharingMenu
+        menu = self.chatWindowController.toolbar.delegate().conferenceScreeningSharingMenu
         menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
-        self.window.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
+        self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
     def resetEditorToolbarIcon(self):
         try:
-            item = (item for item in self.window.toolbar.visibleItems() if item.tag() == 109).next()
+            item = (item for item in self.chatWindowController.toolbar.visibleItems() if item.tag() == 109).next()
         except StopIteration:
             pass
         else:
@@ -1010,13 +1010,13 @@ class ChatController(MediaStream):
         self.chatViewController.editorStatus = not self.chatViewController.editorStatus
         self.showChatViewWithEditorWhileVideoActive()
         self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
-        self.window.noteSession_isComposing_(self.sessionController, False)
+        self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
 
     def remoteBecameIdle_(self, timer):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         self.remoteTypingTimer = None
-        self.window.noteSession_isComposing_(self.sessionController, False)
+        self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1079,7 +1079,7 @@ class ChatController(MediaStream):
                 self.remoteTypingTimer.invalidate()
                 self.remoteTypingTimer = None
 
-        self.window.noteSession_isComposing_(self.sessionController, flag)
+        self.chatWindowController.noteSession_isComposing_(self.sessionController, flag)
 
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateToolbarMuteIcon()
@@ -1240,8 +1240,8 @@ class ChatController(MediaStream):
         # save chat view so we can print it when session is over
         self.sessionController.chatPrintView = self.chatViewController.outputView
 
-        self.window.noteSession_isComposing_(self.sessionController, False)
-        self.window.noteSession_isScreenSharing_(self.sessionController, False)
+        self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
+        self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, False)
 
         if self.handler:
             self.handler.setDisconnected()
