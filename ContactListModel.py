@@ -602,7 +602,10 @@ class HistoryBlinkContactGroup(BlinkContactGroup):
                 contact = getContactMatchingURI(target_uri)
                 if contact:
                     display_name = contact.display_name
-                blink_contact = HistoryBlinkContact(target_uri, icon=loadContactIconFromFile(target_uri), name=display_name)
+                    icon=contact.icon
+                else:
+                    icon=None
+                blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=display_name)
                 blink_contact.setDetail(u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time)))
                 contacts.append(blink_contact)
 
