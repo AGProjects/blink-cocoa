@@ -1045,7 +1045,10 @@ class ChatHistoryReplicator(object):
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
-                pass
+                try:
+                    del self.connections_for_outgoing_replication[key]
+                except KeyError:
+                    pass
             else:
                 self.connections_for_outgoing_replication[account.id]['connection'] = None
                 try:
@@ -1078,7 +1081,10 @@ class ChatHistoryReplicator(object):
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
-                pass
+                try:
+                    del self.connections_for_incoming_replication[key]
+                except KeyError:
+                    pass
             else:
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
