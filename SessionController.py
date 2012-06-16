@@ -1180,6 +1180,8 @@ class SessionController(NSObject):
                     self.session.reject(500)
                 except IllegalDirectionError:
                     pass
+                log_data = TimestampedNotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
+                self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
     def setAnsweringMachineMode_(self, flag):
         self.answeringMachineMode = flag
