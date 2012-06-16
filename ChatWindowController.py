@@ -511,6 +511,18 @@ class ChatWindowController(NSWindowController):
                     item.setState_(NSOnState if item.representedObject()['id'] == id else NSOffState)
                     i += 1
 
+    def keyDown_(self, event):
+        if (event.modifierFlags() & NSCommandKeyMask):
+            keys = event.characters()
+            session = self.selectedSessionController()
+            if keys[0] == 'i' and session and session.info_panel is not None:
+                session.info_panel.toggle()
+        else:
+            super(ChatWindowController, self).keyDown_(event)
+
+    def close_(self, sender):
+        self.window().performClose_(None)
+
     def windowWillClose_(self, sender):
         self.removeTimer()
 
