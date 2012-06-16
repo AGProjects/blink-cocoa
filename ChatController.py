@@ -132,8 +132,9 @@ class ChatController(MediaStream):
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.mediastream_failed = False
         self.session_failed = False
-        self.share_screen_in_conference = False
+        self.failure_origin = None
         self.last_failure_reason = None
+        self.share_screen_in_conference = False
 
         self.history_msgid_list=set()
 
@@ -252,6 +253,9 @@ class ChatController(MediaStream):
             self.chatWindowController.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.session_failed = False
+        self.failure_origin = None
+        self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.session_was_active = True
@@ -263,6 +267,9 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.session_failed = False
+        self.failure_origin = None
+        self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.session_was_active = True
@@ -1119,13 +1126,14 @@ class ChatController(MediaStream):
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.session_failed = True
+        reason = data.failure_reason or data.reason
+        if reason != 'Session Cancelled':
+            if self.last_failure_reason != reason:
+                self.last_failure_reason = reason
+                self.failure_origin = data.originator
         if not self.mediastream_failed:
-            reason = data.failure_reason or data.reason
-            if reason != 'Session Cancelled':
-                if self.last_failure_reason != reason:
-                    self.last_failure_reason = reason
-                    message = "Session failed (%s): %s" % (data.originator, reason)
-                    self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+            message = "Session failed (%s): %s" % (data.originator, reason)
+            self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionDidStart(self, sender, data):
@@ -1178,7 +1186,9 @@ class ChatController(MediaStream):
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             if self.chatViewController:
                 self.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
-
+        elif self.session_failed and not self.mediastream_failed and self.last_failure_reason and self.failure_origin:
+            message = "Session failed (%s): %s" % (self.failure_origin, self.last_failure_reason)
+            self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.reset()
 
