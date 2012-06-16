@@ -1114,12 +1114,7 @@ class ChatWindowController(NSWindowController):
             self.participants.append(contact)
         elif session is not None and session.session is not None:
             if session.account is BonjourAccount():
-                _session = session.session
-                if _session.transport is not None:
-                    own_uri = str(_session.account.contact[_session.transport])[4:]  # skip leading 'sip:'
-                else:
-                    # transport is None if session wasn't connected
-                    own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
