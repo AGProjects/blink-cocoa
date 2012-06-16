@@ -719,6 +719,7 @@ class ChatHistoryReplicator(object):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name='ChatReplicationJournalEntryAdded')
         notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
+        notification_center.add_observer(self, name='SIPAccountManagerDidStart')
         notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         notification_center.add_observer(self, name='SystemWillSleep')
         try:
@@ -737,10 +738,14 @@ class ChatHistoryReplicator(object):
         handler(notification.sender, notification.data)
 
     def _NH_SystemWillSleep(self, sender, data):
-            self.paused = True
+        self.paused = True
 
     def _NH_SystemDidWakeUpFromSleep(self, sender, data):
         self.paused = False
+        self.updateTimer_(None)
+
+    def _NH_SIPAccountManagerDidStart(self, sender, data):
+        self.updateTimer_(None)
 
     def _NH_ChatReplicationJournalEntryAdded(self, sender, data):
         try:
