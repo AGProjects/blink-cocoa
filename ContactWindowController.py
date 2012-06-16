@@ -473,8 +473,11 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatWindow_(self, sender):
-        if self.chatWindowController:
+        has_chat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers)
+        if has_chat:
             self.chatWindowController.window().makeKeyAndOrderFront_(None)
+        else:
+            self.show_last_chat_conversations()
 
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
@@ -2064,7 +2067,6 @@ class ContactWindowController(NSWindowController):
 
     def updateWindowMenu(self):
         item = self.windowMenu.itemWithTag_(5)
-        item.setEnabled_(any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers))
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -2221,7 +2223,7 @@ class ContactWindowController(NSWindowController):
             item = self.historyMenu.itemWithTag_(1)
             item.setHidden_(True)
         else:
-            if self.historyMenu.numberOfItems() < 4:
+            if self.historyMenu.numberOfItems() < 3:
                 self.historyMenu.addItem_(self.recordingsSubMenu)
                 self.historyMenu.addItem_(NSMenuItem.separatorItem())
             self.get_session_history_entries()
@@ -2233,8 +2235,8 @@ class ContactWindowController(NSWindowController):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
 
-        while menu.numberOfItems() > 5:
-            menu.removeItemAtIndex_(5)
+        while menu.numberOfItems() > 4:
+            menu.removeItemAtIndex_(4)
  
         mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
@@ -2401,10 +2403,6 @@ class ContactWindowController(NSWindowController):
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
             openFileTransferSelectionDialog(account, contact.uri)
-
-    @objc.IBAction
-    def showLastChatConversations_(self, sender):
-        self.show_last_chat_conversations()
 
     @objc.IBAction
     def viewHistory_(self, sender):
