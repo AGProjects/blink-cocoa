@@ -908,7 +908,7 @@ class SessionControllersManager(object):
         nsurl = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(60, self, "updateGetCallsTimer:", None, True)
+        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(300, self, "updateGetCallsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
         self.last_calls_connections[account.id] = { 'connection': connection,
@@ -917,6 +917,7 @@ class SessionControllersManager(object):
                                                     'url': url,
                                                     'data': ''
                                                     }
+        self.updateGetCallsTimer_(None)
     
     @run_in_gui_thread
     def close_last_call_connection(self, account):
