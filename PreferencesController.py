@@ -272,7 +272,7 @@ class PreferencesController(NSWindowController, object):
 
         frame = self.advancedTabView.frame()
         for section in (section for section in sections if section not in DisabledAccountPreferenceSections):
-            if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'pstn', 'ldap'):
+            if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'chat', 'pstn', 'ldap', 'web_alert'):
                 continue
 
             if section == 'tls':
