@@ -159,23 +159,16 @@ class SessionHistory(object):
 
     @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
-        transaction = self.db.transaction()
-        try:
-            if previous_version is None and self.__version__ == 2:
-                query = "SELECT id, local_uri, remote_uri FROM sessions"
-                results = list(self.db.queryAll(query))
-                for result in results:
-                    id, local_uri, remote_uri = result
-                    local_uri = local_uri.decode('latin1').encode('utf-8')
-                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                    query = "UPDATE sessions SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
-                    self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (SessionHistoryEntry.sqlmeta.table, previous_version, self.__version__, e))
-            transaction.rollback()
-        else:
-            TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
-            transaction.commit()
+        if previous_version is None:
+            query = "SELECT id, local_uri, remote_uri FROM sessions"
+            results = list(self.db.queryAll(query))
+            for result in results:
+                id, local_uri, remote_uri = result
+                local_uri = local_uri.decode('latin1').encode('utf-8')
+                remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                query = "UPDATE sessions SET local_uri=%s, remote_uri=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(id))
+                self.db.queryAll(query)
+        TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
     def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
@@ -314,38 +307,41 @@ class ChatHistory(object):
 
     @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
-        transaction = self.db.transaction()
-        try:
-            if previous_version is None:
-                next_upgrade_version = 2
-                query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
-                results = list(self.db.queryAll(query))
-                for result in results:
-                    id, local_uri, remote_uri, cpim_from, cpim_to = result
-                    local_uri = local_uri.decode('latin1').encode('utf-8')
-                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                    cpim_from = cpim_from.decode('latin1').encode('utf-8')
-                    cpim_to = cpim_to.decode('latin1').encode('utf-8')
-                    query = "UPDATE chat_messages SET local_uri='%s', remote_uri='%s', cpim_from='%s', cpim_to='%s' WHERE id='%s'" % (local_uri, remote_uri, cpim_from, cpim_to, id)
-                    self.db.queryAll(query)
-            else:
-                next_upgrade_version = previous_version.version
-
-            if next_upgrade_version < 4 and next_upgrade_version != self.__version__:
-                settings = SIPSimpleSettings()
-                query = "alter table chat_messages add column 'uuid' TEXT";
+        if previous_version is None:
+            next_upgrade_version = 2
+            query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
+            results = list(self.db.queryAll(query))
+            for result in results:
+                id, local_uri, remote_uri, cpim_from, cpim_to = result
+                local_uri = local_uri.decode('latin1').encode('utf-8')
+                remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                cpim_from = cpim_from.decode('latin1').encode('utf-8')
+                cpim_to = cpim_to.decode('latin1').encode('utf-8')
+                query = "UPDATE chat_messages SET local_uri=%s, remote_uri=%s, cpim_from=%s, cpim_to=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(cpim_from), SessionHistoryEntry.sqlrepr(cpim_to), SessionHistoryEntry.sqlrepr(id))
                 self.db.queryAll(query)
-                query = "alter table chat_messages add column 'journal_id' TEXT";
-                self.db.queryAll(query)
-                query = "UPDATE chat_messages SET uuid = '%s', journal_id = '0'" % settings.instance_id
-                self.db.queryAll(query)
-
-        except Exception, e:
-            BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (ChatMessage.sqlmeta.table, previous_version, self.__version__, e))
-            transaction.rollback()
         else:
-            TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
-            transaction.commit()
+            next_upgrade_version = previous_version.version
+
+        if next_upgrade_version < 4 and next_upgrade_version != self.__version__:
+            settings = SIPSimpleSettings()
+            query = "alter table chat_messages add column 'uuid' TEXT";
+            try:
+                self.db.queryAll(query)
+            except dberrors.OperationalError, e:
+                if not str(e).startswith('duplicate column name'):
+                    BlinkLogger().log_error(u"Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    return
+            query = "alter table chat_messages add column 'journal_id' TEXT";
+            try:
+                self.db.queryAll(query)
+            except dberrors.OperationalError, e:
+                if not str(e).startswith('duplicate column name'):
+                    BlinkLogger().log_error(u"Error adding column journal_id to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    return
+            query = "UPDATE chat_messages SET uuid = %s, journal_id = '0'" % SessionHistoryEntry.sqlrepr(settings.instance_id)
+            self.db.queryAll(query)
+
+        TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False):
@@ -629,23 +625,16 @@ class FileTransferHistory(object):
 
     @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
-        transaction = self.db.transaction()
-        try:
-            if previous_version is None and self.__version__ == 2:
-                query = "SELECT id, local_uri, remote_uri FROM file_transfers"
-                results = list(self.db.queryAll(query))
-                for result in results:
-                    id, local_uri, remote_uri = result
-                    local_uri = local_uri.decode('latin1').encode('utf-8')
-                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                    query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
-                    self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error migrating table %s from version %s to %s: %s" % (FileTransfer.sqlmeta.table, previous_version, self.__version__, e))
-            transaction.rollback()
-        else:
-            TableVersions().set_table_version(FileTransfer.sqlmeta.table, self.__version__)
-            transaction.commit()
+        if previous_version is None:
+            query = "SELECT id, local_uri, remote_uri FROM file_transfers"
+            results = list(self.db.queryAll(query))
+            for result in results:
+                id, local_uri, remote_uri = result
+                local_uri = local_uri.decode('latin1').encode('utf-8')
+                remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
+                self.db.queryAll(query)
+        TableVersions().set_table_version(FileTransfer.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
     def add_transfer(self, transfer_id, direction, local_uri, remote_uri, file_path, bytes_transfered, file_size, status):
