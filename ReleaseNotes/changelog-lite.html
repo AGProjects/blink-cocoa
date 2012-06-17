@@ -8,9 +8,18 @@
 
 <h2>Version 1.7.0</h2>
 
-<p>May 30th, 2012
+<p>June 17th, 2012
 
 <ul>
+<li>Added session history synchronization with sip2sip.info service
+<li>Added chat messages replication with sip2sip.info service
+<li>Added window menu entry to open Chat conversations
+<li>Added nickname support for MSRP conferences
+<li>Fixed exceptions in the debug window
+<li>Fixed memory leaks in session and stream management
+<li>Fixed a race condition in subscription for conference-info
+<li>Fixed accounting of media type when chat session is cancelled
+<li>Fixed race conditions in account registrar and subscription handler
 <li>Fixed handling for Min-Expires header for REGISTER methods
 <li>Fixed handling for incoming INVITE with inactive audio offer
 <li>Fixed handling re-INVITEs with an empty body
@@ -32,6 +41,7 @@
 <li>Fixed exception when logging a failed Call Transfer
 <li>Fixed setting Chat Window title when there is none to be set
 <li>Fixed a race-condition when adding or removing a Stream
+<li>Re-mapped window keboard shortcuts
 <li>Re-init Session Info panel when re-connect chat session
 <li>Improved display of SIP account in the account popup button
 <li>Handle callto: URLs dialled from external applications
