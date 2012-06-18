@@ -125,6 +125,7 @@
 							<string key="NSFrame">{{264, 13}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="33304580"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="736347389">
 								<int key="NSCellFlags">67239424</int>
@@ -170,7 +171,7 @@
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
-				<string key="NSFrameAutosaveName"/>
+				<string key="NSFrameAutosaveName">nickname</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
 		</array>
