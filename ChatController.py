@@ -131,8 +131,8 @@ class ChatController(MediaStream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.mediastream_failed = False
-        self.session_failed = False
-        self.failure_origin = None
+        self.mediastream_ended = False
+        self.session_succeeded = False
         self.last_failure_reason = None
         self.share_screen_in_conference = False
 
@@ -253,8 +253,7 @@ class ChatController(MediaStream):
             self.chatWindowController.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
-        self.session_failed = False
-        self.failure_origin = None
+        self.session_succeeded = False
         self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -267,8 +266,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
-        self.session_failed = False
-        self.failure_origin = None
+        self.session_succeeded = False
         self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -1125,18 +1123,20 @@ class ChatController(MediaStream):
                 self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        self.session_failed = True
         reason = data.failure_reason or data.reason
         if reason != 'Session Cancelled':
             if self.last_failure_reason != reason:
                 self.last_failure_reason = reason
-                self.failure_origin = data.originator
-        if not self.mediastream_failed:
-            message = "Session failed (%s): %s" % (data.originator, reason)
+        if not self.mediastream_failed and not self.mediastream_ended:
+            if reason != 'Session Cancelled':
+                message = "Cannot establish connection: %s" % reason
+            else:
+                message = "Session Cancelled"
             self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
         self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionDidStart(self, sender, data):
+        self.session_succeeded = True
         # toggle collaborative editor to initialize the java script to be able to receive is-composing
         self.last_failure_reason = None
         settings = SIPSimpleSettings()
@@ -1179,27 +1179,25 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
+        self.mediastream_ended = True
         self.sessionController.log_info(u"Chat stream ended")
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, sender=self.sessionController)
-        if not self.session_failed and not self.mediastream_failed:
+        if self.session_succeeded:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-            if self.chatViewController:
-                self.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
-        elif self.session_failed and not self.mediastream_failed and self.last_failure_reason and self.failure_origin:
-            message = "Session failed (%s): %s" % (self.failure_origin, self.last_failure_reason)
-            self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+            self.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.reset()
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        self.mediastream_failed = True # used to avoid double printing chat disconnect message
+        self.mediastream_failed = True
         self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
-        if data.reason in ('Connection was closed cleanly.', 'A TLS packet with unexpected length was received.', 'Cannot send chunk because MSRPSession is DONE'):
-            self.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
-        else:
-            reason = 'Timeout' if data.reason == 'MSRPConnectTimeout' else data.reason
-            self.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
+        if self.session_succeeded and not self.mediastream_ended:
+            if data.reason in ('Connection was closed cleanly.', 'A TLS packet with unexpected length was received.', 'Cannot send chunk because MSRPSession is DONE'):
+                self.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
+            else:
+                reason = 'Timeout' if data.reason == 'MSRPConnectTimeout' else data.reason
+                self.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
 
@@ -1240,6 +1238,10 @@ class ChatController(MediaStream):
         self.startDeallocTimer()
 
     def reset(self):
+        self.mediastream_failed = False
+        self.mediastream_ended = False
+        self.session_succeeded = False
+        self.last_failure_reason = None
         self.share_screen_in_conference = False
 
         self.videoContainer.hideVideo()
