@@ -118,6 +118,11 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkVideoEnteredFullScreen")
             self.notification_center.add_observer(self, name="BlinkVideoExitedFullScreen")
 
+            ns_nc = NSNotificationCenter.defaultCenter()
+            ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
+            ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
+            ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
+
             self.backend = SIPManager()
 
             if self.backend.is_muted():
@@ -158,6 +163,12 @@ class ChatWindowController(NSWindowController):
         self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
         self.notification_center.remove_observer(self, name="BlinkVideoEnteredFullScreen")
         self.notification_center.remove_observer(self, name="BlinkVideoExitedFullScreen")
+
+        ns_nc = NSNotificationCenter.defaultCenter()
+        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.participantsTableView)
+        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.conferenceFilesTableView)
+        ns_nc.removeObserver_name_object_(self, u"NSSplitViewDidResizeSubviewsNotification", self.drawerSplitView)
+
         super(ChatWindowController, self).dealloc()
 
     @property
@@ -202,11 +213,6 @@ class ChatWindowController(NSWindowController):
         self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
         self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
         self.conferenceFilesTableView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
-        ns_nc = NSNotificationCenter.defaultCenter()
-        ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
-        ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
-        ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
-
         self.participantsTableView.setTarget_(self)
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
         self.conferenceFilesTableView.setTarget_(self)
@@ -557,11 +563,6 @@ class ChatWindowController(NSWindowController):
         self.sessions = {}
         self.stream_controllers = {}
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
-
-        ns_nc = NSNotificationCenter.defaultCenter()
-        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.participantsTableView)
-        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.conferenceFilesTableView)
-        ns_nc.removeObserver_name_object_(self, u"NSSplitViewDidResizeSubviewsNotification", self.drawerSplitView)
 
         # Balance refcount
         self.release()
