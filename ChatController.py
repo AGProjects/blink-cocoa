@@ -1318,8 +1318,8 @@ class ChatController(MediaStream):
 
 
 class MessageInfo(object):
-    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text'):
-        self.msgid = msgid 
+    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text', pending=False):
+        self.msgid = msgid
         self.direction = direction
         self.sender = sender
         self.recipient = recipient
@@ -1328,6 +1328,7 @@ class MessageInfo(object):
         self.private = private
         self.status = status
         self.content_type = content_type
+        self.pending = pending
 
 
 class MessageHandler(NSObject):
@@ -1355,7 +1356,7 @@ class MessageHandler(NSObject):
     connected = False
     delegate = None
     messages = None
-    pending = None
+    no_report_received_messages = None
     remote_uri = None
     local_uri = None
     
@@ -1365,7 +1366,7 @@ class MessageHandler(NSObject):
             self.stream = None
             self.connected = None
             self.messages = {}
-            self.pending = []
+            self.no_report_received_messages = {}
             self.history = ChatHistory()
             self.delegate = chatView
             self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
@@ -1386,6 +1387,7 @@ class MessageHandler(NSObject):
         if message.private and message.recipient is not None:
             try:
                 id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
+                self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
                 BlinkLogger().log_error(u"Error sending message: %s" % e)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
@@ -1395,6 +1397,7 @@ class MessageHandler(NSObject):
         else:
             try:
                 id = self.stream.send_message(message.text, timestamp=message.timestamp)
+                self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
                 BlinkLogger().log_error(u"Error sending message: %s" % e)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
@@ -1441,7 +1444,7 @@ class MessageHandler(NSObject):
                 else:
                     self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
             else:
-                self.pending.append(msgid)
+                self.messages[msgid].pending=True
                 self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
         
         return True
@@ -1463,25 +1466,32 @@ class MessageHandler(NSObject):
             else:
                 self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
         else:
-            self.pending.append(msgid)
+            self.messages[msgid].pending=True
             self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
     
     def setConnected(self, stream):
+        self.no_report_received_messages = {}
         self.connected = True
         self.stream = stream
         NotificationCenter().add_observer(self, sender=stream)
-        for msgid in self.pending:
-            private = self.messages[msgid].private
-            sent = self._send(msgid)
-            if not sent:
-                BlinkLogger().log_error(u"Error sending queued message: %s" % msgid)
+        pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
+        for msgid in pending:
+            try:
+                private = self.messages[msgid].private
+            except KeyError:
+                continue
             else:
-                self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
-        self.pending = []
+                sent = self._send(msgid)
+                if not sent:
+                    BlinkLogger().log_error(u"Error sending queued message: %s" % msgid)
+                else:
+                    self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
 
     def setDisconnected(self):
         self.connected = False
-        for msgid in self.pending:
+        self.connected = False
+        pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
+        for msgid in pending:
             try:
                 message = self.messages.pop(msgid)
                 message.status = 'failed'
@@ -1489,6 +1499,16 @@ class MessageHandler(NSObject):
                 self.add_to_history(message)
             except KeyError:
                 pass
+
+        self.messages = {}
+        for msgid in self.no_report_received_messages.keys():
+            try:
+                message = self.no_report_received_messages.pop(msgid)
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED)
+                self.add_to_history(message)
+            except KeyError:
+                pass
+
         if self.stream:
             NotificationCenter().remove_observer(self, sender=self.stream)
             self.stream = None
@@ -1507,22 +1527,31 @@ class MessageHandler(NSObject):
         try:
             message = self.messages.pop(data.message_id)
             if message:
+                try:
+                    del self.no_report_received_messages[message.msgid]
+                except KeyError:
+                    pass
                 message.status='delivered'
                 self.markMessage(message, MSG_STATE_DELIVERED)
                 self.add_to_history(message)
                 self.lastDeliveredTime = time.time()
         except KeyError:
             pass
-    
+
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
         try:
             message = self.messages.pop(data.message_id)
             if message:
+                try:
+                    del self.no_report_received_messages[message.msgid]
+                except KeyError:
+                    pass
                 message.status='failed'
                 self.markMessage(message, MSG_STATE_FAILED)
                 self.add_to_history(message)
         except KeyError:
             pass
+
     
     @allocate_autorelease_pool
     @run_in_green_thread
