@@ -161,13 +161,20 @@ class SessionHistory(object):
     def _migrate_version(self, previous_version):
         if previous_version is None:
             query = "SELECT id, local_uri, remote_uri FROM sessions"
-            results = list(self.db.queryAll(query))
-            for result in results:
-                id, local_uri, remote_uri = result
-                local_uri = local_uri.decode('latin1').encode('utf-8')
-                remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                query = "UPDATE sessions SET local_uri=%s, remote_uri=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(id))
-                self.db.queryAll(query)
+            try:
+                results = list(self.db.queryAll(query))
+            except Exception:
+                BlinkLogger().log_error(u"Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            else:
+                for result in results:
+                    id, local_uri, remote_uri = result
+                    local_uri = local_uri.decode('latin1').encode('utf-8')
+                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                    query = "UPDATE sessions SET local_uri=%s, remote_uri=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(id))
+                    try:
+                        self.db.queryAll(query)
+                    except Exception:
+                        BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
@@ -223,8 +230,12 @@ class SessionHistory(object):
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
         query="select local_uri, remote_uri from sessions where media_types like '%chat%' and local_uri <> 'bonjour'order by start_time desc limit 100"
-        rows = list(self.db.queryAll(query))
         results = []
+        try:
+            rows = list(self.db.queryAll(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting last chat convesations: %s" % e)
+            return results
         for row in rows:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
             pair = (row[0], target_uri)
@@ -310,15 +321,22 @@ class ChatHistory(object):
         if previous_version is None:
             next_upgrade_version = 2
             query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
-            results = list(self.db.queryAll(query))
-            for result in results:
-                id, local_uri, remote_uri, cpim_from, cpim_to = result
-                local_uri = local_uri.decode('latin1').encode('utf-8')
-                remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                cpim_from = cpim_from.decode('latin1').encode('utf-8')
-                cpim_to = cpim_to.decode('latin1').encode('utf-8')
-                query = "UPDATE chat_messages SET local_uri=%s, remote_uri=%s, cpim_from=%s, cpim_to=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(cpim_from), SessionHistoryEntry.sqlrepr(cpim_to), SessionHistoryEntry.sqlrepr(id))
-                self.db.queryAll(query)
+            try:
+                results = list(self.db.queryAll(query))
+            except Exception:
+                BlinkLogger().log_error(u"Error selecting table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            else:
+                for result in results:
+                    id, local_uri, remote_uri, cpim_from, cpim_to = result
+                    local_uri = local_uri.decode('latin1').encode('utf-8')
+                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                    cpim_from = cpim_from.decode('latin1').encode('utf-8')
+                    cpim_to = cpim_to.decode('latin1').encode('utf-8')
+                    query = "UPDATE chat_messages SET local_uri=%s, remote_uri=%s, cpim_from=%s, cpim_to=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(cpim_from), SessionHistoryEntry.sqlrepr(cpim_to), SessionHistoryEntry.sqlrepr(id))
+                    try:
+                        self.db.queryAll(query)
+                    except Exception:
+                        BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         else:
             next_upgrade_version = previous_version.version
 
@@ -339,7 +357,11 @@ class ChatHistory(object):
                     BlinkLogger().log_error(u"Error adding column journal_id to table %s: %s" % (ChatMessage.sqlmeta.table, e))
                     return
             query = "UPDATE chat_messages SET uuid = %s, journal_id = '0'" % SessionHistoryEntry.sqlrepr(settings.instance_id)
-            self.db.queryAll(query)
+
+            try:
+                self.db.queryAll(query)
+            except Exception:
+                BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
@@ -627,13 +649,20 @@ class FileTransferHistory(object):
     def _migrate_version(self, previous_version):
         if previous_version is None:
             query = "SELECT id, local_uri, remote_uri FROM file_transfers"
-            results = list(self.db.queryAll(query))
-            for result in results:
-                id, local_uri, remote_uri = result
-                local_uri = local_uri.decode('latin1').encode('utf-8')
-                remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
-                self.db.queryAll(query)
+            try:
+                results = list(self.db.queryAll(query))
+            except Exception:
+                BlinkLogger().log_error(u"Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            else:
+                for result in results:
+                    id, local_uri, remote_uri = result
+                    local_uri = local_uri.decode('latin1').encode('utf-8')
+                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
+                    query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
+                    try:
+                        self.db.queryAll(query)
+                    except Exception:
+                        BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         TableVersions().set_table_version(FileTransfer.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
