@@ -1494,20 +1494,22 @@ class MessageHandler(NSObject):
         for msgid in pending:
             try:
                 message = self.messages.pop(msgid)
+            except KeyError:
+                pass
+            else:
                 message.status = 'failed'
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED)
                 self.add_to_history(message)
-            except KeyError:
-                pass
 
         self.messages = {}
         for msgid in self.no_report_received_messages.keys():
             try:
                 message = self.no_report_received_messages.pop(msgid)
-                self.delegate.markMessage(msgid, MSG_STATE_FAILED)
-                self.add_to_history(message)
             except KeyError:
                 pass
+            else:
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED)
+                self.add_to_history(message)
 
         if self.stream:
             NotificationCenter().remove_observer(self, sender=self.stream)
