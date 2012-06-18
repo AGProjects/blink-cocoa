@@ -542,9 +542,6 @@ class ChatWindowController(NSWindowController):
             if ret != NSAlertDefaultReturn:
                 return False
 
-        # Increase refcount so self stays alive after the last tab is closed
-        self.retain()
-
         self.window().close()
         self.closing = True
 
@@ -563,8 +560,6 @@ class ChatWindowController(NSWindowController):
         self.stream_controllers = {}
         self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
 
-        # Balance refcount
-        self.release()
         return True
 
     def joinConferenceWindow(self, session, participants=[]):
