@@ -966,6 +966,7 @@ class ChatHistoryReplicator(object):
 
 
     @allocate_autorelease_pool
+    @run_in_gui_thread
     def updateTimer_(self, timer):
         if self.paused:
             return
