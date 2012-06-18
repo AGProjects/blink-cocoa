@@ -2345,8 +2345,15 @@ class ContactWindowController(NSWindowController):
 
             self.searchBox.setStringValue_(target_uri)
             self.searchContacts()
-            self.window().makeFirstResponder_(self.searchBox)
-            self.window().makeKeyWindow()
+            self.focusSearchTextField()
+
+    @objc.IBAction
+    def focusSearchTextField_(self, sender):
+        self.focusSearchTextField()
+
+    def focusSearchTextField(self):
+        self.window().makeFirstResponder_(self.searchBox)
+        self.window().makeKeyAndOrderFront_(None)
 
     @objc.IBAction
     def redialLast_(self, sender):
@@ -2495,13 +2502,13 @@ class ContactWindowController(NSWindowController):
 
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             if not isinstance(self.window().firstResponder(), AudioSession):
-                self.window().makeFirstResponder_(self.searchBox)
+                self.focusSearchTextField()
 
             self.searchBox.cell().setPlaceholderString_("Enter Phone Number")
             self.searchBox.setToolTip_(u'You may type digits or letters, letters will automatically be translated into digits. Press enter or click # on the dialpad to start the call')
 
             if not isinstance(self.window().firstResponder(), AudioSession):
-                self.window().makeFirstResponder_(self.searchBox)
+                self.focusSearchTextField()
 
             new_value = ""
             for l in unicode(self.searchBox.stringValue().strip()):
