@@ -386,7 +386,7 @@
 					<array key="NSToolbarIBSelectableItems" id="0"/>
 				</object>
 				<nil key="NSUserInterfaceItemIdentifier"/>
-				<string key="NSWindowContentMinSize">{724, 481}</string>
+				<string key="NSWindowContentMinSize">{724, 432}</string>
 				<object class="NSView" key="NSWindowView" id="993445270">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -397,7 +397,6 @@
 							<string key="NSFrame">{{614, -37}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="993445270"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<int key="NSTag">10</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="648449520">
@@ -424,7 +423,6 @@
 							<string key="NSFrame">{{-8, -4}, {740, 445}}</string>
 							<reference key="NSSuperview" ref="993445270"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="350117869"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="627498078">
 									<string key="NSIdentifier">accounts</string>
@@ -498,7 +496,7 @@
 																<string key="NSFrameSize">{283, 351}</string>
 																<reference key="NSSuperview" ref="610364781"/>
 																<reference key="NSWindow"/>
-																<reference key="NSNextKeyView" ref="398299239"/>
+																<reference key="NSNextKeyView" ref="736749453"/>
 																<bool key="NSEnabled">YES</bool>
 																<object class="NSTableHeaderView" key="NSHeaderView" id="76249930">
 																	<reference key="NSNextResponder" ref="27080014"/>
@@ -715,7 +713,7 @@
 												<string key="NSFrame">{{17, 34}, {285, 369}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="736749453"/>
+												<reference key="NSNextKeyView" ref="610364781"/>
 												<int key="NSsFlags">133650</int>
 												<reference key="NSVScroller" ref="398299239"/>
 												<reference key="NSHScroller" ref="736749453"/>
@@ -1315,7 +1313,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<reference key="NSNextKeyView" ref="1010782047"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
-				<string key="NSMinSize">{724, 559}</string>
+				<string key="NSMinSize">{724, 510}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
