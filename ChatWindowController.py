@@ -385,6 +385,7 @@ class ChatWindowController(NSWindowController):
                     tabItem = self.tabView.tabViewItemAtIndex_(index)
                     self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
         self.revalidateToolbar()
+        self.refreshDrawer()
 
     def _NH_BlinkSessionChangedState(self, sender, data):
         session = sender
