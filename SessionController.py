@@ -19,8 +19,10 @@ from application.python.types import Singleton
 from datetime import datetime, timedelta
 from dateutil.tz import tzlocal
 
+from resources import Resources
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
+from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
