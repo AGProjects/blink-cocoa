@@ -367,11 +367,11 @@ class Ringer(object):
         elif name == "ChatViewControllerDidDisplayMessage":
             if not settings.audio.silent:
                 now = time.time()
-                if self.chat_message_outgoing_sound and now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
-                    if data.direction == 'outgoing':
+                if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
+                    if data.direction == 'outgoing' and self.chat_message_outgoing_sound:
                         self.chat_message_outgoing_sound.stop()
                         self.chat_message_outgoing_sound.start()
-                    else:
+                    elif self.chat_message_incoming_sound:
                         self.chat_message_incoming_sound.stop()
                         self.chat_message_incoming_sound.start()
                     self.chat_beep_time = now
