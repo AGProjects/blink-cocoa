@@ -740,7 +740,7 @@ class AlertPanel(NSObject, object):
             session_controller = (controller for controller in self.sessionControllersManager.sessionControllers if controller.session == session).next()
         except StopIteration:
             session.reject_proposal()
-            session.log_info("Cannot find session controller for session: %s" % session)
+            session_controller.log_info("Cannot find session controller for session: %s" % session)
         else:
             session_controller.acceptIncomingProposal(session.proposed_streams)
 
