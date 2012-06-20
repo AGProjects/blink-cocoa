@@ -83,6 +83,7 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='SIPAccountDidActivate')
         self.notification_center.add_observer(self, name='SIPAccountDidDeactivate')
+        self.notification_center.add_observer(self, name='SIPApplicationDidStart')
         self.notification_center.add_observer(self, name='SIPApplicationWillEnd')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
         self.notification_center.add_observer(self, name='SIPSessionNewOutgoing')
