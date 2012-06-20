@@ -996,6 +996,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.nickname = None
+        self.subject = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1034,6 +1035,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.nickname = None
+        self.subject = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1075,6 +1077,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.nickname = None
+        self.subject = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1298,6 +1301,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.invited_participants = []
         self.nickname = None
+        self.subject = None
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
@@ -1935,6 +1939,10 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.conference_shared_files = []
         self.conference_info = data.conference_info
+        if data.conference_info.conference_description.subject is not None:
+            self.subject = data.conference_info.conference_description.subject.value
+        else:
+            self.subject = None
 
         remote_conference_has_audio = any(media.media_type == 'audio' for media in chain(*chain(*(user for user in self.conference_info.users))))
 

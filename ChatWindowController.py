@@ -6,6 +6,9 @@ from AppKit import *
 from WebKit import *
 from Quartz import *
 
+import datetime
+from dateutil.tz import tzlocal
+
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -13,7 +16,7 @@ from itertools import chain
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
-from sipsimple.util import TimestampedNotificationData
+from sipsimple.util import TimestampedNotificationData, Timestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
 
@@ -27,6 +30,7 @@ import ParticipantsTableView
 from ChatPrivateMessageController import ChatPrivateMessageController
 from SIPManager import SIPManager
 from NicknameController import NicknameController
+from SubjectController import SubjectController
 
 
 import FancyTabSwitcher
@@ -42,6 +46,7 @@ PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
 PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE = 311
 PARTICIPANTS_MENU_MUTE = 315
 PARTICIPANTS_MENU_NICKNAME = 316
+PARTICIPANTS_MENU_SUBJECT = 317
 PARTICIPANTS_MENU_INVITE_TO_CONFERENCE = 312
 PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE = 313
 PARTICIPANTS_MENU_START_AUDIO_SESSION = 320
@@ -332,8 +337,11 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             if session.conference_info is not None:
-                conf_desc = session.conference_info.conference_description
-                title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+                if session.subject is not None:
+                    title = u"%s" % session.subject
+                else:
+                    conf_desc = session.conference_info.conference_description
+                    title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
             else:
                 title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
         return title
@@ -614,6 +622,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_MUTE).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_NICKNAME).setEnabled_(False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SUBJECT).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
@@ -707,6 +716,19 @@ class ChatWindowController(NSWindowController):
                     session.nickname = nickname if nickname else None
                     chat_handler.stream.set_local_nickname(nickname)
 
+    def setSubject(self):
+        session = self.selectedSessionController()
+        if session:
+            chat_handler = session.streamHandlerOfType("chat")
+            if chat_handler:
+                controller = SubjectController()
+                subject = controller.runModal(session.subject)
+                if chat_handler.stream:
+                    body = u'SUBJECT %s' % subject if subject else u'SUBJECT'
+                    chat_handler.stream.send_message(body, content_type='sylkserver/control', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+                if subject or (not subject and session.subject):
+                    session.subject = subject if subject else None
+
     def canGoToConferenceWebsite(self):
         session = self.selectedSessionController()
         if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
@@ -719,6 +741,16 @@ class ChatWindowController(NSWindowController):
             chat_handler = session.streamHandlerOfType("chat")
             try:
                 return chat_handler.stream.nickname_allowed
+            except Exception:
+                pass
+        return False
+
+    def canSetSubject(self):
+        session = self.selectedSessionController()
+        if session is not None and session.hasStreamOfType("chat"):
+            chat_handler = session.streamHandlerOfType("chat")
+            try:
+                return chat_handler.control_allowed
             except Exception:
                 pass
         return False
@@ -986,6 +1018,8 @@ class ChatWindowController(NSWindowController):
                 self.sendPrivateMessage()
             elif tag == PARTICIPANTS_MENU_NICKNAME:
                 self.setNickname()
+            elif tag == PARTICIPANTS_MENU_SUBJECT:
+                self.setSubject()
             elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
             elif tag == PARTICIPANTS_MENU_START_AUDIO_SESSION:
@@ -1247,6 +1281,7 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setStringValue_(u"Not Connected")
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_NICKNAME).setEnabled_(self.canSetNickname())
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SUBJECT).setEnabled_(self.canSetSubject())
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 

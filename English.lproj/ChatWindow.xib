@@ -551,7 +551,7 @@
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="31287118"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{650, 598}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">chat_window</string>
@@ -1004,6 +1004,17 @@
 						<reference key="NSOnImage" ref="677793703"/>
 						<reference key="NSMixedImage" ref="730172549"/>
 						<int key="NSTag">316</int>
+					</object>
+					<object class="NSMenuItem" id="861788454">
+						<reference key="NSMenu" ref="898627079"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Set Title...</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="677793703"/>
+						<reference key="NSMixedImage" ref="730172549"/>
+						<int key="NSTag">317</int>
 					</object>
 					<object class="NSMenuItem" id="927743876">
 						<reference key="NSMenu" ref="898627079"/>
@@ -1834,6 +1845,14 @@
 					<int key="connectionID">540</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedParticipantMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="861788454"/>
+					</object>
+					<int key="connectionID">542</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">delegate</string>
 						<reference key="source" ref="1005"/>
@@ -2190,6 +2209,7 @@
 							<reference ref="943204892"/>
 							<reference ref="463616372"/>
 							<reference ref="665507698"/>
+							<reference ref="861788454"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -2572,6 +2592,11 @@
 						<reference key="object" ref="665507698"/>
 						<reference key="parent" ref="898627079"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">541</int>
+						<reference key="object" ref="861788454"/>
+						<reference key="parent" ref="898627079"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -2731,6 +2756,7 @@
 				<string key="521.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="534.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="539.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="541.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="72.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="78.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="81.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -2743,7 +2769,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">540</int>
+			<int key="maxID">542</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
