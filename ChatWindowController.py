@@ -1182,12 +1182,17 @@ class ChatWindowController(NSWindowController):
 
                 # Add remote party
                 contact = getContactMatchingURI(session.remoteSIPAddress)
+                icon = None
+                if chat_stream.remoteIcon:
+                    icon = chat_stream.remoteIcon
                 if contact:
-                    contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=contact.icon)
+                    if contact.icon:
+                        icon = contact.icon
+                    contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=icon)
                 else:
                     uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()
-                    contact = BlinkConferenceContact(uri, name=display_name)
+                    contact = BlinkConferenceContact(uri, name=display_name, icon=icon)
 
                 if session.state == STATE_DNS_LOOKUP:
                     contact.setDetail("Finding Destination...")

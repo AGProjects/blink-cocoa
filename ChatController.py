@@ -34,6 +34,7 @@ import ChatWindowController
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
+from ContactListModel import base64Icon
 
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -134,6 +135,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = False
         self.session_succeeded = False
         self.last_failure_reason = None
+        self.remoteIcon = None
         self.share_screen_in_conference = False
 
         self.history_msgid_list=set()
@@ -286,6 +288,11 @@ class ChatController(MediaStream):
             self.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
             return True
         return False
+
+    def sendOwnIcon(self):
+        if self.stream:
+            base64icon = base64Icon(self.chatWindowController.own_icon)
+            self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
 
     def validateToolbarItem_(self, item):
         return True
@@ -1035,6 +1042,14 @@ class ChatController(MediaStream):
 
     def _NH_ChatStreamGotMessage(self, stream, data):
         message = data.message
+        if message.content_type == 'application/blink-icon':
+            try:
+                data = base64.b64decode(message.body)
+                self.remoteIcon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
+                self.chatWindowController.refreshDrawer()
+            except Exception:
+                pass
+
         if not message.content_type.startswith("text/"):
             return
 
@@ -1181,6 +1196,7 @@ class ChatController(MediaStream):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
 
         self.changeStatus(STREAM_CONNECTED)
+        self.sendOwnIcon()
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.mediastream_ended = True
@@ -1246,6 +1262,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = False
         self.session_succeeded = False
         self.last_failure_reason = None
+        self.remoteIcon = None
         self.share_screen_in_conference = False
 
         self.videoContainer.hideVideo()
