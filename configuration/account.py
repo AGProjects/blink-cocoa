@@ -39,6 +39,10 @@ class ChatSettingsExtension(SettingsGroup):
     replication_password = KeychainPasswordSetting(type=str, default='', label='ChatReplication')
 
 
+class SMSSettingsExtension(SettingsGroup):
+    disable_replication = Setting(type=bool, default=False)
+
+
 class MessageSummarySettingsExtension(MessageSummarySettings):
     enabled = Setting(type=bool, default=True)
 
@@ -125,6 +129,7 @@ class AccountExtension(SettingsObjectExtension):
     auth = AuthSettingsExtension
     audio = AudioSettingsExtension
     chat = ChatSettingsExtension
+    sms = SMSSettingsExtension
     ldap = LDAPSettingsExtension
     message_summary = MessageSummarySettingsExtension
     msrp = MSRPSettingsExtension

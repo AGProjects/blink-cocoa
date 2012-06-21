@@ -1522,7 +1522,6 @@ PreferenceOptionTypes = {
 "audio.tail_length": HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.replication_password": HiddenOption,
-"chat.sms_replication": HiddenOption,
 "file_transfer.directory": HiddenOption,
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
 "file_transfer.render_incoming_video_in_chat_window": HiddenOption,
@@ -1631,6 +1630,7 @@ SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
                        'chat': 'Chat Conversations',
+                       'sms': 'SMS Messages',
                        'conference': 'Conference Server',
                        'dialog_event': 'Dialog',
                        'gui': 'GUI Settings',
@@ -1659,7 +1659,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'sounds', 'chat', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
+AccountSectionOrder = ('auth', 'audio', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'message_summary', 'dialog_event', 'nat_traversal','server', 'ldap')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
