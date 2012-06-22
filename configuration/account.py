@@ -150,6 +150,7 @@ class BonjourAccountExtension(SettingsObjectExtension):
 
     audio = AudioSettingsExtension
     ldap = LDAPSettingsExtension
+    conference = ConferenceSettings
     msrp = BonjourMSRPSettingsExtension
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
