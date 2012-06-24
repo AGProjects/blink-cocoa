@@ -1195,6 +1195,8 @@ class ChatHistoryReplicator(object):
                 uuid           = entry['uuid']
                 timestamp      = entry['timestamp']
                 journal_id     = entry['id']
+                self.last_journal_id[account] = journal_id
+
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to parse server replication results for %s" % account)
                 self.disableReplication(account)
@@ -1236,8 +1238,6 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to apply journal to local history database for %s" % account)
                 return
-
-            self.last_journal_id[account] = journal_id
 
         if notify_data:
             for key in notify_data.keys():
