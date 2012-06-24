@@ -251,12 +251,20 @@ class SessionHistory(object):
         return block_on(self._get_last_chat_conversations(count))
 
     @run_in_db_thread
-    def delete_entries(self):
-        query = "delete from sessions"
+    def delete_entries(self, local_uri=None, remote_uri=None, after_date=None, before_date=None):
+        query = "delete from sessions where 1=1"
+        if local_uri:
+            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        if remote_uri:
+            query += " and remote_uri=%s" % ChatMessage.sqlrepr(remote_uri)
+        if after_date:
+            query += " and start_time >= %s" % ChatMessage.sqlrepr(after_date)
+        if before_date:
+            query += " and start_time < %s" % ChatMessage.sqlrepr(before_date)
         try:
             return self.db.queryAll(query)
         except Exception, e:
-            BlinkLogger().log_error(u"Error deleting entries from sessions history table: %s" % e)
+            BlinkLogger().log_error(u"Error deleting messages from session history table: %s" % e)
             return False
 
 

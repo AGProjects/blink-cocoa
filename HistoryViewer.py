@@ -12,7 +12,7 @@ from util import *
 from zope.interface import implements
 
 from ContactListModel import BlinkContact
-from HistoryManager import ChatHistory
+from HistoryManager import ChatHistory, SessionHistory
 
 SQL_LIMIT=2000
 MAX_MESSAGES_PER_PAGE=15
@@ -111,7 +111,8 @@ class HistoryViewer(NSWindowController):
                 descriptor = NSSortDescriptor.alloc().initWithKey_ascending_(c, True)
                 col.setSortDescriptorPrototype_(descriptor)
 
-            self.history = ChatHistory()
+            self.chat_history = ChatHistory()
+            self.session_history = SessionHistory()
 
             tag = self.afterDate.selectedItem().tag()
             if tag < 4:
@@ -143,18 +144,19 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def delete_messages(self, local_uri=None, remote_uri=None, date=None, after_date=None, before_date=None, media_type=None):
-        self.history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type)
+        self.chat_history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type)
+        self.session_history.delete_entries(local_uri=local_uri, remote_uri=remote_uri, after_date=after_date, before_date=before_date)
         self.refreshViewer()
 
     @run_in_green_thread
     def refreshContacts(self):
-        if self.history:
+        if self.chat_history:
             self.updateBusyIndicator(True)
             media_type = self.search_media if self.search_media else None
             search_text = self.search_text if self.search_text else None
             after_date = self.after_date if self.after_date else None
             before_date = self.before_date if self.before_date else None
-            results = self.history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date, before_date=before_date)
+            results = self.chat_history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date, before_date=before_date)
             self.renderContacts(results)
             self.updateBusyIndicator(False)
 
@@ -202,7 +204,7 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
-        if self.history:
+        if self.chat_history:
             self.resetDailyEntries()
             self.updateBusyIndicator(True)
             search_text = self.search_text if self.search_text else None
@@ -211,7 +213,7 @@ class HistoryViewer(NSWindowController):
             media_type = self.search_media if self.search_media else None
             after_date = self.after_date if self.after_date else None
             before_date = self.before_date if self.before_date else None
-            results = self.history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date, before_date=before_date)
+            results = self.chat_history.get_daily_entries(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, search_text=search_text, order_text=order_text, after_date=after_date, before_date=before_date)
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
 
@@ -246,7 +248,7 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None, before_date=None):
         self.updateBusyIndicator(True)
-        if self.history:
+        if self.chat_history:
             search_text = self.search_text if self.search_text else None
             if not remote_uri: 
                 remote_uri = self.search_contact if self.search_contact else None
@@ -259,7 +261,7 @@ class HistoryViewer(NSWindowController):
             if not before_date:
                 before_date = self.before_date if self.before_date else None
 
-            results = self.history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
+            results = self.chat_history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
 
             # cache message for pagination
             self.messages=[]
@@ -355,7 +357,7 @@ class HistoryViewer(NSWindowController):
 
     @objc.IBAction
     def search_(self, sender):
-        if self.history:
+        if self.chat_history:
             self.search_text = unicode(sender.stringValue()).lower()
             self.refreshContacts()
             row = self.indexTable.selectedRow()
@@ -381,7 +383,7 @@ class HistoryViewer(NSWindowController):
         self.contactTable.scrollRowToVisible_(0)
 
     def tableViewSelectionDidChange_(self, notification):
-        if self.history:
+        if self.chat_history:
             if not notification or notification.object() == self.contactTable:
                 row = self.contactTable.selectedRow()
                 if row == 0:
@@ -507,18 +509,18 @@ class HistoryViewer(NSWindowController):
                     row = self.indexTable.selectedRow()
                     local_uri = self.dayly_entries[row].objectForKey_("local_uri")
                     remote_uri = self.dayly_entries[row].objectForKey_("remote_uri")
+                    remote_uri_sql = self.dayly_entries[row].objectForKey_("remote_uri_sql")
                     date = self.dayly_entries[row].objectForKey_("date")
                     media_type = self.dayly_entries[row].objectForKey_("type")
 
                     ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
                     if ret == NSAlertDefaultReturn:
-                        self.delete_messages(local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date)
+                        self.delete_messages(local_uri=local_uri, remote_uri=remote_uri_sql, media_type=media_type, date=date)
                 except IndexError:
                     pass
 
     def showDeleteConfirmationDialog(self, row):
         media_print = self.search_media or 'All'
-        tag = self.afterDate.selectedItem().tag()
         tag = self.afterDate.selectedItem().tag()
 
         period = '%s %s' % (' newer than ' if tag < 4 else ' older than ', self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
