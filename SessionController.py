@@ -81,8 +81,6 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
         self.notification_center.add_observer(self, name='BlinkSessionDidFail')
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
-        self.notification_center.add_observer(self, name='SIPAccountDidActivate')
-        self.notification_center.add_observer(self, name='SIPAccountDidDeactivate')
         self.notification_center.add_observer(self, name='SIPApplicationDidStart')
         self.notification_center.add_observer(self, name='SIPApplicationWillEnd')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
@@ -97,8 +95,6 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='MediaStreamDidEnd')
         self.notification_center.add_observer(self, name='MediaStreamDidFail')
 
-        self.last_calls_connections = {}
-        self.last_calls_connections_authRequestCount = {}
         self.sessionControllers = []
         self.ringer = Ringer(self)
         self.incomingSessions = set()
@@ -316,14 +312,6 @@ class SessionControllersManager(object):
                 growl_data.streams = ",".join(data.streams)
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-
-    def _NH_SIPAccountDidActivate(self, account, data):
-        if account is not BonjourAccount():
-            self.get_last_calls(account)
-
-    def _NH_SIPAccountDidDeactivate(self, account, data):
-        if account is not BonjourAccount():
-            self.close_last_call_connection(account)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if 'audio.pause_music' in data.modified:
@@ -663,210 +651,6 @@ class SessionControllersManager(object):
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
 
-    def updateGetCallsTimer_(self, timer):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['timer'] == timer).next()
-        except StopIteration:
-            return
-        else:
-            try:
-                connection = self.last_calls_connections[key]['connection']
-                nsurl = NSURL.URLWithString_(self.last_calls_connections[key]['url'])
-            except KeyError:
-                pass
-            else:
-                if connection:
-                    connection.cancel()
-                request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-                connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-                self.last_calls_connections[key]['data'] = ''
-                self.last_calls_connections[key]['authRequestCount'] = 0
-                self.last_calls_connections[key]['connection'] = connection
-    
-    # NSURLConnection delegate method
-    def connection_didReceiveData_(self, connection, data):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        else:
-            try:
-                account = AccountManager().get_account(key)
-            except KeyError:
-                pass
-            else:
-                self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + str(data)
-    
-    def connectionDidFinishLoading_(self, connection):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        else:
-            BlinkLogger().log_debug(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
-            try:
-                account = AccountManager().get_account(key)
-            except KeyError:
-                pass
-            else:
-                try:
-                    calls = cjson.decode(self.last_calls_connections[key]['data'])
-                except (TypeError, cjson.DecodeError):
-                    BlinkLogger().log_debug(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
-                else:
-                    self.syncServerHistoryWithLocalHistory(account, calls)
-    
-    # NSURLConnection delegate method
-    def connection_didFailWithError_(self, connection, error):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            return
-        BlinkLogger().log_debug(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
-    
-    @run_in_green_thread
-    def syncServerHistoryWithLocalHistory(self, account, calls):
-        growl_notifications = {}
-        try:
-            for call in calls['received']:
-                direction = 'incoming'
-                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
-                if not len(local_entry):
-                    id=str(uuid.uuid1())
-                    participants = ""
-                    focus = "0"
-                    local_uri = str(account.id)
-                    try:
-                        remote_uri = call['remoteParty']
-                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
-                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
-                        status = call['status']
-                        duration = call['duration']
-                        call_id = call['sessionId']
-                        from_tag = call['fromTag']
-                        to_tag = call['toTag']
-                        media_types = ", ".join(call['media']) or 'audio'
-                    except KeyError:
-                        continue
-                    success = 'completed' if duration > 0 else 'missed'
-                    BlinkLogger().log_debug(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
-                    self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in call['media']:
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(Timestamp(datetime.now(tzlocal())))
-                        if success == 'missed':
-                            message = '<h3>Missed Incoming Audio Call</h3>'
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                            media_type = 'missed-call'
-                        else:
-                            duration = self.get_printed_duration(start_time, end_time)
-                            message = '<h3>Incoming Audio Call</h3>'
-                            message += '<p>The call has been answered elsewhere'
-                            message += '<p>Call duration: %s' % duration
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                            media_type = 'audio'
-                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, time=start_time, skip_replication=True)
-                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-                    
-                    if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
-                        now = datetime(*time.localtime()[:6])
-                        elapsed = now - start_time
-                        elapsed_hours = elapsed.seconds / (60*60)
-                        if elapsed_hours < 48:
-                            growl_data = TimestampedNotificationData()
-                            try:
-                                uri = SIPURI.parse('sip:'+str(remote_uri))
-                            except Exception:
-                                pass
-                            else:
-                                growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
-                                growl_data.timestamp = start_time
-                                growl_data.streams = media_types
-                                growl_data.account = str(account.id)
-                                self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                                growl_notifications[remote_uri] = True
-        except (KeyError, TypeError):
-            pass
-        
-        try:
-            for call in calls['placed']:
-                direction = 'outgoing'
-                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
-                if not len(local_entry):
-                    id=str(uuid.uuid1())
-                    participants = ""
-                    focus = "0"
-                    local_uri = str(account.id)
-                    try:
-                        remote_uri = call['remoteParty']
-                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
-                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
-                        status = call['status']
-                        duration = call['duration']
-                        call_id = call['sessionId']
-                        from_tag = call['fromTag']
-                        to_tag = call['toTag']
-                        media_types = ", ".join(call['media']) or 'audio'
-                    except KeyError:
-                        continue
-                    
-                    if duration > 0:
-                        success = 'completed'
-                    else:
-                        if status == "487":
-                            success = 'cancelled'
-                        else:
-                            success = 'failed'
-                    
-                    BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
-                    self.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in call['media']:
-                        local_uri = local_uri
-                        remote_uri = remote_uri
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(Timestamp(datetime.now(tzlocal())))
-                        media_type = 'audio'
-                        if success == 'failed':
-                            message = '<h3>Failed Outgoing Audio Call</h3>'
-                            message += '<p>Reason: %s' % status
-                        elif success == 'cancelled':
-                            message= '<h3>Cancelled Outgoing Audio Call</h3>'
-                        else:
-                            duration = self.get_printed_duration(start_time, end_time)
-                            message= '<h3>Outgoing Audio Call</h3>'
-                            message += '<p>Call duration: %s' % duration
-                        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, time=start_time, skip_replication=True)
-                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-        except (KeyError, TypeError):
-            pass
-    
-    # NSURLConnection delegate method
-    def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
-        try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
-        except StopIteration:
-            pass
-        else:
-            try:
-                account = AccountManager().get_account(key)
-            except KeyError:
-                pass
-            else:
-                try:
-                    self.last_calls_connections[key]['authRequestCount'] += 1
-                except KeyError:
-                    self.last_calls_connections[key]['authRequestCount'] = 1
-                
-                if self.last_calls_connections[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
-                    challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
-
     @run_in_gui_thread
     def show_web_alert_page(self, session):
         # open web page with caller information
@@ -901,44 +685,6 @@ class SessionControllersManager(object):
                 if not SIPManager()._delegate.accountSettingsPanels.has_key(caller_key):
                     SIPManager()._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
                 SIPManager()._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
-
-    @run_in_gui_thread
-    def get_last_calls(self, account):
-        if not account.server.settings_url:
-            return
-        query_string = "action=get_history"
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        nsurl = NSURL.URLWithString_(url)
-        request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-        connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(300, self, "updateGetCallsTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
-        self.last_calls_connections[account.id] = { 'connection': connection,
-                                                    'authRequestCount': 0,
-                                                    'timer': timer,
-                                                    'url': url,
-                                                    'data': ''
-                                                    }
-        self.updateGetCallsTimer_(None)
-    
-    @run_in_gui_thread
-    def close_last_call_connection(self, account):
-        try:
-            connection = self.last_calls_connections[account.id]['connection']
-        except KeyError:
-            pass
-        else:
-            if connection:
-                connection.cancel()
-        try:
-            timer = self.last_calls_connections[account.id]['timer']
-            if timer and timer.isValid():
-                timer.invalidate()
-                timer = None
-            del self.last_calls_connections[account.id]
-        except KeyError:
-            pass
 
 
 class SessionController(NSObject):

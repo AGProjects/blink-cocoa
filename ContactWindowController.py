@@ -37,7 +37,7 @@ from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
-from HistoryManager import SessionHistory, ChatHistoryReplicator
+from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
@@ -206,7 +206,6 @@ class ContactWindowController(NSWindowController):
     ldap_search = None
     ldap_found_contacts = []
     local_found_contacts = []
-    journal_replicator = None
     sessionControllersManager = None
     first_run = False
 
@@ -351,7 +350,8 @@ class ContactWindowController(NSWindowController):
 
         self.setAlwaysOnTop()
         self.setSpeechRecognition()
-        self.journal_replicator = ChatHistoryReplicator()
+        ChatHistoryReplicator()
+        SessionHistoryReplicator()
         self.loaded = True
 
     def userDefaultsDidChange_(self, notification):
