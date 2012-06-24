@@ -2012,15 +2012,15 @@
 				2BF432B51084187100F04A6C /* MediaStream.py */,
 				1F5C0760140436E4001DA3EF /* SessionInfoController.py */,
 				1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */,
+				1F89844212FCC78900490C6C /* History */,
 				2BFB34B110178A43002D79FB /* AlertPanel */,
+				1F2615A712BD8FFA00B402E1 /* Conference */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				1FAF8D2E12DA1F5F0029857C /* Video */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
 				2BC09104106884CE0069AB9A /* DesktopSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
-				1F2615A712BD8FFA00B402E1 /* Conference */,
-				1F89844212FCC78900490C6C /* History */,
 			);
 			name = Sessions;
 			sourceTree = "<group>";
