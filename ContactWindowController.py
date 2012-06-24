@@ -350,7 +350,7 @@ class ContactWindowController(NSWindowController):
 
         self.setAlwaysOnTop()
         self.setSpeechRecognition()
-        ChatHistoryReplicator()
+        self.chat_journal_replicator = ChatHistoryReplicator()
         SessionHistoryReplicator()
         self.loaded = True
 
