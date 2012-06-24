@@ -1198,6 +1198,7 @@ class ChatHistoryReplicator(object):
                     data = decryptor_function(data, b64_decode=True)
                 except Exception, e:
                     BlinkLogger().log_debug(u"Failed to decrypt replication results for %s: %s" % (account, e))
+                    continue
 
             try:
                 data = cjson.decode(data)
