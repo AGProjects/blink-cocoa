@@ -975,11 +975,12 @@ class SessionHistoryReplicator(object):
                             duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
                             message= '<h3>Outgoing Audio Call</h3>'
                             message += '<p>Call duration: %s' % duration
-                        self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, time=start_time, skip_replication=True)
+                        self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+
         except (KeyError, TypeError):
             pass
-    
+
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
