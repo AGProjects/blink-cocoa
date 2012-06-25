@@ -744,6 +744,7 @@ class SessionHistoryReplicator(object):
     def __init__(self):
         NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
         NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
+        NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -758,6 +759,16 @@ class SessionHistoryReplicator(object):
     def _NH_SIPAccountDidDeactivate(self, account, data):
         if account is not BonjourAccount():
             self.close_last_call_connection(account)
+
+    def _NH_CFGSettingsObjectDidChange(self, sender, data):
+        account = sender
+        if isinstance(account, Account):
+            if 'server.settings_url' in data.modified or 'server.web_password' in data.modified or 'auth.password' in  or 'enable' in data.modified:
+                if not account.enabled:
+                    self.close_last_call_connection(account)
+                else:
+                    self.close_last_call_connection(account)
+                    self.get_last_calls(account)
 
     @run_in_gui_thread
     def get_last_calls(self, account):
