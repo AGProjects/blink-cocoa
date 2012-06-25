@@ -1010,6 +1010,11 @@ class ContactWindowController(NSWindowController):
             path = contact.iconPath()
             if os.path.isfile(path):
                 return path
+            elif contact.icon is not None:
+                contact.saveIcon()
+                if os.path.isfile(path):
+                    return path
+                return path
         return contactIconPathForURI("default_user_icon")
 
     def iconPathForSelf(self):
