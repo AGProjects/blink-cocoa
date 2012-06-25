@@ -763,7 +763,7 @@ class SessionHistoryReplicator(object):
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         account = sender
         if isinstance(account, Account):
-            if 'server.settings_url' in data.modified or 'server.web_password' in data.modified or 'auth.password' in  or 'enable' in data.modified:
+            if 'server.settings_url' in data.modified or 'server.web_password' in data.modified or 'auth.password' in data.modified or 'enable' in data.modified:
                 if not account.enabled:
                     self.close_last_call_connection(account)
                 else:
