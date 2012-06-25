@@ -947,6 +947,8 @@ class SessionHistoryReplicator(object):
                                 growl_data.account = str(account.id)
                                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                                 growl_notifications[remote_uri] = True
+        except (KeyError, ValueError):
+            pass
         except Exception, e:
             BlinkLogger().log_info(u"Error: %s" % e)
         
@@ -1011,7 +1013,8 @@ class SessionHistoryReplicator(object):
                             message += '<p>Call duration: %s' % duration
                         self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-
+        except (KeyError, ValueError):
+            pass
         except Exception, e:
             BlinkLogger().log_info(u"Error: %s" % e)
 
