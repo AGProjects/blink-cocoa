@@ -883,20 +883,34 @@ class SessionHistoryReplicator(object):
                     local_uri = str(account.id)
                     try:
                         remote_uri = call['remoteParty']
-                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
-                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
                         status = call['status']
                         duration = call['duration']
                         call_id = call['sessionId']
                         from_tag = call['fromTag']
                         to_tag = call['toTag']
-                        media_types = ", ".join(call['media']) or 'audio'
+                        startTime = call['startTime']
+                        stopTime = call['stopTime']
+                        media = call['media']
                     except KeyError:
                         continue
+
+                    media_types = ", ".join(media) or 'audio'
+
+                    try:
+                        start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
+                    except (TypeError, ValueError):
+                        continue
+
+                    try:
+                        end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
+                    except (TypeError, ValueError):
+                        end_time = start_time
+
                     success = 'completed' if duration > 0 else 'missed'
+
                     BlinkLogger().log_debug(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
                     self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in call['media']:
+                    if 'audio' in media:
                         direction = 'incoming'
                         status = 'delivered'
                         cpim_from = remote_uri
@@ -913,7 +927,7 @@ class SessionHistoryReplicator(object):
                             message += '<p>Call duration: %s' % duration
                             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                             media_type = 'audio'
-                        self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, time=start_time, skip_replication=True)
+                        self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
                     
                     if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
@@ -933,8 +947,8 @@ class SessionHistoryReplicator(object):
                                 growl_data.account = str(account.id)
                                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                                 growl_notifications[remote_uri] = True
-        except (KeyError, TypeError):
-            pass
+        except Exception, e:
+            BlinkLogger().log_info(u"Error: %s" % e)
         
         try:
             for call in calls['placed']:
@@ -947,28 +961,37 @@ class SessionHistoryReplicator(object):
                     local_uri = str(account.id)
                     try:
                         remote_uri = call['remoteParty']
-                        start_time = datetime.strptime(call['startTime'], "%Y-%m-%d  %H:%M:%S")
-                        end_time = datetime.strptime(call['stopTime'], "%Y-%m-%d  %H:%M:%S")
                         status = call['status']
                         duration = call['duration']
                         call_id = call['sessionId']
                         from_tag = call['fromTag']
                         to_tag = call['toTag']
-                        media_types = ", ".join(call['media']) or 'audio'
+                        startTime = call['startTime']
+                        stopTime = call['stopTime']
+                        media = call['media']
                     except KeyError:
                         continue
                     
+                    media_types = ", ".join(media) or 'audio'
+
+                    try:
+                        start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
+                    except (TypeError, ValueError):
+                        continue
+
+                    try:
+                        end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
+                    except (TypeError, ValueError):
+                        end_time = start_time
+
                     if duration > 0:
                         success = 'completed'
                     else:
-                        if status == "487":
-                            success = 'cancelled'
-                        else:
-                            success = 'failed'
+                        success = 'cancelled' if status == "487" else 'failed'
                     
                     BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
                     self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in call['media']:
+                    if 'audio' in media:
                         local_uri = local_uri
                         remote_uri = remote_uri
                         direction = 'incoming'
@@ -989,8 +1012,8 @@ class SessionHistoryReplicator(object):
                         self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
 
-        except (KeyError, TypeError):
-            pass
+        except Exception, e:
+            BlinkLogger().log_info(u"Error: %s" % e)
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
