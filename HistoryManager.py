@@ -742,9 +742,10 @@ class SessionHistoryReplicator(object):
 
     @run_in_gui_thread
     def __init__(self):
-        NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
-        NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
-        NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
+        if NSApp.delegate().applicationName != 'Blink Lite':
+            NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
+            NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
+            NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
 
     @allocate_autorelease_pool
     @run_in_gui_thread
