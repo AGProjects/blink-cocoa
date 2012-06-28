@@ -713,8 +713,7 @@ class ChatWindowController(NSWindowController):
                 controller = NicknameController()
                 nickname = controller.runModal(session.nickname)
                 if nickname or (not nickname and session.nickname):
-                    session.nickname = nickname if nickname else None
-                    chat_handler.stream.set_local_nickname(nickname)
+                    chat_handler.setNickname(nickname)
 
     def setSubject(self):
         session = self.selectedSessionController()

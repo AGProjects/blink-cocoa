@@ -124,6 +124,8 @@ class ChatController(MediaStream):
     screenshot_task = None
     dealloc_timer = None
 
+    nickname_request_map = {} # message id -> nickname
+
     @classmethod
     def createStream(self, account):
         return ChatStream(account)
@@ -293,6 +295,15 @@ class ChatController(MediaStream):
         if self.stream:
             base64icon = base64Icon(self.chatWindowController.own_icon)
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+
+    def setNickname(self, nickname):
+        if self.stream and self.stream.nickname_allowed:
+            try:
+                message_id = self.stream.set_local_nickname(nickname)
+            except ChatStreamError:
+                pass
+            else:
+                self.nickname_request_map[message_id] = nickname
 
     def validateToolbarItem_(self, item):
         return True
@@ -1105,6 +1116,13 @@ class ChatController(MediaStream):
 
         self.chatWindowController.noteSession_isComposing_(self.sessionController, flag)
 
+    def _NH_ChatStreamDidSetNickname(self, stream, data):
+        nickname = self.nickname_request_map.pop(data.message_id)
+        self.sessionController.nickname = nickname
+
+    def _NH_ChatStreamDidNotSetNickname(self, stream, data):
+        self.nickname_request_map.pop(data.message_id)
+
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateToolbarMuteIcon()
 
@@ -1184,11 +1202,8 @@ class ChatController(MediaStream):
 
         # Set nickname if available
         nickname = self.sessionController.nickname
-        if self.stream.nickname_allowed and nickname is not None:
-            try:
-                self.stream.set_local_nickname(nickname)
-            except ChatStreamError:
-                pass
+        self.sessionController.nickname = None
+        self.setNickname(nickname)
 
         self.handler.setConnected(self.stream)
 
@@ -1574,7 +1589,6 @@ class MessageHandler(NSObject):
                 self.add_to_history(message)
         except KeyError:
             pass
-
 
     @allocate_autorelease_pool
     @run_in_green_thread
