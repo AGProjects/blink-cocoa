@@ -319,7 +319,7 @@ class ChatViewController(NSObject):
         if is_private and recipient:
             label = 'Private message to %s' % cgi.escape(recipient) if direction == 'outgoing' else 'Private message from %s' % cgi.escape(sender)
         else: 
-            label = cgi.escape(format_identity_to_string(self.account, format='full')) if sender is None else cgi.escape(sender)
+            label = cgi.escape(self.delegate.sessionController.nickname or self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
 
         script = """renderMessage('%s', '%s', '%s', '%s', "%s", '%s', '%s', %s)""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private)
 

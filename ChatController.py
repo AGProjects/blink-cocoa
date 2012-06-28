@@ -1064,7 +1064,7 @@ class ChatController(MediaStream):
             text = message.body
             timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
-            name = format_identity_to_string(sender, format='full')
+            name = format_identity_to_string(sender, format='compact')
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
             recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             if self.chatViewController:
