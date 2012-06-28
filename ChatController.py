@@ -592,8 +592,8 @@ class ChatController(MediaStream):
                 icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
 
             timestamp=Timestamp.parse(message.cpim_timestamp)
-            is_html = False if message.content_type == 'text' else True
-            private = True if message.private == "1" else False
+            is_html = message.content_type != 'text'
+            private = bool(int(message.private))
 
             if self.chatViewController:
                 self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
