@@ -874,146 +874,148 @@ class SessionHistoryReplicator(object):
     def syncServerHistoryWithLocalHistory(self, account, calls):
         growl_notifications = {}
         try:
-            for call in calls['received']:
-                direction = 'incoming'
-                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
-                if not len(local_entry):
-                    id=str(uuid.uuid1())
-                    participants = ""
-                    focus = "0"
-                    local_uri = str(account.id)
-                    try:
-                        remote_uri = call['remoteParty']
-                        status = call['status']
-                        duration = call['duration']
-                        call_id = call['sessionId']
-                        from_tag = call['fromTag']
-                        to_tag = call['toTag']
-                        startTime = call['startTime']
-                        stopTime = call['stopTime']
-                        media = call['media']
-                    except KeyError:
-                        continue
+            if calls['received']:
+                for call in calls['received']:
+                    direction = 'incoming'
+                    local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
+                    if not len(local_entry):
+                        id=str(uuid.uuid1())
+                        participants = ""
+                        focus = "0"
+                        local_uri = str(account.id)
+                        try:
+                            remote_uri = call['remoteParty']
+                            status = call['status']
+                            duration = call['duration']
+                            call_id = call['sessionId']
+                            from_tag = call['fromTag']
+                            to_tag = call['toTag']
+                            startTime = call['startTime']
+                            stopTime = call['stopTime']
+                            media = call['media']
+                        except KeyError:
+                            continue
 
-                    media_types = ", ".join(media) or 'audio'
+                        media_types = ", ".join(media) or 'audio'
 
-                    try:
-                        start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
-                    except (TypeError, ValueError):
-                        continue
+                        try:
+                            start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
+                        except (TypeError, ValueError):
+                            continue
 
-                    try:
-                        end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
-                    except (TypeError, ValueError):
-                        end_time = start_time
+                        try:
+                            end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
+                        except (TypeError, ValueError):
+                            end_time = start_time
 
-                    success = 'completed' if duration > 0 else 'missed'
+                        success = 'completed' if duration > 0 else 'missed'
 
-                    BlinkLogger().log_debug(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
-                    self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in media:
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(Timestamp(datetime.now(tzlocal())))
-                        if success == 'missed':
-                            message = '<h3>Missed Incoming Audio Call</h3>'
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                            media_type = 'missed-call'
-                        else:
-                            duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
-                            message = '<h3>Incoming Audio Call</h3>'
-                            message += '<p>The call has been answered elsewhere'
-                            message += '<p>Call duration: %s' % duration
-                            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-                            media_type = 'audio'
-                        self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-                    
-                    if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
-                        now = datetime(*time.localtime()[:6])
-                        elapsed = now - start_time
-                        elapsed_hours = elapsed.seconds / (60*60)
-                        if elapsed_hours < 48:
-                            growl_data = TimestampedNotificationData()
-                            try:
-                                uri = SIPURI.parse('sip:'+str(remote_uri))
-                            except Exception:
-                                pass
+                        BlinkLogger().log_debug(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
+                        self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                        if 'audio' in media:
+                            direction = 'incoming'
+                            status = 'delivered'
+                            cpim_from = remote_uri
+                            cpim_to = local_uri
+                            timestamp = str(Timestamp(datetime.now(tzlocal())))
+                            if success == 'missed':
+                                message = '<h3>Missed Incoming Audio Call</h3>'
+                                #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                                media_type = 'missed-call'
                             else:
-                                growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
-                                growl_data.timestamp = start_time
-                                growl_data.streams = media_types
-                                growl_data.account = str(account.id)
-                                self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                                growl_notifications[remote_uri] = True
+                                duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
+                                message = '<h3>Incoming Audio Call</h3>'
+                                message += '<p>The call has been answered elsewhere'
+                                message += '<p>Call duration: %s' % duration
+                                #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                                media_type = 'audio'
+                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                        
+                        if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
+                            now = datetime(*time.localtime()[:6])
+                            elapsed = now - start_time
+                            elapsed_hours = elapsed.seconds / (60*60)
+                            if elapsed_hours < 48:
+                                growl_data = TimestampedNotificationData()
+                                try:
+                                    uri = SIPURI.parse('sip:'+str(remote_uri))
+                                except Exception:
+                                    pass
+                                else:
+                                    growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
+                                    growl_data.timestamp = start_time
+                                    growl_data.streams = media_types
+                                    growl_data.account = str(account.id)
+                                    self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
+                                    growl_notifications[remote_uri] = True
         except (KeyError, ValueError):
             pass
         except Exception, e:
             BlinkLogger().log_info(u"Error: %s" % e)
         
         try:
-            for call in calls['placed']:
-                direction = 'outgoing'
-                local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
-                if not len(local_entry):
-                    id=str(uuid.uuid1())
-                    participants = ""
-                    focus = "0"
-                    local_uri = str(account.id)
-                    try:
-                        remote_uri = call['remoteParty']
-                        status = call['status']
-                        duration = call['duration']
-                        call_id = call['sessionId']
-                        from_tag = call['fromTag']
-                        to_tag = call['toTag']
-                        startTime = call['startTime']
-                        stopTime = call['stopTime']
-                        media = call['media']
-                    except KeyError:
-                        continue
-                    
-                    media_types = ", ".join(media) or 'audio'
+            if calls['placed']:
+                for call in calls['placed']:
+                    direction = 'outgoing'
+                    local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
+                    if not len(local_entry):
+                        id=str(uuid.uuid1())
+                        participants = ""
+                        focus = "0"
+                        local_uri = str(account.id)
+                        try:
+                            remote_uri = call['remoteParty']
+                            status = call['status']
+                            duration = call['duration']
+                            call_id = call['sessionId']
+                            from_tag = call['fromTag']
+                            to_tag = call['toTag']
+                            startTime = call['startTime']
+                            stopTime = call['stopTime']
+                            media = call['media']
+                        except KeyError:
+                            continue
+                        
+                        media_types = ", ".join(media) or 'audio'
 
-                    try:
-                        start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
-                    except (TypeError, ValueError):
-                        continue
+                        try:
+                            start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
+                        except (TypeError, ValueError):
+                            continue
 
-                    try:
-                        end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
-                    except (TypeError, ValueError):
-                        end_time = start_time
+                        try:
+                            end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
+                        except (TypeError, ValueError):
+                            end_time = start_time
 
-                    if duration > 0:
-                        success = 'completed'
-                    else:
-                        success = 'cancelled' if status == "487" else 'failed'
-                    
-                    BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
-                    self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
-                    if 'audio' in media:
-                        local_uri = local_uri
-                        remote_uri = remote_uri
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(Timestamp(datetime.now(tzlocal())))
-                        media_type = 'audio'
-                        if success == 'failed':
-                            message = '<h3>Failed Outgoing Audio Call</h3>'
-                            message += '<p>Reason: %s' % status
-                        elif success == 'cancelled':
-                            message= '<h3>Cancelled Outgoing Audio Call</h3>'
+                        if duration > 0:
+                            success = 'completed'
                         else:
-                            duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
-                            message= '<h3>Outgoing Audio Call</h3>'
-                            message += '<p>Call duration: %s' % duration
-                        self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-                        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                            success = 'cancelled' if status == "487" else 'failed'
+                        
+                        BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
+                        self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                        if 'audio' in media:
+                            local_uri = local_uri
+                            remote_uri = remote_uri
+                            direction = 'incoming'
+                            status = 'delivered'
+                            cpim_from = remote_uri
+                            cpim_to = local_uri
+                            timestamp = str(Timestamp(datetime.now(tzlocal())))
+                            media_type = 'audio'
+                            if success == 'failed':
+                                message = '<h3>Failed Outgoing Audio Call</h3>'
+                                message += '<p>Reason: %s' % status
+                            elif success == 'cancelled':
+                                message= '<h3>Cancelled Outgoing Audio Call</h3>'
+                            else:
+                                duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
+                                message= '<h3>Outgoing Audio Call</h3>'
+                                message += '<p>Call duration: %s' % duration
+                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
         except (KeyError, ValueError):
             pass
         except Exception, e:
