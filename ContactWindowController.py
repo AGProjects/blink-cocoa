@@ -2298,8 +2298,8 @@ class ContactWindowController(NSWindowController):
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
  
-        mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
+        ok_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+            NSColor.grayColor(), NSForegroundColorAttributeName)
         mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.redColor(), NSForegroundColorAttributeName)
 
@@ -2322,7 +2322,7 @@ class ContactWindowController(NSWindowController):
                 elif item['status'] not in ('completed', 'missed'):
                     text += " %s" % item['status'].capitalize()
 
-            text_format = mini_red if item['status'] == 'failed' else mini_blue
+            text_format = mini_red if item['status'] == 'failed' else ok_color
             t = NSAttributedString.alloc().initWithString_attributes_(text, text_format)
             a.appendAttributedString_(t)
             return a
