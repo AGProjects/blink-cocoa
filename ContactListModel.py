@@ -1019,6 +1019,9 @@ class CustomListModel(NSObject):
                 else:
                     targetGroup = table.parentForItem_(proposed_item)
 
+                    if sourceGroup == targetGroup and not targetGroup.editable:
+                        return NSDragOperationNone
+
                     if index == NSOutlineViewDropOnItemIndex:
                         index = targetGroup.contacts.index(proposed_item)
                         self.drop_on_contact_index = index
@@ -1074,11 +1077,14 @@ class CustomListModel(NSObject):
                 sourceContact = sourceGroup.contacts[blink_contact]
                 if isinstance(item, BlinkGroup):
                     targetGroup = item
+                    if type(targetGroup) == FavoritesBlinkGroup:
+                        sourceContact.setFavorite(True)
                     if sourceGroup.editable and not targetGroup.only_copy:
                         del sourceGroup.contacts[blink_contact]
                     targetGroup.contacts.insert(index, sourceContact)
                     targetGroup.sortContacts()
                     table.reloadData()
+
                     row = table.rowForItem_(sourceContact)
                     if row>=0:
                         table.scrollRowToVisible_(row)
@@ -1121,9 +1127,6 @@ class CustomListModel(NSObject):
                     except AttributeError:
                         self.addContact(address=sourceContact.uri, group=targetGroup.group.name, display_name=sourceContact.display_name)
                         return True
-
-                    if type(targetGroup) == FavoritesBlinkGroup:
-                        sourceContact.setFavorite(True)
 
                     if type(sourceGroup) == AllContactsBlinkGroup:
                         sourceContact = BlinkPresenceContact(sourceContact.contact)
