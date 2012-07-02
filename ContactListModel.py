@@ -151,6 +151,7 @@ class BlinkContact(NSObject):
     def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, aliases=None):
         self.contact = None
         self.type = None
+        self.favorite = False
         self.uri = uri
         self.uris = []
         self.name = NSString.stringWithString_(name or uri)
@@ -325,6 +326,7 @@ class BlinkPresenceContact(BlinkContact):
     def __init__(self, contact):
         self.type = 'presence'
         self.contact = contact
+        self.favorite = self.contact.favorite
         self.uris = self.contact.uris
         if self.contact.default_uri:
             self.uri = self.contact.default_uri
@@ -1005,7 +1007,10 @@ class CustomListModel(NSObject):
                         return NSDragOperationNone
 
                     if type(targetGroup) == FavoritesBlinkGroup:
-                        return NSDragOperationCopy
+                        if sourceContact.favorite:
+                            return NSDragOperationNone
+                        else:
+                            return NSDragOperationMove
 
                     if not targetGroup.editable:
                         return NSDragOperationNone
@@ -1018,8 +1023,16 @@ class CustomListModel(NSObject):
                     table.setDropItem_dropChildIndex_(self.groupsList[i], c)
                 else:
                     targetGroup = table.parentForItem_(proposed_item)
-
                     if sourceGroup == targetGroup and not targetGroup.editable:
+                        return NSDragOperationNone
+
+                    if type(targetGroup) == FavoritesBlinkGroup:
+                        if sourceContact.favorite:
+                            return NSDragOperationNone
+                        else:
+                            return NSDragOperationMove
+                    
+                    if not targetGroup.editable:
                         return NSDragOperationNone
 
                     if index == NSOutlineViewDropOnItemIndex:
@@ -1077,11 +1090,11 @@ class CustomListModel(NSObject):
                 sourceContact = sourceGroup.contacts[blink_contact]
                 if isinstance(item, BlinkGroup):
                     targetGroup = item
-                    if type(targetGroup) == FavoritesBlinkGroup:
+                    if type(targetGroup) == FavoritesBlinkGroup and not sourceContact.favorite:
                         sourceContact.setFavorite(True)
                     if sourceGroup.editable and not targetGroup.only_copy:
                         del sourceGroup.contacts[blink_contact]
-                    targetGroup.contacts.insert(index, sourceContact)
+                        targetGroup.contacts.insert(index, sourceContact)
                     targetGroup.sortContacts()
                     table.reloadData()
 
