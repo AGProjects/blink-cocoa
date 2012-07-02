@@ -22,7 +22,6 @@ from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
-from ContactWindowController import ENABLE_DIALOG, ENABLE_PRESENCE
 
 class PreferencesController(NSWindowController, object):
     implements(IObserver)
@@ -278,12 +277,6 @@ class PreferencesController(NSWindowController, object):
             if section == 'tls':
                 continue
 
-            if section == 'presence' and not ENABLE_PRESENCE:
-                continue
-
-            if section == 'dialog_event' and not ENABLE_DIALOG:
-                continue
-
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
             
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
@@ -325,9 +318,6 @@ class PreferencesController(NSWindowController, object):
             options.extend(remaining_options)
         except KeyError:
             options = unordered_options
-
-        if not ENABLE_PRESENCE and not ENABLE_DIALOG:
-            PreferenceOptionTypes['sip.publish_interval'] = HiddenOption
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             PreferenceOptionTypes['web_alert.alert_url'] = HiddenOption

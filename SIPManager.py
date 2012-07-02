@@ -31,7 +31,7 @@ from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.account import bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
-from sipsimple.contact import Contact, ContactGroup
+from sipsimple.addressbook import Contact, Group
 from sipsimple.configuration import DefaultValue
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
@@ -46,7 +46,7 @@ from sipsimple.util import TimestampedNotificationData, Timestamp
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
-from configuration.contact import BlinkContactExtension, BlinkContactGroupExtension
+from configuration.contact import BlinkContactExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
@@ -139,7 +139,7 @@ class SIPManager(object):
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
         Contact.register_extension(BlinkContactExtension)
-        ContactGroup.register_extension(BlinkContactGroupExtension)
+        Group.register_extension(BlinkGroupExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         self._app.start(FileStorage(ApplicationData.directory))
@@ -609,12 +609,7 @@ class SIPManager(object):
             return
         BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
 
-        supported_features=(   'contactlist_supported',
-                               'presence_policies_supported',
-                               'dialoginfo_policies_supported',
-                               'status_icon_supported',
-                               'offline_status_supported')
-        BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(supported[0:-10] for supported in supported_features if getattr(data, supported)))
+        BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(data.auids))
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:

@@ -583,8 +583,7 @@ class DebugWindow(NSObject):
             # thread from which it was posted
             return
         self.renderXCAP(u"%s Using XCAP root %s for account %s" % (notification.data.timestamp, xcap_root, account.id))
-        supported_features = ('contactlist_supported', 'presence_policies_supported', 'dialoginfo_policies_supported', 'status_icon_supported', 'offline_status_supported')
-        message = (u"%s XCAP server capabilities: %s" % (notification.data.timestamp, ", ".join(supported[0:-10] for supported in supported_features if getattr(notification.data, supported))))
+        message = (u"%s XCAP server capabilities: %s" % (notification.data.timestamp, ", ".join(notification.data.auids)))
         self.renderXCAP(message)
 
     def _NH_XCAPSubscriptionGotNotify(self, notification):

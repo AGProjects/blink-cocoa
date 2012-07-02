@@ -37,6 +37,13 @@ def show_error_panel(message):
     NSRunAlertPanel("Error", message, "OK", None, None)
 
 
+def checkValidPhoneNumber(number):
+    if _pstn_match_regexp.match(number):
+        return True
+    else:
+        return False
+
+
 def normalize_sip_uri_for_outgoing_session(target_uri, account):
     def format_uri(uri, default_domain, idd_prefix = None, prefix = None):
         if default_domain is not None:

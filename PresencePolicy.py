@@ -6,9 +6,8 @@ import cPickle
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration import DuplicateIDError
-from sipsimple.contact import Contact, ContactGroup, ContactGroupManager
+from sipsimple.addressbook import Contact, Group, AddressbookManager
 from zope.interface import implements
 
 
@@ -21,14 +20,13 @@ import SIPManager
 from resources import ApplicationData
 from util import allocate_autorelease_pool, sip_prefix_pattern
 
-from ContactListModel import BlinkContact, BlinkContactGroup
+from ContactListModel import BlinkContact, BlinkGroup
 
 
 class PendingWatcher(object):
-    def __init__(self, address, event, account, confirm=True):
+    def __init__(self, address, event, confirm=True):
         self.address = address
         self.event = event
-        self.account = account
         self.confirm = confirm
 
 
@@ -63,7 +61,6 @@ DOMAIN_CHECK_RE = "^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|([a-zA-Z0-9\-_]+(\.[a-z
 class PresencePolicy(NSWindowController):
     implements(IObserver)
 
-    accountPop = objc.IBOutlet()
     eventTabView = objc.IBOutlet()
     addButton = objc.IBOutlet()
     delButton = objc.IBOutlet()
@@ -92,8 +89,7 @@ class PresencePolicy(NSWindowController):
     offlineNote = objc.IBOutlet()
     offlineActivity = objc.IBOutlet()
     
-    policy_data = {} # account[event] -> [contact1, contact2...] is the master datasource for the UI
-    account = None
+    policy_data = {} # event -> [contact1, contact2...] is the master datasource for the UI
     event = None
     management_enabled = False
 
@@ -102,11 +98,10 @@ class PresencePolicy(NSWindowController):
     newWatcherInfo = None
     lastWatcherPolicy = None
 
-    policyTypes = ["Allow", "Block", "Ignore", "Undecided"]
+    policyTypes = ["Allow", "Block", "Undecided"]
     defaultPolicy = "Allow"
     allowPolicy = "Allow"
     denyPolicy = "Block"
-    ignorePolicy = "Ignore"
     undecidedPolicy = "Undecided"
 
     initial_checked_pending = False
@@ -126,6 +121,9 @@ class PresencePolicy(NSWindowController):
                                    'presence': self.presencePolicyTableView,
                                    'dialog': self.dialogPolicyTableView
                                    }
+        
+            for event in self.tabViewForEvent.keys():
+                self.policy_data[event] = []
 
             previous_event = NSUserDefaults.standardUserDefaults().stringForKey_("SelectedPolicyEventTab")
             self.event = previous_event if previous_event in self.tabViewForEvent.keys() else self.tabViewForEvent.keys()[0]
@@ -135,14 +133,12 @@ class PresencePolicy(NSWindowController):
             self.newWatcherPop.addItemsWithTitles_(self.policyTypes)
             self.newWatcherWindow.setLevel_(NSModalPanelWindowLevel)
 
-            nc = NotificationCenter()
-            nc.add_observer(self, name="ContactWasActivated")
-            nc.add_observer(self, name="ContactWasDeleted")
-            nc.add_observer(self, name="ContactDidChange")
-            nc.add_observer(self, name="SIPAccountWatcherinfoGotData")
-            nc.add_observer(self, name="SIPAccountDidActivate")
-            nc.add_observer(self, name="SIPAccountDidDeactivate")
-            nc.add_observer(self, name="CFGSettingsObjectDidChange")
+            self.nc = NotificationCenter()
+            self.nc.add_observer(self, name="AddressbookContactWasCreated")
+            self.nc.add_observer(self, name="AddressbookContactWasActivated")
+            self.nc.add_observer(self, name="AddressbookContactWasDeleted")
+            self.nc.add_observer(self, name="AddressbookContactDidChange")
+            self.nc.add_observer(self, name="SIPAccountWatcherinfoGotData")
 
             self.addPolicyTypes()
 
@@ -150,19 +146,6 @@ class PresencePolicy(NSWindowController):
             self.performSelector_withObject_afterDelay_("checkPending", None, 15.0)
 
         return self
-
-    def eventPolicyManagementIsEnabled(self):
-        try:
-            account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.enabled and account.id == self.account).next()
-        except StopIteration:
-            return False
-        else:
-            if account.presence.enabled and self.event == 'presence':
-                return True
-            elif account.dialog_event.enabled and self.event == 'dialog':
-                return True
-            else:
-                return False
 
     def awakeFromNib(self):
         self.presencePolicyTableView.setRowHeight_(35)
@@ -180,75 +163,56 @@ class PresencePolicy(NSWindowController):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def init_policy_data(self, account):
-        if account is not BonjourAccount():
-            if not self.policy_data.has_key(account.id):
-                self.policy_data[account.id] = {}
-            for event in self.tabViewForEvent.keys():
-                if not self.policy_data[account.id].has_key(event):
-                    self.policy_data[account.id][event] = []
-
     def _NH_SIPAccountWatcherinfoGotData(self, notification):
-        account = notification.sender
         watchers = notification.data.pending
         for w in watchers:
             if w.status in ("pending", "waiting"):
                 uri = sip_prefix_pattern.sub("", str(w.sipuri))
-                pendingWatcher = PendingWatcher(address=uri, account=str(account.id), event='presence', confirm=True)
-                hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.account == pendingWatcher.account and watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
+                pendingWatcher = PendingWatcher(address=uri, event='presence', confirm=True)
+                hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
                 if not hasWatcher:
-                    BlinkLogger().log_info(u"New presence subscriber %s for account %s" %(pendingWatcher.address, pendingWatcher.account))
+                    BlinkLogger().log_info(u"New presence subscriber %s" % pendingWatcher.address)
                     self.pendingWatchers.append(pendingWatcher)
 
         if self.pendingWatchers and self.initial_checked_pending:
             self.showPendingWatchers()
 
-    def _NH_ContactWasActivated(self, notification):
+    def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
-        has_policy = None
-        for event in self.tabViewForEvent.keys():
-            has_policy = self.getContactPolicyForEvent(contact, event)
-            if has_policy:
-                self.updatePolicyDataSource(contact)
 
-    def _NH_ContactDidChange(self, notification):
+        for event in self.tabViewForEvent.keys():
+            self.policy_data[event].append(contact)
+            
+            policy = self.getContactPolicyForEvent(contact, event)
+            if contact not in self.policy_data[event]:
+                if policy != 'default':
+                    if self.last_edited_address == contact.default_uri:
+                        self.policy_data[event].insert(0, contact)
+                        self.last_edited_address = None
+                        self.refreshPolicyTable()
+                        view.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
+                        view.editColumn_row_withEvent_select_(0, 0, None, True)
+                    # do not manually refresh the ui after this step as we just started editing the last entry
+                    else:
+                        self.policy_data[event].append(contact)
+                        self.refreshPolicyTable()
+            else:
+                if policy == 'default':
+                    try:
+                        self.policy_data[event].remove(contact)
+                    except (ValueError, KeyError):
+                        pass
+                self.refreshPolicyTable()
+
+
+
+    def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
         self.updatePolicyDataSource(contact)
 
-    def _NH_ContactWasDeleted(self, notification):
+    def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
         self.deletePolicyDataSource(contact)
-
-    def _NH_SIPAccountDidActivate(self, notification):
-        self.refreshAccountList()
-
-    def _NH_SIPAccountDidDeactivate(self, notification):
-        self.refreshAccountList()
-
-    def _NH_CFGSettingsObjectDidChange(self, notification):
-        if 'presence.enabled' in notification.data.modified or 'dialog_event.enabled' in notification.data.modified:
-            self.refreshAccountList()
-
-    def refreshAccountList(self):
-        self.accountPop.removeAllItems()
-        for account in AccountManager().get_accounts():
-            if account is not BonjourAccount() and account.enabled:
-                acc = unicode(account.id)
-                self.accountPop.addItemWithTitle_(acc)
-
-        selection = NSUserDefaults.standardUserDefaults().stringForKey_("SelectedPolicyPresenceAccount")
-        if selection and selection in self.accountPop.itemTitles():
-            self.accountPop.selectItemWithTitle_(selection)
-        else:
-            self.accountPop.selectItemAtIndex_(0)
-
-        try:
-            account = AccountManager().get_account(self.accountPop.titleOfSelectedItem())
-        except KeyError:
-            account = None
-
-        self.account = account and account.id
-        self.refreshPolicyTable()
 
     def refreshPolicyTable(self):
         # refresh the UI with latest changes in the master data
@@ -256,27 +220,27 @@ class PresencePolicy(NSWindowController):
         filter = unicode(self.searchSubscriberBox.stringValue().strip())
         self.policyDatasource = NSMutableArray.array()
         data = []
-        if self.management_enabled and self.account and self.event:
+        if self.management_enabled and self.event:
             self.filtered_contacts_map = {}
             if filter:
                 i = 0
-                for item in self.policy_data[self.account][self.event]:
-                    uri = item.uri
+                for item in self.policy_data[self.event]:
+                    uri = item.default_uri
                     contact = NSApp.delegate().contactsWindowController.model.getContactMatchingURI(uri)
                     contact = BlinkContact(uri, name=contact.name) if contact else BlinkContact(uri, name=uri)
                     if filter in contact:
-                        self.filtered_contacts_map[i] = self.policy_data[self.account][self.event].index(item)
+                        self.filtered_contacts_map[i] = self.policy_data[self.event].index(item)
                         data.append(item)
                         i += 1
             else:
                 try:
-                    data = self.policy_data[self.account][self.event]
+                    data = self.policy_data[self.event]
                 except KeyError:
                     pass
 
         for item in data:
             policy = self.getContactPolicyForEvent(item, self.event)
-            d = NSDictionary.dictionaryWithObjectsAndKeys_(item.uri, "address", policy, "policy")
+            d = NSDictionary.dictionaryWithObjectsAndKeys_(item.default_uri, "address", policy, "policy")
             self.policyDatasource.addObject_(d)
         self.policyDatasource.sortUsingDescriptors_(self.presencePolicyTableView.sortDescriptors())
 
@@ -284,125 +248,65 @@ class PresencePolicy(NSWindowController):
         view.reloadData()
         view.setNeedsDisplay_(True)
 
-    def getPolicyForUri(self, uri, account, event='presence'):
-        try:
-            contacts = self.policy_data[account][event]
-        except KeyError:
-            return None
-
-        try:
-            contact = (contact for contact in contacts if contact.uri == uri).next()
-        except StopIteration:
-            return None
-        else:
-            return self.getContactPolicyForEvent(contact, event)
-
     def getContactPolicyForEvent(self, contact, event):
         if event == 'presence':
-            return contact.presence_policy
+            return contact.presence.policy
         elif event == 'dialog':
-            return contact.dialog_policy
+            return contact.dialog.policy
         else:
             return None
 
-    def contactHasPolicyForEvent(self, contact, event):
-        if event == 'presence' and contact.presence_policy is not None:
-            return True
-        elif event == 'dialog' and contact.dialog_policy is not None:
-            return True
-        else:
-            return False
-
-    def accountHasPolicyForWatcherAndEvent(self, account, event, address):
-        try:
-            contact = (contact for contact in self.policy_data[account][event] if contact.uri == address).next()
-        except StopIteration:
-            pass
-        else:
-            return True
-        return False
-
     def setContactPolicyForEvent(self, contact, event, policy):
-        if event == 'presence' and contact.presence_policy != policy:
-            contact.presence_policy = policy
-        elif event == 'dialog' and contact.dialog_policy != policy:
-            contact.dialog_policy = policy
+        policy = policy.lower()
+        if policy not in ('allow', 'block', 'default'):
+            policy = 'allow'
+        if event == 'presence' and contact.presence.policy != policy:
+            contact.presence.policy = policy
+            contact.save()
+        elif event == 'dialog' and contact.dialog.policy != policy:
+            contact.dialog.policy = policy
+            contact.save()
 
-    def deletePolicyAction(self, account, event, contact):
+    def deletePolicyAction(self, event, contact):
         # modification made by user clicking buttons
         # the outcome is a modification of the underlying middleware contact that will generate notifications
         # finally notifications will repaint the GUI
-        address = contact.uri
-        try:
-            account = AccountManager().get_account(account)
-        except KeyError:
-            pass
-        else:
-            try:
-                contact = account.contact_manager.get_contact(address)
-            except KeyError:
-                pass
-            else:
-                if contact.group is not None:
-                    self.setContactPolicyForEvent(contact, event, None)
-                    contact.save()
-                else:
-                    self.setContactPolicyForEvent(contact, event, None)
-                    if self.contactHasPolicyForEvent(contact, event):
-                        contact.save()
-                    else:
-                        contact.delete()
+        pass
                         
-    def updatePolicyAction(self, account, event, address, policy):
+    def updatePolicyAction(self, event, address, policy):
         # modification made by user clicking buttons
         # the outcome is a modification of the underlying middleware contact that will generate notifications
         # finally notifications will repaint the GUI
         try:
-            account = AccountManager().get_account(account)
-        except KeyError:
-            pass
+            contact = Contact(address, account=account)
+            self.setContactPolicyForEvent(contact, event, policy)
+        except DuplicateIDError:
+            NSRunAlertPanel("Invalid Entry", "Policy for %s already exists"%address, "OK", "", "")
+            return
         else:
-            try:
-                contact = account.contact_manager.get_contact(address)
-            except KeyError:
-                try:
-                    contact = Contact(address, account=account)
-                    self.setContactPolicyForEvent(contact, event, policy)
-                    contact.save()
-                except DuplicateIDError:
-                    NSRunAlertPanel("Invalid Entry", "Policy for %s already exists"%address, "OK", "", "")
-                    return
-            else:
-                self.setContactPolicyForEvent(contact, event, policy)
-                contact.save()
+            self.setContactPolicyForEvent(contact, event, policy)
 
     def updatePolicyDataSource(self, contact):
         # update the master data, must be called only by the notification handlers for contacts
-        if contact.account is None:
-            return
-
-        if not self.policy_data.has_key(contact.account.id):
-            self.init_policy_data(contact.account)
-
         view = self.tabViewForEvent[self.event]
         for event in self.tabViewForEvent.keys():
             policy = self.getContactPolicyForEvent(contact, event)
-            if contact not in self.policy_data[contact.account.id][event]:
-                if policy is not None:
-                    if self.last_edited_address == contact.uri:
-                        self.policy_data[contact.account.id][event].insert(0, contact)
+            if contact not in self.policy_data[event]:
+                if policy != 'default':
+                    if self.last_edited_address == contact.default_uri:
+                        self.policy_data[event].insert(0, contact)
                         self.last_edited_address = None
                         self.refreshPolicyTable()
                         view.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
                         view.editColumn_row_withEvent_select_(0, 0, None, True)
                         # do not manually refresh the ui after this step as we just started editing the last entry
                     else:
-                        self.policy_data[contact.account.id][event].append(contact)
+                        self.policy_data[event].append(contact)
                         self.refreshPolicyTable()
             else:
-                if policy is None:
+                if policy == 'default':
                     try:
-                        self.policy_data[contact.account.id][event].remove(contact)
+                        self.policy_data[event].remove(contact)
                     except (ValueError, KeyError):
                         pass
                 self.refreshPolicyTable()
@@ -410,26 +314,23 @@ class PresencePolicy(NSWindowController):
 
     def deletePolicyDataSource(self, contact):
         # update the master data, must be called only by the notification handlers for contacts
-        if contact.account is None:
-            return
 
         for event in self.tabViewForEvent.keys():
             try:
-                self.policy_data[contact.account.id][event].remove(contact)
+                self.policy_data[event].remove(contact)
             except (ValueError, KeyError):
                 pass
         self.refreshPolicyTable()
 
     def checkPending(self):
-        for account in self.policy_data.keys():
-            for event in self.policy_data[account].keys():
-                for contact in self.policy_data[account][event]:
-                    policy = self.getContactPolicyForEvent(contact, event)
-                    if policy == self.undecidedPolicy:
-                        pendingWatcher = PendingWatcher(address=contact.uri, account=account, event=event, confirm=True)
-                        hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.account == pendingWatcher.account and watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
-                        if not hasWatcher:
-                            self.pendingWatchers.append(pendingWatcher)
+        for event in self.policy_data.keys():
+            for contact in self.policy_data[event]:
+                policy = self.getContactPolicyForEvent(contact, event)
+                if policy == self.undecidedPolicy:
+                    pendingWatcher = PendingWatcher(address=contact.uri, event=event, confirm=True)
+                    hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
+                    if not hasWatcher:
+                        self.pendingWatchers.append(pendingWatcher)
 
         if self.pendingWatchers:
             self.showPendingWatchers()
@@ -437,19 +338,10 @@ class PresencePolicy(NSWindowController):
         self.initial_checked_pending = True
 
     def validateButtons(self):
-        if self.eventPolicyManagementIsEnabled():
-            self.addButton.setHidden_(False)
-            self.delButton.setHidden_(False)
-            self.searchSubscriberBox.setHidden_(False)
-            self.disabled_label.setHidden_(True)
-            self.management_enabled = True
-        else:
-            self.addButton.setHidden_(True)
-            self.delButton.setHidden_(True)
-            self.searchSubscriberBox.setHidden_(True)
-            self.disabled_label.setHidden_(False)
-            self.disabled_label.setStringValue_(u'%s is disabled in account configuration' % self.event.capitalize())
-            self.management_enabled = False
+        self.addButton.setHidden_(False)
+        self.delButton.setHidden_(False)
+        self.searchSubscriberBox.setHidden_(False)
+        self.management_enabled = True
 
     def showPendingWatchers(self):
         if self.newWatcherWindow.isVisible():
@@ -458,12 +350,12 @@ class PresencePolicy(NSWindowController):
         while self.pendingWatchers:
             self.newWatcherInfo = self.pendingWatchers.pop(0)
             if self.applyToAll.state() == NSOnState and self.lastWatcherPolicy:
-                self.updatePolicyAction(self.newWatcherInfo.account, self.newWatcherInfo.event, self.newWatcherInfo.address, self.lastWatcherPolicy)
+                self.updatePolicyAction(self.newWatcherInfo.event, self.newWatcherInfo.address, self.lastWatcherPolicy)
                 if self.createContact.state() == NSOnState:
                     self.addContactToModel(self.newWatcherInfo)
             else:
-                if self.newWatcherInfo.confirm or not self.accountHasPolicyForWatcherAndEvent(self.newWatcherInfo.account, self.newWatcherInfo.event, self.newWatcherInfo.address):
-                    self.newWatcherLabel.setStringValue_(u"%s has subscribed to the %s information published by account %s" % (self.newWatcherInfo.address, self.newWatcherInfo.event, self.newWatcherInfo.account))
+                if self.newWatcherInfo.confirm or not self.hasPolicyForWatcherAndEvent(self.newWatcherInfo.event, self.newWatcherInfo.address):
+                    self.newWatcherLabel.setStringValue_(u"%s has subscribed to the %s information" % (self.newWatcherInfo.address, self.newWatcherInfo.event))
                     self.applyToAll.setTitle_(u"Apply same policy to all other %d pending subscribers" % len(self.pendingWatchers) if len(self.pendingWatchers) > 1 else u"Apply same policy to one more pending subscriber")
                     self.applyToAll.setHidden_(False if len(self.pendingWatchers) else True)
                     self.applyToAll.setState_(NSOffState)
@@ -524,7 +416,7 @@ class PresencePolicy(NSWindowController):
         self.groupCombo.setHidden_(False)
         self.createContact.setHidden_(False)
         self.contactExists.setHidden_(True)
-        groups = [g.name for g in NSApp.delegate().contactsWindowController.model.contactGroupsList if g.editable]
+        groups = [g.name for g in NSApp.delegate().contactsWindowController.model.groupsList if g.editable]
         first_group = groups and groups[0] or None
         group = NSUserDefaults.standardUserDefaults().stringForKey_("LastGroupForWatcher")
         self.groupCombo.setStringValue_(group or "")
@@ -537,15 +429,6 @@ class PresencePolicy(NSWindowController):
 
     def addContactToModel(self, watcher):
         # adds a new contact into the contact list model
-        try:
-            account = AccountManager().get_account(watcher.account)
-        except KeyError:
-            return
-
-        try:
-            contact = account.contact_manager.get_contact(watcher.address)
-        except KeyError:
-            return
 
         if contact.group is None:
             try:
@@ -553,12 +436,12 @@ class PresencePolicy(NSWindowController):
             except StopIteration:
                 # insert after last editable group
                 index = 0
-                for g in NSApp.delegate().contactsWindowController.model.contactGroupsList:
+                for g in NSApp.delegate().contactsWindowController.model.groupsList:
                     if not g.editable:
                         break
                     index += 1
 
-                group = ContactGroup(self.groupCombo.stringValue())
+                group = Group(self.groupCombo.stringValue())
                 group.position = index
                 group.save()
 
@@ -578,46 +461,32 @@ class PresencePolicy(NSWindowController):
 
     @objc.IBAction
     def userButtonClicked_(self, sender):
-        if sender.tag() == 1: # account popup changed
-            try:
-                account = AccountManager().get_account(self.accountPop.titleOfSelectedItem())
-                self.account = account and account.id
-                self.refreshPolicyTable()
-                NSUserDefaults.standardUserDefaults().setValue_forKey_(self.account, "SelectedPolicyPresenceAccount")
-            except KeyError:
-                pass
-        elif sender.tag() == 2: # add a new policy entry
+        if sender.tag() == 2: # add a new policy entry
             # the outcome of the operation is a change to an existing contact or the addition of a new one contact
             # the notifications emitted later by the contact will refresh the UI            
-            if self.account:
-                created_new_contact = False
-                i = 0
-                while not created_new_contact:
-                    try:
-                        account = AccountManager().get_account(self.account)
-                        address = "new_entry@"+account.id.domain if not i else "new_entry" + str(i) + '@' + account.id.domain
-                        contact = Contact(address, account=account)
-                        self.setContactPolicyForEvent(contact, self.event, self.defaultPolicy)
-                        contact.save()
-                        self.last_edited_address = contact.uri
-                        created_new_contact = True
-                    except DuplicateIDError:
-                        i += 1
+            created_new_contact = False
+            i = 0
+            while not created_new_contact:
+                try:
+                    # TODO create a policy contact
+                    self.setContactPolicyForEvent(contact, self.event, self.defaultPolicy)
+                    self.last_edited_address = contact.uri
+                    created_new_contact = True
+                except DuplicateIDError:
+                    i += 1
 
         elif sender.tag() == 3: # delete a policy entry
             # the outcome of the operation is a change to an existing contact or the deletion of a contact
             # the notifications emitted later by the contact will refresh the UI
-            if self.account:
-                view = self.tabViewForEvent[self.event]
-                if view.selectedRow() >= 0:
-                    filter = unicode(self.searchSubscriberBox.stringValue().strip())
-                    i_row = self.filtered_contacts_map[view.selectedRow()] if filter else view.selectedRow()
-                    self.deletePolicyAction(self.account, self.event, self.policy_data[self.account][self.event][i_row])
+            view = self.tabViewForEvent[self.event]
+            if view.selectedRow() >= 0:
+                filter = unicode(self.searchSubscriberBox.stringValue().strip())
+                i_row = self.filtered_contacts_map[view.selectedRow()] if filter else view.selectedRow()
+                self.deletePolicyAction(self.event, self.policy_data[self.event][i_row])
         elif sender.tag() == 4: # close window
             self.window().close()
 
     def showWindow_(self, sender):
-        self.refreshAccountList()
         super(PresencePolicy, self).showWindow_(sender)
 
     @objc.IBAction
@@ -626,7 +495,7 @@ class PresencePolicy(NSWindowController):
         self.newWatcherWindow.close()
 
         if self.newWatcherInfo and self.newWatcherPolicy:
-            self.updatePolicyAction(self.newWatcherInfo.account, self.newWatcherInfo.event, self.newWatcherInfo.address, self.newWatcherPolicy)
+            self.updatePolicyAction(self.newWatcherInfo.event, self.newWatcherInfo.address, self.newWatcherPolicy)
 
             self.lastWatcherPolicy = self.newWatcherPolicy
 
@@ -698,7 +567,7 @@ class PresencePolicy(NSWindowController):
         if row >=0 and row < len(self.policyDatasource):
             value = self.policyDatasource[row].objectForKey_(column.identifier())
             if column.identifier() == "policy":
-                return self.policyTypes.index(str(value))
+                return self.policyTypes.index(str(value).title())
             return value
 
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
@@ -725,21 +594,13 @@ class PresencePolicy(NSWindowController):
 
         if column.identifier() == "address":
             address = unicode(object).strip().lower()
-            if "@" and '.' not in address:
-                try:
-                    account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.enabled and account.id == self.account).next()
-                except StopIteration:
-                    pass
-                else:
-                    address = address + '@%s' % account.id.domain
-
             if not check(address):
                 NSRunAlertPanel("Invalid Entry", "You must enter a valid SIP address or domain name", "OK", "", "")
                 return
 
             # check if address is duplicate
-            for i in range(len(self.policy_data[self.account][self.event])):
-                contact = self.policy_data[self.account][self.event][i]
+            for i in range(len(self.policy_data[self.event])):
+                contact = self.policy_data[self.event][i]
                 if i != row and contact.uri == address:
                     NSRunAlertPanel("Duplicate Entry", "Address %s already has a policy entry, please change the existing entry instead of creating a new one."%address, "OK", "", "")
                     view = self.tabViewForEvent[self.event]
@@ -749,9 +610,9 @@ class PresencePolicy(NSWindowController):
             try:
                 filter = unicode(self.searchSubscriberBox.stringValue().strip())
                 i_row = self.filtered_contacts_map[row] if filter else row
-                contact = self.policy_data[self.account][self.event][i_row]
-                if contact.uri != address:
-                    contact.uri = address
+                contact = self.policy_data[self.event][i_row]
+                if contact.default_uri != address:
+                    contact.default_uri = address
                     contact.save()
             except KeyError:
                 pass
@@ -761,9 +622,8 @@ class PresencePolicy(NSWindowController):
             try:
                 filter = unicode(self.searchSubscriberBox.stringValue().strip())
                 i_row = self.filtered_contacts_map[row] if filter else row
-                contact = self.policy_data[self.account][self.event][i_row]
+                contact = self.policy_data[self.event][i_row]
                 self.setContactPolicyForEvent(contact, self.event, value)
-                contact.save()
             except KeyError:
                 pass
 
@@ -795,13 +655,13 @@ class PresencePolicy(NSWindowController):
             group, contact = eval(pboard.stringForType_("dragged-contact"))
             if contact is None and group is not None:
                 try:
-                    g = NSApp.delegate().contactsWindowController.model.contactGroupsList[group]
+                    g = NSApp.delegate().contactsWindowController.model.groupsList[group]
                     if type(g) == BlinkContactGroup:
                         for contact in g.contacts:
                             uri = contact.uri
                             if uri:
                                 uri = sip_prefix_pattern.sub("", str(uri))
-                            self.updatePolicyAction(self.account, self.event, uri, self.defaultPolicy)
+                            self.updatePolicyAction(self.event, uri, self.defaultPolicy)
                         return True
                 except KeyError:
                     return False
@@ -810,7 +670,7 @@ class PresencePolicy(NSWindowController):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
                 uri = sip_prefix_pattern.sub("", str(uri))
-            self.updatePolicyAction(self.account, self.event, uri, self.defaultPolicy)
+            self.updatePolicyAction(self.event, uri, self.defaultPolicy)
             return True
 
         return False

@@ -40,7 +40,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkContactGroup, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import AddressBookBlinkContact, BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -62,9 +62,6 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
-# TODO: enable presence -adi
-ENABLE_PRESENCE=False
-ENABLE_DIALOG=False
 
 class PhotoView(NSImageView):
     entered = False
@@ -316,10 +313,6 @@ class ContactWindowController(NSWindowController):
 
         self.contactsMenu.itemWithTag_(42).setEnabled_(True) # Dialpad
 
-        # Presence policy
-        item = self.contactsMenu.itemWithTag_(21)
-        item.setEnabled_(ENABLE_PRESENCE)
-
         if NSApp.delegate().applicationName == 'Blink Lite':
             # Answering machine
             item = self.statusMenu.itemWithTag_(50)
@@ -529,8 +522,8 @@ class ContactWindowController(NSWindowController):
 
     def refreshContactsList(self):
         self.contactOutline.reloadData()
-        for group in self.model.contactGroupsList:
-            if group.reference is not None and group.reference.expanded:
+        for group in self.model.groupsList:
+            if group.group is not None and group.group.expanded:
                 self.contactOutline.expandItem_expandChildren_(group, False)
 
     def getSelectedContacts(self, includeGroups=False):
@@ -555,7 +548,7 @@ class ContactWindowController(NSWindowController):
             object = outline.itemAtRow_(item)
             if isinstance(object, BlinkContact):
                 contacts.append(object)
-            elif includeGroups and isinstance(object, BlinkContactGroup):
+            elif includeGroups and isinstance(object, BlinkGroup):
                 contacts.append(object)
             item = selection.indexGreaterThanIndex_(item)
 
@@ -1044,10 +1037,10 @@ class ContactWindowController(NSWindowController):
                 self.contactOutline.reloadData()
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
                 self.contactOutline.scrollRowToVisible_(0)
-            elif self.model.bonjour_group in self.model.contactGroupsList and self.model.contactGroupsList.index(self.model.bonjour_group) == 0:
+            elif self.model.bonjour_group in self.model.groupsList and self.model.groupsList.index(self.model.bonjour_group) == 0:
                 self.model.restoreBonjourGroupPosition()
                 self.contactOutline.reloadData()
-                if not self.model.bonjour_group.reference.expanded:
+                if not self.model.bonjour_group.group.expanded:
                     self.contactOutline.collapseItem_(self.model.bonjour_group)
         else:
             # select back the account and open the new account wizard
@@ -1112,6 +1105,11 @@ class ContactWindowController(NSWindowController):
         return participants
 
     @objc.IBAction
+    def addContactWithUri_(self, sender):
+        item = sender.representedObject()
+        self.model.addContact(item.uri, display_name=item.name)
+
+    @objc.IBAction
     def addContact_(self, sender):
         if sender != self.addContactButton:
             row = self.searchOutline.selectedRow()
@@ -1160,9 +1158,21 @@ class ContactWindowController(NSWindowController):
             self.searchContacts()
 
     @objc.IBAction
+    def removeContactFromGroup_(self, sender):
+        for contact in self.getSelectedContacts() or ():
+            contact = sender.representedObject()[0]
+            group = sender.representedObject()[1]
+            self.model.removeContactFromGroup(contact, group)
+            self.refreshContactsList()
+            self.searchContacts()
+
+    @objc.IBAction
     def deleteContact_(self, sender):
         for contact in self.getSelectedContacts() or ():
-            self.model.deleteContact(contact)
+            if isinstance(contact, BlinkContact):
+                self.model.deleteContact(contact)
+            else:
+                self.model.deleteGroup(contact)
             self.refreshContactsList()
             self.searchContacts()
 
@@ -1182,7 +1192,7 @@ class ContactWindowController(NSWindowController):
         if row >= 0:
             item = self.contactOutline.itemAtRow_(row)
             group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
-            self.model.deleteContact(group)
+            self.model.deleteGroup(group)
             self.refreshContactsList()
 
     @objc.IBAction
@@ -1287,51 +1297,64 @@ class ContactWindowController(NSWindowController):
             self.contactOutline.deselectAll_(None)
             self.mainTabView.selectTabViewItemWithIdentifier_("search")
         self.updateActionButtons()
-        self.local_found_contacts = [contact for group in self.model.contactGroupsList if group.ignore_search is False for contact in group.contacts if text in contact]
 
-        active_account = self.activeAccount()
-        if active_account:
-            # perform LDAP search
-            if len(text) > 3 and self.ldap_directory is not None:
-                NotificationCenter().discard_observer(self, name="LDAPDirectorySearchFoundContact")
-                self.ldap_found_contacts = []
-                if self.ldap_search:
-                    self.ldap_search.cancel()
-                self.ldap_search = LdapSearch(self.ldap_directory)
-                NotificationCenter().add_observer(self, name="LDAPDirectorySearchFoundContact", sender=self.ldap_search)
-                self.ldap_search.search(text)
+        if self.mainTabView.selectedTabViewItem().identifier() == "search":
+            self.local_found_contacts = []
+            local_found_contacts = [contact for group in self.model.groupsList if group.ignore_search is False for contact in group.contacts if text in contact]
+            found_count = {}
+            for local_found_contact in local_found_contacts:
+                if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None:
+                    if local_found_contact.contact.id in found_count.keys():
+                        continue
+                    else:
+                        self.local_found_contacts.append(local_found_contact)
+                        found_count[local_found_contact.contact.id] = True                     
+                else:
+                    self.local_found_contacts.append(local_found_contact)
 
-            # create a syntetic contact with what we typed
-            try:
-                str(text)
-            except UnicodeEncodeError:
-                pass
-            else:
-                if " " not in text:
-                    input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
-                    input_contact = SearchResultContact(input_text, name=unicode(input_text))
-                    exists = text in (contact.uri for contact in self.local_found_contacts)
+            active_account = self.activeAccount()
+            if active_account:
+                # perform LDAP search
+                if len(text) > 3 and self.ldap_directory is not None:
+                    NotificationCenter().discard_observer(self, name="LDAPDirectorySearchFoundContact")
+                    self.ldap_found_contacts = []
+                    if self.ldap_search:
+                        self.ldap_search.cancel()
+                    self.ldap_search = LdapSearch(self.ldap_directory)
+                    NotificationCenter().add_observer(self, name="LDAPDirectorySearchFoundContact", sender=self.ldap_search)
+                    self.ldap_search.search(text)
 
-                    if not exists:
-                        self.local_found_contacts.append(input_contact)
+                # create a syntetic contact with what we typed
+                try:
+                    str(text)
+                except UnicodeEncodeError:
+                    pass
+                else:
+                    if " " not in text:
+                        input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
+                        input_contact = SearchResultContact(input_text, name=unicode(input_text))
+                        exists = text in (contact.uri for contact in self.local_found_contacts)
 
-                    self.addContactButtonSearch.setEnabled_(not exists)
+                        if not exists:
+                            self.local_found_contacts.append(input_contact)
 
-            self.searchResultsModel.contactGroupsList = self.local_found_contacts
-            self.searchOutline.reloadData()
+                        self.addContactButtonSearch.setEnabled_(not exists)
+
+                self.searchResultsModel.groupsList = self.local_found_contacts
+                self.searchOutline.reloadData()
 
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         if notification.sender == self.ldap_search:
             for type, uri in notification.data.uris:
                 if uri:
-                    exists = uri in (contact.uri for contact in self.searchResultsModel.contactGroupsList)
+                    exists = uri in (contact.uri for contact in self.searchResultsModel.groupsList)
                     if not exists:
                         contact = LdapSearchResultContact(str(uri), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
                         contact.setDetail('%s (%s)' % (str(uri), type))
                         self.ldap_found_contacts.append(contact)
 
             if self.ldap_found_contacts:
-                self.searchResultsModel.contactGroupsList = self.local_found_contacts + self.ldap_found_contacts
+                self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
     
     @objc.IBAction
@@ -1376,7 +1399,7 @@ class ContactWindowController(NSWindowController):
         for session in self.sessionControllersManager.sessionControllers[:]:
             session.end()
 
-    def startSessionToSelectedContact(self, media):
+    def startSessionToSelectedContact(self, media, uri=None):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
 
@@ -1389,10 +1412,8 @@ class ContactWindowController(NSWindowController):
                 return
             display_name = ''
         else:
-            target = contact.uri
+            target = uri or contact.uri
             display_name = contact.display_name
-            if ((type(media) is tuple and "chat" in media) or media == "chat") and contact.stored_in_account is not None:
-                account = contact.stored_in_account
 
         if not account:
             account = self.getAccountWitDialPlan(target)
@@ -1554,18 +1575,19 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startAudioToSelected_(self, sender):
-        self.startSessionToSelectedContact("audio")
+        self.startSessionToSelectedContact("audio", sender.representedObject())
 
     @objc.IBAction
     def startVideoToSelected_(self, sender):
-        self.startSessionToSelectedContact("video")
+        self.startSessionToSelectedContact("video", sender.representedObject())
 
     @objc.IBAction
     def startChatToSelected_(self, sender):
-        self.startSessionToSelectedContact("chat")
+        self.startSessionToSelectedContact("chat", sender.representedObject())
 
     @objc.IBAction
     def sendSMSToSelected_(self, sender):
+        uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
             NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
@@ -1579,7 +1601,7 @@ class ContactWindowController(NSWindowController):
                 return
             display_name = ''
         else:
-            target = contact.uri
+            target = uri or contact.uri
             display_name = contact.display_name
 
         if contact in self.model.bonjour_group.contacts:
@@ -1592,27 +1614,61 @@ class ContactWindowController(NSWindowController):
         try:
             NSApp.activateIgnoringOtherApps_(True)
             SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
-        except:
-            import traceback
-            traceback.print_exc()
+        except Exception:
+            pass
+
+    @objc.IBAction
+    def sendSMSToSelectedUri_(self, sender):
+        account = self.activeAccount()
+        if not account:
+            NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
+            return
+        
+        try:
+            contact = self.getSelectedContacts()[0]
+        except IndexError:
+            target = unicode(self.searchBox.stringValue()).strip()
+            if not target:
+                return
+            display_name = ''
+        else:
+            target = contact.uri
+            display_name = contact.display_name
+        
+        if contact in self.model.bonjour_group.contacts:
+            account = BonjourAccount()
+        
+        target = normalize_sip_uri_for_outgoing_session(target, account)
+        if not target:
+            return
+        
+        try:
+            NSApp.activateIgnoringOtherApps_(True)
+            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
+        except Exception:
+            pass
 
     @objc.IBAction
     def startDesktopToSelected_(self, sender):
+        uri = sender.representedObject()
         tag = sender.tag()
         if tag == 1:
-            self.startSessionToSelectedContact(("desktop-viewer", "audio"))
+            self.startSessionToSelectedContact(("desktop-viewer", "audio"), uri)
         elif tag == 2:
-            self.startSessionToSelectedContact(("desktop-server", "audio"))
+            self.startSessionToSelectedContact(("desktop-server", "audio"), uri)
 
     @objc.IBAction
     def setPresencePolicyForContact_(self, sender):
-        new_policy = None
-        event = 'presence'
         item = sender.representedObject()
-        policy = self.presencePolicy.getPolicyForUri(item.uri, item.stored_in_account.id, event)
-        new_policy = self.presencePolicy.allowPolicy if policy != self.presencePolicy.allowPolicy else self.presencePolicy.denyPolicy
-        self.presencePolicy.updatePolicyAction(item.stored_in_account.id, event, item.uri, new_policy)
+        item.contact.presence.policy = 'allow' if item.contact.presence.policy in ('default', 'block') else 'block'
+        item.contact.save()
 
+    @objc.IBAction
+    def setDialogPolicyForContact_(self, sender):
+        item = sender.representedObject()
+        item.contact.dialog.policy = 'allow' if item.contact.dialog.policy in ('default', 'block') else 'block'
+        item.contact.save()
+    
     @objc.IBAction
     def actionButtonClicked_(self, sender):
 
@@ -1769,7 +1825,6 @@ class ContactWindowController(NSWindowController):
         return size
 
     def windowDidResize(self, notification):
-        print 'window did resize...'
         if NSHeight(self.window().frame()) > 154:
             self.originalSize = None
             self.setCollapsed(False)
@@ -1906,13 +1961,13 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
 
         item = self.statusMenu.itemWithTag_(30) # presence
-        item.setHidden_(not ENABLE_PRESENCE)
+        item.setHidden_(True)
 
         item = self.statusMenu.itemWithTag_(31) # presence
-        item.setHidden_(not ENABLE_PRESENCE)
+        item.setHidden_(True)
 
         item = self.statusMenu.itemWithTag_(32) # presence
-        item.setHidden_(not ENABLE_PRESENCE)
+        item.setHidden_(True)
 
         item = self.statusMenu.itemWithTag_(50) # answering machine
         item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
@@ -2403,6 +2458,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def sendFile_(self, sender):
+        uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
             NSRunAlertPanel(u"Cannot Send File", u"There are currently no active SIP accounts", u"OK", None, None)
@@ -2414,17 +2470,18 @@ class ContactWindowController(NSWindowController):
         else:
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
-            openFileTransferSelectionDialog(account, contact.uri)
+            openFileTransferSelectionDialog(account, uri or contact.uri)
 
     @objc.IBAction
     def viewHistory_(self, sender):
+        uri = sender.representedObject()
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
             pass
         else:
             self.showHistoryViewer_(None)
-            self.historyViewer.filterByContact(contact.uri)
+            self.historyViewer.filterByContact(uri or contact.uri)
 
     def updateRecordingsMenu(self):
         if NSApp.delegate().applicationName == 'Blink Lite':
@@ -2649,45 +2706,118 @@ class ContactWindowController(NSWindowController):
 
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_sip_aor_format(item.uri)
-            self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
-            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
-            chat_item.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('chat'))
-            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
-            video_item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
-            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
-            sms_item.setEnabled_(item not in self.model.bonjour_group.contacts and not isinstance(self.activeAccount(), BonjourAccount) and self.sessionControllersManager.isMediaTypeSupported('chat'))
-            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-            sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
-            sf_item.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
-            if item not in self.model.bonjour_group.contacts:
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                sf_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
-                sf_item.setEnabled_(has_full_sip_uri and NSApp.delegate().applicationName != 'Blink Lite')
-            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-            contact = item.display_name
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
-            mitem.setTag_(1)
-            mitem.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('desktop-client'))
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startDesktopToSelected:", "")
-            mitem.setTag_(2)
-            mitem.setEnabled_(has_full_sip_uri and self.sessionControllersManager.isMediaTypeSupported('desktop-server'))
+            if hasattr(item, 'uris') and len(item.uris) > 1:
+                audio_submenu = NSMenu.alloc().init()
+                for uri in item.uris:
+                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startAudioToSelected:", "")
+                    audio_item.setRepresentedObject_(uri.uri)
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "", "")
+                self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
-            if ENABLE_PRESENCE:
-                if item.stored_in_account is not None:
-                    try:
-                        account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.enabled and account.presence.enabled and account == item.stored_in_account).next()
-                    except StopIteration:
-                        pass
-                    else:
+                if self.sessionControllersManager.isMediaTypeSupported('chat'):
+                    chat_submenu = NSMenu.alloc().init()
+                    for uri in item.uris:
+                        if is_sip_aor_format(uri.uri):
+                            chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startChatToSelected:", "")
+                            chat_item.setRepresentedObject_(uri.uri)
+                    if chat_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
+
+                    sms_submenu = NSMenu.alloc().init()
+                    for uri in item.uris:
+                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "sendSMSToSelected:", "")
+                        sms_item.setRepresentedObject_(uri.uri)
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS...", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
+                    
+                if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                    ft_submenu = NSMenu.alloc().init()
+                    for uri in item.uris:
+                        if is_sip_aor_format(uri.uri):
+                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "sendFile:", "")
+                            ft_item.setRepresentedObject_(uri.uri)
+                    if ft_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
+
+                if NSApp.delegate().applicationName != 'Blink Lite':
+                    if item not in self.model.bonjour_group.contacts:
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show My Presence to %s" % item.display_name, "setPresencePolicyForContact:", "")
-                        mitem.setEnabled_(True)
-                        mitem.setRepresentedObject_(item)
-                        policy = self.presencePolicy.getPolicyForUri(item.uri, item.stored_in_account.id, 'presence')
-                        mitem.setState_(NSOnState if policy and policy == self.presencePolicy.allowPolicy else NSOffState)
+                        history_submenu = NSMenu.alloc().init()
+                        for uri in item.uris:
+                            history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "viewHistory:", "")
+                            history_item.setRepresentedObject_(uri.uri)
+                        if history_submenu.itemArray():
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "", "")
+                            self.contactContextMenu.setSubmenu_forItem_(history_submenu, mitem)
 
-            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                added_separator = False
+                if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
+                    ds_submenu = NSMenu.alloc().init()
+                    for uri in item.uris:
+                        if is_sip_aor_format(uri.uri):
+                            if not added_separator:
+                                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                                added_separator = True
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startDesktopToSelected:", "")
+                            ds_item.setRepresentedObject_(uri.uri)
+                            ds_item.setTag_(1)
+
+                    if ds_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.display_name, "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
+
+                if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
+                    ds_submenu = NSMenu.alloc().init()
+                    for uri in item.uris:
+                        if is_sip_aor_format(uri.uri):
+                            if not added_separator:
+                                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                                added_separator = True
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startDesktopToSelected:", "")
+                            ds_item.setRepresentedObject_(uri.uri)
+                            ds_item.setTag_(2)
+                    
+                    if ds_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.display_name, "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
+
+            else:
+                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
+                if self.sessionControllersManager.isMediaTypeSupported('chat'):
+                    if has_full_sip_uri:
+                        chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
+                    if item not in self.model.bonjour_group.contacts:
+                        sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS...", "sendSMSToSelected:", "")
+                        sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
+
+                if self.sessionControllersManager.isMediaTypeSupported('video'):
+                    video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
+            
+                if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                    if has_full_sip_uri:
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
+
+                if NSApp.delegate().applicationName != 'Blink Lite':
+                    if item not in self.model.bonjour_group.contacts:
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
+
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
+                    contact = item.display_name
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
+                    mitem.setTag_(1)
+                    mitem.setEnabled_(has_full_sip_uri)
+                if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startDesktopToSelected:", "")
+                    mitem.setTag_(2)
+                    mitem.setEnabled_(has_full_sip_uri)
+
             if type(item) == BlinkPresenceContact:
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
@@ -2696,27 +2826,46 @@ class ContactWindowController(NSWindowController):
             settings = SIPSimpleSettings()
             if settings.contacts.enable_favorites_group:
                 if type(item) in (BlinkPresenceContact, AddressBookBlinkContact):
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
                     mitem.setState_(NSOnState if item.favorite else NSOffState)
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
                 elif type(item) == FavoriteBlinkContact:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "deleteContact:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
                     mitem.setState_(NSOnState)
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
             if type(item) == AddressBookBlinkContact:
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem.setRepresentedObject_(item)
+            elif type(item) == LdapSearchResultContact:
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem.setRepresentedObject_(item)
             else:
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-            lastItem.setEnabled_(item.editable)
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
-            lastItem.setEnabled_(item.deletable)
-        elif isinstance(item, BlinkContactGroup):
+                if item.editable:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
+                elif not self.hasContactMatchingURI(item.uri):
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                    lastItem.setRepresentedObject_(item)
+
+            group = self.contactOutline.parentForItem_(item)
+            if group and group.delete_contact_allowed:
+                lastItem.setEnabled_(item.editable)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
+                lastItem.setEnabled_(item.deletable)
+            if group and group.remove_contact_from_group_allowed:
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
+                lastItem.setRepresentedObject_((item, group))
+        elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")
             lastItem.setEnabled_(item.editable)
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
@@ -2852,14 +3001,9 @@ class ContactWindowController(NSWindowController):
                 if isinstance(selected, BlinkContact):
                     selected_contact = selected
                     selected_group = self.contactOutline.parentForItem_(selected)
-                elif isinstance(selected, BlinkContactGroup):
+                elif isinstance(selected, BlinkGroup):
                     selected_contact = None
                     selected_group = selected
-
-            item = self.contactsMenu.itemWithTag_(20) # presence policy
-            item.setHidden_(not ENABLE_PRESENCE)
-            item = self.contactsMenu.itemWithTag_(21) # presence policy
-            item.setHidden_(not ENABLE_PRESENCE)
 
             item = self.contactsMenu.itemWithTag_(31) # Edit Contact
             item.setEnabled_(selected_contact and selected_contact.editable)
@@ -2944,8 +3088,7 @@ class ContactWindowController(NSWindowController):
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
             remote_uri = format_identity_to_string(session.remotePartyObject)
 
-            hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
-            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (self.hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)

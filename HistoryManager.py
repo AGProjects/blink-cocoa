@@ -872,6 +872,9 @@ class SessionHistoryReplicator(object):
     
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
+        if calls is None:
+            return
+
         growl_notifications = {}
         try:
             if calls['received']:
