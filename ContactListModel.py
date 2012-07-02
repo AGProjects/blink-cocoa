@@ -869,6 +869,7 @@ class CustomListModel(NSObject):
     """Contacts List Model behaviour, display and drag an drop actions"""
     groupsList = []
     expanded_status = {}
+    drop_on_contact_index = None
 
     @property
     def sessionControllersManager(self):
@@ -940,6 +941,7 @@ class CustomListModel(NSObject):
 
     # drag and drop
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_item, index):
+        self.drop_on_contact_index = None
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not hasattr(proposed_item, "supported_media"):
                 return NSDragOperationNone
@@ -1016,20 +1018,16 @@ class CustomListModel(NSObject):
                     table.setDropItem_dropChildIndex_(self.groupsList[i], c)
                 else:
                     targetGroup = table.parentForItem_(proposed_item)
-                    targetContact = targetGroup.contacts[index]
 
-                    if not targetGroup:
-                        return NSDragOperationNone
+                    if index == NSOutlineViewDropOnItemIndex:
+                        index = targetGroup.contacts.index(proposed_item)
+                        self.drop_on_contact_index = index
 
                     if sourceGroup == targetGroup:
                         return NSDragOperationCopy
 
-                    if index == NSOutlineViewDropOnItemIndex:
-                        index = targetGroup.contacts.index(proposed_item)
-
-                    draggedContact = self.groupsList[group].contacts[blink_contact]
                     table.setDropItem_dropChildIndex_(targetGroup, index)
-
+                            
             return NSDragOperationMove
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
@@ -1090,7 +1088,7 @@ class CustomListModel(NSObject):
                 else:
                     targetGroup = table.parentForItem_(item)
                     if sourceGroup == targetGroup:
-                        targetContact = targetGroup.contacts[index]
+                        targetContact = targetGroup.contacts[self.drop_on_contact_index]
                         
                         if (sourceContact.name == targetContact.name):
                             message = "Would you like to consolidate the two contacts into %s?" % targetContact.name
