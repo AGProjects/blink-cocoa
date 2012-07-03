@@ -556,12 +556,13 @@ class SystemAddressBookBlinkContact(BlinkContact):
         if self.uris:
             first_uri = next(iter(self.uris))
             self.uri = first_uri.uri
+            self.detail = NSString.stringWithString_('%s (%s)' % (first_uri.uri, first_uri.type) )
         else:
-            self.uri = ''
+            self.uri = 'None'
+            self.detail = NSString.stringWithString_('None')
         self.default_uri = self.uri
         self.name = NSString.stringWithString_(self.name or self.uri)
         self.display_name = unicode(self.name)
-        self.detail = NSString.stringWithString_(self.uri or self.name)
         self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         idata = ab_contact.imageData()
         self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
