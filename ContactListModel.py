@@ -154,7 +154,7 @@ class BlinkContact(NSObject):
         self.type = None
         self.favorite = False
         self.uri = uri
-        self.uris = [ContactURI(uri=self.uri, type=uri_type or 'SIP')]
+        self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
         self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         self.name = NSString.stringWithString_(name or uri)
         self.display_name = display_name or unicode(self.name)

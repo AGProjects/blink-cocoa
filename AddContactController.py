@@ -12,7 +12,7 @@ from application.python import Null
 from zope.interface import implements
 
 from sipsimple.core import SIPCoreError, SIPURI
-from util import allocate_autorelease_pool, checkValidPhoneNumber, run_in_gui_thread
+from util import *
 
 ICON_SIZE=128
 
@@ -83,12 +83,7 @@ class AddContactController(NSObject):
             self.belonging_groups = []
     
         if uri:
-            if type and type.lower() in ('sip', 'xmpp'):
-                type = type.upper()
-            elif type:
-                type = type.title()
-            else:
-                type = 'SIP'
+            type = format_uri_type(type)
             self.uris.append((uri, type))
 
         self.update_default_uri()
@@ -397,7 +392,7 @@ class EditContactController(AddContactController):
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         seen_item = {}
         for uri in blink_contact.contact.uris:
-            type = str(uri.type) if uri.type is not None else ''
+            type = format_uri_type(uri.type)
             if type not in address_types:
                 self.addressTypesPopUpButton.addItemWithTitle_(type)
             item = (uri.uri, type)

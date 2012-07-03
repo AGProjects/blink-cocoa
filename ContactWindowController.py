@@ -1172,12 +1172,7 @@ class ContactWindowController(NSWindowController):
         except StopIteration:
             pass
 
-        if type and type.lower() in ('sip', 'xmpp'):
-            type = type.upper()
-        elif type:
-            type = type.title()
-        else:
-            type = 'SIP'
+        type = format_uri_type(type)
 
         destination.contact.uris.add(ContactURI(uri=source.uri, type=type))
         destination.contact.save()
@@ -1374,8 +1369,8 @@ class ContactWindowController(NSWindowController):
                 if uri:
                     exists = uri in (contact.uri for contact in self.searchResultsModel.groupsList)
                     if not exists:
-                        contact = LdapSearchResultContact(str(uri), uri_type=type, name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
-                        contact.setDetail('%s (%s)' % (str(uri), type))
+                        contact = LdapSearchResultContact(str(uri), uri_type=format_uri_type(type), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
+                        contact.setDetail('%s (%s)' % (str(uri), format_uri_type(type)))
                         self.ldap_found_contacts.append(contact)
 
             if self.ldap_found_contacts:
@@ -2734,7 +2729,7 @@ class ContactWindowController(NSWindowController):
             if hasattr(item, 'uris') and len(item.uris) > 1:
                 audio_submenu = NSMenu.alloc().init()
                 for uri in item.uris:
-                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startAudioToSelected:", "")
+                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
                     audio_item.setRepresentedObject_(uri.uri)
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
@@ -2743,7 +2738,7 @@ class ContactWindowController(NSWindowController):
                     chat_submenu = NSMenu.alloc().init()
                     for uri in item.uris:
                         if is_sip_aor_format(uri.uri):
-                            chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startChatToSelected:", "")
+                            chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
                             chat_item.setRepresentedObject_(uri.uri)
                     if chat_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "", "")
@@ -2751,7 +2746,7 @@ class ContactWindowController(NSWindowController):
 
                     sms_submenu = NSMenu.alloc().init()
                     for uri in item.uris:
-                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "sendSMSToSelected:", "")
+                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
                         sms_item.setRepresentedObject_(uri.uri)
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
@@ -2760,7 +2755,7 @@ class ContactWindowController(NSWindowController):
                     ft_submenu = NSMenu.alloc().init()
                     for uri in item.uris:
                         if is_sip_aor_format(uri.uri):
-                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "sendFile:", "")
+                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
                             ft_item.setRepresentedObject_(uri.uri)
                     if ft_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "", "")
@@ -2771,7 +2766,7 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         history_submenu = NSMenu.alloc().init()
                         for uri in item.uris:
-                            history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "viewHistory:", "")
+                            history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "viewHistory:", "")
                             history_item.setRepresentedObject_(uri.uri)
                         if history_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "", "")
@@ -2785,7 +2780,7 @@ class ContactWindowController(NSWindowController):
                             if not added_separator:
                                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                                 added_separator = True
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startDesktopToSelected:", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(1)
 
@@ -2800,7 +2795,7 @@ class ContactWindowController(NSWindowController):
                             if not added_separator:
                                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                                 added_separator = True
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "startDesktopToSelected:", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(2)
                     
