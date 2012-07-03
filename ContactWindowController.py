@@ -15,6 +15,7 @@ from datetime import datetime
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import AccountManager, Account, BonjourAccount
+from sipsimple.addressbook import ContactURI
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
@@ -1158,6 +1159,13 @@ class ContactWindowController(NSWindowController):
             self.refreshContactsList()
             self.searchContacts()
 
+    @objc.IBAction
+    def mergeContacts_(self, sender):
+        source = sender.representedObject()['source']
+        destination = sender.representedObject()['destination']
+        destination.contact.uris.add(ContactURI(uri=source.uri))
+        destination.contact.save()
+    
     @objc.IBAction
     def removeContactFromGroup_(self, sender):
         for contact in self.getSelectedContacts() or ():
@@ -2849,6 +2857,16 @@ class ContactWindowController(NSWindowController):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
+                blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
+                if blink_contacts_with_same_name:
+                    name_submenu = NSMenu.alloc().init()
+                    for blink_contact in blink_contacts_with_same_name:
+                        name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
+                        name_item.setRepresentedObject_({'source': item, 'destination': blink_contact})
+                    if name_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
+
             else:
                 if item.editable:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

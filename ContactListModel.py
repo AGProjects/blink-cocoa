@@ -2113,6 +2113,9 @@ class ContactListModel(CustomListModel):
         else:
             return False
 
+    def getBlinkContactsForName(self, name):
+        return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
+
     def getBlinkContactForContact(self, contact):
         try:
             return self.all_contacts_group.contact_map[contact]
