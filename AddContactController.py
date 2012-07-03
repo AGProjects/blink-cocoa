@@ -391,9 +391,10 @@ class EditContactController(AddContactController):
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         seen_item = {}
         for uri in blink_contact.contact.uris:
-            if uri.type not in address_types:
-                self.addressTypesPopUpButton.addItemWithTitle_(uri.type)
-            item = (uri.uri, uri.type)
+            type = str(uri.type) if uri.type is not None else ''
+            if type not in address_types:
+                self.addressTypesPopUpButton.addItemWithTitle_(type)
+            item = (uri.uri, type)
             if item not in seen_item.keys():
                 self.uris.append(item)
                 seen_item[item] = True
