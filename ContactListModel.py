@@ -148,14 +148,14 @@ class BlinkContact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, name=None, display_name=None, icon=None, detail=None, preferred_media=None, aliases=None):
+    def __init__(self, uri, uri_type=None, name=None, display_name=None, icon=None, detail=None, preferred_media=None):
         self.id = None
         self.contact = None
         self.type = None
         self.favorite = False
         self.uri = uri
-        self.uris = []                 # list of (AoR, type)
-        self.aliases = aliases or []   # list of AoRs
+        self.uris = [ContactURI(uri=self.uri, type=uri_type or 'SIP')]
+        self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         self.name = NSString.stringWithString_(name or uri)
         self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or uri)
@@ -2269,11 +2269,11 @@ class ContactListModel(CustomListModel):
                 group.contacts.add(contact)
                 group.save()
 
-    def addContact(self, address="", group=None, display_name=None):
+    def addContact(self, address="", group=None, display_name=None, type=None):
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
-        controller = AddContactController(uri=address, name=display_name)
+        controller = AddContactController(uri=address, name=display_name, type=type)
         new_contact = controller.runModal()
 
         if new_contact:

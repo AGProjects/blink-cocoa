@@ -68,7 +68,7 @@ class AddContactController(NSObject):
         self.nc.remove_observer(self, name="AddressbookGroupsHaveChanged")
         self.nc = None
 
-    def __init__(self, uri=None, name=None, group=None):
+    def __init__(self, uri=None, name=None, group=None, type=None):
         NSBundle.loadNibNamed_owner_("AddContact", self)
         self.window.setTitle_("Add Contact")
 
@@ -81,8 +81,15 @@ class AddContactController(NSObject):
             self.belonging_groups = [group for group in self.all_groups if group.name == group]
         else:    
             self.belonging_groups = []
+    
         if uri:
-            self.uris.append((uri, 'SIP'))
+            if type and type.lower() in ('sip', 'xmpp'):
+                type = type.upper()
+            elif type:
+                type = type.title()
+            else:
+                type = 'SIP'
+            self.uris.append((uri, type))
 
         self.update_default_uri()
         self.nameText.setStringValue_(name or "")

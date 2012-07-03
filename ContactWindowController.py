@@ -1108,7 +1108,11 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def addContactWithUri_(self, sender):
         item = sender.representedObject()
-        self.model.addContact(item.uri, display_name=item.name)
+        try:
+            type = (uri.type for uri in item.uris if uri.uri == item.uri).next()
+        except StopIteration:
+            type = None
+        self.model.addContact(item.uri, display_name=item.name, type=type)
 
     @objc.IBAction
     def addContact_(self, sender):
@@ -1163,7 +1167,19 @@ class ContactWindowController(NSWindowController):
     def mergeContacts_(self, sender):
         source = sender.representedObject()['source']
         destination = sender.representedObject()['destination']
-        destination.contact.uris.add(ContactURI(uri=source.uri))
+        try:
+            type = (uri.type for uri in source.uris if uri.uri == source.uri).next()
+        except StopIteration:
+            pass
+
+        if type and type.lower() in ('sip', 'xmpp'):
+            type = type.upper()
+        elif type:
+            type = type.title()
+        else:
+            type = 'SIP'
+
+        destination.contact.uris.add(ContactURI(uri=source.uri, type=type))
         destination.contact.save()
     
     @objc.IBAction
@@ -1358,7 +1374,7 @@ class ContactWindowController(NSWindowController):
                 if uri:
                     exists = uri in (contact.uri for contact in self.searchResultsModel.groupsList)
                     if not exists:
-                        contact = LdapSearchResultContact(str(uri), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
+                        contact = LdapSearchResultContact(str(uri), uri_type=type, name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
                         contact.setDetail('%s (%s)' % (str(uri), type))
                         self.ldap_found_contacts.append(contact)
 
