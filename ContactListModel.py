@@ -163,6 +163,10 @@ class BlinkContact(NSObject):
         self._preferred_media = preferred_media or 'audio'
         self.setUsernameAndDomain()
 
+    @property        
+    def model(self):     
+        return NSApp.delegate().contactsWindowController.model
+
     def dealloc(self):
         self.icon = None
         self.nc = None
@@ -481,20 +485,90 @@ class SystemAddressBookBlinkContact(BlinkContact):
     editable = True
     deletable = False
 
-    def __init__(self, id, uris, name=None, icon=None, detail=None):
+    def __init__(self, ab_contact):
         self.type = 'addressbook'
+        self.id = ab_contact.uniqueId()
+        
+        name = formatABPersonName(ab_contact)
+        company = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
+        if company:
+            name += " ("+unicode(company)+")" if name else unicode(company)
+        
+        self.name = name
+
+        addresses = []
+
+        labelNames = {
+            AddressBook.kABPhoneWorkLabel:   "work",
+            AddressBook.kABPhoneWorkFAXLabel: "fax",
+            AddressBook.kABPhoneHomeFAXLabel: "fax",
+            AddressBook.kABPhoneHomeLabel:   "home",
+            AddressBook.kABPhoneMainLabel:   "main",
+            AddressBook.kABPhoneMobileLabel: "mobile",
+            AddressBook.kABOtherLabel:       "other"
+            }
+
+        # get phone numbers from the Phone section
+        value = ab_contact.valueForProperty_(AddressBook.kABPhoneProperty)
+        if value:
+            for n in range(value.count()):
+                label = value.labelAtIndex_(n)
+                uri = unicode(value.valueAtIndex_(n))
+                if labelNames.get(label, None) != 'fax':
+                    addresses.append((labelNames.get(label, label), sip_prefix_pattern.sub("", uri)))
+        
+        # get SIP addresses from the Email section
+        value = ab_contact.valueForProperty_(AddressBook.kABEmailProperty)
+        if value:
+            for n in range(value.count()):
+                label = value.labelAtIndex_(n)
+                uri = unicode(value.valueAtIndex_(n))
+                if label == 'sip' or uri.startswith(("sip:", "sips:")):
+                    addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
+        
+        # get SIP addresses from the URLs section
+        value = ab_contact.valueForProperty_(AddressBook.kABURLsProperty)
+        if value:
+            for n in range(value.count()):
+                label = value.labelAtIndex_(n)
+                uri = unicode(value.valueAtIndex_(n))
+                if label == 'sip' or uri.startswith(("sip:", "sips:")):
+                    addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
+        
+        uris = []
+        for address_type, address in addresses:
+            if not address:
+                continue
+            
+            detail = "%s (%s)"%(address, address_type) if address_type else address
+            
+            # strip everything that's not numbers from the URIs if they are not SIP URIs
+            if "@" not in address:
+                if address.startswith("sip:"):
+                    address = address[4:]
+                contact_uri = "+" if address[0] == "+" else ""
+                contact_uri += "".join(c for c in address if c in "0123456789#*")
+            else:
+                contact_uri = address
+            uris.append(ContactURI(uri=contact_uri, type=address_type))
+
         self.uris = uris
-        first_uri = next(iter(self.uris))
-        self.uri = first_uri.uri
+        if self.uris:
+            first_uri = next(iter(self.uris))
+            self.uri = first_uri.uri
+        else:
+            self.uri = ''
         self.default_uri = self.uri
-        self.id = id
-        self.name = NSString.stringWithString_(name or self.uri)
+        self.name = NSString.stringWithString_(self.name or self.uri)
         self.display_name = unicode(self.name)
-        self.detail = NSString.stringWithString_(detail or self.uri)
+        self.detail = NSString.stringWithString_(self.uri or self.name)
         self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
-        self.icon = icon
+        idata = ab_contact.imageData()
+        self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
         self._preferred_media = 'audio'
         self.setUsernameAndDomain()
+        if self.id in self.model.addressbook_group.favorites:
+            self.setFavorite(True)
 
     def setFavorite(self, favorite):
         self.favorite = favorite
@@ -792,78 +866,9 @@ class AddressBookBlinkGroup(BlinkGroup):
         if book is None:
             return
 
-        default_icon = NSImage.imageNamed_("NSUser")
-        labelNames = {
-            AddressBook.kABPhoneWorkLabel:   "work",
-            AddressBook.kABPhoneWorkFAXLabel: "fax",
-            AddressBook.kABPhoneHomeFAXLabel: "fax",
-            AddressBook.kABPhoneHomeLabel:   "home",
-            AddressBook.kABPhoneMainLabel:   "main",
-            AddressBook.kABPhoneMobileLabel: "mobile",
-            AddressBook.kABOtherLabel:       "other"
-        }
-
-        for match in book.people():
-            person_id = match.uniqueId()
-            name = formatABPersonName(match)
-            company = match.valueForProperty_(AddressBook.kABOrganizationProperty)
-            if company:
-                name += " ("+unicode(company)+")" if name else unicode(company)
-            sip_addresses = []
-            # get phone numbers from the Phone section
-            value = match.valueForProperty_(AddressBook.kABPhoneProperty)
-            if value:
-                for n in range(value.count()):
-                    label = value.labelAtIndex_(n)
-                    uri = unicode(value.valueAtIndex_(n))
-                    if labelNames.get(label, None) != 'fax':
-                        sip_addresses.append((labelNames.get(label, label), sip_prefix_pattern.sub("", uri)))
-
-            # get SIP addresses from the Email section
-            value = match.valueForProperty_(AddressBook.kABEmailProperty)
-            if value:
-                for n in range(value.count()):
-                    label = value.labelAtIndex_(n)
-                    uri = unicode(value.valueAtIndex_(n))
-                    if label == 'sip' or uri.startswith(("sip:", "sips:")):
-                        sip_addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
-
-            # get SIP addresses from the URLs section
-            value = match.valueForProperty_(AddressBook.kABURLsProperty)
-            if value:
-                for n in range(value.count()):
-                    label = value.labelAtIndex_(n)
-                    uri = unicode(value.valueAtIndex_(n))
-                    if label == 'sip' or uri.startswith(("sip:", "sips:")):
-                        sip_addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
-
-            if not sip_addresses:
-                continue
-
-            idata = match.imageData()
-            photo = NSImage.alloc().initWithData_(idata) if idata else None
-
-            uris = []
-            for address_type, sip_address in sip_addresses:
-                if not sip_address:
-                    continue
-
-                detail = "%s (%s)"%(sip_address, address_type) if address_type else sip_address
-
-                # strip everything that's not numbers from the URIs if they are not SIP URIs
-                if "@" not in sip_address:
-                    if sip_address.startswith("sip:"):
-                        sip_address = sip_address[4:]
-                    contact_uri = "+" if sip_address[0] == "+" else ""
-                    contact_uri += "".join(c for c in sip_address if c in "0123456789#*")
-                else:
-                    contact_uri = sip_address
-                uris.append(ContactURI(uri=contact_uri, type=address_type))
-
-            if uris:
-                blink_contact = SystemAddressBookBlinkContact(person_id, uris, name=name, icon=photo or default_icon, detail=detail)
-                if person_id in self.favorites:
-                    blink_contact.setFavorite(True)
+        for ab_contact in book.people():
+            blink_contact = SystemAddressBookBlinkContact(ab_contact)
+            if blink_contact.uri:
                 self.contacts.append(blink_contact)
 
         self.sortContacts()
