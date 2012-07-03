@@ -2310,6 +2310,9 @@ class ContactListModel(CustomListModel):
         return False
 
     def editContact(self, blink_contact):
+        if not blink_contact:
+            return
+
         if type(blink_contact) == BlinkGroup:
             self.editGroup(blink_contact)
             return
