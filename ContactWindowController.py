@@ -1150,10 +1150,14 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def editContact_(self, sender):
-        contact = sender.representedObject()
-        self.model.editContact(contact)
-        self.refreshContactsList()
-        self.searchContacts()
+        try:
+            contact = self.getSelectedContacts()[0]
+        except IndexError:
+            self.renameGroup_(sender)
+        else:
+            self.model.editContact(contact)
+            self.refreshContactsList()
+            self.searchContacts()
 
     @objc.IBAction
     def mergeContacts_(self, sender):
@@ -1164,31 +1168,41 @@ class ContactWindowController(NSWindowController):
     
     @objc.IBAction
     def removeContactFromGroup_(self, sender):
-        contact = sender.representedObject()[0]
-        group = sender.representedObject()[1]
-        self.model.removeContactFromGroup(contact, group)
-        self.refreshContactsList()
-        self.searchContacts()
+        for contact in self.getSelectedContacts() or ():
+            contact = sender.representedObject()[0]
+            group = sender.representedObject()[1]
+            self.model.removeContactFromGroup(contact, group)
+            self.refreshContactsList()
+            self.searchContacts()
 
     @objc.IBAction
     def deleteContact_(self, sender):
-        contact = sender.representedObject()
-        self.model.deleteContact(contact)
-        self.refreshContactsList()
-        self.searchContacts()
+        for contact in self.getSelectedContacts() or ():
+            if isinstance(contact, BlinkContact):
+                self.model.deleteContact(contact)
+            else:
+                self.model.deleteGroup(contact)
+            self.refreshContactsList()
+            self.searchContacts()
 
     @objc.IBAction
     def renameGroup_(self, sender):
-        group = sender.representedObject()
-        self.model.editGroup(group)
-        self.refreshContactsList()
-        self.searchContacts()
+        row = self.contactOutline.selectedRow()
+        if row >= 0:
+            item = self.contactOutline.itemAtRow_(row)
+            group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
+            self.model.editGroup(group)
+            self.refreshContactsList()
+            self.searchContacts()
 
     @objc.IBAction
     def deleteGroup_(self, sender):
-        group = sender.representedObject()
-        self.model.deleteGroup(group)
-        self.refreshContactsList()
+        row = self.contactOutline.selectedRow()
+        if row >= 0:
+            item = self.contactOutline.itemAtRow_(row)
+            group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
+            self.model.deleteGroup(group)
+            self.refreshContactsList()
 
     @objc.IBAction
     def silentClicked_(self, sender):
@@ -1298,7 +1312,7 @@ class ContactWindowController(NSWindowController):
             local_found_contacts = [contact for group in self.model.groupsList if group.ignore_search is False for contact in group.contacts if text in contact]
             found_count = {}
             for local_found_contact in local_found_contacts:
-                if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None and  local_found_contact.uri != 'None':
+                if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None:
                     if local_found_contact.contact.id in found_count.keys():
                         continue
                     else:
@@ -2837,7 +2851,6 @@ class ContactWindowController(NSWindowController):
             if type(item) == SystemAddressBookBlinkContact:
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
-                lastItem.setRepresentedObject_(item)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
             elif type(item) == LdapSearchResultContact:
@@ -2858,7 +2871,6 @@ class ContactWindowController(NSWindowController):
                 if item.editable:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-                    lastItem.setRepresentedObject_(item)
                 elif type(item) == FavoriteBlinkContact:
                     if item.type == "addressbook":
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -2883,12 +2895,10 @@ class ContactWindowController(NSWindowController):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
                 lastItem.setRepresentedObject_((item, group))
         elif isinstance(item, BlinkGroup):
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editGroup:", "")
-            lastItem.setRepresentedObject_(item)
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")
             lastItem.setEnabled_(item.editable)
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
             lastItem.setEnabled_(item.deletable)
-            lastItem.setRepresentedObject_(item)
 
     def menuWillOpen_(self, menu):
         def setupAudioDeviceMenu(menu, tag, devices, option_name, selector):
