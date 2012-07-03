@@ -1146,6 +1146,7 @@ class ContactWindowController(NSWindowController):
                     self.contactOutline.scrollRowToVisible_(row)
                     self.window().makeFirstResponder_(self.contactOutline)
 
+
     @objc.IBAction
     def editContact_(self, sender):
         try:

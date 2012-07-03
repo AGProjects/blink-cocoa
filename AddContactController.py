@@ -376,7 +376,7 @@ class EditContactController(AddContactController):
     def __init__(self, blink_contact):
         self.dealloc_timer = None
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
-        self.all_groups = list(g for g in self.groupsList if g.editable and g.type!= 'no_group')
+        self.all_groups = list(g for g in self.groupsList if g.editable and g.type != 'no_group')
         self.uris = []
 
         self.blink_contact = blink_contact
@@ -387,7 +387,6 @@ class EditContactController(AddContactController):
         self.addressText.setStringValue_(blink_contact.uri or "")
         self.photoImage.setImage_(blink_contact.icon or self.defaultPhotoImage)        
         self.preferredMedia.selectCellWithTag_(2 if blink_contact.preferred_media == "chat" else 1)
-        
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         seen_item = {}
         for uri in blink_contact.contact.uris:
