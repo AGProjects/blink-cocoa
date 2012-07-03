@@ -973,7 +973,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="261364942">
 											<reference key="NSMenu" ref="189998304"/>
 											<int key="NSIndent">2</int>
-											<string key="NSTitle">Subscribe to Presence Information</string>
+											<string key="NSTitle">Subscribe to Contact's Presence Information</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
@@ -986,7 +986,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="804253095">
 											<reference key="NSMenu" ref="189998304"/>
 											<int key="NSIndent">2</int>
-											<string key="NSTitle">Allow to see My Presence Information</string>
+											<string key="NSTitle">Allow Contact to see my Presence Information</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
@@ -1012,7 +1012,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="1008292758">
 											<reference key="NSMenu" ref="189998304"/>
 											<int key="NSIndent">2</int>
-											<string key="NSTitle">Subscribe to Phone Calls</string>
+											<string key="NSTitle">Subscribe to Contact's Active Calls</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
@@ -1025,7 +1025,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="124511290">
 											<reference key="NSMenu" ref="189998304"/>
 											<int key="NSIndent">2</int>
-											<string key="NSTitle">Allow to see My Phone Calls</string>
+											<string key="NSTitle">Allow Contact to see my Active Calls</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
