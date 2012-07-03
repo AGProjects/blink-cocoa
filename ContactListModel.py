@@ -411,7 +411,7 @@ class HistoryBlinkContact(BlinkContact):
 
 class FavoriteBlinkContact(BlinkPresenceContact):
     """Contact representation for a Favorite contact"""
-    editable = False
+    editable = True
     deletable = False
 
     def setFavorite(self, favorite):
@@ -2310,11 +2310,7 @@ class ContactListModel(CustomListModel):
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             return
             
-        editable_favorite = False
-        if type(blink_contact) == FavoriteBlinkContact and blink_contact.type == 'presence':
-            editable_favorite = True
-
-        if not blink_contact.editable and not editable_favorite:
+        if not blink_contact.editable:
             return
 
         controller = EditContactController(blink_contact)
