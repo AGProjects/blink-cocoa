@@ -1060,7 +1060,7 @@ class ContactWindowController(NSWindowController):
         self.contactsMenu.itemWithTag_(32).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=True)) > 0)
         self.contactsMenu.itemWithTag_(33).setEnabled_(not readonly)
         self.contactsMenu.itemWithTag_(34).setEnabled_(not readonly)
-        self.contactsMenu.itemWithTag_(36).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=True)) > 0)
+        self.contactsMenu.itemWithTag_(36).setEnabled_(len(self.getSelectedContacts(includeGroups=True)) > 0)
 
     @objc.IBAction
     def backToContacts_(self, sender):
@@ -1203,9 +1203,8 @@ class ContactWindowController(NSWindowController):
                     self.contactOutline.collapseItem_(group)
                 else:
                     self.contactOutline.expandItem_expandChildren_(group, False)
-                
+                self.model.saveGroupPosition()
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(self.contactOutline.rowForItem_(group)), False)
-                selection = self.contactOutline.selectedRowIndexes()
              
     @objc.IBAction
     def deleteContact_(self, sender):
@@ -3077,7 +3076,7 @@ class ContactWindowController(NSWindowController):
             item = self.contactsMenu.itemWithTag_(35) # Delete Group
             item.setEnabled_(selected_group and selected_group.deletable)
             item = self.contactsMenu.itemWithTag_(36) # Expand Group
-            item.setEnabled_(selected_group and selected_group.deletable)
+            item.setEnabled_(selected_group)
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
             item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
