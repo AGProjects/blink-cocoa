@@ -1394,88 +1394,89 @@ class ContactListModel(CustomListModel):
                 return
             new_groups = {}
             seen_uri = {}
-            for backup_contact in contacts:
-                if version == 1:
+            with AddressbookManager().transaction():
+                for backup_contact in contacts:
+                    if version == 1:
+                        try:
+                            if backup_contact['uri'] in seen_uri.keys():
+                                continue
+                            if self.hasContactMatchingURI(backup_contact['uri']):
+                                continue
+                            contact = Contact()
+                            contact.default_uri = backup_contact['uri']
+                            contact.uris.add(ContactURI(uri=backup_contact['uri'], type='SIP'))
+                            contact.name = backup_contact['name'] or contact.default_uri
+                            contact.preferred_media = backup_contact['preferred_media'] or 'audio'
+                            contact.icon = backup_contact['icon']
+                            contact.favorite = backup_contact['favorite']
+                            contact.save()
+                            group = backup_contact['group']
+                            if group:
+                                try:
+                                    contacts = contacts_for_group[group]
+                                except KeyError:
+                                    contacts_for_group[group] = [contact]
+                                else:
+                                    contacts_for_group[group].append(contact)
+                            restored_contacts += 1
+                            seen_uri[backup_contact['uri']] = True
+                        except DuplicateIDError:
+                            pass
+                        except Exception, e:
+                            BlinkLogger().log_info(u"Contacts restore failed: %s" % e)
+                    elif version == 2:
+                        try:
+                            contact = Contact(id=backup_contact['id'])
+                            contact.name = backup_contact['name']
+                            contact.default_uri = backup_contact['default_uri']
+                            for uri in backup_contact['uris']:
+                                contact.uris.add(ContactURI(uri=uri[0], type=uri[1]))
+                            contact.preferred_media = backup_contact['preferred_media']
+                            contact.icon = backup_contact['icon']
+                            contact.favorite = backup_contact['favorite']
+                            presence = backup_contact['presence']
+                            dialog = backup_contact['dialog']
+                            contact.presence.policy = presence['policy']
+                            contact.presence.subscribe = presence['subscribe']
+                            contact.dialog.policy = dialog['policy']
+                            contact.dialog.subscribe = dialog['subscribe']
+                            contact.save()
+                            restored_contacts += 1
+                        except DuplicateIDError:
+                            pass
+                        except Exception, e:
+                            BlinkLogger().log_info(u"Contacts restore failed: %s" % e)
+            if version == 1:
+                for key in contacts_for_group.keys():
                     try:
-                        if backup_contact['uri'] in seen_uri.keys():
-                            continue
-                        if self.hasContactMatchingURI(backup_contact['uri']):
-                            continue
-                        contact = Contact()
-                        contact.default_uri = backup_contact['uri']
-                        contact.uris.add(ContactURI(uri=backup_contact['uri'], type='SIP'))
-                        contact.name = backup_contact['name'] or contact.default_uri
-                        contact.preferred_media = backup_contact['preferred_media'] or 'audio'
-                        contact.icon = backup_contact['icon']
-                        contact.favorite = backup_contact['favorite']
-                        contact.save()
-                        group = backup_contact['group']
-                        if group:
-                            try:
-                                contacts = contacts_for_group[group]
-                            except KeyError:
-                                contacts_for_group[group] = [contact]
-                            else:
-                                contacts_for_group[group].append(contact)
-                        restored_contacts += 1
-                        seen_uri[backup_contact['uri']] = True
-                    except DuplicateIDError:
-                        pass
-                    except Exception, e:
-                        BlinkLogger().log_info(u"Contacts restore failed: %s" % e)
-                elif version == 2:
+                        group = (group for group in AddressbookManager().get_groups() if group.name == key).next()
+                    except StopIteration:
+                        group = Group()
+                        group.name = key
+                        restored_groups += 1
+                        group.contacts = contacts_for_group[key]
+                    else: 
+                        for c in contacts_for_group[key]:
+                            group.contacts.add(c)
+                    
+                    group.save()
+            elif version == 2:
+                for backup_group in data['groups']:
                     try:
-                        contact = Contact(id=backup_contact['id'])
-                        contact.name = backup_contact['name']
-                        contact.default_uri = backup_contact['default_uri']
-                        for uri in backup_contact['uris']:
-                            contact.uris.add(ContactURI(uri=uri[0], type=uri[1]))
-                        contact.preferred_media = backup_contact['preferred_media']
-                        contact.icon = backup_contact['icon']
-                        contact.favorite = backup_contact['favorite']
-                        presence = backup_contact['presence']
-                        dialog = backup_contact['dialog']
-                        contact.presence.policy = presence['policy']
-                        contact.presence.subscribe = presence['subscribe']
-                        contact.dialog.policy = dialog['policy']
-                        contact.dialog.subscribe = dialog['subscribe']
-                        contact.save()
-                        restored_contacts += 1
+                        group = Group(id=backup_group['id'])
+                        group.name = backup_group['name']
+                        restored_groups += 1
                     except DuplicateIDError:
-                        pass
-                    except Exception, e:
-                        BlinkLogger().log_info(u"Contacts restore failed: %s" % e)
-        if version == 1:
-            for key in contacts_for_group.keys():
-                try:
-                    group = (group for group in AddressbookManager().get_groups() if group.name == key).next()
-                except StopIteration:
-                    group = Group()
-                    group.name = key
-                    restored_groups += 1
-                    group.contacts = contacts_for_group[key]
-                else: 
-                    for c in contacts_for_group[key]:
-                        group.contacts.add(c)
-                
-                group.save()
-        elif version == 2:
-            for backup_group in data['groups']:
-                try:
-                    group = Group(id=backup_group['id'])
-                    group.name = backup_group['name']
-                    restored_groups += 1
-                except DuplicateIDError:
-                    group = AddressbookManager().get_group(backup_group['id'])
+                        group = AddressbookManager().get_group(backup_group['id'])
 
-                for id in backup_group['contacts']:
-                    try:
-                        contact = AddressbookManager().get_contact(id)
-                    except Exception:
-                        pass
-                    else:
-                        group.contacts.add(contact)
-                group.save()
+                    for id in backup_group['contacts']:
+                        try:
+                            contact = AddressbookManager().get_contact(id)
+                        except Exception:
+                            pass
+                        else:
+                            group.contacts.add(contact)
+                    group.save()
 
         panel_text = ''
         if not restored_contacts:
