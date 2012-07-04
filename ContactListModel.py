@@ -1965,9 +1965,8 @@ class ContactListModel(CustomListModel):
             self.groupsList.insert(index, blink_group)
             for contact in group.contacts:
                 blink_contact = BlinkPresenceContact(contact)
-                if blink_contact is not None:
-                    blink_group.contacts.append(blink_contact)
-                    self.removeContactFromNoGroup(contact)
+                blink_group.contacts.append(blink_contact)
+                self.removeContactFromNoGroup(contact)
 
             blink_group.sortContacts()
 
@@ -2276,14 +2275,7 @@ class ContactListModel(CustomListModel):
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
             contact.save()
 
-            blink_contact = BlinkPresenceContact(contact)
-            self.all_contacts_group.contacts.append(blink_contact)
-            self.all_contacts_group.sortContacts()
-
-            if not new_contact['groups']:
-                self.no_group.contacts.append(blink_contact)
-                self.no_group.sortContacts()
-            else:
+            if new_contact['groups']:
                 self.addGroupsForContact(contact, new_contact['groups'])
 
             return True
