@@ -666,7 +666,6 @@ class AllContactsBlinkGroup(BlinkGroup):
     editable = False
     deletable = False
     contacts = []
-    contact_map = {}
 
     def __init__(self, name=u'All Contacts'):
         self.name = NSString.stringWithString_(name)
@@ -1791,7 +1790,6 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
         blink_contact = BlinkPresenceContact(contact)
-        self.all_contacts_group.contact_map[contact] = blink_contact
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
 
@@ -1807,26 +1805,7 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
-        blink_contact = self.all_contacts_group.contact_map[contact]
-        other_groups = self.getBlinkGroupsForBlinkContact(blink_contact)
-        for other_group in other_groups:
-            try:
-                other_group.group.contacts.remove(contact)
-                other_group.group.save()
-            except ValueError:
-                pass
-        try:
-            self.all_contacts_group.contacts.remove(blink_contact)
-            self.favorites_group.sortContacts()
-        except ValueError:
-            pass
-
-        try: 
-            del self.all_contacts_group.contact_map[contact]
-        except KeyError:
-            pass
-    
-        self.removeFromNoGroup(blink_contact)
+        self.removeContactFromAllContactsGroup(contact)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookContactDidChange(self, notification):
@@ -1894,15 +1873,7 @@ class ContactListModel(CustomListModel):
                             self.favorites_group.contacts.append(blink_contact)
                             self.favorites_group.sortContacts()
                     else:
-                        try:
-                            blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.contact == contact).next()    
-                        except StopIteration:                     
-                            pass
-                        else:
-                            try:
-                                self.favorites_group.contacts.remove(blink_contact)
-                            except ValueError:
-                                pass
+                        self.removeContactFromFavoritesGroup(contact)
 
                 aliases = (alias.uri for alias in contact.uris if alias.uri != blink_contact.uri)
                 blink_contact.setAliases(aliases)
@@ -2000,7 +1971,7 @@ class ContactListModel(CustomListModel):
                 blink_contact = BlinkPresenceContact(contact)
                 if blink_contact is not None:
                     blink_group.contacts.append(blink_contact)
-                    self.removeFromNoGroup(blink_contact)
+                    self.removeContactFromNoGroup(contact)
 
             blink_group.sortContacts()
 
@@ -2042,7 +2013,7 @@ class ContactListModel(CustomListModel):
                         blink_contact = BlinkPresenceContact(contact)
                         blink_group.contacts.append(blink_contact)
                         blink_group.sortContacts()
-                        self.removeFromNoGroup(blink_contact)
+                        self.removeContactFromNoGroup(contact)
 
                 removed = notification.data.modified['contacts'].removed
                 for contact in removed:
@@ -2054,10 +2025,9 @@ class ContactListModel(CustomListModel):
                         blink_group.contacts.remove(blink_contact)
                         blink_group.sortContacts()
                         if not self.getBlinkGroupsForBlinkContact(blink_contact):
-                            if contact in self.all_contacts_group.contact_map.keys():
-                                blink_contact = BlinkPresenceContact(contact)
-                                self.no_group.contacts.append(blink_contact)
-                                self.no_group.sortContacts()        
+                            blink_contact = BlinkPresenceContact(contact)
+                            self.no_group.contacts.append(blink_contact)
+                            self.no_group.sortContacts()        
 
             elif 'name' in notification.data.modified:
                 if blink_group.name != group.name:
@@ -2081,13 +2051,8 @@ class ContactListModel(CustomListModel):
                 self.favorites_group.sortContacts()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
         else:
-            try:
-                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.id == contact.id).next()
-            except StopIteration:
-                pass
-            else:
-                self.favorites_group.contacts.remove(blink_contact)
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.removeContactFromFavoritesGroup(contact)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
@@ -2095,7 +2060,7 @@ class ContactListModel(CustomListModel):
             contact.contact.favorite = False
             contact.contact.save()
         elif contact.type == 'addressbook':
-            self.favorites_group.contacts.remove(contact)
+            self.removeContactFromFavoritesGroup(contact)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
             try:
@@ -2116,12 +2081,6 @@ class ContactListModel(CustomListModel):
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
-
-    def getBlinkContactForContact(self, contact):
-        try:
-            return self.all_contacts_group.contact_map[contact]
-        except IndexError:
-            return None
 
     def getBlinkGroupsForBlinkContact(self, contact):
         found_groups = []
@@ -2216,14 +2175,39 @@ class ContactListModel(CustomListModel):
             self.groupsList.insert(self.bonjour_group.group.position, self.bonjour_group)
             self.saveGroupPosition()
 
-    def removeFromNoGroup(self, blink_contact):
+    def removeContactFromAllContactsGroup(self, contact):
+        self.removeContactFromFavoritesGroup(contact)
+        self.removeContactFromNoGroup(contact)
+
         try:
-            no_group_contact = (no_group_contact for no_group_contact in self.no_group.contacts if no_group_contact.contact.id  == blink_contact.contact.id).next()
+            blink_contact = (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.contact.id  == contact.id).next()
         except StopIteration:
             pass
         else:
             try:
-                self.no_group.contacts.remove(no_group_contact)
+                self.all_contacts_group.contacts.remove(blink_contact)
+            except ValueError:
+                pass
+
+    def removeContactFromFavoritesGroup(self, contact):
+        try:
+            blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.contact.id  == contact.id).next()
+        except StopIteration:
+            pass
+        else:
+            try:
+                self.favorites_group.contacts.remove(blink_contact)
+            except ValueError:
+                pass
+
+    def removeContactFromNoGroup(self, contact):
+        try:
+            blink_contact = (blink_contact for blink_contact in self.no_group.contacts if blink_contact.contact.id  == contact.id).next()
+        except StopIteration:
+            pass
+        else:
+            try:
+                self.no_group.contacts.remove(blink_contact)
             except ValueError:
                 pass
     
@@ -2297,7 +2281,6 @@ class ContactListModel(CustomListModel):
             contact.save()
 
             blink_contact = BlinkPresenceContact(contact)
-            self.all_contacts_group.contact_map[contact] = blink_contact
             self.all_contacts_group.contacts.append(blink_contact)
             self.all_contacts_group.sortContacts()
 
@@ -2387,11 +2370,6 @@ class ContactListModel(CustomListModel):
         if ret == NSAlertDefaultReturn:
             groups = self.getBlinkGroupsForBlinkContact(blink_contact)
             blink_contact.contact.delete()
-            for g in groups:
-                try:
-                    g.contacts.remove(blink_contact)
-                except ValueError:
-                    pass
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def deleteGroup(self, blink_group):
