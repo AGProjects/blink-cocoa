@@ -1148,9 +1148,6 @@ class CustomListModel(NSObject):
                         self.addContact(address=sourceContact.uri, group=targetGroup.group.name, display_name=sourceContact.display_name)
                         return True
 
-                    if type(sourceGroup) == AllContactsBlinkGroup:
-                        sourceContact = BlinkPresenceContact(sourceContact.contact)
-
                 return True
             return False
 
