@@ -868,7 +868,7 @@ class AddressBookBlinkGroup(BlinkGroup):
 
         for ab_contact in book.people():
             blink_contact = SystemAddressBookBlinkContact(ab_contact)
-            if blink_contact.uri:
+            if blink_contact.uri and blink_contact.uri != 'None':
                 self.contacts.append(blink_contact)
 
         self.sortContacts()
