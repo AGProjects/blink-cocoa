@@ -1,8 +1,9 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-__all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 
-           'run_in_gui_thread', 'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit',
+__all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'run_in_gui_thread',
+           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session',
+           'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'AccountInfo', 'DictDiffer']
 
 import re
