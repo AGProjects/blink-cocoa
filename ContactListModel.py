@@ -1013,6 +1013,12 @@ class CustomListModel(NSObject):
                     if sourceGroup == targetGroup:
                         return NSDragOperationNone
 
+                    if type(targetGroup) == NoBlinkGroup:
+                        return NSDragOperationNone
+
+                    if type(targetGroup) == AllContactsBlinkGroup:
+                        return NSDragOperationNone
+
                     if type(targetGroup) == FavoritesBlinkGroup:
                         if sourceContact.favorite:
                             return NSDragOperationNone
@@ -1031,6 +1037,12 @@ class CustomListModel(NSObject):
                 else:
                     targetGroup = table.parentForItem_(proposed_item)
                     if sourceGroup == targetGroup and not targetGroup.editable:
+                        return NSDragOperationNone
+
+                    if type(targetGroup) == NoBlinkGroup:
+                        return NSDragOperationNone
+                    
+                    if type(targetGroup) == AllContactsBlinkGroup:
                         return NSDragOperationNone
 
                     if type(targetGroup) == FavoritesBlinkGroup:
@@ -1097,13 +1109,25 @@ class CustomListModel(NSObject):
                 sourceContact = sourceGroup.contacts[blink_contact]
                 if isinstance(item, BlinkGroup):
                     targetGroup = item
+
                     if type(targetGroup) == FavoritesBlinkGroup and not sourceContact.favorite:
                         sourceContact.setFavorite(True)
+                        return
+
+                    if isinstance(sourceContact, SystemAddressBookBlinkContact):
+                        try:
+                            uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
+                        except StopIteration:
+                            uri_type = None
+                        self.addContact(sourceContact.uri, display_name=sourceContact.name, type=uri_type)
+                        return
+                
+                    targetGroup.group.contacts.add(sourceContact.contact)
+                    targetGroup.group.save()
+
                     if sourceGroup.editable and not targetGroup.only_copy:
-                        del sourceGroup.contacts[blink_contact]
-                        targetGroup.contacts.insert(index, sourceContact)
-                    targetGroup.sortContacts()
-                    table.reloadData()
+                        sourceGroup.group.contacts.remove(sourceContact.contact)
+                        sourceGroup.group.save()
 
                     row = table.rowForItem_(sourceContact)
                     if row>=0:
@@ -1140,13 +1164,22 @@ class CustomListModel(NSObject):
                             targetContact.contact.save()
                         sourceContact.contact.delete()
                         return
-                
-                    try:
-                        targetGroup.group.contacts.add(sourceContact.contact)
-                        targetGroup.group.save()
-                    except AttributeError:
-                        self.addContact(address=sourceContact.uri, group=targetGroup.group.name, display_name=sourceContact.display_name)
+
+                    if isinstance(sourceContact, SystemAddressBookBlinkContact):
+                        try:
+                            uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
+                        except StopIteration:
+                            uri_type = None
+                        self.addContact(sourceContact.uri, display_name=sourceContact.name, type=uri_type)
+                        return
+
+                    if type(targetGroup) == FavoritesBlinkGroup and not sourceContact.favorite:
+                        sourceContact.setFavorite(True)
                         return True
+
+                    targetGroup.group.contacts.add(sourceContact.contact)
+                    targetGroup.group.save()
+                    return True
 
                 return True
             return False
@@ -2066,6 +2099,8 @@ class ContactListModel(CustomListModel):
                 ab_contact.setFavorite(False)
 
     def isBlinkContactInBlinkGroups(self, contact, group):
+        if not isinstance(contact, BlinkPresenceContact):
+            return False
         for blink_contact in group.contacts:
             if blink_contact.contact is None:
                 return False
