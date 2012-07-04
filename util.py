@@ -39,10 +39,7 @@ def show_error_panel(message):
 
 
 def checkValidPhoneNumber(number):
-    if _pstn_match_regexp.match(number):
-        return True
-    else:
-        return False
+    return bool(_pstn_match_regexp.match(number))
 
 
 def format_uri_type(type):
