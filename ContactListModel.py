@@ -1232,7 +1232,6 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
         self.nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
         self.nc.add_observer(self, name="CFGSettingsObjectDidChange")
-        self.nc.add_observer(self, name="AddressbookContactWasCreated")
         self.nc.add_observer(self, name="AddressbookContactWasActivated")
         self.nc.add_observer(self, name="AddressbookContactWasDeleted")
         self.nc.add_observer(self, name="AddressbookContactDidChange")
