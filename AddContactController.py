@@ -184,31 +184,29 @@ class AddContactController(NSObject):
     @objc.IBAction
     def subscribePopUpClicked_(self, sender):
         index = self.subscribePopUp.indexOfSelectedItem()
-        if index == 1:
+        if index == 3:
             self.subscriptions['presence']['subscribe'] = not self.subscriptions['presence']['subscribe']
-        elif index  == 2:
+        elif index  == 4:
             self.subscriptions['presence']['policy'] = 'allow' if self.subscriptions['presence']['policy'] == 'block' else 'block'
-        elif index == 5:
+        elif index == 7:
             self.subscriptions['dialog']['subscribe'] = not self.subscriptions['dialog']['subscribe']
-        elif index  == 6:
+        elif index  == 8:
             self.subscriptions['dialog']['policy'] = 'allow' if self.subscriptions['dialog']['policy'] == 'block' else 'block'
         self.updateSubscriptionMenus()
-
+    
     def updateSubscriptionMenus(self):
         self.subscribePopUp.selectItemAtIndex_(0)
         menu_item = self.subscribePopUp.itemAtIndex_(0)
         menu_item.setState_(NSOffState)
-        menu_item.setEnabled_(False)
-        menu_item = self.subscribePopUp.itemAtIndex_(1)
+
+        menu_item = self.subscribePopUp.itemAtIndex_(3)
         menu_item.setState_(NSOnState if self.subscriptions['presence']['subscribe'] else NSOffState)
-        menu_item = self.subscribePopUp.itemAtIndex_(2)
-        menu_item.setState_(NSOnState if self.subscriptions['presence']['policy'] == 'allow' else NSOffState)
         menu_item = self.subscribePopUp.itemAtIndex_(4)
-        menu_item.setState_(NSOffState)
-        menu_item.setEnabled_(False)
-        menu_item = self.subscribePopUp.itemAtIndex_(5)
+        menu_item.setState_(NSOnState if self.subscriptions['presence']['policy'] == 'allow' else NSOffState)
+        
+        menu_item = self.subscribePopUp.itemAtIndex_(7)
         menu_item.setState_(NSOnState if self.subscriptions['dialog']['subscribe'] else NSOffState)
-        menu_item = self.subscribePopUp.itemAtIndex_(6)
+        menu_item = self.subscribePopUp.itemAtIndex_(8)
         menu_item.setState_(NSOnState if self.subscriptions['dialog']['policy'] == 'allow' else NSOffState)
     
     @objc.IBAction
