@@ -30,8 +30,8 @@ from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
-from AddContactController import AddContactController, EditContactController
-from AddGroupController import AddGroupController
+from ContactController import AddContactController, EditContactController
+from GroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory

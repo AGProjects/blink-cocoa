@@ -69,7 +69,7 @@ class AddContactController(NSObject):
         self.nc = None
 
     def __init__(self, uri=None, name=None, group=None, type=None):
-        NSBundle.loadNibNamed_owner_("AddContact", self)
+        NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_("Add Contact")
 
         self.dealloc_timer = None
@@ -380,7 +380,7 @@ class EditContactController(AddContactController):
         self.uris = []
 
         self.blink_contact = blink_contact
-        NSBundle.loadNibNamed_owner_("AddContact", self)
+        NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_("Edit Contact")
         self.addButton.setTitle_("OK")
         self.nameText.setStringValue_(blink_contact.name or "")

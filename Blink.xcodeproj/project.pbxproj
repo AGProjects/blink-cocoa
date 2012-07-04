@@ -38,7 +38,7 @@
 		1F22729A12B554F50010A8B2 /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
 		1F22729B12B554F50010A8B2 /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
 		1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
-		1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
+		1F22729D12B554F50010A8B2 /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
 		1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
@@ -53,7 +53,6 @@
 		1F2272AA12B554F50010A8B2 /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
 		1F2272AC12B554F50010A8B2 /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
 		1F2272AD12B554F50010A8B2 /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
-		1F2272AE12B554F50010A8B2 /* AddContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE4B40FFC501E00701821 /* AddContactController.py */; };
 		1F2272AF12B554F50010A8B2 /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
 		1F2272B012B554F50010A8B2 /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
 		1F2272B112B554F50010A8B2 /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
@@ -130,8 +129,8 @@
 		1F2272FC12B554F50010A8B2 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1F2272FD12B554F50010A8B2 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
 		1F2272FE12B554F50010A8B2 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
-		1F2272FF12B554F50010A8B2 /* AddGroup.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */; };
-		1F22730012B554F50010A8B2 /* AddGroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */; };
+		1F2272FF12B554F50010A8B2 /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
+		1F22730012B554F50010A8B2 /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		1F22730112B554F50010A8B2 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
 		1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
 		1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
@@ -235,6 +234,9 @@
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
+		1F2D05C615A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
+		1F2D05C715A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
+		1F2D05C815A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
 		1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
 		1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
@@ -306,7 +308,7 @@
 		1F8DC32A135084FA0034815C /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
 		1F8DC32B135084FA0034815C /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
 		1F8DC32C135084FA0034815C /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
-		1F8DC32D135084FA0034815C /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
+		1F8DC32D135084FA0034815C /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
 		1F8DC32E135084FA0034815C /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		1F8DC330135084FA0034815C /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
@@ -321,7 +323,6 @@
 		1F8DC339135084FA0034815C /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
 		1F8DC33A135084FA0034815C /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
 		1F8DC33B135084FA0034815C /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
-		1F8DC33C135084FA0034815C /* AddContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE4B40FFC501E00701821 /* AddContactController.py */; };
 		1F8DC33D135084FA0034815C /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
 		1F8DC33E135084FA0034815C /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
 		1F8DC33F135084FA0034815C /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
@@ -398,8 +399,8 @@
 		1F8DC388135084FA0034815C /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1F8DC389135084FA0034815C /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
 		1F8DC38A135084FA0034815C /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
-		1F8DC38B135084FA0034815C /* AddGroup.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */; };
-		1F8DC38C135084FA0034815C /* AddGroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */; };
+		1F8DC38B135084FA0034815C /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
+		1F8DC38C135084FA0034815C /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		1F8DC38D135084FA0034815C /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
 		1F8DC38E135084FA0034815C /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
 		1F8DC38F135084FA0034815C /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
@@ -743,9 +744,8 @@
 		2B4C40FA1047809C00F40437 /* mic.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F81047809C00F40437 /* mic.png */; };
 		2B4C40FB1047809C00F40437 /* speaker.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F91047809C00F40437 /* speaker.png */; };
 		2B4C4100104783D800F40437 /* bell.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40FF104783D800F40437 /* bell.png */; };
-		2B4CA92F10AA5F2F00D5F19E /* AddGroup.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */; };
-		2B4CA93210AA5FAE00D5F19E /* AddGroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */; };
-		2B5DE4B50FFC501E00701821 /* AddContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE4B40FFC501E00701821 /* AddContactController.py */; };
+		2B4CA92F10AA5F2F00D5F19E /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
+		2B4CA93210AA5FAE00D5F19E /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		2B5DE5200FFC5D0500701821 /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
 		2B5DE67E0FFDAE1400701821 /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
 		2B5DE67F0FFDAE1400701821 /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
@@ -768,7 +768,7 @@
 		2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
 		2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
 		2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
-		2BAF381A0FE088C70040117A /* AddContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* AddContact.xib */; };
+		2BAF381A0FE088C70040117A /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
 		2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
 		2BAF381E0FE088C70040117A /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
@@ -1187,6 +1187,7 @@
 		1F274895138930580052C384 /* VideoView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoView.py; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
+		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
 		1F2FBFFC1462A444008B3D52 /* container-migration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "container-migration.plist"; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
@@ -1373,9 +1374,8 @@
 		2B4C40F81047809C00F40437 /* mic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mic.png; path = icons/mic.png; sourceTree = "<group>"; };
 		2B4C40F91047809C00F40437 /* speaker.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = speaker.png; path = icons/speaker.png; sourceTree = "<group>"; };
 		2B4C40FF104783D800F40437 /* bell.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bell.png; path = icons/bell.png; sourceTree = "<group>"; };
-		2B4CA92E10AA5F2F00D5F19E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddGroup.xib; sourceTree = "<group>"; };
-		2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddGroupController.py; sourceTree = "<group>"; };
-		2B5DE4B40FFC501E00701821 /* AddContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddContactController.py; sourceTree = "<group>"; };
+		2B4CA92E10AA5F2F00D5F19E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Group.xib; sourceTree = "<group>"; };
+		2B4CA93110AA5FAE00D5F19E /* GroupController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = GroupController.py; sourceTree = "<group>"; };
 		2B5DE51F0FFC5D0500701821 /* PreferencesController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferencesController.py; sourceTree = "<group>"; };
 		2B5DE6780FFDAE1400701821 /* file_received.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = file_received.wav; path = sounds/file_received.wav; sourceTree = "<group>"; };
 		2B5DE6790FFDAE1400701821 /* file_sent.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = file_sent.wav; path = sounds/file_sent.wav; sourceTree = "<group>"; };
@@ -1398,7 +1398,7 @@
 		2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
 		2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryViewer.py; sourceTree = "<group>"; };
-		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddContact.xib; sourceTree = "<group>"; };
+		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Contact.xib; sourceTree = "<group>"; };
 		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainWindow.xib; sourceTree = "<group>"; };
 		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
@@ -1891,11 +1891,11 @@
 			children = (
 				2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */,
 				2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */,
+				1F2D05C515A459DA00A7079A /* ContactController.py */,
 				2BC594740FCCDA910017CB1B /* ContactCell.py */,
-				2B5DE4B40FFC501E00701821 /* AddContactController.py */,
-				2BAF38080FE088C70040117A /* AddContact.xib */,
-				2B4CA93110AA5FAE00D5F19E /* AddGroupController.py */,
-				2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */,
+				2BAF38080FE088C70040117A /* Contact.xib */,
+				2B4CA93110AA5FAE00D5F19E /* GroupController.py */,
+				2B4CA92D10AA5F2F00D5F19E /* Group.xib */,
 			);
 			name = Contacts;
 			sourceTree = "<group>";
@@ -2227,7 +2227,7 @@
 				1F22729A12B554F50010A8B2 /* reconnect.png in Resources */,
 				1F22729B12B554F50010A8B2 /* SessionController.py in Resources */,
 				1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */,
-				1F22729D12B554F50010A8B2 /* AddContact.xib in Resources */,
+				1F22729D12B554F50010A8B2 /* Contact.xib in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
 				1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */,
@@ -2243,7 +2243,6 @@
 				1F2272AA12B554F50010A8B2 /* BlinkLogger.py in Resources */,
 				1F2272AC12B554F50010A8B2 /* mute.png in Resources */,
 				1F2272AD12B554F50010A8B2 /* paused.png in Resources */,
-				1F2272AE12B554F50010A8B2 /* AddContactController.py in Resources */,
 				1F2272AF12B554F50010A8B2 /* PreferencesController.py in Resources */,
 				1F2272B012B554F50010A8B2 /* file_received.wav in Resources */,
 				1F2272B112B554F50010A8B2 /* file_sent.wav in Resources */,
@@ -2320,8 +2319,8 @@
 				1F2272FC12B554F50010A8B2 /* ring_outbound2.wav in Resources */,
 				1F2272FD12B554F50010A8B2 /* ring_tone.wav in Resources */,
 				1F2272FE12B554F50010A8B2 /* FancyTabSwitcher.py in Resources */,
-				1F2272FF12B554F50010A8B2 /* AddGroup.xib in Resources */,
-				1F22730012B554F50010A8B2 /* AddGroupController.py in Resources */,
+				1F2272FF12B554F50010A8B2 /* Group.xib in Resources */,
+				1F22730012B554F50010A8B2 /* GroupController.py in Resources */,
 				1F22730112B554F50010A8B2 /* pencil.png in Resources */,
 				1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */,
 				1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */,
@@ -2433,6 +2432,7 @@
 				1F546252158B300A005628D9 /* NicknameController.py in Resources */,
 				1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAD1591BCE500A0FE51 /* Subject.xib in Resources */,
+				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2447,7 +2447,7 @@
 				1F8DC32A135084FA0034815C /* reconnect.png in Resources */,
 				1F8DC32B135084FA0034815C /* SessionController.py in Resources */,
 				1F8DC32C135084FA0034815C /* HorizontalBoxView.py in Resources */,
-				1F8DC32D135084FA0034815C /* AddContact.xib in Resources */,
+				1F8DC32D135084FA0034815C /* Contact.xib in Resources */,
 				1F8DC32E135084FA0034815C /* EnrollmentWindow.xib in Resources */,
 				1F8DC32F135084FA0034815C /* MainWindow.xib in Resources */,
 				1F8DC330135084FA0034815C /* PreferencesWindow.xib in Resources */,
@@ -2462,7 +2462,6 @@
 				1F8DC339135084FA0034815C /* BlinkLogger.py in Resources */,
 				1F8DC33A135084FA0034815C /* mute.png in Resources */,
 				1F8DC33B135084FA0034815C /* paused.png in Resources */,
-				1F8DC33C135084FA0034815C /* AddContactController.py in Resources */,
 				1F8DC33D135084FA0034815C /* PreferencesController.py in Resources */,
 				1F8DC33E135084FA0034815C /* file_received.wav in Resources */,
 				1F8DC33F135084FA0034815C /* file_sent.wav in Resources */,
@@ -2540,8 +2539,8 @@
 				1F8DC388135084FA0034815C /* ring_outbound2.wav in Resources */,
 				1F8DC389135084FA0034815C /* ring_tone.wav in Resources */,
 				1F8DC38A135084FA0034815C /* FancyTabSwitcher.py in Resources */,
-				1F8DC38B135084FA0034815C /* AddGroup.xib in Resources */,
-				1F8DC38C135084FA0034815C /* AddGroupController.py in Resources */,
+				1F8DC38B135084FA0034815C /* Group.xib in Resources */,
+				1F8DC38C135084FA0034815C /* GroupController.py in Resources */,
 				1F8DC38D135084FA0034815C /* pencil.png in Resources */,
 				1F8DC38E135084FA0034815C /* DesktopServerWindow.xib in Resources */,
 				1F8DC38F135084FA0034815C /* DesktopSharingController.py in Resources */,
@@ -2651,6 +2650,7 @@
 				1F546253158B300A005628D9 /* NicknameController.py in Resources */,
 				1F536AA71591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAE1591BCE500A0FE51 /* Subject.xib in Resources */,
+				1F2D05C815A459DA00A7079A /* ContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2665,7 +2665,7 @@
 				2B24517A0FCF8A9F0023DBFB /* reconnect.png in Resources */,
 				2BEFC12E0FD0BE4700447EFB /* SessionController.py in Resources */,
 				2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */,
-				2BAF381A0FE088C70040117A /* AddContact.xib in Resources */,
+				2BAF381A0FE088C70040117A /* Contact.xib in Resources */,
 				2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */,
 				2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */,
 				2BAF381E0FE088C70040117A /* PreferencesWindow.xib in Resources */,
@@ -2680,7 +2680,6 @@
 				2B11B0B30FF55C52007FC176 /* BlinkLogger.py in Resources */,
 				2B11B1220FF6B0B3007FC176 /* mute.png in Resources */,
 				2B11B1CF0FF735FB007FC176 /* paused.png in Resources */,
-				2B5DE4B50FFC501E00701821 /* AddContactController.py in Resources */,
 				2B5DE5200FFC5D0500701821 /* PreferencesController.py in Resources */,
 				2B5DE67E0FFDAE1400701821 /* file_received.wav in Resources */,
 				2B5DE67F0FFDAE1400701821 /* file_sent.wav in Resources */,
@@ -2758,8 +2757,8 @@
 				1FB9B12C1095BFF500284E18 /* ring_outbound2.wav in Resources */,
 				1FB9B12D1095BFF500284E18 /* ring_tone.wav in Resources */,
 				2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */,
-				2B4CA92F10AA5F2F00D5F19E /* AddGroup.xib in Resources */,
-				2B4CA93210AA5FAE00D5F19E /* AddGroupController.py in Resources */,
+				2B4CA92F10AA5F2F00D5F19E /* Group.xib in Resources */,
+				2B4CA93210AA5FAE00D5F19E /* GroupController.py in Resources */,
 				2B1FC09D10B104F8004C7355 /* pencil.png in Resources */,
 				2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */,
 				2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */,
@@ -2867,6 +2866,7 @@
 				1F546251158B300A005628D9 /* NicknameController.py in Resources */,
 				1F536AA51591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAC1591BCE500A0FE51 /* Subject.xib in Resources */,
+				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3095,12 +3095,12 @@
 			name = FileTransferItemView.xib;
 			sourceTree = "<group>";
 		};
-		2B4CA92D10AA5F2F00D5F19E /* AddGroup.xib */ = {
+		2B4CA92D10AA5F2F00D5F19E /* Group.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2B4CA92E10AA5F2F00D5F19E /* English */,
 			);
-			name = AddGroup.xib;
+			name = Group.xib;
 			sourceTree = "<group>";
 		};
 		2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */ = {
@@ -3127,12 +3127,12 @@
 			name = DesktopServerWindow.xib;
 			sourceTree = "<group>";
 		};
-		2BAF38080FE088C70040117A /* AddContact.xib */ = {
+		2BAF38080FE088C70040117A /* Contact.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2BAF38090FE088C70040117A /* English */,
 			);
-			name = AddContact.xib;
+			name = Contact.xib;
 			sourceTree = "<group>";
 		};
 		2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */ = {

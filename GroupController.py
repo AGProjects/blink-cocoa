@@ -15,7 +15,7 @@ class AddGroupController(NSObject):
         return cls.alloc().init()
 
     def init(self):
-        NSBundle.loadNibNamed_owner_("AddGroup", self)
+        NSBundle.loadNibNamed_owner_("Group", self)
         return self
 
     def runModal(self):
