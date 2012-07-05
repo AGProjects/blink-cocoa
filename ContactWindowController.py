@@ -3067,6 +3067,12 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(selected_group and selected_group.deletable)
             item = self.contactsMenu.itemWithTag_(36) # Expand Group
             item.setEnabled_(selected_group)
+            if selected_group:
+                item.setTitle_('Expand Group' if not selected_group.group.expanded else 'Collapse Group')
+            else:
+                item.setTitle_('Toggle Expansion')
+    
+
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
             item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
