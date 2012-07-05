@@ -85,6 +85,12 @@ class HistoryViewer(NSWindowController):
                     7: datetime.datetime.now()-datetime.timedelta(days=365)
                     }
 
+    def format_media_type(self, media_type):
+        if media_type == 'sms':
+            return 'Messages'
+        else:
+            return media_type.title()
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -235,7 +241,7 @@ class HistoryViewer(NSWindowController):
             else:
                 remote_uri = result[2]
 
-            entry = NSDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', result[3], 'type')
+            entry = NSDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', self.format_media_type(result[3]), 'type')
             self.dayly_entries.addObject_(entry)
 
         self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())

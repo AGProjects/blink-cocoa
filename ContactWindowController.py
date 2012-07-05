@@ -2184,7 +2184,7 @@ class ContactWindowController(NSWindowController):
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
             item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("SMS...", "sendSMSToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
 
     @run_in_green_thread
@@ -2768,7 +2768,7 @@ class ContactWindowController(NSWindowController):
                     for uri in item.uris:
                         sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
                         sms_item.setRepresentedObject_(uri.uri)
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS...", "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
                     
                 if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):

@@ -1064,7 +1064,7 @@ class CustomListModel(NSObject):
                     table.setDropItem_dropChildIndex_(targetGroup, index)
                             
             return NSDragOperationMove
-
+                    
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not hasattr(item, "supported_media"):
