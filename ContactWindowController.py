@@ -1630,7 +1630,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active SIP accounts", u"OK", None, None)
             return
 
         try:
@@ -1661,7 +1661,7 @@ class ContactWindowController(NSWindowController):
     def sendSMSToSelectedUri_(self, sender):
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send SMS", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active SIP accounts", u"OK", None, None)
             return
         
         try:
@@ -2819,7 +2819,7 @@ class ContactWindowController(NSWindowController):
                     if has_full_sip_uri:
                         chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
                     if item not in self.model.bonjour_group.contacts:
-                        sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send SMS...", "sendSMSToSelected:", "")
+                        sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
                         sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
 
                 if self.sessionControllersManager.isMediaTypeSupported('video'):
