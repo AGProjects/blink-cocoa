@@ -1629,8 +1629,8 @@ Placeholders = {
 SectionNames = {
                        'audio': 'Audio Calls',
                        'auth': 'Authentication',
-                       'chat': 'Chat Conversations',
-                       'sms': 'SMS Messages',
+                       'chat': 'Chat Sessions',
+                       'sms': 'Short Messages',
                        'conference': 'Conference Server',
                        'dialog_event': 'Active Calls Subscriptions',
                        'gui': 'GUI Settings',
