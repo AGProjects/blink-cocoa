@@ -88,6 +88,12 @@ class HistoryViewer(NSWindowController):
     def format_media_type(self, media_type):
         if media_type == 'sms':
             return 'Messages'
+        elif media_type == 'chat':
+            return 'Chat Sessions'
+        elif media_type == 'audio':
+            return 'Audio Calls'
+        elif media_type == 'file-transfer':
+            return 'File Transfers'
         else:
             return media_type.title()
 
@@ -241,7 +247,7 @@ class HistoryViewer(NSWindowController):
             else:
                 remote_uri = result[2]
 
-            entry = NSDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', self.format_media_type(result[3]), 'type')
+            entry = NSDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', result[3], 'type')
             self.dayly_entries.addObject_(entry)
 
         self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
@@ -419,6 +425,9 @@ class HistoryViewer(NSWindowController):
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if table == self.indexTable:
             ident = column.identifier()
+            if ident == 'type':
+                return self.format_media_type(self.dayly_entries[row].objectForKey_(ident))
+
             try:
                 return unicode(self.dayly_entries[row].objectForKey_(ident))
             except IndexError:
