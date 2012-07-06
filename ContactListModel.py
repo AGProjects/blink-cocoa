@@ -1521,20 +1521,22 @@ class ContactListModel(CustomListModel):
         NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
     
     def _NH_SIPApplicationDidStart(self, notification):
-        self.all_contacts_group.setReference()
-        self.no_group.setReference()
-        self.addressbook_group.setReference()
-        self.missed_calls_group.setReference()
-        self.outgoing_calls_group.setReference()
-        self.incoming_calls_group.setReference()
-        self.favorites_group.setReference()
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            self.all_contacts_group.setReference()
+            self.no_group.setReference()
+            self.addressbook_group.setReference()
+            self.missed_calls_group.setReference()
+            self.outgoing_calls_group.setReference()
+            self.incoming_calls_group.setReference()
+            self.favorites_group.setReference()
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
-        if NSApp.delegate().contactsWindowController.first_run:
-            self.createInitialGroupAndContacts()
+            if NSApp.delegate().contactsWindowController.first_run:
+                self.createInitialGroupAndContacts()
 
-        self._migrateContacts()
+            self._migrateContacts()
 
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30.0, self, "checkContactBackup:", None, False)
