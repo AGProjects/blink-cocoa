@@ -35,7 +35,7 @@ from GroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
-from SIPManager import SIPManager, PresenceStatusList
+from SIPManager import PresenceStatusList
 
 from resources import ApplicationData
 from util import *
