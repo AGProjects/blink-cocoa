@@ -2129,16 +2129,18 @@ class ContactListModel(CustomListModel):
 
     def saveGroupPosition(self):
         # save group expansion and position
-        for group in AddressbookManager().get_groups():
-            try:
-                blink_group = (grp for grp in self.groupsList if grp.name == group.name).next()
-            except StopIteration:
-                group.position = None
-                group.save()
-            else:
-                if group.position != self.groupsList.index(blink_group):
-                    group.position = self.groupsList.index(blink_group)
+        addressbook_manager = AddressbookManager
+        with addressbook_manager.transaction():
+            for group in addressbook_manager.get_groups():
+                try:
+                    blink_group = (grp for grp in self.groupsList if grp.name == group.name).next()
+                except StopIteration:
+                    group.position = None
                     group.save()
+                else:
+                    if group.position != self.groupsList.index(blink_group):
+                        group.position = self.groupsList.index(blink_group)
+                        group.save()
 
     def createInitialGroupAndContacts(self):
         BlinkLogger().log_info(u"Creating initial contacts...")
