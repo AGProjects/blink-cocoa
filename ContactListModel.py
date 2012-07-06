@@ -2271,9 +2271,8 @@ class ContactListModel(CustomListModel):
                 group = Group()
                 group.name = grp
                 group.position = index
-            finally:
-                group.contacts.add(contact)
-                group.save()
+            group.contacts.add(contact)
+            group.save()
 
     def addContact(self, address="", group=None, display_name=None, type=None):
         if isinstance(address, SIPURI):
