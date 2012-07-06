@@ -540,8 +540,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
             if not address:
                 continue
             
-            detail = "%s (%s)"%(address, address_type) if address_type else address
-            
             # strip everything that's not numbers from the URIs if they are not SIP URIs
             if "@" not in address:
                 if address.startswith("sip:"):
@@ -949,8 +947,6 @@ class CustomListModel(NSObject):
             if index != NSOutlineViewDropOnItemIndex or not hasattr(proposed_item, "supported_media"):
                 return NSDragOperationNone
 
-            ws = NSWorkspace.sharedWorkspace()
-
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
             for f in fnames:
                 if not os.path.isfile(f):
@@ -1064,7 +1060,6 @@ class CustomListModel(NSObject):
             if index != NSOutlineViewDropOnItemIndex or not hasattr(item, "supported_media"):
                 return False
 
-            ws = NSWorkspace.sharedWorkspace()
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
             if filenames and account and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
@@ -1084,7 +1079,6 @@ class CustomListModel(NSObject):
         else:
             if info.draggingSource() != table:
                 return False
-            pboard = info.draggingPasteboard()
             group, blink_contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
             if blink_contact is None:
                 g = self.groupsList[group]
@@ -1413,7 +1407,6 @@ class ContactListModel(CustomListModel):
             ret = NSRunAlertPanel(u"Restore Contacts", u"This operation will restore %d contacts present in the backup taken at %s. Newer contacts will be preserved. "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
             if ret != NSAlertDefaultReturn:
                 return
-            new_groups = {}
             seen_uri = {}
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
@@ -1834,7 +1827,6 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
 
-        icon_saved = False
         for blink_group in self.groupsList:
             try:
                 blink_contact = (blink_contact for blink_contact in blink_group.contacts if blink_contact.contact.id == contact.id).next()
@@ -2058,7 +2050,6 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("AddressbookGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookGroupWasCreated(self, notification):
-        group = notification.sender
         self.saveGroupPosition()
 
     def _NH_SystemAddressBookFavoriteWasChanged(self, notification):
@@ -2378,7 +2369,6 @@ class ContactListModel(CustomListModel):
 
         ret = NSRunAlertPanel(u"Delete Contact", message, u"Delete", u"Cancel", None)
         if ret == NSAlertDefaultReturn:
-            groups = self.getBlinkGroupsForBlinkContact(blink_contact)
             blink_contact.contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
