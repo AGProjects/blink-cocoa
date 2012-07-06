@@ -2293,8 +2293,7 @@ class ContactListModel(CustomListModel):
             contact = Contact()
             contact.name = new_contact['name']
             contact.default_uri = new_contact['default_uri']
-            for uri in new_contact['uris']:
-                contact.uris.add(ContactURI(uri=uri[0], type=uri[1]))
+            contact.uris = new_contact['uris']
             contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
             icon = new_contact['icon']
             if icon is None:
@@ -2337,13 +2336,7 @@ class ContactListModel(CustomListModel):
             contact = blink_contact.contact
             contact.name = new_contact['name']
             contact.default_uri = new_contact['default_uri']
-            contact.uris = []
-            for uri in new_contact['uris']:
-                address = uri[0].strip()
-                address_type = uri[1].strip()
-                if not address:
-                    continue
-                contact.uris.add(ContactURI(uri=address, type=address_type))
+            contact.uris = new_contact['uris']
             contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
             icon = new_contact['icon']
             if icon is None:
