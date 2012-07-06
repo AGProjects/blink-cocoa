@@ -76,7 +76,7 @@ class AddContactController(NSObject):
         self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
         self.dealloc_timer = None
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}} 
-        self.all_groups = list(g for g in self.groupsList if g.editable and g.type!= 'no_group')
+        self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
 
         if group is not None:
             self.belonging_groups = [group for group in self.all_groups if group.name == group]
@@ -104,7 +104,7 @@ class AddContactController(NSObject):
         self.addressTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
     
     def _NH_AddressbookGroupsHaveChanged(self, notification):
-        self.all_groups = list(g for g in self.groupsList if g.editable and g.type!= 'no_group')
+        self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
         self.loadGroupNames()
 
     def runModal(self):
@@ -297,7 +297,7 @@ class AddContactController(NSObject):
             contact_uri = self.uris[row]
         except ValueError, e:
             return ""
-    
+
         if column == 0:
             return str(contact_uri.uri)
         elif column == 1:
@@ -332,7 +332,7 @@ class AddContactController(NSObject):
                                 "OK", None, None)
                 return
             contact_uri.uri = str(object)
-        else:
+        elif column == 1:
             contact_uri.type = str(cell.itemAtIndex_(object).title())
 
         self.defaultButton.setEnabled_(True)
@@ -371,7 +371,7 @@ class EditContactController(AddContactController):
     def __init__(self, blink_contact):
         self.dealloc_timer = None
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
-        self.all_groups = list(g for g in self.groupsList if g.editable and g.type != 'no_group')
+        self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type != 'no_group')
         self.default_uri = None
 
         self.blink_contact = blink_contact

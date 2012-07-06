@@ -1141,7 +1141,7 @@ class ContactWindowController(NSWindowController):
                 group = self.contactOutline.parentForItem_(item)
             else:
                 group = item
-            contact = self.model.addContact(group=group.name if group and group.editable else None)
+            contact = self.model.addContact(group=group.name if group and group.add_contact_allowed else None)
             if contact:
                 self.refreshContactsList()
                 self.searchContacts()
@@ -2889,7 +2889,7 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
 
             else:
-                if item.editable:
+                if isinstance(item, BlinkContact) and item.editable:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
                 elif type(item) == FavoriteBlinkContact:
@@ -2911,13 +2911,12 @@ class ContactWindowController(NSWindowController):
             if group and group.delete_contact_allowed:
                 lastItem.setEnabled_(item.editable)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
+            if group and group.remove_contact_allowed:
                 lastItem.setEnabled_(item.deletable)
-            if group and group.remove_contact_from_group_allowed:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
                 lastItem.setRepresentedObject_((item, group))
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")
-            lastItem.setEnabled_(item.editable)
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
             lastItem.setEnabled_(item.deletable)
 
@@ -3062,7 +3061,7 @@ class ContactWindowController(NSWindowController):
             item = self.contactsMenu.itemWithTag_(33) # Add Group
             item.setEnabled_(True)
             item = self.contactsMenu.itemWithTag_(34) # Edit Group
-            item.setEnabled_(selected_group and selected_group.editable)
+            item.setEnabled_(selected_group)
             item = self.contactsMenu.itemWithTag_(35) # Delete Group
             item.setEnabled_(selected_group and selected_group.deletable)
             item = self.contactsMenu.itemWithTag_(36) # Expand Group
