@@ -1118,13 +1118,15 @@ class CustomListModel(NSObject):
                             uri_type = None
                         self.addContact(sourceContact.uri, display_name=sourceContact.name, type=uri_type)
                         return
-                
-                    targetGroup.group.contacts.add(sourceContact.contact)
-                    targetGroup.group.save()
 
-                    if sourceGroup.editable and not targetGroup.only_copy:
-                        sourceGroup.group.contacts.remove(sourceContact.contact)
-                        sourceGroup.group.save()
+                    addressbook_manager = AddressbookManager()
+                    with addressbook_manager.transaction():
+                        targetGroup.group.contacts.add(sourceContact.contact)
+                        targetGroup.group.save()
+
+                        if sourceGroup.editable and not targetGroup.only_copy:
+                            sourceGroup.group.contacts.remove(sourceContact.contact)
+                            sourceGroup.group.save()
 
                     row = table.rowForItem_(sourceContact)
                     if row>=0:
