@@ -2282,25 +2282,27 @@ class ContactListModel(CustomListModel):
         new_contact = controller.runModal()
 
         if new_contact:
-            contact = Contact()
-            contact.name = new_contact['name']
-            contact.default_uri = new_contact['default_uri']
-            contact.uris = new_contact['uris']
-            contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
-            icon = new_contact['icon']
-            if icon is None:
-                contact.icon = None
-                saveContactIconToFile(None, contact.default_uri)
-            else:
-                contact.icon = base64Icon(icon)
-            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
-            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
-            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-            contact.save()
+            addressbook_manager = AddressbookManager()
+            with addressbook_manager.transaction():
+                contact = Contact()
+                contact.name = new_contact['name']
+                contact.default_uri = new_contact['default_uri']
+                contact.uris = new_contact['uris']
+                contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
+                icon = new_contact['icon']
+                if icon is None:
+                    contact.icon = None
+                    saveContactIconToFile(None, contact.default_uri)
+                else:
+                    contact.icon = base64Icon(icon)
+                contact.presence.policy = new_contact['subscriptions']['presence']['policy']
+                contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+                contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
+                contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+                contact.save()
 
-            if new_contact['groups']:
-                self.addGroupsForContact(contact, new_contact['groups'])
+                if new_contact['groups']:
+                    self.addGroupsForContact(contact, new_contact['groups'])
 
             return True
         return False
@@ -2325,34 +2327,36 @@ class ContactListModel(CustomListModel):
         new_contact = controller.runModal()
 
         if new_contact:
-            contact = blink_contact.contact
-            contact.name = new_contact['name']
-            contact.default_uri = new_contact['default_uri']
-            contact.uris = new_contact['uris']
-            contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
-            icon = new_contact['icon']
-            if icon is None:
-                contact.icon = None
-                saveContactIconToFile(None, contact.default_uri)
-            else:
-                contact.icon = base64Icon(icon)
+            addressbook_manager = AddressbookManager()
+            with addressbook_manager.transaction():
+                contact = blink_contact.contact
+                contact.name = new_contact['name']
+                contact.default_uri = new_contact['default_uri']
+                contact.uris = new_contact['uris']
+                contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
+                icon = new_contact['icon']
+                if icon is None:
+                    contact.icon = None
+                    saveContactIconToFile(None, contact.default_uri)
+                else:
+                    contact.icon = base64Icon(icon)
 
-            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
-            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
-            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-            contact.save()
-            belonging_groups = self.getBlinkGroupsForBlinkContact(blink_contact)
-            for blink_group in belonging_groups:
-                if not new_contact['groups'] or blink_group not in new_contact['groups']:
-                    try:
-                        blink_group.group.contacts.remove(blink_contact.contact)
-                        blink_group.group.save()
-                    except ValueError:
-                        pass
+                contact.presence.policy = new_contact['subscriptions']['presence']['policy']
+                contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+                contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
+                contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+                contact.save()
+                belonging_groups = self.getBlinkGroupsForBlinkContact(blink_contact)
+                for blink_group in belonging_groups:
+                    if not new_contact['groups'] or blink_group not in new_contact['groups']:
+                        try:
+                            blink_group.group.contacts.remove(blink_contact.contact)
+                            blink_group.group.save()
+                        except ValueError:
+                            pass
 
-            self.addGroupsForContact(contact, new_contact['groups'])
-    
+                self.addGroupsForContact(contact, new_contact['groups'])
+
     def removeContactFromGroup(self, blink_contact, blink_group):
         try:
             blink_group.group.contacts.remove(blink_contact.contact)
