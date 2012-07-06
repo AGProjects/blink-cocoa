@@ -166,7 +166,7 @@ class iCloudManager(NSObject):
         self.sync_active = True
         changes = 0
         BlinkLogger().log_info(u"Synchronizing accounts with iCloud")
-        for account in list(AccountManager().iter_accounts()):
+        for account in AccountManager().get_accounts():
             if isinstance(account, Account):
                 if account.id not in self.storage_keys:
                     if self.first_sync_completed:
