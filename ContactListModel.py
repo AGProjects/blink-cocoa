@@ -622,8 +622,7 @@ class BlinkGroup(NSObject):
                 group.expanded = type(self) not in (AddressBookBlinkGroup, AllContactsBlinkGroup)
                 group.position = None
                 group.save()
-            finally:
-                self.group = group
+            self.group = group
 
 
 class BonjourBlinkGroup(BlinkGroup):
