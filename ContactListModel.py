@@ -582,12 +582,11 @@ class BlinkGroup(NSObject):
     nc = NotificationCenter()
 
     type = None
-    editable = True
     deletable = True
     ignore_search = False
-    remove_contact_from_group_allowed = True
+    add_contact_allowed = True
+    remove_contact_allowed = True
     delete_contact_allowed = True
-    only_copy = False      # shall source contact be moved or copied when dragged to this group
     special_id = None
 
     def __new__(cls, *args, **kwargs):
@@ -630,9 +629,9 @@ class BlinkGroup(NSObject):
 class BonjourBlinkGroup(BlinkGroup):
     """Group representation for Bonjour Neigborhood"""
     type = 'bonjour'
-    editable = False
     deletable = False
-    remove_contact_from_group_allowed = False
+    remove_contact_allowed = False
+    add_contact_allowed = False
     delete_contact_allowed = False
     contacts = []
     not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
@@ -644,9 +643,9 @@ class BonjourBlinkGroup(BlinkGroup):
 
 class NoBlinkGroup(BlinkGroup):
     type = 'no_group'
-    editable = True
     deletable = False
-    remove_contact_from_group_allowed = False
+    remove_contact_allowed = False
+    add_contact_allowed = False
     delete_contact_allowed = True
     contacts = []
     
@@ -658,9 +657,9 @@ class NoBlinkGroup(BlinkGroup):
 class AllContactsBlinkGroup(BlinkGroup):
     """Group representation for all contacts"""
     type = 'all_contacts'
-    remove_contact_from_group_allowed = False
+    remove_contact_allowed = False
     delete_contact_allowed = True
-    editable = False
+    add_contact_allowed = False
     deletable = False
     contacts = []
 
@@ -673,12 +672,11 @@ class FavoritesBlinkGroup(BlinkGroup):
     """Group representation for Favorites"""
     type = 'favorites'
     deletable = False
-    editable = False
     contacts = []
     ignore_search = True
-    only_copy = True
     favorites = []
-    remove_contact_from_group_allowed = False
+    add_contact_allowed = True
+    remove_contact_allowed = False
     delete_contact_allowed = False
 
     def __init__(self, name=u'Favorites'):
@@ -690,9 +688,9 @@ class HistoryBlinkGroup(BlinkGroup):
     """Group representation for missed, incoming and outgoing calls dynamic groups"""
     ignore_search = True
     type = 'history'
-    editable = False
     deletable = False
-    remove_contact_from_group_allowed = False
+    add_contact_allowed = False
+    remove_contact_allowed = False
     delete_contact_allowed = False
     contacts = []
 
@@ -806,9 +804,9 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
 class AddressBookBlinkGroup(BlinkGroup):
     """Address Book Group representation in Blink UI"""
     type = 'addressbook'
-    editable = False
     deletable = False
-    remove_contact_from_group_allowed = False
+    add_contact_allowed = False
+    remove_contact_allowed = False
     delete_contact_allowed = False
     favorites = []
 
@@ -1022,7 +1020,7 @@ class CustomListModel(NSObject):
                         else:
                             return NSDragOperationMove
 
-                    if not targetGroup.editable:
+                    if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
                     
                     if self.isBlinkContactInBlinkGroups(sourceContact, targetGroup):
@@ -1033,7 +1031,7 @@ class CustomListModel(NSObject):
                     table.setDropItem_dropChildIndex_(self.groupsList[i], c)
                 else:
                     targetGroup = table.parentForItem_(proposed_item)
-                    if sourceGroup == targetGroup and not targetGroup.editable:
+                    if sourceGroup == targetGroup and not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
 
                     if type(targetGroup) == NoBlinkGroup:
@@ -1048,7 +1046,7 @@ class CustomListModel(NSObject):
                         else:
                             return NSDragOperationMove
                     
-                    if not targetGroup.editable:
+                    if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
 
                     if index == NSOutlineViewDropOnItemIndex:
@@ -1124,7 +1122,7 @@ class CustomListModel(NSObject):
                         targetGroup.group.contacts.add(sourceContact.contact)
                         targetGroup.group.save()
 
-                        if sourceGroup.editable and not targetGroup.only_copy:
+                        if sourceGroup.editable and not  isinstance(targetGroup, FavoritesBlinkGroup):
                             sourceGroup.group.contacts.remove(sourceContact.contact)
                             sourceGroup.group.save()
 
@@ -1332,9 +1330,6 @@ class ContactListModel(CustomListModel):
             return (blink_contact for group in self.groupsList if group.ignore_search is False for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
         except StopIteration:
             return None
-
-    def hasContactInEditableGroupWithURI(self, uri):
-        return any(blink_contact.uri == uri for group in self.groupsList if group.editable == True and group.ignore_search is False for blink_contact in group.contacts)
 
     def checkContactBackup_(self, timer):
         now = datetime.datetime.now()
@@ -1867,7 +1862,7 @@ class ContactListModel(CustomListModel):
                     blink_contact.setURI(contact.default_uri)
                     blink_contact.setDetail(contact.default_uri)
                     blink_contact.setName(contact.name or contact.uri)
-                    for g in list(group for group in self.groupsList if group.editable):
+                    for g in list(group for group in self.groupsList):
                         g.sortContacts()
 
                     if contact.favorite:
@@ -2263,12 +2258,12 @@ class ContactListModel(CustomListModel):
     def addGroupsForContact(self, contact, groups):
         for grp in groups:
             try:
-                group = (g.group for g in self.groupsList if g == grp and g.editable).next()
+                group = (g.group for g in self.groupsList if g == grp and g.add_contact_allowed).next()
             except StopIteration:
                 # insert after last editable group
                 index = 0
                 for g in self.groupsList:
-                    if not g.editable:
+                    if not g.add_contact_allowed:
                         break
                     index += 1
                 
