@@ -2259,7 +2259,7 @@ class ContactListModel(CustomListModel):
     def addGroupsForContact(self, contact, groups):
         for grp in groups:
             try:
-                group = (g.group for g in self.groupsList if g == grp and g.add_contact_allowed).next()
+                group = next(g.group for g in self.groupsList if g == grp and g.add_contact_allowed)
             except StopIteration:
                 # insert after last editable group
                 index = 0
@@ -2267,14 +2267,11 @@ class ContactListModel(CustomListModel):
                     if not g.add_contact_allowed:
                         break
                     index += 1
-                
+
                 group = Group()
                 group.name = grp
                 group.position = index
-                
-                group.contacts.add(contact)
-                group.save()
-            else:
+            finally:
                 group.contacts.add(contact)
                 group.save()
 
