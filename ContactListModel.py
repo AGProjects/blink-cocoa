@@ -613,20 +613,17 @@ class BlinkGroup(NSObject):
 
     def setReference(self):
         if self.type:
+            addressbook_manager = AddressbookManager()
             try:
-                group = (g for g in AddressbookManager().iter_groups() if g.type == self.type).next()
-            except StopIteration:
-                if self.type:
-                    group = Group(id=self.type)
-                else:
-                    group = Group()
+                group = addressbook_manager.get_group[self.type]
+            except KeyError:
+                group = Group(id=self.type)
                 group.name = self.name
                 group.type  = self.type
-                group.expanded = False if type(self) in (AddressBookBlinkGroup, AllContactsBlinkGroup) else True
+                group.expanded = type(self) not in (AddressBookBlinkGroup, AllContactsBlinkGroup)
                 group.position = None
                 group.save()
-                self.group = group
-            else:
+            finally:
                 self.group = group
 
 
