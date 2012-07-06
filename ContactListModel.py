@@ -614,7 +614,7 @@ class BlinkGroup(NSObject):
         if self.type:
             addressbook_manager = AddressbookManager()
             try:
-                group = addressbook_manager.get_group[self.type]
+                group = addressbook_manager.get_group(self.type)
             except KeyError:
                 group = Group(id=self.type)
                 group.name = self.name
