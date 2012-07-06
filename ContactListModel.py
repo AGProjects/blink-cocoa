@@ -1421,7 +1421,8 @@ class ContactListModel(CustomListModel):
                 return
             new_groups = {}
             seen_uri = {}
-            with AddressbookManager().transaction():
+            addressbook_manager = AddressbookManager()
+            with addressbook_manager.transaction():
                 for backup_contact in contacts:
                     if version == 1:
                         try:
@@ -1473,37 +1474,35 @@ class ContactListModel(CustomListModel):
                             pass
                         except Exception, e:
                             BlinkLogger().log_info(u"Contacts restore failed: %s" % e)
-            if version == 1:
-                for key in contacts_for_group.keys():
-                    try:
-                        group = (group for group in AddressbookManager().get_groups() if group.name == key).next()
-                    except StopIteration:
-                        group = Group()
-                        group.name = key
-                        restored_groups += 1
-                        group.contacts = contacts_for_group[key]
-                    else: 
-                        for c in contacts_for_group[key]:
-                            group.contacts.add(c)
-                    
-                    group.save()
-            elif version == 2:
-                for backup_group in data['groups']:
-                    try:
-                        group = Group(id=backup_group['id'])
-                        group.name = backup_group['name']
-                        restored_groups += 1
-                    except DuplicateIDError:
-                        group = AddressbookManager().get_group(backup_group['id'])
-
-                    for id in backup_group['contacts']:
+                if version == 1:
+                    for key in contacts_for_group.keys():
                         try:
-                            contact = AddressbookManager().get_contact(id)
-                        except Exception:
-                            pass
-                        else:
-                            group.contacts.add(contact)
-                    group.save()
+                            group = (group for group in addressbook_manager.get_groups() if group.name == key).next()
+                        except StopIteration:
+                            group = Group()
+                            group.name = key
+                            restored_groups += 1
+                            group.contacts = contacts_for_group[key]
+                        else: 
+                            for c in contacts_for_group[key]:
+                                group.contacts.add(c)
+                        group.save()
+                elif version == 2:
+                    for backup_group in data['groups']:
+                        try:
+                            group = Group(id=backup_group['id'])
+                            group.name = backup_group['name']
+                            restored_groups += 1
+                        except DuplicateIDError:
+                            group = addressbook_manager.get_group(backup_group['id'])
+                        for id in backup_group['contacts']:
+                            try:
+                                contact = addressbook_manager.get_contact(id)
+                            except Exception:
+                                pass
+                            else:
+                                group.contacts.add(contact)
+                        group.save()
 
         panel_text = ''
         if not restored_contacts:
