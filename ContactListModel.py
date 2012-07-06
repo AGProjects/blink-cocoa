@@ -577,7 +577,7 @@ class BlinkGroup(NSObject):
 
     type = None
     deletable = True
-    ignore_search = False
+    ignore_search = True
     add_contact_allowed = True
     remove_contact_allowed = True
     delete_contact_allowed = True
@@ -655,6 +655,7 @@ class AllContactsBlinkGroup(BlinkGroup):
     add_contact_allowed = False
     deletable = False
     contacts = []
+    ignore_search = False
 
     def __init__(self, name=u'All Contacts'):
         self.name = NSString.stringWithString_(name)
@@ -679,7 +680,6 @@ class FavoritesBlinkGroup(BlinkGroup):
 
 class HistoryBlinkGroup(BlinkGroup):
     """Group representation for missed, incoming and outgoing calls dynamic groups"""
-    ignore_search = True
     type = 'history'
     deletable = False
     add_contact_allowed = False
@@ -801,6 +801,7 @@ class AddressBookBlinkGroup(BlinkGroup):
     add_contact_allowed = False
     remove_contact_allowed = False
     delete_contact_allowed = False
+    ignore_search = False
     favorites = []
 
     def __init__(self, name=u'Address Book'):
