@@ -1090,7 +1090,7 @@ class CustomListModel(NSObject):
                         sourceContact.setFavorite(True)
                         return
 
-                    if isinstance(sourceContact, SystemAddressBookBlinkContact):
+                    if isinstance(sourceContact, SystemAddressBookBlinkContact) or isinstance(sourceGroup, HistoryBlinkGroup):
                         try:
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
                         except StopIteration:
