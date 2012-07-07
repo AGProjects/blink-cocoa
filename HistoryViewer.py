@@ -629,7 +629,7 @@ class HistoryViewer(NSWindowController):
         tag = sender.tag()
 
         if tag == 1:
-            NSApp.delegate().contactsWindowController.addContact(contact.uri, contact.display_name)
+            NSApp.delegate().contactsWindowController.addContact(contact.uri, contact.name)
         elif tag == 2:
             self.showDeleteConfirmationDialog(row)
         elif tag == 3:

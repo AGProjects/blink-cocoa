@@ -693,7 +693,7 @@ class ChatWindowController(NSWindowController):
                 return
 
             try:
-                recipient = CPIMIdentity(SIPURI.parse('sip:%s' % contact.uri), display_name=contact.display_name)
+                recipient = CPIMIdentity(SIPURI.parse('sip:%s' % contact.uri), display_name=contact.name)
             except SIPCoreError:
                 return
 
@@ -896,7 +896,7 @@ class ChatWindowController(NSWindowController):
             try:
                 remoteScreen = self.remoteScreens[uri]
             except KeyError:
-                self.viewSharedScreen(uri, participant.display_name, participant.screensharing_url)
+                self.viewSharedScreen(uri, participant.name, participant.screensharing_url)
 
     def menuWillOpen_(self, menu):
         if menu == self.participantMenu:
@@ -995,7 +995,7 @@ class ChatWindowController(NSWindowController):
                 return
 
             uri = object.uri
-            display_name = object.display_name
+            display_name = object.name
             screensharing_url = object.screensharing_url
 
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:

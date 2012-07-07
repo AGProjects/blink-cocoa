@@ -148,7 +148,7 @@ class BlinkContact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, uri_type=None, name=None, display_name=None, icon=None, detail=None, preferred_media=None):
+    def __init__(self, uri, uri_type=None, name=None, icon=None, detail=None, preferred_media=None):
         self.id = None
         self.contact = None
         self.favorite = False
@@ -156,7 +156,6 @@ class BlinkContact(NSObject):
         self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
         self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         self.name = NSString.stringWithString_(name or uri)
-        self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or uri)
         self.icon = icon
         self._preferred_media = preferred_media or 'audio'
@@ -273,7 +272,6 @@ class BlinkContact(NSObject):
                     
     def setName(self, name):
         self.name = NSString.stringWithString_(name)
-        self.display_name = unicode(self.name)
 
     def setDetail(self, detail):
         self.detail = NSString.stringWithString_(detail)
@@ -341,7 +339,6 @@ class BlinkPresenceContact(BlinkContact):
                 self.uri = ''
 
         self.name = NSString.stringWithString_(self.contact.name or self.uri)
-        self.display_name = unicode(self.name)
         self.detail = NSString.stringWithString_(self.uri)
         self.aliases = list(alias.uri for alias in iter(self.contact.uris) if alias.uri != self.uri)
         self.icon = loadContactIcon(self.contact) or loadContactIconFromFile(self.uri)
@@ -355,7 +352,6 @@ class BlinkPresenceContact(BlinkContact):
         self.supported_media = []
 
         self.name = NSString.stringWithString_(self.contact.name or self.uri)
-        self.display_name = unicode(self.name)
         self.detail = NSString.stringWithString_(self.uri)
         self.aliases = list(alias.uri for alias in iter(self.contact.uris) if alias.uri != self.uri)
 
@@ -430,12 +426,11 @@ class BonjourBlinkContact(BlinkContact):
     editable = False
     deletable = False
 
-    def __init__(self, uri, bonjour_neighbour, name=None, display_name=None, icon=None, detail=None):
+    def __init__(self, uri, bonjour_neighbour, name=None, icon=None, detail=None):
         self.uri = str(uri)
         self.bonjour_neighbour = bonjour_neighbour
         self.aor = uri
         self.name = NSString.stringWithString_(name or self.uri)
-        self.display_name = display_name or unicode(self.name)
         self.detail = NSString.stringWithString_(detail or self.uri)
         self.icon = NSImage.imageNamed_("NSUserGroup") if icon is None and ";isfocus" in self.uri else icon
 
@@ -556,7 +551,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
             self.detail = NSString.stringWithString_('None')
         self.default_uri = self.uri
         self.name = NSString.stringWithString_(self.name or self.uri)
-        self.display_name = unicode(self.name)
         self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         idata = ab_contact.imageData()
         self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
@@ -729,7 +723,7 @@ class HistoryBlinkGroup(BlinkGroup):
         settings = SIPSimpleSettings()
         count = settings.contacts.maximum_calls
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
 
             if seen.has_key(target_uri):
                 seen[target_uri] += 1
@@ -738,11 +732,11 @@ class HistoryBlinkGroup(BlinkGroup):
                 getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
                 contact = getContactMatchingURI(target_uri)
                 if contact:
-                    display_name = contact.display_name
+                    name = contact.name
                     icon=contact.icon
                 else:
                     icon=None
-                blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=display_name)
+                blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=name)
                 blink_contact.setDetail(u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time)))
                 contacts.append(blink_contact)
 
@@ -1104,7 +1098,7 @@ class CustomListModel(NSObject):
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
                         except StopIteration:
                             uri_type = None
-                        self.addContact(sourceContact.uri, display_name=sourceContact.name, type=uri_type)
+                        self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
                         return
 
                     addressbook_manager = AddressbookManager()
@@ -1157,7 +1151,7 @@ class CustomListModel(NSObject):
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
                         except StopIteration:
                             uri_type = None
-                        self.addContact(sourceContact.uri, display_name=sourceContact.name, type=uri_type)
+                        self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
                         return
 
                     if type(targetGroup) == FavoritesBlinkGroup and not sourceContact.favorite:
@@ -2262,11 +2256,11 @@ class ContactListModel(CustomListModel):
             group.contacts.add(contact)
             group.save()
 
-    def addContact(self, address="", group=None, display_name=None, type=None):
+    def addContact(self, address="", group=None, name=None, type=None):
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
-        controller = AddContactController(uri=address, name=display_name, type=type)
+        controller = AddContactController(uri=address, name=name, type=type)
         new_contact = controller.runModal()
 
         if new_contact:

@@ -19,7 +19,7 @@ class ChatPrivateMessageController(NSObject):
 
     def __init__(self, contact):
         NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
-        recipient = '%s <%s>' % (contact.display_name, contact.uri)
+        recipient = '%s <%s>' % (contact.name, contact.uri)
         self.title.setStringValue_(u'To %s' % recipient)
         self.icon.setImage_(contact.icon or NSImage.imageNamed_("NSUser"))
 

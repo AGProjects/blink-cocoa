@@ -283,7 +283,7 @@ class SMSViewController(NSObject):
             settings = SIPSimpleSettings()
             if not self.account.sms.disable_replication:
                 contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.target_uri)
-                msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.display_name if contact else None)])
+                msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.name if contact else None)])
                 self.sendReplicationMessage(response_code, str(msg), content_type='message/cpim')
 
     @run_in_green_thread

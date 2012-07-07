@@ -1121,7 +1121,7 @@ class ContactWindowController(NSWindowController):
             row = self.searchOutline.selectedRow()
             if row != NSNotFound and row != -1:
                 item = self.searchOutline.itemAtRow_(row)
-                contact = self.model.addContact(item.uri, display_name=item.display_name)
+                contact = self.model.addContact(item.uri, name=item.name)
             else:
                 contact = self.model.addContact(self.searchBox.stringValue())
 
@@ -1453,7 +1453,7 @@ class ContactWindowController(NSWindowController):
             display_name = ''
         else:
             target = uri or contact.uri
-            display_name = contact.display_name
+            display_name = contact.name
 
         if not account:
             account = self.getAccountWitDialPlan(target)
@@ -1498,7 +1498,7 @@ class ContactWindowController(NSWindowController):
             return
 
         contact = self.getContactMatchingURI(remote_uri)
-        display_name = contact.display_name if contact else ''
+        display_name = contact.name if contact else ''
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
@@ -1528,7 +1528,7 @@ class ContactWindowController(NSWindowController):
             return
 
         contact = self.getContactMatchingURI(target_uri)
-        display_name = contact.display_name if contact else ''
+        display_name = contact.name if contact else ''
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
@@ -1550,7 +1550,7 @@ class ContactWindowController(NSWindowController):
             account = self.activeAccount()
         else:
             account = BonjourAccount()
-            displayName = contact.display_name
+            displayName = contact.name
 
         if not account:
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
@@ -1642,7 +1642,7 @@ class ContactWindowController(NSWindowController):
             display_name = ''
         else:
             target = uri or contact.uri
-            display_name = contact.display_name
+            display_name = contact.name
 
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
@@ -1673,7 +1673,7 @@ class ContactWindowController(NSWindowController):
             display_name = ''
         else:
             target = contact.uri
-            display_name = contact.display_name
+            display_name = contact.name
         
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
@@ -2221,8 +2221,8 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
-            if contact and contact.display_name and contact.display_name != contact.uri:
-                display_name = contact.display_name
+            if contact and contact.name and contact.name != contact.uri:
+                display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
             elif display_name == target_uri:
                 fancy_uri = target_uri
@@ -2246,8 +2246,8 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
-            if contact and contact.display_name and contact.display_name != target_uri:
-                display_name = contact.display_name
+            if contact and contact.name and contact.name != target_uri:
+                display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
             elif display_name == target_uri:
                 fancy_uri = target_uri
@@ -2271,8 +2271,8 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
-            if contact and contact.display_name and contact.display_name != target_uri:
-                display_name = contact.display_name
+            if contact and contact.name and contact.name != target_uri:
+                display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
             elif display_name == target_uri:
                 fancy_uri = target_uri
@@ -2296,8 +2296,8 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             contact = self.getContactMatchingURI(target_uri)
-            if contact and contact.display_name and contact.display_name != target_uri:
-                display_name = contact.display_name
+            if contact and contact.name and contact.name != target_uri:
+                display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
             item = {
             "streams": result.media_types.split(","),
@@ -2795,7 +2795,7 @@ class ContactWindowController(NSWindowController):
                             ds_item.setTag_(1)
 
                     if ds_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.display_name, "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.name, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
                 if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
@@ -2810,7 +2810,7 @@ class ContactWindowController(NSWindowController):
                             ds_item.setTag_(2)
                     
                     if ds_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.display_name, "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
             else:
@@ -2837,7 +2837,7 @@ class ContactWindowController(NSWindowController):
 
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
-                    contact = item.display_name
+                    contact = item.name
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
                     mitem.setTag_(1)
                     mitem.setEnabled_(has_full_sip_uri)
@@ -3025,7 +3025,7 @@ class ContactWindowController(NSWindowController):
                 pass
             else:
                 item = self.desktopShareMenu.itemWithTag_(1)
-                item.setTitle_("Request Screen from %s" % contact.display_name)
+                item.setTitle_("Request Screen from %s" % contact.name)
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('desktop-client'))
 
                 item = self.desktopShareMenu.itemWithTag_(2)
@@ -3033,7 +3033,7 @@ class ContactWindowController(NSWindowController):
                     item.setHidden_(True)
                 else:
                     item.setHidden_(False)
-                    item.setTitle_("Share My Screen with %s" % contact.display_name)
+                    item.setTitle_("Share My Screen with %s" % contact.name)
 
         elif menu == self.contactsMenu:
             settings = SIPSimpleSettings()
@@ -3274,7 +3274,7 @@ class ContactWindowController(NSWindowController):
                 return
 
             uri = object.uri
-            display_name = object.display_name
+            display_name = object.name
 
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:
                 self.addContact(uri, display_name)
