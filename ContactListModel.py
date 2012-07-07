@@ -151,7 +151,6 @@ class BlinkContact(NSObject):
     def __init__(self, uri, uri_type=None, name=None, display_name=None, icon=None, detail=None, preferred_media=None):
         self.id = None
         self.contact = None
-        self.type = None
         self.favorite = False
         self.uri = uri
         self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
@@ -313,7 +312,6 @@ class BlinkConferenceContact(BlinkContact):
 
     def __init__(self, *args, **kw):
         self.contact = None
-        self.type = 'conference'
     	BlinkContact.__init__(self, *args, **kw)
         self.active_media = []
         self.screensharing_url = None
@@ -329,7 +327,6 @@ class BlinkPresenceContact(BlinkContact):
     """Contact representation with Presence Enabled"""
 
     def __init__(self, contact):
-        self.type = 'presence'
         self.id = contact.id
         self.contact = contact
         self.favorite = self.contact.favorite
@@ -423,8 +420,16 @@ class FavoriteBlinkContact(BlinkPresenceContact):
         if favorite is False:
             self.nc.post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
 
-    def setType(self, type):
-        self.type = type
+
+class ABFavoriteBlinkContact(FavoriteBlinkContact):
+    """Contact representation for a Favorite contact"""
+    editable = True
+    deletable = False
+    
+    def setFavorite(self, favorite):
+        self.favorite = favorite
+        if favorite is False:
+            self.nc.post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
 
 
 class BonjourBlinkContact(BlinkContact):
@@ -433,7 +438,6 @@ class BonjourBlinkContact(BlinkContact):
     deletable = False
 
     def __init__(self, uri, bonjour_neighbour, name=None, display_name=None, icon=None, detail=None):
-        self.type = 'bonjour'
         self.uri = str(uri)
         self.bonjour_neighbour = bonjour_neighbour
         self.aor = uri
@@ -486,7 +490,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
     deletable = False
 
     def __init__(self, ab_contact):
-        self.type = 'addressbook'
         self.id = ab_contact.uniqueId()
         
         name = formatABPersonName(ab_contact)
@@ -670,8 +673,8 @@ class FavoritesBlinkGroup(BlinkGroup):
     type = 'favorites'
     deletable = False
     contacts = []
-    ignore_search = True
     favorites = []
+    ignore_search = True
     add_contact_allowed = True
     remove_contact_allowed = False
     delete_contact_allowed = False
@@ -1883,7 +1886,6 @@ class ContactListModel(CustomListModel):
                             blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.contact == contact).next()
                         except StopIteration:
                             blink_contact = FavoriteBlinkContact(contact)
-                            blink_contact.setType('presence')
                             blink_contact.setPresenceIndicator("unknown")
                             self.favorites_group.contacts.append(blink_contact)
                             self.favorites_group.sortContacts()
@@ -2058,8 +2060,7 @@ class ContactListModel(CustomListModel):
             try:
                 blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.id == contact.id).next()
             except StopIteration:
-                blink_contact = FavoriteBlinkContact(contact)
-                blink_contact.setType('addressbook')
+                blink_contact = ABFavoriteBlinkContact(contact)
                 self.favorites_group.contacts.append(blink_contact)
                 self.favorites_group.sortContacts()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -2069,10 +2070,10 @@ class ContactListModel(CustomListModel):
 
     def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
-        if contact.type == 'presence':
+        if type(contact) == BlinkPresenceContact:
             contact.contact.favorite = False
             contact.contact.save()
-        elif contact.type == 'addressbook':
+        elif type(contact) == SystemAddressBookBlinkContact:
             self.removeContactFromFavoritesGroup(contact)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
@@ -2099,7 +2100,7 @@ class ContactListModel(CustomListModel):
 
     def getBlinkGroupsForBlinkContact(self, contact):
         found_groups = []
-        all_blink_groups = (blink_group for blink_group in self.groupsList if blink_group.type is None)
+        all_blink_groups = (blink_group for blink_group in self.groupsList if blink_group.add_contact_allowed)
         for blink_group in all_blink_groups:
             for blink_contact in blink_group.contacts:
                 if blink_contact.contact.id == contact.contact.id:
@@ -2306,7 +2307,7 @@ class ContactListModel(CustomListModel):
             self.editGroup(blink_contact)
             return
 
-        if type(blink_contact) == SystemAddressBookBlinkContact or blink_contact.type == 'addressbook':
+        if type(blink_contact) in (SystemAddressBookBlinkContact, ABFavoriteBlinkContact):
             url = "addressbook://"+blink_contact.id
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             return

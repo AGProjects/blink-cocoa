@@ -41,7 +41,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, ABFavoriteBlinkContact, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -2862,7 +2862,7 @@ class ContactWindowController(NSWindowController):
                     mitem.setRepresentedObject_(item)
                     mitem.setState_(NSOnState if item.favorite else NSOffState)
 
-                elif type(item) == FavoriteBlinkContact:
+                elif isinstance(item, FavoriteBlinkContact):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "deleteContact:", "")
                     mitem.setEnabled_(True)
@@ -2889,18 +2889,13 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
 
             else:
-                if isinstance(item, BlinkContact) and item.editable:
+                if type(item) == ABFavoriteBlinkContact:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
+                    lastItem.setRepresentedObject_(item)
+                elif isinstance(item, BlinkPresenceContact):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-                elif type(item) == FavoriteBlinkContact:
-                    if item.type == "addressbook":
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
-                        lastItem.setRepresentedObject_(item)
-                    elif item.type == "presence":
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-                        lastItem.setRepresentedObject_(item)
                 
                 elif not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
