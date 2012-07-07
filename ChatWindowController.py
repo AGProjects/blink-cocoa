@@ -1145,9 +1145,9 @@ class ChatWindowController(NSWindowController):
             self.participants.append(contact)
 
             # Add remote party
-            contact = getContactMatchingURI(session.remoteSIPAddress)
+            contact = session.selected_contact or getContactMatchingURI(session.remoteSIPAddress)
             if contact:
-                contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=contact.icon)
+                contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon)
             else:
                 uri = format_identity_to_string(session.remotePartyObject)
                 display_name = session.getTitleShort()
@@ -1180,14 +1180,14 @@ class ChatWindowController(NSWindowController):
                 self.participants.append(contact)
 
                 # Add remote party
-                contact = getContactMatchingURI(session.remoteSIPAddress)
+                contact = session.selected_contact or getContactMatchingURI(session.remoteSIPAddress)
                 icon = None
                 if chat_stream.remoteIcon:
                     icon = chat_stream.remoteIcon
                 if contact:
                     if contact.icon:
                         icon = contact.icon
-                    contact = BlinkConferenceContact(contact.uri, name=contact.name, icon=icon)
+                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=icon)
                 else:
                     uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()

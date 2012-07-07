@@ -1444,6 +1444,7 @@ class ContactWindowController(NSWindowController):
         NSApp.activateIgnoringOtherApps_(True)
 
         account = None
+        selected_contact = None
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
@@ -1454,6 +1455,7 @@ class ContactWindowController(NSWindowController):
         else:
             target = uri or contact.uri
             display_name = contact.name
+            selected_contact = contact
 
         if not account:
             account = self.getAccountWitDialPlan(target)
@@ -1470,6 +1472,7 @@ class ContactWindowController(NSWindowController):
             account = BonjourAccount()
 
         session = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(display_name))
+        session.selected_contact = selected_contact
 
         if media == "video":
             media = ("video", "audio")

@@ -739,6 +739,7 @@ class SessionController(NSObject):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, sender=self)
+        self.selected_contact = None
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -778,6 +779,7 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
+        self.selected_contact = None
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -820,6 +822,7 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
+        self.selected_contact = None
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -1043,6 +1046,7 @@ class SessionController(NSObject):
         self.session = None
         self.endingBy = None
         self.failureReason = None
+        self.selected_contact = None
         self.cancelledStream = None
         self.remote_focus = False
         self.remote_focus_log = False
