@@ -154,12 +154,15 @@ class BlinkContact(NSObject):
         self.favorite = False
         self.uri = uri
         self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
-        self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         self.name = NSString.stringWithString_(name or uri)
         self.detail = NSString.stringWithString_(uri)
         self.icon = icon
         self._preferred_media = 'audio'
         self.setUsernameAndDomain()
+
+    @property        
+    def aliases(self):
+        return list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
 
     @property        
     def model(self):     
@@ -268,7 +271,6 @@ class BlinkContact(NSObject):
             except StopIteration:
                 self.uri = ''
         self.detail = NSString.stringWithString_(self.uri)
-        self.aliases = list(alias.uri for alias in iter(self.contact.uris) if alias.uri != self.uri)
                     
     def setName(self, name):
         self.name = NSString.stringWithString_(name)
@@ -278,9 +280,6 @@ class BlinkContact(NSObject):
 
     def setPreferredMedia(self, media):
         self._preferred_media = media
-
-    def setAliases(self, aliases):
-        self.aliases = aliases
 
     def setFavorite(self, favorite):
         self.favorite = favorite
@@ -340,7 +339,6 @@ class BlinkPresenceContact(BlinkContact):
 
         self.name = NSString.stringWithString_(self.contact.name or self.uri)
         self.detail = NSString.stringWithString_(self.uri)
-        self.aliases = list(alias.uri for alias in iter(self.contact.uris) if alias.uri != self.uri)
         self.icon = loadContactIcon(self.contact) or loadContactIconFromFile(self.uri)
         self._preferred_media = self.contact.preferred_media or 'audio'
         self.setUsernameAndDomain()
@@ -353,7 +351,6 @@ class BlinkPresenceContact(BlinkContact):
 
         self.name = NSString.stringWithString_(self.contact.name or self.uri)
         self.detail = NSString.stringWithString_(self.uri)
-        self.aliases = list(alias.uri for alias in iter(self.contact.uris) if alias.uri != self.uri)
 
     
     def setPresenceIndicator(self, indicator):
@@ -551,7 +548,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
             self.detail = NSString.stringWithString_('None')
         self.default_uri = self.uri
         self.name = NSString.stringWithString_(self.name or self.uri)
-        self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         idata = ab_contact.imageData()
         self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
         self._preferred_media = 'audio'
@@ -1659,12 +1655,6 @@ class ContactListModel(CustomListModel):
                             pass
 
                         try:
-                            new_aliases = ";".join(pickled_contact["aliases"])
-                            contact.aliases =  new_aliases if new_aliases else None
-                        except KeyError:
-                            pass
-
-                        try:
                             contact.save()
                         except DuplicateIDError:
                             pass
@@ -1879,8 +1869,6 @@ class ContactListModel(CustomListModel):
                     else:
                         self.removeContactFromFavoritesGroup(contact)
 
-                aliases = (alias.uri for alias in contact.uris if alias.uri != blink_contact.uri)
-                blink_contact.setAliases(aliases)
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
