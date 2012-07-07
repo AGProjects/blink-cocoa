@@ -1340,7 +1340,7 @@ class ContactWindowController(NSWindowController):
 
         if self.mainTabView.selectedTabViewItem().identifier() == "search":
             self.local_found_contacts = []
-            local_found_contacts = [contact for group in self.model.groupsList if group.ignore_search is False for contact in group.contacts if text in contact]
+            local_found_contacts = [contact for group in self.model.groupsList if group.ignore_search is False for contact in group.contacts if (text in contact or contact.matchesURI(text))]
             found_count = {}
             for local_found_contact in local_found_contacts:
                 if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None:
@@ -1371,7 +1371,12 @@ class ContactWindowController(NSWindowController):
                     pass
                 else:
                     if " " not in text:
-                        input_text = '%s@%s' % (text, active_account.id.domain) if active_account is not BonjourAccount() and "@" not in text else text
+                        input_text = text
+                        if active_account is not BonjourAccount():
+                            if text.endswith('@'):
+                                input_text = '%s%s' % (text, active_account.id.domain)
+                            elif "@" not in text:                          
+                                input_text = '%s@%s' % (text, active_account.id.domain)
                         input_contact = SearchResultContact(input_text, name=unicode(input_text))
                         exists = text in (contact.uri for contact in self.local_found_contacts)
 

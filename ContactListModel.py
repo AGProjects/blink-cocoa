@@ -226,8 +226,12 @@ class BlinkContact(NSObject):
 
         def match(me, candidate):
             # check exact match
-            if (me[0], me[1]) == (candidate[0], candidate[1]):
-                return True
+            if not len(candidate[1]):
+                if me[0].startswith(candidate[0]):
+                    return True
+            else:
+                if (me[0], me[1]) == (candidate[0], candidate[1]):
+                    return True
 
             # check when a phone number, if the end matches
             # remove special characters used by Address Book contacts
@@ -1311,7 +1315,7 @@ class ContactListModel(CustomListModel):
             return (blink_contact for group in self.groupsList if group.ignore_search is False for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
         except StopIteration:
             return None
-
+    
     def checkContactBackup_(self, timer):
         now = datetime.datetime.now()
         for file in glob.glob('%s/*.pickle' % ApplicationData.get('contacts_backup')):
