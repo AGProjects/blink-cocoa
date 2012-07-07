@@ -406,7 +406,7 @@ class HistoryBlinkContact(BlinkContact):
 class FavoriteBlinkContact(BlinkPresenceContact):
     """Contact representation for a Favorite contact"""
     editable = True
-    deletable = False
+    deletable = True
 
     def setFavorite(self, favorite):
         self.favorite = favorite
@@ -416,6 +416,8 @@ class FavoriteBlinkContact(BlinkPresenceContact):
 
 class ABFavoriteBlinkContact(FavoriteBlinkContact):
     """Contact representation for an AB Favorite contact"""
+    editable = True
+    deletable = False
 
 
 class BonjourBlinkContact(BlinkContact):
@@ -654,13 +656,13 @@ class AllContactsBlinkGroup(BlinkGroup):
 class FavoritesBlinkGroup(BlinkGroup):
     """Group representation for Favorites"""
     type = 'favorites'
-    deletable = False
+    deletable = True
     contacts = []
     favorites = []
     ignore_search = True
     add_contact_allowed = True
-    remove_contact_allowed = False
-    delete_contact_allowed = False
+    remove_contact_allowed = True
+    delete_contact_allowed = True
 
     def __init__(self, name=u'Favorites'):
         self.name = NSString.stringWithString_(name)
@@ -1101,7 +1103,7 @@ class CustomListModel(NSObject):
                         targetGroup.group.contacts.add(sourceContact.contact)
                         targetGroup.group.save()
 
-                        if sourceGroup.editable and not  isinstance(targetGroup, FavoritesBlinkGroup):
+                        if sourceGroup.remove_contact_allowed and not  isinstance(targetGroup, FavoritesBlinkGroup):
                             sourceGroup.group.contacts.remove(sourceContact.contact)
                             sourceGroup.group.save()
 
@@ -2337,6 +2339,10 @@ class ContactListModel(CustomListModel):
                 self.addGroupsForContact(contact, new_contact['groups'])
 
     def removeContactFromGroup(self, blink_contact, blink_group):
+        if isinstance(blink_group, FavoritesBlinkGroup):
+            blink_contact.setFavorite(False)
+            return
+
         try:
             blink_group.group.contacts.remove(blink_contact.contact)
             blink_group.group.save()
@@ -2344,11 +2350,7 @@ class ContactListModel(CustomListModel):
             pass
     
     def deleteContact(self, blink_contact):
-        if isinstance(blink_contact, FavoriteBlinkContact):
-            blink_contact.setFavorite(False)
-            return
-
-        if not blink_contact.editable:
+        if not blink_contact.deletable:
             return
 
         name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
