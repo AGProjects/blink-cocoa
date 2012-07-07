@@ -575,7 +575,6 @@ class BlinkGroup(NSObject):
     add_contact_allowed = True
     remove_contact_allowed = True
     delete_contact_allowed = True
-    special_id = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
