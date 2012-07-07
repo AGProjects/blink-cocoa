@@ -482,11 +482,11 @@ class SystemAddressBookBlinkContact(BlinkContact):
         
         name = formatABPersonName(ab_contact)
         company = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
-        if company:
-            name += " ("+unicode(company)+")" if name else unicode(company)
-        
-        self.name = name
 
+        if not name and company:
+            name = unicode(company)
+
+        self.name = name
         addresses = []
 
         labelNames = {
