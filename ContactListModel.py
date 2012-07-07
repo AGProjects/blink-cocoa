@@ -2281,10 +2281,14 @@ class ContactListModel(CustomListModel):
                 contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
                 contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
                 contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+
+                if self.favorites_group in new_contact['groups']:
+                    contact.favorite = True
+
                 contact.save()
 
                 if new_contact['groups']:
-                    self.addGroupsForContact(contact, new_contact['groups'])
+                    self.addGroupsForContact(contact, new_contact['groups'])                            
 
             return True
         return False
