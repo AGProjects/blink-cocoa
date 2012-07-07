@@ -422,14 +422,7 @@ class FavoriteBlinkContact(BlinkPresenceContact):
 
 
 class ABFavoriteBlinkContact(FavoriteBlinkContact):
-    """Contact representation for a Favorite contact"""
-    editable = True
-    deletable = False
-    
-    def setFavorite(self, favorite):
-        self.favorite = favorite
-        if favorite is False:
-            self.nc.post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
+    """Contact representation for an AB Favorite contact"""
 
 
 class BonjourBlinkContact(BlinkContact):
@@ -2070,10 +2063,10 @@ class ContactListModel(CustomListModel):
 
     def _NH_FavoriteContactWasRemoved(self, notification):
         contact = notification.sender
-        if type(contact) == BlinkPresenceContact:
+        if type(contact) == FavoriteBlinkContact:
             contact.contact.favorite = False
             contact.contact.save()
-        elif type(contact) == SystemAddressBookBlinkContact:
+        elif type(contact) == ABFavoriteBlinkContact:
             self.removeContactFromFavoritesGroup(contact)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
@@ -2250,6 +2243,8 @@ class ContactListModel(CustomListModel):
 
     def addGroupsForContact(self, contact, groups):
         for grp in groups:
+            if type(grp) == FavoritesBlinkGroup:
+                continue
             try:
                 group = next(g.group for g in self.groupsList if g == grp and g.add_contact_allowed)
             except StopIteration:
@@ -2337,16 +2332,22 @@ class ContactListModel(CustomListModel):
                 contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
                 contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
                 contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-                contact.save()
                 belonging_groups = self.getBlinkGroupsForBlinkContact(blink_contact)
                 for blink_group in belonging_groups:
                     if not new_contact['groups'] or blink_group not in new_contact['groups']:
-                        try:
-                            blink_group.group.contacts.remove(blink_contact.contact)
-                            blink_group.group.save()
-                        except ValueError:
-                            pass
+                        if type(blink_group) == FavoritesBlinkGroup:
+                            contact.favorite = False
+                        else:
+                            try:
+                                blink_group.group.contacts.remove(blink_contact.contact)
+                                blink_group.group.save()
+                            except ValueError:
+                                pass
 
+                if self.favorites_group in new_contact['groups']:
+                    contact.favorite = True
+
+                contact.save()
                 self.addGroupsForContact(contact, new_contact['groups'])
 
     def removeContactFromGroup(self, blink_contact, blink_group):
@@ -2357,7 +2358,7 @@ class ContactListModel(CustomListModel):
             pass
     
     def deleteContact(self, blink_contact):
-        if type(blink_contact) is FavoriteBlinkContact:
+        if isinstance(blink_contact, FavoriteBlinkContact):
             blink_contact.setFavorite(False)
             return
 
