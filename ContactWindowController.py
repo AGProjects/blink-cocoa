@@ -1018,7 +1018,7 @@ class ContactWindowController(NSWindowController):
         return unicode(icon)
 
     def addContact(self, uri, display_name=None):
-        self.model.addContact(uri, display_name=display_name)
+        self.model.addContact(uri, name=display_name)
         self.contactOutline.reloadData()
 
     @objc.IBAction
@@ -1113,7 +1113,7 @@ class ContactWindowController(NSWindowController):
             type = (uri.type for uri in item.uris if uri.uri == item.uri).next()
         except StopIteration:
             type = None
-        self.model.addContact(item.uri, display_name=item.name, type=type)
+        self.model.addContact(item.uri, name=item.name, type=type)
 
     @objc.IBAction
     def addContact_(self, sender):
