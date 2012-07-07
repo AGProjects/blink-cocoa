@@ -2120,7 +2120,7 @@ class ContactListModel(CustomListModel):
 
     def saveGroupPosition(self):
         # save group expansion and position
-        addressbook_manager = AddressbookManager
+        addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
             for group in addressbook_manager.get_groups():
                 try:
