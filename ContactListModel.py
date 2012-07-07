@@ -148,7 +148,7 @@ class BlinkContact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, uri_type=None, name=None, icon=None, detail=None, preferred_media=None):
+    def __init__(self, uri, uri_type=None, name=None, icon=None):
         self.id = None
         self.contact = None
         self.favorite = False
@@ -156,9 +156,9 @@ class BlinkContact(NSObject):
         self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
         self.aliases = list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
         self.name = NSString.stringWithString_(name or uri)
-        self.detail = NSString.stringWithString_(detail or uri)
+        self.detail = NSString.stringWithString_(uri)
         self.icon = icon
-        self._preferred_media = preferred_media or 'audio'
+        self._preferred_media = 'audio'
         self.setUsernameAndDomain()
 
     @property        
