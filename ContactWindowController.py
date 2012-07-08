@@ -2220,7 +2220,7 @@ class ContactWindowController(NSWindowController):
         while self.groupMenu.numberOfItems() > 0:
             self.groupMenu.removeItemAtIndex_(0)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_('Navigate to a Group', "", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Navigate to Group', "", "")
         item.setEnabled_(False)
         self.groupMenu.addItem_(NSMenuItem.separatorItem())
 

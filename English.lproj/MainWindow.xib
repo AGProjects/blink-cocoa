@@ -566,14 +566,14 @@
 								</object>
 								<object class="NSMenuItem" id="1056024133">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Navigate to</string>
+									<string key="NSTitle">Scroll Position</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
 									<reference key="NSMixedImage" ref="600792618"/>
 									<string key="NSAction">submenuAction:</string>
 									<object class="NSMenu" key="NSSubmenu" id="56008310">
-										<string key="NSTitle">Navigate to</string>
+										<string key="NSTitle">Scroll Position</string>
 										<array class="NSMutableArray" key="NSMenuItems"/>
 									</object>
 								</object>
@@ -2349,6 +2349,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="NSFrame">{{232, 6}, {29, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="722602892">
 								<int key="NSCellFlags">67239424</int>
@@ -2378,7 +2379,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="485186698"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{274, 154}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">ContactWindow</string>
@@ -6861,12 +6862,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="345991132"/>
-						<string key="accessibilityValue">Add New Contact</string>
+						<string key="accessibilityValue">Navigate to Group</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="345991132"/>
-						<string key="toolTip">Add a new Contact</string>
+						<string key="toolTip">Navigate to Group</string>
 					</object>
 				</dictionary>
 				<string key="1689.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
