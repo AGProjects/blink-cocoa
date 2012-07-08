@@ -2,7 +2,7 @@
 #
 
 from AppKit import *
-
+from ContactListModel import BlinkContact, BlinkGroup
 
 class ContactOutlineView(NSOutlineView):
     def menuForEvent_(self, event):
@@ -19,3 +19,22 @@ class ContactOutlineView(NSOutlineView):
             self.target().performSelector_withObject_(self.doubleAction(), self)
         else:
             super(ContactOutlineView, self).keyDown_(event)
+
+    def acceptsFirstResponder(self):
+        return True
+
+    def copy_(self, sender):
+        text = None
+        selection = self.selectedRowIndexes()
+        item = selection.firstIndex()
+        if item != NSNotFound:
+            object = self.itemAtRow_(item)
+            if isinstance(object, BlinkContact):
+                text = u'%s <%s>' % (object.name, object.uri)
+            elif isinstance(object, BlinkGroup):
+                text = u'%s' % object.name
+        if text:
+            pb = NSPasteboard.generalPasteboard()
+            pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)
+            pb.setString_forType_(text, NSStringPboardType)
+
