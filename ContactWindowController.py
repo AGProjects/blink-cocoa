@@ -274,6 +274,9 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
         nc.add_observer(self, name="SIPAccountRegistrationGotAnswer")
         nc.add_observer(self, name="SIPAccountRegistrationDidEnd")
+        nc.add_observer(self, name="AddressbookGroupWasActivated")
+        nc.add_observer(self, name="AddressbookGroupWasDeleted")
+        nc.add_observer(self, name="AddressbookGroupDidChange")
 
         nc.add_observer(self, sender=AccountManager())
 
@@ -569,6 +572,15 @@ class ContactWindowController(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_AddressbookGroupWasActivated(self, notification):
+        self.updateGroupMenu()
+
+    def _NH_AddressbookGroupWasDeleted(self, notification):
+        self.updateGroupMenu()
+    
+    def _NH_AddressbookGroupDidChange(self, notification):
+        self.updateGroupMenu()
 
     def _NH_SIPAccountManagerDidAddAccount(self, notification):
         account = notification.data.account
@@ -2223,6 +2235,8 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_(group)
             item.setState_(NSOnState if group == selected_group else NSOffState)
 
+        self.contactsMenu.setSubmenu_forItem_(self.groupMenu, self.navigateToGroup)
+
     def goToGroup_(self, sender):
         group = sender.representedObject()
         row = self.contactOutline.rowForItem_(group)
@@ -3064,8 +3078,6 @@ class ContactWindowController(NSWindowController):
             self.updateCallMenu()
         elif menu == self.toolsMenu:
             self.updateToolsMenu()
-        elif menu == self.groupMenu:
-            self.updateGroupMenu()
         elif menu == self.chatMenu:
             self.updateChatMenu()
         elif menu == self.windowMenu:
@@ -3121,7 +3133,6 @@ class ContactWindowController(NSWindowController):
                 item.setTitle_('Toggle Expansion')
     
             self.updateGroupMenu()
-            self.contactsMenu.setSubmenu_forItem_(self.groupMenu, self.navigateToGroup)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
