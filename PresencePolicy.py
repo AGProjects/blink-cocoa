@@ -53,7 +53,7 @@ def fillPresenceMenu(presenceMenu, target, action, attributes=None):
         if target:
             lastItem.setTarget_(target)
         presenceMenu.addItem_(lastItem)
-            
+
 
 USERNAME_CHECK_RE = "^[a-zA-Z0-9_+()-.]+$"
 DOMAIN_CHECK_RE = "^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|([a-zA-Z0-9\-_]+(\.[a-zA-Z0-9\-_]+)*)$"
@@ -67,7 +67,7 @@ class PresencePolicy(NSWindowController):
     enableButtons = True
     searchSubscriberBox = objc.IBOutlet()
     disabled_label = objc.IBOutlet()
-    
+
     presencePolicyTableView = objc.IBOutlet()
     dialogPolicyTableView = objc.IBOutlet()
 
@@ -82,13 +82,13 @@ class PresencePolicy(NSWindowController):
     createContact = objc.IBOutlet()
     contactExists = objc.IBOutlet()
     pendingWatchersView = objc.IBOutlet()
-    pendingWatchersList = objc.IBOutlet() 
-    
+    pendingWatchersList = objc.IBOutlet()
+
     offlineWindowShown = False
     offlineWindow = objc.IBOutlet()
     offlineNote = objc.IBOutlet()
     offlineActivity = objc.IBOutlet()
-    
+
     policy_data = {} # event -> [contact1, contact2...] is the master datasource for the UI
     event = None
     management_enabled = False
@@ -121,14 +121,14 @@ class PresencePolicy(NSWindowController):
                                    'presence': self.presencePolicyTableView,
                                    'dialog': self.dialogPolicyTableView
                                    }
-        
+
             for event in self.tabViewForEvent.keys():
                 self.policy_data[event] = []
 
             previous_event = NSUserDefaults.standardUserDefaults().stringForKey_("SelectedPolicyEventTab")
             self.event = previous_event if previous_event in self.tabViewForEvent.keys() else self.tabViewForEvent.keys()[0]
             self.eventTabView.selectTabViewItemWithIdentifier_(self.event)
-            
+
             self.newWatcherPop.removeAllItems()
             self.newWatcherPop.addItemsWithTitles_(self.policyTypes)
             self.newWatcherWindow.setLevel_(NSModalPanelWindowLevel)
@@ -149,12 +149,12 @@ class PresencePolicy(NSWindowController):
 
     def awakeFromNib(self):
         self.presencePolicyTableView.setRowHeight_(35)
-        self.presencePolicyTableView.setTarget_(self)   
+        self.presencePolicyTableView.setTarget_(self)
         self.presencePolicyTableView.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
         self.presencePolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri", "dragged-contact"))
 
         self.dialogPolicyTableView.setRowHeight_(35)
-        self.dialogPolicyTableView.setTarget_(self)   
+        self.dialogPolicyTableView.setTarget_(self)
         self.dialogPolicyTableView.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
         self.dialogPolicyTableView.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri", "dragged-contact"))
 
@@ -182,7 +182,7 @@ class PresencePolicy(NSWindowController):
 
         for event in self.tabViewForEvent.keys():
             self.policy_data[event].append(contact)
-            
+
             policy = self.getContactPolicyForEvent(contact, event)
             if contact not in self.policy_data[event]:
                 if policy != 'default':
@@ -272,7 +272,7 @@ class PresencePolicy(NSWindowController):
         # the outcome is a modification of the underlying middleware contact that will generate notifications
         # finally notifications will repaint the GUI
         pass
-                        
+
     def updatePolicyAction(self, event, address, policy):
         # modification made by user clicking buttons
         # the outcome is a modification of the underlying middleware contact that will generate notifications
@@ -359,7 +359,7 @@ class PresencePolicy(NSWindowController):
                     self.applyToAll.setTitle_(u"Apply same policy to all other %d pending subscribers" % len(self.pendingWatchers) if len(self.pendingWatchers) > 1 else u"Apply same policy to one more pending subscriber")
                     self.applyToAll.setHidden_(False if len(self.pendingWatchers) else True)
                     self.applyToAll.setState_(NSOffState)
-                    
+
                     frame = self.newWatcherWindow.frame()
                     if len(self.pendingWatchers):
                         pending_list = []
@@ -380,9 +380,9 @@ class PresencePolicy(NSWindowController):
                         self.pendingWatchersView.setHidden_(True)
                         frame.origin.y -= (self.newWatcherWindow.minSize().height - frame.size.height)
                         frame.size = self.newWatcherWindow.minSize()
- 
+
                     self.newWatcherWindow.setFrame_display_animate_(frame, True, True)
-        
+
                     if not NSApp.delegate().contactsWindowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
                         self.showGroupsCombo()
                     else:
@@ -463,7 +463,7 @@ class PresencePolicy(NSWindowController):
     def userButtonClicked_(self, sender):
         if sender.tag() == 2: # add a new policy entry
             # the outcome of the operation is a change to an existing contact or the addition of a new one contact
-            # the notifications emitted later by the contact will refresh the UI            
+            # the notifications emitted later by the contact will refresh the UI
             created_new_contact = False
             i = 0
             while not created_new_contact:
@@ -528,7 +528,7 @@ class PresencePolicy(NSWindowController):
             NSBundle.loadNibNamed_owner_("PresenceOfflineWindow", self)
             fillPresenceMenu(self.offlineActivity.menu(), None, None)
             self.offlineWindowShown = True
-        
+
         try:
             storage_path = ApplicationData.get('presence_offline_')
             info = cPickle.load(open(storage_path, "r"))
@@ -539,7 +539,7 @@ class PresencePolicy(NSWindowController):
 
         self.offlineWindow.makeKeyAndOrderFront_(None)
 
-    @objc.IBAction    
+    @objc.IBAction
     def togglePresenceOfflineStatus_(self, sender):
         sender.setState_(NSOffState if sender.state() == NSOnState else NSOnState)
 

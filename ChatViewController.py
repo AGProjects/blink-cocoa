@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
@@ -89,13 +89,13 @@ class ChatInputTextView(NSTextView):
         if self:
             pass
         return self
-    
+
     def setOwner(self, owner):
         self.owner = owner   # ChatViewController
-    
+
     def setMaxLength_(self, l):
         self.maxLength = l
-    
+
     def insertText_(self, text):
         if self.maxLength:
             oldText = self.textStorage().copy()
@@ -374,7 +374,7 @@ class ChatViewController(NSObject):
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def webviewFinishedLoading_(self, notification):
-        self.document = self.outputView.mainFrameDocument() 
+        self.document = self.outputView.mainFrameDocument()
         self.finishedLoading = True
         if hasattr(self.delegate, "chatViewDidLoad_"):
             self.delegate.chatViewDidLoad_(self)
@@ -388,7 +388,7 @@ class ChatViewController(NSObject):
                 del defaultItems[defaultItems.index(item)]
                 break
         return defaultItems
-        
+
     def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, info, request, frame, listener):
         # intercept when user clicks on links so that we process them in different ways
         theURL = info[WebActionOriginalURLKey]

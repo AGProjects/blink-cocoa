@@ -275,7 +275,7 @@ class SessionControllersManager(object):
 
     def _NH_WavePlayerDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
-            
+
     @run_in_gui_thread
     def _NH_BlinkSessionDidEnd(self, session_controller, data):
         if session_controller.session.direction == "incoming":
@@ -296,7 +296,7 @@ class SessionControllersManager(object):
                 self.log_incoming_session_answered_elsewhere(session_controller, data)
             else:
                 self.log_incoming_session_missed(session_controller, data)
-            
+
             if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
                 pass
             elif data.streams == ['file-transfer']:
@@ -426,7 +426,7 @@ class SessionControllersManager(object):
         account = controller.account
         if account is BonjourAccount():
             return
-        
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -438,9 +438,9 @@ class SessionControllersManager(object):
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
-        
+
         self.add_to_history(id, media_types, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-        
+
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
@@ -450,7 +450,7 @@ class SessionControllersManager(object):
             cpim_from = data.target_uri
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
-            
+
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -459,7 +459,7 @@ class SessionControllersManager(object):
         session = controller.session
         if account is BonjourAccount():
             return
-        
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -470,14 +470,14 @@ class SessionControllersManager(object):
         if session.start_time is None and session.end_time is not None:
             # Session could have ended before it was completely started
             session.start_time = session.end_time
-        
+
         duration = session.end_time - session.start_time
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
-        
+
         self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-        
+
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
         message = '<h3>Incoming Audio Call</h3>'
@@ -489,7 +489,7 @@ class SessionControllersManager(object):
         cpim_from = data.target_uri
         cpim_to = format_identity_to_string(account)
         timestamp = str(Timestamp(datetime.now(tzlocal())))
-        
+
         self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -497,7 +497,7 @@ class SessionControllersManager(object):
         account = controller.account
         if account is BonjourAccount():
             return
-        
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -508,9 +508,9 @@ class SessionControllersManager(object):
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
-        
+
         self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-        
+
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
             message += '<p>The call has been answered elsewhere'
@@ -523,7 +523,7 @@ class SessionControllersManager(object):
             cpim_from = data.target_uri
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
-            
+
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -531,7 +531,7 @@ class SessionControllersManager(object):
         account = controller.account
         if account is BonjourAccount():
             return
-        
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -542,12 +542,12 @@ class SessionControllersManager(object):
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
-        
+
         self.add_to_history(id, media_types, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-        
+
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
-            message += '<p>Reason: %s (%s)' % (data.reason or data.failure_reason, data.code) 
+            message += '<p>Reason: %s (%s)' % (data.reason or data.failure_reason, data.code)
             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
             local_uri = local_uri
@@ -557,7 +557,7 @@ class SessionControllersManager(object):
             cpim_from = data.target_uri
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
-            
+
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -565,7 +565,7 @@ class SessionControllersManager(object):
         account = controller.account
         if account is BonjourAccount():
             return
-        
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -576,9 +576,9 @@ class SessionControllersManager(object):
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
-        
+
         self.add_to_history(id, media_types, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-        
+
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
@@ -588,7 +588,7 @@ class SessionControllersManager(object):
             cpim_from = data.target_uri
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
-            
+
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -597,7 +597,7 @@ class SessionControllersManager(object):
         session = controller.session
         if account is BonjourAccount():
             return
-        
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -610,15 +610,15 @@ class SessionControllersManager(object):
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
-        
+
         if session.start_time is None and session.end_time is not None:
             # Session could have ended before it was completely started
             session.start_time = session.end_time
-        
+
         duration = session.end_time - session.start_time
-        
+
         self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
-        
+
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
             message= '<h3>Outgoing Audio Call</h3>'
@@ -628,7 +628,7 @@ class SessionControllersManager(object):
             cpim_from = data.target_uri
             cpim_to = local_uri
             timestamp = str(Timestamp(datetime.now(tzlocal())))
-            
+
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -642,7 +642,7 @@ class SessionControllersManager(object):
             duration_print += "%02i:%02i" % (seconds/60, seconds%60)
         else:
             duration_print = "00:00"
-        
+
         return duration_print
 
     @run_in_green_thread
@@ -666,19 +666,19 @@ class SessionControllersManager(object):
 
         if session.account is not BonjourAccount() and session.account.web_alert.alert_url:
             url = unicode(session.account.web_alert.alert_url)
-            
+
             replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
             caller_key = replace_caller[5:]
             url = url.replace('$caller_party', caller_key)
-            
+
             replace_username = urllib.urlencode({'x:': '%s' % session.remote_identity.uri.user})
             url = url.replace('$caller_username', replace_username[5:])
-            
+
             replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
             url = url.replace('$called_party', replace_account[5:])
-            
+
             settings = SIPSimpleSettings()
-            
+
             if settings.gui.use_default_web_browser_for_alerts:
                 session_controller.log_info(u"Opening HTTP URL in default browser %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
@@ -967,7 +967,7 @@ class SessionController(NSObject):
     def endStream(self, streamHandler):
         if self.session:
             if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
-                # if session is desktop-sharing end it 
+                # if session is desktop-sharing end it
                 self.end()
                 return True
             elif self.session.streams is not None and self.streamHandlers == [streamHandler]:
@@ -1088,7 +1088,7 @@ class SessionController(NSObject):
         settings = SIPSimpleSettings()
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, 
+            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port,
                          parameters={'transport': self.account.sip.outbound_proxy.transport})
             self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
@@ -1550,15 +1550,15 @@ class SessionController(NSObject):
             stream_names = ', '.join(stream.type for stream in data.streams)
             self.log_info(u"Received %s proposal" % stream_names)
             streams = data.streams
-        
+
             settings = SIPSimpleSettings()
             stream_type_list = list(set(stream.type for stream in streams))
-            
+
             if not self.sessionControllersManager.isProposedMediaTypeSupported(streams):
                 self.log_info(u"Unsupported media type, proposal rejected")
                 session.reject_proposal()
                 return
-            
+
             if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
                 self.log_info(u"Automatically accepting chat for established audio session from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptIncomingProposal(streams)
@@ -1701,7 +1701,7 @@ class SessionController(NSObject):
         if remote_conference_has_audio and not self.remote_conference_has_audio:
             self.notification_center.post_notification("ConferenceHasAddedAudio", sender=self)
         self.remote_conference_has_audio = remote_conference_has_audio
-         
+
         for user in data.conference_info.users:
             uri = sip_prefix_pattern.sub("", str(user.entity))
             # save uri for accounting purposes

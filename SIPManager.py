@@ -53,7 +53,7 @@ from util import *
 
 STATUS_PHONE = "phone"
 
-PresenceStatusList =  [(1, "Available", None), 
+PresenceStatusList =  [(1, "Available", None),
                        (1, "Working", None),
                        (0, "Appointment", None),
                        (0, "Busy", None),

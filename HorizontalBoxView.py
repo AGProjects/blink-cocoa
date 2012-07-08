@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -22,7 +22,7 @@ class HorizontalBoxView(NSView):
 
     def setSpacing_(self, spacing):
         self.spacing = spacing
-    
+
     def setBorderWidth_(self, border):
         self.border = border
 
@@ -33,20 +33,20 @@ class HorizontalBoxView(NSView):
             if view in self.expandingViews:
                 expandCount += 1
             else:
-                minimumWidth += NSWidth(view.frame()) 
+                minimumWidth += NSWidth(view.frame())
 
         frame = self.frame()
         if NSWidth(frame) != minimumWidth:
             frame.size.width = minimumWidth
             self.setFrame_(frame)
-    
+
     def isFlipped(self):
         return True
 
     def setBackgroundColor_(self, color):
         self.backgroundColor = color
         self.setNeedsDisplay_(True)
-    
+
     def drawRect_(self, rect):
         if self.backgroundColor:
             self.backgroundColor.set()
@@ -57,7 +57,7 @@ class HorizontalBoxView(NSView):
     def resizeSubviewsWithOldSize_(self, oldSize):
         frame = self.frame()
         height = NSHeight(frame) - 2 * self.border
-        
+
         expandCount = 0
         minimumWidth = 2 * self.border
         for view in self.subviews():
@@ -70,7 +70,7 @@ class HorizontalBoxView(NSView):
         expandedWidth= 0
         if expandCount > 0:
             expandedWidth = int((NSWidth(frame) - minimumWidth) / expandCount)
-        
+
         x = self.border
         for view in self.subviews():
             rect = view.frame()
@@ -82,8 +82,8 @@ class HorizontalBoxView(NSView):
             rect.origin.x = x
             if view in self.expandingViews:
                 rect.size.width = expandedWidth
-            
+
             view.setFrame_(rect)
             x += NSWidth(rect) + self.spacing
-            
+
 

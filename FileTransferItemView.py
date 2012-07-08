@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from AppKit import *
@@ -17,7 +17,7 @@ from util import allocate_autorelease_pool, format_size, run_in_gui_thread
 
 class FileTransferItemView(NSView):
     implements(IObserver)
-    
+
     view = objc.IBOutlet()
     icon = objc.IBOutlet()
     nameText = objc.IBOutlet()
@@ -124,10 +124,10 @@ class FileTransferItemView(NSView):
         image = NSImage.alloc().initWithSize_(NSMakeSize(48,48))
         image.lockFocus()
         size = icon.size()
-        icon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint((48-size.width)/2, (48-size.height)/2), 
+        icon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint((48-size.width)/2, (48-size.height)/2),
                 NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1)
 
-        # overlay file transfer direction icon 
+        # overlay file transfer direction icon
         if type(self.transfer) == OutgoingPushFileTransferHandler or (self.oldTransferInfo and self.oldTransferInfo.direction == "outgoing"):
             icon = NSImage.imageNamed_("outgoing_file")
         else:

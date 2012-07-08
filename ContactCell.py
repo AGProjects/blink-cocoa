@@ -78,15 +78,15 @@ class ContactCell(NSTextFieldCell):
             left = left - padding
             self.drawIcon(self.audioHoldIcon, left, self.frame.origin.y +14, 16, 16)
         elif 'audio' in self.contact.active_media:
-            left = left - padding       
-            self.drawIcon(self.audioIcon, left, self.frame.origin.y +14, 16, 16)                
-    
+            left = left - padding
+            self.drawIcon(self.audioIcon, left, self.frame.origin.y +14, 16, 16)
+
         if 'message' in self.contact.active_media:
-            left = left - padding       
+            left = left - padding
             self.drawIcon(self.chatIcon, left, self.frame.origin.y +14, 16, 16)
 
         if 'screen' in self.contact.active_media:
-            left = left - padding - 2       
+            left = left - padding - 2
             self.drawIcon(self.screenIcon, left, self.frame.origin.y +14, 16, 16)
 
     def drawPresenceIndicator(self):
@@ -103,9 +103,9 @@ class ContactCell(NSTextFieldCell):
 
         if self.contact.presence_indicator == 'available':
             NSColor.greenColor().set()
-        elif self.contact.presence_indicator == 'activity':  
+        elif self.contact.presence_indicator == 'activity':
             NSColor.yellowColor().set()
-        elif self.contact.presence_indicator == 'busy':  
+        elif self.contact.presence_indicator == 'busy':
             NSColor.redColor().set()
         else:
             NSColor.whiteColor().set()

@@ -12,7 +12,7 @@ class FileTransferController(MediaStream):
     """
     def initWithOwner_stream_(self, scontroller, stream):
         return super(FileTransferController, self).initWithOwner_stream_(scontroller, stream)
-    
+
     def startIncoming(self, is_update):
         self.transfer = IncomingFileTransferHandler(self.session, self.stream)
         self.transfer.start()

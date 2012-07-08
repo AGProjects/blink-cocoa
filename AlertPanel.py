@@ -420,7 +420,7 @@ class AlertPanel(NSObject, object):
         default_action = u"Accept"
         alt_action = None
 
-        if len(streams) != 1:                    
+        if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
             if "Chat" in type_names:
                 alt_action = u"Chat Only"
@@ -461,7 +461,7 @@ class AlertPanel(NSObject, object):
 
         if not self.sessions.has_key(session):
             return
-    
+
         if self.answeringMachineTimers.has_key(session):
             self.answeringMachineTimers[session].invalidate()
             del self.answeringMachineTimers[session]

@@ -29,7 +29,7 @@ class SessionInfoController(NSObject):
     sessionBox = objc.IBOutlet()
     audioBox = objc.IBOutlet()
     chatBox = objc.IBOutlet()
-     
+
     remote_party = objc.IBOutlet()
     account = objc.IBOutlet()
     duration = objc.IBOutlet()
@@ -86,10 +86,10 @@ class SessionInfoController(NSObject):
         self.sessionBox.setTitle_(sessionBoxTitle)
 
         audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Audio RTP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
-        self.audioBox.setTitle_(audioBoxTitle)       
+        self.audioBox.setTitle_(audioBoxTitle)
 
         chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Chat MSRP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
-        self.chatBox.setTitle_(chatBoxTitle)       
+        self.chatBox.setTitle_(chatBoxTitle)
 
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
@@ -122,7 +122,7 @@ class SessionInfoController(NSObject):
             self.sessionController = None
         self.remove_audio_stream()
         self.remove_chat_stream()
-        
+
     def add_audio_stream(self):
         if self.sessionController is not None and self.sessionController.hasStreamOfType("audio") and self.audio_stream is None:
             self.audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -168,7 +168,7 @@ class SessionInfoController(NSObject):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def resetSession(self): 
+    def resetSession(self):
         self.local_endpoint.setStringValue_('')
         self.remote_endpoint.setStringValue_('')
         self.remote_ua.setStringValue_('')
@@ -197,7 +197,7 @@ class SessionInfoController(NSObject):
         self.chat_local_endpoint.setStringValue_('')
         self.chat_remote_endpoint.setStringValue_('')
         self.chat_connection_mode.setStringValue_('')
-    
+
     def updatePanelValues(self):
         self.updateSession()
 
@@ -331,7 +331,7 @@ class SessionInfoController(NSObject):
 
             if self.chat_stream and self.chat_stream.stream:
                 self.chat_connection_mode.setStringValue_(self.chat_stream.stream.local_role.title())
-    
+
     def updateTimer_(self, timer):
         if self.sessionController is not None:
             self.updateDuration()
@@ -366,7 +366,7 @@ class SessionInfoController(NSObject):
                 self.audio_status.setStringValue_(u"Active")
             else:
                 self.audio_status.setStringValue_("")
-            
+
     def _NH_BlinkSessionGotRingIndication(self, notification):
         self.updateSessionStatus(sub_state='Ringing')
 
@@ -468,7 +468,7 @@ class CBGraphView(NSView):
     lineSpacing = 0.0    # default spacing between bars to no space
     limit = 1000
     minHeigth = None
-    
+
     def initWithFrame_(self, frame):
         """ basic constructor for views. here we init colors and gradients """
 
@@ -489,7 +489,7 @@ class CBGraphView(NSView):
         """ set the data object we are graphig """
         self.dataQueue = dq
         self.setNeedsDisplay_(needs_display)
-        
+
     def setLineWidth_(self, width):
         """ let user change line (bar) width """
         self.lineWidth = width
@@ -501,11 +501,11 @@ class CBGraphView(NSView):
     def setMinimumHeigth_(self, heigth):
         """ show red color above limit """
         self.minHeigth = heigth
-        
+
     def setLineSpacing_(self, spacing):
         """ let user change spacing bewteen bars (lines) """
         self.lineSpacing = spacing
-     
+
     def setLineColor_(self, color):
         """ let user change line (bar) color """
         self.lineColor = color
@@ -513,17 +513,17 @@ class CBGraphView(NSView):
     def setBorderColor_(self, color):
         """ let user change border color """
         self.borderColor = color
-        
+
     def setBackgroundGradientStart_andEnd_(self, startColor, endColor):
         """ let user change the gradient colors """
         self.grad.release()
         self.grad = NSGradient.alloc().initWithStartingColor_endingColor_(startColor, endColor)
         self.grad.retain()
-        
+
     def isOpaque(self):
         """ are we opaque? why, of course we are! """
         return True
-        
+
     def dealloc(self):
         """ default destructor """
         self.grad.release()
@@ -536,10 +536,10 @@ class CBGraphView(NSView):
 
         bounds = self.bounds() # get our view bounds
         insetBounds = NSInsetRect(bounds, 2, 2) # set the inside ortion
-        
+
         r = NSBezierPath.bezierPathWithRect_(bounds) # create a new bezier rect
         self.grad.drawInBezierPath_angle_(r, 90.0) # and draw gradient in it
-        
+
         self.borderColor.set() # set border to white
         NSBezierPath.setDefaultLineWidth_(1.0) # set line width for outline
         NSBezierPath.strokeRect_(bounds) # draw outline
@@ -569,11 +569,11 @@ class CBGraphView(NSView):
                 barRect.origin.y = insetBounds.origin.y
                 barRect.size.width = self.lineWidth
                 barRect.size.height = ((int(sample) * insetBounds.size.height) / maxB)
-                
+
                 NSBezierPath.fillRect_(barRect)
-                
+
                 barRect.origin.x = barRect.origin.x - self.lineWidth - self.lineSpacing
-                    
+
             NSGraphicsContext.currentContext().setShouldAntialias_(shouldAA)
 
 

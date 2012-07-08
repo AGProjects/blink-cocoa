@@ -108,8 +108,8 @@ class JoinConferenceWindowController(NSObject):
         self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
 
         if media:
-            self.audio.setState_(NSOnState if "audio" in media else NSOffState) 
-            self.chat.setState_(NSOnState if "chat" in media else NSOffState) 
+            self.audio.setState_(NSOnState if "audio" in media else NSOffState)
+            self.chat.setState_(NSOnState if "chat" in media else NSOffState)
 
         self.updatePopupButtons()
 
@@ -223,7 +223,7 @@ class JoinConferenceWindowController(NSObject):
                     self.nickname_textfield.setStringValue_('')
                 self.selected_configuration = configuration.name
                 self._participants = configuration.participants
-                self.participantsTable.reloadData() 
+                self.participantsTable.reloadData()
                 self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
                 self.audio.setState_(NSOnState if "audio" in configuration.media_types else NSOffState)
                 self.chat.setState_(NSOnState if "chat" in configuration.media_types else NSOffState)
@@ -249,7 +249,7 @@ class JoinConferenceWindowController(NSObject):
         else:
             self.configurationsButton.addItemWithTitle_(u"No configurations saved")
             self.configurationsButton.lastItem().setEnabled_(False)
-             
+
         self.configurationsButton.menu().addItem_(NSMenuItem.separatorItem())
         self.configurationsButton.addItemWithTitle_(u"Save configuration...")
         self.configurationsButton.lastItem().setEnabled_(True)
@@ -496,7 +496,7 @@ class AddParticipantsWindowController(NSObject):
     participant = objc.IBOutlet()
     participantsTable = objc.IBOutlet()
     target = objc.IBOutlet()
-    
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -634,7 +634,7 @@ class AddParticipantsWindowController(NSObject):
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
         return True
-        
+
     def selectedParticipant(self):
         row = self.participantsTable.selectedRow()
         try:

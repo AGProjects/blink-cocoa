@@ -19,7 +19,7 @@ class AccountSettings(NSObject):
     spinWheel2 = objc.IBOutlet()
     errorText = objc.IBOutlet()
     loadingText = objc.IBOutlet()
-    
+
     @classmethod
     def isSupportedAccount_(cls, account):
         return account.server.settings_url is not None
@@ -106,7 +106,7 @@ class AccountSettings(NSObject):
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
-        
+
     def webView_runOpenPanelForFileButtonWithResultListener_(self, sender, resultListener):
         panel = NSOpenPanel.openPanel()
         if panel.runModal() == NSFileHandlingPanelOKButton:
@@ -194,7 +194,7 @@ class AccountSettings(NSObject):
 
     def webView_resource_didCancelAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         BlinkLogger().log_info(u"Cancelled authentication request")
-    
+
     # download delegate
     def download_decideDestinationWithSuggestedFilename_(self, download, filename):
         panel = NSSavePanel.savePanel()
@@ -205,26 +205,26 @@ class AccountSettings(NSObject):
         else:
             download.cancel()
             BlinkLogger().log_info(u"Download cancelled")
-    
+
     def downloadDidBegin_(self, download):
         BlinkLogger().log_info(u"Download started...")
-    
+
     def downloadDidFinish_(self, download):
         BlinkLogger().log_info(u"Download finished")
-    
+
     def download_didReceiveDataOfLength_(self, download, length):
         pass
-    
+
     def download_didFailWithError_(self, download, error):
         download.cancel()
         BlinkLogger().log_info(u"Download error: %s" % error.localizedDescription())
         NSRunAlertPanel("Download Error", "Error downloading file: %s" % error.localizedDescription(), "OK", "", "")
-    
+
     # API exported to webpage. Be careful with what you export.
 
     def addContact_withDisplayName_(self, uri, display_name):
         BlinkLogger().log_info(u"Adding contact %s <%s>" % (display_name, uri))
-        
+
         contact = self.owner.model.addContact(address=uri, display_name=display_name)
         self.owner.contactOutline.reloadData()
         row = self.owner.contactOutline.rowForItem_(contact)

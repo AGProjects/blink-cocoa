@@ -270,11 +270,11 @@ class AudioController(MediaStream):
         if self.view:
             return self.view.selected
         return False
-    
+
     @property
     def isConferencing(self):
         return self.view.conferencing
-    
+
     @property
     def canConference(self):
         return self.status not in (STREAM_FAILED, STREAM_IDLE, STREAM_DISCONNECTING)
@@ -379,7 +379,7 @@ class AudioController(MediaStream):
     def sessionBoxDidAddConferencePeer(self, sender, peer):
         if self == peer:
             return
-        
+
         if type(peer) == str:
             self.sessionController.log_info(u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
                   peer))
@@ -393,7 +393,7 @@ class AudioController(MediaStream):
                 peer.addToConference()
             else:
                 self.view.setConferencing_(False)
-                
+
             return False
         else:
             self.sessionController.log_info(u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.getTitle(),
@@ -401,7 +401,7 @@ class AudioController(MediaStream):
             # if conference already exists and neither self nor peer are part of it:
             #     return False
             # else conference the sessions
-            
+
             # set both as under conference before actually adding to avoid getting the session
             # that gets added to the conference last getting held by the 1st
             self.view.setConferencing_(True)
@@ -425,7 +425,7 @@ class AudioController(MediaStream):
         self.conferenceSegmented.setHidden_(False)
         self.view.setConferencing_(True)
         self.updateLabelColor()
-    
+
     def removeFromConference(self):
         NSApp.delegate().contactsWindowController.removeAudioSessionFromConference(self)
         if self.transferEnabled:
@@ -456,7 +456,7 @@ class AudioController(MediaStream):
 
     def updateTimer_(self, timer):
         self.updateTileStatistics()
-        
+
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
             if duration >= SIPSimpleSettings().answering_machine.max_recording_duration:
@@ -472,7 +472,7 @@ class AudioController(MediaStream):
                 if timer.isValid():
                     timer.invalidate()
                 self.audioEndTime = None
-    
+
         if self.stream and self.stream.recording_active and (self.audioSegmented or self.transferSegmented):
             if self.isConferencing:
                 self.conferenceSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 2)
@@ -566,7 +566,7 @@ class AudioController(MediaStream):
             raise Exception("called from non-main thread")
 
         oldstatus = self.status
-    
+
         if self.status != newstate:
             self.status = newstate
 
@@ -656,7 +656,7 @@ class AudioController(MediaStream):
         elif status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING):
             # can cancel the call, but not put on hold
             for i in range(2):
-                self.audioSegmented.setEnabled_forSegment_(False, i) 
+                self.audioSegmented.setEnabled_forSegment_(False, i)
             self.audioSegmented.setEnabled_forSegment_(True, 2)
             for i in range(3):
                 self.transferSegmented.setEnabled_forSegment_(False, i)

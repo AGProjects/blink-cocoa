@@ -34,7 +34,7 @@ MAX_MESSAGE_LENGTH = 1300
 
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, content_type=None, status=None):
-        self.msgid = msgid 
+        self.msgid = msgid
         self.direction = direction
         self.sender = sender
         self.recipient = recipient
@@ -42,7 +42,7 @@ class MessageInfo(object):
         self.text = text
         self.content_type = content_type
         self.status = status
-        
+
 class SMSSplitView(NSSplitView):
     text = None
     attributes = NSDictionary.dictionaryWithObjectsAndKeys_(
@@ -76,7 +76,7 @@ class SMSViewController(NSObject):
     showHistoryEntries = 50
     remoteTypingTimer = None
     enableIsComposing = False
-    
+
     account = None
     target_uri = None
     routes = None
@@ -116,7 +116,7 @@ class SMSViewController(NSObject):
         super(SMSViewController, self).dealloc()
 
     def awakeFromNib(self):
-        # setup smiley popup 
+        # setup smiley popup
         smileys = SmileyManager().get_smiley_list()
 
         menu = self.smileyButton.menu()
@@ -150,13 +150,13 @@ class SMSViewController(NSObject):
     def addContactPanelClicked_(self, sender):
         if sender.tag() == 1:
             NSApp.delegate().contactsWindowController.addContact(self.target_uri)
-        
+
         self.addContactView.removeFromSuperview()
         frame = self.chatViewController.outputView.frame()
         frame.origin.y = 0
         frame.size = self.outputContainer.frame().size
         self.chatViewController.outputView.setFrame_(frame)
-    
+
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
@@ -182,7 +182,7 @@ class SMSViewController(NSObject):
         # save to history
         message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
         self.add_to_history(message)
- 
+
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
         if window:
@@ -260,7 +260,7 @@ class SMSViewController(NSObject):
 
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
-        
+
         if message.content_type != "application/im-iscomposing+xml":
             self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
             message.status='failed'
@@ -357,7 +357,7 @@ class SMSViewController(NSObject):
         settings = SIPSimpleSettings()
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, 
+            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port,
                          parameters={'transport': self.account.sip.outbound_proxy.transport})
             self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
@@ -375,11 +375,11 @@ class SMSViewController(NSObject):
         hash = hashlib.sha1()
         hash.update(text.encode("utf-8")+str(timestamp))
         msgid = hash.hexdigest()
- 
+
         if content_type != "application/im-iscomposing+xml":
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="sent")
-        
+
             recipient=CPIMIdentity(self.target_uri, self.display_name)
             self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
 

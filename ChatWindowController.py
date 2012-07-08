@@ -446,7 +446,7 @@ class ChatWindowController(NSWindowController):
 
     def _NH_BlinkVideoExitedFullScreen(self, sender, data):
         self.toolbar.setVisible_(True)
-        
+
     def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
         self.revalidateToolbar()
 
@@ -832,7 +832,7 @@ class ChatWindowController(NSWindowController):
 
                 # print the content of the web view
                 print_view.mainFrame().frameView().documentView().print_(self)
- 
+
     @objc.IBAction
     def userClickedActionsButton_(self, sender):
         point = sender.convertPointToBase_(NSZeroPoint)
@@ -1403,7 +1403,7 @@ class ChatWindowController(NSWindowController):
             if row < len(self.conference_shared_files):
                 return self.conference_shared_files[row].name
         return None
-        
+
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
         if tableView == self.participantsTableView:
             try:
@@ -1431,7 +1431,7 @@ class ChatWindowController(NSWindowController):
                         uri = sip_prefix_pattern.sub("", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
-                        
+
                         # do not invite remote party itself
                         remote_uri = format_identity_to_string(session.remotePartyObject)
                         if uri == remote_uri:

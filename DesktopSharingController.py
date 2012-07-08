@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -75,9 +75,9 @@ class DesktopSharingController(MediaStream):
     viewer = None
     vncServerPort = None
     exhanged_bytes = 0
-    
+
     #statusItem = StatusItem.alloc().init()
-    
+
     statusWindow = objc.IBOutlet()
     statusLabel = objc.IBOutlet()
     statusProgress = objc.IBOutlet()
@@ -100,7 +100,7 @@ class DesktopSharingController(MediaStream):
         else:
             self.sessionController.log_info("Sharing local screen...")
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
-            NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)            
+            NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_("Screen Sharing with %s" % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
@@ -137,7 +137,7 @@ class DesktopSharingController(MediaStream):
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
         elif self.status in (STREAM_CONNECTED, STREAM_INCOMING):
-            self.sessionController.log_info("Removing Desktop Stream from Session")                    
+            self.sessionController.log_info("Removing Desktop Stream from Session")
             self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
         else:
@@ -147,7 +147,7 @@ class DesktopSharingController(MediaStream):
 
     def updateStatusIcon(self):
         pass
-    
+
     def sessionStateChanged(self, newstate, detail):
         if newstate == STATE_DNS_FAILED:
             if self.statusWindow:
@@ -290,14 +290,14 @@ class DesktopSharingController(MediaStream):
 
 class DesktopSharingViewerController(DesktopSharingController):
     @classmethod
-    def createStream(cls, account):        
+    def createStream(cls, account):
         handler = ExternalVNCViewerHandler()
         return DesktopSharingStream(account, handler)
 
 
 class DesktopSharingServerController(DesktopSharingController):
     @classmethod
-    def createStream(cls, account):        
+    def createStream(cls, account):
         handler = ExternalVNCServerHandler(("localhost", cls.vncServerPort))
         return DesktopSharingStream(account, handler)
 

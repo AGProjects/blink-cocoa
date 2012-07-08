@@ -39,16 +39,16 @@ class AddContactController(NSObject):
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = NSImage.imageNamed_("NSUser")
     nc = NotificationCenter()
-    
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    @property        
-    def groupsList(self):     
+    @property
+    def groupsList(self):
         return NSApp.delegate().contactsWindowController.model.groupsList
 
-    @property        
-    def model(self):     
+    @property
+    def model(self):
         return NSApp.delegate().contactsWindowController.model
 
     def startDeallocTimer(self):
@@ -56,7 +56,7 @@ class AddContactController(NSObject):
         self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
-    
+
     def deallocTimer_(self, timer):
         self.dealloc_timer.invalidate()
         self.dealloc_timer = None
@@ -75,14 +75,14 @@ class AddContactController(NSObject):
         self.default_uri = None
         self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
         self.dealloc_timer = None
-        self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}} 
+        self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
         self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
 
         if group is not None:
             self.belonging_groups = [group for group in self.all_groups if group.name == group]
-        else:    
+        else:
             self.belonging_groups = []
-    
+
 
         self.update_default_uri()
         self.nameText.setStringValue_(name or "")
@@ -96,13 +96,13 @@ class AddContactController(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
-    
+
     def awakeFromNib(self):
         self.nc.add_observer(self, name="AddressbookGroupsHaveChanged")
         self.addressTable.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add a new address")
         self.addressTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
         self.addressTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
-    
+
     def _NH_AddressbookGroupsHaveChanged(self, notification):
         self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
         self.loadGroupNames()
@@ -125,7 +125,7 @@ class AddContactController(NSObject):
     def checkURI(self, uri):
         if checkValidPhoneNumber(uri):
             return True
-        
+
         if not (uri.startswith('sip:') or uri.startswith('sips:')):
             uri = "sip:%s" % uri
         try:
@@ -134,7 +134,7 @@ class AddContactController(NSObject):
             return False
 
         return True
-    
+
     def update_default_uri(self):
         if not self.uris:
             self.addressText.setStringValue_('')
@@ -180,7 +180,7 @@ class AddContactController(NSObject):
         self.groupPopUp.addItemWithTitle_(u"Select All")
         self.groupPopUp.addItemWithTitle_(u"Deselect All")
         self.groupPopUp.addItemWithTitle_(u"Add Group...")
-    
+
     @objc.IBAction
     def subscribePopUpClicked_(self, sender):
         index = self.subscribePopUp.indexOfSelectedItem()
@@ -193,7 +193,7 @@ class AddContactController(NSObject):
         elif index  == 8:
             self.subscriptions['dialog']['policy'] = 'allow' if self.subscriptions['dialog']['policy'] == 'block' else 'block'
         self.updateSubscriptionMenus()
-    
+
     def updateSubscriptionMenus(self):
         self.subscribePopUp.selectItemAtIndex_(0)
         menu_item = self.subscribePopUp.itemAtIndex_(0)
@@ -203,12 +203,12 @@ class AddContactController(NSObject):
         menu_item.setState_(NSOnState if self.subscriptions['presence']['subscribe'] else NSOffState)
         menu_item = self.subscribePopUp.itemAtIndex_(4)
         menu_item.setState_(NSOnState if self.subscriptions['presence']['policy'] == 'allow' else NSOffState)
-        
+
         menu_item = self.subscribePopUp.itemAtIndex_(7)
         menu_item.setState_(NSOnState if self.subscriptions['dialog']['subscribe'] else NSOffState)
         menu_item = self.subscribePopUp.itemAtIndex_(8)
         menu_item.setState_(NSOnState if self.subscriptions['dialog']['policy'] == 'allow' else NSOffState)
-    
+
     @objc.IBAction
     def groupPopUpButtonClicked_(self, sender):
         item = sender.selectedItem()
@@ -243,7 +243,7 @@ class AddContactController(NSObject):
                 path = panel.filename()
                 image = NSImage.alloc().initWithContentsOfFile_(path)
                 self.photoImage.setImage_(image)
-            
+
         elif sender.tag() == 21: # clear icon
             self.photoImage.setImage_(self.defaultPhotoImage)
         elif sender.tag() == 10:
@@ -274,7 +274,7 @@ class AddContactController(NSObject):
                 self.addressTable.reloadData()
             except IndexError:
                 pass
-    
+
     def selectedContactURI(self):
         try:
             row = self.addressTable.selectedRow()
@@ -287,7 +287,7 @@ class AddContactController(NSObject):
 
     def tableView_sortDescriptorsDidChange_(self, table, odescr):
         return
-    
+
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if row >= len(self.uris):
             return ""
@@ -318,7 +318,7 @@ class AddContactController(NSObject):
                     return
             else:
                 return
-        
+
         if row >= len(self.uris):
             if column == 0:
                 has_empty_cell = any(value for value in self.uris if value.uri == '')
@@ -344,7 +344,7 @@ class AddContactController(NSObject):
         if oper == NSTableViewDropOn:
             table.setDropRow_dropOperation_(row, NSTableViewDropAbove)
         return NSDragOperationGeneric
-    
+
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         if info.draggingSource() != self.addressTable:
             return False
@@ -380,7 +380,7 @@ class EditContactController(AddContactController):
         self.addButton.setTitle_("OK")
         self.nameText.setStringValue_(blink_contact.name or "")
         self.addressText.setStringValue_(blink_contact.uri or "")
-        self.photoImage.setImage_(blink_contact.icon or self.defaultPhotoImage)        
+        self.photoImage.setImage_(blink_contact.icon or self.defaultPhotoImage)
         self.preferredMedia.selectCellWithTag_(2 if blink_contact.preferred_media == "chat" else 1)
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         for item in blink_contact.contact.uris:
@@ -392,11 +392,11 @@ class EditContactController(AddContactController):
         self.addressTable.reloadData()
 
         self.subscriptions = {
-                              'presence': {'subscribe': blink_contact.contact.presence.subscribe, 
-                                           'policy': blink_contact.contact.presence.policy if blink_contact.contact.presence.policy != 'default' else 'block'},  
-                              'dialog': {'subscribe': blink_contact.contact.dialog.subscribe, 
+                              'presence': {'subscribe': blink_contact.contact.presence.subscribe,
+                                           'policy': blink_contact.contact.presence.policy if blink_contact.contact.presence.policy != 'default' else 'block'},
+                              'dialog': {'subscribe': blink_contact.contact.dialog.subscribe,
                                          'policy': blink_contact.contact.dialog.policy if blink_contact.contact.dialog.policy != 'default' else 'block'}
-        } 
+        }
         self.updateSubscriptionMenus()
         self.loadGroupNames()
 

@@ -43,7 +43,7 @@ class SMSWindowController(NSWindowController):
         if activeTab:
             return activeTab.identifier()
         return None
-    
+
     def updateTitle(self, display_name = None):
         session = self.selectedSessionController()
         if session:
@@ -60,7 +60,7 @@ class SMSWindowController(NSWindowController):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
         if index == NSNotFound:
             return
-        tabItem = self.tabView.tabViewItemAtIndex_(index)            
+        tabItem = self.tabView.tabViewItemAtIndex_(index)
         item = self.tabSwitcher.itemForTabViewItem_(tabItem)
         if item:
             if self.tabView.selectedTabViewItem() == tabItem:
@@ -96,11 +96,11 @@ class SMSWindowController(NSWindowController):
         if i != NSNotFound:
             item = self.tabView.tabViewItemAtIndex_(i)
             self.tabSwitcher.removeTabViewItem_(item)
-    
+
     @property
     def viewers(self):
         return (item.identifier() for item in self.tabView.tabViewItems())
-    
+
     def close_(self, sender):
         selected = self.selectedSessionController()
         if self.unreadMessageCounts.has_key(selected):
@@ -194,7 +194,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
         return self
-    
+
     def setOwner_(self, owner):
         self._owner = owner
 
@@ -231,7 +231,7 @@ class SMSWindowManagerClass(NSObject):
         oldWindow = self.windowForViewer(viewer)
         oldWindow.removeViewer_(viewer)
         window = SMSWindowController.alloc().initWithOwner_(self)
-        self.windows.append(window)    
+        self.windows.append(window)
         window.addViewer_(viewer)
         window.window().makeKeyAndOrderFront_(None)
         return window

@@ -756,7 +756,7 @@ class SessionHistoryReplicator(object):
     def _NH_SIPAccountDidActivate(self, account, data):
         if account is not BonjourAccount():
             self.get_last_calls(account)
-    
+
     def _NH_SIPAccountDidDeactivate(self, account, data):
         if account is not BonjourAccount():
             self.close_last_call_connection(account)
@@ -790,7 +790,7 @@ class SessionHistoryReplicator(object):
             'data': ''
         }
         self.updateGetCallsTimer_(None)
-    
+
     @run_in_gui_thread
     def close_last_call_connection(self, account):
         try:
@@ -828,7 +828,7 @@ class SessionHistoryReplicator(object):
                 self.last_calls_connections[key]['data'] = ''
                 self.last_calls_connections[key]['authRequestCount'] = 0
                 self.last_calls_connections[key]['connection'] = connection
-    
+
     # NSURLConnection delegate method
     def connection_didReceiveData_(self, connection, data):
         try:
@@ -842,7 +842,7 @@ class SessionHistoryReplicator(object):
                 pass
             else:
                 self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + str(data)
-    
+
     def connectionDidFinishLoading_(self, connection):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
@@ -861,7 +861,7 @@ class SessionHistoryReplicator(object):
                     BlinkLogger().log_debug(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
-    
+
     # NSURLConnection delegate method
     def connection_didFailWithError_(self, connection, error):
         try:
@@ -869,7 +869,7 @@ class SessionHistoryReplicator(object):
         except StopIteration:
             return
         BlinkLogger().log_debug(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
-    
+
     @run_in_green_thread
     def syncServerHistoryWithLocalHistory(self, account, calls):
         if calls is None:
@@ -934,7 +934,7 @@ class SessionHistoryReplicator(object):
                                 media_type = 'audio'
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
-                        
+
                         if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
                             now = datetime(*time.localtime()[:6])
                             elapsed = now - start_time
@@ -956,7 +956,7 @@ class SessionHistoryReplicator(object):
             pass
         except Exception, e:
             BlinkLogger().log_info(u"Error: %s" % e)
-        
+
         try:
             if calls['placed']:
                 for call in calls['placed']:
@@ -979,7 +979,7 @@ class SessionHistoryReplicator(object):
                             media = call['media']
                         except KeyError:
                             continue
-                        
+
                         media_types = ", ".join(media) or 'audio'
 
                         try:
@@ -996,7 +996,7 @@ class SessionHistoryReplicator(object):
                             success = 'completed'
                         else:
                             success = 'cancelled' if status == "487" else 'failed'
-                        
+
                         BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
                         self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                         if 'audio' in media:
@@ -1040,7 +1040,7 @@ class SessionHistoryReplicator(object):
                     self.last_calls_connections[key]['authRequestCount'] += 1
                 except KeyError:
                     self.last_calls_connections[key]['authRequestCount'] = 1
-                
+
                 if self.last_calls_connections[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
@@ -1273,7 +1273,7 @@ class ChatHistoryReplicator(object):
                         notify_data[data['remote_uri']] = 1
                     else:
                         notify_data[data['remote_uri']] += 1
-                    
+
                 if data['direction'] == 'incoming':
                     BlinkLogger().log_debug(u"Replicate %s chat message %s from %s to %s" % (data['direction'], journal_id, data['remote_uri'], account))
                 else:
@@ -1346,7 +1346,7 @@ class ChatHistoryReplicator(object):
             from_journal_id = self.get_last_journal_entry(account.id)
             BlinkLogger().log_debug(u"Starting chat history replication for %s from journal id %s" % (account.id, from_journal_id))
             self.last_journal_id[account.id] = from_journal_id
-        
+
         from_journal_id = self.last_journal_id[account.id]
         self.startConnectionForIncomingReplication(account, from_journal_id)
 

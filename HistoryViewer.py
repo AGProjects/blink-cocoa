@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -35,7 +35,7 @@ class MyTableView(NSTableView):
 
 class HistoryViewer(NSWindowController):
     implements(IObserver)
-    
+
     chatViewController = objc.IBOutlet()
     indexTable = objc.IBOutlet()
     contactTable = objc.IBOutlet()
@@ -75,7 +75,7 @@ class HistoryViewer(NSWindowController):
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file-transfer', 5: 'audio-recording', 6: 'video-recording', 7: 'voicemail', 8: 'missed-call'}
-    period_array = {0: None, 
+    period_array = {0: None,
                     1: datetime.datetime.now()-datetime.timedelta(days=1),
                     2: datetime.datetime.now()-datetime.timedelta(days=7),
                     3: datetime.datetime.now()-datetime.timedelta(days=31),
@@ -135,7 +135,7 @@ class HistoryViewer(NSWindowController):
             self.refreshViewer()
 
             self.selectedTableView = self.contactTable
- 
+
     def awakeFromNib(self):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
         self.contactTable.setDoubleAction_("doubleClick:")
@@ -262,9 +262,9 @@ class HistoryViewer(NSWindowController):
         self.updateBusyIndicator(True)
         if self.chat_history:
             search_text = self.search_text if self.search_text else None
-            if not remote_uri: 
+            if not remote_uri:
                 remote_uri = self.search_contact if self.search_contact else None
-            if not local_uri: 
+            if not local_uri:
                 local_uri = self.search_local if self.search_local else None
             if not media_type:
                 media_type = self.search_media if self.search_media else None
@@ -284,7 +284,7 @@ class HistoryViewer(NSWindowController):
             self.start=0
             self.renderMessages()
         self.updateBusyIndicator(False)
- 
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderMessages(self):
@@ -376,12 +376,12 @@ class HistoryViewer(NSWindowController):
             if row > 0:
                 self.refreshDailyEntries()
                 self.refreshMessages(local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
-            else: 
+            else:
                 row = self.contactTable.selectedRow()
                 if row > 0:
                     self.refreshMessages()
                     self.refreshDailyEntries()
-                else:    
+                else:
                     self.refreshDailyEntries()
                     self.refreshMessages()
 
@@ -399,10 +399,10 @@ class HistoryViewer(NSWindowController):
             if not notification or notification.object() == self.contactTable:
                 row = self.contactTable.selectedRow()
                 if row == 0:
-                    self.search_local = None 
+                    self.search_local = None
                     self.search_contact = None
                 elif row == 1:
-                    self.search_local = 'bonjour' 
+                    self.search_local = 'bonjour'
                     self.search_contact = None
                 elif row > 1:
                     self.search_local = None
@@ -418,7 +418,7 @@ class HistoryViewer(NSWindowController):
     def numberOfRowsInTableView_(self, table):
         if table == self.indexTable:
             return self.dayly_entries.count()
-        elif table == self.contactTable:    
+        elif table == self.contactTable:
             return len(self.contacts)
         return 0
 
@@ -431,7 +431,7 @@ class HistoryViewer(NSWindowController):
             try:
                 return unicode(self.dayly_entries[row].objectForKey_(ident))
             except IndexError:
-                return None    
+                return None
         elif table == self.contactTable:
             try:
                 if type(self.contacts[row]) in (str, unicode):
@@ -439,9 +439,9 @@ class HistoryViewer(NSWindowController):
                 else:
                     return self.contacts[row].name
             except IndexError:
-                return None    
-        return None 
-    
+                return None
+        return None
+
     def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, tableColumn, row):
         if table == self.contactTable:
             try:
@@ -452,7 +452,7 @@ class HistoryViewer(NSWindowController):
                         cell.setContact_(self.contacts[row])
             except:
                 pass
-                
+
     def showWindow_(self, sender):
         self.window().makeKeyAndOrderFront_(None)
 
@@ -488,7 +488,7 @@ class HistoryViewer(NSWindowController):
         else:
             self.before_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
             self.after_date = None
-            
+
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()

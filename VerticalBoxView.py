@@ -18,7 +18,7 @@ class VerticalBoxView(NSView):
 
     def setSpacing_(self, spacing):
         self.spacing = spacing
-    
+
     def setBorderWidth_(self, border):
         self.border = border
 
@@ -28,7 +28,7 @@ class VerticalBoxView(NSView):
             if hasattr(view, "expand"):
                 expandCount += 1
             else:
-                minimumHeight += NSHeight(view.frame()) 
+                minimumHeight += NSHeight(view.frame())
         self.relayout()
 
     def isFlipped(self):
@@ -37,7 +37,7 @@ class VerticalBoxView(NSView):
     def setBackgroundColor_(self, color):
         self.backgroundColor = color
         self.setNeedsDisplay_(True)
-    
+
     def drawRect_(self, rect):
         if self.backgroundColor:
             self.backgroundColor.set()
@@ -48,14 +48,14 @@ class VerticalBoxView(NSView):
         for view in self.subviews():
             h += NSHeight(view.frame())
         return h
-    
+
     def relayout(self):
         self.resizeWithOldSuperviewSize_(NSZeroSize)
 
     def resizeWithOldSuperviewSize_(self, oldSize):
         sview = self.enclosingScrollView()
         frame = self.frame()
-        
+
         if sview:
             width = sview.contentSize().width
         else:

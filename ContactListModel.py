@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from __future__ import with_statement
@@ -160,12 +160,12 @@ class BlinkContact(NSObject):
         self._preferred_media = 'audio'
         self.setUsernameAndDomain()
 
-    @property        
+    @property
     def aliases(self):
         return list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
 
-    @property        
-    def model(self):     
+    @property
+    def model(self):
         return NSApp.delegate().contactsWindowController.model
 
     def dealloc(self):
@@ -275,7 +275,7 @@ class BlinkContact(NSObject):
             except StopIteration:
                 self.uri = ''
         self.detail = NSString.stringWithString_(self.uri)
-                    
+
     def setName(self, name):
         self.name = NSString.stringWithString_(name)
 
@@ -356,7 +356,7 @@ class BlinkPresenceContact(BlinkContact):
         self.name = NSString.stringWithString_(self.contact.name or self.uri)
         self.detail = NSString.stringWithString_(self.uri)
 
-    
+
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
 
@@ -482,7 +482,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
 
     def __init__(self, ab_contact):
         self.id = ab_contact.uniqueId()
-        
+
         name = formatABPersonName(ab_contact)
         company = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
 
@@ -510,7 +510,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
                 uri = unicode(value.valueAtIndex_(n))
                 if labelNames.get(label, None) != 'fax':
                     addresses.append((labelNames.get(label, label), sip_prefix_pattern.sub("", uri)))
-        
+
         # get SIP addresses from the Email section
         value = ab_contact.valueForProperty_(AddressBook.kABEmailProperty)
         if value:
@@ -519,7 +519,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
                 uri = unicode(value.valueAtIndex_(n))
                 if label == 'sip' or uri.startswith(("sip:", "sips:")):
                     addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
-        
+
         # get SIP addresses from the URLs section
         value = ab_contact.valueForProperty_(AddressBook.kABURLsProperty)
         if value:
@@ -528,12 +528,12 @@ class SystemAddressBookBlinkContact(BlinkContact):
                 uri = unicode(value.valueAtIndex_(n))
                 if label == 'sip' or uri.startswith(("sip:", "sips:")):
                     addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
-        
+
         uris = []
         for address_type, address in addresses:
             if not address:
                 continue
-            
+
             # strip everything that's not numbers from the URIs if they are not SIP URIs
             if "@" not in address:
                 if address.startswith("sip:"):
@@ -636,7 +636,7 @@ class NoBlinkGroup(BlinkGroup):
     add_contact_allowed = False
     delete_contact_allowed = True
     contacts = []
-    
+
     def __init__(self, name=u'No Group'):
         self.name = NSString.stringWithString_(name)
         self.group = None
@@ -919,7 +919,7 @@ class CustomListModel(NSObject):
         return isinstance(item, BlinkGroup)
 
     def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
-        cell.setMessageIcon_(None) 
+        cell.setMessageIcon_(None)
 
         if isinstance(item, BlinkContact):
             cell.setContact_(item)
@@ -979,10 +979,10 @@ class CustomListModel(NSObject):
             else:
                 sourceGroup = self.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
-    
+
                 if type(sourceGroup) == FavoritesBlinkGroup:
                     return NSDragOperationNone
-                    
+
                 if type(sourceGroup) == BonjourBlinkGroup:
                     return False
 
@@ -1009,7 +1009,7 @@ class CustomListModel(NSObject):
 
                     if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
-                    
+
                     if self.isBlinkContactInBlinkGroups(sourceContact, targetGroup):
                         return NSDragOperationNone
 
@@ -1023,7 +1023,7 @@ class CustomListModel(NSObject):
 
                     if type(targetGroup) == NoBlinkGroup:
                         return NSDragOperationNone
-                    
+
                     if type(targetGroup) == AllContactsBlinkGroup:
                         return NSDragOperationNone
 
@@ -1032,7 +1032,7 @@ class CustomListModel(NSObject):
                             return NSDragOperationNone
                         else:
                             return NSDragOperationMove
-                    
+
                     if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
 
@@ -1044,9 +1044,9 @@ class CustomListModel(NSObject):
                         return NSDragOperationCopy
 
                     table.setDropItem_dropChildIndex_(targetGroup, index)
-                            
+
             return NSDragOperationMove
-                    
+
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not hasattr(item, "supported_media"):
@@ -1114,23 +1114,23 @@ class CustomListModel(NSObject):
                     row = table.rowForItem_(sourceContact)
                     if row>=0:
                         table.scrollRowToVisible_(row)
-                    
+
                     if table.selectedRow() >= 0:
                         table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row if row>=0 else 0), False)
                 else:
                     targetGroup = table.parentForItem_(item)
                     if sourceGroup == targetGroup:
                         targetContact = targetGroup.contacts[self.drop_on_contact_index]
-                        
+
                         if (sourceContact.name == targetContact.name):
                             message = "Would you like to consolidate the two contacts into %s?" % targetContact.name
                         else:
                             message = u"Would you like to merge %s and %s contacts into %s?"%(sourceContact.name, targetContact.name, targetContact.name)
-                        
+
                         ret = NSRunAlertPanel(u"Merge Contacts", message, u"Merge", u"Cancel", None)
                         if ret != NSAlertDefaultReturn:
                             return
-                        
+
                         target_changed = 0
                         for new_uri in sourceContact.contact.uris:
                             try:
@@ -1141,7 +1141,7 @@ class CustomListModel(NSObject):
                             if targetContact.contact.icon is None and sourceContact.contact.icon is not None:
                                 targetContact.contact.icon = sourceContact.contact.icon
                                 target_changed += 1
-                        
+
                         if target_changed:
                             targetContact.contact.save()
                         sourceContact.contact.delete()
@@ -1315,7 +1315,7 @@ class ContactListModel(CustomListModel):
             return (blink_contact for group in self.groupsList if group.ignore_search is False for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
         except StopIteration:
             return None
-    
+
     def checkContactBackup_(self, timer):
         now = datetime.datetime.now()
         for file in glob.glob('%s/*.pickle' % ApplicationData.get('contacts_backup')):
@@ -1339,7 +1339,7 @@ class ContactListModel(CustomListModel):
                 'default_uri'     : contact.default_uri,
                 'uris'            : list((alias.uri, alias.type) for alias in iter(contact.uris)),
                 'preferred_media' : contact.preferred_media,
-                'icon'            : contact.icon, 
+                'icon'            : contact.icon,
                 'favorite'        : contact.favorite,
                 'presence'        : {'policy': contact.presence.policy, 'subscribe': contact.presence.subscribe},
                 'dialog'          : {'policy': contact.dialog.policy,   'subscribe': contact.dialog.subscribe}
@@ -1351,8 +1351,8 @@ class ContactListModel(CustomListModel):
                 continue
             contacts = list(contact.id for contact in group.contacts)
             backup_group = {
-                'id'      : group.id, 
-                'name'    : group.name, 
+                'id'      : group.id,
+                'name'    : group.name,
                 'contacts': contacts
             }
             backup_groups.append(backup_group)
@@ -1462,7 +1462,7 @@ class ContactListModel(CustomListModel):
                             group.name = key
                             restored_groups += 1
                             group.contacts = contacts_for_group[key]
-                        else: 
+                        else:
                             for c in contacts_for_group[key]:
                                 group.contacts.add(c)
                         group.save()
@@ -1499,7 +1499,7 @@ class ContactListModel(CustomListModel):
             panel_text += u"%d groups have been restored. " % restored_groups
 
         NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
-    
+
     def _NH_SIPApplicationDidStart(self, notification):
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
@@ -1828,7 +1828,7 @@ class ContactListModel(CustomListModel):
                     blink_contact.setIcon(loadContactIcon(contact))
                     if contact.favorite:
                         try:
-                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()    
+                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()
                         except StopIteration:
                             pass
                         else:
@@ -1846,10 +1846,10 @@ class ContactListModel(CustomListModel):
 
                     if contact.favorite:
                         try:
-                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()    
+                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()
                         except StopIteration:
                             pass
-                        else:  
+                        else:
                             favorite_contact.setName(contact.name or contact.uri)
                             favorite_contact.setURI(contact.default_uri)
                             favorite_contact.setDetail(contact.default_uri)
@@ -1858,7 +1858,7 @@ class ContactListModel(CustomListModel):
                 if 'preferred_media' in notification.data.modified:
                     if contact.favorite:
                         try:
-                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()    
+                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()
                         except StopIteration:
                             pass
                         else:
@@ -1893,7 +1893,7 @@ class ContactListModel(CustomListModel):
             if not group.position:
                 position = len(self.groupsList) - 1 if self.groupsList else 0
                 group.position = position
-                group.save()   
+                group.save()
             self.groupsList.insert(index, self.all_contacts_group)
 
         elif group.type == "no_group":
@@ -1991,7 +1991,7 @@ class ContactListModel(CustomListModel):
             for blink_contact in blink_group.contacts:
                 if not self.getBlinkGroupsForBlinkContact(blink_contact):
                     self.no_group.contacts.append(blink_contact)
-                    self.no_group.sortContacts()        
+                    self.no_group.sortContacts()
 
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
             self.nc.post_notification("AddressbookGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -2026,7 +2026,7 @@ class ContactListModel(CustomListModel):
                         if not self.getBlinkGroupsForBlinkContact(blink_contact):
                             blink_contact = BlinkPresenceContact(contact)
                             self.no_group.contacts.append(blink_contact)
-                            self.no_group.sortContacts()        
+                            self.no_group.sortContacts()
 
             elif 'name' in notification.data.modified:
                 if blink_group.name != group.name:
@@ -2089,7 +2089,7 @@ class ContactListModel(CustomListModel):
                 if blink_contact.contact.id == contact.contact.id:
                     found_groups.append(blink_group)
                     break
-        return found_groups      
+        return found_groups
 
     def getGroupsForContact(self, search_contact):
         found_groups = []
@@ -2099,7 +2099,7 @@ class ContactListModel(CustomListModel):
                 if contact.contact.id == search_contact.id:
                     found_groups.append(group)
                     break
-        return found_groups      
+        return found_groups
 
     def saveGroupPosition(self):
         # save group expansion and position
@@ -2209,7 +2209,7 @@ class ContactListModel(CustomListModel):
                 self.no_group.contacts.remove(blink_contact)
             except ValueError:
                 pass
-    
+
     def addGroup(self):
         controller = AddGroupController()
         name = controller.runModal()
@@ -2283,7 +2283,7 @@ class ContactListModel(CustomListModel):
                 contact.save()
 
                 if new_contact['groups']:
-                    self.addGroupsForContact(contact, new_contact['groups'])                            
+                    self.addGroupsForContact(contact, new_contact['groups'])
 
             return True
         return False
@@ -2300,7 +2300,7 @@ class ContactListModel(CustomListModel):
             url = "addressbook://"+blink_contact.id
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             return
-            
+
         if not blink_contact.editable:
             return
 
@@ -2354,7 +2354,7 @@ class ContactListModel(CustomListModel):
             blink_group.group.save()
         except ValueError:
             pass
-    
+
     def deleteContact(self, blink_contact):
         if not blink_contact.deletable:
             return

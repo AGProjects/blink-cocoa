@@ -580,7 +580,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_AddressbookGroupWasDeleted(self, notification):
         self.updateGroupMenu()
-    
+
     def _NH_AddressbookGroupDidChange(self, notification):
         self.updateGroupMenu()
 
@@ -602,10 +602,10 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BonjourGroupWasActivated(self, notification):
         self.updateGroupMenu()
-    
+
     def _NH_BonjourGroupWasDeactivated(self, notification):
         self.updateGroupMenu()
-    
+
     def _NH_SIPAccountDidDeactivate(self, notification):
         self.refreshAccountList()
         if notification.sender is BonjourAccount():
@@ -1201,7 +1201,7 @@ class ContactWindowController(NSWindowController):
 
         destination.contact.uris.add(ContactURI(uri=source.uri, type=type))
         destination.contact.save()
-    
+
     @objc.IBAction
     def removeContactFromGroup_(self, sender):
         for contact in self.getSelectedContacts() or ():
@@ -1229,7 +1229,7 @@ class ContactWindowController(NSWindowController):
                     self.contactOutline.expandItem_expandChildren_(group, False)
                 self.model.saveGroupPosition()
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(self.contactOutline.rowForItem_(group)), False)
-             
+
     @objc.IBAction
     def deleteContact_(self, sender):
         for contact in self.getSelectedContacts() or ():
@@ -1372,7 +1372,7 @@ class ContactWindowController(NSWindowController):
                         continue
                     else:
                         self.local_found_contacts.append(local_found_contact)
-                        found_count[local_found_contact.contact.id] = True                     
+                        found_count[local_found_contact.contact.id] = True
                 else:
                     self.local_found_contacts.append(local_found_contact)
 
@@ -1399,7 +1399,7 @@ class ContactWindowController(NSWindowController):
                         if active_account is not BonjourAccount():
                             if text.endswith('@'):
                                 input_text = '%s%s' % (text, active_account.id.domain)
-                            elif "@" not in text:                          
+                            elif "@" not in text:
                                 input_text = '%s@%s' % (text, active_account.id.domain)
                         input_contact = SearchResultContact(input_text, name=unicode(input_text))
                         exists = text in (contact.uri for contact in self.local_found_contacts)
@@ -1425,7 +1425,7 @@ class ContactWindowController(NSWindowController):
             if self.ldap_found_contacts:
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
-    
+
     @objc.IBAction
     def addContactToConference_(self, sender):
         active_sessions = [s for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference]
@@ -1695,7 +1695,7 @@ class ContactWindowController(NSWindowController):
         if not account:
             NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active SIP accounts", u"OK", None, None)
             return
-        
+
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
@@ -1706,14 +1706,14 @@ class ContactWindowController(NSWindowController):
         else:
             target = contact.uri
             display_name = contact.name
-        
+
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
-        
+
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
-        
+
         try:
             NSApp.activateIgnoringOtherApps_(True)
             SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
@@ -1948,7 +1948,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def setAlwaysOnTop_(self, sender):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
-        NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not always_on_top else False, "AlwaysOnTop") 
+        NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not always_on_top else False, "AlwaysOnTop")
 
     @objc.IBAction
     def setSpeechSyntezis_(self, sender):
@@ -2239,7 +2239,7 @@ class ContactWindowController(NSWindowController):
         if row >= 0:
             item = self.contactOutline.itemAtRow_(row)
             selected_group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
-                                
+
         for group in self.model.groupsList:
             item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(group.name, "goToGroup:", "8" if type(group) == FavoritesBlinkGroup else "")
             item.setRepresentedObject_(group)
@@ -2254,11 +2254,11 @@ class ContactWindowController(NSWindowController):
             frame = self.contactOutline.frameOfOutlineCellAtRow_(row)
             self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
             self.contactOutline.scrollPoint_(frame.origin)
-            
+
             self.contactOutline.expandItem_expandChildren_(group, False)
             if group.group is not None:
                 group.group.expanded = True
-                group.group.save()   
+                group.group.save()
 
     @run_in_green_thread
     def show_last_chat_conversations(self):
@@ -2410,7 +2410,7 @@ class ContactWindowController(NSWindowController):
 
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
- 
+
         ok_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
             NSColor.grayColor(), NSForegroundColorAttributeName)
         mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
@@ -2541,7 +2541,7 @@ class ContactWindowController(NSWindowController):
         except IndexError:
             pass
         else:
-            self.redial(session_info)      
+            self.redial(session_info)
 
     @run_in_gui_thread
     def redial(self, session_info):
@@ -2836,7 +2836,7 @@ class ContactWindowController(NSWindowController):
                         sms_item.setRepresentedObject_(uri.uri)
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
-                    
+
                 if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                     ft_submenu = NSMenu.alloc().init()
                     for uri in item.uris:
@@ -2884,7 +2884,7 @@ class ContactWindowController(NSWindowController):
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(2)
-                    
+
                     if ds_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
@@ -2900,7 +2900,7 @@ class ContactWindowController(NSWindowController):
 
                 if self.sessionControllersManager.isMediaTypeSupported('video'):
                     video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
-            
+
                 if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                     if has_full_sip_uri:
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -2972,7 +2972,7 @@ class ContactWindowController(NSWindowController):
                 elif isinstance(item, BlinkPresenceContact):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-                
+
                 elif not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
@@ -3141,7 +3141,7 @@ class ContactWindowController(NSWindowController):
                 item.setTitle_('Expand Group' if not selected_group.group.expanded else 'Collapse Group')
             else:
                 item.setTitle_('Toggle Expansion')
-    
+
             self.updateGroupMenu()
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
@@ -3189,7 +3189,7 @@ class ContactWindowController(NSWindowController):
             NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
         self.picker = None
-        
+
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()
         if not self.participantsTableView.isRowSelected_(row):
@@ -3230,7 +3230,7 @@ class ContactWindowController(NSWindowController):
                 return len(self.participants)
             except:
                 pass
- 
+
         return 0
 
     def tableView_objectValueForTableColumn_row_(self, tableView, tableColumn, row):
@@ -3244,7 +3244,7 @@ class ContactWindowController(NSWindowController):
             except:
                 pass
         return None
-        
+
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
         if tableView == self.participantsTableView:
             try:
@@ -3266,13 +3266,13 @@ class ContactWindowController(NSWindowController):
             session = selected_audio_view.delegate.sessionController if hasattr(selected_audio_view.delegate, 'sessionController') else None
 
         return session
-           
+
 
     @allocate_autorelease_pool
     def updateParticipantsView(self):
         self.participants = []
         session = self.getSelectedAudioSession()
-        
+
         if session and session.conference_info is not None:
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
@@ -3325,7 +3325,7 @@ class ContactWindowController(NSWindowController):
             if session.invited_participants:
                 for contact in session.invited_participants:
                     self.participants.append(contact)
- 
+
         self.participantsTableView.reloadData()
         sessions_frame = self.sessionsView.frame()
 
@@ -3337,7 +3337,7 @@ class ContactWindowController(NSWindowController):
             self.drawerSplitterPosition = {'topFrame': sessions_frame, 'bottomFrame': participants_frame}
 
         self.resizeDrawerSplitter()
-            
+
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
         session = self.getSelectedAudioSession()
@@ -3499,7 +3499,7 @@ class ContactWindowController(NSWindowController):
                         uri = sip_prefix_pattern.sub("", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
-                        
+
                         # do not invite remote party itself
                         remote_uri = format_identity_to_string(session.remotePartyObject)
                         if uri == remote_uri:
@@ -3553,7 +3553,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def showChangelog_(self, sender):
         settings = SIPSimpleSettings()
-    
+
         if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
         else:
@@ -3602,7 +3602,7 @@ class LdapDirectory(object):
             except ldap.LDAPError, e:
                 BlinkLogger().log_info('Connection to LDAP server %s failed: %s' % (self.server, e))
                 self.connected = False
-    
+
     def disconnect(self):
         if self.l is not None and self.connected:
             try:

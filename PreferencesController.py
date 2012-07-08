@@ -42,7 +42,7 @@ class PreferencesController(NSWindowController, object):
     addButton = objc.IBOutlet()
     removeButton = objc.IBOutlet()
 
-    # account elements 
+    # account elements
     advancedToggle = objc.IBOutlet()
     advancedPop = objc.IBOutlet()
     advancedTabView = objc.IBOutlet()
@@ -278,7 +278,7 @@ class PreferencesController(NSWindowController, object):
                 continue
 
             view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
-            
+
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
             try:
                 label = SectionNames[section]
@@ -402,7 +402,7 @@ class PreferencesController(NSWindowController, object):
 
         self.updating = False
 
-    def addAccount(self):        
+    def addAccount(self):
         enroll = EnrollmentController.alloc().init()
         enroll.setupForAdditionalAccounts()
         enroll.runModal()
@@ -763,10 +763,10 @@ class PreferencesController(NSWindowController, object):
 
             sv.viewWithTag_(20).setHidden_(False)
             sv.viewWithTag_(21).setHidden_(False)
-            
+
         self.removeButton.setEnabled_(account_info is not None and account_info.account is not BonjourAccount())
         self.updateRegistrationStatus()
-    
+
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         account_info = self.getAccountForRow(row)
         if not object:
@@ -780,11 +780,11 @@ class PreferencesController(NSWindowController, object):
         if oper == NSTableViewDropOn:
             table.setDropRow_dropOperation_(row, NSTableViewDropAbove)
         return NSDragOperationGeneric
-    
+
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         pboard = info.draggingPasteboard()
         draggedRow = int(pboard.stringForType_("dragged-account"))
-        
+
         if draggedRow != row+1 or oper != 0:
             account_info = self.accounts.pop(draggedRow)
             if draggedRow < row:
@@ -798,8 +798,8 @@ class PreferencesController(NSWindowController, object):
             table.reloadData()
             return True
         return False
-        
-    
+
+
     def tableView_writeRows_toPasteboard_(self, table, rows, pboard):
         index = rows[0]
         pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-account"), self)
@@ -809,7 +809,7 @@ class PreferencesController(NSWindowController, object):
     def windowShouldClose_(self, sender):
         sender.makeFirstResponder_(None)
         return True
-    
+
     @objc.IBAction
     def openSite_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://ag-projects.com"))
@@ -822,10 +822,10 @@ class PreferencesController(NSWindowController, object):
     def buttonClicked_(self, sender):
         if sender == self.advancedToggle:
             if self.advancedToggle.state() == NSOnState:
-                self.advancedPop.setHidden_(False) 
-                self.advancedTabView.setHidden_(False) 
+                self.advancedPop.setHidden_(False)
+                self.advancedTabView.setHidden_(False)
             else:
-                self.advancedPop.setHidden_(True) 
+                self.advancedPop.setHidden_(True)
                 self.advancedTabView.setHidden_(True)
             account_info = self.selectedAccount()
             if account_info:

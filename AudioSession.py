@@ -60,7 +60,7 @@ class AudioSession(NSView):
     def makeDragImage(self):
         image = NSImage.alloc().initWithSize_(self.frame().size)
         image.lockFocus()
-        
+
         frame = self.frame()
         frame.origin = NSZeroPoint
         rect = NSInsetRect(frame, 1.5, 1.5)
@@ -82,11 +82,11 @@ class AudioSession(NSView):
 
         NSColor.blackColor().set()
         point = NSMakePoint(8, NSMaxY(frame)-20)
-        NSString.stringWithString_(self.sessionInfo).drawAtPoint_withAttributes_(point, 
+        NSString.stringWithString_(self.sessionInfo).drawAtPoint_withAttributes_(point,
               NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(12), NSFontAttributeName))
         point = NSMakePoint(8, 6)
         if self.conferencing:
-            NSString.stringWithString_("Drop outside to remove from conference").drawAtPoint_withAttributes_(point, 
+            NSString.stringWithString_("Drop outside to remove from conference").drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         else:
             audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers]
@@ -96,21 +96,21 @@ class AudioSession(NSView):
                 text = "Drop this over a session to conference"
             NSString.stringWithString_(text).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
-        
+
         icon = NSImage.imageNamed_("NSUserGroup")
         rect = frame
         s = icon.size()
         p = NSMakePoint(NSWidth(rect) - s.width - 8, rect.size.height - s.height - 8)
         r = NSMakeRect(0, 0, s.width, s.height)
         icon.drawAtPoint_fromRect_operation_fraction_(p, r, NSCompositeSourceOver, 0.5)
-        
+
         image.unlockFocus()
         return image
-    
+
     def mouseUp_(self, event):
         self.setSelected_(True)
         self.window().makeFirstResponder_(self)
-    
+
     def mouseDown_(self, event):
         self.dragPos = event.locationInWindow()
 
@@ -118,16 +118,16 @@ class AudioSession(NSView):
         pos = event.locationInWindow()
         if abs(self.dragPos.x - pos.x) > 3 or abs(self.dragPos.y - pos.y) > 3:
             image = self.makeDragImage()
-            
+
             pos.x -= image.size().width/2
             pos.y -= image.size().height/2
             pboard = NSPasteboard.pasteboardWithName_(NSDragPboard)
             pboard.declareTypes_owner_(NSArray.arrayWithObject_("x-blink-audio-session"), self)
             pboard.setString_forType_(self.sessionInfo, "x-blink-audio-session")
-            self.window().dragImage_at_offset_event_pasteboard_source_slideBack_(image, 
+            self.window().dragImage_at_offset_event_pasteboard_source_slideBack_(image,
                     pos, NSZeroPoint, event, pboard, self, False)
             self.draggedOut = False
-            
+
 
     def viewDidMoveToSuperview(self):
         if self.selected and self.superview():
@@ -193,7 +193,7 @@ class AudioSession(NSView):
             source = info.draggingSource()
             if (source == self and not self.conferencing) or not source:
                 return NSDragOperationNone
-            # drop over a session that's not in a conference while there is 1 ongoing 
+            # drop over a session that's not in a conference while there is 1 ongoing
             if not self.conferencing and self.superview().subviews().objectAtIndex_(0).conferencing:
                 return NSDragOperationNone
             if source.delegate is None:
@@ -203,12 +203,12 @@ class AudioSession(NSView):
 
             highlight(self)
             self.foreachConferenceSession(highlight)
-            
+
             source.draggedOut = False
             source.makeDragImage()
 
             return NSDragOperationAll
-    
+
     def draggingExited_(self, info):
         def unhighlight(view):
             view.highlighted = False
@@ -256,7 +256,7 @@ class AudioSession(NSView):
             NSColor.whiteColor().set()
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
             path.fill()
-            
+
         if self.conferencing:
             if self.draggedOut:
                 NSColor.whiteColor().set()
@@ -312,7 +312,7 @@ class AudioSession(NSView):
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
             path.setLineWidth_(3)
             NSColor.grayColor().set()
-            path.stroke()            
+            path.stroke()
         else:
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
             path.setLineWidth_(1)

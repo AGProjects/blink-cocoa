@@ -25,12 +25,12 @@ class FancyTabItem(NSView):
 
     badgeAttributes = None
     draggedOut = False
-    
+
     @classmethod
     def initialize(self):
         paraStyle = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         paraStyle.setAlignment_(NSCenterTextAlignment)
-    
+
         self.badgeAttributes = NSMutableDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(8),
                                 NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName,
                                 paraStyle, NSParagraphStyleAttributeName)
@@ -55,7 +55,7 @@ class FancyTabItem(NSView):
             self.closeButton.setAutoresizingMask_(NSViewMaxXMargin|NSViewMaxYMargin)
             self.closeButton.setHidden_(True)
             self.addSubview_(self.closeButton)
-            
+
             self.switcher = switcher
             self.item = item
         return self
@@ -83,19 +83,19 @@ class FancyTabItem(NSView):
     def idealWidth(self):
         attribs = NSDictionary.dictionaryWithObject_forKey_(NSFont.systemFontOfSize_(11), NSFontAttributeName)
         size = self.label.sizeWithAttributes_(attribs)
-        
+
         return size.width + 14 + 20
 
     def dragImage(self):
         if self.cachedDragImage:
            return self.cachedDragImage
- 
+
         self.lockFocus()
         rep = NSBitmapImageRep.alloc().initWithFocusedViewRect_(self.bounds())
         self.unlockFocus()
         tabImage = NSImage.alloc().initWithSize_(rep.size())
         tabImage.addRepresentation_(rep)
-        
+
         image = NSImage.alloc().initWithSize_(rep.size())
         image.addRepresentation_(rep)
         image.lockFocus()
@@ -126,7 +126,7 @@ class FancyTabItem(NSView):
             # draw the number in redbadge indicator
             gradient = NSGradient.alloc().initWithStartingColor_endingColor_(
                           NSColor.colorWithDeviceRed_green_blue_alpha_(0.9, 0.2, 0.2, 1),
-                          NSColor.colorWithDeviceRed_green_blue_alpha_(1.0, 0.2, 0.2, 1)) 
+                          NSColor.colorWithDeviceRed_green_blue_alpha_(1.0, 0.2, 0.2, 1))
             size = self.badgeLabel.size()
             size.width += 4
             if size.width < 12:
@@ -174,24 +174,24 @@ class FancyTabItem(NSView):
             self.busyIndicator.setHidden_(True)
 
         self.setNeedsDisplay_(True)
-    
-    
+
+
     def mouseExited_(self, event):
         self.mouseInside = False
         self.closeButton.setHidden_(True)
         if self.busyIndicator:
             self.busyIndicator.setHidden_(False)
         self.setNeedsDisplay_(True)
-    
+
     def mouseDown_(self, event):
         self.switcher.tabView.selectTabViewItem_(self.item)
         self.switcher.startedDragging_event_(self, event)
-    
+
     def mouseDragged_(self, event):
         self.switcher.draggedItem_event_(self, event)
         if not self.cachedDragImage:
             self.cachedDragImage = self.dragImage()
-    
+
     def mouseUp_(self, event):
         self.switcher.finishedDraging_event_(self, event)
         self.cachedDragImage = None
@@ -252,7 +252,7 @@ class FancyTabSwitcher(NSView):
         self = NSView.initWithFrame_(self, frame)
         if self:
             self.items = []
-            
+
             self.leftButton = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 20, 20))
             self.leftButton.setTarget_(self)
             self.leftButton.setAction_("scrollLeft:")
@@ -305,7 +305,7 @@ class FancyTabSwitcher(NSView):
             if i.item == item:
                 i.setBusy_(busy)
                 break
-    
+
     def addTabViewItem_(self, item):
         label = item.label()
         titem = FancyTabItem.alloc().initWithSwitcher_item_(self, item)
@@ -314,10 +314,10 @@ class FancyTabSwitcher(NSView):
         self.items.append(titem)
         self.tabView.addTabViewItem_(item)
         self.rearrange()
-        
+
         titem.closeButton.setTarget_(self)
         titem.closeButton.setAction_("closeItemClicked:")
-    
+
     def removeTabViewItem_(self, item):
         self.tabView.removeTabViewItem_(item)
         titem = self.itemForTabViewItem_(item)
@@ -326,11 +326,11 @@ class FancyTabSwitcher(NSView):
             self.items.remove(titem)
             titem.removeFromSuperview()
         self.rearrange()
-    
+
     def selectLastTabViewItem_(self, sender):
         self.tabView.selectLastTabViewItem_(sender)
-    
-    
+
+
     def closeItemClicked_(self, sender):
         item = sender.superview()
         resp = self.delegate.tabView_shouldCloseTabViewItem_(self.tabView, item.item)
@@ -340,7 +340,7 @@ class FancyTabSwitcher(NSView):
     def reorderByPosition_(self, sender):
         def centerx(rect):
             return rect.origin.x + rect.size.width/2
-            
+
         self.items.sort(lambda a,b: int(centerx(a.frame()) - centerx(b.frame())))
 
         frame = self.frame()
@@ -375,9 +375,9 @@ class FancyTabSwitcher(NSView):
         p = sender.convertPoint_fromView_(event.locationInWindow(), None)
         dx = self.dragPos.x - p.x
         dy = self.dragPos.y - p.y
-        
+
         frame = sender.frame()
-        
+
         if abs(dy) > 25 or self.dragWindow:
             if not self.dragWindow:
                 self.dragWindow = self.createDragWindowForTab_(sender)
@@ -389,7 +389,7 @@ class FancyTabSwitcher(NSView):
             pos.y -= self.dragPos.y
             self.dragWindow.setFrameOrigin_(pos)
 
-            
+
 
             if abs(dy) < 25 and p.x > NSMinX(frame) and p.x < NSMaxX(frame):
                 self.dragWindow.close()
@@ -404,7 +404,7 @@ class FancyTabSwitcher(NSView):
 
         self.reorderByPosition_(sender)
 
-    
+
     def finishedDraging_event_(self, sender, event):
         sender.setHidden_(False)
         self.rearrange()
@@ -424,7 +424,7 @@ class FancyTabSwitcher(NSView):
         frame = self.frame()
         x = 5
         h = NSHeight(frame)
-                
+
         if len(self.items) * MIN_TAB_WIDTH > NSWidth(frame) - 15 - 20:
             # some tabs don't fit, show what we can
             self.fitTabCount = max(int(NSWidth(frame)-15-40) / MIN_TAB_WIDTH, 1)
@@ -434,7 +434,7 @@ class FancyTabSwitcher(NSView):
             self.rightButton.setFrame_(NSMakeRect(NSWidth(frame)-31, 3, 24, 20))
             self.leftButton.setHidden_(False)
             self.rightButton.setHidden_(False)
-            
+
             x += 20
             for item in self.items[self.firstVisible : self.firstVisible + self.fitTabCount]:
                 item.setHidden_(False)
@@ -457,12 +457,12 @@ class FancyTabSwitcher(NSView):
                 item.setFrame_(NSMakeRect(x, 2, w, h))
                 item.setHidden_(False)
                 x += w
-    
-    
+
+
     def resizeSubviewsWithOldSize_(self, osize):
         self.rearrange()
-    
-    
+
+
     def drawRect_(self, rect):
         gradient = NSGradient.alloc().initWithColors_(
                     [NSColor.colorWithDeviceRed_green_blue_alpha_(121/256.0, 121/256.0, 121/256.0, 1),
@@ -492,6 +492,6 @@ class FancyTabSwitcher(NSView):
         if not item:
             return None
         return self.itemForTabViewItem_(item)
-    
+
 
 

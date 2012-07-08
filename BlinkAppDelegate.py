@@ -67,13 +67,13 @@ class BlinkAppDelegate(NSObject):
     aboutzRTPIcon = objc.IBOutlet()
 
     debug = False
-    
+
     blinkMenu = objc.IBOutlet()
     ready = False
     missedCalls = 0
     missedChats = 0
     urisToOpen = []
-    
+
     def init(self):
         self = super(BlinkAppDelegate, self).init()
         if self:
@@ -85,7 +85,7 @@ class BlinkAppDelegate(NSObject):
 
             ns_nc = NSNotificationCenter.defaultCenter()
             ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
-            
+
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
@@ -194,7 +194,7 @@ class BlinkAppDelegate(NSObject):
         if not NSApp.isActive():
             self.missedChats += 1
             self.updateDockTile()
-  
+
     def noteMissedCall(self):
         self.missedCalls += 1
         NSApp.requestUserAttention_(NSCriticalRequest)
@@ -244,13 +244,13 @@ class BlinkAppDelegate(NSObject):
 
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
-                if NSRunAlertPanel("Error Reading Configurations", 
+                if NSRunAlertPanel("Error Reading Configurations",
                     """The configuration file could not be read. The file could be corrupted or written by an older version of Blink. You might need to Replace it and re-enter your account information. Your old file will be backed up.""",
                     "Replace", "Quit", None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
                 os.rename(config_file, config_file+".oldfmt")
-                BlinkLogger().log_info(u"Renamed configuration file to %s" % config_file+".oldfmt") 
+                BlinkLogger().log_info(u"Renamed configuration file to %s" % config_file+".oldfmt")
             except BaseException, exc:
                 import traceback
                 print traceback.print_exc()

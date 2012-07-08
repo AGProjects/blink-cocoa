@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from AppKit import *
@@ -26,7 +26,7 @@ from resources import ApplicationData
 from util import allocate_autorelease_pool
 
 
-def makeLabel(label):            
+def makeLabel(label):
     text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 130, 17))
     text.setStringValue_(label)
     text.setBordered_(False)
@@ -72,40 +72,40 @@ class HiddenOption(object):
 
 class Option(HorizontalBoxView):
     def __new__(cls, *args, **kwargs):
-        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 22))    
+        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 22))
 
     object = None
     option = None
     delegate = None
     description = None
-    
+
     def __init__(self, object, name, option, description=None):
         self.object = object
         self.option = name
         self.description = description
-        
+
         self.setSpacing_(8)
-    
+
     def get(self, default=None):
         v = getattr(self.object, self.option, default)
         return v
-    
+
     def set(self, value):
         if self.get() != value:
             setattr(self.object, self.option, value)
             if self.delegate:
                 self.delegate.optionDidChange(self)
-    
+
     def restore(self):
         print "Restore not implemented for "+self.option
-    
+
     def store(self):
         try:
             self._store()
         except Exception, e:
             NSRunAlertPanel("Error", "Can't set option '%s'.\nError: %s"%(self.option,str(e)), "OK", None, None)
             self.restore()
-    
+
     def _store(self):
         print "Store not implemented for "+self.option
 
@@ -116,18 +116,18 @@ class Option(HorizontalBoxView):
         pass
 
 
-class BoolOption(Option):    
+class BoolOption(Option):
     def __init__(self, object, name, option, description=None):
         Option.__init__(self, object, name, option, description)
-          
+
         self.addSubview_(makeLabel(""))
-        
+
         self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 400, 20))
 
         self.check.setTitle_(description or formatName(name))
         self.check.setButtonType_(NSSwitchButton)
         self.addSubview_(self.check)
-        
+
         self.check.setTarget_(self)
         self.check.setAction_("toggled:")
 
@@ -138,7 +138,7 @@ class BoolOption(Option):
     def _store(self):
         if (self.check.state() == NSOnState) != self.get(False):
             self.set(self.check.state() == NSOnState)
-    
+
     def restore(self):
         value = self.get()
         self.check.setState_(value and NSOnState or NSOffState)
@@ -391,15 +391,15 @@ class TLSPortOption(PortOption):
 class MultipleSelectionOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 80))
-    
+
     def __init__(self, object, name, option, allowReorder=False, tableWidth=200, description=None):
         Option.__init__(self, object, name, option, description)
-        
+
         self.caption = makeLabel(description or formatName(name))
         self.selection = set()
         self.options = []
         self.allowReorder = allowReorder
-        
+
         self.addSubview_(self.caption)
 
         self.swin = NSScrollView.alloc().initWithFrame_(NSMakeRect(120, 0, tableWidth, 80))
@@ -435,18 +435,18 @@ class MultipleSelectionOption(Option):
         column.setEditable_(False)
         column.setDataCell_(cell)
         self.table.addTableColumn_(column)
-        
+
         self.addSubview_(self.swin)
-    
+
     def numberOfRowsInTableView_(self, table):
         return len(self.options)
-    
+
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if column.identifier() == "check":
             return self.options[row] in self.selection and NSOnState or NSOffState
         else:
             return self.options[row]
-    
+
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         if object:
             if self.options[row] not in self.selection:
@@ -457,14 +457,14 @@ class MultipleSelectionOption(Option):
                 self.selection.remove(self.options[row])
                 self.store()
         table.reloadData()
-    
+
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if not self.allowReorder:
             return NSDragOperationNone
         if oper == NSTableViewDropOn:
             table.setDropRow_dropOperation_(row, NSTableViewDropAbove)
         return NSDragOperationGeneric
-    
+
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         if info.draggingSource() != self.table or not self.allowReorder:
             return False
@@ -492,7 +492,7 @@ class MultipleSelectionOption(Option):
 class AudioCodecListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 105))
-    
+
     def __init__(self, object, name, option, description=None):
         MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=100, description=description)
 
@@ -501,7 +501,7 @@ class AudioCodecListOption(MultipleSelectionOption):
 
         self.sideView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 170, NSHeight(self.frame())))
         self.addSubview_(self.sideView)
-    
+
         #self.moveUp = NSButton.alloc().initWithFrame_(NSMakeRect(0, 24, 100, 24))
         #self.sideView.addSubview_(self.moveUp)
         #self.moveUp.setBezelStyle_(NSRoundedBezelStyle)
@@ -511,24 +511,24 @@ class AudioCodecListOption(MultipleSelectionOption):
         #self.moveUp.cell().setControlSize_(NSSmallControlSize)
         #self.moveUp.cell().setFont_(NSFont.systemFontOfSize_(10))
         #self.moveDown = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 24))
-        #self.sideView.addSubview_(self.moveDown)                
+        #self.sideView.addSubview_(self.moveDown)
         #self.moveDown.setTitle_("Move Down")
         #self.moveDown.setTarget_(self)
         #self.moveDown.setAction_("moveItem:")
         #self.moveDown.cell().setFont_(NSFont.systemFontOfSize_(10))
         #self.moveDown.cell().setControlSize_(NSSmallControlSize)
         #self.moveDown.setBezelStyle_(NSRoundedBezelStyle)
-        
+
         #self.tableViewSelectionDidChange_(None)
-        
-                
+
+
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         if column.identifier() == "check":
             if len(self.selection) == 1 and not object:
                 return
             MultipleSelectionOption.tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row)
 
-    
+
     #def tableViewSelectionDidChange_(self, notification):
     #    if self.table.selectedRow() < 0:
     #        self.moveUp.setEnabled_(False)
@@ -572,10 +572,10 @@ class AudioCodecListOption(MultipleSelectionOption):
 class SIPTransportListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 15*len(SIPTransportList.available_values)+8))
-    
+
     def __init__(self, object, name, option, description=None):
         MultipleSelectionOption.__init__(self, object, name, option, allowReorder=False, tableWidth=80, description=description)
-        
+
         self.options = SIPTransportList.available_values
 
     def _store(self):
@@ -610,7 +610,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         self.check.setTarget_(self)
         self.check.setAction_("customizeCodecs:")
         self.sideView.addSubview_(self.check)
-    
+
     def loadGlobalSettings(self):
         value = SIPSimpleSettings().rtp.audio_codec_list or []
         self.selection = set(value)
@@ -624,7 +624,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
     def customizeCodecs_(self, sender):
         if sender.state() == NSOffState:
             self.loadGlobalSettings()
-    
+
         self.table.reloadData()
         self.store()
 
@@ -653,7 +653,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
 class PopUpMenuOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 26))
-    
+
     def __init__(self, object, name, option, useRepresented=False, description=None):
         Option.__init__(self, object, name, option, description)
 
@@ -667,7 +667,7 @@ class PopUpMenuOption(Option):
         self.popup = NSPopUpButton.alloc().initWithFrame_(NSMakeRect(120, 0, 200, 26))
 
         self.addSubview_(self.popup)
-        
+
         self.popup.setTarget_(self)
         self.popup.setAction_("changed:")
 
@@ -682,7 +682,7 @@ class PopUpMenuOption(Option):
         else:
             if unicode(self.popup.titleOfSelectedItem()) != unicode(self.get()):
                 self.set(unicode(self.popup.titleOfSelectedItem()))
-    
+
     def restore(self):
         value = unicode(self.get(False))
         if self.useRepresentedObject:
@@ -740,8 +740,8 @@ class AudioInputDeviceOption(PopUpMenuOption):
         self.popup.sizeToFit()
         frame = self.popup.frame()
         frame.size.width = 300
-        self.popup.setFrame_(frame)      
-    
+        self.popup.setFrame_(frame)
+
     def refresh(self):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_("None")
@@ -751,7 +751,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
         for item in Engine().input_devices:
             self.popup.addItemWithTitle_(item)
             self.popup.lastItem().setRepresentedObject_(item)
-    
+
 
 class AudioOutputDeviceOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
@@ -867,7 +867,7 @@ class MessageRecorder(NSObject):
 
     def setOutputPath_(self, path):
         self.requested_path = path
-  
+
     def timerTick_(self, timer):
         self.counter -= 1
         if self.counter == 0 or self.recording:
@@ -927,14 +927,14 @@ class SoundFileOption(Option):
     volumeText = objc.IBOutlet()
     play = objc.IBOutlet()
     sound = None
-    
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 340, 38))
 
     def __init__(self, object, name, option, description=None):
         Option.__init__(self, object, name, option, description)
         self.oldIndex = 0
-        
+
         self.caption = makeLabel(description or formatName(name))
         self.setSpacing_(8)
         self.addSubview_(self.caption)
@@ -965,7 +965,7 @@ class SoundFileOption(Option):
             self.sound.stop()
             self.finished_(None)
             return
-    
+
         if self.popup.selectedItem():
             path = self.popup.selectedItem().representedObject()
             if not path:
@@ -981,8 +981,8 @@ class SoundFileOption(Option):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if self.sound == notification.sender:
             self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)
-    
-    
+
+
     def finished_(self, data):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
         self.sound = None
@@ -994,7 +994,7 @@ class SoundFileOption(Option):
             panel.setTitle_(u"Select Sound File")
             panel.setCanChooseFiles_(True)
             panel.setCanChooseDirectories_(False)
-            
+
             if panel.runModalForTypes_(NSArray.arrayWithObject_(u"wav")) == NSOKButton:
                 path = unicodedata.normalize('NFC', panel.filename())
                 self.oldIndex = self.addItemForPath(path)
@@ -1140,37 +1140,37 @@ class NightVolumeOption(Option):
             self.volumeText.setStringValue_("Volume: %i%%"%value.volume)
         else:
             self.slider.setEnabled_(False)
-        
+
 
 class AnsweringMessageOption(Option):
     implements(IObserver)
 
     view = objc.IBOutlet()
-    radio = objc.IBOutlet() 
+    radio = objc.IBOutlet()
     play = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     sound = None
-    
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 340, 38))
 
     def __init__(self, object, name, option, description=None):
         Option.__init__(self, object, name, option, description)
         self.oldIndex = 0
-        
+
         self.caption = makeLabel(description or formatName(name))
         self.setSpacing_(8)
         self.addSubview_(self.caption)
 
-        NSBundle.loadNibNamed_owner_("AnsweringMachineSetting", self)        
+        NSBundle.loadNibNamed_owner_("AnsweringMachineSetting", self)
         self.custom_file = AnsweringMachineSoundFile("sounds/unavailable_message_custom.wav")
         self.addSubview_(self.view)
         self.radio.cellWithTag_(2).setEnabled_(os.path.exists(self.custom_file.sound_file.path))
 
     @objc.IBAction
     def selectRadio_(self, sender):
-        self.store()        
-    
+        self.store()
+
     @objc.IBAction
     def record_(self, sender):
         rec = MessageRecorder.alloc().init()
@@ -1186,7 +1186,7 @@ class AnsweringMessageOption(Option):
             self.sound.stop()
             self.finished_(None)
             return
-    
+
         settings = SIPSimpleSettings()
         file = settings.answering_machine.unavailable_message
 
@@ -1201,8 +1201,8 @@ class AnsweringMessageOption(Option):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if self.sound == notification.sender:
             self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)
-    
-    
+
+
     def finished_(self, data):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
         self.sound = None
@@ -1221,7 +1221,7 @@ class AnsweringMessageOption(Option):
             else:
                 self.radio.selectCellWithTag_(2)
 
-class AccountSoundFileOption(SoundFileOption):    
+class AccountSoundFileOption(SoundFileOption):
     def __init__(self, object, name, option, description=None):
         SoundFileOption.__init__(self, object, name, option, description)
 
@@ -1279,13 +1279,13 @@ class AccountSoundFileOption(SoundFileOption):
 class ObjectTupleOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 80))
-    
+
     def __init__(self, object, name, option, columns, description=None):
         Option.__init__(self, object, name, option, description)
-        
+
         self.caption = makeLabel(description or formatName(name))
         self.values = []
-        
+
         self.addSubview_(self.caption)
 
         self.swin = NSScrollView.alloc().initWithFrame_(NSMakeRect(120, 0, 230, 80))
@@ -1299,7 +1299,7 @@ class ObjectTupleOption(Option):
         self.table.setDataSource_(self)
         self.table.setAllowsMultipleSelection_(False)
         self.table.setDelegate_(self)
-        
+
         i = 0
         for c,w in columns:
             column = NSTableColumn.alloc().initWithIdentifier_(str(i))
@@ -1311,29 +1311,29 @@ class ObjectTupleOption(Option):
             cell.setEditable_(True)
             self.table.addTableColumn_(column)
             i += 1
-        
+
         self.swin.setDocumentView_(self.table)
         self.table.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
         self.table.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
-        
+
         self.addSubview_(self.swin)
-    
+
     def numberOfRowsInTableView_(self, table):
         return len(self.values)+1
-    
+
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if row >= len(self.values):
             return ""
         column = int(column.identifier())
         return self.values[row][column]
-        
+
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if row >= len(self.values):
             return NSDragOperationNone
         #if oper == NSTableViewDropOn:
         #    table.setDropRow_dropOperation_(row, NSTableViewDropAbove)
         return NSDragOperationGeneric
-    
+
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
         if row >= len(self.values):
             return NSDragOperationNone
@@ -1359,7 +1359,7 @@ class ObjectTupleOption(Option):
         pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-row"), self)
         pboard.setString_forType_(NSString.stringWithString_(str(index)), "dragged-row")
         return True
-    
+
 
 class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option, description=None):
@@ -1370,7 +1370,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
         f = self.swin.frame()
         f.size.height = 55
         self.swin.setFrame_(f)
-        
+
         f = self.frame()
         f.size.height = 55
         self.setFrame_(f)
@@ -1402,7 +1402,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
             return
         self.store()
         table.reloadData()
-            
+
     def _store(self):
         l = []
         for host, port in self.values:
@@ -1417,15 +1417,15 @@ class STUNServerAddressListOption(ObjectTupleOption):
                 self.values.append((addr.host, addr.port))
 
 
-class NumberPairOption(Option):    
+class NumberPairOption(Option):
     def __init__(self, object, name, option, description=None):
         Option.__init__(self, object, name, option, description)
-        
+
         self.caption = makeLabel(description or formatName(name))
 
         self.first = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 22))
         self.second = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 22))
-                 
+
         for text in [self.first, self.second]:
             formatter = NSNumberFormatter.alloc().init()
             formatter.setMinimum_(NSNumber.numberWithInt_(0))
@@ -1440,7 +1440,7 @@ class NumberPairOption(Option):
         self.addSubview_(self.caption)
         self.addSubview_(self.first)
         self.addSubview_(self.second)
-    
+
     def controlTextDidEndEditing_(self, sender):
         if sender.object() == self.first:
             self.window().makeFirstResponder_(self.second)
@@ -1459,7 +1459,7 @@ class PortRangeOption(NumberPairOption):
         if res:
             self.first.setIntegerValue_(res.start)
             self.second.setIntegerValue_(res.end)
-    
+
 
 class ResolutionOption(NumberPairOption):
     def _store(self):

@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -98,7 +98,7 @@ class DebugWindow(NSObject):
     _siptrace_start_time = None
     _siptrace_packet_count = 0
 
-    grayText = NSDictionary.dictionaryWithObject_forKey_(NSColor.grayColor(), NSForegroundColorAttributeName)    
+    grayText = NSDictionary.dictionaryWithObject_forKey_(NSColor.grayColor(), NSForegroundColorAttributeName)
     boldTextAttribs = NSDictionary.dictionaryWithObject_forKey_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
     boldRedTextAttribs = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName, NSColor.redColor(), NSForegroundColorAttributeName)
     newline = NSAttributedString.alloc().initWithString_("\n")
@@ -169,7 +169,7 @@ class DebugWindow(NSObject):
             notification_center.add_observer(self, name="MSRPLibraryLog")
             notification_center.add_observer(self, name="MSRPTransportTrace")
             self.msrpTraceType = "full"
-        
+
         trace = userdef.integerForKey_("XCAPTrace")
         if trace == Disabled:
             notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
@@ -189,13 +189,13 @@ class DebugWindow(NSObject):
         trace = userdef.boolForKey_("EnablePJSIPTrace")
         if trace:
             notification_center.add_observer(self, name="SIPEngineLog")
-        else:        
+        else:
             notification_center.discard_observer(self, name="SIPEngineLog")
 
         trace = userdef.boolForKey_("EnableNotificationsTrace")
         if trace:
             notification_center.add_observer(self)
-        else:        
+        else:
             notification_center.discard_observer(self)
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
@@ -210,9 +210,9 @@ class DebugWindow(NSObject):
     @objc.IBAction
     def radioClicked_(self, sender):
         if sender == self.sipRadio:
-            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "SIPTrace") 
+            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "SIPTrace")
         elif sender == self.msrpRadio:
-            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "MSRPTrace") 
+            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "MSRPTrace")
         elif sender == self.xcapRadio:
             NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "XCAPTrace")
 
@@ -333,13 +333,13 @@ class DebugWindow(NSObject):
         if self._siptrace_start_time is None:
             self._siptrace_start_time = event_data.timestamp
         self._siptrace_packet_count += 1
-        
+
         text = NSMutableAttributedString.alloc().init()
-        
+
         if self.lastSIPMessageWasDNS:
             text.appendAttributedString_(self.newline)
         self.lastSIPMessageWasDNS = False
-        
+
         if event_data.received:
             self.sipInCount += 1
             text.appendAttributedString_(self.receivedText)
@@ -349,23 +349,23 @@ class DebugWindow(NSObject):
 
         line = " Packet %d, +%s\n" % (self._siptrace_packet_count, (event_data.timestamp - self._siptrace_start_time))
         text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
-        
+
         line = "%(timestamp)s: %(source_ip)s:%(source_port)d -(SIP over %(transport)s)-> %(destination_ip)s:%(destination_port)d\n" % event_data.__dict__
         text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
-        
+
         data = event_data.data.strip()
         first, rest = data.split("\n", 1)
         if data.startswith("SIP/2.0"):
             try:
                 code = first.split()[1]
                 attribs = self.boldRedTextAttribs if code[0] in ["4", "5", "6"] else self.boldTextAttribs
-                
+
                 if self.sipTraceType == "full":
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
                 else:
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
-            
+
             except:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(data+"\n"))
         else:
@@ -384,7 +384,7 @@ class DebugWindow(NSObject):
         if self.sipTraceType is not None:
             self.lastSIPMessageWasDNS = True
             self.append_line(self.sipTextView, text)
-    
+
     def renderPJSIP(self, text):
         if self.pjsipCheckBox.state() == NSOnState:
             iserror = 'error' in text.lower()

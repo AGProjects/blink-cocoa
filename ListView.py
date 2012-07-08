@@ -32,11 +32,11 @@ class ListView(VerticalBoxView):
         return self.subviews().count()
 
     def acceptsFirstResponder(self):
-        return True        
+        return True
 
     def drawRect_(self, rect):
         VerticalBoxView.drawRect_(self, rect)
-        
+
         if self.alternateRows:
             i = 0
             NSColor.colorWithCalibratedRed_green_blue_alpha_(237/256.0, 243/256.0, 254/256.0, 1.0).set()
@@ -44,7 +44,7 @@ class ListView(VerticalBoxView):
                 if i % 2 == 1:
                     NSRectFill(v.frame())
                 i += 1
-        
+
         if self.selection != -1 and self.selection < self.subviews().count():
             if self.window().isKeyWindow():
                 NSColor.alternateSelectedControlColor().set()

@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.     
+# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -41,11 +41,11 @@ class EnrollmentController(NSObject):
     createRadio = objc.IBOutlet()
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
-    
+
     displayNameText = objc.IBOutlet()
     addressText = objc.IBOutlet()
     passwordText = objc.IBOutlet()
-    
+
     newDisplayNameText = objc.IBOutlet()
     newUsernameText = objc.IBOutlet()
     newPasswordText = objc.IBOutlet()
@@ -54,8 +54,8 @@ class EnrollmentController(NSObject):
 
     nextButton = objc.IBOutlet()
     purchaseProLabel = objc.IBOutlet()
-    
-    
+
+
     def init(self):
         if self:
             NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
@@ -75,7 +75,7 @@ class EnrollmentController(NSObject):
     def runModal(self):
         self.newDisplayNameText.setStringValue_(NSFullUserName() or "")
         self.displayNameText.setStringValue_(NSFullUserName() or "")
-        
+
         self.window.center()
         NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
@@ -96,7 +96,7 @@ class EnrollmentController(NSObject):
         if sender.selectedCell().tag() == 1:
             self.loginView.setHidden_(False)
             self.createView.setHidden_(True)
-            
+
             frame.origin.y -= (self.window.minSize().height - frame.size.height)
             frame.size = self.window.minSize()
         else:
@@ -105,7 +105,7 @@ class EnrollmentController(NSObject):
 
             frame.origin.y += (frame.size.height - self.window.maxSize().height)
             frame.size = self.window.maxSize()
-        
+
         self.window.setFrame_display_animate_(frame, True, True)
 
     def validate(self):
@@ -143,7 +143,7 @@ class EnrollmentController(NSObject):
                 NSRunAlertPanel("Sign Up For a SIP Account", "Please enter your Display Name.",
                     "OK", None, None)
                 return False
-            
+
             if not username.strip():
                 NSRunAlertPanel("Sign Up For a SIP Account", "Please choose a Username for your account.",
                     "OK", None, None)
@@ -194,16 +194,16 @@ class EnrollmentController(NSObject):
 
     def setupForAdditionalAccounts(self):
         self.window.setTitle_("Add Account")
-        
+
         welcome = self.window.contentView().viewWithTag_(100)
         welcome.setStringValue_("Add New Account")
 
         descr = self.window.contentView().viewWithTag_(101)
         descr.setStringValue_("Select whether you want to add a SIP Account you already\nhave or create a new one.")
-        
+
         matrix = self.window.contentView().viewWithTag_(102)
         matrix.cellWithTag_(1).setTitle_("Add an Existing SIP Account")
-        
+
         cancel = self.window.contentView().viewWithTag_(110)
         cancel.setTitle_("Cancel")
 
@@ -215,7 +215,7 @@ class EnrollmentController(NSObject):
         username = unicode(self.newUsernameText.stringValue())
         password = unicode(self.newPasswordText.stringValue())
         email = unicode(self.newEmailText.stringValue())
-        
+
         self.progressIndicator.setHidden_(False)
         self.progressText.setHidden_(False)
         self.progressIndicator.setUsesThreadedAnimation_(True)
@@ -331,18 +331,18 @@ class EnrollmentController(NSObject):
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
         self.progressText.setHidden_(True)
-        
+
         if not sip_address:
-            NSRunAlertPanel("Sign Up to SIP Account", 
+            NSRunAlertPanel("Sign Up to SIP Account",
                             "Error creating account: %s" % error_message, "OK", None, None)
             return False
-        
+
         try:
             account = Account(str(sip_address))
         except ValueError, e:
             NSRunAlertPanel("Sign Up to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
             return False
-        
+
         account.display_name = display_name
         account.auth.password = password
 
@@ -359,7 +359,7 @@ class EnrollmentController(NSObject):
         if web_alert_url:
             account.web_alert.alert_url = web_alert_url
 
-        if web_password: 
+        if web_password:
             account.server.web_password = web_password
 
         if conference_server:
@@ -380,10 +380,10 @@ class EnrollmentController(NSObject):
                 account.ldap.port = ldap_port
 
         account.save()
-                
+
         NSRunAlertPanel("SIP Account Created", "Your new SIP Address is:\n\n%s"%sip_address, "Continue", None, None)
 
-        # enable account only after Continue pressed to give server time to update 
+        # enable account only after Continue pressed to give server time to update
         account.enabled = True
         account.save()
         AccountManager().default_account = account
@@ -402,7 +402,7 @@ class EnrollmentController(NSObject):
                         NSApp.stopModalWithCode_(NSOKButton)
         else:
             NSApp.stopModalWithCode_(NSCancelButton)
-            
+
 
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
