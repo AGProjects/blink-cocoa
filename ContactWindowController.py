@@ -143,7 +143,6 @@ class ContactWindowController(NSWindowController):
     accountPopUp = objc.IBOutlet()
     contactOutline = objc.IBOutlet()
     groupMenu = objc.IBOutlet()
-    navigateToGroup = objc.IBOutlet()
     actionButtons = objc.IBOutlet()
     addContactButton = objc.IBOutlet()
     addContactButtonSearch = objc.IBOutlet()
@@ -2244,8 +2243,6 @@ class ContactWindowController(NSWindowController):
             item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(group.name, "goToGroup:", "8" if type(group) == FavoritesBlinkGroup else "")
             item.setRepresentedObject_(group)
             item.setState_(NSOnState if group == selected_group else NSOffState)
-
-        self.contactsMenu.setSubmenu_forItem_(self.groupMenu, self.navigateToGroup)
 
     def goToGroup_(self, sender):
         group = sender.representedObject()
