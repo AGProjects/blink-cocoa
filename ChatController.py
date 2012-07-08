@@ -1256,8 +1256,8 @@ class ChatController(MediaStream):
             self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
         else:
-            self.sessionController.end()
-            #self.sessionController.endStream(self)
+            #self.sessionController.end()
+            self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
 
     # lifetime of a chat controler: possible deallocation paths
