@@ -1673,6 +1673,7 @@ class ContactListModel(CustomListModel):
                 positions = [g.position for g in AddressbookManager().get_groups() if g.position is not None]
                 self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+                self.nc.post_notification("BonjourGroupWasActivated", sender=self, data=TimestampedNotificationData())
         else:
             self.updatePresenceIndicator()
 
@@ -1680,6 +1681,7 @@ class ContactListModel(CustomListModel):
         if notification.sender is BonjourAccount() and self.bonjour_group in self.groupsList:
             self.bonjour_group.contacts = []
             self.groupsList.remove(self.bonjour_group)
+            self.nc.post_notification("BonjourGroupWasDeactivated", sender=self, data=TimestampedNotificationData())
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def updatePresenceIndicator(self):

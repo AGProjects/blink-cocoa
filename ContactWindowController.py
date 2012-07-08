@@ -277,6 +277,8 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="AddressbookGroupWasActivated")
         nc.add_observer(self, name="AddressbookGroupWasDeleted")
         nc.add_observer(self, name="AddressbookGroupDidChange")
+        nc.add_observer(self, name="BonjourGroupWasActivated")
+        nc.add_observer(self, name="BonjourGroupWasDeactivated")
 
         nc.add_observer(self, sender=AccountManager())
 
@@ -598,8 +600,16 @@ class ContactWindowController(NSWindowController):
             notification.sender.save()
         self.refreshAccountList()
 
+    def _NH_BonjourGroupWasActivated(self, notification):
+        self.updateGroupMenu()
+    
+    def _NH_BonjourGroupWasDeactivated(self, notification):
+        self.updateGroupMenu()
+    
     def _NH_SIPAccountDidDeactivate(self, notification):
         self.refreshAccountList()
+        if notification.sender is BonjourAccount():
+            self.updateGroupMenu()
 
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.refreshAccountList()
