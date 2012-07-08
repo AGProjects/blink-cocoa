@@ -3086,6 +3086,8 @@ class ContactWindowController(NSWindowController):
             self.updateStatusMenu()
         elif menu == self.callMenu:
             self.updateCallMenu()
+        elif menu == self.groupMenu:
+            self.updateGroupMenu()
         elif menu == self.toolsMenu:
             self.updateToolsMenu()
         elif menu == self.chatMenu:
