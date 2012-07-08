@@ -145,6 +145,7 @@ class ContactWindowController(NSWindowController):
     groupMenu = objc.IBOutlet()
     actionButtons = objc.IBOutlet()
     addContactButton = objc.IBOutlet()
+    groupButton = objc.IBOutlet()
     addContactButtonSearch = objc.IBOutlet()
     addContactButtonDialPad = objc.IBOutlet()
     conferenceButton = objc.IBOutlet()
@@ -1140,7 +1141,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def addContact_(self, sender):
-        if sender != self.addContactButton:
+        if sender not in (self.addContactButton, self.groupButton):
             row = self.searchOutline.selectedRow()
             if row != NSNotFound and row != -1:
                 item = self.searchOutline.itemAtRow_(row)
@@ -2229,10 +2230,12 @@ class ContactWindowController(NSWindowController):
         while self.groupMenu.numberOfItems() > 0:
             self.groupMenu.removeItemAtIndex_(0)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Navigate to Group', "", "")
-        item.setEnabled_(False)
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Add Contact...', "addContact:", "")
         self.groupMenu.addItem_(NSMenuItem.separatorItem())
 
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Scroll to:', "", "")
+        item.setEnabled_(False)
+ 
         row = self.contactOutline.selectedRow()
         selected_group = None
         if row >= 0:
@@ -2240,7 +2243,8 @@ class ContactWindowController(NSWindowController):
             selected_group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
 
         for group in self.model.groupsList:
-            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(group.name, "goToGroup:", "8" if type(group) == FavoritesBlinkGroup else "")
+            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(group.name, "goToGroup:", "")
+            item.setIndentationLevel_(1)
             item.setRepresentedObject_(group)
             item.setState_(NSOnState if group == selected_group else NSOffState)
 
@@ -3140,8 +3144,6 @@ class ContactWindowController(NSWindowController):
                 item.setTitle_('Expand Group' if not selected_group.group.expanded else 'Collapse Group')
             else:
                 item.setTitle_('Toggle Expansion')
-
-            self.updateGroupMenu()
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
