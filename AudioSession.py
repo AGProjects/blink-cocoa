@@ -10,6 +10,8 @@ from Foundation import *
 from VerticalBoxView import VerticalBoxView
 from SIPManager import SIPManager
 
+from util import format_identity_to_string
+
 
 class AudioSession(NSView):
     selected = False
@@ -33,14 +35,13 @@ class AudioSession(NSView):
     def canBecomeKeyView(self):
         return True
 
-    def setSessionInfo_(self, info):
-        self.sessionInfo = info
-
     def copy_(self, sender):
+        if self.delegate is None:
+            return
         pb = NSPasteboard.generalPasteboard()
-        if self.sessionInfo:
-            pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)
-            pb.setString_forType_(self.sessionInfo, NSStringPboardType)
+        copy_text = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=True, format='full')
+        pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)
+        pb.setString_forType_(copy_text, NSStringPboardType)
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-audio-session", "x-blink-sip-uri", NSFilenamesPboardType))

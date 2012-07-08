@@ -203,7 +203,6 @@ class AudioController(MediaStream):
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
-        self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.updateTLSIcon()
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
@@ -224,7 +223,6 @@ class AudioController(MediaStream):
         display_name = self.sessionController.contactDisplayName if self.sessionController.contactDisplayName and not self.sessionController.contactDisplayName.startswith('sip:') and not self.sessionController.contactDisplayName.startswith('sips:') else None
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
-        self.view.setSessionInfo_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
