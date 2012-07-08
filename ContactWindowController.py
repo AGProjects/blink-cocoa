@@ -41,7 +41,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, ABFavoriteBlinkContact, FavoriteBlinkContact, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, ABFavoriteBlinkContact, FavoriteBlinkContact, FavoritesBlinkGroup, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, contactIconPathForURI, saveContactIconToFile
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -142,6 +142,8 @@ class ContactWindowController(NSWindowController):
     searchBox = objc.IBOutlet()
     accountPopUp = objc.IBOutlet()
     contactOutline = objc.IBOutlet()
+    groupMenu = objc.IBOutlet()
+    navigateToGroup = objc.IBOutlet()
     actionButtons = objc.IBOutlet()
     addContactButton = objc.IBOutlet()
     addContactButtonSearch = objc.IBOutlet()
@@ -1716,7 +1718,17 @@ class ContactWindowController(NSWindowController):
         item = sender.representedObject()
         item.contact.dialog.policy = 'allow' if item.contact.dialog.policy in ('default', 'block') else 'block'
         item.contact.save()
-    
+
+    @objc.IBAction
+    def groupButtonClicked_(self, sender):
+        # IM button
+        point = sender.convertPointToBase_(NSZeroPoint)
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                                                  NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                                                                                                                                  sender.window().graphicsContext(), 0, 1, 0)
+        NSMenu.popUpContextMenu_withEvent_forView_(self.groupMenu, event, sender)
+        return
+
     @objc.IBAction
     def actionButtonClicked_(self, sender):
 
@@ -2191,6 +2203,38 @@ class ContactWindowController(NSWindowController):
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
+
+    def updateGroupMenu(self):
+        while self.groupMenu.numberOfItems() > 0:
+            self.groupMenu.removeItemAtIndex_(0)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_('Navigate to a Group', "", "")
+        item.setEnabled_(False)
+        self.groupMenu.addItem_(NSMenuItem.separatorItem())
+
+        row = self.contactOutline.selectedRow()
+        selected_group = None
+        if row >= 0:
+            item = self.contactOutline.itemAtRow_(row)
+            selected_group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
+                                
+        for group in self.model.groupsList:
+            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(group.name, "goToGroup:", "8" if type(group) == FavoritesBlinkGroup else "")
+            item.setRepresentedObject_(group)
+            item.setState_(NSOnState if group == selected_group else NSOffState)
+
+    def goToGroup_(self, sender):
+        group = sender.representedObject()
+        row = self.contactOutline.rowForItem_(group)
+        if row >= 0:
+            frame = self.contactOutline.frameOfOutlineCellAtRow_(row)
+            self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
+            self.contactOutline.scrollPoint_(frame.origin)
+            
+            self.contactOutline.expandItem_expandChildren_(group, False)
+            if group.group is not None:
+                group.group.expanded = True
+                group.group.save()   
 
     @run_in_green_thread
     def show_last_chat_conversations(self):
@@ -3020,6 +3064,8 @@ class ContactWindowController(NSWindowController):
             self.updateCallMenu()
         elif menu == self.toolsMenu:
             self.updateToolsMenu()
+        elif menu == self.groupMenu:
+            self.updateGroupMenu()
         elif menu == self.chatMenu:
             self.updateChatMenu()
         elif menu == self.windowMenu:
@@ -3074,6 +3120,8 @@ class ContactWindowController(NSWindowController):
             else:
                 item.setTitle_('Toggle Expansion')
     
+            self.updateGroupMenu()
+            self.contactsMenu.setSubmenu_forItem_(self.groupMenu, self.navigateToGroup)
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
