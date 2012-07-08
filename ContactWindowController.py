@@ -213,6 +213,7 @@ class ContactWindowController(NSWindowController):
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
         # minimizing
+
         self.searchOutlineTopOffset = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - NSHeight(self.searchOutline.enclosingScrollView().frame())
 
         # save the NSUser icon to disk so that it can be used from html
@@ -339,7 +340,7 @@ class ContactWindowController(NSWindowController):
             # TODO: enable adds
             #self.showContactsAdsView()
 
-        self.window().setTitle_(NSApp.delegate().applicationName)
+        self.window().setTitle_(NSApp.delegate().applicationNamePrint)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.actionButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Audio Call'), NSAccessibilityDescriptionAttribute)
@@ -709,7 +710,7 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         if settings.service_provider.name:
-            window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
+            window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
             self.window().setTitle_(window_title)
 
         self.callPendingURIs()
@@ -800,10 +801,10 @@ class ContactWindowController(NSWindowController):
                 self.silentButton.setState_(NSOffState)
         if notification.data.modified.has_key("service_provider.name"):
             if settings.service_provider.name:
-                window_title =  "%s by %s" % (NSApp.delegate().applicationName, settings.service_provider.name)
+                window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
                 self.window().setTitle_(window_title)
             else:
-                self.window().setTitle_(NSApp.delegate().applicationName)
+                self.window().setTitle_(NSApp.delegate().applicationNamePrint)
 
         if notification.data.modified.has_key("ldap.enabled"):
             self.refreshLdapDirectory()
@@ -2012,7 +2013,7 @@ class ContactWindowController(NSWindowController):
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
 
-        self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationName)
+        self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationNamePrint)
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)

@@ -128,7 +128,7 @@ class PreferencesController(NSWindowController, object):
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="AudioDevicesDidChange")
 
-        self.window().setTitle_("%s Preferences" % NSApp.delegate().applicationName)
+        self.window().setTitle_("%s Preferences" % NSApp.delegate().applicationNamePrint)
 
         self.toolbar.setSelectedItemIdentifier_('accounts')
 

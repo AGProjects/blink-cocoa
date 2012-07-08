@@ -89,6 +89,7 @@ class BlinkAppDelegate(NSObject):
             nc = NotificationCenter()
             nc.add_observer(self, name="SIPApplicationDidEnd")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
+            self.applicationNamePrint = 'Blink' if self.applicationName == 'Blink Pro' else self.applicationName
 
             def purge_screenshots():
                 screenshots_folder = ApplicationData.get('.tmp_screenshots')
@@ -222,7 +223,7 @@ class BlinkAppDelegate(NSObject):
         #https://github.com/roddi/ValidateStoreReceipt
 
     def applicationDidFinishLaunching_(self, sender):
-        self.blinkMenu.setTitle_(self.applicationName)
+        self.blinkMenu.setTitle_(self.applicationNamePrint)
 
         config_file = ApplicationData.get('config')
         self.icloud_manager = iCloudManager()
@@ -322,7 +323,7 @@ class BlinkAppDelegate(NSObject):
             version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
             build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-            self.aboutPanel.setTitle_('About %s' % self.applicationName)
+            self.aboutPanel.setTitle_('About %s' % self.applicationNamePrint)
 
             if self.applicationName == 'Blink Pro':
                 target = "Pro"
