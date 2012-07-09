@@ -613,6 +613,7 @@ class BlinkGroup(NSObject):
 class BonjourBlinkGroup(BlinkGroup):
     """Group representation for Bonjour Neigborhood"""
     type = 'bonjour'
+    ignore_search = False
     deletable = False
     remove_contact_allowed = False
     add_contact_allowed = False
