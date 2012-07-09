@@ -2230,19 +2230,14 @@ class ContactListModel(CustomListModel):
         blink_group.group.save()
 
     def addGroupsForContact(self, contact, groups):
-        for grp in groups:
-            if type(grp) == FavoritesBlinkGroup:
-                continue
+        for grp in (grp for grp in groups if not isinstance(grp, FavoritesBlinkGroup)):
             try:
                 group = next(g.group for g in self.groupsList if g == grp and g.add_contact_allowed)
             except StopIteration:
                 # insert after last editable group
-                index = 0
-                for g in self.groupsList:
+                for index, g in enumerate(self.groupsList):
                     if not g.add_contact_allowed:
                         break
-                    index += 1
-
                 group = Group()
                 group.name = grp
                 group.position = index
