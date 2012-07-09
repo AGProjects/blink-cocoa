@@ -58,6 +58,9 @@ class AudioSession(NSView):
         self.delegate = delegate
 
     def makeDragImage(self):
+        if self.delegate is None:
+            return
+
         image = NSImage.alloc().initWithSize_(self.frame().size)
         image.lockFocus()
 
@@ -116,6 +119,8 @@ class AudioSession(NSView):
         self.dragPos = event.locationInWindow()
 
     def mouseDragged_(self, event):
+        if self.delegate is None:
+            return
         pos = event.locationInWindow()
         if abs(self.dragPos.x - pos.x) > 3 or abs(self.dragPos.y - pos.y) > 3:
             image = self.makeDragImage()
@@ -167,6 +172,8 @@ class AudioSession(NSView):
                     self.delegate.sessionBoxDidDeactivate(self)
 
     def draggedImage_endedAt_operation_(self, image, point, operation):
+        if self.delegate is None:
+            return
         if self.draggedOut and self.conferencing:
             self.delegate.sessionBoxDidRemoveFromConference(self)
 
@@ -176,6 +183,9 @@ class AudioSession(NSView):
                 callable(view)
 
     def draggingEntered_(self, info):
+        if self.delegate is None:
+            return
+
         def highlight(view):
             view.highlighted = True
             view.setNeedsDisplay_(True)
@@ -223,6 +233,9 @@ class AudioSession(NSView):
             info.draggingSource().setNeedsDisplay_(True)
 
     def performDragOperation_(self, info):
+        if self.delegate is None:
+            return
+
         source = info.draggingSource()
         pboard = info.draggingPasteboard()
 
