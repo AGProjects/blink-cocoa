@@ -116,10 +116,9 @@ def loadContactIcon(contact):
         try:
             data = base64.b64decode(contact.icon)
             return NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
-        except:
-            return None
-    else:
-        return None
+        except Exception:
+            pass
+    return None
 
 def formatABPersonName(person):
     first = person.valueForProperty_(AddressBook.kABFirstNameProperty)
