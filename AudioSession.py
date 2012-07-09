@@ -16,7 +16,6 @@ from util import format_identity_to_string
 class AudioSession(NSView):
     selected = False
     delegate = None
-    sessionInfo = None
     highlighted = False
     conferencing = False
     draggedOut = False
@@ -83,7 +82,8 @@ class AudioSession(NSView):
 
         NSColor.blackColor().set()
         point = NSMakePoint(8, NSMaxY(frame)-20)
-        NSString.stringWithString_(self.sessionInfo).drawAtPoint_withAttributes_(point,
+        uri = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=False, format='compact')
+        NSString.stringWithString_(uri).drawAtPoint_withAttributes_(point,
               NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(12), NSFontAttributeName))
         point = NSMakePoint(8, 6)
         if self.conferencing:
@@ -124,7 +124,8 @@ class AudioSession(NSView):
             pos.y -= image.size().height/2
             pboard = NSPasteboard.pasteboardWithName_(NSDragPboard)
             pboard.declareTypes_owner_(NSArray.arrayWithObject_("x-blink-audio-session"), self)
-            pboard.setString_forType_(self.sessionInfo, "x-blink-audio-session")
+            uri = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=False, format='compact')
+            pboard.setString_forType_(uri, "x-blink-audio-session")
             self.window().dragImage_at_offset_event_pasteboard_source_slideBack_(image,
                     pos, NSZeroPoint, event, pboard, self, False)
             self.draggedOut = False
