@@ -1086,7 +1086,26 @@ class CustomListModel(NSObject):
                 return False
             if not source.delegate.canTransfer or not source.delegate.transferEnabled:
                 return False
-            source.delegate.transferSession(item.uri)
+            if len(item.uris) == 1:
+                source.delegate.transferSession(item.uri)
+            else:
+                row = table.rowForItem_(item)
+                frame = table.frameOfOutlineCellAtRow_(row)
+                point = frame.origin
+                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
+                                                                                table.window().graphicsContext(), 0, 1, 0)
+                transfer_menu = NSMenu.alloc().init()
+                titem = transfer_menu.addItemWithTitle_action_keyEquivalent_(u'Transfer Call To', "", "")
+                titem.setEnabled_(False)
+                for uri in item.uris:
+                    titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedBlindTransferMenuItem:", "")
+                    titem.setIndentationLevel_(1)
+                    titem.setTarget_(self)
+                    titem.setRepresentedObject_({'source': source, 'destination': uri.uri})
+
+                NSMenu.popUpContextMenu_withEvent_forView_(transfer_menu, event, self.contactsWindowController.contactOutline)
+
             return True
         else:
             if info.draggingSource() != table:
@@ -1214,23 +1233,11 @@ class CustomListModel(NSObject):
                 pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
                 return True
 
-    def draggingEntered_(self, info):
-        self.colapseBeforeDrop()
+    def userClickedBlindTransferMenuItem_(self, sender):
+        source = sender.representedObject()['source']
+        destination = sender.representedObject()['destination']
+        source.delegate.transferSession(destination)
 
-    def draggingExited_(self, info):
-        self.expandAfterDrop()
-
-    def colapseBeforeDrop(self):
-        self.expanded_status = {}
-        for group in self.groupsList:
-            if group.group is not None and group.group.expanded:
-                self.expanded_status[group] = group.group.expanded
-                self.contactOutline.expandItem_expandChildren_(group, True)
-
-    def expandAfterDrop(self):
-        for group in self.expanded_status.keys():
-            expanded = self.expanded_status[group]
-            self.contactOutline.expandItem_expandChildren_(group, not expanded)
 
 class SearchContactListModel(CustomListModel):
     def init(self):
