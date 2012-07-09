@@ -608,7 +608,7 @@ class BlinkGroup(NSObject):
                 group = Group(id=self.type)
                 group.name = self.name
                 group.type  = self.type
-                group.expanded = type(self) not in (AddressBookBlinkGroup, AllContactsBlinkGroup)
+                group.expanded = True
                 group.position = None
                 group.save()
             self.group = group
@@ -655,6 +655,19 @@ class AllContactsBlinkGroup(BlinkGroup):
     def __init__(self, name=u'All Contacts'):
         self.name = NSString.stringWithString_(name)
         self.group = None
+
+    def setReference(self):
+        addressbook_manager = AddressbookManager()
+        try:
+            group = addressbook_manager.get_group(self.type)
+        except KeyError:
+            group = Group(id=self.type)
+            group.name = self.name
+            group.type  = self.type
+            group.expanded = False
+            group.position = None
+            group.save()
+        self.group = group
 
 
 class FavoritesBlinkGroup(BlinkGroup):
@@ -856,6 +869,19 @@ class AddressBookBlinkGroup(BlinkGroup):
                 self.contacts.append(blink_contact)
 
         self.sortContacts()
+
+    def setReference(self):
+        addressbook_manager = AddressbookManager()
+        try:
+            group = addressbook_manager.get_group(self.type)
+        except KeyError:
+            group = Group(id=self.type)
+            group.name = self.name
+            group.type  = self.type
+            group.expanded = False
+            group.position = None
+            group.save()
+        self.group = group
 
 
 class CustomListModel(NSObject):
