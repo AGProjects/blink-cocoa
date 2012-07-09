@@ -949,7 +949,7 @@ class CustomListModel(NSObject):
             if source.delegate is None or not source.delegate.canTransfer or not source.delegate.transferEnabled:
                 return NSDragOperationNone
 
-            if source.delegate.sessionController.account is not BonjourAccount() and type(proposed_item) == BonjourBlinkContact:
+            if source.delegate.sessionController.account is not BonjourAccount() and isinstance(proposed_item, BonjourBlinkContact):
                 return NSDragOperationNone
 
             if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, BlinkContact):
@@ -980,11 +980,11 @@ class CustomListModel(NSObject):
                 sourceGroup = self.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
 
-                if type(sourceGroup) == FavoritesBlinkGroup:
+                if isinstance(sourceGroup, FavoritesBlinkGroup):
                     return NSDragOperationNone
 
-                if type(sourceGroup) == BonjourBlinkGroup:
-                    return False
+                if isinstance(sourceGroup, BonjourBlinkGroup):
+                    return NSDragOperationNone
 
                 if isinstance(proposed_item, BlinkGroup):
                     targetGroup = proposed_item
@@ -995,13 +995,10 @@ class CustomListModel(NSObject):
                     if sourceGroup == targetGroup:
                         return NSDragOperationNone
 
-                    if type(targetGroup) == NoBlinkGroup:
+                    if isinstance(targetGroup, (AllContactsBlinkGroup, NoBlinkGroup)):
                         return NSDragOperationNone
 
-                    if type(targetGroup) == AllContactsBlinkGroup:
-                        return NSDragOperationNone
-
-                    if type(targetGroup) == FavoritesBlinkGroup:
+                    if isinstance(targetGroup, FavoritesBlinkGroup):
                         if sourceContact.favorite:
                             return NSDragOperationNone
                         else:
@@ -1018,16 +1015,17 @@ class CustomListModel(NSObject):
                     table.setDropItem_dropChildIndex_(self.groupsList[i], c)
                 else:
                     targetGroup = table.parentForItem_(proposed_item)
+
+                    if not targetGroup:
+                        return NSDragOperationNone
+
                     if sourceGroup == targetGroup and not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
 
-                    if type(targetGroup) == NoBlinkGroup:
+                    if isinstance(targetGroup, (AllContactsBlinkGroup, NoBlinkGroup)):
                         return NSDragOperationNone
 
-                    if type(targetGroup) == AllContactsBlinkGroup:
-                        return NSDragOperationNone
-
-                    if type(targetGroup) == FavoritesBlinkGroup:
+                    if isinstance(targetGroup, FavoritesBlinkGroup):
                         if sourceContact.favorite:
                             return NSDragOperationNone
                         else:
@@ -1090,7 +1088,7 @@ class CustomListModel(NSObject):
                 if isinstance(item, BlinkGroup):
                     targetGroup = item
 
-                    if type(targetGroup) == FavoritesBlinkGroup and not sourceContact.favorite:
+                    if isinstance(targetGroup, FavoritesBlinkGroup) and not sourceContact.favorite:
                         sourceContact.setFavorite(True)
                         return
 
@@ -1155,7 +1153,7 @@ class CustomListModel(NSObject):
                         self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
                         return
 
-                    if type(targetGroup) == FavoritesBlinkGroup and not sourceContact.favorite:
+                    if isinstance(targetGroup, FavoritesBlinkGroup) and not sourceContact.favorite:
                         sourceContact.setFavorite(True)
                         return True
 
