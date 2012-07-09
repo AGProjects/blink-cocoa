@@ -250,9 +250,7 @@ class BlinkContact(NSObject):
                 return False
 
             # check if the trimmed candidate matches the end of the username if the number is long enough
-            if len(candidate_username) > 7 and me_username.endswith(candidate_username):
-                return True
-            return False
+            return len(candidate_username) > 7 and me_username.endswith(candidate_username)
 
         candidate = self.split_uri(uri)
         if match((self.username, self.domain), candidate):
