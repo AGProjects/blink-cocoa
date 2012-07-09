@@ -457,8 +457,7 @@ class BonjourBlinkContact(BlinkContact):
 
     def matchesURI(self, uri):
         candidate = self.split_uri(uri)
-        if (self.username, self.domain) == (candidate[0], candidate[1]):
-            return True
+        return (self.username, self.domain) == (candidate[0], candidate[1])
 
 class SearchResultContact(BlinkContact):
     """Contact representation for un-matched results in the search outline"""
@@ -930,9 +929,8 @@ class CustomListModel(NSObject):
             try:
                 return item.contacts[index]
             except IndexError:
-                return None
-        else:
-            return None
+                pass
+        return None
 
     def outlineView_heightOfRowByItem_(self, outline, item):
         return 18 if isinstance(item, BlinkGroup) else 34
@@ -1329,11 +1327,11 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def hasContactMatchingURI(self, uri):
-        return any(blink_contact.matchesURI(uri) for group in self.groupsList if group.ignore_search is False for blink_contact in group.contacts)
+        return any(blink_contact.matchesURI(uri) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
 
     def getContactMatchingURI(self, uri):
         try:
-            return (blink_contact for group in self.groupsList if group.ignore_search is False for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
+            return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
         except StopIteration:
             return None
 
@@ -1887,7 +1885,7 @@ class ContactListModel(CustomListModel):
 
                 if 'favorite' in notification.data.modified:
                     blink_contact.favorite = contact.favorite
-                    if contact.favorite is True:
+                    if contact.favorite:
                         try:
                             blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.contact == contact).next()
                         except StopIteration:
