@@ -2307,29 +2307,29 @@ class ContactListModel(CustomListModel):
             return True
         return False
 
-    def editContact(self, blink_contact):
-        if not blink_contact:
+    def editContact(self, item):
+        if not item:
             return
 
-        if type(blink_contact) == BlinkGroup:
-            self.editGroup(blink_contact)
+        if isinstance(item, BlinkGroup):
+            self.editGroup(item)
             return
 
-        if type(blink_contact) in (SystemAddressBookBlinkContact, ABFavoriteBlinkContact):
-            url = "addressbook://"+blink_contact.id
+        if isinstance(item, (SystemAddressBookBlinkContact, ABFavoriteBlinkContact)):
+            url = "addressbook://"+item.id
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             return
 
-        if not blink_contact.editable:
+        if not item.editable:
             return
 
-        controller = EditContactController(blink_contact)
+        controller = EditContactController(item)
         new_contact = controller.runModal()
 
         if new_contact:
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
-                contact = blink_contact.contact
+                contact = item.contact
                 contact.name = new_contact['name']
                 contact.default_uri = new_contact['default_uri']
                 contact.uris = new_contact['uris']
@@ -2345,14 +2345,14 @@ class ContactListModel(CustomListModel):
                 contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
                 contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
                 contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-                belonging_groups = self.getBlinkGroupsForBlinkContact(blink_contact)
+                belonging_groups = self.getBlinkGroupsForBlinkContact(item)
                 for blink_group in belonging_groups:
                     if not new_contact['groups'] or blink_group not in new_contact['groups']:
                         if type(blink_group) == FavoritesBlinkGroup:
                             contact.favorite = False
                         else:
                             try:
-                                blink_group.group.contacts.remove(blink_contact.contact)
+                                blink_group.group.contacts.remove(item.contact)
                                 blink_group.group.save()
                             except ValueError:
                                 pass
