@@ -133,8 +133,6 @@ class ContactWindowController(NSWindowController):
     participantsView = objc.IBOutlet()
     participantsTableView = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
-    audioAdsView = objc.IBOutlet()
-    contactsAdsView = objc.IBOutlet()
     sessionsView = objc.IBOutlet()
     audioSessionsListView = objc.IBOutlet()
     drawerSplitterPosition = None
@@ -336,10 +334,6 @@ class ContactWindowController(NSWindowController):
             item = self.historyMenu.itemWithTag_(1)
             item.setHidden_(True)
 
-            self.initAds()
-            # TODO: enable adds
-            #self.showContactsAdsView()
-
         self.window().setTitle_(NSApp.delegate().applicationNamePrint)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.actionButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
@@ -383,54 +377,6 @@ class ContactWindowController(NSWindowController):
             if self.ldap_directory:
                 self.ldap_directory.disconnect()
                 self.ldap_directory = None
-
-    def initAds(self):
-        # TODO: enable adds
-        pass
-
-    def showAudioAdsView(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            # show adds view and resize audio sessions drawer
-            if self.audioAdsView.isHidden():
-                self.audioAdsView.setHidden_(False)
-                drawer_frame = self.drawerSplitView.frame()
-                drawer_frame.size.height -=  self.audioAdsView.frame().size.height
-                self.drawerSplitView.setFrame_(drawer_frame)
-
-    def hideAudioAdsView(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            # hide adds view and resize audio sessions drawer
-            if not self.audioAdsView.isHidden():
-                self.audioAdsView.setHidden_(True)
-                drawer_frame = self.drawerSplitView.frame()
-                drawer_frame.size.height +=  self.audioAdsView.frame().size.height
-                self.drawerSplitView.setFrame_(drawer_frame)
-
-    def toggleAudioAdsView(self):
-        if self.audioAdsView.isHidden():
-            self.showAudioAdsView()
-        else:
-            self.hideAudioAdsView()
-
-    def showContactsAdsView(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            if self.contactsAdsView.isHidden():
-                self.contactsAdsView.setHidden_(False)
-                self.refreshAdsLayout()
-
-    def hideContactsAdsView(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            if not self.contactsAdsView.isHidden():
-                self.contactsAdsView.setHidden_(True)
-                contacts_frame = self.contactsScrollView.frame()
-                contacts_frame.size.height =  self.contactsScrollView.superview().frame().size.height
-                self.contactsScrollView.setFrame_(contacts_frame)
-
-    def toggleContactsAdsView(self):
-        if self.contactsAdsView.isHidden():
-            self.showContactsAdsView()
-        else:
-            self.hideContactsAdsView()
 
     def setup(self, sipManager):
         self.backend = sipManager
@@ -852,9 +798,6 @@ class ContactWindowController(NSWindowController):
         if not self.drawer.isOpen() and has_audio:
             #self.drawer.setContentSize_(self.window().frame().size)
             self.drawer.open()
-            # TODO: enable adds
-            #self.toggleAudioAdsView()
-            #self.toggleContactsAdsView()
 
     def shuffleUpAudioSession(self, audioSessionView):
         # move up the given view in the audio session list so that it is after
@@ -1895,13 +1838,6 @@ class ContactWindowController(NSWindowController):
             self.contactOutline.deselectAll_(None)
         return nframe
 
-    def refreshAdsLayout(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            if not self.contactsAdsView.isHidden():
-                contacts_frame = self.contactsScrollView.frame()
-                contacts_frame.size.height =  self.contactsScrollView.superview().frame().size.height - self.contactsAdsView.frame().size.height
-                self.contactsScrollView.setFrame_(contacts_frame)
-
     def windowWillResize_toSize_(self, sender, size):
         if size.height == 157:
             size.height = 154
@@ -1925,8 +1861,6 @@ class ContactWindowController(NSWindowController):
                 frame.size.height = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - self.searchOutlineTopOffset
                 self.searchOutline.enclosingScrollView().setFrame_(frame)
 
-        #self.refreshAdsLayout()
-
     def drawerDidOpen_(self, notification):
         windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
         if self.collapsedState:
@@ -1938,9 +1872,6 @@ class ContactWindowController(NSWindowController):
         if self.collapsedState:
             self.window().zoom_(None)
             self.setCollapsed(True)
-
-        #self.toggleAudioAdsView()
-        #self.toggleContactsAdsView()
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
