@@ -1090,8 +1090,7 @@ class CustomListModel(NSObject):
                 source.delegate.transferSession(item.uri)
             else:
                 row = table.rowForItem_(item)
-                frame = table.frameOfOutlineCellAtRow_(row)
-                point = frame.origin
+                point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                                                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                 table.window().graphicsContext(), 0, 1, 0)
@@ -1104,7 +1103,7 @@ class CustomListModel(NSObject):
                     titem.setTarget_(self)
                     titem.setRepresentedObject_({'source': source, 'destination': uri.uri})
 
-                NSMenu.popUpContextMenu_withEvent_forView_(transfer_menu, event, self.contactsWindowController.contactOutline)
+                NSMenu.popUpContextMenu_withEvent_forView_(transfer_menu, event, table)
 
             return True
         else:
