@@ -155,7 +155,7 @@ class BlinkContact(NSObject):
         self.detail = NSString.stringWithString_(uri)
         self.icon = icon
         self._preferred_media = 'audio'
-        self.setUsernameAndDomain()
+        self._set_username_and_domain()
 
     @property
     def aliases(self):
@@ -174,7 +174,7 @@ class BlinkContact(NSObject):
         self.nc = None
         super(BlinkContact, self).dealloc()
 
-    def setUsernameAndDomain(self):
+    def _set_username_and_domain(self):
         # save username and domain to speed up name lookups in the contacts list
         uri_string = self.uri
         if '@' in uri_string:
@@ -340,7 +340,7 @@ class BlinkPresenceContact(BlinkContact):
         self.detail = NSString.stringWithString_(self.uri)
         self.icon = loadContactIcon(self.contact) or loadContactIconFromFile(self.uri)
         self._preferred_media = self.contact.preferred_media or 'audio'
-        self.setUsernameAndDomain()
+        self._set_username_and_domain()
 
         # presence related attributes
         self.presence_indicator = 'unknown'
@@ -430,8 +430,7 @@ class BonjourBlinkContact(BlinkContact):
         self.supported_media = []
 
         self._preferred_media = 'audio'
-
-        self.setUsernameAndDomain()
+        self._set_username_and_domain()
 
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
@@ -543,7 +542,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
         idata = ab_contact.imageData()
         self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
         self._preferred_media = 'audio'
-        self.setUsernameAndDomain()
+        self._set_username_and_domain()
 
 
 class BlinkGroup(NSObject):
