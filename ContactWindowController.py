@@ -1134,26 +1134,22 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def mergeContacts_(self, sender):
-        source = sender.representedObject()['source']
-        destination = sender.representedObject()['destination']
+        source, destination = sender.representedObject()
         try:
             type = (uri.type for uri in source.uris if uri.uri == source.uri).next()
         except StopIteration:
-            pass
-
-        type = format_uri_type(type)
-
+            type = None
+        else:
+            type = format_uri_type(type)
         destination.contact.uris.add(ContactURI(uri=source.uri, type=type))
         destination.contact.save()
 
     @objc.IBAction
     def removeContactFromGroup_(self, sender):
-        for contact in self.getSelectedContacts() or ():
-            contact = sender.representedObject()[0]
-            group = sender.representedObject()[1]
-            self.model.removeContactFromGroups(contact, [group])
-            self.refreshContactsList()
-            self.searchContacts()
+        contact, group = sender.representedObject()
+        self.model.removeContactFromGroups(contact, [group])
+        self.refreshContactsList()
+        self.searchContacts()
 
     @objc.IBAction
     def toogleExpand_(self, sender):
@@ -1176,32 +1172,24 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def deleteContact_(self, sender):
-        for contact in self.getSelectedContacts() or ():
-            if isinstance(contact, BlinkContact):
-                self.model.deleteContact(contact)
-            else:
-                self.model.deleteGroup(contact)
-            self.refreshContactsList()
-            self.searchContacts()
+        contact = sender.representedObject()
+        self.model.deleteContact(contact)
+        self.refreshContactsList()
+        self.searchContacts()
 
     @objc.IBAction
     def renameGroup_(self, sender):
-        row = self.contactOutline.selectedRow()
-        if row >= 0:
-            item = self.contactOutline.itemAtRow_(row)
-            group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
-            self.model.editGroup(group)
-            self.refreshContactsList()
-            self.searchContacts()
+        group = sender.representedObject()
+        self.model.editGroup(group)
+        self.refreshContactsList()
+        self.searchContacts()
 
     @objc.IBAction
     def deleteGroup_(self, sender):
-        row = self.contactOutline.selectedRow()
-        if row >= 0:
-            item = self.contactOutline.itemAtRow_(row)
-            group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
-            self.model.deleteGroup(group)
-            self.refreshContactsList()
+        group = sender.representedObject()
+        self.model.deleteGroup(group)
+        self.refreshContactsList()
+        self.searchContacts()
 
     @objc.IBAction
     def silentClicked_(self, sender):
@@ -2824,6 +2812,7 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
             else:
+                # Contact has a single URI
                 self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
                     if has_full_sip_uri:
@@ -2856,27 +2845,27 @@ class ContactWindowController(NSWindowController):
                     mitem.setTag_(2)
                     mitem.setEnabled_(has_full_sip_uri)
 
-            if type(item) == BlinkPresenceContact:
+            if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.auto_answer else NSOffState)
-
-            settings = SIPSimpleSettings()
-            if settings.contacts.enable_favorites_group and isinstance(item, BlinkPresenceContact):
+                settings = SIPSimpleSettings()
+                if settings.contacts.enable_favorites_group:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
+                    mitem.setState_(NSOnState if item.favorite else NSOffState)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
-                mitem.setState_(NSOnState if item.favorite else NSOffState)
-
-            if type(item) == SystemAddressBookBlinkContact:
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
+            elif isinstance(item, SystemAddressBookBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
-            elif type(item) == LdapSearchResultContact:
+            elif isinstance(item, LdapSearchResultContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
@@ -2885,33 +2874,30 @@ class ContactWindowController(NSWindowController):
                     name_submenu = NSMenu.alloc().init()
                     for blink_contact in blink_contacts_with_same_name:
                         name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
-                        name_item.setRepresentedObject_({'source': item, 'destination': blink_contact})
+                        name_item.setRepresentedObject_(item, blink_contact)    # (source, destination)
                     if name_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
-
-            else:
-                if isinstance(item, BlinkPresenceContact):
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-
-                elif not self.hasContactMatchingURI(item.uri):
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
-                    lastItem.setRepresentedObject_(item)
+            elif not self.hasContactMatchingURI(item.uri):
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem.setRepresentedObject_(item)
 
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:
-                lastItem.setEnabled_(item.editable)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
-            if group and group.remove_contact_allowed:
                 lastItem.setEnabled_(item.deletable)
+                lastItem.setRepresentedObject_(item)
+            if group and group.remove_contact_allowed:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
+                lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_((item, group))
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
+            lastItem.setRepresentedObject_(item)
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
             lastItem.setEnabled_(item.deletable)
+            lastItem.setRepresentedObject_(item)
 
     def menuWillOpen_(self, menu):
         def setupAudioDeviceMenu(menu, tag, devices, option_name, selector):
