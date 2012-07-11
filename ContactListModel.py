@@ -819,7 +819,6 @@ class AddressBookBlinkGroup(BlinkGroup):
 class CustomListModel(NSObject):
     """Contacts List Model behaviour, display and drag an drop actions"""
     groupsList = []
-    expanded_status = {}
     drop_on_contact_index = None
 
     @property
