@@ -575,7 +575,7 @@ class BlinkGroup(NSObject):
         handler(notification)
 
     def sortContacts(self):
-        self.contacts.sort(lambda a,b:cmp(unicode(a.name).lower(), unicode(b.name).lower()))
+        self.contacts.sort(key=lambda item: unicode(getattr(item, 'name')).lower())
 
     def setReference(self):
         if self.type:
