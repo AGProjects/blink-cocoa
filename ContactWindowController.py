@@ -2163,6 +2163,7 @@ class ContactWindowController(NSWindowController):
             self.groupMenu.removeItemAtIndex_(0)
 
         item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Add Contact...', "addContact:", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Add Group...', "addGroup:", "")
         self.groupMenu.addItem_(NSMenuItem.separatorItem())
 
         item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Scroll to:', "", "")
