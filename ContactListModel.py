@@ -1752,7 +1752,7 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
-        self.removeContactFromAllContactsGroup(contact)
+        self.removeContactFromBlinkGroups(contact, [self.favorites_group, self.all_contacts_group, self.no_group])
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookContactDidChange(self, notification):
@@ -1856,7 +1856,7 @@ class ContactListModel(CustomListModel):
                 for contact in group.contacts:
                     blink_contact = BlinkPresenceContact(contact)
                     self.favorites_group.contacts.append(blink_contact)
-                    self.removeContactFromNoGroup(contact)
+                    self.removeContactFromBlinkGroups(contact, [self.no_group])
                 self.favorites_group.sortContacts()
 
         elif group.type is None:
@@ -1869,7 +1869,7 @@ class ContactListModel(CustomListModel):
             for contact in group.contacts:
                 blink_contact = BlinkPresenceContact(contact)
                 blink_group.contacts.append(blink_contact)
-                self.removeContactFromNoGroup(contact)
+                self.removeContactFromBlinkGroups(contact, [self.no_group])
             blink_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -1910,7 +1910,7 @@ class ContactListModel(CustomListModel):
                         blink_contact = BlinkPresenceContact(contact)
                         blink_group.contacts.append(blink_contact)
                         blink_group.sortContacts()
-                        self.removeContactFromNoGroup(contact)
+                        self.removeContactFromBlinkGroups(contact, [self.no_group])
 
                 removed = notification.data.modified['contacts'].removed
                 for contact in removed:
@@ -2044,41 +2044,19 @@ class ContactListModel(CustomListModel):
             self.groupsList.insert(self.bonjour_group.group.position, self.bonjour_group)
             self.saveGroupPosition()
 
-    def removeContactFromAllContactsGroup(self, contact):
-        self.removeContactFromFavoritesGroup(contact)
-        self.removeContactFromNoGroup(contact)
+    def removeContactFromGroups(self, blink_contact, blink_groups):
+        for blink_group in blink_groups:
+            blink_group.group.contacts.remove(blink_contact.contact)
+            blink_group.group.save()
 
-        try:
-            blink_contact = (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.contact.id  == contact.id).next()
-        except StopIteration:
-            pass
-        else:
+    def removeContactFromBlinkGroups(self, contact, groups):
+        for group in groups:
             try:
-                self.all_contacts_group.contacts.remove(blink_contact)
-            except ValueError:
+                blink_contact = next(blink_contact for blink_contact in group.contacts if blink_contact.contact == contact)
+            except StopIteration:
                 pass
-
-    def removeContactFromFavoritesGroup(self, contact):
-        try:
-            blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.contact.id  == contact.id).next()
-        except StopIteration:
-            pass
-        else:
-            try:
-                self.favorites_group.contacts.remove(blink_contact)
-            except ValueError:
-                pass
-
-    def removeContactFromNoGroup(self, contact):
-        try:
-            blink_contact = (blink_contact for blink_contact in self.no_group.contacts if blink_contact.contact.id  == contact.id).next()
-        except StopIteration:
-            pass
-        else:
-            try:
-                self.no_group.contacts.remove(blink_contact)
-            except ValueError:
-                pass
+            else:
+                group.contacts.remove(blink_contact)
 
     def addGroup(self):
         controller = AddGroupController()
@@ -2189,16 +2167,8 @@ class ContactListModel(CustomListModel):
 
             old_groups = set(self.getBlinkGroupsForBlinkContact(item))
             new_groups = set(new_contact['groups'] or [])
-            [self.removeContactFromGroup(item, grp) for grp in old_groups - new_groups]
+            self.removeContactFromGroups(item, old_groups - new_groups)
             self.addGroupsForContact(contact, new_groups)
-
-    def removeContactFromGroup(self, blink_contact, blink_group):
-        try:
-            blink_group.group.contacts.remove(blink_contact.contact)
-        except ValueError:
-            pass
-        else:
-            blink_group.group.save()
 
     def deleteContact(self, blink_contact):
         if not blink_contact.deletable:

@@ -1151,7 +1151,7 @@ class ContactWindowController(NSWindowController):
         for contact in self.getSelectedContacts() or ():
             contact = sender.representedObject()[0]
             group = sender.representedObject()[1]
-            self.model.removeContactFromGroup(contact, group)
+            self.model.removeContactFromGroups(contact, [group])
             self.refreshContactsList()
             self.searchContacts()
 
