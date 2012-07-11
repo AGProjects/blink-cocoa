@@ -140,7 +140,6 @@ class BlinkContact(NSObject):
     """Basic Contact representation in Blink UI"""
     editable = True
     deletable = True
-    favorite = False
     auto_answer = False
     nc = NotificationCenter()
 
@@ -150,7 +149,6 @@ class BlinkContact(NSObject):
     def __init__(self, uri, uri_type=None, name=None, icon=None):
         self.id = None
         self.contact = None
-        self.favorite = False
         self.uri = uri
         self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
         self.name = NSString.stringWithString_(name or uri)
@@ -166,6 +164,10 @@ class BlinkContact(NSObject):
     @property
     def model(self):
         return NSApp.delegate().contactsWindowController.model
+
+    @property
+    def favorite(self):
+        return False
 
     def dealloc(self):
         self.icon = None
@@ -282,9 +284,6 @@ class BlinkContact(NSObject):
     def setPreferredMedia(self, media):
         self._preferred_media = media
 
-    def setFavorite(self, favorite):
-        self.favorite = favorite
-
     def setAutoAnswer(self, value):
         self.auto_answer = value
 
@@ -327,7 +326,6 @@ class BlinkPresenceContact(BlinkContact):
     def __init__(self, contact):
         self.id = contact.id
         self.contact = contact
-        self.favorite = self.contact.favorite
         self.uris = self.contact.uris
         if self.contact.default_uri:
             self.uri = self.contact.default_uri
@@ -353,6 +351,20 @@ class BlinkPresenceContact(BlinkContact):
         self.name = NSString.stringWithString_(self.contact.name or self.uri)
         self.detail = NSString.stringWithString_(self.uri)
 
+    def _get_favorite(self):
+        favorite_group = self.model.favorites_group.group
+        return self.contact.id in favorite_group.contacts
+    def _set_favorite(self, favorite):
+        group = self.model.favorites_group.group
+        operation = group.contacts.add if favorite else group.contacts.remove
+        try:
+            operation(self.contact)
+        except ValueError:
+            pass
+        else:
+            group.save()
+    favorite = property(_get_favorite, _set_favorite)
+    del _get_favorite, _set_favorite
 
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
@@ -368,11 +380,6 @@ class BlinkPresenceContact(BlinkContact):
 
     def setIcon(self, icon=None):
         self.icon = icon
-
-    def setFavorite(self, favorite):
-        self.favorite = favorite
-        self.contact.favorite = favorite
-        self.contact.save()
 
     def saveIcon(self):
         if self.icon:
@@ -401,23 +408,6 @@ class BlinkPresenceContact(BlinkContact):
 class HistoryBlinkContact(BlinkContact):
     """Contact representation for history drawer"""
     editable = False
-    deletable = False
-
-
-class FavoriteBlinkContact(BlinkPresenceContact):
-    """Contact representation for a Favorite contact"""
-    editable = True
-    deletable = True
-
-    def setFavorite(self, favorite):
-        self.favorite = favorite
-        if favorite is False:
-            self.nc.post_notification("FavoriteContactWasRemoved", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now()))
-
-
-class ABFavoriteBlinkContact(FavoriteBlinkContact):
-    """Contact representation for an AB Favorite contact"""
-    editable = True
     deletable = False
 
 
@@ -554,12 +544,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
         self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
         self._preferred_media = 'audio'
         self.setUsernameAndDomain()
-        if self.id in self.model.addressbook_group.favorites:
-            self.setFavorite(True)
-
-    def setFavorite(self, favorite):
-        self.favorite = favorite
-        self.nc.post_notification("SystemAddressBookFavoriteWasChanged", sender=self, data=TimestampedNotificationData(timestamp=datetime.datetime.now(), favorite=favorite))
 
 
 class BlinkGroup(NSObject):
@@ -578,10 +562,9 @@ class BlinkGroup(NSObject):
         return cls.alloc().init()
 
     def __init__(self, name=None, group=None):
+        self.name = NSString.stringWithString_(name)
         self.group = group
         self.contacts = []
-        self.name = NSString.stringWithString_(name)
-        self.sortContacts()
 
     def copyWithZone_(self, zone):
         return self
@@ -613,45 +596,43 @@ class BlinkGroup(NSObject):
 class BonjourBlinkGroup(BlinkGroup):
     """Group representation for Bonjour Neigborhood"""
     type = 'bonjour'
-    ignore_search = False
     deletable = False
-    remove_contact_allowed = False
+    ignore_search = False
+
     add_contact_allowed = False
+    remove_contact_allowed = False
     delete_contact_allowed = False
-    contacts = []
-    not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
 
     def __init__(self, name=u'Bonjour Neighbours'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(BonjourBlinkGroup, self).__init__(name)
+        self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
 
 
 class NoBlinkGroup(BlinkGroup):
     type = 'no_group'
     deletable = False
-    remove_contact_allowed = False
+    ignore_search = True
+
     add_contact_allowed = False
+    remove_contact_allowed = False
     delete_contact_allowed = True
-    contacts = []
 
     def __init__(self, name=u'No Group'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(NoBlinkGroup, self).__init__(name)
 
 
 class AllContactsBlinkGroup(BlinkGroup):
     """Group representation for all contacts"""
     type = 'all_contacts'
-    remove_contact_allowed = False
-    delete_contact_allowed = True
-    add_contact_allowed = False
     deletable = False
-    contacts = []
     ignore_search = False
 
+    add_contact_allowed = False
+    remove_contact_allowed = False
+    delete_contact_allowed = True
+
     def __init__(self, name=u'All Contacts'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(AllContactsBlinkGroup, self).__init__(name)
 
     def setReference(self):
         addressbook_manager = AddressbookManager()
@@ -671,26 +652,25 @@ class FavoritesBlinkGroup(BlinkGroup):
     """Group representation for Favorites"""
     type = 'favorites'
     deletable = True
-    contacts = []
-    favorites = []
     ignore_search = True
+
     add_contact_allowed = True
     remove_contact_allowed = True
     delete_contact_allowed = True
 
     def __init__(self, name=u'Favorites'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(FavoritesBlinkGroup, self).__init__(name)
 
 
 class HistoryBlinkGroup(BlinkGroup):
     """Group representation for missed, incoming and outgoing calls dynamic groups"""
     type = 'history'
     deletable = False
+    ignore_search = True
+
     add_contact_allowed = False
     remove_contact_allowed = False
     delete_contact_allowed = False
-    contacts = []
 
     def startTimer(self):
         # contacts are not yet loaded when building this group so we cannot lookup contacts just yet
@@ -767,8 +747,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
     type = 'missed'
 
     def __init__(self, name=u'Missed Calls'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(MissedCallsBlinkGroup, self).__init__(name)
         self.startTimer()
 
     def get_history_entries(self):
@@ -779,8 +758,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'outgoing'
 
     def __init__(self, name=u'Outgoing Calls'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(OutgoingCallsBlinkGroup, self).__init__(name)
         self.startTimer()
 
     def get_history_entries(self):
@@ -791,8 +769,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'incoming'
 
     def __init__(self, name=u'Incoming Calls'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
+        super(IncomingCallsBlinkGroup, self).__init__(name)
         self.startTimer()
 
     def get_history_entries(self):
@@ -803,57 +780,16 @@ class AddressBookBlinkGroup(BlinkGroup):
     """Address Book Group representation in Blink UI"""
     type = 'addressbook'
     deletable = False
+    ignore_search = False
+
     add_contact_allowed = False
     remove_contact_allowed = False
     delete_contact_allowed = False
-    ignore_search = False
-    favorites = []
 
     def __init__(self, name=u'Address Book'):
-        self.name = NSString.stringWithString_(name)
-        self.group = None
-
-        self.favorites_storage_path = ApplicationData.get('addressbook_favorite_contacts_')
-        makedirs(os.path.dirname(self.favorites_storage_path))
-        self.nc.add_observer(self, name="SystemAddressBookFavoriteWasChanged")
-
-    def _NH_SystemAddressBookFavoriteWasChanged(self, notification):
-        if notification.data.favorite:
-            self.add_favorite(notification.sender.id)
-        else:
-            self.remove_favorite(notification.sender.id)
-
-    def load_favorites(self):
-        try:
-            with open(self.favorites_storage_path, 'r') as f:
-                data = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
-            return
-
-        try:
-            self.favorites = data['favorites']
-        except (TypeError, KeyError):
-            pass
-
-    def add_favorite(self, id):
-        if id not in self.favorites:
-            self.favorites.append(id)
-            try:
-                cPickle.dump({"favorites": self.favorites}, open(self.favorites_storage_path, "w+"))
-            except (IOError, cPickle.PicklingError):
-                pass
-
-    def remove_favorite(self, id):
-        if id in self.favorites:
-            self.favorites.remove(id)
-            try:
-                cPickle.dump({"favorites": self.favorites}, open(self.favorites_storage_path, "w+"))
-            except (IOError, cPickle.PicklingError):
-                pass
+        super(AddressBookBlinkGroup, self).__init__(name)
 
     def loadAddressBook(self):
-        self.load_favorites()
-
         self.contacts = []
 
         book = AddressBook.ABAddressBook.sharedAddressBook()
@@ -1002,9 +938,6 @@ class CustomListModel(NSObject):
                 sourceGroup = self.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
 
-                if isinstance(sourceGroup, FavoritesBlinkGroup):
-                    return NSDragOperationNone
-
                 if isinstance(sourceGroup, BonjourBlinkGroup):
                     return NSDragOperationNone
 
@@ -1024,7 +957,7 @@ class CustomListModel(NSObject):
                         if sourceContact.favorite:
                             return NSDragOperationNone
                         else:
-                            return NSDragOperationMove
+                            return NSDragOperationCopy
 
                     if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
@@ -1051,7 +984,7 @@ class CustomListModel(NSObject):
                         if sourceContact.favorite:
                             return NSDragOperationNone
                         else:
-                            return NSDragOperationMove
+                            return NSDragOperationCopy
 
                     if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
@@ -1128,10 +1061,6 @@ class CustomListModel(NSObject):
                 if isinstance(item, BlinkGroup):
                     targetGroup = item
 
-                    if isinstance(targetGroup, FavoritesBlinkGroup) and not sourceContact.favorite:
-                        sourceContact.setFavorite(True)
-                        return
-
                     if isinstance(sourceContact, SystemAddressBookBlinkContact) or isinstance(sourceGroup, HistoryBlinkGroup):
                         try:
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
@@ -1145,7 +1074,7 @@ class CustomListModel(NSObject):
                         targetGroup.group.contacts.add(sourceContact.contact)
                         targetGroup.group.save()
 
-                        if sourceGroup.remove_contact_allowed and not  isinstance(targetGroup, FavoritesBlinkGroup):
+                        if not isinstance(targetGroup, FavoritesBlinkGroup) and sourceGroup.remove_contact_allowed:
                             sourceGroup.group.contacts.remove(sourceContact.contact)
                             sourceGroup.group.save()
 
@@ -1192,10 +1121,6 @@ class CustomListModel(NSObject):
                             uri_type = None
                         self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
                         return
-
-                    if isinstance(targetGroup, FavoritesBlinkGroup) and not sourceContact.favorite:
-                        sourceContact.setFavorite(True)
-                        return True
 
                     targetGroup.group.contacts.add(sourceContact.contact)
                     targetGroup.group.save()
@@ -1285,8 +1210,6 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="SIPApplicationDidStart")
         self.nc.add_observer(self, name="SIPApplicationWillEnd")
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
-        self.nc.add_observer(self, name="SystemAddressBookFavoriteWasChanged")
-        self.nc.add_observer(self, name="FavoriteContactWasRemoved")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -1614,8 +1537,7 @@ class ContactListModel(CustomListModel):
 
         if notification.data.modified.has_key("contacts.enable_favorites_group"):
             if settings.contacts.enable_favorites_group and self.favorites_group not in self.groupsList:
-                position = 0
-                self.groupsList.insert(position, self.favorites_group)
+                self.groupsList.insert(0, self.favorites_group)
                 self.saveGroupPosition()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
             elif not settings.contacts.enable_favorites_group and self.favorites_group in self.groupsList:
@@ -1827,10 +1749,6 @@ class ContactListModel(CustomListModel):
             self.no_group.contacts.append(blink_contact)
             self.no_group.sortContacts()
 
-        if contact.favorite is True:
-            blink_contact = FavoriteBlinkContact(contact)
-            self.favorites_group.contacts.append(blink_contact)
-            self.favorites_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookContactWasDeleted(self, notification):
@@ -1841,69 +1759,20 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
 
-        for blink_group in self.groupsList:
-            try:
-                blink_contact = (blink_contact for blink_contact in blink_group.contacts if blink_contact.contact.id == contact.id).next()
-            except StopIteration:
-                pass
-            except AttributeError:
-                continue
-            else:
-                blink_contact.setPreferredMedia(contact.preferred_media)
-                if 'icon' in notification.data.modified:
-                    blink_contact.setIcon(loadContactIcon(contact))
-                    if contact.favorite:
-                        try:
-                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()
-                        except StopIteration:
-                            pass
-                        else:
-                            favorite_contact.setIcon(loadContactIcon(contact))
+        for blink_contact in (blink_contact for blink_group in self.groupsList for blink_contact in blink_group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact == contact):
+            if 'icon' in notification.data.modified:
+                blink_contact.setIcon(loadContactIcon(contact))
 
-                if 'uris' in notification.data.modified:
-                    blink_contact.setURIs(contact.uris)
+            if 'uris' in notification.data.modified:
+                blink_contact.setURIs(contact.uris)
 
-                if 'name' in notification.data.modified or 'default_uri' in notification.data.modified:
-                    blink_contact.setURI(contact.default_uri)
-                    blink_contact.setDetail(contact.default_uri)
-                    blink_contact.setName(contact.name or contact.uri)
-                    for g in list(group for group in self.groupsList):
-                        g.sortContacts()
-
-                    if contact.favorite:
-                        try:
-                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()
-                        except StopIteration:
-                            pass
-                        else:
-                            favorite_contact.setName(contact.name or contact.uri)
-                            favorite_contact.setURI(contact.default_uri)
-                            favorite_contact.setDetail(contact.default_uri)
-                            self.favorites_group.sortContacts()
-
-                if 'preferred_media' in notification.data.modified:
-                    if contact.favorite:
-                        try:
-                            favorite_contact = (favorite_contact for favorite_contact in self.favorites_group.contacts if favorite_contact.contact == contact).next()
-                        except StopIteration:
-                            pass
-                        else:
-                            favorite_contact.setPreferredMedia(contact.preferred_media)
-
-                if 'favorite' in notification.data.modified:
-                    blink_contact.favorite = contact.favorite
-                    if contact.favorite:
-                        try:
-                            blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.contact == contact).next()
-                        except StopIteration:
-                            blink_contact = FavoriteBlinkContact(contact)
-                            blink_contact.setPresenceIndicator("unknown")
-                            self.favorites_group.contacts.append(blink_contact)
-                            self.favorites_group.sortContacts()
-                    else:
-                        self.removeContactFromFavoritesGroup(contact)
+            if 'name' in notification.data.modified or 'default_uri' in notification.data.modified:
+                blink_contact.setURI(contact.default_uri)
+                blink_contact.setDetail(contact.default_uri)
+                blink_contact.setName(contact.name or contact.uri)
 
 
+        [g.sortContacts() for g in self.groupsList]
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookGroupWasActivated(self, notification):
@@ -1985,6 +1854,11 @@ class ContactListModel(CustomListModel):
                     group.position = position
                     group.save()
                 self.groupsList.insert(index, self.favorites_group)
+                for contact in group.contacts:
+                    blink_contact = BlinkPresenceContact(contact)
+                    self.favorites_group.contacts.append(blink_contact)
+                    self.removeContactFromNoGroup(contact)
+                self.favorites_group.sortContacts()
 
         elif group.type is None:
             if not group.position:
@@ -1997,7 +1871,6 @@ class ContactListModel(CustomListModel):
                 blink_contact = BlinkPresenceContact(contact)
                 blink_group.contacts.append(blink_contact)
                 self.removeContactFromNoGroup(contact)
-
             blink_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -2062,36 +1935,6 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookGroupWasCreated(self, notification):
         self.saveGroupPosition()
-
-    def _NH_SystemAddressBookFavoriteWasChanged(self, notification):
-        contact = notification.sender
-        if notification.data.favorite:
-            try:
-                blink_contact = (blink_contact for blink_contact in self.favorites_group.contacts if blink_contact.id == contact.id).next()
-            except StopIteration:
-                blink_contact = ABFavoriteBlinkContact(contact)
-                self.favorites_group.contacts.append(blink_contact)
-                self.favorites_group.sortContacts()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        else:
-            self.removeContactFromFavoritesGroup(contact)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-
-    def _NH_FavoriteContactWasRemoved(self, notification):
-        contact = notification.sender
-        if type(contact) == FavoriteBlinkContact:
-            contact.contact.favorite = False
-            contact.contact.save()
-        elif type(contact) == ABFavoriteBlinkContact:
-            self.removeContactFromFavoritesGroup(contact)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-
-            try:
-                ab_contact = (ab_contact for ab_contact in self.addressbook_group.contacts if ab_contact.id == contact.contact.id).next()
-            except StopIteration:
-                pass
-            else:
-                ab_contact.setFavorite(False)
 
     def isBlinkContactInBlinkGroups(self, contact, group):
         if not isinstance(contact, BlinkPresenceContact):
@@ -2258,7 +2101,7 @@ class ContactListModel(CustomListModel):
         blink_group.group.save()
 
     def addGroupsForContact(self, contact, groups):
-        for grp in (grp for grp in groups if not isinstance(grp, FavoritesBlinkGroup)):
+        for grp in groups:
             try:
                 group = next(g.group for g in self.groupsList if g == grp and g.add_contact_allowed)
             except StopIteration:
@@ -2279,35 +2122,29 @@ class ContactListModel(CustomListModel):
         controller = AddContactController(uri=address, name=name, type=type)
         new_contact = controller.runModal()
 
-        if new_contact:
-            addressbook_manager = AddressbookManager()
-            with addressbook_manager.transaction():
-                contact = Contact()
-                contact.name = new_contact['name']
-                contact.default_uri = new_contact['default_uri']
-                contact.uris = new_contact['uris']
-                contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
-                icon = new_contact['icon']
-                if icon is None:
-                    contact.icon = None
-                    saveContactIconToFile(None, contact.default_uri)
-                else:
-                    contact.icon = base64Icon(icon)
-                contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-                contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
-                contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
-                contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+        if not new_contact:
+            return False
 
-                if self.favorites_group in new_contact['groups']:
-                    contact.favorite = True
-
-                contact.save()
-
-                if new_contact['groups']:
-                    self.addGroupsForContact(contact, new_contact['groups'])
-
-            return True
-        return False
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            contact = Contact()
+            contact.name = new_contact['name']
+            contact.default_uri = new_contact['default_uri']
+            contact.uris = new_contact['uris']
+            contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
+            icon = new_contact['icon']
+            if icon is None:
+                contact.icon = None
+                saveContactIconToFile(None, contact.default_uri)
+            else:
+                contact.icon = base64Icon(icon)
+            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
+            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
+            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+            contact.save()
+            self.addGroupsForContact(contact, new_contact['groups'] or [])
+        return True
 
     def editContact(self, item):
         if not item:
@@ -2317,7 +2154,7 @@ class ContactListModel(CustomListModel):
             self.editGroup(item)
             return
 
-        if isinstance(item, (SystemAddressBookBlinkContact, ABFavoriteBlinkContact)):
+        if isinstance(item, SystemAddressBookBlinkContact):
             url = "addressbook://"+item.id
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             return
@@ -2327,54 +2164,40 @@ class ContactListModel(CustomListModel):
 
         controller = EditContactController(item)
         new_contact = controller.runModal()
-
-        if new_contact:
-            addressbook_manager = AddressbookManager()
-            with addressbook_manager.transaction():
-                contact = item.contact
-                contact.name = new_contact['name']
-                contact.default_uri = new_contact['default_uri']
-                contact.uris = new_contact['uris']
-                contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
-                icon = new_contact['icon']
-                if icon is None:
-                    contact.icon = None
-                    saveContactIconToFile(None, contact.default_uri)
-                else:
-                    contact.icon = base64Icon(icon)
-
-                contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-                contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
-                contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
-                contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-                belonging_groups = self.getBlinkGroupsForBlinkContact(item)
-                for blink_group in belonging_groups:
-                    if not new_contact['groups'] or blink_group not in new_contact['groups']:
-                        if type(blink_group) == FavoritesBlinkGroup:
-                            contact.favorite = False
-                        else:
-                            try:
-                                blink_group.group.contacts.remove(item.contact)
-                                blink_group.group.save()
-                            except ValueError:
-                                pass
-
-                if self.favorites_group in new_contact['groups']:
-                    contact.favorite = True
-
-                contact.save()
-                self.addGroupsForContact(contact, new_contact['groups'])
-
-    def removeContactFromGroup(self, blink_contact, blink_group):
-        if isinstance(blink_group, FavoritesBlinkGroup):
-            blink_contact.setFavorite(False)
+        if not new_contact:
             return
 
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            contact = item.contact
+            contact.name = new_contact['name']
+            contact.default_uri = new_contact['default_uri']
+            contact.uris = new_contact['uris']
+            contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
+            icon = new_contact['icon']
+            if icon is None:
+                contact.icon = None
+                saveContactIconToFile(None, contact.default_uri)
+            else:
+                contact.icon = base64Icon(icon)
+            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
+            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
+            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+            contact.save()
+
+            old_groups = set(self.getBlinkGroupsForBlinkContact(item))
+            new_groups = set(new_contact['groups'] or [])
+            [self.removeContactFromGroup(item, grp) for grp in old_groups - new_groups]
+            self.addGroupsForContact(contact, new_groups)
+
+    def removeContactFromGroup(self, blink_contact, blink_group):
         try:
             blink_group.group.contacts.remove(blink_contact.contact)
-            blink_group.group.save()
         except ValueError:
             pass
+        else:
+            blink_group.group.save()
 
     def deleteContact(self, blink_contact):
         if not blink_contact.deletable:
