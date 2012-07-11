@@ -1135,13 +1135,8 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def mergeContacts_(self, sender):
         source, destination = sender.representedObject()
-        try:
-            type = (uri.type for uri in source.uris if uri.uri == source.uri).next()
-        except StopIteration:
-            type = None
-        else:
-            type = format_uri_type(type)
-        destination.contact.uris.add(ContactURI(uri=source.uri, type=type))
+        for uri in source.uris:
+            destination.contact.uris.add(ContactURI(uri=uri.uri, type=format_uri_type(uri.type)))
         destination.contact.save()
 
     @objc.IBAction
