@@ -2908,7 +2908,7 @@ class ContactWindowController(NSWindowController):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
                 lastItem.setRepresentedObject_((item, group))
         elif isinstance(item, BlinkGroup):
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "editContact:", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
             lastItem.setEnabled_(item.deletable)
 

@@ -2075,7 +2075,6 @@ class ContactListModel(CustomListModel):
         name = controller.runModalForRename_(blink_group.name)
         if not name or name == blink_group.name:
             return
-
         blink_group.group.name = name
         blink_group.group.save()
 
@@ -2127,10 +2126,6 @@ class ContactListModel(CustomListModel):
 
     def editContact(self, item):
         if not item:
-            return
-
-        if isinstance(item, BlinkGroup):
-            self.editGroup(item)
             return
 
         if isinstance(item, SystemAddressBookBlinkContact):
