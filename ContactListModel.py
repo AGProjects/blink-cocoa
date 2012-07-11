@@ -1988,47 +1988,49 @@ class ContactListModel(CustomListModel):
     def createInitialGroupAndContacts(self):
         BlinkLogger().log_info(u"Creating initial contacts...")
 
-        group = Group(id='test')
-        group.name = 'Test'
-        group.expanded = True
-        group.position = None
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            group = Group(id='test')
+            group.name = 'Test'
+            group.expanded = True
+            group.position = None
 
-        test_contacts = {
-                         "200901@login.zipdx.com":       { 'name': "VUC http://vuc.me", 'preferred_media': "audio", 'id': 'test_zipdx' },
-                         "3333@sip2sip.info":            { 'name': "Call Test",         'preferred_media': "audio", 'id': 'test_audio' },
-                         "4444@sip2sip.info":            { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
-                         "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
-                         }
+            test_contacts = {
+                            "200901@login.zipdx.com":       { 'name': "VUC http://vuc.me", 'preferred_media': "audio", 'id': 'test_zipdx' },
+                            "3333@sip2sip.info":            { 'name': "Call Test",         'preferred_media': "audio", 'id': 'test_audio' },
+                            "4444@sip2sip.info":            { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
+                            "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
+                            }
 
-        for uri in test_contacts.keys():
-            icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
-            path = ApplicationData.get('photos/%s.tiff' % uri)
-            NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
+            for uri in test_contacts.keys():
+                icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
+                path = ApplicationData.get('photos/%s.tiff' % uri)
+                NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
 
-            contact = Contact(id=test_contacts[uri]['id'])
-            contact.default_uri=uri
-            contact.uris.add(ContactURI(uri=uri, type='SIP'))
-            contact.name = test_contacts[uri]['name']
-            contact.preferred_media = test_contacts[uri]['preferred_media']
-            contact.save()
-            group.contacts.add(contact)
+                contact = Contact(id=test_contacts[uri]['id'])
+                contact.default_uri=uri
+                contact.uris.add(ContactURI(uri=uri, type='SIP'))
+                contact.name = test_contacts[uri]['name']
+                contact.preferred_media = test_contacts[uri]['preferred_media']
+                contact.save()
+                group.contacts.add(contact)
 
-        group.save()
+            group.save()
 
-        group = Group()
-        group.name = 'Business'
-        group.expanded = True
-        group.save()
+            group = Group()
+            group.name = 'Business'
+            group.expanded = True
+            group.save()
 
-        group = Group()
-        group.name = 'Family'
-        group.expanded = True
-        group.save()
+            group = Group()
+            group.name = 'Family'
+            group.expanded = True
+            group.save()
 
-        group = Group()
-        group.name = 'Friends'
-        group.expanded = True
-        group.save()
+            group = Group()
+            group.name = 'Friends'
+            group.expanded = True
+            group.save()
 
 
     def moveBonjourGroupFirst(self):
