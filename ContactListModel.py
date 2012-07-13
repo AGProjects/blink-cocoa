@@ -1781,6 +1781,7 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
         settings = SIPSimpleSettings()
+        is_lite = NSApp.delegate().applicationName == 'Blink Lite'
 
         positions = [g.position for g in AddressbookManager().get_groups() if g.position is not None and g.type != 'bonjour']
         positions.sort()
@@ -1814,7 +1815,7 @@ class ContactListModel(CustomListModel):
 
         elif group.type == "missed":
             self.missed_calls_group.name = group.name
-            if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_missed_calls_group:
+            if not is_lite and settings.contacts.enable_missed_calls_group:
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1824,7 +1825,7 @@ class ContactListModel(CustomListModel):
 
         elif group.type == "outgoing":
             self.outgoing_calls_group.name = group.name
-            if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_outgoing_calls_group:
+            if not is_lite and settings.contacts.enable_outgoing_calls_group:
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1834,7 +1835,7 @@ class ContactListModel(CustomListModel):
 
         elif group.type == "incoming":
             self.incoming_calls_group.name = group.name
-            if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_incoming_calls_group:
+            if not is_lite and settings.contacts.enable_incoming_calls_group:
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1844,7 +1845,7 @@ class ContactListModel(CustomListModel):
 
         elif group.type == "favorites":
             self.favorites_group.name = group.name
-            if NSApp.delegate().applicationName != 'Blink Lite' and settings.contacts.enable_favorites_group:
+            if not is_lite and settings.contacts.enable_favorites_group:
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1943,25 +1944,8 @@ class ContactListModel(CustomListModel):
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
 
-    def getBlinkGroupsForBlinkContact(self, contact):
-        found_groups = []
-        all_blink_groups = (blink_group for blink_group in self.groupsList if blink_group.add_contact_allowed)
-        for blink_group in all_blink_groups:
-            for blink_contact in blink_group.contacts:
-                if blink_contact.contact.id == contact.contact.id:
-                    found_groups.append(blink_group)
-                    break
-        return found_groups
-
-    def getGroupsForContact(self, search_contact):
-        found_groups = []
-        all_groups = (group for group in AddressbookManager.get_groups() if blink_group.type is None)
-        for group in all_groups:
-            for contact in group.contacts:
-                if contact.contact.id == search_contact.id:
-                    found_groups.append(group)
-                    break
-        return found_groups
+    def getBlinkGroupsForBlinkContact(self, blink_contact):
+        return [group for group in self.groupsList if group.add_contact_allowed and blink_contact in group.contacts]
 
     def saveGroupPosition(self):
         # save group expansion and position
@@ -2059,8 +2043,8 @@ class ContactListModel(CustomListModel):
 
         group = Group()
         group.name = name
-        group.expanded=True
-        group.position=len(self.groupsList)-1 if self.groupsList else 0
+        group.expanded = True
+        group.position = max(len(self.groupsList)-1, 0)
         group.save()
 
     def editGroup(self, blink_group):
