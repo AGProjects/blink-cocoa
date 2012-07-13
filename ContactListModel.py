@@ -1895,17 +1895,6 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookGroupWasCreated(self, notification):
         self.saveGroupPosition()
 
-    def isBlinkContactInBlinkGroups(self, contact, group):
-        if not isinstance(contact, BlinkPresenceContact):
-            return False
-        for blink_contact in group.contacts:
-            if blink_contact.contact is None:
-                return False
-            if blink_contact.contact.id == contact.contact.id:
-                return True
-        else:
-            return False
-
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
 
