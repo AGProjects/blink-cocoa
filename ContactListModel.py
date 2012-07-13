@@ -892,7 +892,7 @@ class CustomListModel(NSObject):
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_item, index):
         self.drop_on_contact_index = None
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or not hasattr(proposed_item, "supported_media"):
+            if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, (BlinkPresenceContact, BonjourBlinkContact)):
                 return NSDragOperationNone
 
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
@@ -1000,7 +1000,7 @@ class CustomListModel(NSObject):
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or not hasattr(item, "supported_media"):
+            if index != NSOutlineViewDropOnItemIndex or not isinstance(item, (BlinkPresenceContact, BonjourBlinkContact)):
                 return False
 
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
