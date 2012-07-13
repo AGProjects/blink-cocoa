@@ -894,7 +894,6 @@ class CustomListModel(NSObject):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, (BlinkPresenceContact, BonjourBlinkContact)):
                 return NSDragOperationNone
-
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
             if not all(os.path.isfile(f) for f in fnames):
                 return NSDragOperationNone
@@ -1708,11 +1707,9 @@ class ContactListModel(CustomListModel):
         self.presence_contacts.append(blink_contact)
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
-
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
             self.no_group.contacts.append(blink_contact)
             self.no_group.sortContacts()
-
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookContactWasDeleted(self, notification):
@@ -1994,7 +1991,6 @@ class ContactListModel(CustomListModel):
         name = controller.runModal()
         if not name:
             return
-
         group = Group()
         group.name = name
         group.expanded = True
@@ -2108,3 +2104,4 @@ class ContactListModel(CustomListModel):
             if blink_group.deletable:
                 blink_group.group.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+
