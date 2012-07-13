@@ -1992,7 +1992,7 @@ class ContactListModel(CustomListModel):
     def addGroup(self):
         controller = AddGroupController()
         name = controller.runModal()
-        if not name or name in (blink_group.name for blink_group in self.groupsList):
+        if not name:
             return
 
         group = Group()
