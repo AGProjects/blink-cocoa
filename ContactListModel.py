@@ -2010,19 +2010,10 @@ class ContactListModel(CustomListModel):
         blink_group.group.save()
 
     def addGroupsForContact(self, contact, groups):
-        for grp in groups:
-            try:
-                group = next(g.group for g in self.groupsList if g == grp and g.add_contact_allowed)
-            except StopIteration:
-                # insert after last editable group
-                for index, g in enumerate(self.groupsList):
-                    if not g.add_contact_allowed:
-                        break
-                group = Group()
-                group.name = grp
-                group.position = index
-            group.contacts.add(contact)
-            group.save()
+        # Always call this with a transaction
+        for blink_group in groups:
+            blink_group.group.contacts.add(contact)
+            blink_group.group.save()
 
     def addContact(self, address="", group=None, name=None, type=None):
         if isinstance(address, SIPURI):
