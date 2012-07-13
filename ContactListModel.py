@@ -925,7 +925,7 @@ class CustomListModel(NSObject):
 
                 try:
                     i = self.groupsList.index(proposed_item)
-                except:
+                except ValueError:
                     i = len(self.groupsList)
                     if group == i-1:
                         return NSDragOperationNone
