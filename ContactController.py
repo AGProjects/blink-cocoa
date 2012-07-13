@@ -301,7 +301,7 @@ class AddContactController(NSObject):
         if column == 0:
             return str(contact_uri.uri)
         elif column == 1:
-            return cell.indexOfItemWithTitle_(contact_uri.type)
+            return cell.indexOfItemWithTitle_(contact_uri.type or u'SIP')
 
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         cell = column.dataCell()
