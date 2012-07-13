@@ -896,9 +896,8 @@ class CustomListModel(NSObject):
                 return NSDragOperationNone
 
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
-            for f in fnames:
-                if not os.path.isfile(f):
-                    return NSDragOperationNone
+            if not all(os.path.isfile(f) for f in fnames):
+                return NSDragOperationNone
             return NSDragOperationCopy
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
             source = info.draggingSource()
