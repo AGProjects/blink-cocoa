@@ -917,6 +917,7 @@ class CustomListModel(NSObject):
 
             group, blink_contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
             if blink_contact is None:
+                # Dragging a group
                 if isinstance(proposed_item, BlinkContact):
                     proposed_item = table.parentForItem_(proposed_item)
 
@@ -931,7 +932,9 @@ class CustomListModel(NSObject):
                         return NSDragOperationNone
 
                 table.setDropItem_dropChildIndex_(None, i)
+                return NSDragOperationMove
             else:
+                # Dragging a contact
                 sourceGroup = self.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
 
@@ -939,69 +942,44 @@ class CustomListModel(NSObject):
                     return NSDragOperationNone
 
                 if isinstance(proposed_item, BlinkGroup):
+                    # Dragged a contact to a group
                     targetGroup = proposed_item
 
-                    if not targetGroup:
+                    if not targetGroup or not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
 
                     if sourceGroup == targetGroup:
                         return NSDragOperationNone
 
-                    if isinstance(targetGroup, (AllContactsBlinkGroup, NoBlinkGroup)):
-                        return NSDragOperationNone
-
-                    if isinstance(targetGroup, FavoritesBlinkGroup):
-                        if sourceContact.favorite:
-                            return NSDragOperationNone
-                        else:
-                            return NSDragOperationCopy
-
                     if not targetGroup.add_contact_allowed:
                         return NSDragOperationNone
 
-                    if self.isBlinkContactInBlinkGroups(sourceContact, targetGroup):
+                    if isinstance(sourceContact, BlinkPresenceContact) and sourceContact in targetGroup.contacts:
                         return NSDragOperationNone
 
-                    c = len(proposed_item.contacts) if index == NSOutlineViewDropOnItemIndex else index
-                    i = self.groupsList.index(proposed_item)
-                    table.setDropItem_dropChildIndex_(self.groupsList[i], c)
+                    position = len(proposed_item.contacts) if index == NSOutlineViewDropOnItemIndex else index
+                    table.setDropItem_dropChildIndex_(proposed_item, position)
+
+                    if isinstance(sourceContact, SystemAddressBookBlinkContact):
+                        # Contacts coming from the system AddressBook are copied
+                        return NSDragOperationCopy
+                    if isinstance(targetGroup, FavoritesBlinkGroup):
+                        return NSDragOperationCopy
+                    return NSDragOperationMove
                 else:
+                    # Dragged a contact on another contact
                     targetGroup = table.parentForItem_(proposed_item)
 
-                    if not targetGroup:
+                    if not isinstance(proposed_item, BlinkPresenceContact):
                         return NSDragOperationNone
 
-                    if sourceGroup == targetGroup and not targetGroup.add_contact_allowed:
-                        return NSDragOperationNone
-
-                    if isinstance(targetGroup, (AllContactsBlinkGroup, NoBlinkGroup)):
-                        return NSDragOperationNone
-
-                    if isinstance(targetGroup, FavoritesBlinkGroup):
-                        if sourceContact.favorite:
-                            return NSDragOperationNone
-                        else:
-                            return NSDragOperationCopy
-
-                    if not targetGroup.add_contact_allowed:
-                        return NSDragOperationNone
-
-                    if index == NSOutlineViewDropOnItemIndex:
-                        index = targetGroup.contacts.index(proposed_item)
-                        self.drop_on_contact_index = index
-
-                    if sourceGroup == targetGroup:
-                        return NSDragOperationCopy
-
-                    table.setDropItem_dropChildIndex_(targetGroup, index)
-
-            return NSDragOperationMove
+                    self.drop_on_contact_index = targetGroup.contacts.index(proposed_item)
+                    return NSDragOperationCopy
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not isinstance(item, (BlinkPresenceContact, BonjourBlinkContact)):
                 return False
-
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
             if filenames and account and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
@@ -1041,6 +1019,7 @@ class CustomListModel(NSObject):
                 return False
             group, blink_contact = eval(info.draggingPasteboard().stringForType_("dragged-contact"))
             if blink_contact is None:
+                # Dragging a group
                 g = self.groupsList[group]
                 del self.groupsList[group]
                 if group > index:
@@ -1053,8 +1032,10 @@ class CustomListModel(NSObject):
                 self.saveGroupPosition()
                 return True
             else:
+                # Dragging a contact
                 sourceGroup = self.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
+                addressbook_manager = AddressbookManager()
                 if isinstance(item, BlinkGroup):
                     targetGroup = item
 
@@ -1064,9 +1045,8 @@ class CustomListModel(NSObject):
                         except StopIteration:
                             uri_type = None
                         self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
-                        return
+                        return False
 
-                    addressbook_manager = AddressbookManager()
                     with addressbook_manager.transaction():
                         targetGroup.group.contacts.add(sourceContact.contact)
                         targetGroup.group.save()
@@ -1078,53 +1058,38 @@ class CustomListModel(NSObject):
                     row = table.rowForItem_(sourceContact)
                     if row>=0:
                         table.scrollRowToVisible_(row)
-
                     if table.selectedRow() >= 0:
                         table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row if row>=0 else 0), False)
+                    return True
                 else:
                     targetGroup = table.parentForItem_(item)
-                    if sourceGroup == targetGroup:
-                        targetContact = targetGroup.contacts[self.drop_on_contact_index]
+                    targetContact = targetGroup.contacts[self.drop_on_contact_index]
 
-                        if (sourceContact.name == targetContact.name):
-                            message = "Would you like to consolidate the two contacts into %s?" % targetContact.name
-                        else:
-                            message = u"Would you like to merge %s and %s contacts into %s?"%(sourceContact.name, targetContact.name, targetContact.name)
+                    if (sourceContact.name == targetContact.name):
+                        message = "Would you like to consolidate the two contacts into %s?" % targetContact.name
+                    else:
+                        message = u"Would you like to merge %s and %s contacts into %s?" % (sourceContact.name, targetContact.name, targetContact.name)
 
-                        ret = NSRunAlertPanel(u"Merge Contacts", message, u"Merge", u"Cancel", None)
-                        if ret != NSAlertDefaultReturn:
-                            return
+                    ret = NSRunAlertPanel(u"Merge Contacts", message, u"Merge", u"Cancel", None)
+                    if ret != NSAlertDefaultReturn:
+                        return False
 
-                        target_changed = 0
-                        for new_uri in sourceContact.contact.uris:
-                            try:
-                                uri = (uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri).next()
-                            except StopIteration:
-                                targetContact.contact.uris.add(new_uri)
-                                target_changed += 1
-                            if targetContact.contact.icon is None and sourceContact.contact.icon is not None:
-                                targetContact.contact.icon = sourceContact.contact.icon
-                                target_changed += 1
+                    target_changed = False
+                    for new_uri in sourceContact.contact.uris:
+                        try:
+                            uri = next(uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri)
+                        except StopIteration:
+                            targetContact.contact.uris.add(new_uri)
+                            target_changed = True
+                    if targetContact.contact.icon is None and sourceContact.contact.icon is not None:
+                        targetContact.contact.icon = sourceContact.contact.icon
+                        target_changed = True
 
+                    with addressbook_manager.transaction():
                         if target_changed:
                             targetContact.contact.save()
                         sourceContact.contact.delete()
-                        return
-
-                    if isinstance(sourceContact, SystemAddressBookBlinkContact):
-                        try:
-                            uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
-                        except StopIteration:
-                            uri_type = None
-                        self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
-                        return
-
-                    targetGroup.group.contacts.add(sourceContact.contact)
-                    targetGroup.group.save()
                     return True
-
-                return True
-            return False
 
     def outlineView_writeItems_toPasteboard_(self, table, items, pboard):
         if isinstance(items[0], BlinkGroup):
