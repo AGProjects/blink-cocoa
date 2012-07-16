@@ -36,6 +36,7 @@ from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from SIPManager import PresenceStatusList
+from VirtualGroups import VirtualGroupsManager, VirtualGroup
 
 from resources import ApplicationData
 from util import *
@@ -548,9 +549,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
 class BlinkGroup(NSObject):
     """Basic Group representation in Blink UI"""
     implements(IObserver)
-    nc = NotificationCenter()
 
-    type = None
     deletable = True
     ignore_search = True
     add_contact_allowed = True
@@ -560,7 +559,7 @@ class BlinkGroup(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, name=None, group=None):
+    def __init__(self, name=u'', group=None):
         self.name = NSString.stringWithString_(name)
         self.group = group
         self.contacts = []
@@ -568,31 +567,32 @@ class BlinkGroup(NSObject):
     def copyWithZone_(self, zone):
         return self
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
-
     def sortContacts(self):
         self.contacts.sort(key=lambda item: unicode(getattr(item, 'name')).lower())
 
-    def setReference(self):
-        if self.type:
-            addressbook_manager = AddressbookManager()
-            try:
-                group = addressbook_manager.get_group(self.type)
-            except KeyError:
-                group = Group(id=self.type)
-                group.name = self.name
-                group.type  = self.type
-                group.expanded = True
-                group.position = None
-                group.save()
-            self.group = group
+
+class VirtualBlinkGroup(BlinkGroup):
+    """ Base class for Virtual Groups managed by Blink """
+
+    def __init__(self, name=u''):
+        self.name = NSString.stringWithString_(name)
+        self.contacts = []
+        self.group = None
+
+    def load_group(self):
+        vgm = VirtualGroupsManager()
+        try:
+            group = vgm.get_group(self.type)
+        except KeyError:
+            group = VirtualGroup(id=self.type)
+            group.name = self.name
+            group.expanded = False
+            group.position = None
+            group.save()
+        self.group = group
 
 
-class BonjourBlinkGroup(BlinkGroup):
+class BonjourBlinkGroup(VirtualBlinkGroup):
     """Group representation for Bonjour Neigborhood"""
     type = 'bonjour'
     deletable = False
@@ -607,7 +607,7 @@ class BonjourBlinkGroup(BlinkGroup):
         self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
 
 
-class NoBlinkGroup(BlinkGroup):
+class NoBlinkGroup(VirtualBlinkGroup):
     type = 'no_group'
     deletable = False
     ignore_search = True
@@ -620,7 +620,7 @@ class NoBlinkGroup(BlinkGroup):
         super(NoBlinkGroup, self).__init__(name)
 
 
-class AllContactsBlinkGroup(BlinkGroup):
+class AllContactsBlinkGroup(VirtualBlinkGroup):
     """Group representation for all contacts"""
     type = 'all_contacts'
     deletable = False
@@ -633,37 +633,10 @@ class AllContactsBlinkGroup(BlinkGroup):
     def __init__(self, name=u'All Contacts'):
         super(AllContactsBlinkGroup, self).__init__(name)
 
-    def setReference(self):
-        addressbook_manager = AddressbookManager()
-        try:
-            group = addressbook_manager.get_group(self.type)
-        except KeyError:
-            group = Group(id=self.type)
-            group.name = self.name
-            group.type  = self.type
-            group.expanded = False
-            group.position = None
-            group.save()
-        self.group = group
 
-
-class FavoritesBlinkGroup(BlinkGroup):
-    """Group representation for Favorites"""
-    type = 'favorites'
-    deletable = True
-    ignore_search = True
-
-    add_contact_allowed = True
-    remove_contact_allowed = True
-    delete_contact_allowed = True
-
-    def __init__(self, name=u'Favorites'):
-        super(FavoritesBlinkGroup, self).__init__(name)
-
-
-class HistoryBlinkGroup(BlinkGroup):
+class HistoryBlinkGroup(VirtualBlinkGroup):
     """Group representation for missed, incoming and outgoing calls dynamic groups"""
-    type = 'history'
+    type = None    # To be defined by a subclass
     deletable = False
     ignore_search = True
 
@@ -671,7 +644,8 @@ class HistoryBlinkGroup(BlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def startTimer(self):
+    def __init__(self, name):
+        super(HistoryBlinkGroup, self).__init__(name)
         # contacts are not yet loaded when building this group so we cannot lookup contacts just yet
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "firstLoadTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
@@ -739,7 +713,7 @@ class HistoryBlinkGroup(BlinkGroup):
                 blink_contact.setDetail(new_detail)
             self.contacts.append(blink_contact)
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
 
 class MissedCallsBlinkGroup(HistoryBlinkGroup):
@@ -747,7 +721,6 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
 
     def __init__(self, name=u'Missed Calls'):
         super(MissedCallsBlinkGroup, self).__init__(name)
-        self.startTimer()
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='missed', count=100, remote_focus="0")
@@ -758,7 +731,6 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
 
     def __init__(self, name=u'Outgoing Calls'):
         super(OutgoingCallsBlinkGroup, self).__init__(name)
-        self.startTimer()
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='outgoing', count=100, remote_focus="0")
@@ -769,13 +741,12 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
 
     def __init__(self, name=u'Incoming Calls'):
         super(IncomingCallsBlinkGroup, self).__init__(name)
-        self.startTimer()
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='completed', count=100, remote_focus="0")
 
 
-class AddressBookBlinkGroup(BlinkGroup):
+class AddressBookBlinkGroup(VirtualBlinkGroup):
     """Address Book Group representation in Blink UI"""
     type = 'addressbook'
     deletable = False
@@ -790,30 +761,47 @@ class AddressBookBlinkGroup(BlinkGroup):
 
     def loadAddressBook(self):
         self.contacts = []
-
         book = AddressBook.ABAddressBook.sharedAddressBook()
         if book is None:
             return
-
         for ab_contact in book.people():
             blink_contact = SystemAddressBookBlinkContact(ab_contact)
             if blink_contact.uri and blink_contact.uri != 'None':
                 self.contacts.append(blink_contact)
-
         self.sortContacts()
 
-    def setReference(self):
-        addressbook_manager = AddressbookManager()
-        try:
-            group = addressbook_manager.get_group(self.type)
-        except KeyError:
-            group = Group(id=self.type)
-            group.name = self.name
-            group.type  = self.type
-            group.expanded = False
-            group.position = None
-            group.save()
-        self.group = group
+
+class FavoritesBlinkGroup(BlinkGroup):
+    """Group representation for Favorites"""
+    type = 'favorites'
+    deletable = True
+    ignore_search = True
+
+    add_contact_allowed = True
+    remove_contact_allowed = True
+    delete_contact_allowed = True
+
+    def __init__(self, name=u'Favorites'):
+        self.name = NSString.stringWithString_(name)
+        self.contacts = []
+
+    def _get_group(self):
+        if 'group' not in self.__dict__:
+            addressbook_manager = AddressbookManager()
+            try:
+                group = addressbook_manager.get_group(self.type)
+            except KeyError:
+                group = Group(id=self.type)
+                group.name = self.name
+                group.expanded = True
+                group.position = None
+                group.save()
+            self.__dict__['group'] = group
+        return self.__dict__['group']
+    def _set_group(self, value):
+        self.__dict__['group'] = value
+    group = property(_get_group, _set_group)
+    del _get_group, _set_group
 
 
 class CustomListModel(NSObject):
@@ -1167,9 +1155,13 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="AddressbookGroupWasActivated")
         self.nc.add_observer(self, name="AddressbookGroupWasDeleted")
         self.nc.add_observer(self, name="AddressbookGroupDidChange")
+        self.nc.add_observer(self, name="VirtualGroupWasActivated")
+        self.nc.add_observer(self, name="VirtualGroupWasDeleted")
+        self.nc.add_observer(self, name="VirtualGroupDidChange")
         self.nc.add_observer(self, name="SIPAccountDidActivate")
         self.nc.add_observer(self, name="SIPAccountDidDeactivate")
         self.nc.add_observer(self, name="SIPApplicationDidStart")
+        self.nc.add_observer(self, name="SIPApplicationWillStart")
         self.nc.add_observer(self, name="SIPApplicationWillEnd")
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
 
@@ -1258,8 +1250,6 @@ class ContactListModel(CustomListModel):
             backup_contacts.append(backup_contact)
 
         for group in AddressbookManager().get_groups():
-            if group.type is not None:
-                continue
             contacts = list(contact.id for contact in group.contacts)
             backup_group = {
                 'id'      : group.id,
@@ -1411,24 +1401,26 @@ class ContactListModel(CustomListModel):
 
         NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
 
+    def _NH_SIPApplicationWillStart(self, notification):
+        vgm = VirtualGroupsManager()
+        vgm.load()
+
     def _NH_SIPApplicationDidStart(self, notification):
+        # Load virtual groups
+        self.all_contacts_group.load_group()
+        self.no_group.load_group()
+        self.addressbook_group.load_group()
+        self.missed_calls_group.load_group()
+        self.outgoing_calls_group.load_group()
+        self.incoming_calls_group.load_group()
+
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
-            self.all_contacts_group.setReference()
-            self.no_group.setReference()
-            self.addressbook_group.setReference()
-            self.missed_calls_group.setReference()
-            self.outgoing_calls_group.setReference()
-            self.incoming_calls_group.setReference()
-            self.favorites_group.setReference()
-
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-
             if NSApp.delegate().contactsWindowController.first_run:
                 self.createInitialGroupAndContacts()
-
             self._migrateContacts()
 
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30.0, self, "checkContactBackup:", None, False)
 
@@ -1550,7 +1542,6 @@ class ContactListModel(CustomListModel):
                     group = Group()
                     group.name = group_item["name"]
                     group.expanded = group_item["expanded"]
-                    group.type = group_item["special"]
                     group.position = None
                     group.save()
                 except DuplicateIDError:
@@ -1578,21 +1569,20 @@ class ContactListModel(CustomListModel):
 
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount():
-            if self.bonjour_group not in self.groupsList:
-                self.bonjour_group.setReference()
-                positions = [g.position for g in AddressbookManager().get_groups() if g.position is not None]
-                self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-                self.nc.post_notification("BonjourGroupWasActivated", sender=self, data=TimestampedNotificationData())
+            self.bonjour_group.load_group()
+            positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None]
+            positions.sort()
+            self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BonjourGroupWasActivated", sender=self, data=TimestampedNotificationData())
         else:
             self.updatePresenceIndicator()
 
     def _NH_SIPAccountDidDeactivate(self, notification):
-        if notification.sender is BonjourAccount() and self.bonjour_group in self.groupsList:
-            self.bonjour_group.contacts = []
-            self.groupsList.remove(self.bonjour_group)
-            self.nc.post_notification("BonjourGroupWasDeactivated", sender=self, data=TimestampedNotificationData())
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.bonjour_group.contacts = []
+        self.groupsList.remove(self.bonjour_group)
+        self.nc.post_notification("BonjourGroupWasDeactivated", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def updatePresenceIndicator(self):
         return
@@ -1745,67 +1735,11 @@ class ContactListModel(CustomListModel):
         settings = SIPSimpleSettings()
         is_lite = NSApp.delegate().applicationName == 'Blink Lite'
 
-        positions = [g.position for g in AddressbookManager().get_groups() if g.position is not None and g.type != 'bonjour']
+        positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
         positions.sort()
         index = bisect.bisect_left(positions, group.position)
 
-        if group.type == "all_contacts":
-            self.all_contacts_group.name = group.name
-            if not group.position:
-                position = len(self.groupsList) - 1 if self.groupsList else 0
-                group.position = position
-                group.save()
-            self.groupsList.insert(index, self.all_contacts_group)
-
-        elif group.type == "no_group":
-            self.no_group.name = group.name
-            if not group.position:
-                position = len(self.groupsList) - 1 if self.groupsList else 0
-                group.position = position
-                group.save()
-            self.groupsList.insert(index, self.no_group)
-
-        elif group.type == "addressbook":
-            self.addressbook_group.name = group.name
-            if settings.contacts.enable_address_book:
-                if not group.position:
-                    position = len(self.groupsList) - 1 if self.groupsList else 0
-                    group.position = position
-                    group.save()
-                self.addressbook_group.loadAddressBook()
-                self.groupsList.insert(index, self.addressbook_group)
-
-        elif group.type == "missed":
-            self.missed_calls_group.name = group.name
-            if not is_lite and settings.contacts.enable_missed_calls_group:
-                if not group.position:
-                    position = len(self.groupsList) - 1 if self.groupsList else 0
-                    group.position = position
-                    group.save()
-                self.missed_calls_group.load_history()
-                self.groupsList.insert(index, self.missed_calls_group)
-
-        elif group.type == "outgoing":
-            self.outgoing_calls_group.name = group.name
-            if not is_lite and settings.contacts.enable_outgoing_calls_group:
-                if not group.position:
-                    position = len(self.groupsList) - 1 if self.groupsList else 0
-                    group.position = position
-                    group.save()
-                self.outgoing_calls_group.load_history()
-                self.groupsList.insert(index, self.outgoing_calls_group)
-
-        elif group.type == "incoming":
-            self.incoming_calls_group.name = group.name
-            if not is_lite and settings.contacts.enable_incoming_calls_group:
-                if not group.position:
-                    position = len(self.groupsList) - 1 if self.groupsList else 0
-                    group.position = position
-                    group.save()
-                self.incoming_calls_group.load_history()
-                self.groupsList.insert(index, self.incoming_calls_group)
-
-        elif group.type == "favorites":
+        if group.id == "favorites":
             self.favorites_group.name = group.name
             if not is_lite and settings.contacts.enable_favorites_group:
                 if not group.position:
@@ -1818,7 +1752,7 @@ class ContactListModel(CustomListModel):
                     self.removeContactFromBlinkGroups(blink_contact.contact, [self.no_group])
                 self.favorites_group.sortContacts()
 
-        elif group.type is None:
+        else:
             if not group.position:
                 position = 0
                 group.position = position
@@ -1831,7 +1765,7 @@ class ContactListModel(CustomListModel):
             blink_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("AddressbookGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookGroupWasDeleted(self, notification):
         group = notification.sender
@@ -1850,7 +1784,7 @@ class ContactListModel(CustomListModel):
         self.no_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("AddressbookGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookGroupDidChange(self, notification):
         group = notification.sender
@@ -1887,10 +1821,109 @@ class ContactListModel(CustomListModel):
         elif 'name' in notification.data.modified:
             blink_group.name = group.name
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("AddressbookGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookGroupWasCreated(self, notification):
         self.saveGroupPosition()
+
+    def _NH_VirtualGroupWasActivated(self, notification):
+        group = notification.sender
+        settings = SIPSimpleSettings()
+        is_lite = NSApp.delegate().applicationName == 'Blink Lite'
+
+        positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
+        positions.sort()
+        index = bisect.bisect_left(positions, group.position)
+
+        if group.id == "all_contacts":
+            self.all_contacts_group.name = group.name
+            if not group.position:
+                position = len(self.groupsList) - 1 if self.groupsList else 0
+                group.position = position
+                group.save()
+            self.groupsList.insert(index, self.all_contacts_group)
+
+        elif group.id == "no_group":
+            self.no_group.name = group.name
+            if not group.position:
+                position = len(self.groupsList) - 1 if self.groupsList else 0
+                group.position = position
+                group.save()
+            self.groupsList.insert(index, self.no_group)
+
+        elif group.id == "addressbook":
+            self.addressbook_group.name = group.name
+            if settings.contacts.enable_address_book:
+                if not group.position:
+                    position = len(self.groupsList) - 1 if self.groupsList else 0
+                    group.position = position
+                    group.save()
+                self.addressbook_group.loadAddressBook()
+                self.groupsList.insert(index, self.addressbook_group)
+
+        elif group.id == "missed":
+            self.missed_calls_group.name = group.name
+            if not is_lite and settings.contacts.enable_missed_calls_group:
+                if not group.position:
+                    position = len(self.groupsList) - 1 if self.groupsList else 0
+                    group.position = position
+                    group.save()
+                self.missed_calls_group.load_history()
+                self.groupsList.insert(index, self.missed_calls_group)
+
+        elif group.id == "outgoing":
+            self.outgoing_calls_group.name = group.name
+            if not is_lite and settings.contacts.enable_outgoing_calls_group:
+                if not group.position:
+                    position = len(self.groupsList) - 1 if self.groupsList else 0
+                    group.position = position
+                    group.save()
+                self.outgoing_calls_group.load_history()
+                self.groupsList.insert(index, self.outgoing_calls_group)
+
+        elif group.id == "incoming":
+            self.incoming_calls_group.name = group.name
+            if not is_lite and settings.contacts.enable_incoming_calls_group:
+                if not group.position:
+                    position = len(self.groupsList) - 1 if self.groupsList else 0
+                    group.position = position
+                    group.save()
+                self.incoming_calls_group.load_history()
+                self.groupsList.insert(index, self.incoming_calls_group)
+
+        elif group.id is None:
+            if not group.position:
+                position = 0
+                group.position = position
+                group.save()
+            blink_group = VirtualBlinkGroup(name=group.name)
+            self.groupsList.insert(index, blink_group)
+
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+
+    def _NH_VirtualGroupWasDeleted(self, notification):
+        group = notification.sender
+        try:
+            blink_group = next(grp for grp in self.groupsList if grp.group == group)
+        except StopIteration:
+            return
+
+        self.groupsList.remove(blink_group)
+        self.saveGroupPosition()
+
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+
+    def _NH_VirtualGroupDidChange(self, notification):
+        group = notification.sender
+        try:
+            blink_group = next(grp for grp in self.groupsList if grp.group == group)
+        except StopIteration:
+            return
+
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
@@ -1916,49 +1949,47 @@ class ContactListModel(CustomListModel):
     def createInitialGroupAndContacts(self):
         BlinkLogger().log_info(u"Creating initial contacts...")
 
-        addressbook_manager = AddressbookManager()
-        with addressbook_manager.transaction():
-            group = Group(id='test')
-            group.name = 'Test'
-            group.expanded = True
-            group.position = None
+        group = Group(id='test')
+        group.name = 'Test'
+        group.expanded = True
+        group.position = None
 
-            test_contacts = {
-                            "200901@login.zipdx.com":       { 'name': "VUC http://vuc.me", 'preferred_media': "audio", 'id': 'test_zipdx' },
-                            "3333@sip2sip.info":            { 'name': "Call Test",         'preferred_media': "audio", 'id': 'test_audio' },
-                            "4444@sip2sip.info":            { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
-                            "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
-                            }
+        test_contacts = {
+                        "200901@login.zipdx.com":       { 'name': "VUC http://vuc.me", 'preferred_media': "audio", 'id': 'test_zipdx' },
+                        "3333@sip2sip.info":            { 'name': "Call Test",         'preferred_media': "audio", 'id': 'test_audio' },
+                        "4444@sip2sip.info":            { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
+                        "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
+                        }
 
-            for uri in test_contacts.keys():
-                icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
-                path = ApplicationData.get('photos/%s.tiff' % uri)
-                NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
+        for uri in test_contacts.keys():
+            icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
+            path = ApplicationData.get('photos/%s.tiff' % uri)
+            NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
 
-                contact = Contact(id=test_contacts[uri]['id'])
-                contact.default_uri=uri
-                contact.uris.add(ContactURI(uri=uri, type='SIP'))
-                contact.name = test_contacts[uri]['name']
-                contact.preferred_media = test_contacts[uri]['preferred_media']
-                contact.save()
-                group.contacts.add(contact)
+            contact = Contact(id=test_contacts[uri]['id'])
+            contact.default_uri=uri
+            contact.uris.add(ContactURI(uri=uri, type='SIP'))
+            contact.name = test_contacts[uri]['name']
+            contact.preferred_media = test_contacts[uri]['preferred_media']
+            contact.save()
+            group.contacts.add(contact)
 
-            group.save()
+        group.save()
 
-            group = Group()
-            group.name = 'Business'
-            group.expanded = True
-            group.save()
+        group = Group()
+        group.name = 'Business'
+        group.expanded = True
+        group.save()
 
-            group = Group()
-            group.name = 'Family'
-            group.expanded = True
-            group.save()
+        group = Group()
+        group.name = 'Family'
+        group.expanded = True
+        group.save()
 
-            group = Group()
-            group.name = 'Friends'
-            group.expanded = True
-            group.save()
+        group = Group()
+        group.name = 'Friends'
+        group.expanded = True
+        group.save()
 
 
     def moveBonjourGroupFirst(self):

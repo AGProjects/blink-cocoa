@@ -26,6 +26,5 @@ class BlinkContactExtension(ContactExtension):
 class BlinkGroupExtension(GroupExtension):
     position = Setting(type=int, nillable=True)
     expanded = Setting(type=bool, default=True)
-    type = Setting(type=str, nillable=True)
 
 

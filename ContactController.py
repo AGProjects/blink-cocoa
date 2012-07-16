@@ -65,7 +65,7 @@ class AddContactController(NSObject):
         self.uris = None
         self.subscriptions = None
         self.defaultPhotoImage = None
-        self.nc.remove_observer(self, name="AddressbookGroupsHaveChanged")
+        self.nc.remove_observer(self, name="BlinkGroupsHaveChanged")
         self.nc = None
 
     def __init__(self, uri=None, name=None, group=None, type=None):
@@ -98,12 +98,12 @@ class AddContactController(NSObject):
         handler(notification)
 
     def awakeFromNib(self):
-        self.nc.add_observer(self, name="AddressbookGroupsHaveChanged")
+        self.nc.add_observer(self, name="BlinkGroupsHaveChanged")
         self.addressTable.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add a new address")
         self.addressTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
         self.addressTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
 
-    def _NH_AddressbookGroupsHaveChanged(self, notification):
+    def _NH_BlinkGroupsHaveChanged(self, notification):
         self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
         self.loadGroupNames()
 

@@ -825,6 +825,9 @@
 		DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
 		DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
 		DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
+		DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
+		DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
+		DE9790FB15B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
 		DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA0135DF34200456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA2135DF34400456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
@@ -1449,6 +1452,7 @@
 		C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = CallTransferWindow.xib; path = English.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceFileCell.py; sourceTree = "<group>"; };
+		DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VirtualGroups.py; sourceTree = "<group>"; };
 		DEFD8C5E135DD6CD00456E86 /* resources.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = resources.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1900,6 +1904,7 @@
 				2BAF38080FE088C70040117A /* Contact.xib */,
 				2B4CA93110AA5FAE00D5F19E /* GroupController.py */,
 				2B4CA92D10AA5F2F00D5F19E /* Group.xib */,
+				DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */,
 			);
 			name = Contacts;
 			sourceTree = "<group>";
@@ -2438,7 +2443,6 @@
 				1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAD1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
-				1FEAFA8715B558DA00C00CF0 /* NewWatcherController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2657,7 +2661,6 @@
 				1F536AA71591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAE1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C815A459DA00A7079A /* ContactController.py in Resources */,
-				1FEAFA8815B558DA00C00CF0 /* NewWatcherController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2874,7 +2877,6 @@
 				1F536AA51591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAC1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
-				1FEAFA8615B558DA00C00CF0 /* NewWatcherController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
