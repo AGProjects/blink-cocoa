@@ -546,6 +546,40 @@ class SystemAddressBookBlinkContact(BlinkContact):
         self._set_username_and_domain()
 
 
+class BlinkGroupAttribute(object):
+    def __init__(self, name):
+        self.name = name
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return None
+        if obj.group is None:
+            return obj.__dict__.get(self.name, None)
+        else:
+            return getattr(obj.group, self.name)
+    def __set__(self, obj, value):
+        if obj.group is None:
+            obj.__dict__[self.name] = value
+        else:
+            setattr(obj.group, self.name, value)
+
+
+class BlinkFavoritesGroupAttribute(object):
+    def __init__(self, name):
+        self.name = name
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return None
+        if 'group' not in obj.__dict__:
+            return obj.__dict__.get(self.name, None)
+        else:
+            return getattr(obj.group, self.name)
+    def __set__(self, obj, value):
+        if 'group' not in obj.__dict__:
+            obj.__dict__[self.name] = value
+        else:
+            setattr(obj.group, self.name, value)
+
+
 class BlinkGroup(NSObject):
     """Basic Group representation in Blink UI"""
     deletable = True
@@ -554,13 +588,15 @@ class BlinkGroup(NSObject):
     remove_contact_allowed = True
     delete_contact_allowed = True
 
+    name = BlinkGroupAttribute('name')
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, name=u'', group=None):
-        self.name = name
-        self.group = group
+    def __init__(self, name, group):
         self.contacts = []
+        self.group = group
+        self.name = name
 
     def copyWithZone_(self, zone):
         return self
@@ -573,9 +609,9 @@ class VirtualBlinkGroup(BlinkGroup):
     """ Base class for Virtual Groups managed by Blink """
 
     def __init__(self, name=u''):
-        self.name = name
         self.contacts = []
         self.group = None
+        self.name = name
 
     def load_group(self):
         vgm = VirtualGroupsManager()
@@ -778,6 +814,8 @@ class FavoritesBlinkGroup(BlinkGroup):
     add_contact_allowed = True
     remove_contact_allowed = True
     delete_contact_allowed = True
+
+    name = BlinkFavoritesGroupAttribute('name')
 
     def __init__(self, name=u'Favorites'):
         self.name = name
@@ -1817,8 +1855,6 @@ class ContactListModel(CustomListModel):
                         self.no_group.contacts.append(blink_contact)
                         self.no_group.sortContacts()
 
-        elif 'name' in notification.data.modified:
-            blink_group.name = group.name
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
 
