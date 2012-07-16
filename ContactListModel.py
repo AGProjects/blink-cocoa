@@ -548,8 +548,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
 
 class BlinkGroup(NSObject):
     """Basic Group representation in Blink UI"""
-    implements(IObserver)
-
     deletable = True
     ignore_search = True
     add_contact_allowed = True
