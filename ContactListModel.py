@@ -1577,10 +1577,11 @@ class ContactListModel(CustomListModel):
             self.updatePresenceIndicator()
 
     def _NH_SIPAccountDidDeactivate(self, notification):
-        self.bonjour_group.contacts = []
-        self.groupsList.remove(self.bonjour_group)
-        self.nc.post_notification("BonjourGroupWasDeactivated", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        if notification.sender is BonjourAccount():
+            self.bonjour_group.contacts = []
+            self.groupsList.remove(self.bonjour_group)
+            self.nc.post_notification("BonjourGroupWasDeactivated", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def updatePresenceIndicator(self):
         return
