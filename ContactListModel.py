@@ -558,7 +558,7 @@ class BlinkGroup(NSObject):
         return cls.alloc().init()
 
     def __init__(self, name=u'', group=None):
-        self.name = NSString.stringWithString_(name)
+        self.name = name
         self.group = group
         self.contacts = []
 
@@ -573,7 +573,7 @@ class VirtualBlinkGroup(BlinkGroup):
     """ Base class for Virtual Groups managed by Blink """
 
     def __init__(self, name=u''):
-        self.name = NSString.stringWithString_(name)
+        self.name = name
         self.contacts = []
         self.group = None
 
@@ -780,7 +780,7 @@ class FavoritesBlinkGroup(BlinkGroup):
     delete_contact_allowed = True
 
     def __init__(self, name=u'Favorites'):
-        self.name = NSString.stringWithString_(name)
+        self.name = name
         self.contacts = []
 
     def _get_group(self):
