@@ -1241,7 +1241,7 @@ class ContactListModel(CustomListModel):
                 'uris'            : list((alias.uri, alias.type) for alias in iter(contact.uris)),
                 'preferred_media' : contact.preferred_media,
                 'icon'            : contact.icon,
-                'favorite'        : contact.favorite,
+                'favorite'        : self.favorites_group.group is not None and contact.id in self.favorites_group.group.contacts,
                 'presence'        : {'policy': contact.presence.policy, 'subscribe': contact.presence.subscribe},
                 'dialog'          : {'policy': contact.dialog.policy,   'subscribe': contact.dialog.subscribe}
             }
