@@ -1931,12 +1931,13 @@ class ContactListModel(CustomListModel):
         return [group for group in self.groupsList if group.add_contact_allowed and blink_contact in group.contacts]
 
     def saveGroupPosition(self):
-        # save group expansion and position
+        # save groups position
         addressbook_manager = AddressbookManager()
+        vg_manager = VirtualGroupsManager()
         with addressbook_manager.transaction():
-            for group in addressbook_manager.get_groups():
+            for group in addressbook_manager.get_groups()+vg_manager.get_groups():
                 try:
-                    blink_group = (grp for grp in self.groupsList if grp.name == group.name).next()
+                    blink_group = next(grp for grp in self.groupsList if grp.group == group)
                 except StopIteration:
                     group.position = None
                     group.save()
