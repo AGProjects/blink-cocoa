@@ -1832,6 +1832,7 @@ class ContactListModel(CustomListModel):
 
         if 'contacts' in notification.data.modified:
             added = notification.data.modified['contacts'].added
+            removed = notification.data.modified['contacts'].removed
             for contact in added:
                 try:
                     blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
@@ -1839,10 +1840,7 @@ class ContactListModel(CustomListModel):
                     pass
                 else:
                     blink_group.contacts.append(blink_contact)
-                    blink_group.sortContacts()
                     self.removeContactFromBlinkGroups(contact, [self.no_group])
-
-            removed = notification.data.modified['contacts'].removed
             for contact in removed:
                 try:
                     blink_contact = next(blink_contact for blink_contact in blink_group.contacts if blink_contact.contact == contact)
@@ -1850,10 +1848,10 @@ class ContactListModel(CustomListModel):
                     pass
                 else:
                     blink_group.contacts.remove(blink_contact)
-                    blink_group.sortContacts()
                     if not self.getBlinkGroupsForBlinkContact(blink_contact):
                         self.no_group.contacts.append(blink_contact)
                         self.no_group.sortContacts()
+            blink_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
