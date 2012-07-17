@@ -633,6 +633,9 @@
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1FEAFA8615B558DA00C00CF0 /* NewWatcherController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FEAFA8515B558DA00C00CF0 /* NewWatcherController.py */; };
+		1FEAFA8715B558DA00C00CF0 /* NewWatcherController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FEAFA8515B558DA00C00CF0 /* NewWatcherController.py */; };
+		1FEAFA8815B558DA00C00CF0 /* NewWatcherController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FEAFA8515B558DA00C00CF0 /* NewWatcherController.py */; };
 		1FEC3E9114D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9214D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9314D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
@@ -1278,6 +1281,7 @@
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1FEAFA8515B558DA00C00CF0 /* NewWatcherController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NewWatcherController.py; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
@@ -1981,6 +1985,7 @@
 				2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */,
 				2B7FC8261132D415008C07BF /* PresencePolicy.py */,
 				2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */,
+				1FEAFA8515B558DA00C00CF0 /* NewWatcherController.py */,
 				2B7FCC951134DA9E008C07BF /* NewWatcherDialog.xib */,
 			);
 			name = Presence;
@@ -2433,6 +2438,7 @@
 				1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAD1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
+				1FEAFA8715B558DA00C00CF0 /* NewWatcherController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2651,6 +2657,7 @@
 				1F536AA71591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAE1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C815A459DA00A7079A /* ContactController.py in Resources */,
+				1FEAFA8815B558DA00C00CF0 /* NewWatcherController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2867,6 +2874,7 @@
 				1F536AA51591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAC1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
+				1FEAFA8615B558DA00C00CF0 /* NewWatcherController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

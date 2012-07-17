@@ -23,13 +23,6 @@ from util import allocate_autorelease_pool, sip_prefix_pattern
 from ContactListModel import BlinkContact, BlinkGroup
 
 
-class PendingWatcher(object):
-    def __init__(self, address, event, confirm=True):
-        self.address = address
-        self.event = event
-        self.confirm = confirm
-
-
 def fillPresenceMenu(presenceMenu, target, action, attributes=None):
     if not attributes:
         attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -73,17 +66,6 @@ class PresencePolicy(NSWindowController):
 
     policyDatasource = NSMutableArray.array()
 
-    newWatcherWindow = objc.IBOutlet()
-    applyToAll = objc.IBOutlet()
-    newWatcherLabel = objc.IBOutlet()
-    newWatcherPop = objc.IBOutlet()
-    newWatchers = objc.IBOutlet()
-    groupCombo = objc.IBOutlet()
-    createContact = objc.IBOutlet()
-    contactExists = objc.IBOutlet()
-    pendingWatchersView = objc.IBOutlet()
-    pendingWatchersList = objc.IBOutlet()
-
     offlineWindowShown = False
     offlineWindow = objc.IBOutlet()
     offlineNote = objc.IBOutlet()
@@ -93,18 +75,12 @@ class PresencePolicy(NSWindowController):
     event = None
     management_enabled = False
 
-    pendingWatchers = []
-    newWatcherPolicy = None
-    newWatcherInfo = None
-    lastWatcherPolicy = None
-
     policyTypes = ["Allow", "Block", "Undecided"]
     defaultPolicy = "Allow"
     allowPolicy = "Allow"
     denyPolicy = "Block"
     undecidedPolicy = "Undecided"
 
-    initial_checked_pending = False
     last_edited_address = None
     filtered_contacts_map = None
 
@@ -115,7 +91,6 @@ class PresencePolicy(NSWindowController):
             self.policy_data = {}
 
             NSBundle.loadNibNamed_owner_("PresencePolicyWindow", self)
-            NSBundle.loadNibNamed_owner_("NewWatcherDialog", self)
 
             self.tabViewForEvent = {
                                    'presence': self.presencePolicyTableView,
@@ -129,21 +104,12 @@ class PresencePolicy(NSWindowController):
             self.event = previous_event if previous_event in self.tabViewForEvent.keys() else self.tabViewForEvent.keys()[0]
             self.eventTabView.selectTabViewItemWithIdentifier_(self.event)
 
-            self.newWatcherPop.removeAllItems()
-            self.newWatcherPop.addItemsWithTitles_(self.policyTypes)
-            self.newWatcherWindow.setLevel_(NSModalPanelWindowLevel)
-
             self.nc = NotificationCenter()
             self.nc.add_observer(self, name="AddressbookContactWasCreated")
             self.nc.add_observer(self, name="AddressbookContactWasActivated")
             self.nc.add_observer(self, name="AddressbookContactWasDeleted")
             self.nc.add_observer(self, name="AddressbookContactDidChange")
-            self.nc.add_observer(self, name="SIPAccountWatcherinfoGotData")
-
             self.addPolicyTypes()
-
-            # check for new watchers after a delay to give time for startup
-            self.performSelector_withObject_afterDelay_("checkPending", None, 15.0)
 
         return self
 
@@ -162,20 +128,6 @@ class PresencePolicy(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
-
-    def _NH_SIPAccountWatcherinfoGotData(self, notification):
-        watchers = notification.data.pending
-        for w in watchers:
-            if w.status in ("pending", "waiting"):
-                uri = sip_prefix_pattern.sub("", str(w.sipuri))
-                pendingWatcher = PendingWatcher(address=uri, event='presence', confirm=True)
-                hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
-                if not hasWatcher:
-                    BlinkLogger().log_info(u"New presence subscriber %s" % pendingWatcher.address)
-                    self.pendingWatchers.append(pendingWatcher)
-
-        if self.pendingWatchers and self.initial_checked_pending:
-            self.showPendingWatchers()
 
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
@@ -322,142 +274,20 @@ class PresencePolicy(NSWindowController):
                 pass
         self.refreshPolicyTable()
 
-    def checkPending(self):
-        for event in self.policy_data.keys():
-            for contact in self.policy_data[event]:
-                policy = self.getContactPolicyForEvent(contact, event)
-                if policy == self.undecidedPolicy:
-                    pendingWatcher = PendingWatcher(address=contact.uri, event=event, confirm=True)
-                    hasWatcher = any(watcher for watcher in self.pendingWatchers if watcher.event == pendingWatcher.event and watcher.address == pendingWatcher.address)
-                    if not hasWatcher:
-                        self.pendingWatchers.append(pendingWatcher)
-
-        if self.pendingWatchers:
-            self.showPendingWatchers()
-
-        self.initial_checked_pending = True
-
     def validateButtons(self):
         self.addButton.setHidden_(False)
         self.delButton.setHidden_(False)
         self.searchSubscriberBox.setHidden_(False)
         self.management_enabled = True
 
-    def showPendingWatchers(self):
-        if self.newWatcherWindow.isVisible():
-            return
-
-        while self.pendingWatchers:
-            self.newWatcherInfo = self.pendingWatchers.pop(0)
-            if self.applyToAll.state() == NSOnState and self.lastWatcherPolicy:
-                self.updatePolicyAction(self.newWatcherInfo.event, self.newWatcherInfo.address, self.lastWatcherPolicy)
-                if self.createContact.state() == NSOnState:
-                    self.addContactToModel(self.newWatcherInfo)
-            else:
-                if self.newWatcherInfo.confirm or not self.hasPolicyForWatcherAndEvent(self.newWatcherInfo.event, self.newWatcherInfo.address):
-                    self.newWatcherLabel.setStringValue_(u"%s has subscribed to the %s information" % (self.newWatcherInfo.address, self.newWatcherInfo.event))
-                    self.applyToAll.setTitle_(u"Apply same policy to all other %d pending subscribers" % len(self.pendingWatchers) if len(self.pendingWatchers) > 1 else u"Apply same policy to one more pending subscriber")
-                    self.applyToAll.setHidden_(False if len(self.pendingWatchers) else True)
-                    self.applyToAll.setState_(NSOffState)
-
-                    frame = self.newWatcherWindow.frame()
-                    if len(self.pendingWatchers):
-                        pending_list = []
-                        for p in self.pendingWatchers:
-                            if p.address not in pending_list:
-                                pending_list.append(p.address)
-                        pending_list.sort()
-
-                        self.pendingWatchersList.setString_(u'')
-                        storage = self.pendingWatchersList.textStorage()
-                        storage.beginEditing()
-                        storage.appendAttributedString_(NSAttributedString.alloc().initWithString_('\n'.join(pending_list)))
-                        storage.endEditing()
-                        self.pendingWatchersView.setHidden_(False)
-                        frame.origin.y += (frame.size.height - self.newWatcherWindow.maxSize().height)
-                        frame.size = self.newWatcherWindow.maxSize()
-                    else:
-                        self.pendingWatchersView.setHidden_(True)
-                        frame.origin.y -= (self.newWatcherWindow.minSize().height - frame.size.height)
-                        frame.size = self.newWatcherWindow.minSize()
-
-                    self.newWatcherWindow.setFrame_display_animate_(frame, True, True)
-
-                    if not NSApp.delegate().contactsWindowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
-                        self.showGroupsCombo()
-                    else:
-                        self.hideGroupsCombo()
-
-                    self.newWatcherPolicy = self.undecidedPolicy
-                    self.newWatcherWindow.makeKeyAndOrderFront_(None)
-                    break
-
     def windowWillClose_(self, notification):
-        if notification.object() == self.newWatcherWindow:
-            pass
-        else: # PresenceOffline
-            self.offlineWindowShown = False
+        self.offlineWindowShown = False
 
     def addPolicyTypes(self):
         for view in self.tabViewForEvent.values():
             cell = view.tableColumnWithIdentifier_("policy").dataCell()
             cell.removeAllItems()
             cell.addItemsWithTitles_(self.policyTypes)
-
-    def setGroupNames(self, groups):
-        current = self.groupCombo.stringValue()
-        self.groupCombo.removeAllItems()
-        self.groupCombo.addItemsWithObjectValues_(NSArray.arrayWithObjects_(*groups))
-        self.groupCombo.selectItemAtIndex_(0)
-        if current:
-            self.groupCombo.setStringValue_(current)
-
-    def showGroupsCombo(self):
-        self.groupCombo.setHidden_(False)
-        self.createContact.setHidden_(False)
-        self.contactExists.setHidden_(True)
-        groups = [g.name for g in NSApp.delegate().contactsWindowController.model.groupsList if g.editable]
-        first_group = groups and groups[0] or None
-        group = NSUserDefaults.standardUserDefaults().stringForKey_("LastGroupForWatcher")
-        self.groupCombo.setStringValue_(group or "")
-        self.setGroupNames(groups)
-
-    def hideGroupsCombo(self):
-        self.groupCombo.setHidden_(True)
-        self.createContact.setHidden_(True)
-        self.contactExists.setHidden_(False)
-
-    def addContactToModel(self, watcher):
-        # adds a new contact into the contact list model
-
-        if contact.group is None:
-            try:
-                group = (g for g in ContactGroupManager().iter_groups() if g.name == self.groupCombo.stringValue()).next()
-            except StopIteration:
-                # insert after last editable group
-                index = 0
-                for g in NSApp.delegate().contactsWindowController.model.groupsList:
-                    if not g.editable:
-                        break
-                    index += 1
-
-                group = Group(self.groupCombo.stringValue())
-                group.position = index
-                group.save()
-
-            contact.group = group
-            contact.save()
-            NSUserDefaults.standardUserDefaults().setValue_forKey_(self.groupCombo.stringValue(), "LastGroupForWatcher")
-
-    @objc.IBAction
-    def userClickedApplyAllCheckBox_(self, sender):
-        if sender.state() == NSOnState:
-            self.showGroupsCombo()
-        else:
-            if not NSApp.delegate().contactsWindowController.model.hasContactInEditableGroupWithURI(self.newWatcherInfo.address):
-                self.showGroupsCombo()
-            else:
-                self.hideGroupsCombo()
 
     @objc.IBAction
     def userButtonClicked_(self, sender):
@@ -488,29 +318,6 @@ class PresencePolicy(NSWindowController):
 
     def showWindow_(self, sender):
         super(PresencePolicy, self).showWindow_(sender)
-
-    @objc.IBAction
-    def saveNewWatcher_(self, sender):
-        self.newWatcherPolicy = str(self.newWatcherPop.titleOfSelectedItem())
-        self.newWatcherWindow.close()
-
-        if self.newWatcherInfo and self.newWatcherPolicy:
-            self.updatePolicyAction(self.newWatcherInfo.event, self.newWatcherInfo.address, self.newWatcherPolicy)
-
-            self.lastWatcherPolicy = self.newWatcherPolicy
-
-            if self.createContact.state() == NSOnState:
-                self.addContactToModel(self.newWatcherInfo)
-
-            self.newWatcherPolicy = None
-            self.newWatcherInfo = None
-
-            if self.pendingWatchers:
-                self.performSelector_withObject_afterDelay_("showPendingWatchers", None, 0.05)
-
-    @objc.IBAction
-    def decideLater_(self, sender):
-        self.newWatcherWindow.close()
 
     @objc.IBAction
     def offlineWindowConfirm_(self, sender):
