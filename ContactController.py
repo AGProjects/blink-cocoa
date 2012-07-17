@@ -121,7 +121,7 @@ class AddContactController(NSObject):
         if checkValidPhoneNumber(uri):
             return True
 
-        if not (uri.startswith('sip:') or uri.startswith('sips:')):
+        if not uri.startswith(('sip:', 'sips:')):
             uri = "sip:%s" % uri
         try:
             sip_uri = SIPURI.parse(str(uri))
