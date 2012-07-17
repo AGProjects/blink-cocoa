@@ -142,7 +142,6 @@ class BlinkContact(NSObject):
     editable = True
     deletable = True
     auto_answer = False
-    nc = NotificationCenter()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -172,7 +171,6 @@ class BlinkContact(NSObject):
 
     def dealloc(self):
         self.icon = None
-        self.nc = None
         super(BlinkContact, self).dealloc()
 
     def _set_username_and_domain(self):
