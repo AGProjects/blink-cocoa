@@ -12,6 +12,9 @@ from sipsimple.core import SIPCoreError, SIPURI
 from zope.interface import implements
 from util import *
 
+from VirtualGroups import VirtualGroup
+
+
 ICON_SIZE=128
 
 class MyImageThing(NSImageView):
@@ -36,18 +39,36 @@ class AddContactController(NSObject):
     addressTypesPopUpButton = objc.IBOutlet()
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = NSImage.imageNamed_("NSUser")
-    nc = NotificationCenter()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    @property
-    def groupsList(self):
-        return NSApp.delegate().contactsWindowController.model.groupsList
+    def __init__(self, uri=None, name=None, group=None, type=None):
+        NSBundle.loadNibNamed_owner_("Contact", self)
+        self.window.setTitle_("Add Contact")
+
+        self.default_uri = None
+        self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
+        self.dealloc_timer = None
+        self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
+        self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
+        self.belonging_groups = []
+        if group is not None:
+            self.belonging_groups.append(group)
+        self.update_default_uri()
+        self.nameText.setStringValue_(name or "")
+        self.photoImage.setImage_(self.defaultPhotoImage)
+        self.defaultButton.setEnabled_(False)
+        self.updateSubscriptionMenus()
+        self.loadGroupNames()
 
     @property
     def model(self):
         return NSApp.delegate().contactsWindowController.model
+
+    @property
+    def groupsList(self):
+        return self.model.groupsList
 
     def startDeallocTimer(self):
         # workaround to keep the object alive as cocoa still sends delegate tableview messages after close
@@ -63,31 +84,7 @@ class AddContactController(NSObject):
         self.uris = None
         self.subscriptions = None
         self.defaultPhotoImage = None
-        self.nc.remove_observer(self, name="BlinkGroupsHaveChanged")
-        self.nc = None
-
-    def __init__(self, uri=None, name=None, group=None, type=None):
-        NSBundle.loadNibNamed_owner_("Contact", self)
-        self.window.setTitle_("Add Contact")
-
-        self.default_uri = None
-        self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
-        self.dealloc_timer = None
-        self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
-        self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
-
-        if group is not None:
-            self.belonging_groups = [group for group in self.all_groups if group.name == group]
-        else:
-            self.belonging_groups = []
-
-
-        self.update_default_uri()
-        self.nameText.setStringValue_(name or "")
-        self.photoImage.setImage_(self.defaultPhotoImage)
-        self.defaultButton.setEnabled_(False)
-        self.updateSubscriptionMenus()
-        self.loadGroupNames()
+        NotificationCenter().remove_observer(self, name="BlinkGroupsHaveChanged")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -96,13 +93,13 @@ class AddContactController(NSObject):
         handler(notification)
 
     def awakeFromNib(self):
-        self.nc.add_observer(self, name="BlinkGroupsHaveChanged")
+        NotificationCenter().add_observer(self, name="BlinkGroupsHaveChanged")
         self.addressTable.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add a new address")
         self.addressTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
         self.addressTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
 
     def _NH_BlinkGroupsHaveChanged(self, notification):
-        self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type!= 'no_group')
+        self.all_groups = list(g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed)
         self.loadGroupNames()
 
     def runModal(self):
@@ -369,7 +366,7 @@ class EditContactController(AddContactController):
     def __init__(self, blink_contact):
         self.dealloc_timer = None
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
-        self.all_groups = list(g for g in self.groupsList if g.add_contact_allowed and g.type != 'no_group')
+        self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
         self.default_uri = None
 
         self.blink_contact = blink_contact
@@ -413,3 +410,4 @@ class EditContactController(AddContactController):
                     }
             return contact
         return False
+

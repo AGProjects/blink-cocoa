@@ -1067,7 +1067,7 @@ class CustomListModel(NSObject):
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
                         except StopIteration:
                             uri_type = None
-                        self.addContact(sourceContact.uri, name=sourceContact.name, type=uri_type)
+                        self.addContact(sourceContact.uri, name=sourceContact.name, group=targetGroup, type=uri_type)
                         return False
 
                     with addressbook_manager.transaction():
@@ -2080,7 +2080,7 @@ class ContactListModel(CustomListModel):
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
-        controller = AddContactController(uri=address, name=name, type=type)
+        controller = AddContactController(uri=address, name=name, group=group, type=type)
         new_contact = controller.runModal()
 
         if not new_contact:
