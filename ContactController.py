@@ -4,14 +4,12 @@
 from AppKit import *
 from Foundation import *
 
-from sipsimple.account import AccountManager, BonjourAccount
-from util import sip_prefix_pattern
-
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from zope.interface import implements
+from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.addressbook import ContactURI
 from sipsimple.core import SIPCoreError, SIPURI
+from zope.interface import implements
 from util import *
 
 ICON_SIZE=128
