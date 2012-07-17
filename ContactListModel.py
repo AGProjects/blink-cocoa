@@ -607,6 +607,7 @@ class BlinkGroup(NSObject):
 
 class VirtualBlinkGroup(BlinkGroup):
     """ Base class for Virtual Groups managed by Blink """
+    type = None    # To be defined by a subclass
 
     def __init__(self, name=u''):
         self.contacts = []
@@ -807,7 +808,6 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
 
 class FavoritesBlinkGroup(BlinkGroup):
     """Group representation for Favorites"""
-    type = 'favorites'
     deletable = True
     ignore_search = True
 
@@ -825,9 +825,9 @@ class FavoritesBlinkGroup(BlinkGroup):
         if 'group' not in self.__dict__:
             addressbook_manager = AddressbookManager()
             try:
-                group = addressbook_manager.get_group(self.type)
+                group = addressbook_manager.get_group('favorites')
             except KeyError:
-                group = Group(id=self.type)
+                group = Group(id='favorites')
                 group.name = self.name
                 group.expanded = True
                 group.position = None
