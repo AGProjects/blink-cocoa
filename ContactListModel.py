@@ -99,10 +99,7 @@ def saveContactIconToFile(image, uri):
         data = image.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
         data.writeToFile_atomically_(path, False)
     else:
-        try:
-            os.remove(path)
-        except OSError:
-            pass
+        unlink(path)
 
 
 def loadContactIconFromFile(uri):
