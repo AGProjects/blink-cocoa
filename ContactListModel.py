@@ -181,7 +181,7 @@ class BlinkContact(NSObject):
         else:
             self.username = uri_string.partition(":")[0] if ':' in uri_string else uri_string
             default_account = AccountManager().default_account
-            self.domain = default_account.id.domain if default_account is not None and default_account is not BonjourAccount else ''
+            self.domain = default_account.id.domain if default_account is not None and default_account is not BonjourAccount() else ''
 
     def copyWithZone_(self, zone):
         return self
