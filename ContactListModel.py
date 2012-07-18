@@ -1870,7 +1870,6 @@ class ContactListModel(CustomListModel):
                 group.position = position
                 group.save()
             self.groupsList.insert(index, self.all_contacts_group)
-
         elif group.id == "no_group":
             self.no_group.name = group.name
             if not group.position:
@@ -1878,47 +1877,50 @@ class ContactListModel(CustomListModel):
                 group.position = position
                 group.save()
             self.groupsList.insert(index, self.no_group)
-
         elif group.id == "addressbook":
-            self.addressbook_group.name = group.name
             if settings.contacts.enable_address_book:
+                self.addressbook_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
                     group.save()
                 self.addressbook_group.loadAddressBook()
                 self.groupsList.insert(index, self.addressbook_group)
-
+            else:
+                return
         elif group.id == "missed":
-            self.missed_calls_group.name = group.name
             if not is_lite and settings.contacts.enable_missed_calls_group:
+                self.missed_calls_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
                     group.save()
                 self.missed_calls_group.load_history()
                 self.groupsList.insert(index, self.missed_calls_group)
-
+            else:
+                return
         elif group.id == "outgoing":
-            self.outgoing_calls_group.name = group.name
             if not is_lite and settings.contacts.enable_outgoing_calls_group:
+                self.outgoing_calls_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
                     group.save()
                 self.outgoing_calls_group.load_history()
                 self.groupsList.insert(index, self.outgoing_calls_group)
-
+            else:
+                return
         elif group.id == "incoming":
-            self.incoming_calls_group.name = group.name
             if not is_lite and settings.contacts.enable_incoming_calls_group:
+                self.incoming_calls_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
                     group.save()
                 self.incoming_calls_group.load_history()
                 self.groupsList.insert(index, self.incoming_calls_group)
-
+            else:
+                return
         elif group.id is None:
             if not group.position:
                 position = 0
