@@ -46,16 +46,16 @@ class AddContactController(NSObject):
     def __init__(self, uri=None, name=None, group=None, type=None):
         NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_("Add Contact")
+        self.dealloc_timer = None
 
         self.default_uri = None
         self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
-        self.dealloc_timer = None
+        self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
         self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
         self.belonging_groups = []
         if group is not None:
             self.belonging_groups.append(group)
-        self.update_default_uri()
         self.nameText.setStringValue_(name or "")
         self.photoImage.setImage_(self.defaultPhotoImage)
         self.defaultButton.setEnabled_(False)
@@ -131,17 +131,13 @@ class AddContactController(NSObject):
         return True
 
     def update_default_uri(self):
-        if not self.uris:
-            self.addressText.setStringValue_('')
-            self.defaultButton.setEnabled_(False)
-            self.default_uri = ''
+        if self.default_uri:
+            if self.default_uri not in self.uris:
+                self.addressText.setStringValue_('')
+            else:
+                self.addressText.setStringValue_(self.default_uri.uri)
         else:
-            all_addresses = list(uri.uri for uri in self.uris if uri.uri)
-            if self.addressText.stringValue() not in all_addresses:
-                self.addressText.setStringValue_(all_addresses[0] if all_addresses else '')
-            self.default_uri = all_addresses[0]
-
-        self.addButton.setEnabled_(True if str(self.addressText.stringValue()) else False)
+            self.addressText.setStringValue_('')
 
     def windowShouldClose_(self, sender):
         self.startDeallocTimer()
@@ -251,34 +247,30 @@ class AddContactController(NSObject):
     @objc.IBAction
     def defaultClicked_(self, sender):
         if sender.selectedSegment() == 0:
+            # Set default URI
             contact_uri = self.selectedContactURI()
-            if contact_uri:
-                try:
-                    address = str(contact_uri.uri).strip()
-                except TypeError:
-                    pass
-                else:
-                    if contact_uri is not None and address:
-                        self.addressText.setStringValue_(address)
-                        self.default_uri = contact_uri.uri
+            self.default_uri = contact_uri
+            self.update_default_uri()
         elif sender.selectedSegment() == 1:
+            # Delete URI
             row = self.addressTable.selectedRow()
-            try:
-                del self.uris[row]
-                self.update_default_uri()
-                self.addressTable.reloadData()
-            except IndexError:
-                pass
+            del self.uris[row]
+            self.update_default_uri()
+            self.addressTable.reloadData()
 
     def selectedContactURI(self):
+        row = self.addressTable.selectedRow()
         try:
-            row = self.addressTable.selectedRow()
             return self.uris[row]
         except IndexError:
             return None
 
     def numberOfRowsInTableView_(self, table):
         return len(self.uris)+1
+
+    def tableViewSelectionDidChange_(self, notification):
+        row = self.addressTable.selectedRow()
+        self.defaultButton.setEnabled_(row < len(self.uris))
 
     def tableView_sortDescriptorsDidChange_(self, table, odescr):
         return
@@ -288,13 +280,9 @@ class AddContactController(NSObject):
             return ""
         cell = column.dataCell()
         column = int(column.identifier())
-        try:
-            contact_uri = self.uris[row]
-        except ValueError, e:
-            return ""
-
+        contact_uri = self.uris[row]
         if column == 0:
-            return str(contact_uri.uri)
+            return contact_uri.uri
         elif column == 1:
             return cell.indexOfItemWithTitle_(contact_uri.type or u'SIP')
 
@@ -316,7 +304,7 @@ class AddContactController(NSObject):
 
         if row >= len(self.uris):
             if column == 0:
-                has_empty_cell = any(value for value in self.uris if value.uri == '')
+                has_empty_cell = any(value for value in self.uris if not value)
                 if not has_empty_cell:
                     self.uris.append(ContactURI(uri="", type="SIP"))
 
@@ -329,8 +317,6 @@ class AddContactController(NSObject):
             contact_uri.uri = str(object)
         elif column == 1:
             contact_uri.type = str(cell.itemAtIndex_(object).title())
-
-        self.defaultButton.setEnabled_(True)
 
         self.update_default_uri()
         table.reloadData()
@@ -345,6 +331,8 @@ class AddContactController(NSObject):
             return False
         pboard = info.draggingPasteboard()
         draggedRow = int(pboard.stringForType_("dragged-row"))
+        if draggedRow >= len(self.uris):
+            return False
         if draggedRow != row+1 or oper != 0:
             item = self.uris[draggedRow]
             del self.uris[draggedRow]
@@ -364,17 +352,16 @@ class AddContactController(NSObject):
 
 class EditContactController(AddContactController):
     def __init__(self, blink_contact):
-        self.dealloc_timer = None
-        self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
-        self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
-        self.default_uri = None
-
-        self.blink_contact = blink_contact
         NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_("Edit Contact")
         self.addButton.setTitle_("OK")
+        self.dealloc_timer = None
+
+        self.blink_contact = blink_contact
+        self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
+        self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
+
         self.nameText.setStringValue_(blink_contact.name or "")
-        self.addressText.setStringValue_(blink_contact.uri or "")
         self.photoImage.setImage_(blink_contact.icon or self.defaultPhotoImage)
         self.preferredMedia.selectCellWithTag_(2 if blink_contact.preferred_media == "chat" else 1)
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
@@ -382,6 +369,7 @@ class EditContactController(AddContactController):
             type = format_uri_type(item.type)
             if type not in address_types:
                 self.addressTypesPopUpButton.addItemWithTitle_(type)
+        self.default_uri = blink_contact.default_uri
         self.uris = list(blink_contact.contact.uris)
         self.update_default_uri()
         self.addressTable.reloadData()
@@ -392,6 +380,7 @@ class EditContactController(AddContactController):
                               'dialog': {'subscribe': blink_contact.contact.dialog.subscribe,
                                          'policy': blink_contact.contact.dialog.policy if blink_contact.contact.dialog.policy != 'default' else 'block'}
         }
+        self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
         self.loadGroupNames()
 
