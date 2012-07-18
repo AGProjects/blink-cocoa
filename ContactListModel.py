@@ -1765,15 +1765,14 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
         settings = SIPSimpleSettings()
-        is_lite = NSApp.delegate().applicationName == 'Blink Lite'
 
         positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
         positions.sort()
         index = bisect.bisect_left(positions, group.position)
 
         if group.id == "favorites":
-            self.favorites_group.name = group.name
-            if not is_lite and settings.contacts.enable_favorites_group:
+            if settings.contacts.enable_favorites_group:
+                self.favorites_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1783,7 +1782,8 @@ class ContactListModel(CustomListModel):
                     self.favorites_group.contacts.append(blink_contact)
                     self.removeContactFromBlinkGroups(blink_contact.contact, [self.no_group])
                 self.favorites_group.sortContacts()
-
+            else:
+                return
         else:
             if not group.position:
                 position = 0
