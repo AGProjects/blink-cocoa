@@ -2443,6 +2443,8 @@
 				1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAD1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
+				1FEAFA8715B558DA00C00CF0 /* NewWatcherController.py in Resources */,
+				DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2661,6 +2663,8 @@
 				1F536AA71591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAE1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C815A459DA00A7079A /* ContactController.py in Resources */,
+				1FEAFA8815B558DA00C00CF0 /* NewWatcherController.py in Resources */,
+				DE9790FB15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2877,6 +2881,8 @@
 				1F536AA51591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAC1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
+				1FEAFA8615B558DA00C00CF0 /* NewWatcherController.py in Resources */,
+				DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
