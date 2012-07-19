@@ -1057,9 +1057,11 @@ class ChatController(MediaStream):
             try:
                 data = base64.b64decode(message.body)
                 self.remoteIcon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
-                self.chatWindowController.refreshDrawer()
             except Exception:
                 pass
+            else:
+                self.chatWindowController.refreshDrawer()
+            return
 
         if not message.content_type.startswith("text/"):
             return
