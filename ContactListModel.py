@@ -1075,6 +1075,7 @@ class CustomListModel(NSObject):
                     targetGroup = item
 
                     if isinstance(sourceContact, SystemAddressBookBlinkContact) or isinstance(sourceGroup, HistoryBlinkGroup):
+                        # TODO: Migrate all URIs for system addressbook contacts
                         try:
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
                         except StopIteration:
