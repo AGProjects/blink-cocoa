@@ -254,6 +254,8 @@ class AddContactController(NSObject):
             del self.uris[row]
             self.update_default_uri()
             self.addressTable.reloadData()
+        row = self.addressTable.selectedRow()
+        self.defaultButton.setEnabled_(row < len(self.uris))
 
     def selectedContactURI(self):
         row = self.addressTable.selectedRow()
@@ -317,6 +319,8 @@ class AddContactController(NSObject):
 
         self.update_default_uri()
         table.reloadData()
+        row = self.addressTable.selectedRow()
+        self.defaultButton.setEnabled_(row < len(self.uris))
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if oper == NSTableViewDropOn:
