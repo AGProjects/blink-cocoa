@@ -1734,8 +1734,8 @@ class ContactListModel(CustomListModel):
         contact = notification.sender
         blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
         blink_contact.avatar.delete()
-        self.presence_contacts.remove(blink_contact)
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group]+self.groupsList)
+        self.presence_contacts.remove(blink_contact)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
     def _NH_AddressbookContactDidChange(self, notification):
