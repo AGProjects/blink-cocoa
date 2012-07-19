@@ -3,7 +3,30 @@
 
 from __future__ import with_statement
 
-__all__ = ['BlinkContact', 'BlinkGroup', 'ContactListModel']
+__all__ = ['BlinkContact',
+           'BlinkConferenceContact',
+           'BlinkPresenceContact',
+           'HistoryBlinkContact',
+           'BonjourBlinkContact',
+           'SearchResultContact',
+           'LdapSearchResultContact',
+           'SystemAddressBookBlinkContact',
+           'BlinkGroup',
+           'BonjourBlinkGroup',
+           'NoBlinkGroup',
+           'AllContactsBlinkGroup',
+           'HistoryBlinkGroup',
+           'MissedCallsBlinkGroup',
+           'OutgoingCallsBlinkGroup',
+           'IncomingCallsBlinkGroup',
+           'AddressBookBlinkGroup',
+           'FavoritesBlinkGroup',
+           'Avatar',
+           'DefaultUserAvatar',
+           'DefaultMultiUserAvatar',
+           'PresenceContactAvatar',
+           'ContactListModel',
+           'SearchContactListModel']
 
 import bisect
 import base64
