@@ -15,10 +15,12 @@ class ContactCell(NSTextFieldCell):
     chatIcon = NSImage.imageNamed_("pencil")
     screenIcon = NSImage.imageNamed_("display_16")
 
-    firstLineFontAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName)
-    firstLineFontAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName)
-    secondLineFontAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.grayColor(), NSForegroundColorAttributeName)
-    secondLineFontAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName)
+    style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
+    style.setLineBreakMode_(NSLineBreakByTruncatingTail)
+    firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName, style, NSParagraphStyleAttributeName)
+    firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.grayColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    secondLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
 
     def setContact_(self, contact):
         self.contact = contact
@@ -54,15 +56,17 @@ class ContactCell(NSTextFieldCell):
         frame.origin.x = 35
         frame.origin.y += 2
 
-        attrs = self.firstLineFontAttributes if not self.isHighlighted() else self.firstLineFontAttributes_highlighted
-        self.stringValue().drawAtPoint_withAttributes_(frame.origin, attrs)
+        rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width-10, frame.size.height)
+        attrs = self.firstLineAttributes if not self.isHighlighted() else self.firstLineAttributes_highlighted
+        self.stringValue().drawInRect_withAttributes_(rect, attrs)
 
     def drawSecondLine(self):
         if self.contact.detail:
-            point = self.frame.origin
-            point.y += 15
-            attrs = self.secondLineFontAttributes if not self.isHighlighted() else self.secondLineFontAttributes_highlighted
-            self.contact.detail.drawAtPoint_withAttributes_(point, attrs)
+            frame = self.frame
+            frame.origin.y += 15
+            rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width-10, frame.size.height)
+            attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
+            self.contact.detail.drawInRect_withAttributes_(rect, attrs)
 
     def drawActiveMedia(self):
         if not hasattr(self.contact, "active_media"):
