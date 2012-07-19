@@ -1743,10 +1743,10 @@ class SessionController(NSObject):
         except StopIteration:
             pass
         else:
-            contact.setDetail('%s (%s)' % (data.reason, data.code))
+            contact.detail = '%s (%s)' % (data.reason, data.code)
             self.failed_to_join_participants[uri]=time.time()
             if data.code >= 400 or data.code == 0:
-                contact.setDetail('Invite Failed: %s (%s)' % (data.reason, data.code))
+                contact.detail = 'Invite Failed: %s (%s)' % (data.reason, data.code)
                 self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
@@ -1757,13 +1757,13 @@ class SessionController(NSObject):
             pass
         else:
             if data.code == 100:
-                contact.setDetail('Connecting...')
+                contact.detail = 'Connecting...'
             elif data.code in (180, 183):
-                contact.setDetail('Ringing...')
+                contact.detail = 'Ringing...'
             elif data.code == 200:
-                contact.setDetail('Invitation accepted')
+                contact.detail = 'Invitation accepted'
             elif data.code < 400:
-                contact.setDetail('%s (%s)' % (data.reason, data.code))
+                contact.detail = '%s (%s)' % (data.reason, data.code)
 
             # notify controllers who need conference information
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())

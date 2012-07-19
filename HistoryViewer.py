@@ -188,7 +188,7 @@ class HistoryViewer(NSWindowController):
                 detail = unicode(row[0])
                 contact = BlinkContact(unicode(row[0]), name=unicode(row[0]))
 
-            contact.setDetail(detail)
+            contact.detail = detail
             self.contacts.append(contact)
             self.allContacts.append(contact)
 

@@ -10,7 +10,6 @@ class ContactCell(NSTextFieldCell):
     view = None
     frame = None
 
-    defaultIcon = None
     audioIcon = NSImage.imageNamed_("audio_16")
     audioHoldIcon = NSImage.imageNamed_("paused_16")
     chatIcon = NSImage.imageNamed_("pencil")
@@ -39,13 +38,10 @@ class ContactCell(NSTextFieldCell):
         if self.contact is None:
             return super(ContactCell, self).drawWithFrame_inView_(frame, view)
 
-        if self.defaultIcon is None:
-            self.defaultIcon = NSImage.imageNamed_("NSUser")
-
         self.frame = frame
         self.view = view
 
-        icon = self.contact.icon or self.defaultIcon
+        icon = self.contact.avatar.icon
         self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
 
         self.drawActiveMedia()

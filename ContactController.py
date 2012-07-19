@@ -15,8 +15,6 @@ from util import *
 from VirtualGroups import VirtualGroup
 
 
-ICON_SIZE=128
-
 class MyImageThing(NSImageView):
     def mouseDown_(self, event):
         super(MyImageThing, self).mouseDown_(event)
@@ -234,7 +232,6 @@ class AddContactController(NSObject):
                 path = panel.filename()
                 image = NSImage.alloc().initWithContentsOfFile_(path)
                 self.photoImage.setImage_(image)
-
         elif sender.tag() == 21: # clear icon
             self.photoImage.setImage_(self.defaultPhotoImage)
         elif sender.tag() == 10:
@@ -362,7 +359,7 @@ class EditContactController(AddContactController):
         self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
 
         self.nameText.setStringValue_(blink_contact.name or "")
-        self.photoImage.setImage_(blink_contact.icon or self.defaultPhotoImage)
+        self.photoImage.setImage_(blink_contact.icon)
         self.preferredMedia.selectCellWithTag_(2 if blink_contact.preferred_media == "chat" else 1)
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         for item in blink_contact.contact.uris:

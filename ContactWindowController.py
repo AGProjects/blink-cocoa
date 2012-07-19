@@ -41,7 +41,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, contactIconPathForURI, saveContactIconToFile
+from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -213,11 +213,6 @@ class ContactWindowController(NSWindowController):
         # minimizing
 
         self.searchOutlineTopOffset = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - NSHeight(self.searchOutline.enclosingScrollView().frame())
-
-        # save the NSUser icon to disk so that it can be used from html
-        icon = NSImage.imageNamed_("NSUser")
-        icon.setSize_(NSMakeSize(32, 32))
-        saveContactIconToFile(icon, "default_user_icon")
 
         self.contactOutline.setRowHeight_(40)
         self.contactOutline.setTarget_(self)
@@ -969,20 +964,15 @@ class ContactWindowController(NSWindowController):
             return self.iconPathForSelf()
         contact = self.getContactMatchingURI(uri)
         if contact:
-            path = contact.iconPath()
+            path = contact.avatar.path
             if os.path.isfile(path):
                 return path
-            elif contact.icon is not None:
-                contact.saveIcon()
-                if os.path.isfile(path):
-                    return path
-                return path
-        return contactIconPathForURI("default_user_icon")
+        return DefaultUserAvatar().path
 
     def iconPathForSelf(self):
         icon = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
         if not icon or not os.path.exists(unicode(icon)):
-            return contactIconPathForURI("default_user_icon")
+            return DefaultUserAvatar().path
         return unicode(icon)
 
     def addContact(self, uri, display_name=None):
@@ -1346,7 +1336,7 @@ class ContactWindowController(NSWindowController):
                     exists = uri in (contact.uri for contact in self.searchResultsModel.groupsList)
                     if not exists:
                         contact = LdapSearchResultContact(str(uri), uri_type=format_uri_type(type), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
-                        contact.setDetail('%s (%s)' % (str(uri), format_uri_type(type)))
+                        contact.detail = '%s (%s)' % (str(uri), format_uri_type(type))
                         self.ldap_found_contacts.append(contact)
 
             if self.ldap_found_contacts:
@@ -1558,7 +1548,7 @@ class ContactWindowController(NSWindowController):
                     contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                 else:
                     contact = BlinkConferenceContact(uri=uri, name=uri)
-                contact.setDetail('Invitation sent...')
+                contact.detail = 'Invitation sent...'
                 session_controller.invited_participants.append(contact)
                 session_controller.participants_log.add(uri)
 
@@ -2576,7 +2566,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def setAutoAnswer_(self, sender):
         contact = sender.representedObject()
-        contact.setAutoAnswer(True if not contact.auto_answer else False)
+        contact.auto_answer = not contact.auto_answer
 
     @objc.IBAction
     def goToBackupContactsFolderClicked_(self, sender):
@@ -3210,14 +3200,14 @@ class ContactWindowController(NSWindowController):
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                     contact = BlinkConferenceContact(uri, name=display_name)
 
-                contact.setActiveMedia(active_media)
+                contact.active_media = active_media
 
                 # detail will be reset on receival of next conference-info update
                 if uri in session.pending_removal_participants:
-                    contact.setDetail('Removal requested...')
+                    contact.detail = 'Removal requested...'
 
                 if own_uri and own_icon and contact.uri == own_uri:
-                    contact.setIcon(own_icon)
+                    contact.avatar.icon = own_icon
 
                 if contact not in self.participants:
                     self.participants.append(contact)
@@ -3371,7 +3361,7 @@ class ContactWindowController(NSWindowController):
                             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
-                        contact.setDetail('Invitation sent...')
+                        contact.detail = 'Invitation sent...'
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
                             session.participants_log.add(uri)
@@ -3446,7 +3436,7 @@ class ContactWindowController(NSWindowController):
                     contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                 else:
                     contact = BlinkConferenceContact(uri, name=uri)
-                contact.setDetail('Invitation sent...')
+                contact.detail = 'Invitation sent...'
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)
                 session.log_info(u"Invite %s to conference" % uri)

@@ -3,7 +3,7 @@
 
 from __future__ import with_statement
 
-__all__ = ['BlinkContact', 'BlinkGroup', 'ContactListModel', 'contactIconPathForURI', 'loadContactIconFromFile', 'saveContactIconToFile']
+__all__ = ['BlinkContact', 'BlinkGroup', 'ContactListModel']
 
 import bisect
 import base64
@@ -20,10 +20,12 @@ from AppKit import *
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from application.python.descriptor import classproperty
 from application.system import makedirs, unlink
+from itertools import chain
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import FrozenSIPURI, SIPURI
+from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
@@ -41,28 +43,8 @@ from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from resources import ApplicationData
 from util import *
 
+
 ICON_SIZE=64
-
-
-def base64Icon(icon):
-    if not icon:
-        return None
-
-    originalSize = icon.size()
-    if originalSize.width > ICON_SIZE or originalSize.height > ICON_SIZE:
-        resizeWidth = ICON_SIZE
-        resizeHeight = ICON_SIZE * originalSize.height/originalSize.width
-        scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
-        scaled_icon.lockFocus()
-        icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
-        scaled_icon.unlockFocus()
-        tiff_data = scaled_icon.TIFFRepresentation()
-    else:
-        tiff_data = icon.TIFFRepresentation()
-
-    bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
-    png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-    return base64.b64encode(png_data)
 
 PresenceActivityPrefix = {
     "Available": "is",
@@ -88,50 +70,87 @@ PresenceActivityPrefix = {
     "Holiday": "is in"
     }
 
-def contactIconPathForURI(uri):
-    return ApplicationData.get('photos/%s.tiff' % uri)
+
+class Avatar(object):
+    def __init__(self, icon, path=None):
+        self.icon = self.scale_icon(icon)
+        self.path = path
+
+    @classproperty
+    def base_path(cls):
+        return ApplicationData.get('photos')
+
+    @classmethod
+    def scale_icon(cls, icon):
+        size = icon.size()
+        if size.width > ICON_SIZE or size.height > ICON_SIZE:
+            icon.setScalesWhenResized_(True)
+            icon.setSize_(NSMakeSize(ICON_SIZE, ICON_SIZE * size.height/size.width))
+        return icon
+
+    def to_base64(self):
+        tiff_data = self.icon.TIFFRepresentation()
+        bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+        png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+        return base64.b64encode(png_data)
+
+    def save(self):
+        pass
+
+    def delete(self):
+        pass
 
 
-def saveContactIconToFile(image, uri):
-    path = contactIconPathForURI(uri)
-    makedirs(os.path.dirname(path))
-    if image is not None:
-        data = image.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
-        data.writeToFile_atomically_(path, False)
-    else:
-        unlink(path)
+class DefaultUserAvatar(Avatar):
+    def __init__(self):
+        filename = 'default_user_icon.tiff'
+        path = os.path.join(self.base_path, filename)
+        makedirs(os.path.dirname(path))
+        if not os.path.isfile(path):
+            icon = NSImage.imageNamed_("NSUser")
+            icon.setSize_(NSMakeSize(32, 32))
+            data = icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
+            data.writeToFile_atomically_(path, False)
+        else:
+            icon = NSImage.alloc().initWithContentsOfFile_(path)
+        super(DefaultUserAvatar, self).__init__(icon, path)
 
 
-def loadContactIconFromFile(uri):
-    path = contactIconPathForURI(uri)
-    if os.path.exists(path):
-        return NSImage.alloc().initWithContentsOfFile_(path)
-    return None
+class DefaultMultiUserAvatar(Avatar):
+    def __init__(self):
+        filename = 'default_multi_user_icon.tiff'
+        path = os.path.join(self.base_path, filename)
+        makedirs(os.path.dirname(path))
+        if not os.path.isfile(path):
+            icon = NSImage.imageNamed_("NSUserGroup")
+            icon.setSize_(NSMakeSize(32, 32))
+            data = image.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
+            data.writeToFile_atomically_(path, False)
+        else:
+            icon = NSImage.alloc().initWithContentsOfFile_(path)
+        super(DefaultMultiUserAvatar, self).__init__(icon, path)
 
 
-def loadContactIcon(contact):
-    if contact.icon is not None:
+class PresenceContactAvatar(Avatar):
+    @classmethod
+    def from_contact(cls, contact):
+        if contact.icon is None:
+            return DefaultUserAvatar()
         try:
             data = base64.b64decode(contact.icon)
-            return NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
+            icon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
         except Exception:
-            pass
-    return None
+            return DefaultUserAvatar()
+        else:
+            path = os.path.join(cls.base_path, '%s.tiff' % contact.id)
+            return cls(icon, path)
 
-def formatABPersonName(person):
-    first = person.valueForProperty_(AddressBook.kABFirstNameProperty)
-    last = person.valueForProperty_(AddressBook.kABLastNameProperty)
-    middle = person.valueForProperty_(AddressBook.kABMiddleNameProperty)
-    name = u""
-    if first and last and middle:
-        name += unicode(first) + " " + unicode(middle) + " " + unicode(last)
-    elif first and last:
-        name += unicode(first) + " " + unicode(last)
-    elif last:
-        name += unicode(last)
-    elif first:
-        name += unicode(first)
-    return name
+    def save(self):
+        data = self.icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
+        data.writeToFile_atomically_(self.path, False)
+
+    def delete(self):
+        unlink(self.path)
 
 
 class BlinkContact(NSObject):
@@ -139,6 +158,7 @@ class BlinkContact(NSObject):
     editable = True
     deletable = True
     auto_answer = False
+    default_preferred_media = 'audio'
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -146,28 +166,49 @@ class BlinkContact(NSObject):
     def __init__(self, uri, uri_type=None, name=None, icon=None):
         self.id = None
         self.contact = None
-        self.uri = uri
-        self.uris = [ContactURI(uri=self.uri, type=format_uri_type(uri_type))]
-        self.name = NSString.stringWithString_(name or uri)
-        self.detail = NSString.stringWithString_(uri)
-        self.icon = icon
-        self._preferred_media = 'audio'
+        self.uris = [ContactURI(uri=uri, type=format_uri_type(uri_type))]
+        self.name = name or self.uri
+        self.detail = self.uri
+        if icon is not None:
+            self.avatar = Avatar(icon)
+        else:
+            self.avatar = DefaultUserAvatar()
         self._set_username_and_domain()
 
-    @property
-    def aliases(self):
-        return list(alias.uri for alias in iter(self.uris) if alias.uri != self.uri)
+    def _get_detail(self):
+        detail = self.__dict__.get('detail', None)
+        if detail is None:
+            detail = NSString.stringWithString_(u'')
+        return detail
+    def _set_detail(self, value):
+        self.__dict__['detail'] = NSString.stringWithString_(value)
+    detail = property(_get_detail, _set_detail)
 
     @property
-    def model(self):
-        return NSApp.delegate().contactsWindowController.model
+    def icon(self):
+        return self.avatar.icon
 
     @property
-    def favorite(self):
-        return False
+    def uri(self):
+        if self.uris:
+            return self.uris[0].uri
+        else:
+            return u''
+
+    @property
+    def preferred_media(self):
+        uri = str(self.uri)
+        if not uri.startswith(('sip:', 'sips:')):
+            uri = 'sip:'+uri
+        try:
+            uri = SIPURI.parse(uri)
+        except SIPCoreError:
+            return self.default_preferred_media
+        else:
+            return uri.parameters.get('session-type', self.default_preferred_media)
 
     def dealloc(self):
-        self.icon = None
+        self.avatar = None
         super(BlinkContact, self).dealloc()
 
     def _set_username_and_domain(self):
@@ -193,19 +234,7 @@ class BlinkContact(NSObject):
 
     def __contains__(self, text):
         text = text.lower()
-        return text in self.uri.lower() or text in self.name.lower()
-
-    @property
-    def preferred_media(self):
-        _split = str(self.uri).split(';')
-        for item in _split[:]:
-            if not item.startswith("session-type"):
-                _split.remove(item)
-        try:
-            session_type = _split[0].split("=")[1]
-        except IndexError:
-            session_type = None
-        return session_type or self._preferred_media
+        return any(text in item for item in chain((uri.uri.lower() for uri in self.uris), (self.name.lower(),)))
 
     def split_uri(self, uri):
         if isinstance(uri, (FrozenSIPURI, SIPURI)):
@@ -254,104 +283,56 @@ class BlinkContact(NSObject):
         if match((self.username, self.domain), candidate):
             return True
 
-        return any(match(self.split_uri(alias), candidate) for alias in self.aliases) if hasattr(self, "aliases") else False
-
-    def setURI(self, uri):
-        self.uri = uri
-
-    def setURIs(self, uris):
-        self.uris = self.contact.uris
-        if self.contact.default_uri:
-            self.uri = self.contact.default_uri
-        else:
-            try:
-                first_uri = next(iter(self.contact.uris))
-                self.uri = first_uri.uri
-            except StopIteration:
-                self.uri = ''
-        self.detail = NSString.stringWithString_(self.uri)
-
-    def setName(self, name):
-        self.name = NSString.stringWithString_(name)
-
-    def setDetail(self, detail):
-        self.detail = NSString.stringWithString_(detail)
-
-    def setPreferredMedia(self, media):
-        self._preferred_media = media
-
-    def setAutoAnswer(self, value):
-        self.auto_answer = value
-
-    def iconPath(self):
-        return contactIconPathForURI(str(self.uri))
-
-    def setIcon(self, image):
-        if image:
-            size = image.size()
-            if size.width > ICON_SIZE or size.height > ICON_SIZE:
-                image.setScalesWhenResized_(True)
-                image.setSize_(NSMakeSize(ICON_SIZE, ICON_SIZE * size.height/size.width))
-
-        self.icon = image
-        self.saveIcon()
-
-    def saveIcon(self):
-        saveContactIconToFile(self.icon, str(self.uri))
+        return any(match(self.split_uri(item.uri), candidate) for item in self.uris if item.uri)
 
 
 class BlinkConferenceContact(BlinkContact):
     """Contact representation for conference drawer UI"""
 
-    def __init__(self, *args, **kw):
-        self.contact = None
-    	BlinkContact.__init__(self, *args, **kw)
+    def __init__(self, uri, name=None, icon=None):
+        super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
         self.active_media = []
         self.screensharing_url = None
 
-    def setActiveMedia(self, media):
-        self.active_media = media
 
-    def setScreensharingUrl(self, url):
-        self.screensharing_url = url
+class BlinkPresenceContactAttribute(object):
+    def __init__(self, name):
+        self.name = name
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return None
+        return getattr(obj.contact, self.name)
+    def __set__(self, obj, value):
+        setattr(obj.contact, self.name, value)
+        obj.contact.save()
 
 
 class BlinkPresenceContact(BlinkContact):
     """Contact representation with Presence Enabled"""
 
-    def __init__(self, contact):
-        self.id = contact.id
-        self.contact = contact
-        self.uris = self.contact.uris
-        if self.contact.default_uri:
-            self.uri = self.contact.default_uri
-        else:
-            try:
-                first_uri = next(iter(self.contact.uris))
-                self.uri = first_uri.uri
-            except StopIteration:
-                self.uri = ''
+    auto_answer = BlinkPresenceContactAttribute('auto_answer')
+    name = BlinkPresenceContactAttribute('name')
+    uris = BlinkPresenceContactAttribute('uris')
 
-        self.name = NSString.stringWithString_(self.contact.name or self.uri)
-        self.detail = NSString.stringWithString_(self.uri)
-        self.icon = loadContactIcon(self.contact) or loadContactIconFromFile(self.uri)
-        self._preferred_media = self.contact.preferred_media or 'audio'
+    def __init__(self, contact):
+        self.contact = contact
+        self.avatar = PresenceContactAvatar.from_contact(contact)
+        self.avatar.save()
+        self.detail = self.uri
         self._set_username_and_domain()
 
         # presence related attributes
         self.presence_indicator = 'unknown'
         self.presence_note = None
         self.presence_activity = None
-        self.supported_media = []
-
-        self.name = NSString.stringWithString_(self.contact.name or self.uri)
-        self.detail = NSString.stringWithString_(self.uri)
 
     def _get_favorite(self):
-        favorite_group = self.model.favorites_group.group
+        model = NSApp.delegate().contactsWindowController.model
+        favorite_group = model.favorites_group.group
         return self.contact.id in favorite_group.contacts
     def _set_favorite(self, favorite):
-        group = self.model.favorites_group.group
+        model = NSApp.delegate().contactsWindowController.model
+        group = model.favorites_group.group
         operation = group.contacts.add if favorite else group.contacts.remove
         try:
             operation(self.contact)
@@ -362,6 +343,54 @@ class BlinkPresenceContact(BlinkContact):
     favorite = property(_get_favorite, _set_favorite)
     del _get_favorite, _set_favorite
 
+    def _get_preferred_media(self):
+        uri = str(self.uri)
+        if not uri.startswith(('sip:', 'sips:')):
+            uri = 'sip:'+uri
+        try:
+            uri = SIPURI.parse(uri)
+        except SIPCoreError:
+            return self.contact.preferred_media
+        else:
+            return uri.parameters.get('session-type', self.contact.preferred_media)
+    def _set_preferred_media(self, value):
+        self.contact.preferred_media = value
+        self.contact.save()
+    preferred_media = property(_get_preferred_media, _set_preferred_media)
+    del _get_preferred_media, _set_preferred_media
+
+    def _get_default_uri(self):
+        if self.contact.default_uri is not None:
+            try:
+                return self.contact.uris[self.contact.default_uri]
+            except KeyError:
+                pass
+        return None
+    def _set_default_uri(self, value):
+        if value:
+            if value.id not in self.contact.uris:
+                self.contact.uris.add(value)
+            value = value.id
+        self.contact.default_uri = value
+        self.contact.save()
+    default_uri = property(_get_default_uri, _set_default_uri)
+    del _get_default_uri, _set_default_uri
+
+    @property
+    def id(self):
+        return self.contact.id
+
+    @property
+    def uri(self):
+        if self.default_uri is not None:
+            return self.default_uri.uri
+        try:
+            uri = next(iter(self.contact.uris))
+        except StopIteration:
+            return u''
+        else:
+            return uri.uri
+
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
 
@@ -370,35 +399,6 @@ class BlinkPresenceContact(BlinkContact):
 
     def setPresenceActivity(self, activity):
         self.presence_activity = activity
-
-    def setSupportedMedia(self, media):
-        self.supported_media = media
-
-    def setIcon(self, icon=None):
-        self.icon = icon
-
-    def saveIcon(self):
-        if self.icon:
-            originalSize = self.icon.size()
-            if originalSize.width > ICON_SIZE or originalSize.height > ICON_SIZE:
-                resizeWidth = ICON_SIZE
-                resizeHeight = ICON_SIZE * originalSize.height/originalSize.width
-                scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
-                scaled_icon.lockFocus()
-                self.icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
-                scaled_icon.unlockFocus()
-                saveContactIconToFile(scaled_icon, str(self.uri))
-                base64icon = base64Icon(scaled_icon)
-            else:
-                saveContactIconToFile(self.icon, str(self.uri))
-                base64icon = base64Icon(self.icon)
-
-            self.contact.icon = base64icon
-            self.contact.save()
-        else:
-            saveContactIconToFile(None, str(self.uri))
-            self.contact.icon = None
-            self.contact.save()
 
 
 class HistoryBlinkContact(BlinkContact):
@@ -412,20 +412,24 @@ class BonjourBlinkContact(BlinkContact):
     editable = False
     deletable = False
 
-    def __init__(self, uri, bonjour_neighbour, name=None, icon=None, detail=None):
-        self.uri = str(uri)
+    def __init__(self, uri, bonjour_neighbour, name=None):
         self.bonjour_neighbour = bonjour_neighbour
-        self.aor = uri
-        self.name = NSString.stringWithString_(name or self.uri)
-        self.detail = NSString.stringWithString_(detail or self.uri)
-        self.icon = NSImage.imageNamed_("NSUserGroup") if icon is None and ";isfocus" in self.uri else icon
+        self.update_uri(uri)
+        self.name = name or self.uri
+        self.detail = self.uri
+        if 'isfocus' in uri.parameters:
+            self.avatar = DefaultMultiUserAvatar()
+        else:
+            self.avatar = DefaultUserAvatar()
 
+        # presence related attributes
         self.presence_indicator = None
         self.presence_note = None
         self.presence_activity = None
-        self.supported_media = []
 
-        self._preferred_media = 'audio'
+    def update_uri(self, uri):
+        self.aor = uri
+        self.uris = [ContactURI(uri=str(uri), type='SIP')]
         self._set_username_and_domain()
 
     def setPresenceIndicator(self, indicator):
@@ -437,12 +441,10 @@ class BonjourBlinkContact(BlinkContact):
     def setPresenceActivity(self, activity):
         self.presence_activity = activity
 
-    def setSupportedMedia(self, media):
-        self.supported_media = media
-
     def matchesURI(self, uri):
         candidate = self.split_uri(uri)
         return (self.username, self.domain) == (candidate[0], candidate[1])
+
 
 class SearchResultContact(BlinkContact):
     """Contact representation for un-matched results in the search outline"""
@@ -464,7 +466,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
     def __init__(self, ab_contact):
         self.id = ab_contact.uniqueId()
 
-        name = formatABPersonName(ab_contact)
+        name = self.__class__.format_person_name(ab_contact)
         company = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
 
         if not name and company:
@@ -527,18 +529,33 @@ class SystemAddressBookBlinkContact(BlinkContact):
 
         self.uris = uris
         if self.uris:
-            first_uri = next(iter(self.uris))
-            self.uri = first_uri.uri
-            self.detail = NSString.stringWithString_('%s (%s)' % (first_uri.uri, first_uri.type) )
+            detail = u'%s (%s)' % (self.uris[0].uri, self.uris[0].type)
         else:
-            self.uri = 'None'
-            self.detail = NSString.stringWithString_('None')
-        self.default_uri = self.uri
-        self.name = NSString.stringWithString_(self.name or self.uri)
-        idata = ab_contact.imageData()
-        self.icon = NSImage.alloc().initWithData_(idata) if idata else NSImage.imageNamed_("NSUser")
-        self._preferred_media = 'audio'
+            detail = u''
+        self.detail = detail
+        image_data = ab_contact.imageData()
+        if image_data:
+            icon = NSImage.alloc().initWithData_(image_data)
+            self.avatar = Avatar(icon)
+        else:
+            self.avatar = DefaultUserAvatar()
         self._set_username_and_domain()
+
+    @classmethod
+    def format_person_name(cls, person):
+        first = person.valueForProperty_(AddressBook.kABFirstNameProperty)
+        last = person.valueForProperty_(AddressBook.kABLastNameProperty)
+        middle = person.valueForProperty_(AddressBook.kABMiddleNameProperty)
+        name = u""
+        if first and last and middle:
+            name += unicode(first) + " " + unicode(middle) + " " + unicode(last)
+        elif first and last:
+            name += unicode(first) + " " + unicode(last)
+        elif last:
+            name += unicode(last)
+        elif first:
+            name += unicode(first)
+        return name
 
 
 class BlinkGroupAttribute(object):
@@ -727,11 +744,11 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 contact = getContactMatchingURI(target_uri)
                 if contact:
                     name = contact.name
-                    icon=contact.icon
+                    icon = contact.avatar.icon
                 else:
-                    icon=None
+                    icon = None
                 blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=name)
-                blink_contact.setDetail(u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time)))
+                blink_contact.detail = u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time))
                 contacts.append(blink_contact)
 
             if len(seen) >= count:
@@ -740,7 +757,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         for blink_contact in contacts:
             if seen[blink_contact.uri] > 1:
                 new_detail = blink_contact.detail + u' and %d other times' % seen[blink_contact.uri]
-                blink_contact.setDetail(new_detail)
+                blink_contact.detail = new_detail
             self.contacts.append(blink_contact)
 
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -796,7 +813,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
             return
         for ab_contact in book.people():
             blink_contact = SystemAddressBookBlinkContact(ab_contact)
-            if blink_contact.uri and blink_contact.uri != 'None':
+            if blink_contact.uris:
                 self.contacts.append(blink_contact)
         self.sortContacts()
 
@@ -1250,7 +1267,7 @@ class ContactListModel(CustomListModel):
                 'id'              : contact.id,
                 'name'            : contact.name,
                 'default_uri'     : contact.default_uri,
-                'uris'            : list((alias.uri, alias.type) for alias in iter(contact.uris)),
+                'uris'            : list((uri.uri, uri.type) for uri in iter(contact.uris)),
                 'preferred_media' : contact.preferred_media,
                 'icon'            : contact.icon,
                 'favorite'        : self.favorites_group.group is not None and contact.id in self.favorites_group.group.contacts,
@@ -1612,7 +1629,7 @@ class ContactListModel(CustomListModel):
                     activity = random.choice(PresenceStatusList)
                     if PresenceActivityPrefix.has_key(activity[1]):
                         detail = '%s %s %s' % (blink_contact.uri, PresenceActivityPrefix[activity[1]], activity[1])
-                        blink_contact.setDetail(detail)
+                        blink_contact.detail = detail
                     change = True
 
         if change:
@@ -1663,19 +1680,18 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
             self.bonjour_group.not_filtered_contacts.append(blink_contact)
-            if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
-                if uri.transport != 'tls':
-                    tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
-                    if not tls_neighbours:
-                        blink_contact.setPresenceIndicator("unknown")
-                        self.bonjour_group.contacts.append(blink_contact)
-                else:
+            if uri.transport != 'tls':
+                tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
+                if not tls_neighbours:
                     blink_contact.setPresenceIndicator("unknown")
                     self.bonjour_group.contacts.append(blink_contact)
+            else:
+                blink_contact.setPresenceIndicator("unknown")
+                self.bonjour_group.contacts.append(blink_contact)
         else:
-            blink_contact.setName(name)
-            blink_contact.setURI(str(uri))
-            blink_contact.setDetail(str(uri))
+            blink_contact.name = name
+            blink_contact.update_uri(uri)
+            blink_contact.detail = blink_contact.uri
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
 
@@ -1716,6 +1732,7 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
         blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
+        blink_contact.avatar.delete()
         self.presence_contacts.remove(blink_contact)
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group]+self.groupsList)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -1725,18 +1742,11 @@ class ContactListModel(CustomListModel):
         blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
 
         if 'icon' in notification.data.modified:
-            blink_contact.setIcon(loadContactIcon(contact))
-
-        if 'uris' in notification.data.modified:
-            blink_contact.setURIs(contact.uris)
-
-        if 'name' in notification.data.modified or 'default_uri' in notification.data.modified:
-            blink_contact.setURI(contact.default_uri)
-            blink_contact.setDetail(contact.default_uri)
-            blink_contact.setName(contact.name or contact.uri)
-
-        if 'preferred_media' in notification.data.modified:
-            blink_contact.setPreferredMedia(contact.preferred_media)
+            blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
+            blink_contact.avatar.save()
+        if set(['default_uri', 'uris']).intersection(notification.data.modified):
+            blink_contact.detail = blink_contact.uri
+            blink_contact._set_username_and_domain()
 
         [g.sortContacts() for g in self.groupsList if blink_contact in g.contacts]
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
@@ -1962,7 +1972,6 @@ class ContactListModel(CustomListModel):
         group = Group(id='test')
         group.name = 'Test'
         group.expanded = True
-        group.position = None
 
         test_contacts = {
                         "200901@login.zipdx.com":       { 'name': "VUC http://vuc.me", 'preferred_media': "audio", 'id': 'test_zipdx' },
@@ -1971,16 +1980,17 @@ class ContactListModel(CustomListModel):
                         "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
                         }
 
-        for uri in test_contacts.keys():
-            icon = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
-            path = ApplicationData.get('photos/%s.tiff' % uri)
-            NSFileManager.defaultManager().copyItemAtPath_toPath_error_(icon, path, None)
+        for uri, data in test_contacts.itervalues():
+            path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
+            icon = NSImage.alloc().initWithContentsOfFile_(path)
 
-            contact = Contact(id=test_contacts[uri]['id'])
-            contact.default_uri=uri
-            contact.uris.add(ContactURI(uri=uri, type='SIP'))
-            contact.name = test_contacts[uri]['name']
-            contact.preferred_media = test_contacts[uri]['preferred_media']
+            contact = Contact(id=data['id'])
+            contact_uri = ContactURI(uri=uri, type='SIP')
+            contact.uris.add(contact_uri)
+            contact.default_uri = contact_uri.id
+            contact.name = data['name']
+            contact.preferred_media = data['preferred_media']
+            contact.icon = Avatar(icon).to_base64()
             contact.save()
             group.contacts.add(contact)
 
@@ -2066,15 +2076,15 @@ class ContactListModel(CustomListModel):
         with addressbook_manager.transaction():
             contact = Contact()
             contact.name = new_contact['name']
-            contact.default_uri = new_contact['default_uri']
             contact.uris = new_contact['uris']
-            contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
+            default_uri = new_contact['default_uri']
+            contact.default_uri = default_uri.id if default_uri is not None else None
+            contact.preferred_media = new_contact['preferred_media']
             icon = new_contact['icon']
             if icon is None:
                 contact.icon = None
-                saveContactIconToFile(None, contact.default_uri)
             else:
-                contact.icon = base64Icon(icon)
+                contact.icon = Avatar(icon).to_base64()
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
@@ -2104,15 +2114,16 @@ class ContactListModel(CustomListModel):
         with addressbook_manager.transaction():
             contact = item.contact
             contact.name = new_contact['name']
-            contact.default_uri = new_contact['default_uri']
             contact.uris = new_contact['uris']
-            contact.preferred_media = new_contact['preferred_media'] if new_contact['preferred_media'] else None
+            default_uri = new_contact['default_uri']
+            contact.default_uri = default_uri.id if default_uri is not None else None
+            contact.preferred_media = new_contact['preferred_media']
             icon = new_contact['icon']
             if icon is None:
+                item.avatar.delete()
                 contact.icon = None
-                saveContactIconToFile(None, contact.default_uri)
             else:
-                contact.icon = base64Icon(icon)
+                contact.icon = Avatar(icon).to_base64()
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
@@ -2120,7 +2131,7 @@ class ContactListModel(CustomListModel):
             contact.save()
 
             old_groups = set(self.getBlinkGroupsForBlinkContact(item))
-            new_groups = set(new_contact['groups'] or [])
+            new_groups = set(new_contact['groups'])
             self.removeContactFromGroups(item, old_groups - new_groups)
             self.addGroupsForContact(contact, new_groups)
 

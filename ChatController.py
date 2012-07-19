@@ -34,7 +34,7 @@ import ChatWindowController
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
-from ContactListModel import base64Icon
+from ContactListModel import Avatar
 
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -293,7 +293,7 @@ class ChatController(MediaStream):
 
     def sendOwnIcon(self):
         if self.stream:
-            base64icon = base64Icon(self.chatWindowController.own_icon)
+            base64icon = Avatar(self.chatWindowController.own_icon).to_base64()
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
 
     def setNickname(self, nickname):

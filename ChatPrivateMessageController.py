@@ -21,7 +21,7 @@ class ChatPrivateMessageController(NSObject):
         NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
         recipient = '%s <%s>' % (contact.name, contact.uri)
         self.title.setStringValue_(u'To %s' % recipient)
-        self.icon.setImage_(contact.icon or NSImage.imageNamed_("NSUser"))
+        self.icon.setImage_(contact.icon)
 
     def runModal(self):
         self.window.makeKeyAndOrderFront_(None)

@@ -800,7 +800,7 @@ class ChatWindowController(NSWindowController):
                             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
-                        contact.setDetail('Invitation sent...')
+                        contact.detail = 'Invitation sent...'
                         if contact not in session.invited_participants:
                             session.invited_participants.append(contact)
                             session.participants_log.add(uri)
@@ -1152,7 +1152,6 @@ class ChatWindowController(NSWindowController):
                 uri = format_identity_to_string(session.remotePartyObject)
                 display_name = session.getTitleShort()
                 contact = BlinkConferenceContact(uri, name=display_name)
-                contact.setDetail(uri)
             self.participants.append(contact)
         elif session is not None and session.session is not None:
             if session.account is BonjourAccount():
@@ -1176,7 +1175,7 @@ class ChatWindowController(NSWindowController):
 
                 # Add ourselves
                 contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
-                contact.setActiveMedia(active_media)
+                contact.active_media = active_media
                 self.participants.append(contact)
 
                 # Add remote party
@@ -1194,16 +1193,16 @@ class ChatWindowController(NSWindowController):
                     contact = BlinkConferenceContact(uri, name=display_name, icon=icon)
 
                 if session.state == STATE_DNS_LOOKUP:
-                    contact.setDetail("Finding Destination...")
+                    contact.detail = "Finding Destination..."
                 elif session.state == STATE_CONNECTING:
-                    contact.setDetail("Connecting...")
+                    contact.detail = "Connecting..."
                 else:
                     try:
                         sip_uri = SIPURI.parse(str(contact.uri))
                         puri = '%s@%s' % (sip_uri.user, sip_uri.host)
                     except SIPCoreError:
                         puri = contact.uri
-                    contact.setDetail(puri)
+                    contact.detail = puri
 
                 active_media = []
 
@@ -1213,7 +1212,7 @@ class ChatWindowController(NSWindowController):
                 if session.hasStreamOfType("audio"):
                     active_media.append('audio' if not audio_stream.holdByRemote else 'audio-onhold')
 
-                contact.setActiveMedia(active_media)
+                contact.active_media = active_media
                 self.participants.append(contact)
             elif session.conference_info is not None:
                 # Add conference participants if any
@@ -1238,7 +1237,7 @@ class ChatWindowController(NSWindowController):
 
                     if user.screen_image_url is not None:
                         active_media.append('screen')
-                        contact.setScreensharingUrl(user.screen_image_url.value)
+                        contact.screensharing_url = user.screen_image_url.value
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
@@ -1247,10 +1246,10 @@ class ChatWindowController(NSWindowController):
                     elif audio_endpoints and user_on_hold:
                         active_media.append('audio-onhold')
 
-                    contact.setActiveMedia(active_media)
+                    contact.active_media = active_media
                     # detail will be reset on receival of next conference-info update
                     if uri in session.pending_removal_participants:
-                        contact.setDetail('Removal requested...')
+                        contact.detail = 'Removal requested...'
 
                     self.participants.append(contact)
 
@@ -1476,7 +1475,7 @@ class ChatWindowController(NSWindowController):
                     contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                 else:
                     contact = BlinkConferenceContact(uri, name=uri)
-                contact.setDetail('Invitation sent...')
+                contact.detail = 'Invitation sent...'
                 session.invited_participants.append(contact)
                 session.participants_log.add(uri)
                 self.refreshDrawer()

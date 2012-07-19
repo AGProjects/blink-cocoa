@@ -7,16 +7,17 @@ Blink contact extensions
 
 __all__ = ['BlinkContactExtension', 'BlinkContactGroupExtension']
 
-from sipsimple.configuration import Setting
-from sipsimple.addressbook import ContactExtension, GroupExtension, SharedSetting
 from application.configuration.datatypes import Boolean
+
+from sipsimple.addressbook import ContactURI, ContactExtension, GroupExtension, SharedSetting
+from sipsimple.configuration import Setting
 
 SharedSetting.set_namespace('ag-projects:blink')
 
+
 class BlinkContactExtension(ContactExtension):
-    aliases = SharedSetting(type=str, nillable=True)
-    default_uri = SharedSetting(type=str, nillable=True)
-    preferred_media = SharedSetting(type=str, default='audio', nillable=True)
+    default_uri = SharedSetting(type=str, default=None, nillable=True)
+    preferred_media = SharedSetting(type=str, default='audio')
     icon = SharedSetting(type=str, default=None, nillable=True)
     presence_policy = Setting(type=str, default=None, nillable=True)
     dialog_policy = Setting(type=str, default=None, nillable=True)
