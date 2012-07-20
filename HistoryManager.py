@@ -1150,8 +1150,8 @@ class ChatHistoryReplicator(object):
             return None
 
     def save_journal_on_disk(self):
+        storage_path = ApplicationData.get('chat_journal.pickle')
         try:
-            storage_path = ApplicationData.get('chat_journal.pickle')
             cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
             pass
@@ -1246,8 +1246,8 @@ class ChatHistoryReplicator(object):
                 return
 
             if replication_password:
+                decryptor_function = decryptor(replication_password)
                 try:
-                    decryptor_function = decryptor(replication_password)
                     data = decryptor_function(data, b64_decode=True)
                 except Exception, e:
                     BlinkLogger().log_debug(u"Failed to decrypt replication results for %s: %s" % (account, e))
