@@ -1191,6 +1191,7 @@ class ChatHistoryReplicator(object):
                 ChatHistory().update_from_journal_put_results(msgid, journal_id)
 
     @run_in_green_thread
+    @allocate_autorelease_pool
     def updateLocalHistoryWithRemoteJournalEntries(self, journal, account):
         try:
             success = journal['success']
