@@ -1047,6 +1047,7 @@ class SessionHistoryReplicator(object):
 
 
 class ChatHistoryReplicator(object):
+    __metaclass__ = Singleton
     implements(IObserver)
 
     outgoing_entries = {}
