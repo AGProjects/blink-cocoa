@@ -49,7 +49,7 @@ from itertools import chain
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
-from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group
+from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group, unique_id
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import TimestampedNotificationData
@@ -1328,6 +1328,7 @@ class ContactListModel(CustomListModel):
     def restore_contacts(self, backup):
         restored_contacts = 0
         restored_groups = 0
+        restored_contact_objs = {}
         filename = backup[0]
 
         try:
@@ -1362,12 +1363,10 @@ class ContactListModel(CustomListModel):
                             if self.hasContactMatchingURI(backup_contact['uri']):
                                 continue
                             contact = Contact()
-                            contact.default_uri = backup_contact['uri']
                             contact.uris.add(ContactURI(uri=backup_contact['uri'], type='SIP'))
-                            contact.name = backup_contact['name'] or contact.default_uri
+                            contact.name = backup_contact['name'] or ''
                             contact.preferred_media = backup_contact['preferred_media'] or 'audio'
                             contact.icon = backup_contact['icon']
-                            contact.favorite = backup_contact['favorite']
                             contact.save()
                             group = backup_contact['group']
                             if group:
@@ -1392,7 +1391,6 @@ class ContactListModel(CustomListModel):
                                 contact.uris.add(ContactURI(uri=uri[0], type=uri[1]))
                             contact.preferred_media = backup_contact['preferred_media']
                             contact.icon = backup_contact['icon']
-                            contact.favorite = backup_contact['favorite']
                             presence = backup_contact['presence']
                             dialog = backup_contact['dialog']
                             contact.presence.policy = presence['policy']
@@ -1405,6 +1403,8 @@ class ContactListModel(CustomListModel):
                             pass
                         except Exception, e:
                             BlinkLogger().log_info(u"Contacts restore failed: %s" % e)
+                        else:
+                            restored_contact_objs[str(contact.id)] = contact
                 if version == 1:
                     for key in contacts_for_group.keys():
                         try:
@@ -1428,8 +1428,8 @@ class ContactListModel(CustomListModel):
                             group = addressbook_manager.get_group(backup_group['id'])
                         for id in backup_group['contacts']:
                             try:
-                                contact = addressbook_manager.get_contact(id)
-                            except Exception:
+                                contact = restored_contact_objs[id]
+                            except KeyError:
                                 pass
                             else:
                                 group.contacts.add(contact)
@@ -1453,6 +1453,51 @@ class ContactListModel(CustomListModel):
         NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
 
     def _NH_SIPApplicationWillStart(self, notification):
+        # Backup contacts before migration, just in case
+        addressbook_manager = AddressbookManager()
+        if hasattr(addressbook_manager, '_AddressbookManager__old_data'):
+            old_data = addressbook_manager._AddressbookManager__old_data
+            backup_contacts = []
+            backup_groups = {}
+            old_contacts = old_data['contacts'].values()
+            old_groups = old_data['groups']
+            for group_id in old_groups.keys():
+                if 'type' in old_groups[group_id]:
+                    del old_groups[group_id]
+                else:
+                    backup_group = {
+                        'id'      : group_id,
+                        'name'    : old_groups[group_id].get('name', ''),
+                        'contacts': []
+                    }
+                    backup_groups[group_id] = backup_group
+            for item in old_contacts:
+                for group_id, contacts in item.iteritems():
+                    for contact_id, contact_data in contacts.iteritems():
+                        backup_contact={
+                            'id'              : unique_id(),
+                            'name'            : contact_data.get('name', ''),
+                            'default_uri'     : None,
+                            'uris'            : [(contact_id, 'SIP')],
+                            'preferred_media' : contact_data.get('prefered_media', 'audio'),
+                            'icon'            : contact_data.get('icon', None),
+                            'favorite'        : False,
+                            'presence'        : {'policy': 'default', 'subscribe': False},
+                            'dialog'          : {'policy': 'default', 'subscribe': False}
+                        }
+                        backup_contacts.append(backup_contact)
+                        backup_groups[group_id]['contacts'].append(backup_contact['id'])
+
+            if backup_contacts or backup_groups:
+                backup_data = {"contacts": backup_contacts, "groups": backup_groups.values(), "version": 2}
+                filename = "contacts_backup/%s.pickle" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+                storage_path = ApplicationData.get(filename)
+                makedirs(os.path.dirname(storage_path))
+                try:
+                    cPickle.dump(backup_data, open(storage_path, "w+"))
+                except (IOError, cPickle.PicklingError):
+                    pass
+        # Load virtual groups
         vgm = VirtualGroupsManager()
         vgm.load()
 
