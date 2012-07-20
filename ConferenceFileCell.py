@@ -54,12 +54,5 @@ class ConferenceFileCell(NSTextFieldCell):
         size = icon.size()
         rect = NSMakeRect(0, 0, size.width, size.height)
         trect = NSMakeRect(origin_x, origin_y, (size_y/size.height) * size.width, size_x)
-        if icon.respondsToSelector_("drawInRect:fromRect:operation:fraction:respectFlipped:hints:"):
-            # New API in Snow Leopard to correctly draw an icon in context respecting its flipped attribute
-            icon.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(trect, rect, NSCompositeSourceOver, 1.0, True, None)
-        else:
-            # Leopard, see http://developer.apple.com/mac/library/releasenotes/cocoa/AppKit.html
-            icon_flipped = icon.copy()
-            icon_flipped.setFlipped_(True)
-            icon_flipped.drawInRect_fromRect_operation_fraction_(trect, rect, NSCompositeSourceOver, 1.0)
+        icon.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(trect, rect, NSCompositeSourceOver, 1.0, True, None)
 
