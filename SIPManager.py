@@ -349,9 +349,9 @@ class SIPManager(object):
         return ApplicationData.get('history')
 
     def get_contacts_backup_directory(self):
-        storage_path = ApplicationData.get('contacts_backup/dummy')
-        makedirs(os.path.dirname(storage_path))
-        return ApplicationData.get('contacts_backup')
+        path = ApplicationData.get('contacts_backup')
+        makedirs(path)
+        return path
 
     def get_audio_recordings(self):
         result = []
