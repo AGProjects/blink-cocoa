@@ -1058,7 +1058,6 @@ class ChatHistoryReplicator(object):
     paused = False
     debug = False
 
-    @run_in_gui_thread
     def __init__(self):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name='ChatReplicationJournalEntryAdded')
