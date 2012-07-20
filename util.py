@@ -2,10 +2,11 @@
 #
 
 __all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'run_in_gui_thread',
-           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session',
+           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'AccountInfo', 'DictDiffer']
 
+import platform
 import re
 import shlex
 
@@ -17,6 +18,8 @@ from Foundation import NSAutoreleasePool, NSThread
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import SIPURI, FrozenSIPURI, SIPCoreError
 
+
+osx_version = re.match("(?P<major>\d+.\d+)(?P<minor>.\d+)?", platform.mac_ver()[0]).groupdict()['major']
 
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 image_file_extension_pattern = re.compile("\.(png|tiff|jpg|jpeg|gif)$", re.I)

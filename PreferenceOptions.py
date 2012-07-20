@@ -23,7 +23,7 @@ from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
-from util import allocate_autorelease_pool
+from util import allocate_autorelease_pool, osx_version
 
 
 def makeLabel(label):
@@ -1549,8 +1549,9 @@ PreferenceOptionTypes = {
 }
 
 # These acount sections are always hidden
-#DisabledAccountPreferenceSections = ['dialog_event']
 DisabledAccountPreferenceSections = []
+if osx_version == '10.6':
+    DisabledAccountPreferenceSections.append('chat')
 
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider', 'server']

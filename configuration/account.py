@@ -13,6 +13,7 @@ from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSR
 
 from configuration import KeychainPasswordSetting
 from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername
+from util import osx_version
 
 
 class AuthSettingsExtension(AuthSettings):
@@ -35,7 +36,7 @@ class AudioSettingsExtension(SettingsGroup):
 
 
 class ChatSettingsExtension(SettingsGroup):
-    disable_replication = Setting(type=bool, default=False)
+    disable_replication = Setting(type=bool, default=osx_version != '10.6')
     replication_password = KeychainPasswordSetting(type=str, default='', label='ChatReplication')
 
 

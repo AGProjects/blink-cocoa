@@ -537,9 +537,10 @@ class ContactWindowController(NSWindowController):
         self.refreshAccountList()
 
     def _NH_SIPAccountDidActivate(self, notification):
-        if notification.sender is not BonjourAccount() and not notification.sender.chat.replication_password:
-            notification.sender.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
-            notification.sender.save()
+        account = notification.sender
+        if account is not BonjourAccount() and not account.chat.disable_replication and not account.chat.replication_password:
+            account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+            account.save()
         self.refreshAccountList()
 
     def _NH_BonjourGroupWasActivated(self, notification):
