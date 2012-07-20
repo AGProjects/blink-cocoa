@@ -1239,7 +1239,6 @@ class ChatHistoryReplicator(object):
                 timestamp      = entry['timestamp']
                 journal_id     = entry['id']
                 self.last_journal_id[account] = journal_id
-
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to parse server replication results for %s" % account)
                 self.disableReplication(account)
@@ -1289,7 +1288,6 @@ class ChatHistoryReplicator(object):
                 growl_data.sender = key
                 growl_data.content = '%d new chat messages retrieved from replication server' % notify_data[key]
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
-
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1363,7 +1361,8 @@ class ChatHistoryReplicator(object):
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
         self.connections_for_incoming_replication[account.id] = {'responseData': '','authRequestCount': 0, 'connection':connection, 'url': url}
 
-    # NSURLConnection delegate method
+    # NSURLConnection delegate methods
+
     def connection_didReceiveData_(self, connection, data):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1379,7 +1378,6 @@ class ChatHistoryReplicator(object):
         else:
             self.connections_for_incoming_replication[key]['responseData'] = self.connections_for_incoming_replication[key]['responseData'] + str(data)
 
-    # NSURLConnection delegate method
     def connectionDidFinishLoading_(self, connection):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1439,7 +1437,6 @@ class ChatHistoryReplicator(object):
                     self.updateLocalHistoryWithRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
 
-    # NSURLConnection delegate method
     def connection_didFailWithError_(self, connection, error):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1465,7 +1462,6 @@ class ChatHistoryReplicator(object):
             else:
                 self.connections_for_incoming_replication[key]['connection'] = None
 
-    # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1504,3 +1500,4 @@ class ChatHistoryReplicator(object):
                 if self.connections_for_incoming_replication[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+
