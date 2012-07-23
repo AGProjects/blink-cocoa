@@ -966,7 +966,7 @@ class ContactWindowController(NSWindowController):
         contact = self.getContactMatchingURI(uri)
         if contact:
             path = contact.avatar.path
-            if os.path.isfile(path):
+            if path is not None and os.path.isfile(path):
                 return path
         return DefaultUserAvatar().path
 
