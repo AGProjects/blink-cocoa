@@ -98,69 +98,16 @@ class BlinkAppDelegate(NSObject):
                         shutil.rmtree(screenshots_folder)
                     except EnvironmentError:
                         pass
+            call_in_thread('file-io', purge_screenshots)
 
             userdef = NSUserDefaults.standardUserDefaults()
             self.debug = userdef.boolForKey_("debug")
-
-            call_in_thread('file-io', purge_screenshots)
-
             DesktopSharingController.vncServerPort = 5900
-
-            # Migrate configuration from Blink Lite to Blink Pro
-            # TODO: this will not work in the sandbox environment -adi
-            app_dir_name = (name for name in Resources.directory.split('/') if name.endswith('.app')).next()
-            path = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0])
-            lite_path = os.path.join(path, 'Blink Lite')
-            pro_path = os.path.join(path, 'Blink Pro')
-            classic_path = os.path.join(path, 'Blink')
-            if os.path.isdir(classic_path):
-                migration_path = classic_path
-                migration_source = 'Blink'
-            elif os.path.isdir(lite_path):
-                migration_path = lite_path
-                migration_source = 'Blink Lite'
-            else:
-                migration_path = None
-            if self.applicationName == 'Blink Pro' and not os.path.exists(pro_path) and migration_path:
-                self.showMigrationPanel()
-
-                try:
-                    shutil.copytree(migration_path, pro_path)
-                except shutil.Error, e:
-                    BlinkLogger().log_info(u"Could not migrate configuration from %s: %s" % (migration_source, e))
-                else:
-                    with open(os.path.join(pro_path, 'config'), 'r+') as f:
-                        data = ''.join(f.readlines())
-                        f.seek(0, 0)
-                        f.truncate()
-                        data = re.sub('Library/Application Support/%s' % migration_source, 'Library/Application Support/Blink Pro', data)
-                        m = re.search('\/(?P<name>Blink[\w ]*)\.app', data)
-                        if m:
-                            name = m.groupdict()['name']
-                            data = re.sub('%s.app/Contents/Resources' % name, '%s/Contents/Resources' % str(app_dir_name), data)
-                        f.write(data)
-
-                self.hideMigrationPanel()
 
         return self
 
     def userDefaultsDidChange_(self, notification):
         self.debug = NSUserDefaults.standardUserDefaults().boolForKey_("debug")
-
-    @run_in_gui_thread
-    def showMigrationPanel(self, text=None):
-        NSBundle.loadNibNamed_owner_("MigrationPanel", self)
-        self.migrationPanel.makeKeyAndOrderFront_(None)
-        self.migrationProgressWheel.startAnimation_(None)
-
-        if text is not None:
-            self.migrationText.setStringValue_(text)
-        else:
-            self.migrationText.setStringValue_('Migrating configuration and data from the previous version. Please wait...')
-
-    @run_in_gui_thread
-    def hideMigrationPanel(self):
-        self.migrationPanel.close()
 
     # Needed by run_in_gui_thread and call_in_gui_thread
     def callObject_(self, callable):
