@@ -2002,22 +2002,6 @@ class ContactListModel(CustomListModel):
 
         group.save()
 
-        group = Group()
-        group.name = 'Business'
-        group.expanded = True
-        group.save()
-
-        group = Group()
-        group.name = 'Family'
-        group.expanded = True
-        group.save()
-
-        group = Group()
-        group.name = 'Friends'
-        group.expanded = True
-        group.save()
-
-
     def moveBonjourGroupFirst(self):
         if self.bonjour_group in self.groupsList:
             self.groupsList.remove(self.bonjour_group)
