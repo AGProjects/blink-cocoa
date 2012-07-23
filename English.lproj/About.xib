@@ -55,7 +55,6 @@
 							<string key="NSFrame">{{51, 20}, {243, 28}}</string>
 							<reference key="NSSuperview" ref="661994322"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="712685643">
 								<int key="NSCellFlags">68288064</int>
@@ -150,7 +149,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="534644642">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">138413056</int>
-								<string key="NSContents">0.9999 pure SIP client</string>
+								<string key="NSContents">A state of the art, easy to use SIP client</string>
 								<object class="NSFont" key="NSSupport" id="258894516">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
