@@ -80,7 +80,6 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
         self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
         self.notification_center.add_observer(self, name='BlinkSessionDidFail')
-        self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='SIPApplicationDidStart')
         self.notification_center.add_observer(self, name='SIPApplicationWillEnd')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
@@ -111,7 +110,6 @@ class SessionControllersManager(object):
         self.ringer.start()
         self.ringer.update_ringtones()
         settings = SIPSimpleSettings()
-        self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ringer.stop()
@@ -312,11 +310,6 @@ class SessionControllersManager(object):
                 growl_data.streams = ",".join(data.streams)
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-
-    def _NH_CFGSettingsObjectDidChange(self, account, data):
-        if 'audio.pause_music' in data.modified:
-            settings = SIPSimpleSettings()
-            self.pause_music = settings.audio.pause_music if settings.audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite' else False
 
     def addControllerWithSession_(self, session):
         sessionController = SessionController.alloc().initWithSession_(session)

@@ -133,7 +133,6 @@ class PreferencesController(NSWindowController, object):
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
         if NSApp.delegate().applicationName == 'Blink Lite':
-            PreferenceOptionTypes['audio.pause_music'] = HiddenOption
             PreferenceOptionTypes['audio.directory'] = HiddenOption
             PreferenceOptionTypes['audio.auto_recording'] = HiddenOption
             PreferenceOptionTypes['logs.directory'] = HiddenOption

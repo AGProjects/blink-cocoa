@@ -58,18 +58,15 @@ class MusicApplications(object):
             self.itunes_paused = False
             self.spotify_paused = False
             self.vlc_paused = False
-            BlinkLogger().log_info(u"Playback of music applications stopped")
 
     @run_in_thread('iTunes-interface')
     def pause(self):
-        BlinkLogger().log_info(u"Stopping playback of music applications")
         self.itunes.pause()
         self.spotify.pause()
         self.vlc.pause()
 
     @run_in_thread('iTunes-interface')
     def resume(self):
-        BlinkLogger().log_info(u"Resuming playback of music applications")
         self.itunes.resume()
         self.spotify.resume()
         self.vlc.resume()
