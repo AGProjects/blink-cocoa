@@ -134,8 +134,6 @@ class SIPManager(object):
     def init(self):
         self._version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
 
-        #first_start = not os.path.exists(ApplicationData.get('config'))
-
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
         Contact.register_extension(BlinkContactExtension)
