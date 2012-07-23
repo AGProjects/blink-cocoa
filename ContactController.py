@@ -135,7 +135,10 @@ class AddContactController(NSObject):
             else:
                 self.addressText.setStringValue_(self.default_uri.uri)
         else:
-            self.addressText.setStringValue_('')
+            if self.uris:
+                self.addressText.setStringValue_(self.uris[0].uri)
+            else:
+                self.addressText.setStringValue_('')
 
     def windowShouldClose_(self, sender):
         self.startDeallocTimer()
