@@ -104,11 +104,11 @@ class PresencePolicy(NSWindowController):
             self.event = previous_event if previous_event in self.tabViewForEvent.keys() else self.tabViewForEvent.keys()[0]
             self.eventTabView.selectTabViewItemWithIdentifier_(self.event)
 
-            self.nc = NotificationCenter()
-            self.nc.add_observer(self, name="AddressbookContactWasCreated")
-            self.nc.add_observer(self, name="AddressbookContactWasActivated")
-            self.nc.add_observer(self, name="AddressbookContactWasDeleted")
-            self.nc.add_observer(self, name="AddressbookContactDidChange")
+            #self.nc = NotificationCenter()
+            #self.nc.add_observer(self, name="AddressbookContactWasCreated")
+            #self.nc.add_observer(self, name="AddressbookContactWasActivated")
+            #self.nc.add_observer(self, name="AddressbookContactWasDeleted")
+            #self.nc.add_observer(self, name="AddressbookContactDidChange")
             self.addPolicyTypes()
 
         return self
