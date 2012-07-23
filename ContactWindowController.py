@@ -1076,7 +1076,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def addContact_(self, sender):
-        if sender not in (self.addContactButton, self.groupButton):
+        if self.mainTabView.selectedTabViewItem().identifier() == "search":
             row = self.searchOutline.selectedRow()
             if row != NSNotFound and row != -1:
                 item = self.searchOutline.itemAtRow_(row)
