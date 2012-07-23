@@ -306,7 +306,7 @@ class SMSViewController(NSObject):
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(Timestamp(datetime.datetime.now())))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
-                                      RouteHeader(routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
+                                      RouteHeader(routes[0].uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
     @allocate_autorelease_pool
@@ -333,7 +333,7 @@ class SMSViewController(NSObject):
 
         utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
         message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                  RouteHeader(self.routes[0].get_uri()), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
+                                  RouteHeader(self.routes[0].uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
         self.notification_center.add_observer(self, sender=message_request)
         message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
 
