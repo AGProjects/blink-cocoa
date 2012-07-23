@@ -143,18 +143,13 @@ class SIPManager(object):
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         self._app.start(FileStorage(ApplicationData.directory))
-        self.init_configurations()
 
         # start session mgr
         SessionManager()
 
     def init_configurations(self):
-        account_manager = AccountManager()
-        settings = SIPSimpleSettings()
-
-        self.notification_center.add_observer(self, sender=settings)
-
         # fixup default account
+        account_manager = AccountManager()
         self._selected_account = account_manager.default_account
         if self._selected_account is None:
             self._selected_account = account_manager.get_accounts()[0]
@@ -494,7 +489,6 @@ class SIPManager(object):
         self.ip_address_monitor.start()
 
     def _NH_SIPApplicationDidStart(self, sender, data):
-
         settings = SIPSimpleSettings()
         BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
         BlinkLogger().log_info(u"SIP Device ID %s" % settings.instance_id)
@@ -506,6 +500,8 @@ class SIPManager(object):
                     BlinkLogger().log_info(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
                 except KeyError:
                     pass
+
+        self.init_configurations()
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()
