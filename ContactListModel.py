@@ -1384,12 +1384,18 @@ class ContactListModel(CustomListModel):
                         except DuplicateIDError:
                             group = addressbook_manager.get_group(backup_group['id'])
                         for id in backup_group['contacts']:
+                            contact = None
                             try:
                                 contact = restored_contact_objs[id]
                             except KeyError:
                                 pass
-                            else:
+                            try:
+                                contact = addressbook_manager.get_contact(id)
+                            except KeyError:
+                                pass
+                            if contact is not None:
                                 group.contacts.add(contact)
+                                contact.save()
                         group.save()
 
         panel_text = ''
