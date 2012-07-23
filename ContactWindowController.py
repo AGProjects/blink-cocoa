@@ -1157,9 +1157,22 @@ class ContactWindowController(NSWindowController):
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(self.contactOutline.rowForItem_(group)), False)
 
     @objc.IBAction
-    def deleteContact_(self, sender):
-        contact = sender.representedObject()
-        self.model.deleteContact(contact)
+    def deleteItem_(self, sender):
+        item = sender.representedObject()
+        if not item:
+            row = self.contactOutline.selectedRow()
+            if row >= 0:
+                item = self.contactOutline.itemAtRow_(row)
+            else:
+                return
+        if not item.deletable:
+            return
+        if isinstance(item, BlinkGroup):
+            self.model.deleteGroup(item)
+        else:
+            group = self.contactOutline.parentForItem_(item)
+            if group and group.delete_contact_allowed:
+                self.model.deleteContact(item)
         self.refreshContactsList()
         self.searchContacts()
 
@@ -1167,13 +1180,6 @@ class ContactWindowController(NSWindowController):
     def renameGroup_(self, sender):
         group = sender.representedObject()
         self.model.editGroup(group)
-        self.refreshContactsList()
-        self.searchContacts()
-
-    @objc.IBAction
-    def deleteGroup_(self, sender):
-        group = sender.representedObject()
-        self.model.deleteGroup(group)
         self.refreshContactsList()
         self.searchContacts()
 
@@ -2870,7 +2876,7 @@ class ContactWindowController(NSWindowController):
 
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteContact:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
             if group and group.remove_contact_allowed:
@@ -2880,7 +2886,7 @@ class ContactWindowController(NSWindowController):
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
             lastItem.setRepresentedObject_(item)
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteGroup:", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteItem:", "")
             lastItem.setEnabled_(item.deletable)
             lastItem.setRepresentedObject_(item)
 
