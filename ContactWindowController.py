@@ -2838,12 +2838,11 @@ class ContactWindowController(NSWindowController):
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.auto_answer else NSOffState)
                 settings = SIPSimpleSettings()
-                if settings.contacts.enable_favorites_group:
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
-                    mitem.setEnabled_(True)
-                    mitem.setRepresentedObject_(item)
-                    mitem.setState_(NSOnState if item.favorite else NSOffState)
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
+                mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+                mitem.setState_(NSOnState if item.favorite else NSOffState)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
             elif isinstance(item, SystemAddressBookBlinkContact):

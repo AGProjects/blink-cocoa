@@ -1574,7 +1574,6 @@ SettingDescription = {
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
                       'chat.disable_collaboration_editor': 'Disable Collaboration Editor',
                       'contacts.enable_address_book': 'Show Address Book',
-                      'contacts.enable_favorites_group': 'Show Favorites',
                       'contacts.enable_incoming_calls_group': 'Show Incoming Calls',
                       'contacts.enable_missed_calls_group': 'Show Missed Calls',
                       'contacts.enable_outgoing_calls_group': 'Show Outgoing Calls',

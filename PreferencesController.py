@@ -137,7 +137,6 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['audio.directory'] = HiddenOption
             PreferenceOptionTypes['audio.auto_recording'] = HiddenOption
             PreferenceOptionTypes['logs.directory'] = HiddenOption
-            PreferenceOptionTypes['contacts.enable_favorites_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_incoming_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_outgoing_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_missed_calls_group'] = HiddenOption
