@@ -146,24 +146,22 @@ class SIPManager(object):
         SessionManager()
 
     def init_configurations(self):
-        # fixup default account
         account_manager = AccountManager()
+        settings = SIPSimpleSettings()
+
+        # fixup default account
         self._selected_account = account_manager.default_account
         if self._selected_account is None:
             self._selected_account = account_manager.get_accounts()[0]
 
-        default_ca = open(Resources.get('ca.crt'), "r").read().strip()
-        self.set_default_certificate_authority(default_ca)
-
-    def set_default_certificate_authority(self, ca):
+        # save default ca if needed
+        ca = open(Resources.get('ca.crt'), "r").read().strip()
         try:
             X509Certificate(ca)
         except GNUTLSError, e:
             BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
-            return False
+            return
 
-        settings = SIPSimpleSettings()
-        must_save_ca = False
         tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
             os.mkdir(tls_folder, 0700)
@@ -171,22 +169,18 @@ class SIPManager(object):
 
         try:
             existing_cas = open(ca_path, "r").read().strip()
-        except:
+        except Exception:
             existing_cas = None
 
-        if ca != existing_cas:
-            f = open(ca_path, "w")
+        if ca == existing_cas:
+            return
+
+        with open(ca_path, "w") as f:
             os.chmod(ca_path, 0600)
             f.write(ca)
-            f.close()
-            BlinkLogger().log_info(u"Added default Certificate Authority to %s" % ca_path)
-            must_save_ca = True
-
-        if must_save_ca:
-            settings.tls.ca_list = ca_path
-            settings.save()
-
-        return True
+        BlinkLogger().log_info(u"Added default Certificate Authority to %s" % ca_path)
+        settings.tls.ca_list = ca_path
+        settings.save()
 
     def add_certificate_authority(self, ca):
         # not used anymore, let users add CAs in keychain instead
