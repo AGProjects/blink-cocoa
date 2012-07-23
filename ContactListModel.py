@@ -2049,7 +2049,7 @@ class ContactListModel(CustomListModel):
                         "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
                         }
 
-        for uri, data in test_contacts.itervalues():
+        for uri, data in test_contacts.iteritems():
             path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
             icon = NSImage.alloc().initWithContentsOfFile_(path)
 
