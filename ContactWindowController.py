@@ -2860,7 +2860,7 @@ class ContactWindowController(NSWindowController):
                     name_submenu = NSMenu.alloc().init()
                     for blink_contact in blink_contacts_with_same_name:
                         name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
-                        name_item.setRepresentedObject_(item, blink_contact)    # (source, destination)
+                        name_item.setRepresentedObject_((item, blink_contact))    # (source, destination)
                     if name_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
