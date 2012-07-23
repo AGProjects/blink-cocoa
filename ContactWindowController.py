@@ -2720,7 +2720,7 @@ class ContactWindowController(NSWindowController):
 
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_sip_aor_format(item.uri)
-            if hasattr(item, 'uris') and len(item.uris) > 1:
+            if len(item.uris) > 1:
                 audio_submenu = NSMenu.alloc().init()
                 for uri in item.uris:
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
