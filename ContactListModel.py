@@ -1859,14 +1859,12 @@ class ContactListModel(CustomListModel):
         index = bisect.bisect_left(positions, group.position)
 
         if group.id == "all_contacts":
-            self.all_contacts_group.name = group.name
             if not group.position:
                 position = len(self.groupsList) - 1 if self.groupsList else 0
                 group.position = position
                 group.save()
             self.groupsList.insert(index, self.all_contacts_group)
         elif group.id == "no_group":
-            self.no_group.name = group.name
             if not group.position:
                 position = len(self.groupsList) - 1 if self.groupsList else 0
                 group.position = position
@@ -1874,7 +1872,6 @@ class ContactListModel(CustomListModel):
             self.groupsList.insert(index, self.no_group)
         elif group.id == "addressbook":
             if settings.contacts.enable_address_book:
-                self.addressbook_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1885,7 +1882,6 @@ class ContactListModel(CustomListModel):
                 return
         elif group.id == "missed":
             if not is_lite and settings.contacts.enable_missed_calls_group:
-                self.missed_calls_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1896,7 +1892,6 @@ class ContactListModel(CustomListModel):
                 return
         elif group.id == "outgoing":
             if not is_lite and settings.contacts.enable_outgoing_calls_group:
-                self.outgoing_calls_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
@@ -1907,7 +1902,6 @@ class ContactListModel(CustomListModel):
                 return
         elif group.id == "incoming":
             if not is_lite and settings.contacts.enable_incoming_calls_group:
-                self.incoming_calls_group.name = group.name
                 if not group.position:
                     position = len(self.groupsList) - 1 if self.groupsList else 0
                     group.position = position
