@@ -42,14 +42,14 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>7003</string>
+	<string>7621</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>NSMainNibFile</key>
 	<string>MainWindow</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-        <key>NSUbiquitousDisplaySet</key>
-        <string>com.agprojects.BlinkLite</string>
+	<key>NSUbiquitousDisplaySet</key>
+	<string>com.agprojects.BlinkLite</string>
 </dict>
 </plist>
