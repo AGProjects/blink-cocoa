@@ -2020,6 +2020,7 @@ class ContactListModel(CustomListModel):
             return
         for group in (group for group in groups if blink_contact in group.contacts):
             group.contacts.remove(blink_contact)
+            group.sortContacts()
 
     def addGroup(self):
         controller = AddGroupController()
