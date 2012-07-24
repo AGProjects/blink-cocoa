@@ -1904,11 +1904,12 @@ class ContactListModel(CustomListModel):
                 self.groupsList.insert(index, self.incoming_calls_group)
             else:
                 return
-        elif group.id is None:
+        else:
             if not group.position:
                 group.position = max(len(self.groupsList)-1, 0)
                 group.save()
             blink_group = VirtualBlinkGroup(name=group.name)
+            blink_group.group = group
             self.groupsList.insert(index, blink_group)
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
