@@ -273,6 +273,9 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="AddressbookGroupDidChange")
         nc.add_observer(self, name="BonjourGroupWasActivated")
         nc.add_observer(self, name="BonjourGroupWasDeactivated")
+        nc.add_observer(self, name="VirtualGroupWasActivated")
+        nc.add_observer(self, name="VirtualGroupWasDeleted")
+        nc.add_observer(self, name="VirtualGroupDidChange")
 
         nc.add_observer(self, sender=AccountManager())
 
@@ -525,6 +528,10 @@ class ContactWindowController(NSWindowController):
 
     def _NH_AddressbookGroupDidChange(self, notification):
         self.updateGroupMenu()
+
+    _NH_VirtualGroupWasActivated = _NH_AddressbookGroupWasActivated
+    _NH_VirtualGroupWasDeleted = _NH_AddressbookGroupWasDeleted
+    _NH_VirtualGroupDidChange = _NH_AddressbookGroupDidChange
 
     def _NH_SIPAccountManagerDidAddAccount(self, notification):
         account = notification.data.account
