@@ -40,13 +40,13 @@
 			<object class="NSWindowTemplate" id="782083584">
 				<int key="NSWindowStyleMask">15</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{381, 75}, {642, 678}}</string>
+				<string key="NSWindowRect">{{381, 75}, {800, 678}}</string>
 				<int key="NSWTFlags">1677721600</int>
 				<string key="NSWindowTitle">Account Settings</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
-				<string key="NSWindowContentMinSize">{642, 300}</string>
+				<string key="NSWindowContentMinSize">{800, 300}</string>
 				<object class="NSView" key="NSWindowView" id="438071196">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">258</int>
@@ -71,7 +71,7 @@
 								<string>public.url</string>
 								<string>public.url-name</string>
 							</set>
-							<string key="NSFrameSize">{642, 678}</string>
+							<string key="NSFrameSize">{800, 678}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -91,9 +91,10 @@
 						<object class="NSTextField" id="271801333">
 							<reference key="NSNextResponder" ref="438071196"/>
 							<int key="NSvFlags">301</int>
-							<string key="NSFrame">{{245, 374}, {151, 17}}</string>
+							<string key="NSFrame">{{323, 374}, {151, 17}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="290421302"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="264005088">
 								<int key="NSCellFlags">68288064</int>
@@ -128,9 +129,10 @@
 						<object class="NSTextField" id="687151261">
 							<reference key="NSNextResponder" ref="438071196"/>
 							<int key="NSvFlags">319</int>
-							<string key="NSFrame">{{142, 388}, {357, 75}}</string>
+							<string key="NSFrame">{{177, 388}, {444, 75}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="271801333"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="977882214">
 								<int key="NSCellFlags">67239424</int>
@@ -149,9 +151,10 @@
 							<reference key="NSNextResponder" ref="438071196"/>
 							<int key="NSvFlags">1325</int>
 							<object class="NSPSMatrix" key="NSDrawMatrix"/>
-							<string key="NSFrame">{{304, 323}, {32, 32}}</string>
+							<string key="NSFrame">{{382, 323}, {32, 32}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<int key="NSpiFlags">28682</int>
 							<double key="NSMinValue">16</double>
 							<double key="NSMaxValue">100</double>
@@ -163,17 +166,19 @@
 							<string key="NSFrame">{{5, 656}, {16, 16}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="687151261"/>
 							<int key="NSpiFlags">28938</int>
 							<double key="NSMinValue">16</double>
 							<double key="NSMaxValue">100</double>
 						</object>
 					</array>
-					<string key="NSFrameSize">{642, 678}</string>
+					<string key="NSFrameSize">{800, 678}</string>
 					<reference key="NSSuperview"/>
 					<reference key="NSWindow"/>
+					<reference key="NSNextKeyView" ref="497458157"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
-				<string key="NSMinSize">{642, 322}</string>
+				<string key="NSMinSize">{800, 322}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">server-settings</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
