@@ -1868,6 +1868,10 @@ class ContactListModel(CustomListModel):
                 group.position = max(len(self.groupsList)-1, 0)
                 group.save()
             self.groupsList.insert(index, self.no_group)
+        elif group.id == "bonjour":
+            if not group.position:
+                group.position = 0
+                group.save()
         elif group.id == "addressbook":
             if settings.contacts.enable_address_book:
                 if not group.position:
