@@ -668,6 +668,7 @@ class BonjourBlinkGroup(VirtualBlinkGroup):
     def __init__(self, name=u'Bonjour Neighbours'):
         super(BonjourBlinkGroup, self).__init__(name)
         self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
+        self.original_position = None
 
 
 class NoBlinkGroup(VirtualBlinkGroup):
@@ -1996,14 +1997,15 @@ class ContactListModel(CustomListModel):
 
     def moveBonjourGroupFirst(self):
         if self.bonjour_group in self.groupsList:
+            self.bonjour_group.original_position = self.groupsList.index(self.bonjour_group)
             self.groupsList.remove(self.bonjour_group)
             self.groupsList.insert(0, self.bonjour_group)
             self.saveGroupPosition()
 
     def restoreBonjourGroupPosition(self):
-        if self.bonjour_group in self.groupsList and self.bonjour_group.group.position:
+        if self.bonjour_group in self.groupsList:
             self.groupsList.remove(self.bonjour_group)
-            self.groupsList.insert(self.bonjour_group.group.position, self.bonjour_group)
+            self.groupsList.insert(self.bonjour_group.original_position or 0, self.bonjour_group)
             self.saveGroupPosition()
 
     def removeContactFromGroups(self, blink_contact, blink_groups):
