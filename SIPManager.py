@@ -30,7 +30,7 @@ from zope.interface import implements
 from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
-from sipsimple.account import bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
+from sipsimple.account.bonjour import _bonjour as bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
 from sipsimple.addressbook import Contact, Group
 from sipsimple.configuration import DefaultValue
 from sipsimple.audio import WavePlayer
