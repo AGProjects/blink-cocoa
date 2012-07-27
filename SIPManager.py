@@ -100,7 +100,7 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidEnd')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidFail')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationGotAnswer')
-        self.notification_center.add_observer(self, name='SIPAccountMWIDidGetSummary')
+        self.notification_center.add_observer(self, name='SIPAccountGotMessageSummary')
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
@@ -548,7 +548,7 @@ class SIPManager(object):
         BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, reason, data.timeout))
 
     @run_in_gui_thread
-    def _NH_SIPAccountMWIDidGetSummary(self, account, data):
+    def _NH_SIPAccountGotMessageSummary(self, account, data):
         BlinkLogger().log_info(u"Received NOTIFY for MWI of account %s" % account.id)
         summary = data.message_summary
         if summary.summaries.get('voice-message') is None:
