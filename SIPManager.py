@@ -30,7 +30,7 @@ from zope.interface import implements
 from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
-from sipsimple.account.bonjour import _bonjour as bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
+from sipsimple.account.bonjour import _bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
 from sipsimple.addressbook import Contact, Group
 from sipsimple.configuration import DefaultValue
 from sipsimple.audio import WavePlayer
@@ -685,8 +685,8 @@ class BonjourConferenceServices(object):
         notification_center = NotificationCenter()
         file = BonjourDiscoveryFile.find_by_file(file)
         service_description = BonjourServiceDescription(service_name, regtype, reply_domain)
-        if error_code != bonjour.kDNSServiceErr_NoError:
-            error = bonjour.BonjourError(error_code)
+        if error_code != _bonjour.kDNSServiceErr_NoError:
+            error = _bonjour.BonjourError(error_code)
             notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=TimestampedNotificationData(reason=str(error), transport=file.transport))
             removed_files = [file] + [f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file]
             for f in removed_files:
@@ -699,13 +699,13 @@ class BonjourConferenceServices(object):
             return
         if reply_domain != 'local.':
             return
-        if flags & bonjour.kDNSServiceFlagsAdd:
+        if flags & _bonjour.kDNSServiceFlagsAdd:
             try:
                 resolution_file = (f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description).next()
             except StopIteration:
                 try:
-                    resolution_file = bonjour.DNSServiceResolve(0, interface_index, service_name, regtype, reply_domain, self._resolve_cb)
-                except bonjour.BonjourError, e:
+                    resolution_file = _bonjour.DNSServiceResolve(0, interface_index, service_name, regtype, reply_domain, self._resolve_cb)
+                except _bonjour.BonjourError, e:
                     notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=TimestampedNotificationData(error=str(e), transport=file.transport))
                 else:
                     resolution_file = BonjourResolutionFile(resolution_file, discovery_file=file, service_description=service_description)
@@ -729,8 +729,8 @@ class BonjourConferenceServices(object):
         notification_center = NotificationCenter()
         settings = SIPSimpleSettings()
         file = BonjourResolutionFile.find_by_file(file)
-        if error_code == bonjour.kDNSServiceErr_NoError:
-            txt = bonjour.TXTRecord.parse(txtrecord)
+        if error_code == _bonjour.kDNSServiceErr_NoError:
+            txt = _bonjour.TXTRecord.parse(txtrecord)
             name = txt['name'].decode('utf-8') if 'name' in txt else None
             host = re.match(r'^(.*?)(\.local)?\.?$', host_target).group(1)
             contact = txt.get('contact', file.service_description.name).split(None, 1)[0].strip('<>')
@@ -761,7 +761,7 @@ class BonjourConferenceServices(object):
             self._files.remove(file)
             self._select_proc.kill(RestartSelect)
             file.close()
-            error = bonjour.BonjourError(error_code)
+            error = _bonjour.BonjourError(error_code)
             notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=TimestampedNotificationData(error=str(error), transport=file.transport))
             # start a new resolve process here? -Dan
 
@@ -808,8 +808,8 @@ class BonjourConferenceServices(object):
         for transport in missing_transports:
             notification_center.post_notification('BonjourConferenceServicesWillInitiateDiscovery', sender=self, data=TimestampedNotificationData(transport=transport))
             try:
-                file = bonjour.DNSServiceBrowse(regtype="_sipfocus._%s" % transport, callBack=self._browse_cb)
-            except bonjour.BonjourError, e:
+                file = _bonjour.DNSServiceBrowse(regtype="_sipfocus._%s" % transport, callBack=self._browse_cb)
+            except _bonjour.BonjourError, e:
                 notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=TimestampedNotificationData(reason=str(e), transport=transport))
             else:
                 self._files.append(BonjourDiscoveryFile(file, transport))
@@ -824,7 +824,7 @@ class BonjourConferenceServices(object):
     def _CH_process_results(self, command):
         for file in (f for f in command.files if not f.closed):
             try:
-                bonjour.DNSServiceProcessResult(file.file)
+                _bonjour.DNSServiceProcessResult(file.file)
             except Exception:
                 pass
         for file in command.files:
