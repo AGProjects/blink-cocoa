@@ -545,7 +545,7 @@ class SIPManager(object):
 
     def _NH_SIPAccountRegistrationDidFail(self, account, data):
         reason = 'Connection Failed' if data.error == 'Unknown error 61' else data.error
-        BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, reason, data.timeout))
+        BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, reason, data.retry_after))
 
     @run_in_gui_thread
     def _NH_SIPAccountGotMessageSummary(self, account, data):
