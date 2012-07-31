@@ -46,12 +46,12 @@ class GrowlNotifications(object):
 
     def _NH_GrowlMissedCall(self, notification):
         title = 'Missed Call (' + notification.data.streams  + ')'
-        message = 'From %s\nat %s' % (notification.data.caller, notification.data.timestamp.strftime("%Y-%m-%d %H:%M"))
+        message = 'From %s\nat %s' % (notification.data.caller, notification.datetime.strftime("%Y-%m-%d %H:%M"))
         self.growl.notify('Missed Call', title, message, sticky=True)
 
     def _NH_GrowlAudioSessionRecorded(self, notification):
         title = 'Audio Session Recorded'
-        message = '%s\nat %s' % (notification.data.remote_party, notification.data.timestamp.strftime("%Y-%m-%d %H:%M"))
+        message = '%s\nat %s' % (notification.data.remote_party, notification.datetime.strftime("%Y-%m-%d %H:%M"))
         self.growl.notify('Audio Session Recorded', title, message, sticky=True)
 
     def _NH_GrowlGotMWI(self, notification):

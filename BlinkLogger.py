@@ -191,13 +191,13 @@ class FileLogger(object):
         if not settings.logs.trace_sip:
             return
         if self._siptrace_start_time is None:
-            self._siptrace_start_time = notification.data.timestamp
+            self._siptrace_start_time = notification.datetime
         self._siptrace_packet_count += 1
         if notification.data.received:
             direction = "RECEIVED"
         else:
             direction = "SENDING"
-        buf = ["%s: Packet %d, +%s" % (direction, self._siptrace_packet_count, (notification.data.timestamp - self._siptrace_start_time))]
+        buf = ["%s: Packet %d, +%s" % (direction, self._siptrace_packet_count, (notification.datetime - self._siptrace_start_time))]
         buf.append("%(source_ip)s:%(source_port)d -(SIP over %(transport)s)-> %(destination_ip)s:%(destination_port)d" % notification.data.__dict__)
         buf.append(notification.data.data)
         buf.append('--')
@@ -207,7 +207,7 @@ class FileLogger(object):
         except Exception:
             pass
         else:
-            self._siptrace_file.write('%s [%s %d]: %s\n' % (notification.data.timestamp, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
+            self._siptrace_file.write('%s [%s %d]: %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._siptrace_file.flush()
 
     def _LH_SIPEngineLog(self, notification):
@@ -220,7 +220,7 @@ class FileLogger(object):
         except Exception:
             pass
         else:
-            self._pjsiptrace_file.write('%s [%s %d] %s\n' % (notification.data.timestamp, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
+            self._pjsiptrace_file.write('%s [%s %d] %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._pjsiptrace_file.flush()
 
     def _LH_DNSLookupTrace(self, notification):
@@ -248,7 +248,7 @@ class FileLogger(object):
         except Exception:
             pass
         else:
-            self._siptrace_file.write('%s [%s %d]: %s\n' % (notification.data.timestamp, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
+            self._siptrace_file.write('%s [%s %d]: %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._siptrace_file.flush()
 
     def _LH_MSRPTransportTrace(self, notification):
@@ -266,7 +266,7 @@ class FileLogger(object):
         except Exception:
             pass
         else:
-            self._msrptrace_file.write('%s [%s %d]: %s\n' % (notification.data.timestamp, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
+            self._msrptrace_file.write('%s [%s %d]: %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._msrptrace_file.flush()
 
     def _LH_MSRPLibraryLog(self, notification):
@@ -281,7 +281,7 @@ class FileLogger(object):
         except Exception:
             pass
         else:
-            self._msrptrace_file.write('%s [%s %d]: %s\n' % (notification.data.timestamp, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
+            self._msrptrace_file.write('%s [%s %d]: %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._msrptrace_file.flush()
 
     # private methods

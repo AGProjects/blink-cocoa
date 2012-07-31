@@ -325,13 +325,14 @@ class DebugWindow(NSObject):
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
-    def renderSIP(self, event_data):
+    def renderSIP(self, notification):
+        event_data = notification.data
         self.sipBytes += len(event_data.data)
         if self.sipTraceType is None:
             return
 
         if self._siptrace_start_time is None:
-            self._siptrace_start_time = event_data.timestamp
+            self._siptrace_start_time = notification.datetime
         self._siptrace_packet_count += 1
 
         text = NSMutableAttributedString.alloc().init()
@@ -347,10 +348,10 @@ class DebugWindow(NSObject):
             self.sipOutCount += 1
             text.appendAttributedString_(self.sendingText)
 
-        line = " Packet %d, +%s\n" % (self._siptrace_packet_count, (event_data.timestamp - self._siptrace_start_time))
+        line = " Packet %d, +%s\n" % (self._siptrace_packet_count, (notification.datetime - self._siptrace_start_time))
         text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
 
-        line = "%(timestamp)s: %(source_ip)s:%(source_port)d -(SIP over %(transport)s)-> %(destination_ip)s:%(destination_port)d\n" % event_data.__dict__
+        line = "%s: %s:%d -(SIP over %s)-> %s:%d\n" % (notification.datetime, event_data.source_ip, event_data.source_port, event_data.transport, event_data.destination_ip, event_data.destination_port)
         text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
 
         data = event_data.data.strip()
@@ -414,9 +415,6 @@ class DebugWindow(NSObject):
         if self.notificationsCheckBox.state() == NSOnState:
             attribs = notification.data.__dict__.copy()
 
-            # remove information we do not need
-            attribs.pop('timestamp', None)
-
             # remove some data that would be too big to log
             if notification.name == "MSRPTransportTrace":
                 if len(attribs["data"]) > 30:
@@ -427,7 +425,7 @@ class DebugWindow(NSObject):
                     attribs["data"] = "..."
 
             attribs = ", ".join("%s=%s" % (k, v) for k, v in attribs.iteritems())
-            ts = getattr(notification.data, "timestamp", None)
+            ts = notification.datetime
             ts = ts.replace(microsecond=0) if type(ts) == datetime else ""
 
             self.notificationsBytes += len(notification.name) + len(str(notification.sender)) + len(attribs) + len(str(ts))
@@ -460,7 +458,7 @@ class DebugWindow(NSObject):
         remote_address = notification.sender.getPeer()
         remote_address = '%s:%d' % (remote_address.host, remote_address.port)
 
-        message = '\n%s: %s %s %s' % (notification.data.timestamp, local_address, arrow, remote_address)
+        message = '\n%s: %s %s %s' % (notification.datetime, local_address, arrow, remote_address)
         header = []
         if self.msrpTraceType == "full":
             header = notification.data.data.split("\n")
@@ -500,7 +498,7 @@ class DebugWindow(NSObject):
         if self.msrpTraceType is None:
             return
 
-        message = '%s %s%s\n\n' % (notification.data.timestamp, notification.data.level.prefix, notification.data.message)
+        message = '%s %s%s\n\n' % (notification.datetime, notification.data.level.prefix, notification.data.message)
         text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
         self.append_line(self.msrpTextView, text)
 
@@ -546,14 +544,14 @@ class DebugWindow(NSObject):
 
     def _NH_SIPEngineLog(self, notification):
         if self.pjsipCheckBox.state() == NSOnState:
-            self.renderPJSIP("%(timestamp)s (%(level)d) %(sender)14s: %(message)s" % notification.data.__dict__)
+            self.renderPJSIP("%s (%d) %14s: %s" % (notification.datetime, notification.data.level, notification.data.sender, notification.data.message))
 
     def _NH_SIPEngineSIPTrace(self, notification):
-        self.renderSIP(notification.data)
+        self.renderSIP(notification)
 
     def _NH_DNSLookupTrace(self, notification):
         data = notification.data
-        message = '%(timestamp)s: DNS lookup %(query_type)s %(query_name)s' % data.__dict__
+        message = '%s: DNS lookup %s %s' % (notification.datetime, data.query_type, data.query_name)
         if data.error is None:
             message += ' succeeded, ttl=%d: ' % data.answer.ttl
             if data.query_type == 'A':
@@ -582,17 +580,17 @@ class DebugWindow(NSObject):
             # The XCAP manager might be stopped because this notification is processed in a different
             # thread from which it was posted
             return
-        self.renderXCAP(u"%s Using XCAP root %s for account %s" % (notification.data.timestamp, xcap_root, account.id))
-        message = (u"%s XCAP server capabilities: %s" % (notification.data.timestamp, ", ".join(notification.data.auids)))
+        self.renderXCAP(u"%s Using XCAP root %s for account %s" % (notification.datetime, xcap_root, account.id))
+        message = (u"%s XCAP server capabilities: %s" % (notification.datetime, ", ".join(notification.data.auids)))
         self.renderXCAP(message)
 
     def _NH_XCAPSubscriptionGotNotify(self, notification):
-        message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.data.timestamp, notification.sender.account.id, notification.data.body))
+        message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body))
         if notification.data.body is not None and self.xcapTraceType == 'full':
             self.renderXCAP(message)
 
     def _NH_XCAPManagerDidChangeState(self, notification):
-        message = (u"%s XCAP manager of account %s changed state from %s to %s" % (notification.data.timestamp, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
+        message = (u"%s XCAP manager of account %s changed state from %s to %s" % (notification.datetime, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
         self.renderXCAP(message)
 
 
