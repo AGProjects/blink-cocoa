@@ -1631,7 +1631,6 @@ SectionNames = {
                        'chat': 'Chat Sessions',
                        'sms': 'Short Messages',
                        'conference': 'Conference Server',
-                       'dialog_event': 'Active Calls Subscriptions',
                        'gui': 'GUI Settings',
                        'logs': 'File Logging',
                        'message_summary': 'Voicemail',
