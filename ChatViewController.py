@@ -19,9 +19,8 @@ import urllib
 
 from dateutil.tz import tzlocal
 
-from application.notification import NotificationCenter
+from application.notification import NotificationCenter, NotificationData
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.util import TimestampedNotificationData
 
 from SmileyManager import SmileyManager
 from util import escape_html, format_identity_to_string
@@ -415,7 +414,7 @@ class ChatViewController(NSObject):
         self.editor_has_changed = True
         self.delegate.resetIsComposingTimer(5)
 
-        NotificationCenter().post_notification("BlinkColaborativeEditorContentHasChanged", sender=self, data=TimestampedNotificationData())
+        NotificationCenter().post_notification("BlinkColaborativeEditorContentHasChanged", sender=self)
 
     def webView_didClearWindowObject_forFrame_(self, sender, windowObject, frame):
         windowObject.setValue_forKey_(self, "blink")

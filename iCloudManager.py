@@ -7,7 +7,7 @@ from AppKit import *
 import cjson
 import platform
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 
 from configuration.account import LDAPSettingsExtension
@@ -16,7 +16,6 @@ from sipsimple.account import AuthSettings
 from sipsimple.configuration import DefaultValue, SettingsGroupMeta, Setting
 from sipsimple.account import AccountManager, Account
 from sipsimple.threading import run_in_thread
-from sipsimple.util import TimestampedNotificationData
 
 from zope.interface import implements
 from util import *
@@ -305,7 +304,7 @@ class iCloudManager(NSObject):
             except KeyError:
                 pass
 
-        self.notification_center.post_notification("SIPAccountChangedByICloud", sender=self, data=TimestampedNotificationData(account=key))
+        self.notification_center.post_notification("SIPAccountChangedByICloud", sender=self, data=NotificationData(account=key))
 
     def hasDifference(self, account, local_json, remote_json, icloud=False):
         changed_keys = set()
@@ -360,7 +359,7 @@ class iCloudManager(NSObject):
             diffs += 1
 
         if diffs and icloud:
-            self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=TimestampedNotificationData(account=account.id, changed_keys=changed_keys))
+            self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=NotificationData(account=account.id, changed_keys=changed_keys))
 
         return bool(diffs)
 

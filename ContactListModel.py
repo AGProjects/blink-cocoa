@@ -40,7 +40,7 @@ import AddressBook
 from Foundation import *
 from AppKit import *
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from application.python.descriptor import classproperty
 from application.system import makedirs, unlink
@@ -51,7 +51,6 @@ from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group, unique_id
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
 from ContactController import AddContactController, EditContactController
@@ -777,7 +776,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 blink_contact.detail = new_detail
             self.contacts.append(blink_contact)
 
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
 
 class MissedCallsBlinkGroup(HistoryBlinkGroup):
@@ -1218,7 +1217,7 @@ class ContactListModel(CustomListModel):
         settings = SIPSimpleSettings()
         if settings.contacts.enable_address_book:
             self.addressbook_group.loadAddressBook()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def hasContactMatchingURI(self, uri):
         return any(blink_contact.matchesURI(uri) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
@@ -1482,7 +1481,7 @@ class ContactListModel(CustomListModel):
                 self.createInitialGroupAndContacts()
             self._migrateContacts()
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30.0, self, "checkContactBackup:", None, False)
 
@@ -1512,11 +1511,11 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.addressbook_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.groupsList:
                 self.groupsList.remove(self.addressbook_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_incoming_calls_group"):
             if settings.contacts.enable_incoming_calls_group and self.incoming_calls_group not in self.groupsList:
@@ -1527,7 +1526,7 @@ class ContactListModel(CustomListModel):
             elif not settings.contacts.enable_incoming_calls_group and self.incoming_calls_group in self.groupsList:
                 self.groupsList.remove(self.incoming_calls_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_outgoing_calls_group"):
             if settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group not in self.groupsList:
@@ -1538,7 +1537,7 @@ class ContactListModel(CustomListModel):
             elif not settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group in self.groupsList:
                 self.groupsList.remove(self.outgoing_calls_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.enable_missed_calls_group"):
             if settings.contacts.enable_missed_calls_group and self.missed_calls_group not in self.groupsList:
@@ -1549,7 +1548,7 @@ class ContactListModel(CustomListModel):
             elif not settings.contacts.enable_missed_calls_group and self.missed_calls_group in self.groupsList:
                 self.groupsList.remove(self.missed_calls_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if notification.data.modified.has_key("contacts.maximum_calls"):
             if settings.contacts.enable_missed_calls_group:
@@ -1625,8 +1624,8 @@ class ContactListModel(CustomListModel):
             positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None]
             positions.sort()
             self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-            self.nc.post_notification("BonjourGroupWasActivated", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BonjourGroupWasActivated", sender=self)
         else:
             self.updatePresenceIndicator()
 
@@ -1634,8 +1633,8 @@ class ContactListModel(CustomListModel):
         if notification.sender is BonjourAccount():
             self.bonjour_group.contacts = []
             self.groupsList.remove(self.bonjour_group)
-            self.nc.post_notification("BonjourGroupWasDeactivated", sender=self, data=TimestampedNotificationData())
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def updatePresenceIndicator(self):
         return
@@ -1658,7 +1657,7 @@ class ContactListModel(CustomListModel):
                     change = True
 
         if change:
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -1690,7 +1689,7 @@ class ContactListModel(CustomListModel):
                     self.bonjour_group.contacts.remove(n)
 
             self.bonjour_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -1718,7 +1717,7 @@ class ContactListModel(CustomListModel):
             blink_contact.update_uri(uri)
             blink_contact.detail = blink_contact.uri
             self.bonjour_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
@@ -1741,7 +1740,7 @@ class ContactListModel(CustomListModel):
                     self.bonjour_group.contacts.append(n)
 
             self.bonjour_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
@@ -1752,7 +1751,7 @@ class ContactListModel(CustomListModel):
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
             self.no_group.contacts.append(blink_contact)
             self.no_group.sortContacts()
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
@@ -1760,7 +1759,7 @@ class ContactListModel(CustomListModel):
         blink_contact.avatar.delete()
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group]+self.groupsList)
         self.presence_contacts.remove(blink_contact)
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
@@ -1774,7 +1773,7 @@ class ContactListModel(CustomListModel):
             blink_contact._set_username_and_domain()
 
         [g.sortContacts() for g in self.groupsList if blink_contact in g.contacts]
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
@@ -1795,8 +1794,8 @@ class ContactListModel(CustomListModel):
             self.removeContactFromBlinkGroups(blink_contact.contact, [self.no_group])
         blink_group.sortContacts()
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
     def _NH_AddressbookGroupWasDeleted(self, notification):
         group = notification.sender
@@ -1814,8 +1813,8 @@ class ContactListModel(CustomListModel):
                 self.no_group.contacts.append(blink_contact)
         self.no_group.sortContacts()
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
     def _NH_AddressbookGroupDidChange(self, notification):
         group = notification.sender
@@ -1847,8 +1846,8 @@ class ContactListModel(CustomListModel):
                         self.no_group.sortContacts()
             blink_group.sortContacts()
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
     def _NH_AddressbookGroupWasCreated(self, notification):
         self.saveGroupPosition()
@@ -1920,8 +1919,8 @@ class ContactListModel(CustomListModel):
             blink_group.group = group
             self.groupsList.insert(index, blink_group)
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
     def _NH_VirtualGroupWasDeleted(self, notification):
         group = notification.sender
@@ -1933,8 +1932,8 @@ class ContactListModel(CustomListModel):
         self.groupsList.remove(blink_group)
         self.saveGroupPosition()
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
     def _NH_VirtualGroupDidChange(self, notification):
         group = notification.sender
@@ -1943,8 +1942,8 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             return
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
-        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self, data=TimestampedNotificationData())
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
@@ -2134,7 +2133,7 @@ class ContactListModel(CustomListModel):
         ret = NSRunAlertPanel(u"Delete Contact", message, u"Delete", u"Cancel", None)
         if ret == NSAlertDefaultReturn:
             blink_contact.contact.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def deleteGroup(self, blink_group):
         message = u"Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. "%blink_group.name
@@ -2143,5 +2142,5 @@ class ContactListModel(CustomListModel):
         if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
             if blink_group.deletable:
                 blink_group.group.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 

@@ -11,7 +11,7 @@ import time
 import uuid
 import urllib
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from collections import deque
 from dateutil.tz import tzlocal
@@ -24,7 +24,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import AudioStream
 from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp, TimestampedNotificationData
+from sipsimple.util import Timestamp
 import AudioSession
 
 from AnsweringMachine import AnsweringMachine
@@ -304,7 +304,7 @@ class AudioController(MediaStream):
                 self.session.hold()
             self.holdByLocal = True
             self.changeStatus(self.status)
-            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
 
     def unhold(self):
         if self.session and self.holdByLocal and self.status not in (STREAM_IDLE, STREAM_FAILED):
@@ -313,7 +313,7 @@ class AudioController(MediaStream):
                 self.session.unhold()
             self.holdByLocal = False
             self.changeStatus(self.status)
-            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
 
     def sessionBoxKeyPressEvent(self, sender, event):
         s = event.characters()
@@ -362,8 +362,7 @@ class AudioController(MediaStream):
             NSApp.delegate().contactsWindowController.holdConference()
             self.unhold()
 
-        data = TimestampedNotificationData()
-        self.notification_center.post_notification("ActiveAudioSessionChanged", sender=self, data=data)
+        self.notification_center.post_notification("ActiveAudioSessionChanged", sender=self)
 
 
     def sessionBoxDidDeactivate(self, sender):
@@ -1034,7 +1033,7 @@ class AudioController(MediaStream):
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.addRecordingToHistory(data.filename)
-        growl_data = TimestampedNotificationData()
+        growl_data = NotificationData()
         growl_data.remote_party = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact')
         growl_data.timestamp = datetime.datetime.now(tzlocal())
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
@@ -1045,7 +1044,7 @@ class AudioController(MediaStream):
         if data.originator != "local":
             self.holdByRemote = data.on_hold
             self.changeStatus(self.status)
-            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
         else:
             if data.on_hold:
                 tip = "Activate"

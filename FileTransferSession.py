@@ -10,7 +10,7 @@ import time
 import unicodedata
 import uuid
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null, limit
 from application.system import makedirs
 from sipsimple.account import Account, BonjourAccount
@@ -21,7 +21,7 @@ from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData, Timestamp
+from sipsimple.util import Timestamp
 from threading import Event
 from twisted.internet import reactor
 from twisted.internet.error import ConnectionLost
@@ -145,7 +145,7 @@ class FileTransfer(object):
             self.rate_history = []
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferSpeedDidUpdate", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferSpeedDidUpdate", sender=self)
 
     @run_in_green_thread
     def add_to_history(self):
@@ -179,7 +179,7 @@ class FileTransfer(object):
     def _NH_SIPSessionWillStart(self, sender, data):
         self.status = "Starting File Transfer..."
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferUpdate", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferUpdate", sender=self)
 
     def log_info(self, text):
         if self.session:
@@ -239,8 +239,8 @@ class IncomingFileTransferHandler(FileTransfer):
         notification_center.add_observer(self, sender=self.stream)
 
         BlinkLogger().log_info("Initiating Incoming File Transfer")
-        notification_center.post_notification("BlinkFileTransferInitializing", self, data=TimestampedNotificationData())
-        notification_center.post_notification("BlinkFileTransferInitiated", self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferInitializing", self)
+        notification_center.post_notification("BlinkFileTransferInitiated", self)
 
     def cancel(self):
         if not self.finished_transfer:
@@ -255,15 +255,15 @@ class IncomingFileTransferHandler(FileTransfer):
             try:
                 self.file_selector.fd.write(data)
             except EnvironmentError, e:
-                notification_center.post_notification('IncomingFileTransferHandlerGotError', sender=self, data=TimestampedNotificationData(error=str(e)))
+                notification_center.post_notification('IncomingFileTransferHandlerGotError', sender=self, data=NotificationData(error=str(e)))
             else:
                 self.hash.update(data)
         else:
             self.file_selector.fd.close()
             if self.error:
-                notification_center.post_notification('IncomingFileTransferHandlerDidFail', sender=self, data=TimestampedNotificationData())
+                notification_center.post_notification('IncomingFileTransferHandlerDidFail', sender=self)
             else:
-                notification_center.post_notification('IncomingFileTransferHandlerDidEnd', sender=self, data=TimestampedNotificationData())
+                notification_center.post_notification('IncomingFileTransferHandlerDidEnd', sender=self)
 
     def _NH_SIPSessionDidFail(self, sender, data):
         self.log_info("File Transfer Session failed: %s" % (data.reason or data.failure_reason))
@@ -272,7 +272,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.ft_info.status = "failed"
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.log_info(u"File Transfer Session ended by %s" % data.originator)
@@ -288,7 +288,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.started = True
         self.start_time = datetime.datetime.now()
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidStart", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidStart", sender=self)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.log_info("Error while handling file transfer: %s" % data.reason)
@@ -312,7 +312,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.status = self.format_progress()
         self.ft_info.status = "transfering"
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferUpdate", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferUpdate", sender=self)
 
     def _NH_FileTransferStreamDidFinish(self, sender, data):
         self.finished_transfer = True
@@ -355,12 +355,12 @@ class IncomingFileTransferHandler(FileTransfer):
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_size
-            notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=TimestampedNotificationData(file_path=self.file_path))
+            notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
         else:
             self.status = self.fail_reason
             self.ft_info.status = "failed"
             self.ft_info.bytes_transfered = self.file_pos
-            notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_IncomingFileTransferHandlerDidFail(self, sender, data):
         #self.end_time = datetime.datetime.now()
@@ -371,7 +371,7 @@ class IncomingFileTransferHandler(FileTransfer):
         os.remove(self.file_path)
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         notification_center = NotificationCenter()
@@ -436,9 +436,9 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
         notification_center = NotificationCenter()
         if restart:
-            notification_center.post_notification("BlinkFileTransferRestarting", self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferRestarting", self)
         else:
-            notification_center.post_notification("BlinkFileTransferInitializing", self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferInitializing", self)
 
         BlinkLogger().log_info(u"Computing checksum for file %s" % os.path.basename(self.file_path))
 
@@ -458,7 +458,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         hash = hashlib.sha1()
         pos = progress = 0
         chunk_size = limit(self.file_selector.size/100, min=65536, max=1048576)
-        notification_center.post_notification('BlinkFileTransferHashUpdate', sender=self, data=TimestampedNotificationData(progress=0))
+        notification_center.post_notification('BlinkFileTransferHashUpdate', sender=self, data=NotificationData(progress=0))
         while not self.stop_event.isSet():
             content = self.file_selector.fd.read(chunk_size)
             if not content:
@@ -467,13 +467,13 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             pos += len(content)
             old_progress, progress = progress, int(float(pos)/self.file_selector.size*100)
             if old_progress != progress:
-                notification_center.post_notification('BlinkFileTransferHashUpdate', sender=self, data=TimestampedNotificationData(progress=progress))
+                notification_center.post_notification('BlinkFileTransferHashUpdate', sender=self, data=NotificationData(progress=progress))
         else:
             notification_center.post_notification('BlinkFileTransferDidNotComputeHash', sender=self)
             return
         self.file_selector.fd.seek(0)
         self.file_selector.hash = hash
-        notification_center.post_notification('BlinkFileTransferDidComputeHash', sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification('BlinkFileTransferDidComputeHash', sender=self)
 
     def cancel(self):
         if not self.finished_transfer:
@@ -488,7 +488,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, sender=sender)
         if self.interrupted:
-            notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
             return
         self.session.connect(ToHeader(self.target_uri), data.result, [self.stream])
 
@@ -500,7 +500,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.status = self.fail_reason
         self.ft_info.status = "failed"
 
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.log_info("Outgoing Push File Transfer started")
@@ -509,7 +509,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.started = True
         self.start_time = datetime.datetime.now()
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidStart", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidStart", sender=self)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.log_info("Error while handling file transfer: %s" % data.reason)
@@ -524,7 +524,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.ft_info.status = "failed"
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
         self.file_selector.fd.close()
         self.file_selector = None
@@ -540,12 +540,12 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             self.ft_info.status = "failed"
             self.ft_info.bytes_transfered = self.file_pos
             self.status = "%s %s %s" % (str(format_size(self.file_pos, 1024)), unichr(0x2014), self.fail_reason)
-            notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
         else:
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered=self.file_size
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
-            notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=TimestampedNotificationData(file_path=self.file_path))
+            notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
 
         self.file_selector.fd.close()
         self.file_selector = None
@@ -556,7 +556,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.status = self.format_progress()
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferUpdate", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferUpdate", sender=self)
 
     def _NH_FileTransferStreamDidFinish(self, sender, data):
         self.finished_transfer = True
@@ -588,7 +588,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         else:
             uri = self.target_uri
             BlinkLogger().log_info(u"Initiating DNS Lookup for SIP routes of %s" % self.target_uri)
-        notification_center.post_notification("BlinkFileTransferInitiated", self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferInitiated", self)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def _NH_BlinkFileTransferDidNotComputeHash(self, sender, data):
@@ -598,7 +598,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.ft_info.status = "interrupted"
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         notification_center = NotificationCenter()
@@ -684,8 +684,8 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         else:
             uri = self.target_uri
             BlinkLogger().log_info(u"Initiating DNS Lookup for SIP routes of %s" % self.target_uri)
-        notification_center.post_notification("BlinkFileTransferInitializing", self, data=TimestampedNotificationData())
-        notification_center.post_notification("BlinkFileTransferInitiated", self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferInitializing", self)
+        notification_center.post_notification("BlinkFileTransferInitiated", self)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def cancel(self):
@@ -703,21 +703,21 @@ class OutgoingPullFileTransferHandler(FileTransfer):
             try:
                 self.file_selector.fd.write(data)
             except EnvironmentError, e:
-                notification_center.post_notification('OutgoingPullFileTransferHandlerGotError', sender=self, data=TimestampedNotificationData(error=str(e)))
+                notification_center.post_notification('OutgoingPullFileTransferHandlerGotError', sender=self, data=NotificationData(error=str(e)))
             else:
                 self.hash.update(data)
         else:
             self.file_selector.fd.close()
             if self.error:
-                notification_center.post_notification('OutgoingPullFileTransferHandlerDidFail', sender=self, data=TimestampedNotificationData())
+                notification_center.post_notification('OutgoingPullFileTransferHandlerDidFail', sender=self)
             else:
-                notification_center.post_notification('OutgoingPullFileTransferHandlerDidEnd', sender=self, data=TimestampedNotificationData())
+                notification_center.post_notification('OutgoingPullFileTransferHandlerDidEnd', sender=self)
 
     def _NH_DNSLookupDidSucceed(self, sender, data):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, sender=sender)
         if self.interrupted:
-            notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
             return
         self.session.connect(ToHeader(self.target_uri), data.result, [self.stream])
 
@@ -729,7 +729,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.status = self.fail_reason
         self.ft_info.status = "failed"
 
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_SIPSessionDidFail(self, sender, data):
         self.log_info("File Transfer Session failed: %s" % (data.reason or data.failure_reason))
@@ -739,7 +739,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.ft_info.status = "failed"
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.log_info("File Transfer Session ended by %s" % data.originator)
@@ -755,7 +755,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.started = True
         self.start_time = datetime.datetime.now()
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidStart", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidStart", sender=self)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.log_info("Error while handling file transfer: %s" % data.reason)
@@ -780,7 +780,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.status = self.format_progress()
         self.ft_info.status = "transfering"
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferUpdate", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferUpdate", sender=self)
 
     def _NH_FileTransferStreamDidFinish(self, sender, data):
         self.finished_transfer = True
@@ -824,12 +824,12 @@ class OutgoingPullFileTransferHandler(FileTransfer):
             self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_size
-            notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=TimestampedNotificationData(file_path=self.file_path))
+            notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
         else:
             self.status = self.fail_reason
             self.ft_info.status = "failed"
             self.ft_info.bytes_transfered = self.file_pos
-            notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_OutgoingPullFileTransferHandlerDidFail(self, sender, data):
         self.end_time = datetime.datetime.now()
@@ -840,7 +840,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         os.remove(self.file_path)
 
         notification_center = NotificationCenter()
-        notification_center.post_notification("BlinkFileTransferDidFail", sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         notification_center = NotificationCenter()

@@ -12,7 +12,7 @@ import string
 import ldap
 from datetime import datetime
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.addressbook import ContactURI
@@ -24,7 +24,6 @@ from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
 from sipsimple.threading import call_in_thread, run_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData
 from operator import attrgetter
 from zope.interface import implements
 
@@ -1215,7 +1214,7 @@ class ContactWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-        NotificationCenter().post_notification("BlinkMuteChangedState", sender=self, data=TimestampedNotificationData())
+        NotificationCenter().post_notification("BlinkMuteChangedState", sender=self)
 
     @objc.IBAction
     def toggleAnsweringMachine_(self, sender):
@@ -1707,8 +1706,8 @@ class ContactWindowController(NSWindowController):
             elif sender.selectedSegment() == 1:
                 # IM button
                 point = sender.convertPointToBase_(NSZeroPoint)
-                point.x += sender.widthForSegment_(0)
-                point.y -= NSHeight(sender.frame())
+                point.x -= sender.widthForSegment_(0)
+                point.y -= 2 *  NSHeight(sender.frame())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                 sender.window().graphicsContext(), 0, 1, 0)
@@ -1717,8 +1716,8 @@ class ContactWindowController(NSWindowController):
             elif sender.selectedSegment() == 2:
                 # DS button
                 point = sender.convertPointToBase_(NSZeroPoint)
-                point.x += sender.widthForSegment_(0) + sender.widthForSegment_(1)
-                point.y -= NSHeight(sender.frame())
+                #point.x += sender.widthForSegment_(0) + sender.widthForSegment_(1)
+                point.y -= 2 * NSHeight(sender.frame())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                 sender.window().graphicsContext(), 0, 1, 0)
@@ -3093,7 +3092,7 @@ class ContactWindowController(NSWindowController):
         if image and path:
             self.photoImage.setImage_(image)
             NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self, data=TimestampedNotificationData())
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
         self.picker = None
 
     def getSelectedParticipant(self):
@@ -3570,7 +3569,7 @@ class LdapSearch(object):
                                         address = ('sip', sip_prefix_pattern.sub("", str(_entry)))
                                         uris.append(address)
                                 if uris:
-                                    data = TimestampedNotificationData(timestamp=datetime.now(), name=entry['cn'][0], uris=uris)
+                                    data = NotificationData(name=entry['cn'][0], uris=uris)
                                     NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
                 self.ldap_query_id = None
 

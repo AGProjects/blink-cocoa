@@ -14,7 +14,7 @@ import urllib
 import uuid
 
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.decorator import decorator, preserve_signature
 from application.python.types import Singleton
@@ -36,7 +36,7 @@ from util import *
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp, TimestampedNotificationData
+from sipsimple.util import Timestamp
 from zope.interface import implements
 
 
@@ -401,7 +401,7 @@ class ChatHistory(object):
                 }
 
                 notification_center = NotificationCenter()
-                notification_center.post_notification('ChatReplicationJournalEntryAdded', sender=self, data=TimestampedNotificationData(entry=journal_entry))
+                notification_center.post_notification('ChatReplicationJournalEntryAdded', sender=self, data=NotificationData(entry=journal_entry))
             else:
                 try:
                     time_entry = datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
@@ -933,14 +933,14 @@ class SessionHistoryReplicator(object):
                                 #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                                 media_type = 'audio'
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
 
                         if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
                             now = datetime(*time.localtime()[:6])
                             elapsed = now - start_time
                             elapsed_hours = elapsed.seconds / (60*60)
                             if elapsed_hours < 48:
-                                growl_data = TimestampedNotificationData()
+                                growl_data = NotificationData()
                                 try:
                                     uri = SIPURI.parse('sip:'+str(remote_uri))
                                 except Exception:
@@ -1018,7 +1018,7 @@ class SessionHistoryReplicator(object):
                                 message= '<h3>Outgoing Audio Call</h3>'
                                 message += '<p>Call duration: %s' % duration
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
         except (KeyError, ValueError):
             pass
         except Exception, e:
@@ -1286,7 +1286,7 @@ class ChatHistoryReplicator(object):
         if notify_data:
             for key in notify_data.keys():
                 # notify growl
-                growl_data = TimestampedNotificationData()
+                growl_data = NotificationData()
                 growl_data.sender = key
                 growl_data.content = '%d new chat messages retrieved from replication server' % notify_data[key]
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)

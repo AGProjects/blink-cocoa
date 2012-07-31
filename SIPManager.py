@@ -13,7 +13,7 @@ import re
 import time
 import uuid
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from application.python.types import Singleton
 from application.system import host, makedirs, unlink
@@ -41,7 +41,7 @@ from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread, Command
-from sipsimple.util import TimestampedNotificationData, Timestamp
+from sipsimple.util import Timestamp
 
 from BlinkLogger import BlinkLogger, FileLogger
 
@@ -554,7 +554,7 @@ class SIPManager(object):
         if summary.summaries.get('voice-message') is None:
             return
         voice_messages = summary.summaries['voice-message']
-        growl_data = TimestampedNotificationData()
+        growl_data = NotificationData()
         growl_data.new_messages = int(voice_messages['new_messages'])
         growl_data.old_messages = int(voice_messages['old_messages'])
         MWIData.store(account, summary)
@@ -687,7 +687,7 @@ class BonjourConferenceServices(object):
         service_description = BonjourServiceDescription(service_name, regtype, reply_domain)
         if error_code != _bonjour.kDNSServiceErr_NoError:
             error = _bonjour.BonjourError(error_code)
-            notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=TimestampedNotificationData(reason=str(error), transport=file.transport))
+            notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=NotificationData(reason=str(error), transport=file.transport))
             removed_files = [file] + [f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file]
             for f in removed_files:
                 self._files.remove(f)
@@ -706,7 +706,7 @@ class BonjourConferenceServices(object):
                 try:
                     resolution_file = _bonjour.DNSServiceResolve(0, interface_index, service_name, regtype, reply_domain, self._resolve_cb)
                 except _bonjour.BonjourError, e:
-                    notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=TimestampedNotificationData(error=str(e), transport=file.transport))
+                    notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=NotificationData(error=str(e), transport=file.transport))
                 else:
                     resolution_file = BonjourResolutionFile(resolution_file, discovery_file=file, service_description=service_description)
                     self._files.append(resolution_file)
@@ -723,7 +723,7 @@ class BonjourConferenceServices(object):
                 service_description = resolution_file.service_description
                 if service_description in self._servers:
                     del self._servers[service_description]
-                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
+                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
 
     def _resolve_cb(self, file, flags, interface_index, error_code, fullname, host_target, port, txtrecord):
         notification_center = NotificationCenter()
@@ -745,7 +745,7 @@ class BonjourConferenceServices(object):
                 supported_transport = transport in settings.sip.transport_list and (transport!='tls' or account.tls.certificate is not None)
                 if not supported_transport and service_description in self._servers:
                     del self._servers[service_description]
-                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
+                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
                 elif supported_transport:
                     try:
                         contact_uri = account.contact[transport]
@@ -753,7 +753,7 @@ class BonjourConferenceServices(object):
                         return
                     if uri != contact_uri:
                         notification_name = 'BonjourConferenceServicesDidUpdateServer' if service_description in self._servers else 'BonjourConferenceServicesDidAddServer'
-                        notification_data = TimestampedNotificationData(server=service_description, name=name, host=host, uri=uri)
+                        notification_data = NotificationData(server=service_description, name=name, host=host, uri=uri)
                         server_description = BonjourConferenceServerDescription(uri, host, name)
                         self._servers[service_description] = server_description
                         notification_center.post_notification(notification_name, sender=self, data=notification_data)
@@ -762,7 +762,7 @@ class BonjourConferenceServices(object):
             self._select_proc.kill(RestartSelect)
             file.close()
             error = _bonjour.BonjourError(error_code)
-            notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=TimestampedNotificationData(error=str(error), transport=file.transport))
+            notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=NotificationData(error=str(error), transport=file.transport))
             # start a new resolve process here? -Dan
 
     def _process_files(self):
@@ -801,16 +801,16 @@ class BonjourConferenceServices(object):
             file.close()
         for service_description in [service for service, description in self._servers.iteritems() if description.uri.transport not in supported_transports]:
             del self._servers[service_description]
-            notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=TimestampedNotificationData(server=service_description))
+            notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
         discovered_transports = set(file.transport for file in self._files if isinstance(file, BonjourDiscoveryFile))
         missing_transports = discoverable_transports - discovered_transports
         added_transports = set()
         for transport in missing_transports:
-            notification_center.post_notification('BonjourConferenceServicesWillInitiateDiscovery', sender=self, data=TimestampedNotificationData(transport=transport))
+            notification_center.post_notification('BonjourConferenceServicesWillInitiateDiscovery', sender=self, data=NotificationData(transport=transport))
             try:
                 file = _bonjour.DNSServiceBrowse(regtype="_sipfocus._%s" % transport, callBack=self._browse_cb)
             except _bonjour.BonjourError, e:
-                notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=TimestampedNotificationData(reason=str(e), transport=transport))
+                notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=NotificationData(reason=str(e), transport=transport))
             else:
                 self._files.append(BonjourDiscoveryFile(file, transport))
                 added_transports.add(transport)
@@ -885,7 +885,7 @@ class IPAddressMonitor(object):
             if new_address != host.default_ip:
                 continue
             if new_address != current_address:
-                notification_center.post_notification(name='SystemIPAddressDidChange', sender=self, data=TimestampedNotificationData(old_ip_address=current_address, new_ip_address=new_address))
+                notification_center.post_notification(name='SystemIPAddressDidChange', sender=self, data=NotificationData(old_ip_address=current_address, new_ip_address=new_address))
                 current_address = new_address
             api.sleep(5)
 

@@ -7,7 +7,7 @@ from AppKit import *
 import datetime
 import hashlib
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
@@ -19,7 +19,7 @@ from sipsimple.lookup import DNSLookup
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp, TimestampedNotificationData
+from sipsimple.util import Timestamp
 
 
 from BlinkLogger import BlinkLogger
@@ -177,7 +177,7 @@ class SMSViewController(NSObject):
 
         self.chatViewController.showMessage(msgid, 'incoming', format_identity_to_string(sender), icon, message, timestamp, is_html=is_html, state="delivered")
 
-        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
         # save to history
         message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
@@ -396,7 +396,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient=CPIMIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             return True
         return False

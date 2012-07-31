@@ -6,7 +6,7 @@ __all__ = ['VirtualGroupsManager', 'VirtualGroup']
 from zope.interface import implements
 
 from application import log
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.decorator import execute_once
 from application.python.types import Singleton
@@ -15,7 +15,6 @@ from sipsimple.addressbook import unique_id
 from sipsimple.configuration import ConfigurationManager, Setting, SettingsObjectImmutableID, SettingsState, PersistentKey, ObjectNotFoundError
 from sipsimple.payloads.datatypes import ID
 from sipsimple.threading import run_in_thread
-from sipsimple.util import TimestampedNotificationData
 
 
 class VirtualGroupKey(object):
@@ -60,7 +59,7 @@ class VirtualGroup(SettingsState):
         if self.__state__ == 'loaded':
             self.__state__ = 'active'
             notification_center = NotificationCenter()
-            notification_center.post_notification('VirtualGroupWasActivated', sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification('VirtualGroupWasActivated', sender=self)
 
     def __repr__(self):
         return "%s(id=%r)" % (self.__class__.__name__, self.id)
@@ -90,18 +89,18 @@ class VirtualGroup(SettingsState):
             configuration.update(self.__key__, self.__getstate__())
             self.__state__ = 'active'
             modified_data = None
-            notification_center.post_notification('VirtualGroupWasActivated', sender=self, data=TimestampedNotificationData())
-            notification_center.post_notification('VirtualGroupWasCreated', sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification('VirtualGroupWasActivated', sender=self)
+            notification_center.post_notification('VirtualGroupWasCreated', sender=self)
         else:
             configuration.update(self.__key__, self.__getstate__())
-            notification_center.post_notification('VirtualGroupDidChange', sender=self, data=TimestampedNotificationData(modified=modified_settings))
+            notification_center.post_notification('VirtualGroupDidChange', sender=self, data=NotificationData(modified=modified_settings))
             modified_data = modified_settings
 
         try:
             configuration.save()
         except Exception, e:
             log.err()
-            notification_center.post_notification('CFGManagerSaveFailed', sender=configuration, data=TimestampedNotificationData(object=self, operation='save', modified=modified_data, exception=e))
+            notification_center.post_notification('CFGManagerSaveFailed', sender=configuration, data=NotificationData(object=self, operation='save', modified=modified_data, exception=e))
 
     @run_in_thread('file-io')
     def delete(self):
@@ -114,12 +113,12 @@ class VirtualGroup(SettingsState):
         notification_center = NotificationCenter()
 
         configuration.delete(self.__key__)
-        notification_center.post_notification('VirtualGroupWasDeleted', sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification('VirtualGroupWasDeleted', sender=self)
         try:
             configuration.save()
         except Exception, e:
             log.err()
-            notification_center.post_notification('CFGManagerSaveFailed', sender=configuration, data=TimestampedNotificationData(object=self, operation='delete', exception=e))
+            notification_center.post_notification('CFGManagerSaveFailed', sender=configuration, data=NotificationData(object=self, operation='delete', exception=e))
 
     def clone(self, new_id=None):
         """Create a copy of this group and all its sub-settings."""
@@ -158,11 +157,11 @@ class VirtualGroupsManager(object):
         group = notification.sender
         self.groups[group.id] = group
         notification_center = NotificationCenter()
-        notification_center.post_notification('VirtualGroupsManagerDidAddGroup', sender=self, data=TimestampedNotificationData(group=group))
+        notification_center.post_notification('VirtualGroupsManagerDidAddGroup', sender=self, data=NotificationData(group=group))
 
     def _NH_VirtualGroupWasDeleted(self, notification):
         group = notification.sender
         del self.groups[group.id]
         notification_center = NotificationCenter()
-        notification_center.post_notification('VirtualGroupsManagerDidRemoveGroup', sender=self, data=TimestampedNotificationData(group=group))
+        notification_center.post_notification('VirtualGroupsManagerDidRemoveGroup', sender=self, data=NotificationData(group=group))
 

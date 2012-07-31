@@ -13,7 +13,7 @@ import time
 import unicodedata
 import uuid
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.system import makedirs
 from application.python import Null
 from dateutil.tz import tzlocal
@@ -26,7 +26,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
 from sipsimple.streams.applications.chat import CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import TimestampedNotificationData, Timestamp
+from sipsimple.util import Timestamp
 
 from util import *
 
@@ -316,7 +316,7 @@ class ChatController(MediaStream):
             self.toggleVideoMirror()
         elif sender.itemIdentifier() == 'mute':
             self.backend.mute(False if self.backend.is_muted() else True)
-            self.notification_center.post_notification("BlinkMuteChangedState", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
         elif sender.itemIdentifier() == 'hold':
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -347,7 +347,7 @@ class ChatController(MediaStream):
                 if not self.handler.send(text, recipient=identity):
                     textView.setString_(original)
                 else:
-                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 BlinkLogger().log_info(u"Session not established, starting it")
@@ -410,7 +410,7 @@ class ChatController(MediaStream):
         self.chatWindowController.window().setFrame_display_animate_(fullframe, True, True)
         self.chatWindowController.window().setMovable_(False)
 
-        self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
 
         self.showFullScreenVideoPanel()
         self.showVideoMirror()
@@ -434,7 +434,7 @@ class ChatController(MediaStream):
         # Restore Dock and other desktop items
         SetSystemUIMode(kUIModeNormal, kUIOptionAutoShowMenuBar)
 
-        self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self)
 
     def showFullScreenVideoPanel(self):
         if not self.fullScreenVideoPanel:
@@ -862,7 +862,7 @@ class ChatController(MediaStream):
                     self.sessionController.addAudioToSession()
                     sender.setToolTip_('Click to cancel the audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))
-                    self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session, data=TimestampedNotificationData())
+                    self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session)
 
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
                 if audio_stream.stream.recording_active:
@@ -1090,12 +1090,12 @@ class ChatController(MediaStream):
             # FancyTabViewSwitcher will set unfocused tab item views as Hidden
             if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
                 # notify growl
-                growl_data = TimestampedNotificationData()
+                growl_data = NotificationData()
                 growl_data.sender = format_identity_to_string(sender, format='compact')
                 growl_data.content = html2txt(message.body[0:400]) if message.content_type == 'text/html' else message.body[0:400]
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # save to history
             message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text')
@@ -1210,7 +1210,7 @@ class ChatController(MediaStream):
         self.handler.setConnected(self.stream)
 
         # needed to set the Audio button state after session has started
-        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
         self.changeStatus(STREAM_CONNECTED)
         self.sendOwnIcon()
@@ -1303,7 +1303,7 @@ class ChatController(MediaStream):
         self.removeFromSession()
 
         if not self.session_was_active:
-            self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController)
 
         if not self.dealloc_timer:
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)

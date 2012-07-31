@@ -6,14 +6,13 @@ from AppKit import *
 
 import datetime
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
-from sipsimple.util import TimestampedNotificationData
 from sipsimple.payloads.iscomposing import IsComposingMessage
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
 from sipsimple.util import Timestamp
@@ -331,7 +330,7 @@ class SMSWindowManagerClass(NSObject):
 
         if not self.windowForViewer(viewer).window().isKeyWindow():
             # notify growl
-            growl_data = TimestampedNotificationData()
+            growl_data = NotificationData()
             if is_html:
                 growl_data.content = html2txt(body)
             else:

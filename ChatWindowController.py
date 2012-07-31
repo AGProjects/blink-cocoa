@@ -10,13 +10,13 @@ import datetime
 from dateutil.tz import tzlocal
 
 from zope.interface import implements
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from itertools import chain
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
-from sipsimple.util import TimestampedNotificationData, Timestamp
+from sipsimple.util import Timestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
 
@@ -567,7 +567,7 @@ class ChatWindowController(NSWindowController):
         self.closing = False
         self.sessions = {}
         self.stream_controllers = {}
-        self.notification_center.post_notification("BlinkChatWindowClosed", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkChatWindowClosed", sender=self)
 
         return True
 
@@ -836,8 +836,6 @@ class ChatWindowController(NSWindowController):
     @objc.IBAction
     def userClickedActionsButton_(self, sender):
         point = sender.convertPointToBase_(NSZeroPoint)
-        point.x += 30
-        point.y -= 10
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                     NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                     sender.window().graphicsContext(), 0, 1, 0)
@@ -850,7 +848,6 @@ class ChatWindowController(NSWindowController):
                 item.setEnabled_(self.validateToolbarItem_(item))
 
             point = sender.convertPointToBase_(NSZeroPoint)
-            point.y -= NSHeight(sender.frame())
             event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
                 0, 1, 0)
@@ -864,7 +861,6 @@ class ChatWindowController(NSWindowController):
 
         elif sender.tag() == 300: # screenshot sharing menu button
             point = sender.convertPointToBase_(NSZeroPoint)
-            point.y -= NSHeight(sender.frame())
             event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
                 0, 1, 0)
@@ -1109,7 +1105,7 @@ class ChatWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-        self.notification_center.post_notification("BlinkMuteChangedState", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
 
     def revalidateToolbar(self, got_proposal=False):
         # update the toolbar buttons depending on session and stream state

@@ -5,12 +5,11 @@ __all__ = ['MusicApplications']
 
 from Foundation import NSAppleScript
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python.types import Singleton
 from application.python import Null
 
 from sipsimple.threading import run_in_thread
-from sipsimple.util import TimestampedNotificationData
 
 from util import allocate_autorelease_pool
 from zope.interface import implements
@@ -54,7 +53,7 @@ class MusicApplications(object):
 
     def send_global_pause_notification(self):
         if self.itunes_paused and self.spotify_paused and self.vlc_paused:
-            self.notification_center.post_notification('MusicPauseDidExecute', sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification('MusicPauseDidExecute', sender=self)
             self.itunes_paused = False
             self.spotify_paused = False
             self.vlc_paused = False
@@ -103,7 +102,7 @@ class ITunesInterface(object):
     def pause(self):
         notification_center = NotificationCenter()
         if self.paused:
-            notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self)
         else:
             script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
             result, error_info = script.executeAndReturnError_(None)
@@ -116,7 +115,7 @@ class ITunesInterface(object):
                     self.paused = True
                 else:
                     self.paused = False
-            notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self, data=TimestampedNotificationData())
+            notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self)
 
     @run_in_thread('iTunes-interface')
     @allocate_autorelease_pool
@@ -156,7 +155,7 @@ class VLCInterface(ITunesInterface):
         if result and result.booleanValue():
             script = NSAppleScript.alloc().initWithSource_(self.mute_script)
             script.executeAndReturnError_(None)
-        notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self, data=TimestampedNotificationData())
+        notification_center.post_notification('%sPauseDidExecute' % self.application, sender=self)
 
     @run_in_thread('iTunes-interface')
     @allocate_autorelease_pool

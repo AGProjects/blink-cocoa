@@ -16,7 +16,7 @@ import shutil
 import struct
 import unicodedata
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application import log
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
@@ -24,7 +24,6 @@ from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import call_in_thread
-from sipsimple.util import TimestampedNotificationData
 from zope.interface import implements
 
 from SIPManager import SIPManager
@@ -247,10 +246,10 @@ class BlinkAppDelegate(NSObject):
         pass
 
     def computerDidWake_(self, notification):
-        NotificationCenter().post_notification("SystemDidWakeUpFromSleep", None, TimestampedNotificationData())
+        NotificationCenter().post_notification("SystemDidWakeUpFromSleep", None)
 
     def computerWillSleep_(self, notification):
-        NotificationCenter().post_notification("SystemWillSleep", None, TimestampedNotificationData())
+        NotificationCenter().post_notification("SystemWillSleep", None)
 
     def callFromAddressBook_(self, notification):
         url = notification.userInfo()["URI"]

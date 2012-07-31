@@ -12,7 +12,7 @@ import uuid
 
 from itertools import chain
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.types import Singleton
 
@@ -27,7 +27,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
-from sipsimple.util import TimestampedNotificationData, Timestamp
+from sipsimple.util import Timestamp
 
 from sipsimple.threading.green import run_in_green_thread
 
@@ -304,7 +304,7 @@ class SessionControllersManager(object):
                 if 'audio' in data.streams:
                     NSApp.delegate().noteMissedCall()
 
-                growl_data = TimestampedNotificationData()
+                growl_data = NotificationData()
                 growl_data.caller = format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
                 growl_data.timestamp = data.timestamp
                 growl_data.streams = ",".join(data.streams)
@@ -445,7 +445,7 @@ class SessionControllersManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_ended(self, controller, data):
         account = controller.account
@@ -484,7 +484,7 @@ class SessionControllersManager(object):
         timestamp = str(Timestamp(datetime.now(tzlocal())))
 
         self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
         account = controller.account
@@ -518,7 +518,7 @@ class SessionControllersManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_failed(self, controller, data):
         account = controller.account
@@ -552,7 +552,7 @@ class SessionControllersManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_cancelled(self, controller, data):
         account = controller.account
@@ -583,7 +583,7 @@ class SessionControllersManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
         account = controller.account
@@ -623,7 +623,7 @@ class SessionControllersManager(object):
             timestamp = str(Timestamp(datetime.now(tzlocal())))
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=TimestampedNotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def get_printed_duration(self, start_time, end_time):
         duration = end_time - start_time
@@ -930,7 +930,7 @@ class SessionController(NSObject):
                     self.session.reject(500)
                 except IllegalDirectionError:
                     pass
-                log_data = TimestampedNotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
+                log_data = NotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
                 self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
     def setAnsweringMachineMode_(self, flag):
@@ -975,7 +975,7 @@ class SessionController(NSObject):
                     self.log_info("Removing %s stream" % streamHandler.stream.type)
                     try:
                         self.session.remove_stream(streamHandler.stream)
-                        self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self, data=TimestampedNotificationData())
+                        self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
                         return True
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
@@ -1003,7 +1003,7 @@ class SessionController(NSObject):
                 self.cancelledStream = stream
                 try:
                     self.session.cancel_proposal()
-                    self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session, data=TimestampedNotificationData())
+                    self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session)
 
                 except IllegalStateError, e:
                     self.log_info("IllegalStateError: %s" % e)
@@ -1021,7 +1021,7 @@ class SessionController(NSObject):
             return
 
         # notify Chat Window controller to update the toolbar buttons
-        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1031,7 +1031,7 @@ class SessionController(NSObject):
         # This is very bad behavior and should be fixed. -Dan
         for handler in self.streamHandlers[:]:
             handler.sessionStateChanged(newstate, fail_reason)
-        self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=TimestampedNotificationData(state=newstate, reason=fail_reason))
+        self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=NotificationData(state=newstate, reason=fail_reason))
 
     def resetSession(self):
 
@@ -1198,10 +1198,10 @@ class SessionController(NSObject):
                     self.log_info("Proposing %s stream" % stream.type)
                     try:
                        self.session.add_stream(stream)
-                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self, data=TimestampedNotificationData())
+                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
-                        log_data = TimestampedNotificationData(timestamp=datetime.now(), failure_reason=e)
+                        log_data = NotificationData(timestamp=datetime.now(), failure_reason=e)
                         self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
                         return False
             else:
@@ -1284,7 +1284,7 @@ class SessionController(NSObject):
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
-        log_data = TimestampedNotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
+        log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
@@ -1314,7 +1314,7 @@ class SessionController(NSObject):
         self.session.connect(ToHeader(target_uri), self.routes, streams)
         self.changeSessionState(STATE_CONNECTING)
         self.log_info("Connecting session to %s" % self.routes[0])
-        self.notification_center.post_notification("BlinkSessionWillStart", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
     def transferSession(self, target, replaced_session_controller=None):
         if self.session:
@@ -1390,7 +1390,7 @@ class SessionController(NSObject):
     def _NH_SIPSessionGotRingIndication(self, sender, data):
         for sc in self.streamHandlers:
             sc.sessionRinging()
-        self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self)
 
     def _NH_SIPSessionWillStart(self, sender, data):
         self.log_info("Session will start")
@@ -1426,7 +1426,7 @@ class SessionController(NSObject):
         hash.update(id)
         self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
-        self.notification_center.post_notification("BlinkSessionDidStart", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
     def _NH_SIPSessionWillEnd(self, sender, data):
         self.log_info("Session will end %sly"%data.originator)
@@ -1463,7 +1463,7 @@ class SessionController(NSObject):
             self.failureReason = "failed"
 
         self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
-        log_data = TimestampedNotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
+        log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=data.timestamp, code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_FAILED, status)
@@ -1474,7 +1474,7 @@ class SessionController(NSObject):
 
         oldSession = self.session
 
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
         self.notification_center.remove_observer(self, sender=sender)
 
         # redirect
@@ -1522,17 +1522,17 @@ class SessionController(NSObject):
 
         self.log_info("Session ended")
         self.changeSessionState(STATE_FINISHED, data.originator)
-        log_data = TimestampedNotificationData(target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
+        log_data = NotificationData(target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
-        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
-        self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=TimestampedNotificationData())
+        self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+        self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
 
         self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
         if data.code != 180:
-            log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
+            log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 
     def _NH_SIPSessionGotProposal(self, session, data):
@@ -1593,14 +1593,14 @@ class SessionController(NSObject):
                 NSApp.delegate().contactsWindowController.alertPanel.show()
 
             # needed to temporarily disable the Chat Window toolbar buttons
-            self.notification_center.post_notification("BlinkGotProposal", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkGotProposal", sender=self)
 
     def _NH_SIPSessionGotRejectProposal(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
         self.log_info("Proposal cancelled" if data.code == 487 else "Proposal was rejected: %s (%s)"%(data.reason, data.code))
 
-        log_data = TimestampedNotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
+        log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
         self.notification_center.post_notification("BlinkProposalGotRejected", sender=self, data=log_data)
 
         if data.streams:
@@ -1626,7 +1626,7 @@ class SessionController(NSObject):
                     self.log_info("Got reject proposal for unhandled stream type: %r" % stream)
 
             # notify Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionGotAcceptProposal(self, sender, data):
         self.inProposal = False
@@ -1643,14 +1643,14 @@ class SessionController(NSObject):
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
             # notify by Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
         self.log_info("Proposal failure: %s" % data.failure_reason)
 
-        log_data = TimestampedNotificationData(timestamp=datetime.now(), failure_reason=data.failure_reason)
+        log_data = NotificationData(timestamp=datetime.now(), failure_reason=data.failure_reason)
         self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
 
         if data.streams:
@@ -1663,7 +1663,7 @@ class SessionController(NSObject):
                     handler.changeStatus(STREAM_FAILED, data.failure_reason)
 
             # notify Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPInvitationChangedState(self, sender, data):
         self.notification_center.post_notification("BlinkInvitationChangedState", sender=self, data=data)
@@ -1726,7 +1726,7 @@ class SessionController(NSObject):
         else:
             self.invited_participants.remove(contact)
             # notify controllers who need conference information
-            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
@@ -1740,7 +1740,7 @@ class SessionController(NSObject):
             self.failed_to_join_participants[uri]=time.time()
             if data.code >= 400 or data.code == 0:
                 contact.detail = 'Invite Failed: %s (%s)' % (data.reason, data.code)
-                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
+                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = sip_prefix_pattern.sub("", str(data.participant))
@@ -1759,7 +1759,7 @@ class SessionController(NSObject):
                 contact.detail = '%s (%s)' % (data.reason, data.code)
 
             # notify controllers who need conference information
-            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=TimestampedNotificationData())
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
         target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
