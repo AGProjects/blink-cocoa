@@ -1232,8 +1232,11 @@ class ContactListModel(CustomListModel):
     def checkContactBackup_(self, timer):
         now = datetime.datetime.now()
         for file in glob.glob('%s/*.pickle' % ApplicationData.get('contacts_backup')):
-            backup_date, _ = os.path.splitext(os.path.basename(file))
-            diff = now - datetime.datetime.strptime(backup_date, "%Y%m%d-%H%M%S")
+            try:
+                backup_date = datetime.datetime.strptime(os.path.splitext(os.path.basename(file))[0], "%Y%m%d-%H%M%S")
+            except ValueError:
+                continue
+            diff = now - backup_date
             if diff.days <= 7:
                 break
             elif diff.days > 120:
