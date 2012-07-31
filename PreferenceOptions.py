@@ -1638,7 +1638,7 @@ SectionNames = {
                        'nat_traversal': 'NAT Traversal',
                        'pstn': 'Phone Numbers',
                        'rtp': 'RTP Media',
-                       'presence': 'Presence Subscriptions',
+                       'presence': 'Presence',
                        'sip': 'SIP Signaling',
                        'sounds': 'Sound Alerts',
                        'server': 'Server Settings',
@@ -1657,7 +1657,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'nat_traversal','server', 'ldap')
+AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'nat_traversal','server', 'ldap')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
