@@ -855,6 +855,8 @@ class ChatController(MediaStream):
 
                     sender.setToolTip_('Click to add audio to this session')
                     sender.setImage_(NSImage.imageNamed_("audio"))
+                    self.chatWindowController.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                    self.chatWindowController.audioStatus.setStringValue_(u"Connected")
 
                     # The button will be enabled again after operation is finished
                     sender.setEnabled_(False)
