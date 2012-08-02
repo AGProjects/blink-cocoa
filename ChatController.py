@@ -292,7 +292,7 @@ class ChatController(MediaStream):
         return False
 
     def sendOwnIcon(self):
-        if self.stream:
+        if self.stream and not self.sessionController.session.remote_focus:
             base64icon = Avatar(self.chatWindowController.own_icon).to_base64()
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
 
