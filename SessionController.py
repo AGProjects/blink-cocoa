@@ -1149,6 +1149,10 @@ class SessionController(NSObject):
                 self.log_info("Stream already exists: %s"%self.streamHandlers)
                 if stype == 'chat':
                     streamController = self.streamHandlerOfType('chat')
+                    handlerClass = StreamHandlerForType[stype]
+                    stream = handlerClass.createStream(self.account)
+                    streamController.stream = stream
+
                     if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:
                         # starts outgoing chat session
                         if self.streamHandlers == [streamController]:
