@@ -40,7 +40,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
+from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -2781,7 +2781,7 @@ class ContactWindowController(NSWindowController):
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
-                if isinstance(item, BlinkPresenceContact):
+                if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                     if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                         ft_submenu = NSMenu.alloc().init()
                         for uri in item.uris:
@@ -2844,7 +2844,7 @@ class ContactWindowController(NSWindowController):
                             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
                             sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
 
-                    if isinstance(item, BlinkPresenceContact):
+                    if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                         if self.sessionControllersManager.isMediaTypeSupported('video'):
                             video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
 
