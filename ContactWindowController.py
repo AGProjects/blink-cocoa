@@ -2756,7 +2756,7 @@ class ContactWindowController(NSWindowController):
 
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_sip_aor_format(item.uri)
-            if len(item.uris) > 1:
+            if len(item.uris) > 1 and not isinstance(item, BlinkBlockedContact):
                 audio_submenu = NSMenu.alloc().init()
                 for uri in item.uris:
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
@@ -2833,41 +2833,41 @@ class ContactWindowController(NSWindowController):
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-
             else:
-                # Contact has a single URI
-                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
-                if self.sessionControllersManager.isMediaTypeSupported('chat'):
-                    if has_full_sip_uri:
-                        chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
-                    if item not in self.model.bonjour_group.contacts:
-                        sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
-                        sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
-
-                if isinstance(item, BlinkPresenceContact):
-                    if self.sessionControllersManager.isMediaTypeSupported('video'):
-                        video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
-
-                    if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                if not isinstance(item, BlinkBlockedContact):
+                    # Contact has a single URI
+                    self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
+                    if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_full_sip_uri:
-                            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                            self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
-
-                    if NSApp.delegate().applicationName != 'Blink Lite':
+                            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
                         if item not in self.model.bonjour_group.contacts:
-                            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                            self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
+                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
+                            sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
 
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
-                        contact = item.name
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
-                        mitem.setTag_(1)
-                        mitem.setEnabled_(has_full_sip_uri)
-                    if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startDesktopToSelected:", "")
-                        mitem.setTag_(2)
-                        mitem.setEnabled_(has_full_sip_uri)
+                    if isinstance(item, BlinkPresenceContact):
+                        if self.sessionControllersManager.isMediaTypeSupported('video'):
+                            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
+
+                        if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                            if has_full_sip_uri:
+                                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
+
+                        if NSApp.delegate().applicationName != 'Blink Lite':
+                            if item not in self.model.bonjour_group.contacts:
+                                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
+
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
+                            contact = item.name
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
+                            mitem.setTag_(1)
+                            mitem.setEnabled_(has_full_sip_uri)
+                        if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startDesktopToSelected:", "")
+                            mitem.setTag_(2)
+                            mitem.setEnabled_(has_full_sip_uri)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -2884,7 +2884,6 @@ class ContactWindowController(NSWindowController):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
             elif isinstance(item, BlinkBlockedContact):
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deletePolicyItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
