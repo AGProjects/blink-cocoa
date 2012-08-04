@@ -40,7 +40,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkBlockedContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
+from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -2756,7 +2756,7 @@ class ContactWindowController(NSWindowController):
 
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_sip_aor_format(item.uri)
-            if len(item.uris) > 1 and not isinstance(item, BlinkBlockedContact):
+            if len(item.uris) > 1 and not isinstance(item, BlinkBlockedPresenceContact):
                 audio_submenu = NSMenu.alloc().init()
                 for uri in item.uris:
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
@@ -2834,7 +2834,7 @@ class ContactWindowController(NSWindowController):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
             else:
-                if not isinstance(item, BlinkBlockedContact):
+                if not isinstance(item, BlinkBlockedPresenceContact):
                     # Contact has a single URI
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
@@ -2883,7 +2883,7 @@ class ContactWindowController(NSWindowController):
                 mitem.setState_(NSOnState if item.favorite else NSOffState)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
-            elif isinstance(item, BlinkBlockedContact):
+            elif isinstance(item, BlinkBlockedPresenceContact):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deletePolicyItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)

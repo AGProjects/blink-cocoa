@@ -7,7 +7,7 @@ __all__ = ['BlinkContact',
            'BlinkConferenceContact',
            'BlinkPendingWatcher',
            'BlinkPresenceContact',
-           'BlinkBlockedContact',
+           'BlinkBlockedPresenceContact',
            'HistoryBlinkContact',
            'BonjourBlinkContact',
            'SearchResultContact',
@@ -346,8 +346,8 @@ class BlinkPendingWatcher(BlinkContact):
         self.avatar = PendingWatcherAvatar()
             
 
-class BlinkBlockedContact(BlinkContact):
-    """Contact representation for a policy contact"""
+class BlinkBlockedPresenceContact(BlinkContact):
+    """Contact representation for a blocked policy contact"""
     editable = False
     deletable = True
 
@@ -355,7 +355,7 @@ class BlinkBlockedContact(BlinkContact):
         self.policy = policy
         uri = policy.uri
         name = policy.name
-        super(BlinkBlockedContact, self).__init__(uri, name=name)
+        super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
 
 
 class BlinkPresenceContactAttribute(object):
@@ -1026,13 +1026,13 @@ class CustomListModel(NSObject):
                 if isinstance(sourceGroup, BonjourBlinkGroup):
                     return NSDragOperationNone
 
-                if isinstance(sourceContact, BlinkBlockedContact):
+                if isinstance(sourceContact, BlinkBlockedPresenceContact):
                     return NSDragOperationNone
 
                 if isinstance(proposed_item, BlockedGroup):
                     return NSDragOperationNone
 
-                if isinstance(proposed_item, BlinkBlockedContact):
+                if isinstance(proposed_item, BlinkBlockedPresenceContact):
                     return NSDragOperationNone                    
 
                 if isinstance(proposed_item, BlinkGroup):
@@ -1936,7 +1936,7 @@ class ContactListModel(CustomListModel):
 
         if policy.presence.policy == 'block':
             # add to blocked group
-            policy_contact = BlinkBlockedContact(policy)
+            policy_contact = BlinkBlockedPresenceContact(policy)
             self.blocked_contacts_group.contacts.append(policy_contact)
             self.blocked_contacts_group.sortContacts()
 
