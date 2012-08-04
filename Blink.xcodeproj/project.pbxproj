@@ -609,6 +609,9 @@
 		1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
+		1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
+		1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD2EF911439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
 		1FD2EF921439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
 		1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
@@ -1270,6 +1273,7 @@
 		1FCF160812B5639F00F71BE5 /* Info-pro.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-pro.plist"; sourceTree = "<group>"; };
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pending_watcher.tiff; path = icons/pending_watcher.tiff; sourceTree = "<group>"; };
 		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
 		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
@@ -1751,6 +1755,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */,
 				1F7CC99514730F6F00F2C981 /* ldap.png */,
 				1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */,
 				1FC9FE9514378A450056B3A8 /* shrinktofit.png */,
@@ -2433,6 +2438,7 @@
 				1F536AAD1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
+				1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2651,6 +2657,7 @@
 				1F536AAE1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C815A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790FB15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
+				1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2867,6 +2874,7 @@
 				1F536AAC1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
+				1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

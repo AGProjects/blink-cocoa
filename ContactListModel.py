@@ -5,7 +5,9 @@ from __future__ import with_statement
 
 __all__ = ['BlinkContact',
            'BlinkConferenceContact',
+           'BlinkPendingWatcher',
            'BlinkPresenceContact',
+           'BlinkBlockedContact',
            'HistoryBlinkContact',
            'BonjourBlinkContact',
            'SearchResultContact',
@@ -49,7 +51,7 @@ from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group, unique_id
-from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
 
@@ -269,9 +271,9 @@ class BlinkContact(NSObject):
             user = uri.partition(":")[0]
             return (user, '')
 
-    def matchesURI(self, uri):
+    def matchesURI(self, uri, exact_match=False):
 
-        def match(me, candidate):
+        def match(me, candidate, exact_match=False):
             # check exact match
             if not len(candidate[1]):
                 if me[0].startswith(candidate[0]):
@@ -279,6 +281,8 @@ class BlinkContact(NSObject):
             else:
                 if (me[0], me[1]) == (candidate[0], candidate[1]):
                     return True
+                if exact_match:
+                    return False
 
             # check when a phone number, if the end matches
             # remove special characters used by Address Book contacts
@@ -301,10 +305,10 @@ class BlinkContact(NSObject):
             return len(candidate_username) > 7 and me_username.endswith(candidate_username)
 
         candidate = self.split_uri(uri)
-        if match((self.username, self.domain), candidate):
+        if match((self.username, self.domain), candidate, exact_match):
             return True
 
-        return any(match(self.split_uri(item.uri), candidate) for item in self.uris if item.uri)
+        return any(match(self.split_uri(item.uri), candidate, exact_match) for item in self.uris if item.uri)
 
 
 class BlinkConferenceContact(BlinkContact):
@@ -314,6 +318,28 @@ class BlinkConferenceContact(BlinkContact):
         super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
         self.active_media = []
         self.screensharing_url = None
+
+
+class BlinkPendingWatcher(BlinkContact):
+    """Contact representation for a pending watcher"""
+    editable = False
+    deletable = False
+
+    def __init__(self, watcher):
+        uri = sip_prefix_pattern.sub('', watcher.sipuri)
+        super(BlinkPendingWatcher, self).__init__(uri, name=watcher.display_name)
+            
+
+class BlinkBlockedContact(BlinkContact):
+    """Contact representation for a policy contact"""
+    editable = False
+    deletable = True
+
+    def __init__(self, policy):
+        self.policy = policy
+        uri = policy.uri
+        name = policy.name
+        super(BlinkBlockedContact, self).__init__(uri, name=name)
 
 
 class BlinkPresenceContactAttribute(object):
@@ -473,7 +499,7 @@ class BonjourBlinkContact(BlinkContact):
     def setPresenceActivity(self, activity):
         self.presence_activity = activity
 
-    def matchesURI(self, uri):
+    def matchesURI(self, uri, exact_match=False):
         candidate = self.split_uri(uri)
         return (self.username, self.domain) == (candidate[0], candidate[1])
 
@@ -681,6 +707,32 @@ class NoBlinkGroup(VirtualBlinkGroup):
 
     def __init__(self, name=u'No Group'):
         super(NoBlinkGroup, self).__init__(name)
+
+
+class PendingWatchersGroup(VirtualBlinkGroup):
+    type = 'pending_watchers'
+    deletable = False
+    ignore_search = True
+
+    add_contact_allowed = False
+    remove_contact_allowed = False
+    delete_contact_allowed = False
+
+    def __init__(self, name=u'Pending Contact Requests'):
+        super(PendingWatchersGroup, self).__init__(name)
+
+
+class BlockedGroup(VirtualBlinkGroup):
+    type = 'blocked_contacts'
+    deletable = True
+    ignore_search = True
+
+    add_contact_allowed = False
+    remove_contact_allowed = False
+    delete_contact_allowed = False
+    
+    def __init__(self, name=u'Blocked Contacts'):
+        super(BlockedGroup, self).__init__(name)
 
 
 class AllContactsBlinkGroup(VirtualBlinkGroup):
@@ -958,6 +1010,15 @@ class CustomListModel(NSObject):
                 if isinstance(sourceGroup, BonjourBlinkGroup):
                     return NSDragOperationNone
 
+                if isinstance(sourceContact, BlinkBlockedContact):
+                    return NSDragOperationNone
+
+                if isinstance(proposed_item, BlockedGroup):
+                    return NSDragOperationNone
+
+                if isinstance(proposed_item, BlinkBlockedContact):
+                    return NSDragOperationNone                    
+
                 if isinstance(proposed_item, BlinkGroup):
                     # Dragged a contact to a group
                     targetGroup = proposed_item
@@ -980,6 +1041,7 @@ class CustomListModel(NSObject):
                     if isinstance(sourceContact, SystemAddressBookBlinkContact):
                         # Contacts coming from the system AddressBook are copied
                         return NSDragOperationCopy
+
                     if targetGroup.group is not None and targetGroup.group.id == 'favorites':
                         return NSDragOperationCopy
                     return NSDragOperationMove
@@ -1066,7 +1128,16 @@ class CustomListModel(NSObject):
                         return False
 
                     with addressbook_manager.transaction():
-                        targetGroup.group.contacts.add(sourceContact.contact)
+                        if isinstance(sourceContact, BlinkPendingWatcher):
+                            contact = Contact()
+                            contact.uris = sourceContact.uris
+                            contact.name = sourceContact.name
+                            contact.presence.policy = 'allow'
+                            contact.presence.subscribe = True
+                            contact.save()
+                            targetGroup.group.contacts.add(contact)
+                        else:
+                            targetGroup.group.contacts.add(sourceContact.contact)
                         targetGroup.group.save()
 
                         if targetGroup.group.id != 'favorites' and sourceGroup.remove_contact_allowed:
@@ -1093,20 +1164,31 @@ class CustomListModel(NSObject):
                         return False
 
                     target_changed = False
-                    for new_uri in sourceContact.contact.uris:
+                    if isinstance(sourceContact, BlinkPendingWatcher):
                         try:
-                            uri = next(uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri)
+                            uri = next(uri for uri in targetContact.contact.uris if uri.uri == sourceContact.uri)
                         except StopIteration:
-                            targetContact.contact.uris.add(new_uri)
+                            targetContact.contact.uris.add(sourceContact.uris[0])
+                            targetContact.contact.presence.policy = 'allow'
+                            targetContact.contact.presence.subscribe = True
                             target_changed = True
-                    if targetContact.contact.icon is None and sourceContact.contact.icon is not None:
-                        targetContact.contact.icon = sourceContact.contact.icon
-                        target_changed = True
+                    else:
+                        for new_uri in sourceContact.contact.uris:
+                            try:
+                                uri = next(uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri)
+                            except StopIteration:
+                                targetContact.contact.uris.add(new_uri)
+                                target_changed = True
+
+                        if targetContact.contact.icon is None and sourceContact.contact.icon is not None:
+                            targetContact.contact.icon = sourceContact.contact.icon
+                            target_changed = True
 
                     with addressbook_manager.transaction():
                         if target_changed:
                             targetContact.contact.save()
-                        sourceContact.contact.delete()
+                        if not isinstance(sourceContact, BlinkPendingWatcher):
+                            sourceContact.contact.delete()
                     return True
 
     def outlineView_writeItems_toPasteboard_(self, table, items, pboard):
@@ -1154,9 +1236,12 @@ class ContactListModel(CustomListModel):
     contactOutline = objc.IBOutlet()
     nc = NotificationCenter()
     presence_contacts = []
+    pending_watchers_map = {}
 
     def init(self):
         self.all_contacts_group = AllContactsBlinkGroup()
+        self.pending_watchers_group = PendingWatchersGroup()
+        self.blocked_contacts_group = BlockedGroup()
         self.no_group = NoBlinkGroup()
         self.bonjour_group = BonjourBlinkGroup()
         self.addressbook_group = AddressBookBlinkGroup()
@@ -1185,6 +1270,8 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="AddressbookGroupWasActivated")
         self.nc.add_observer(self, name="AddressbookGroupWasDeleted")
         self.nc.add_observer(self, name="AddressbookGroupDidChange")
+        self.nc.add_observer(self, name="AddressbookPolicyWasActivated")
+        self.nc.add_observer(self, name="AddressbookPolicyWasDeleted")
         self.nc.add_observer(self, name="VirtualGroupWasActivated")
         self.nc.add_observer(self, name="VirtualGroupWasDeleted")
         self.nc.add_observer(self, name="VirtualGroupDidChange")
@@ -1194,6 +1281,7 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="SIPApplicationWillStart")
         self.nc.add_observer(self, name="SIPApplicationWillEnd")
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
+        self.nc.add_observer(self, name="SIPAccountGotPresenceWinfo")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -1219,14 +1307,30 @@ class ContactListModel(CustomListModel):
             self.addressbook_group.loadAddressBook()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
-    def hasContactMatchingURI(self, uri):
-        return any(blink_contact.matchesURI(uri) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
+    def hasContactMatchingURI(self, uri, exact_match=False):
+        return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
 
     def getContactMatchingURI(self, uri):
         try:
             return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
         except StopIteration:
             return None
+
+    def presencePolicyExistsForURI_(self, uri):
+        uri = sip_prefix_pattern.sub('', uri)
+        for policy in AddressbookManager().get_policies():
+            if policy.uri == uri and policy.presence.policy != 'default':
+                return True
+
+        for contact in AddressbookManager().get_contacts():
+            if contact.presence.policy != 'default':
+                for address in contact.uris:
+                    if address.uri == uri:
+                        return True
+        return False
+
+    def watcherExistsForURI_(self, uri):
+        return False
 
     def checkContactBackup_(self, timer):
         now = datetime.datetime.now()
@@ -1418,6 +1522,108 @@ class ContactListModel(CustomListModel):
 
         NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
 
+    def _migrateContacts(self):
+        """Used in version 1.2.0 when switched over to new contacts model in sip simple sdk 0.18.3"""
+        path = ApplicationData.get('contacts_')
+        if not os.path.exists(path):
+            return
+        
+        BlinkLogger().log_info(u"Migrating old contacts to the new model...")
+        
+        try:
+            with open(path, 'r') as f:
+                data = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            BlinkLogger().log_info(u"Couldn't load old contacts")
+            return
+        
+        for group_item in data:
+            if type(group_item) == tuple:
+                if len(group_item) == 3:
+                    group_item = (group_item[0], group_item[-1])
+                group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
+            
+            # workaround because the special attribute wasn't saved
+            if "special" not in group_item:
+                group_item["special"] = None
+            
+            if group_item["special"] is None:
+                try:
+                    group = Group()
+                    group.name = group_item["name"]
+                    group.expanded = group_item["expanded"]
+                    group.position = None
+                    group.save()
+                except DuplicateIDError:
+                    pass
+                
+                if group:
+                    for pickled_contact in group_item["contacts"]:
+                        uri = unicode(pickled_contact["uri"].strip())
+                        contact = Contact(uri, group=group)
+                        try:
+                            contact.name = pickled_contact["display_name"]
+                        except KeyError:
+                            pass
+                        
+                        try:
+                            contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
+                        except KeyError:
+                            pass
+                        
+                        try:
+                            contact.save()
+                        except DuplicateIDError:
+                            pass
+        unlink(path)
+    
+    def updatePresenceIndicator(self):
+        return
+        groups_with_presence = (group for group in self.groupsList if isinstance(group, BlinkPresenceContact))
+        change = False
+        # TODO: remove random import enable presence -adi
+        import random
+        for group in groups_with_presence:
+            for blink_contact in group.contacts:
+                #continue
+                
+                # TODO: set indicator to unknown when enable presence -adi
+                #blink_contact.setPresenceIndicator("unknown")
+                indicator = random.choice(('available','busy', 'activity', 'unknown'))
+                blink_contact.setPresenceIndicator(indicator)
+                activity = random.choice(PresenceStatusList)
+                if PresenceActivityPrefix.has_key(activity[1]):
+                    detail = '%s %s %s' % (blink_contact.uri, PresenceActivityPrefix[activity[1]], activity[1])
+                    blink_contact.detail = detail
+                change = True
+        
+        if change:
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def renderPendingWatchersGroupIfNecessary(self):
+        if self.pending_watchers_map:
+            if self.pending_watchers_group not in self.groupsList:
+                self.groupsList.insert(0, self.pending_watchers_group)
+                self.saveGroupPosition()
+            self.pending_watchers_group.sortContacts()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        elif self.pending_watchers_group in self.groupsList:
+            self.groupsList.remove(self.pending_watchers_group)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+                        
+    def addPendingWatchers(self):   
+        for watcher_dict in self.pending_watchers_map.itervalues():
+            for watcher in watcher_dict.values():
+                if not self.presencePolicyExistsForURI_(watcher.sipuri):
+                    uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                    try:
+                        gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
+                    except StopIteration:
+                        gui_watcher = BlinkPendingWatcher(watcher)
+                        self.pending_watchers_group.contacts.append(gui_watcher)
+                        self.pending_watchers_group.sortContacts()
+        self.renderPendingWatchersGroupIfNecessary()
+
     def _NH_SIPApplicationWillStart(self, notification):
         # Backup contacts before migration, just in case
         addressbook_manager = AddressbookManager()
@@ -1465,11 +1671,53 @@ class ContactListModel(CustomListModel):
         # Load virtual groups
         vgm = VirtualGroupsManager()
         vgm.load()
+                        
+    def _NH_SIPAccountGotPresenceWinfo(self, notification):
+        watcher_list = notification.data.watcher_list
+        if notification.data.state == 'full':
+            # TODO: don't remove all of them, just the ones that match?
+            self.pending_watchers_group.contacts = []
+            self.pending_watchers_map[notification.sender.id] = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
+            all_pending_watchers = {}
+            [all_pending_watchers.update(d) for d in self.pending_watchers_map.values()]
+            for watcher in all_pending_watchers.itervalues():
+                if not self.presencePolicyExistsForURI_(watcher.sipuri):
+                    gui_watcher = BlinkPendingWatcher(watcher)
+                    self.pending_watchers_group.contacts.append(gui_watcher)
+
+        elif notification.data.state == 'partial':
+            tmp_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
+            for watcher in tmp_watchers.itervalues():
+                uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                try:
+                    gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
+                except StopIteration:
+                    if not self.presencePolicyExistsForURI_(watcher.sipuri):
+                        gui_watcher = BlinkPendingWatcher(watcher)
+                        self.pending_watchers_group.contacts.append(gui_watcher)
+                else:
+                    # TODO: set displayname if it didn't have one?
+                    pass
+            
+            terminated_watchers = set([watcher.sipuri for watcher in watcher_list.terminated])
+            for sipuri in terminated_watchers:
+                uri = sip_prefix_pattern.sub('', sipuri)
+                try:
+                    gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
+                except StopIteration:
+                    pass
+                else:
+                    self.pending_watchers_group.contacts.remove(gui_watcher)
+                    del self.pending_watchers_map[notification.sender.id][watcher.sipuri]
+
+        self.renderPendingWatchersGroupIfNecessary()
 
     def _NH_SIPApplicationDidStart(self, notification):
         # Load virtual groups
         self.all_contacts_group.load_group()
         self.no_group.load_group()
+        self.pending_watchers_group.load_group()
+        self.blocked_contacts_group.load_group()
         self.addressbook_group.load_group()
         self.missed_calls_group.load_group()
         self.outgoing_calls_group.load_group()
@@ -1563,60 +1811,8 @@ class ContactListModel(CustomListModel):
         if notification.data.modified.has_key("presence.enabled"):
             self.updatePresenceIndicator()
 
-    def _migrateContacts(self):
-        """Used in version 1.2.0 when switched over to new contacts model in sip simple sdk 0.18.3"""
-        path = ApplicationData.get('contacts_')
-        if not os.path.exists(path):
-            return
-
-        BlinkLogger().log_info(u"Migrating old contacts to the new model...")
-
-        try:
-            with open(path, 'r') as f:
-                data = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
-            BlinkLogger().log_info(u"Couldn't load old contacts")
-            return
-
-        for group_item in data:
-            if type(group_item) == tuple:
-                if len(group_item) == 3:
-                    group_item = (group_item[0], group_item[-1])
-                group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
-
-            # workaround because the special attribute wasn't saved
-            if "special" not in group_item:
-                group_item["special"] = None
-
-            if group_item["special"] is None:
-                try:
-                    group = Group()
-                    group.name = group_item["name"]
-                    group.expanded = group_item["expanded"]
-                    group.position = None
-                    group.save()
-                except DuplicateIDError:
-                    pass
-
-                if group:
-                    for pickled_contact in group_item["contacts"]:
-                        uri = unicode(pickled_contact["uri"].strip())
-                        contact = Contact(uri, group=group)
-                        try:
-                            contact.name = pickled_contact["display_name"]
-                        except KeyError:
-                            pass
-
-                        try:
-                            contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
-                        except KeyError:
-                            pass
-
-                        try:
-                            contact.save()
-                        except DuplicateIDError:
-                            pass
-        unlink(path)
+        if isinstance(notification.sender, Account):
+            self.pending_watchers_map.pop(notification.sender.id, None)
 
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount():
@@ -1634,29 +1830,6 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.contacts = []
             self.groupsList.remove(self.bonjour_group)
             self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
-    def updatePresenceIndicator(self):
-        return
-        groups_with_presence = (group for group in self.groupsList if isinstance(group, BlinkPresenceContact))
-        change = False
-        # TODO: remove random import enable presence -adi
-        import random
-        for group in groups_with_presence:
-            for blink_contact in group.contacts:
-                    #continue
-
-                    # TODO: set indicator to unknown when enable presence -adi
-                    #blink_contact.setPresenceIndicator("unknown")
-                    indicator = random.choice(('available','busy', 'activity', 'unknown'))
-                    blink_contact.setPresenceIndicator(indicator)
-                    activity = random.choice(PresenceStatusList)
-                    if PresenceActivityPrefix.has_key(activity[1]):
-                        detail = '%s %s %s' % (blink_contact.uri, PresenceActivityPrefix[activity[1]], activity[1])
-                        blink_contact.detail = detail
-                    change = True
-
-        if change:
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
@@ -1742,6 +1915,54 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+    def _NH_AddressbookPolicyWasActivated(self, notification):
+        policy = notification.sender
+
+        if policy.presence.policy == 'block':
+            # add to blocked group
+            policy_contact = BlinkBlockedContact(policy)
+            self.blocked_contacts_group.contacts.append(policy_contact)
+            self.blocked_contacts_group.sortContacts()
+
+            # remove from pending group
+            try:
+                gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == policy.uri)
+            except StopIteration:
+                pass
+            else:
+                self.pending_watchers_group.contacts.remove(gui_watcher)
+                self.renderPendingWatchersGroupIfNecessary()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+    
+    def _NH_AddressbookPolicyWasDeleted(self, notification):
+        policy = notification.sender
+        if policy.presence.policy == 'block':
+            changes = 0
+            # remove from blocked
+            try:
+                policy_contact = next(contact for contact in self.blocked_contacts_group.contacts if contact.policy == policy)
+            except StopIteration:
+                pass
+            else:
+                self.blocked_contacts_group.contacts.remove(policy_contact)
+                changes += 1
+                    
+            # add to pending if we have watchers
+            for watcher_dict in self.pending_watchers_map.itervalues():
+                for watcher in watcher_dict.values():
+                    if not self.presencePolicyExistsForURI_(watcher.sipuri):
+                        uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                        try:
+                            gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
+                        except StopIteration:
+                            gui_watcher = BlinkPendingWatcher(watcher)
+                            self.pending_watchers_group.contacts.append(gui_watcher)
+                            self.pending_watchers_group.sortContacts()
+                            changes += 1
+
+            if changes:
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
         blink_contact = BlinkPresenceContact(contact)
@@ -1753,6 +1974,16 @@ class ContactListModel(CustomListModel):
             self.no_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+        if contact.presence.policy != 'default':
+            for address in contact.uris:
+                try:
+                    gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == address.uri)
+                except StopIteration:
+                    pass
+                else:
+                    self.pending_watchers_group.contacts.remove(gui_watcher)
+                    self.renderPendingWatchersGroupIfNecessary()
+
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
         blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
@@ -1760,6 +1991,7 @@ class ContactListModel(CustomListModel):
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group]+self.groupsList)
         self.presence_contacts.remove(blink_contact)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.addPendingWatchers()   
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
@@ -1774,6 +2006,18 @@ class ContactListModel(CustomListModel):
 
         [g.sortContacts() for g in self.groupsList if blink_contact in g.contacts]
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if contact.presence.policy != 'default':
+            for address in contact.uris:
+                try:
+                    gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == address.uri)
+                except StopIteration:
+                    pass
+                else:
+                    self.pending_watchers_group.contacts.remove(gui_watcher)
+                    self.renderPendingWatchersGroupIfNecessary()
+
+        self.addPendingWatchers()
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
@@ -1871,9 +2115,18 @@ class ContactListModel(CustomListModel):
                 group.position = max(len(self.groupsList)-1, 0)
                 group.save()
             self.groupsList.insert(index, self.no_group)
+        elif group.id == "blocked_contacts":
+            if not group.position:
+                group.position = max(len(self.groupsList)-1, 0)
+                group.save()
+            self.groupsList.insert(index, self.blocked_contacts_group)
+        elif group.id == "pending_watchers":
+            group.position = 0
+            group.save()
+            self.groupsList.insert(0, self.pending_watchers_group)
         elif group.id == "bonjour":
             if not group.position:
-                group.position = 0
+                group.position = 0 if self.pending_watchers_group not in self.groupsList else 1
                 group.save()
         elif group.id == "addressbook":
             if settings.contacts.enable_address_book:
@@ -1947,6 +2200,9 @@ class ContactListModel(CustomListModel):
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
+
+    def getBlinkContactsForURI(self, uri, exact_match=False):
+        return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
 
     def getBlinkGroupsForBlinkContact(self, blink_contact):
         return [group for group in self.groupsList if group.add_contact_allowed and blink_contact in group.contacts]
