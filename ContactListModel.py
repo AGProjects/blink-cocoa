@@ -63,7 +63,7 @@ from HistoryManager import SessionHistory
 from SIPManager import PresenceStatusList
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 
-from resources import ApplicationData
+from resources import ApplicationData, Resources
 from util import *
 
 
@@ -137,6 +137,21 @@ class DefaultUserAvatar(Avatar):
         else:
             icon = NSImage.alloc().initWithContentsOfFile_(path)
         super(DefaultUserAvatar, self).__init__(icon, path)
+
+
+class PendingWatcherAvatar(Avatar):
+    def __init__(self):
+        filename = 'pending_watcher.tiff'
+        path = os.path.join(self.base_path, filename)
+        makedirs(os.path.dirname(path))
+        if not os.path.isfile(path):
+            default_path = Resources.get(filename)
+            icon = NSImage.alloc().initWithContentsOfFile_(default_path)
+            data = icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
+            data.writeToFile_atomically_(path, False)
+        else:
+            icon = NSImage.alloc().initWithContentsOfFile_(path)
+        super(PendingWatcherAvatar, self).__init__(icon, path)
 
 
 class DefaultMultiUserAvatar(Avatar):
@@ -328,6 +343,7 @@ class BlinkPendingWatcher(BlinkContact):
     def __init__(self, watcher):
         uri = sip_prefix_pattern.sub('', watcher.sipuri)
         super(BlinkPendingWatcher, self).__init__(uri, name=watcher.display_name)
+        self.avatar = PendingWatcherAvatar()
             
 
 class BlinkBlockedContact(BlinkContact):
