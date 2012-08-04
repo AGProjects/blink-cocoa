@@ -150,7 +150,6 @@
 		1F22731212B554F50010A8B2 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		1F22731412B554F50010A8B2 /* 3333@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */; };
-		1F22731512B554F50010A8B2 /* PresencePolicyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */; };
 		1F22731612B554F50010A8B2 /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
 		1F22731912B554F50010A8B2 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
@@ -419,7 +418,6 @@
 		1F8DC39D135084FA0034815C /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1F8DC39E135084FA0034815C /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		1F8DC39F135084FA0034815C /* 3333@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */; };
-		1F8DC3A0135084FA0034815C /* PresencePolicyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */; };
 		1F8DC3A1135084FA0034815C /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		1F8DC3A3135084FA0034815C /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
 		1F8DC3A4135084FA0034815C /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
@@ -762,7 +760,6 @@
 		2B6328850FE422AE00446655 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
 		2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		2B7B9C661008D67500BFDAF7 /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
-		2B7FC8251132D409008C07BF /* PresencePolicyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */; };
 		2B7FC8271132D415008C07BF /* PresencePolicy.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7FC8261132D415008C07BF /* PresencePolicy.py */; };
 		2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
 		2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
@@ -1395,7 +1392,6 @@
 		2B6328840FE422AE00446655 /* ChatController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatController.py; sourceTree = "<group>"; };
 		2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactWindowController.py; sourceTree = "<group>"; };
 		2B7B9C651008D67500BFDAF7 /* TableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = TableView.py; sourceTree = "<group>"; };
-		2B7FC8241132D409008C07BF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresencePolicyWindow.xib; sourceTree = "<group>"; };
 		2B7FC8261132D415008C07BF /* PresencePolicy.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePolicy.py; sourceTree = "<group>"; };
 		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DesktopServerWindow.xib; sourceTree = "<group>"; };
 		2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopSharingController.py; sourceTree = "<group>"; };
@@ -1986,7 +1982,6 @@
 			children = (
 				2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */,
 				2B7FC8261132D415008C07BF /* PresencePolicy.py */,
-				2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */,
 			);
 			name = Presence;
 			sourceTree = "<group>";
@@ -2345,7 +2340,6 @@
 				1F22731212B554F50010A8B2 /* audio_small.png in Resources */,
 				1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */,
 				1F22731412B554F50010A8B2 /* 3333@sip2sip.info.tiff in Resources */,
-				1F22731512B554F50010A8B2 /* PresencePolicyWindow.xib in Resources */,
 				1F22731612B554F50010A8B2 /* PresencePolicy.py in Resources */,
 				1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */,
 				1F22731912B554F50010A8B2 /* 4444@sip2sip.info.tiff in Resources */,
@@ -2566,7 +2560,6 @@
 				1F8DC39D135084FA0034815C /* audio_small.png in Resources */,
 				1F8DC39E135084FA0034815C /* SMSViewController.py in Resources */,
 				1F8DC39F135084FA0034815C /* 3333@sip2sip.info.tiff in Resources */,
-				1F8DC3A0135084FA0034815C /* PresencePolicyWindow.xib in Resources */,
 				1F8DC3A1135084FA0034815C /* PresencePolicy.py in Resources */,
 				1F8DC3A3135084FA0034815C /* PresenceOfflineWindow.xib in Resources */,
 				1F8DC3A4135084FA0034815C /* 4444@sip2sip.info.tiff in Resources */,
@@ -2785,7 +2778,6 @@
 				2BDAE17311113B8200AC1D7A /* audio_small.png in Resources */,
 				2B06A42A111CFE74001D41E5 /* SMSViewController.py in Resources */,
 				2BD66FD3112850DD003F32B9 /* 3333@sip2sip.info.tiff in Resources */,
-				2B7FC8251132D409008C07BF /* PresencePolicyWindow.xib in Resources */,
 				2B7FC8271132D415008C07BF /* PresencePolicy.py in Resources */,
 				2B29EF3811382F65009DA9B0 /* PresenceOfflineWindow.xib in Resources */,
 				1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */,
@@ -3109,14 +3101,6 @@
 				2B4CA92E10AA5F2F00D5F19E /* English */,
 			);
 			name = Group.xib;
-			sourceTree = "<group>";
-		};
-		2B7FC8231132D409008C07BF /* PresencePolicyWindow.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				2B7FC8241132D409008C07BF /* English */,
-			);
-			name = PresencePolicyWindow.xib;
 			sourceTree = "<group>";
 		};
 		2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */ = {
