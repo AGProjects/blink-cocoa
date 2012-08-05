@@ -2316,10 +2316,11 @@ class ContactListModel(CustomListModel):
         blink_group.group.save()
 
     def addGroupsForContact(self, contact, groups):
-        # Always call this with a transaction
-        for blink_group in groups:
-            blink_group.group.contacts.add(contact)
-            blink_group.group.save()
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            for blink_group in groups:
+                blink_group.group.contacts.add(contact)
+                blink_group.group.save()
 
     def addContact(self, address="", group=None, name=None, type=None):
         if isinstance(address, SIPURI):
