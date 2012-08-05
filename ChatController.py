@@ -1316,7 +1316,7 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
-        BlinkLogger().log_info(u"Disposing %s" % self)
+        #BlinkLogger().log_info(u"Disposing %s" % self)
         # remove middleware observers
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
