@@ -2423,7 +2423,7 @@ class ContactListModel(CustomListModel):
                         continue
                     policy_contact = Policy()
                     policy_contact.uri = address.uri
-                    policy_contact.display_name = blink_contact.name
+                    policy_contact.name = blink_contact.name
                     policy_contact.presence.policy = 'block'
                     policy_contact.save()
                 blink_contact.contact.delete()
