@@ -734,7 +734,7 @@ class PendingWatchersGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Pending Contact Requests'):
+    def __init__(self, name=u'New Contact Requests'):
         super(PendingWatchersGroup, self).__init__(name)
 
 
