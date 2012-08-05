@@ -15,7 +15,7 @@ class GrowlNotifications(object):
 
     implements(IObserver)
 
-    notification_names = ('SMS Received', 'Chat Message Received', 'Missed Call', 'Audio Session Recorded', 'Voicemail Summary')
+    notification_names = ('SMS Received', 'Chat Message Received', 'Missed Call', 'Audio Session Recorded', 'Voicemail Summary', 'New Contact Request')
 
     def __init__(self):
         dir = os.path.dirname(__file__)
@@ -29,10 +29,16 @@ class GrowlNotifications(object):
         notification_center.add_observer(self, name='GrowlMissedCall')
         notification_center.add_observer(self, name='GrowlAudioSessionRecorded')
         notification_center.add_observer(self, name='GrowlGotMWI')
+        notification_center.add_observer(self, name='GrowlContactRequest')
 
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_GrowlContactRequest(self, notification):
+        title = 'New Contact Request'
+        message = '%s would like to see your presence information' % notification.data.watcher
+        self.growl.notify('New Contact Request', title, message)
 
     def _NH_GrowlGotSMS(self, notification):
         title = 'SMS Received'

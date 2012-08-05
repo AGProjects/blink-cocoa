@@ -1701,6 +1701,11 @@ class ContactListModel(CustomListModel):
                     gui_watcher = BlinkPendingWatcher(watcher)
                     self.pending_watchers_group.contacts.append(gui_watcher)
 
+                    growl_data = NotificationData()
+                    growl_data.timestamp = notification.datetime
+                    growl_data.watcher = watcher.display_name
+                    self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
+
         elif notification.data.state == 'partial':
             tmp_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
             for watcher in tmp_watchers.itervalues():
@@ -1711,6 +1716,12 @@ class ContactListModel(CustomListModel):
                     if not self.presencePolicyExistsForURI_(watcher.sipuri):
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
+
+                        growl_data = NotificationData()
+                        growl_data.timestamp = notification.datetime
+                        growl_data.watcher = watcher.display_name
+                        self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
+
                 else:
                     # TODO: set displayname if it didn't have one?
                     pass
