@@ -1576,6 +1576,7 @@ SettingDescription = {
                       'contacts.enable_incoming_calls_group': 'Show Incoming Calls',
                       'contacts.enable_missed_calls_group': 'Show Missed Calls',
                       'contacts.enable_outgoing_calls_group': 'Show Outgoing Calls',
+                      'contacts.enable_blocked_group': 'Show Blocked Contacts',
                       'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
                       'ldap.hostname': 'Server Address',

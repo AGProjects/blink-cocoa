@@ -1825,6 +1825,16 @@ class ContactListModel(CustomListModel):
                 self.saveGroupPosition()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+        if notification.data.modified.has_key("contacts.enable_blocked_group"):
+            if settings.contacts.enable_blocked_group and self.blocked_contacts_group not in self.groupsList:
+                position = len(self.groupsList) if self.groupsList else 0
+                self.groupsList.insert(position, self.blocked_contacts_group)
+                self.saveGroupPosition()
+            elif not settings.contacts.enable_blocked_group and self.blocked_contacts_group in self.groupsList:
+                self.groupsList.remove(self.blocked_contacts_group)
+                self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
         if notification.data.modified.has_key("contacts.maximum_calls"):
             if settings.contacts.enable_missed_calls_group:
                 self.missed_calls_group.load_history()
@@ -2143,10 +2153,11 @@ class ContactListModel(CustomListModel):
                 group.save()
             self.groupsList.insert(index, self.no_group)
         elif group.id == "blocked_contacts":
-            if not group.position:
-                group.position = max(len(self.groupsList)-1, 0)
-                group.save()
-            self.groupsList.insert(index, self.blocked_contacts_group)
+            if settings.contacts.enable_blocked_group:
+                if not group.position:
+                    group.position = max(len(self.groupsList)-1, 0)
+                    group.save()
+                self.groupsList.insert(index, self.blocked_contacts_group)
         elif group.id == "pending_watchers":
             group.position = 0
             group.save()
