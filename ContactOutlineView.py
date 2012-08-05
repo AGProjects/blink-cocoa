@@ -30,7 +30,7 @@ class ContactOutlineView(NSOutlineView):
         if item != NSNotFound:
             object = self.itemAtRow_(item)
             if isinstance(object, BlinkContact):
-                text = u'%s <%s>' % (object.name, object.uri)
+                text = u'%s <%s>' % (object.name, object.uri) if object.name != object.uri else object.uri
             elif isinstance(object, BlinkGroup):
                 text = u'%s' % object.name
         if text:
