@@ -40,7 +40,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
+from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -2754,6 +2754,31 @@ class ContactWindowController(NSWindowController):
         while self.contactContextMenu.numberOfItems() > 0:
             self.contactContextMenu.removeItemAtIndex_(0)
 
+        if isinstance(item, BlinkPendingWatcher):
+            if not self.hasContactMatchingURI(item.uri, exact_match=True):
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem.setRepresentedObject_(item)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForURI:", "")
+                lastItem.setRepresentedObject_(item)
+            else:
+                all_contacts_with_uri = self.model.getBlinkContactsForURI(item.uri, exact_match=True)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request to Show My Presence Information", "allowPresenceForContacts:", "")
+                lastItem.setRepresentedObject_(all_contacts_with_uri)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForContacts:", "")
+                lastItem.setRepresentedObject_(all_contacts_with_uri)
+            
+            blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
+            if blink_contacts_with_same_name:
+                name_submenu = NSMenu.alloc().init()
+                for blink_contact in blink_contacts_with_same_name:
+                    name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
+                    name_item.setRepresentedObject_((item, blink_contact))    # (source, destination)
+                if name_submenu.itemArray():
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
+
+            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_sip_aor_format(item.uri)
             if len(item.uris) > 1 and not isinstance(item, BlinkBlockedPresenceContact):
@@ -2887,31 +2912,6 @@ class ContactWindowController(NSWindowController):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deletePolicyItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
-            elif isinstance(item, BlinkPendingWatcher):
-                if not self.hasContactMatchingURI(item.uri, exact_match=True):
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
-                    lastItem.setRepresentedObject_(item)
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForURI:", "")
-                    lastItem.setRepresentedObject_(item)
-                else:
-                    all_contacts_with_uri = self.model.getBlinkContactsForURI(item.uri, exact_match=True)
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request to Show My Presence Information", "allowPresenceForContacts:", "")
-                    lastItem.setRepresentedObject_(all_contacts_with_uri)
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForContacts:", "")
-                    lastItem.setRepresentedObject_(all_contacts_with_uri)
-
-                blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
-                if blink_contacts_with_same_name:
-                    name_submenu = NSMenu.alloc().init()
-                    for blink_contact in blink_contacts_with_same_name:
-                        name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
-                        name_item.setRepresentedObject_((item, blink_contact))    # (source, destination)
-                    if name_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
-                        self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
-
             elif isinstance(item, SystemAddressBookBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
@@ -2930,10 +2930,11 @@ class ContactWindowController(NSWindowController):
                     if name_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
-            elif not self.hasContactMatchingURI(item.uri):
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
-                lastItem.setRepresentedObject_(item)
+            elif isinstance(item, HistoryBlinkContact):
+                if not self.hasContactMatchingURI(item.uri):
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                    lastItem.setRepresentedObject_(item)
 
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:
