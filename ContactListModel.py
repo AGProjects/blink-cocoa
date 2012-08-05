@@ -50,7 +50,7 @@ from itertools import chain
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
-from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group, unique_id
+from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group, unique_id, Policy
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
@@ -2405,7 +2405,17 @@ class ContactListModel(CustomListModel):
 
         ret = NSRunAlertPanel(u"Delete Contact", message, u"Delete", u"Cancel", None)
         if ret == NSAlertDefaultReturn:
-            blink_contact.contact.delete()
+            addressbook_manager = AddressbookManager()
+            with addressbook_manager.transaction():
+                for address in blink_contact.contact.uris:
+                    if '@' not in address.uri:
+                        continue
+                    policy_contact = Policy()
+                    policy_contact.uri = address.uri
+                    policy_contact.display_name = blink_contact.name
+                    policy_contact.presence.policy = 'block'
+                    policy_contact.save()
+                blink_contact.contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def deleteGroup(self, blink_group):
