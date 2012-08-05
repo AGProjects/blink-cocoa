@@ -1617,7 +1617,7 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def renderPendingWatchersGroupIfNecessary(self):
-        if self.pending_watchers_map:
+        if self.pending_watchers_group.contacts:
             if self.pending_watchers_group not in self.groupsList:
                 self.groupsList.insert(0, self.pending_watchers_group)
                 self.saveGroupPosition()
@@ -1998,6 +1998,7 @@ class ContactListModel(CustomListModel):
                             changes += 1
 
             if changes:
+                self.renderPendingWatchersGroupIfNecessary()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookContactWasActivated(self, notification):
