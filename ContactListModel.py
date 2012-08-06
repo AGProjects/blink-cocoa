@@ -1448,6 +1448,9 @@ class ContactListModel(CustomListModel):
                             contact.preferred_media = backup_contact['preferred_media'] or 'audio'
                             contact.icon = backup_contact['icon']
                             contact.save()
+
+                            self.removePolicyForContactURIs(contact)
+
                             group = backup_contact['group']
                             if group:
                                 try:
@@ -1478,6 +1481,8 @@ class ContactListModel(CustomListModel):
                             contact.dialog.policy = dialog['policy']
                             contact.dialog.subscribe = dialog['subscribe']
                             contact.save()
+                            self.removePolicyForContactURIs(contact)
+
                             restored_contacts += 1
                         except DuplicateIDError:
                             pass
@@ -2319,6 +2324,34 @@ class ContactListModel(CustomListModel):
             group.contacts.remove(blink_contact)
             group.sortContacts()
 
+    def removePolicyForContactURIs(self, contact):
+        addressbook_manager = AddressbookManager()
+        # remove any policies for the same uris
+        for policy_contact in addressbook_manager.get_policies():
+            for address in contact.uris:
+                if policy_contact.uri == address.uri:
+                    policy_contact.delete()
+
+    def addBlockedPolicyForContactURIs(self, contact):
+        addressbook_manager = AddressbookManager()
+        for address in contact.uris:
+            if '@' not in address.uri:
+                continue
+
+            try:
+                policy_contact = (policy_contact for policy_contact in addressbook_manager.get_policies() if policy_contact.uri == address.uri).next()
+            except StopIteration:
+                policy_contact = Policy()
+                policy_contact.uri = address.uri
+                policy_contact.name = contact.name
+                policy_contact.presence.policy = 'block'
+                policy_contact.dialog.policy = 'block'
+                policy_contact.save()
+            else:
+                policy_contact.presence.policy = 'block'
+                policy_contact.dialog.policy = 'block'
+                policy_contact.save()
+
     def addGroup(self):
         controller = AddGroupController()
         name = controller.runModal()
@@ -2373,6 +2406,9 @@ class ContactListModel(CustomListModel):
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
             contact.save()
+
+            self.removePolicyForContactURIs(contact)
+
             self.addGroupsForContact(contact, new_contact['groups'] or [])
         return True
 
@@ -2413,6 +2449,8 @@ class ContactListModel(CustomListModel):
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
             contact.save()
 
+            self.removePolicyForContactURIs(contact)
+
             old_groups = set(self.getBlinkGroupsForBlinkContact(item))
             new_groups = set(new_contact['groups'])
             self.removeContactFromGroups(item, old_groups - new_groups)
@@ -2430,14 +2468,7 @@ class ContactListModel(CustomListModel):
         if ret == NSAlertDefaultReturn:
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
-                for address in blink_contact.contact.uris:
-                    if '@' not in address.uri:
-                        continue
-                    policy_contact = Policy()
-                    policy_contact.uri = address.uri
-                    policy_contact.name = blink_contact.name
-                    policy_contact.presence.policy = 'block'
-                    policy_contact.save()
+                self.addBlockedPolicyForContactURIs(blink_contact.contact)
                 blink_contact.contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
