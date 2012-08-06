@@ -1125,7 +1125,7 @@ class ContactWindowController(NSWindowController):
                 group = self.contactOutline.parentForItem_(item)
             else:
                 group = item
-            contact = self.model.addContact(group=group.name if group and group.add_contact_allowed else None)
+            contact = self.model.addContact(group=group if group and group.add_contact_allowed else None)
             if contact:
                 self.refreshContactsList()
                 self.searchContacts()
