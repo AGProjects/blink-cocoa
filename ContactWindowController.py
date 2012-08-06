@@ -2931,6 +2931,10 @@ class ContactWindowController(NSWindowController):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
             elif isinstance(item, HistoryBlinkContact):
+                if NSApp.delegate().applicationName != 'Blink Lite':
+                    if item not in self.model.bonjour_group.contacts:
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
                 if not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
