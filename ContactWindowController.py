@@ -31,8 +31,6 @@ import ContactOutlineView
 import ListView
 import SMSWindowManager
 
-import PresencePolicy
-from PresencePolicy import fillPresenceMenu
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from AudioSession import AudioSession
@@ -46,7 +44,8 @@ from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionControllersManager
-from SIPManager import SIPManager, MWIData
+from SIPManager import SIPManager, MWIData, PresenceStatusList
+
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import ApplicationData, Resources
 from util import *
@@ -62,6 +61,29 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
+def fillPresenceMenu(presenceMenu, target, action, attributes=None):
+    if not attributes:
+        attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+    
+    dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(2, 2, 8, 8))
+    dots = {}
+    for i, color in [(-1, NSColor.redColor()), (0, NSColor.yellowColor()), (1, NSColor.greenColor())]:
+        dot = NSImage.alloc().initWithSize_(NSMakeSize(12, 12))
+        dot.lockFocus()
+        color.set()
+        dotPath.fill()
+        dot.unlockFocus()
+        dots[i] = dot
+    
+    for state, item, ident in PresenceStatusList:
+        lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", action, "")
+        title = NSAttributedString.alloc().initWithString_attributes_(item, attributes)
+        lastItem.setAttributedTitle_(title)
+        lastItem.setImage_(dots[state])
+        lastItem.setRepresentedObject_(ident or item)
+        if target:
+            lastItem.setTarget_(target)
+        presenceMenu.addItem_(lastItem)
 
 class PhotoView(NSImageView):
     entered = False
