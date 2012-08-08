@@ -740,7 +740,7 @@ class PendingWatchersGroup(VirtualBlinkGroup):
 
 class BlockedGroup(VirtualBlinkGroup):
     type = 'blocked_contacts'
-    deletable = True
+    deletable = False
     ignore_search = True
 
     add_contact_allowed = False
