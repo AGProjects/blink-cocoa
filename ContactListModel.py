@@ -154,6 +154,21 @@ class PendingWatcherAvatar(Avatar):
         super(PendingWatcherAvatar, self).__init__(icon, path)
 
 
+class BlockedPolicyAvatar(Avatar):
+    def __init__(self):
+        filename = 'blocked.png'
+        path = os.path.join(self.base_path, filename)
+        makedirs(os.path.dirname(path))
+        if not os.path.isfile(path):
+            default_path = Resources.get(filename)
+            icon = NSImage.alloc().initWithContentsOfFile_(default_path)
+            data = icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
+            data.writeToFile_atomically_(path, False)
+        else:
+            icon = NSImage.alloc().initWithContentsOfFile_(path)
+        super(BlockedPolicyAvatar, self).__init__(icon, path)
+
+
 class DefaultMultiUserAvatar(Avatar):
     def __init__(self):
         filename = 'default_multi_user_icon.tiff'
@@ -356,6 +371,7 @@ class BlinkBlockedPresenceContact(BlinkContact):
         uri = policy.uri
         name = policy.name
         super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
+        self.avatar = BlockedPolicyAvatar()
 
 
 class BlinkPresenceContactAttribute(object):

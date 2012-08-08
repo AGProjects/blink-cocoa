@@ -632,6 +632,9 @@
 		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
+		1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
+		1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
+		1FD7AB8C15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD996FF142DEFC400EE171F /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
 		1FD99700142DEFC400EE171F /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
 		1FD99701142DEFC400EE171F /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
@@ -1292,6 +1295,7 @@
 		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
+		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
@@ -1768,6 +1772,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FD7AB8915D2F18B00ECBAF5 /* blocked.png */,
 				1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */,
 				1F7CC99514730F6F00F2C981 /* ldap.png */,
 				1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */,
@@ -2448,6 +2453,7 @@
 				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
+				1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2665,6 +2671,7 @@
 				1F2D05C815A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790FB15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
+				1FD7AB8C15D2F18B00ECBAF5 /* blocked.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2880,6 +2887,7 @@
 				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
+				1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
