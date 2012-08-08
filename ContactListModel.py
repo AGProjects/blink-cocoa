@@ -1724,7 +1724,7 @@ class ContactListModel(CustomListModel):
 
                     growl_data = NotificationData()
                     growl_data.timestamp = notification.datetime
-                    growl_data.watcher = watcher.display_name
+                    growl_data.watcher = gui_watcher.name
                     self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
 
         elif notification.data.state == 'partial':
@@ -1740,7 +1740,7 @@ class ContactListModel(CustomListModel):
 
                         growl_data = NotificationData()
                         growl_data.timestamp = notification.datetime
-                        growl_data.watcher = watcher.display_name
+                        growl_data.watcher = gui_watcher.name
                         self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
 
                 else:
