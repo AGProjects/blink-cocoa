@@ -240,6 +240,11 @@
 		1F27973C15D24F8E00FB33D9 /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
 		1F27973D15D24F9200FB33D9 /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
 		1F27973E15D24F9400FB33D9 /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
+		1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
+		1F27974015D2996200FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
+		1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
+		1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
+		1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
@@ -252,8 +257,6 @@
 		1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
-		1F489AD0148D335A0033D860 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9268FF1486C494006F2FD8 /* Carbon.framework */; };
-		1F489AD1148D33650033D860 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9269011486C4A4006F2FD8 /* Security.framework */; };
 		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
@@ -521,8 +524,6 @@
 		1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9268FD1486C3B5006F2FD8 /* EMKeychainItem.h in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F414868A82006F2FD8 /* EMKeychainItem.h */; };
 		1F9268FE1486C3BB006F2FD8 /* EMKeychainItem.m in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
-		1F9269001486C494006F2FD8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9268FF1486C494006F2FD8 /* Carbon.framework */; };
-		1F9269021486C4A4006F2FD8 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9269011486C4A4006F2FD8 /* Security.framework */; };
 		1F9406C014307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C114307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C214307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
@@ -1236,8 +1237,6 @@
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
 		1F9268F414868A82006F2FD8 /* EMKeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EMKeychainItem.h; path = keychain/EMKeychainItem.h; sourceTree = "<group>"; };
 		1F9268F514868A82006F2FD8 /* EMKeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EMKeychainItem.m; path = keychain/EMKeychainItem.m; sourceTree = "<group>"; };
-		1F9268FF1486C494006F2FD8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Carbon.framework; sourceTree = DEVELOPER_DIR; };
-		1F9269011486C4A4006F2FD8 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin-setup.py"; sourceTree = "<group>"; };
@@ -1315,7 +1314,6 @@
 		2B06A429111CFE74001D41E5 /* SMSViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSViewController.py; sourceTree = "<group>"; };
 		2B0C2369107BB2FA008266C7 /* incoming_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = incoming_file.png; path = icons/incoming_file.png; sourceTree = "<group>"; };
 		2B0C236A107BB2FA008266C7 /* upfile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = upfile.png; path = icons/upfile.png; sourceTree = "<group>"; };
-		2B0CD87410BD6F0500325F30 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = /Library/Frameworks/Sparkle.framework; sourceTree = "<absolute>"; };
 		2B0CE28E10C2F2BC00325F30 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
 		2B0CE72A10CD824400325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMSSession.xib; sourceTree = "<group>"; };
 		2B0CE73410CDE8CE00325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMSView.xib; sourceTree = "<group>"; };
@@ -1470,10 +1468,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F9269021486C4A4006F2FD8 /* Security.framework in Frameworks */,
-				1F9269001486C494006F2FD8 /* Carbon.framework in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F22732512B554F50010A8B2 /* Python.framework in Frameworks */,
+				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
+				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 				1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1482,10 +1480,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F489AD1148D33650033D860 /* Security.framework in Frameworks */,
-				1F489AD0148D335A0033D860 /* Carbon.framework in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */,
+				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
+				1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */,
+				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1525,13 +1524,12 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
+				1F27973115D24E2C00FB33D9 /* Security.framework */,
+				1F27973315D24E3500FB33D9 /* Carbon.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
 				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
 				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
-				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
-				1F9268FF1486C494006F2FD8 /* Carbon.framework */,
-				1F9269011486C4A4006F2FD8 /* Security.framework */,
-				2B0CD87410BD6F0500325F30 /* Sparkle.framework */,
 				77631A260C06C501005415CB /* Python.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
@@ -1691,8 +1689,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				1F27973315D24E3500FB33D9 /* Carbon.framework */,
-				1F27973115D24E2C00FB33D9 /* Security.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
