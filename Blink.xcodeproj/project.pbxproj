@@ -228,6 +228,18 @@
 		1F274896138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
 		1F274897138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
 		1F274898138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
+		1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
+		1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
+		1F27973515D24EAB00FB33D9 /* EMKeychainItem.h in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F414868A82006F2FD8 /* EMKeychainItem.h */; };
+		1F27973615D24EAB00FB33D9 /* EMKeychainItem.m in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
+		1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
+		1F27973815D24F6200FB33D9 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
+		1F27973A15D24F8800FB33D9 /* libgnutls-extra.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
+		1F27973B15D24F8B00FB33D9 /* libgnutls.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
+		1F27973C15D24F8E00FB33D9 /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
+		1F27973D15D24F9200FB33D9 /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
+		1F27973E15D24F9400FB33D9 /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
@@ -663,8 +675,6 @@
 		2B06A42A111CFE74001D41E5 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		2B0C236B107BB2FA008266C7 /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
 		2B0C236C107BB2FB008266C7 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
-		2B0CD87510BD6F0500325F30 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0CD87410BD6F0500325F30 /* Sparkle.framework */; };
-		2B0CDA6010BDCD0900325F30 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2B0CD87410BD6F0500325F30 /* Sparkle.framework */; };
 		2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
 		2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
@@ -1041,14 +1051,15 @@
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2B0C1E8B10781A62008266C7 /* CopyFiles */ = {
+		2B0C1E8B10781A62008266C7 /* Copy Libraries */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 10;
+			dstSubfolderSpec = 7;
 			files = (
-				2B0CDA6010BDCD0900325F30 /* Sparkle.framework in CopyFiles */,
+				1F27973815D24F6200FB33D9 /* lib in Copy Libraries */,
 			);
+			name = "Copy Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2B2DF6A3105DC57700F267F9 /* Copy Smiley Files (default) */ = {
@@ -1104,14 +1115,20 @@
 			name = "Copy Smiley Files (default)";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2B87567D10B6DD51002FD271 /* Copy Helper Binaries */ = {
+		2B87567D10B6DD51002FD271 /* Copy Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 7;
+			dstSubfolderSpec = 10;
 			files = (
+				1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */,
+				1F27973A15D24F8800FB33D9 /* libgnutls-extra.26.dylib in Copy Frameworks */,
+				1F27973B15D24F8B00FB33D9 /* libgnutls.26.dylib in Copy Frameworks */,
+				1F27973C15D24F8E00FB33D9 /* libgpg-error.0.dylib in Copy Frameworks */,
+				1F27973D15D24F9200FB33D9 /* liblzo.1.dylib in Copy Frameworks */,
+				1F27973E15D24F9400FB33D9 /* libtasn1.3.dylib in Copy Frameworks */,
 			);
-			name = "Copy Helper Binaries";
+			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		857DA94D114EB82B00C798A3 /* Copy Interfaces Package */ = {
@@ -1120,6 +1137,8 @@
 			dstPath = interfaces;
 			dstSubfolderSpec = 7;
 			files = (
+				1F27973515D24EAB00FB33D9 /* EMKeychainItem.h in Copy Interfaces Package */,
+				1F27973615D24EAB00FB33D9 /* EMKeychainItem.m in Copy Interfaces Package */,
 				8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */,
 				8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */,
 			);
@@ -1182,6 +1201,8 @@
 		1F2746781388755F0052C384 /* fullscreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = fullscreen.png; path = icons/fullscreen.png; sourceTree = "<group>"; };
 		1F2747D21388FC5C0052C384 /* restore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = restore.png; path = icons/restore.png; sourceTree = "<group>"; };
 		1F274895138930580052C384 /* VideoView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoView.py; sourceTree = "<group>"; };
+		1F27973115D24E2C00FB33D9 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		1F27973315D24E3500FB33D9 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
@@ -1472,9 +1493,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
+				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
+				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				77631A270C06C501005415CB /* Python.framework in Frameworks */,
-				2B0CD87510BD6F0500325F30 /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1668,6 +1691,8 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				1F27973315D24E3500FB33D9 /* Carbon.framework */,
+				1F27973115D24E2C00FB33D9 /* Security.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -2165,10 +2190,10 @@
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				2B2DF6A3105DC57700F267F9 /* Copy Smiley Files (default) */,
-				2B0C1E8B10781A62008266C7 /* CopyFiles */,
-				2B87567D10B6DD51002FD271 /* Copy Helper Binaries */,
 				85E8551210F644170083D346 /* Copy Configuration Package */,
 				857DA94D114EB82B00C798A3 /* Copy Interfaces Package */,
+				2B0C1E8B10781A62008266C7 /* Copy Libraries */,
+				2B87567D10B6DD51002FD271 /* Copy Frameworks */,
 			);
 			buildRules = (
 			);
@@ -3315,8 +3340,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3338,7 +3362,6 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 				);
 				PRODUCT_NAME = Blink;
-				PROVISIONING_PROFILE = "4C665DDB-8932-40A0-AF13-4AD8DC613ADD";
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
