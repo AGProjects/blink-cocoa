@@ -171,8 +171,6 @@ class ContactWindowController(NSWindowController):
 
     contactContextMenu = objc.IBOutlet()
 
-    presencePolicy = objc.IBOutlet()
-
     photoImage = objc.IBOutlet()
     statusPopUp = objc.IBOutlet()
     nameText = objc.IBOutlet()
