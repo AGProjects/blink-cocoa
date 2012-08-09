@@ -172,9 +172,9 @@ class ContactWindowController(NSWindowController):
     contactContextMenu = objc.IBOutlet()
 
     photoImage = objc.IBOutlet()
-    statusPopUp = objc.IBOutlet()
+    presenceActivityPopUp = objc.IBOutlet()
+    presenceNoteText = objc.IBOutlet()
     nameText = objc.IBOutlet()
-    statusText = objc.IBOutlet()
 
     muteButton = objc.IBOutlet()
     silentButton = objc.IBOutlet()
@@ -313,20 +313,20 @@ class ContactWindowController(NSWindowController):
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
         white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
-        self.statusPopUp.removeAllItems()
+        self.presenceActivityPopUp.removeAllItems()
 
         while self.presenceMenu.numberOfItems() > 0:
             self.presenceMenu.removeItemAtIndex_(0)
-        fillPresenceMenu(self.presenceMenu, self, "presentStatusChanged:")
-        fillPresenceMenu(self.statusPopUp.menu(), self, "presentStatusChanged:", white)
+        fillPresenceMenu(self.presenceMenu, self, "presenceActivityChanged:")
+        fillPresenceMenu(self.presenceActivityPopUp.menu(), self, "presenceActivityChanged:", white)
 
         note = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceNote")
         if note:
-            self.statusText.setStringValue_(note)
+            self.presenceNoteText.setStringValue_(note)
 
         status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
         if status:
-            self.statusPopUp.selectItemWithTitle_(status)
+            self.presenceActivityPopUp.selectItemWithTitle_(status)
 
         path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
         if path:
@@ -928,16 +928,16 @@ class ContactWindowController(NSWindowController):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
 
-        status = self.statusPopUp.selectedItem().representedObject()
+        status = self.presenceActivityPopUp.selectedItem().representedObject()
         if status == "phone":
             if not hasAudio and self.originalPresenceStatus:
-                i = self.statusPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
-                self.statusPopUp.selectItemAtIndex_(i)
+                i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
+                self.presenceActivityPopUp.selectItemAtIndex_(i)
                 self.originalPresenceStatus = None
         elif status != "phone":
             if hasAudio:
-                i = self.statusPopUp.indexOfItemWithRepresentedObject_("phone")
-                self.statusPopUp.selectItemAtIndex_(i)
+                i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_("phone")
+                self.presenceActivityPopUp.selectItemAtIndex_(i)
                 self.originalPresenceStatus = status
         # TODO Status -> Presence activity menu must be updated too -adi
 
@@ -1932,23 +1932,19 @@ class ContactWindowController(NSWindowController):
             self.mirrorWindow.show()
 
     @objc.IBAction
-    def presenceTextAction_(self, sender):
-        if sender == self.nameText:
-            name = unicode(self.nameText.stringValue())
-            if self.activeAccount():
-                self.activeAccount().display_name = name
-                self.activeAccount().save()
-            self.window().fieldEditor_forObject_(False, sender).setSelectedRange_(NSMakeRange(0, 0))
-            self.window().makeFirstResponder_(self.contactOutline)
-            sender.resignFirstResponder()
-        elif sender == self.statusText:
-            text = unicode(self.statusText.stringValue())
-            self.window().fieldEditor_forObject_(False, sender).setSelectedRange_(NSMakeRange(0, 0))
-            self.window().makeFirstResponder_(self.contactOutline)
-            NSUserDefaults.standardUserDefaults().setValue_forKey_(text, "PresenceNote")
+    def displayNameChanged_(self, sender):
+        name = unicode(self.nameText.stringValue())
+        self.activeAccount().display_name = name
+        self.activeAccount().save()
+        sender.resignFirstResponder()
 
     @objc.IBAction
-    def presentStatusChanged_(self, sender):
+    def presenceNoteChanged_(self, sender):
+        text = unicode(self.presenceNoteText.stringValue())
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(text, "PresenceNote")
+
+    @objc.IBAction
+    def presenceActivityChanged_(self, sender):
         value = sender.title()
         NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceStatus")
 
@@ -1957,9 +1953,9 @@ class ContactWindowController(NSWindowController):
         item = self.presenceMenu.itemWithTitle_(value)
         item.setState_(NSOnState)
 
-        menu = self.statusPopUp.menu()
+        menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
-        self.statusPopUp.selectItem_(item)
+        self.presenceActivityPopUp.selectItem_(item)
 
     @objc.IBAction
     def showHelp_(self, sender):
