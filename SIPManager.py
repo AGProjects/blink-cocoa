@@ -54,26 +54,13 @@ from util import *
 STATUS_PHONE = "phone"
 
 PresenceStatusList =  [(1, "Available", None),
-                       (1, "Working", None),
-                       (0, "Appointment", None),
-                       (0, "Busy", None),
-                       (0, "Breakfast", None),
-                       (0, "Lunch", None),
-                       (0, "Dinner", None),
-                       (0, "Travel", None),
-                       (0, "Driving", None),
-                       (0, "Playing", None),
-                       (0, "Spectator", None),
-                       (0, "TV", None),
+                       (-1, "Busy", None),
                        (-1, "Away", None),
-                       (-1, "Invisible", None),
                        (-1, "Meeting", None),
                        (-1, "On the phone", STATUS_PHONE),
-                       (-1, "Presentation", None),
-                       (-1, "Performance", None),
-                       (-1, "Sleeping", None),
                        (-1, "Vacation", None),
-                       (-1, "Holiday", None)]
+                       (-1, "Holiday", None),
+                       (0, "Invisible", None)]
 
 
 class SIPManager(object):
