@@ -397,7 +397,7 @@ class BlinkPresenceContact(BlinkContact):
         self.contact = contact
         self.avatar = PresenceContactAvatar.from_contact(contact)
         self.avatar.save()
-        self.detail = self.uri
+        self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
 
         # presence related attributes
@@ -480,6 +480,17 @@ class BlinkPresenceContact(BlinkContact):
             return u''
         else:
             return uri.uri
+
+    @property
+    def uri_type(self):
+        if self.default_uri is not None:
+            return self.default_uri.type or 'SIP'
+        try:
+            uri = next(iter(self.contact.uris))
+        except StopIteration:
+            return u'SIP'
+        else:
+            return uri.type or 'SIP'
 
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
