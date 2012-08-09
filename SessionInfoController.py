@@ -85,10 +85,10 @@ class SessionInfoController(NSObject):
         sessionBoxTitle = NSAttributedString.alloc().initWithString_attributes_("SIP Session", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.sessionBox.setTitle_(sessionBoxTitle)
 
-        audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Audio RTP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+        audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Audio Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.audioBox.setTitle_(audioBoxTitle)
 
-        chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Chat MSRP Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+        chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Chat Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.chatBox.setTitle_(chatBoxTitle)
 
         self.audio_rtt_graph.setLineWidth_(1.0)
