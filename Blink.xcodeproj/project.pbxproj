@@ -306,6 +306,9 @@
 		1F87B6EA1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
 		1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
 		1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
+		1F88639915D6F62B00373743 /* PresencePublisher.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F88639815D6F62B00373743 /* PresencePublisher.py */; };
+		1F88639A15D6F62B00373743 /* PresencePublisher.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F88639815D6F62B00373743 /* PresencePublisher.py */; };
+		1F88639B15D6F62B00373743 /* PresencePublisher.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F88639815D6F62B00373743 /* PresencePublisher.py */; };
 		1F8A7630138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7631138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7632138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
@@ -1233,6 +1236,7 @@
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F87B6EE1477D57000BDF25A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
+		1F88639815D6F62B00373743 /* PresencePublisher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePublisher.py; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
@@ -2003,6 +2007,7 @@
 			isa = PBXGroup;
 			children = (
 				2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */,
+				1F88639815D6F62B00373743 /* PresencePublisher.py */,
 			);
 			name = Presence;
 			sourceTree = "<group>";
@@ -2454,6 +2459,7 @@
 				DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 				1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */,
+				1F88639A15D6F62B00373743 /* PresencePublisher.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2672,6 +2678,7 @@
 				DE9790FB15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 				1FD7AB8C15D2F18B00ECBAF5 /* blocked.png in Resources */,
+				1F88639B15D6F62B00373743 /* PresencePublisher.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2888,6 +2895,7 @@
 				DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 				1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */,
+				1F88639915D6F62B00373743 /* PresencePublisher.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

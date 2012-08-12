@@ -45,7 +45,7 @@ from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionControllersManager
 from SIPManager import SIPManager, MWIData, PresenceStatusList
-
+from PresencePublisher import PresencePublisher
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import ApplicationData, Resources
 from util import *
@@ -74,8 +74,11 @@ def fillPresenceMenu(presenceMenu, target, action, attributes=None):
         dotPath.fill()
         dot.unlockFocus()
         dots[i] = dot
-    
+
+    last_state = None
     for state, item, ident in PresenceStatusList:
+        if last_state is not None and state != last_state:
+            presenceMenu.addItem_(NSMenuItem.separatorItem())
         lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", action, "")
         title = NSAttributedString.alloc().initWithString_attributes_(item, attributes)
         lastItem.setAttributedTitle_(title)
@@ -84,6 +87,7 @@ def fillPresenceMenu(presenceMenu, target, action, attributes=None):
         if target:
             lastItem.setTarget_(target)
         presenceMenu.addItem_(lastItem)
+        last_state = state
 
 class PhotoView(NSImageView):
     entered = False
@@ -327,6 +331,8 @@ class ContactWindowController(NSWindowController):
         status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
         if status:
             self.presenceActivityPopUp.selectItemWithTitle_(status)
+            for item in self.presenceMenu.itemArray():
+                item.setState_(NSOnState if item.title() == status else NSOffState)
 
         path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
         if path:
@@ -365,6 +371,8 @@ class ContactWindowController(NSWindowController):
         self.setSpeechRecognition()
         self.chat_journal_replicator = ChatHistoryReplicator()
         SessionHistoryReplicator()
+        PresencePublisher(self)
+
         self.loaded = True
 
     def userDefaultsDidChange_(self, notification):
@@ -928,18 +936,27 @@ class ContactWindowController(NSWindowController):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
 
-        status = self.presenceActivityPopUp.selectedItem().representedObject()
-        if status == "phone":
+        activity_object = self.presenceActivityPopUp.selectedItem().representedObject()
+        if activity_object['rpid_activity'] == "on-the-phone":
             if not hasAudio and self.originalPresenceStatus:
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
+                NotificationCenter().post_notification("PresenceActivityHasChanged", sender=self)
+                for item in self.presenceMenu.itemArray():
+                    item.setState_(NSOnState if item.title() == self.originalPresenceStatus['name'] else NSOffState)
                 self.originalPresenceStatus = None
-        elif status != "phone":
+        else:
             if hasAudio:
-                i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_("phone")
+                i = self.presenceActivityPopUp.indexOfItemWithTitle_('On the Phone')
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
-                self.originalPresenceStatus = status
-        # TODO Status -> Presence activity menu must be updated too -adi
+                self.originalPresenceStatus = activity_object
+
+                for item in self.presenceMenu.itemArray():
+                    item.setState_(NSOffState)
+                item = self.presenceMenu.itemWithTitle_('On the Phone')
+                item.setState_(NSOnState)
+
+                NotificationCenter().post_notification("PresenceActivityHasChanged", sender=self)
 
     def updateActionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
@@ -1942,6 +1959,7 @@ class ContactWindowController(NSWindowController):
     def presenceNoteChanged_(self, sender):
         text = unicode(self.presenceNoteText.stringValue())
         NSUserDefaults.standardUserDefaults().setValue_forKey_(text, "PresenceNote")
+        NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
@@ -1956,6 +1974,7 @@ class ContactWindowController(NSWindowController):
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
         self.presenceActivityPopUp.selectItem_(item)
+        NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
     @objc.IBAction
     def showHelp_(self, sender):

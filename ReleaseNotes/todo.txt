@@ -7,9 +7,3 @@ Main tasks
 - AGC
 - Pause/Resume File Transfer
 - Add bandwidth throttling for File Transfers
-
-How to Detect idle time
-
-  http://www.eosgarden.com/en/articles/iokit-idle/
-  http://sourceforge.net/mailarchive/forum.php?thread_name=6a36e7290609051049v3fed040dta6f7394f2923dfa1%40mail.gmail.com&forum_name=pyobjc-dev
-

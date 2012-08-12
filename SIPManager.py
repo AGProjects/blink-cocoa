@@ -51,16 +51,19 @@ from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import *
 
-STATUS_PHONE = "phone"
+# extended_status_list = ('available', 'offline', 'away', 'extended-away', 'busy')
+# rpid_activities = ('appointment', 'away', 'breakfast', 'busy', 'dinner', 'holiday', 'in-transit', 'looking-for-work', 'meal', 'meeting', 'on-the-phone', 'performance', 'permanent-absence', 'playing', 'presentation', 'shopping', 'sleeping', 'spectator', 'steering', 'travel', 'tv', 'vacation', 'working', 'worship', 'unknown')
 
-PresenceStatusList =  [(1, "Available", None),
-                       (-1, "Busy", None),
-                       (-1, "Away", None),
-                       (-1, "Meeting", None),
-                       (-1, "On the phone", STATUS_PHONE),
-                       (-1, "Vacation", None),
-                       (-1, "Holiday", None),
-                       (0, "Invisible", None)]
+
+PresenceStatusList =  [(1, u"Available",       {'name': "Available",      'basic_status': 'open',   'extended_status': 'available',     'rpid_activity': 'available'}),
+                       (-1, u"Away",           {'name': "Away",           'basic_status': 'open',   'extended_status': 'away',          'rpid_activity': 'away'}),
+                       (-1, u"On the Phone",   {'name': "On the Phone",   'basic_status': 'open',   'extended_status': 'busy',          'rpid_activity': 'on-the-phone'}),
+                       (-1, u"Don't Disturb",  {'name': "Don't Disturb",  'basic_status': 'open',   'extended_status': 'busy',          'rpid_activity': 'busy'}),
+                       (-1, u"Meeting",        {'name': "Meeting",        'basic_status': 'open',   'extended_status': 'busy',          'rpid_activity': 'meeting'}),
+                       (-1, u"Travel",         {'name': "Travel",         'basic_status': 'open',   'extended_status': 'extended-away', 'rpid_activity': 'travel'}),
+                       (-1, u"Vacation",       {'name': "Vacation",       'basic_status': 'open',   'extended_status': 'extended-away', 'rpid_activity': 'vacation'}),
+                       (0,  u"Invisible",      {'name': "Invisible",      'basic_status': 'closed', 'extended_status': 'offline',       'rpid_activity': 'offline' })
+                       ]
 
 
 class SIPManager(object):
