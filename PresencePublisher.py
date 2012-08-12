@@ -6,6 +6,7 @@ from AppKit import *
 
 import hashlib
 import objc
+import socket
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -27,7 +28,9 @@ class PresencePublisher(object):
     idle_threshold = 600
     idle_mode = False
     last_input = datetime.now()
+    last_time_offset = rpid.TimeOffset()
     gruu_addresses = {}
+    hostname = socket.gethostname().split(".")[0]
 
     def __init__(self, owner):
         self.owner = owner
@@ -105,6 +108,17 @@ class PresencePublisher(object):
             self.publish()
 
     def updateIdleTimer_(self, timer):
+        must_publish = False
+        hostname = socket.gethostname().split(".")[0]
+        if hostname != self.hostname:
+            must_publish = True
+            self.hostname = hostname
+
+        last_time_offset = rpid.TimeOffset()
+        if last_time_offset != self.last_time_offset:
+            must_publish = True
+            self.last_time_offset = last_time_offset
+
         # secret sausage after taking the red pill = indigestion
         last_idle_counter = CGEventSourceSecondsSinceLastEventType(0, int(4294967295))
         self.previous_idle_counter = last_idle_counter
@@ -113,6 +127,8 @@ class PresencePublisher(object):
 
         activity_object = self.owner.presenceActivityPopUp.selectedItem().representedObject()
         if activity_object['name'] not in ('Available', 'Away'):
+            if must_publish:
+                self.publish()
             return
 
         if last_idle_counter > self.idle_threshold:
@@ -124,7 +140,7 @@ class PresencePublisher(object):
                     self.originalPresenceStatus = activity_object
 
                 self.idle_mode = True
-                self.publish()
+                must_publish = True
         else:
             if self.idle_mode:
                 self.user_input = {'state': 'active', 'last_input': None}
@@ -135,7 +151,10 @@ class PresencePublisher(object):
                         self.originalPresenceStatus = None
 
                 self.idle_mode = False
-                self.publish()
+                must_publish = True
+
+        if must_publish:
+            self.publish()
 
     def build_pidf(self, account, state=None):
         timestamp = datetime.now()
@@ -191,6 +210,7 @@ class PresencePublisher(object):
         device.user_input.value = self.user_input['state']
         device.user_input.last_input = self.user_input['last_input']
         device.user_input.idle_threshold = self.idle_threshold
+        device.notes.add(rpid.Note(unicode(self.hostname)))
         pidf_doc.add(device)
 
         return pidf_doc
