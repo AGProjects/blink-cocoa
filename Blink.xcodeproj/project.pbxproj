@@ -580,6 +580,9 @@
 		1FB247D915D8E3F200703D24 /* status-user-phone-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247D815D8E3F200703D24 /* status-user-phone-icon.png */; };
 		1FB247DA15D8E3F200703D24 /* status-user-phone-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247D815D8E3F200703D24 /* status-user-phone-icon.png */; };
 		1FB247DB15D8E3F200703D24 /* status-user-phone-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247D815D8E3F200703D24 /* status-user-phone-icon.png */; };
+		1FB247DD15D8E5F100703D24 /* status-user-available-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247DC15D8E5F100703D24 /* status-user-available-icon.png */; };
+		1FB247DE15D8E5F100703D24 /* status-user-available-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247DC15D8E5F100703D24 /* status-user-available-icon.png */; };
+		1FB247DF15D8E5F100703D24 /* status-user-available-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247DC15D8E5F100703D24 /* status-user-available-icon.png */; };
 		1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
 		1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
 		1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
@@ -1282,6 +1285,7 @@
 		1FB247D015D8E28F00703D24 /* status-user-vacation-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "status-user-vacation-icon.png"; path = "icons/status-user-vacation-icon.png"; sourceTree = "<group>"; };
 		1FB247D415D8E36F00703D24 /* status-user-meeting-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "status-user-meeting-icon.png"; path = "icons/status-user-meeting-icon.png"; sourceTree = "<group>"; };
 		1FB247D815D8E3F200703D24 /* status-user-phone-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "status-user-phone-icon.png"; path = "icons/status-user-phone-icon.png"; sourceTree = "<group>"; };
+		1FB247DC15D8E5F100703D24 /* status-user-available-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "status-user-available-icon.png"; path = "icons/status-user-available-icon.png"; sourceTree = "<group>"; };
 		1FB30807146D540C001430B5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1FB30809146D5598001430B5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
@@ -1800,6 +1804,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FB247DC15D8E5F100703D24 /* status-user-available-icon.png */,
 				1FB247D815D8E3F200703D24 /* status-user-phone-icon.png */,
 				1FB247D415D8E36F00703D24 /* status-user-meeting-icon.png */,
 				1FB247D015D8E28F00703D24 /* status-user-vacation-icon.png */,
@@ -2496,6 +2501,7 @@
 				1FB247D215D8E28F00703D24 /* status-user-vacation-icon.png in Resources */,
 				1FB247D615D8E36F00703D24 /* status-user-meeting-icon.png in Resources */,
 				1FB247DA15D8E3F200703D24 /* status-user-phone-icon.png in Resources */,
+				1FB247DE15D8E5F100703D24 /* status-user-available-icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2721,6 +2727,7 @@
 				1FB247D315D8E28F00703D24 /* status-user-vacation-icon.png in Resources */,
 				1FB247D715D8E36F00703D24 /* status-user-meeting-icon.png in Resources */,
 				1FB247DB15D8E3F200703D24 /* status-user-phone-icon.png in Resources */,
+				1FB247DF15D8E5F100703D24 /* status-user-available-icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2944,6 +2951,7 @@
 				1FB247D115D8E28F00703D24 /* status-user-vacation-icon.png in Resources */,
 				1FB247D515D8E36F00703D24 /* status-user-meeting-icon.png in Resources */,
 				1FB247D915D8E3F200703D24 /* status-user-phone-icon.png in Resources */,
+				1FB247DD15D8E5F100703D24 /* status-user-available-icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

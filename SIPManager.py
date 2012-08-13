@@ -55,7 +55,7 @@ from util import *
 # rpid_activities = ('appointment', 'away', 'breakfast', 'busy', 'dinner', 'holiday', 'in-transit', 'looking-for-work', 'meal', 'meeting', 'on-the-phone', 'performance', 'permanent-absence', 'playing', 'presentation', 'shopping', 'sleeping', 'spectator', 'steering', 'travel', 'tv', 'vacation', 'working', 'worship', 'unknown')
 
 
-PresenceStatusList = [(1, u"Available",       {'name': "Available",      'basic_status': 'open',   'extended_status': 'available',     'rpid_activity': 'available', 'image': None}),
+PresenceStatusList = [(1, u"Available",       {'name': "Available",      'basic_status': 'open',   'extended_status': 'available',     'rpid_activity': 'available', 'image': 'status-user-available-icon'}),
     (-1, u"Away",           {'name': "Away",           'basic_status': 'open',   'extended_status': 'away',          'rpid_activity': 'away', 'image': 'status-user-away-icon'}),
     (-1, u"On the Phone",   {'name': "On the Phone",   'basic_status': 'open',   'extended_status': 'busy',          'rpid_activity': 'on-the-phone', 'image': 'status-user-phone-icon'}),
     (-1, u"Don't Disturb",  {'name': "Don't Disturb",  'basic_status': 'open',   'extended_status': 'busy',          'rpid_activity': 'busy', 'image': 'status-user-busy-icon'}),
