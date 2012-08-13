@@ -5,6 +5,7 @@ from Foundation import *
 from AppKit import *
 import objc
 
+import cPickle
 import os
 import re
 import random
@@ -234,6 +235,7 @@ class ContactWindowController(NSWindowController):
     ldap_found_contacts = []
     local_found_contacts = []
     sessionControllersManager = None
+    presence_notes = {}
     first_run = False
 
 
@@ -377,6 +379,13 @@ class ContactWindowController(NSWindowController):
         self.setSpeechRecognition()
         self.chat_journal_replicator = ChatHistoryReplicator()
         SessionHistoryReplicator()
+
+        try:
+            with open(ApplicationData.get('presence_notes.pickle'), 'r') as f:
+                self.presence_notes = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            pass
+
         PresencePublisher(self)
 
         self.loaded = True
@@ -1963,9 +1972,19 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
-        text = unicode(self.presenceNoteText.stringValue())
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(text, "PresenceNote")
+        presence_note = unicode(self.presenceNoteText.stringValue())
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
+
+        selected_presence_activity = self.presenceActivityPopUp.selectedItem().representedObject()
+        self.presence_notes[selected_presence_activity['name']] = presence_note
+
+        storage_path = ApplicationData.get('presence_notes.pickle')
+        try:
+            cPickle.dump(self.presence_notes, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
+
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
@@ -1980,6 +1999,17 @@ class ContactWindowController(NSWindowController):
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
         self.presenceActivityPopUp.selectItem_(item)
+
+        # set the note coresponding to this activity
+        selected_presence_activity = item.representedObject()
+        try:
+            presence_note = self.presence_notes[selected_presence_activity['name']]
+        except KeyError:
+            presence_note = selected_presence_activity['note']
+
+        self.presenceNoteText.setStringValue_(presence_note)
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
+
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
     @objc.IBAction
