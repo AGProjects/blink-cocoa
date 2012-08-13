@@ -82,7 +82,13 @@ def fillPresenceMenu(presenceMenu, target, action, attributes=None):
         lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", action, "")
         title = NSAttributedString.alloc().initWithString_attributes_(item, attributes)
         lastItem.setAttributedTitle_(title)
-        lastItem.setImage_(dots[state])
+        if ident['image'] is not None:
+            image = NSImage.imageNamed_(ident['image'])
+            image.setScalesWhenResized_(True)
+            image.setSize_(NSMakeSize(12,12))
+            lastItem.setImage_(image)
+        else:
+            lastItem.setImage_(dots[state])
         lastItem.setRepresentedObject_(ident or item)
         if target:
             lastItem.setTarget_(target)
