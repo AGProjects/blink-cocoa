@@ -195,6 +195,7 @@ class PresencePublisher(object):
 
         contact_address = contact_address or contact
         tuple = pidf.Service(tuple_id, status=status, contact=contact_address)
+        tuple.display_name = cipid.DisplayName(account.display_name)
         tuple.timestamp = pidf.ServiceTimestamp(timestamp)
         tuple.notes.add(rpid.Note(unicode(self.owner.presenceNoteText.stringValue())))
         tuple.device_info = pidf.DeviceInfo(self.device_id, description=settings.user_agent)
