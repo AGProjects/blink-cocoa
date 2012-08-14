@@ -438,6 +438,7 @@ class ContactWindowController(NSWindowController):
         title = NSAttributedString.alloc().initWithString_attributes_(note or 'Not set', attributes)
         lastItem.setAttributedTitle_(title)
         lastItem.setIndentationLevel_(2)
+        lastItem.setEnabled_(False)
         menu.insertItem_atIndex_(lastItem, 6)
 
         for item in reversed(self.presence_notes_history):
