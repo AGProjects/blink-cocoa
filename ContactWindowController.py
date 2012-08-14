@@ -307,7 +307,7 @@ class ContactWindowController(NSWindowController):
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
         self.white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
-        
+
         # populate presence menus
         self.presenceActivityPopUp.removeAllItems()
         while self.presenceMenu.numberOfItems() > 0:
@@ -385,12 +385,12 @@ class ContactWindowController(NSWindowController):
     def fillPresenceMenu(self, presenceMenu, attributes=None):
         if not attributes:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-        
+
         for item in PresenceStatusList:
             if item['type'] == 'delimiter':
                 presenceMenu.addItem_(NSMenuItem.separatorItem())
                 continue
-                    
+
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", item['action'], "")
             title = NSAttributedString.alloc().initWithString_attributes_(item['title'], attributes)
             lastItem.setAttributedTitle_(title)
@@ -400,7 +400,7 @@ class ContactWindowController(NSWindowController):
                 pass
             else:
                 lastItem.setIndentationLevel_(indentation)
-    
+
             if item['represented_object'] is not None:
                 try:
                     if item['represented_object']['image'] is not None:
@@ -433,7 +433,7 @@ class ContactWindowController(NSWindowController):
             with open(ApplicationData.get('presence_offline_note.pickle'), 'r') as f:
                 note = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
-            pass
+            note = None
 
         title = NSAttributedString.alloc().initWithString_attributes_(note or 'Not set', attributes)
         lastItem.setAttributedTitle_(title)
@@ -459,7 +459,7 @@ class ContactWindowController(NSWindowController):
                     lastItem.setImage_(dots[item['extended_status']])
             lastItem.setRepresentedObject_(item)
             lastItem.setTarget_(self)
-            menu.addItem_(lastItem)   
+            menu.addItem_(lastItem)
 
     def userDefaultsDidChange_(self, notification):
         self.setAlwaysOnTop()
@@ -1021,7 +1021,7 @@ class ContactWindowController(NSWindowController):
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
-        
+
         activity_object = self.presenceActivityPopUp.selectedItem().representedObject()
         if activity_object['title'] == on_the_phone_title:
             if not hasAudio and self.originalPresenceStatus:
@@ -1121,7 +1121,7 @@ class ContactWindowController(NSWindowController):
                 cPickle.dump(self.custom_presence_status, open(storage_path, "w+"))
             except (cPickle.PickleError, IOError):
                 pass
-    
+
     @objc.IBAction
     def setPresenceOfflineNote_(self, sender):
         status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
@@ -1237,7 +1237,7 @@ class ContactWindowController(NSWindowController):
         policy_contact.uri = item.uri
         policy_contact.presence.policy = 'block'
         policy_contact.save()
-    
+
     @objc.IBAction
     def addContactWithUri_(self, sender):
         item = sender.representedObject()
@@ -1333,7 +1333,7 @@ class ContactWindowController(NSWindowController):
     def deletePolicyItem_(self, sender):
         item = sender.representedObject()
         item.policy.delete()
-    
+
     @objc.IBAction
     def deleteItem_(self, sender):
         item = sender.representedObject()
@@ -2077,12 +2077,12 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOffState)
         item = self.presenceMenu.itemWithTitle_(value)
         item.setState_(NSOnState)
-        
+
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
         self.presenceActivityPopUp.selectItem_(item)
         NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceStatus")
-    
+
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
         presence_note = unicode(self.presenceNoteText.stringValue())
@@ -2148,7 +2148,7 @@ class ContactWindowController(NSWindowController):
                 cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
             except (cPickle.PickleError, IOError):
                 pass
-    
+
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
     @objc.IBAction
@@ -2967,7 +2967,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForContacts:", "")
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
-            
+
             blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
             if blink_contacts_with_same_name:
                 name_submenu = NSMenu.alloc().init()
