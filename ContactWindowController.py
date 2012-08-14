@@ -2089,7 +2089,14 @@ class ContactWindowController(NSWindowController):
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
-        selected_presence_activity = self.presenceActivityPopUp.selectedItem().representedObject()
+        item = self.presenceActivityPopUp.selectedItem()
+        if not item:
+            return
+
+        selected_presence_activity = item.representedObject()
+    
+        if not selected_presence_activity:
+            return
 
         storage_path = ApplicationData.get('presence_notes.pickle')
         try:
@@ -2100,6 +2107,8 @@ class ContactWindowController(NSWindowController):
         if selected_presence_activity['basic_status'] != 'closed':
             try:
                 entry = (entry for entry in self.presence_notes_history if entry['note'] == presence_note and entry['extended_status'] == selected_presence_activity['extended_status']).next()
+            except KeyError:
+                pass
             except StopIteration:
                 history_object = dict(selected_presence_activity)
                 history_object['note'] = presence_note
@@ -2125,6 +2134,9 @@ class ContactWindowController(NSWindowController):
 
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
+        if not item:
+            return
+
         self.presenceActivityPopUp.selectItem_(item)
 
         # set the note coresponding to this activity
@@ -2134,7 +2146,7 @@ class ContactWindowController(NSWindowController):
         except KeyError:
             presence_note = selected_presence_activity['note']
 
-        self.presenceNoteText.setStringValue_(presence_note)
+        self.presenceNoteText.setStringValue_(presence_note or '')
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
 
         try:
