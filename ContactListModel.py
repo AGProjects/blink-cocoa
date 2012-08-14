@@ -60,7 +60,6 @@ from GroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
-from SIPManager import PresenceStatusList
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 
 from resources import ApplicationData, Resources
@@ -1626,25 +1625,7 @@ class ContactListModel(CustomListModel):
         unlink(path)
     
     def updatePresenceIndicator(self):
-        return
-        groups_with_presence = (group for group in self.groupsList if isinstance(group, BlinkPresenceContact))
-        change = False
-        # TODO: remove random import enable presence -adi
-        import random
-        for group in groups_with_presence:
-            for blink_contact in group.contacts:
-                #continue
-                
-                # TODO: set indicator to unknown when enable presence -adi
-                #blink_contact.setPresenceIndicator("unknown")
-                indicator = random.choice(('available','busy', 'activity', 'unknown'))
-                blink_contact.setPresenceIndicator(indicator)
-                activity = random.choice(PresenceStatusList)
-                if PresenceActivityPrefix.has_key(activity[1]):
-                    detail = '%s %s %s' % (blink_contact.uri, PresenceActivityPrefix[activity[1]], activity[1])
-                    blink_contact.detail = detail
-                change = True
-        
+        return        
         if change:
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 

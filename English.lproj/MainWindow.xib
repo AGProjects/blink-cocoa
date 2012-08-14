@@ -1352,23 +1352,22 @@
 								<string key="NSKeyEquivalent"/>
 								<int key="NSPeriodicDelay">400</int>
 								<int key="NSPeriodicInterval">75</int>
-								<object class="NSMenuItem" key="NSMenuItem" id="842501717">
-									<reference key="NSMenu" ref="842422554"/>
-									<string key="NSTitle">Presence Activity</string>
-									<string key="NSKeyEquiv"/>
-									<int key="NSKeyEquivModMask">1048576</int>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<int key="NSState">1</int>
-									<reference key="NSOnImage" ref="660791971"/>
-									<reference key="NSMixedImage" ref="600792618"/>
-									<string key="NSAction">_popUpItemAction:</string>
-									<reference key="NSTarget" ref="293982666"/>
-								</object>
+								<nil key="NSMenuItem"/>
 								<bool key="NSMenuItemRespectAlignment">YES</bool>
 								<object class="NSMenu" key="NSMenu" id="842422554">
 									<string key="NSTitle">OtherViews</string>
 									<array class="NSMutableArray" key="NSMenuItems">
-										<reference ref="842501717"/>
+										<object class="NSMenuItem" id="842501717">
+											<reference key="NSMenu" ref="842422554"/>
+											<string key="NSTitle">Presence Activity</string>
+											<string key="NSKeyEquiv"/>
+											<int key="NSKeyEquivModMask">1048576</int>
+											<int key="NSMnemonicLoc">2147483647</int>
+											<reference key="NSOnImage" ref="660791971"/>
+											<reference key="NSMixedImage" ref="600792618"/>
+											<string key="NSAction">_popUpItemAction:</string>
+											<reference key="NSTarget" ref="293982666"/>
+										</object>
 										<object class="NSMenuItem" id="817294628">
 											<reference key="NSMenu" ref="842422554"/>
 											<string key="NSTitle">Item 2</string>
@@ -1393,6 +1392,7 @@
 										</object>
 									</array>
 								</object>
+								<int key="NSSelectedIndex">-1</int>
 								<int key="NSPreferredEdge">1</int>
 								<bool key="NSUsesItemFromMenu">YES</bool>
 								<bool key="NSAltersState">YES</bool>
@@ -1427,7 +1427,6 @@
 							<string key="NSFrame">{{0, 32}, {274, 350}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="384228997"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="954578565">
 									<string key="NSIdentifier">contacts</string>
@@ -2469,7 +2468,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 											<object class="NSTableView" id="787233811">
 												<reference key="NSNextResponder" ref="56636289"/>
 												<int key="NSvFlags">4352</int>
-												<string key="NSFrameSize">{217, 36}</string>
+												<string key="NSFrameSize">{217, 1}</string>
 												<reference key="NSSuperview" ref="56636289"/>
 												<reference key="NSNextKeyView" ref="910683784"/>
 												<bool key="NSEnabled">YES</bool>
@@ -3736,14 +3735,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">presenceMenu</string>
-						<reference key="source" ref="900429702"/>
-						<reference key="destination" ref="441892724"/>
-					</object>
-					<int key="connectionID">1102</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
 						<string key="label">statusMenu</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="633631115"/>
@@ -4391,6 +4382,22 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1713</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">presenceMenu</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="441892724"/>
+					</object>
+					<int key="connectionID">1102</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">presencePopUpMenu</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="842422554"/>
+					</object>
+					<int key="connectionID">1730</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
 						<string key="label">link</string>
 						<reference key="source" ref="954251869"/>
@@ -4477,6 +4484,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="258774560"/>
 					</object>
 					<int key="connectionID">1647</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="842422554"/>
+						<reference key="destination" ref="900429702"/>
+					</object>
+					<int key="connectionID">1727</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
@@ -4645,6 +4660,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="900429702"/>
 					</object>
 					<int key="connectionID">957</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">delegate</string>
+						<reference key="source" ref="441892724"/>
+						<reference key="destination" ref="900429702"/>
+					</object>
+					<int key="connectionID">1728</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -7062,7 +7085,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1713</int>
+			<int key="maxID">1730</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7194,6 +7217,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="clearSearchField:">id</string>
 						<string key="close:">id</string>
 						<string key="conferenceClicked:">id</string>
+						<string key="definePresenceStatus:">id</string>
 						<string key="deleteItem:">id</string>
 						<string key="deletePolicyItem:">id</string>
 						<string key="dialPadButtonClicked:">id</string>
@@ -7222,6 +7246,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="setAlwaysOnTop:">id</string>
 						<string key="setAutoAnswer:">id</string>
 						<string key="setDialogPolicyForContact:">id</string>
+						<string key="setPresenceOfflineNote:">id</string>
 						<string key="setPresencePolicyForContact:">id</string>
 						<string key="setSpeechSyntezis:">id</string>
 						<string key="setUseSpeechRecognition:">id</string>
@@ -7247,6 +7272,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="toggleDialPadClicked:">id</string>
 						<string key="toggleMirrorWindow:">id</string>
 						<string key="toogleExpand:">id</string>
+						<string key="updatePresenceFromHistory:">id</string>
 						<string key="userClickedParticipantMenu:">id</string>
 						<string key="viewHistory:">id</string>
 					</dictionary>
@@ -7293,6 +7319,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="conferenceClicked:">
 							<string key="name">conferenceClicked:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="definePresenceStatus:">
+							<string key="name">definePresenceStatus:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="deleteItem:">
@@ -7407,6 +7437,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">setDialogPolicyForContact:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="setPresenceOfflineNote:">
+							<string key="name">setPresenceOfflineNote:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="setPresencePolicyForContact:">
 							<string key="name">setPresencePolicyForContact:</string>
 							<string key="candidateClassName">id</string>
@@ -7507,6 +7541,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">toogleExpand:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="updatePresenceFromHistory:">
+							<string key="name">updatePresenceFromHistory:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="userClickedParticipantMenu:">
 							<string key="name">userClickedParticipantMenu:</string>
 							<string key="candidateClassName">id</string>
@@ -7554,6 +7592,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="presenceActivityPopUp">id</string>
 						<string key="presenceMenu">id</string>
 						<string key="presenceNoteText">id</string>
+						<string key="presencePopUpMenu">id</string>
 						<string key="recordingsMenu">id</string>
 						<string key="recordingsSubMenu">id</string>
 						<string key="restoreContactsMenu">id</string>
@@ -7715,6 +7754,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="presenceNoteText">
 							<string key="name">presenceNoteText</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="presencePopUpMenu">
+							<string key="name">presencePopUpMenu</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="recordingsMenu">

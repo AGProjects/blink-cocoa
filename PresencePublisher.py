@@ -12,6 +12,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from datetime import datetime
 from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account.xcap import OfflineStatus
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import pidf, rpid, cipid, caps
 from zope.interface import implements
@@ -20,9 +21,107 @@ from util import *
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
+on_the_phone_title = 'On the Phone'
+
+PresenceStatusList = [
+                      (  
+                       {
+                       'title':           u"Available",
+                       'type':            'menu_item',
+                       'action':          'presenceActivityChanged:',
+                       'represented_object': {
+                                           'title':           u"Available",
+                                           'basic_status':    'open',
+                                           'extended_status': 'available',
+                                           'rpid_activity':   'available', 
+                                           'image':           'status-user-available-icon', 
+                                           'note':            'I am available now'
+                       }
+                       }),
+                      (     
+                       {
+                       'title':           u"Away",
+                       'type':            'menu_item',
+                       'action':          'presenceActivityChanged:',
+                       'represented_object': {
+                                           'title':           u"Away",
+                                           'basic_status':    'open',
+                                           'extended_status': 'away',
+                                           'rpid_activity':   'away', 
+                                           'image':           'status-user-away-icon',
+                                           'note':            'I am away at this moment'
+                       }
+                       }),
+                      (   
+                       {
+                       'title':           u"Don't Disturb", 
+                       'type':             'menu_item',
+                       'action':           'presenceActivityChanged:',
+                       'represented_object': {
+                                           'title':           u"Don't Disturb",
+                                           'basic_status':    'open',
+                                           'extended_status': 'busy',          
+                                           'rpid_activity':   'busy', 
+                                           'image':           'status-user-busy-icon', 
+                                           'note':            'Do not disturb me now'
+                       }
+                       }),
+                      (       
+                       {
+                       'title':            u"Invisible",
+                       'type':             'menu_item',
+                       'action':           'presenceActivityChanged:',
+                       'represented_object': {
+                                           'title':            u"Invisible",
+                                           'basic_status':     'closed', 
+                                           'extended_status':  'offline',
+                                           'rpid_activity':    'offline' , 
+                                           'image':            None, 
+                                           'note':             ''
+                       }
+                       }),
+                      (       
+                       {
+                       'type':             'delimiter'
+                       }),
+                      (       
+                       {'title':            u"Set Offline Status...",      
+                       'type':             'menu_item',
+                       'action':           'setPresenceOfflineNote:',
+                       'represented_object': None
+                       }),
+                      (       
+                       {
+                       'title':            u"Empty",
+                       'type':             'menu_item',
+                       'action':           'setPresenceOfflineNote:',
+                       'indentation':      2,
+                       'represented_object': None
+                       }),
+                      (       
+                       {
+                       'type':             'delimiter'
+                       }),
+                      (  
+                       {
+                       'title':           u"On the Phone",
+                       'type':            'menu_item',
+                       'action':          'presenceActivityChanged:',
+                       'represented_object': {
+                                           'title':           u"On the Phone",
+                                           'basic_status':    'open',   
+                                           'extended_status': 'busy',
+                                           'rpid_activity':   'on-the-phone', 
+                                           'image':           'status-user-busy-icon',
+                                           'note':            'I am engaged in a phone call'
+                       }
+                       })
+                      ]
+
 
 class PresencePublisher(object):
     implements(IObserver)
+
     device_id = None
     user_input = {'state': 'active', 'last_input': None}
     idle_threshold = 600
@@ -31,6 +130,7 @@ class PresencePublisher(object):
     last_time_offset = rpid.TimeOffset()
     gruu_addresses = {}
     hostname = socket.gethostname().split(".")[0]
+    originalPresenceStatus = None
 
     def __init__(self, owner):
         self.owner = owner
@@ -126,7 +226,10 @@ class PresencePublisher(object):
             self.last_input = datetime.now()
 
         activity_object = self.owner.presenceActivityPopUp.selectedItem().representedObject()
-        if activity_object['name'] not in ('Available', 'Away'):
+        if activity_object is None:
+            return
+
+        if activity_object['title'] not in ('Available', 'Away'):
             if must_publish:
                 self.publish()
             return
@@ -134,7 +237,7 @@ class PresencePublisher(object):
         if last_idle_counter > self.idle_threshold:
             if not self.idle_mode:
                 self.user_input = {'state': 'idle', 'last_input': self.last_input}
-                if activity_object['name'] != "Away":
+                if activity_object['title'] != "Away":
                     i = self.owner.presenceActivityPopUp.indexOfItemWithTitle_('Away')
                     self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
                     self.originalPresenceStatus = activity_object
@@ -144,7 +247,7 @@ class PresencePublisher(object):
         else:
             if self.idle_mode:
                 self.user_input = {'state': 'active', 'last_input': None}
-                if activity_object['name'] == "Away":
+                if activity_object['title'] == "Away":
                     if self.originalPresenceStatus:
                         i = self.owner.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
                         self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
@@ -167,18 +270,20 @@ class PresencePublisher(object):
         pidf_doc.add(person)
 
         if state:
+            if state['basic_status'] == 'closed':
+                return None
             status = pidf.Status(state['basic_status'])
             status.extended = state['extended_status']
             person.activities.add(state['rpid_activity'])
-            if state['basic_status'] == 'closed':
-                return pidf_doc
         else:
             activity_object = self.owner.presenceActivityPopUp.selectedItem().representedObject()
+            if activity_object is None:
+                return pidf_doc
+            if activity_object['basic_status'] == 'closed':
+                return None
             status = pidf.Status(activity_object['basic_status'])
             status.extended = activity_object['extended_status']
             person.activities.add(activity_object['rpid_activity'])
-            if activity_object['basic_status'] == 'closed':
-                return pidf_doc
 
         person.timestamp = pidf.PersonTimestamp(timestamp)
         if account.display_name is not None:
@@ -213,12 +318,28 @@ class PresencePublisher(object):
         device.user_input.idle_threshold = self.idle_threshold
         device.notes.add(rpid.Note(unicode(self.hostname)))
         pidf_doc.add(device)
-
         return pidf_doc
-
+            
+    def build_offline_pidf(self, account, note):
+        if not note:
+            return None
+        pidf_doc = pidf.PIDF(account.id)
+        person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
+        person.activities = rpid.Activities()
+        person.activities.add('offline')
+        person.notes.add(rpid.Note(unicode(note)))
+        pidf_doc.add(person)
+        return pidf_doc
+            
     def publish(self, state=None):
         for account in AccountManager().iter_accounts():
             if account.enabled and account is not BonjourAccount() and account.presence.enabled:
                 presence_state = self.build_pidf(account, state)
                 account.presence_state = presence_state
 
+    def set_offline_status(self, note):
+        for account in AccountManager().iter_accounts():
+            if account.enabled and account is not BonjourAccount() and account.xcap.enabled and account.xcap.xcap_root:
+                pidf = self.build_offline_pidf(account, note)
+                offline_status = OfflineStatus(pidf) if pidf is not None else None
+                account.xcap_manager.set_offline_status(offline_status)

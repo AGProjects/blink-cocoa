@@ -11,6 +11,7 @@ import re
 import random
 import string
 import ldap
+from collections import deque
 from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -45,8 +46,9 @@ from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionControllersManager
-from SIPManager import SIPManager, MWIData, PresenceStatusList
-from PresencePublisher import PresencePublisher
+from SIPManager import SIPManager, MWIData
+from PresencePublisher import PresencePublisher, PresenceStatusList, on_the_phone_title
+from OfflineNoteController import OfflineNoteController
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import ApplicationData, Resources
 from util import *
@@ -62,39 +64,16 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
-def fillPresenceMenu(presenceMenu, target, action, attributes=None):
-    if not attributes:
-        attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-    
-    dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(2, 2, 8, 8))
-    dots = {}
-    for i, color in [(-1, NSColor.redColor()), (0, NSColor.yellowColor()), (1, NSColor.greenColor())]:
-        dot = NSImage.alloc().initWithSize_(NSMakeSize(12, 12))
-        dot.lockFocus()
-        color.set()
-        dotPath.fill()
-        dot.unlockFocus()
-        dots[i] = dot
+dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(2, 2, 8, 8))
+dots = {}
+for i, color in [('busy', NSColor.redColor()), ('away', NSColor.redColor()), ('extended-away', NSColor.redColor()), ('offline', NSColor.grayColor()), ('available', NSColor.greenColor())]:
+    dot = NSImage.alloc().initWithSize_(NSMakeSize(12, 12))
+    dot.lockFocus()
+    color.set()
+    dotPath.fill()
+    dot.unlockFocus()
+    dots[i] = dot
 
-    last_state = None
-    for state, item, ident in PresenceStatusList:
-        if last_state is not None and state != last_state:
-            presenceMenu.addItem_(NSMenuItem.separatorItem())
-        lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", action, "")
-        title = NSAttributedString.alloc().initWithString_attributes_(item, attributes)
-        lastItem.setAttributedTitle_(title)
-        if ident['image'] is not None:
-            image = NSImage.imageNamed_(ident['image'])
-            image.setScalesWhenResized_(True)
-            image.setSize_(NSMakeSize(12,12))
-            lastItem.setImage_(image)
-        else:
-            lastItem.setImage_(dots[state])
-        lastItem.setRepresentedObject_(ident or item)
-        if target:
-            lastItem.setTarget_(target)
-        presenceMenu.addItem_(lastItem)
-        last_state = state
 
 class PhotoView(NSImageView):
     entered = False
@@ -207,6 +186,7 @@ class ContactWindowController(NSWindowController):
     toolsMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
+    presencePopUpMenu = objc.IBOutlet()
     windowMenu = objc.IBOutlet()
     restoreContactsMenu = objc.IBOutlet()
     alwaysOnTopMenuItem = objc.IBOutlet()
@@ -236,13 +216,15 @@ class ContactWindowController(NSWindowController):
     local_found_contacts = []
     sessionControllersManager = None
     presence_notes = {}
+    presence_notes_history = deque(maxlen=10)
     first_run = False
+    presencePublisher = None
+    white = None
 
 
     def awakeFromNib(self):
         # check how much space there is left for the search Outline, so we can restore it after
         # minimizing
-
         self.searchOutlineTopOffset = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - NSHeight(self.searchOutline.enclosingScrollView().frame())
 
         self.contactOutline.setRowHeight_(40)
@@ -324,13 +306,14 @@ class ContactWindowController(NSWindowController):
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
-        white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
+        self.white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
+        
+        # populate presence menus
         self.presenceActivityPopUp.removeAllItems()
-
         while self.presenceMenu.numberOfItems() > 0:
             self.presenceMenu.removeItemAtIndex_(0)
-        fillPresenceMenu(self.presenceMenu, self, "presenceActivityChanged:")
-        fillPresenceMenu(self.presenceActivityPopUp.menu(), self, "presenceActivityChanged:", white)
+        self.fillPresenceMenu(self.presenceMenu)
+        self.fillPresenceMenu(self.presenceActivityPopUp.menu(), self.white)
 
         note = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceNote")
         if note:
@@ -341,6 +324,9 @@ class ContactWindowController(NSWindowController):
             self.presenceActivityPopUp.selectItemWithTitle_(status)
             for item in self.presenceMenu.itemArray():
                 item.setState_(NSOnState if item.title() == status else NSOffState)
+        else:
+            item = self.presenceActivityPopUp.selectItem()
+            NSUserDefaults.standardUserDefaults().setValue_forKey_(item.title(), "PresenceStatus")
 
         path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
         if path:
@@ -386,9 +372,93 @@ class ContactWindowController(NSWindowController):
         except (IOError, cPickle.UnpicklingError):
             pass
 
-        PresencePublisher(self)
+        try:
+            with open(ApplicationData.get('presence_notes_history.pickle'), 'r') as f:
+                self.presence_notes_history.extend(cPickle.load(f))
+        except (IOError, cPickle.UnpicklingError):
+            pass
+
+        self.presencePublisher = PresencePublisher(self)
 
         self.loaded = True
+
+    def fillPresenceMenu(self, presenceMenu, attributes=None):
+        if not attributes:
+            attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+        
+        for item in PresenceStatusList:
+            if item['type'] == 'delimiter':
+                presenceMenu.addItem_(NSMenuItem.separatorItem())
+                continue
+                    
+            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", item['action'], "")
+            title = NSAttributedString.alloc().initWithString_attributes_(item['title'], attributes)
+            lastItem.setAttributedTitle_(title)
+            try:
+                indentation = item['indentation']
+            except KeyError:
+                pass
+            else:
+                lastItem.setIndentationLevel_(indentation)
+    
+            if item['represented_object'] is not None:
+                try:
+                    if item['represented_object']['image'] is not None:
+                        image = NSImage.imageNamed_(item['represented_object']['image'])
+                        image.setScalesWhenResized_(True)
+                        image.setSize_(NSMakeSize(12,12))
+                        lastItem.setImage_(image)
+                    else:
+                        try:
+                            extended_status = item['represented_object']['extended_status']
+                            lastItem.setImage_(dots[item['represented_object']['extended_status']])
+                        except KeyError:
+                            pass
+                except KeyError:
+                    pass
+                lastItem.setRepresentedObject_(item['represented_object'])
+            lastItem.setTarget_(self)
+            presenceMenu.addItem_(lastItem)
+
+    def updatePresenceMenu(self, menu, attributes=None):
+        if not attributes:
+            attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+
+        while menu.numberOfItems() > 9:
+            menu.removeItemAtIndex_(9)
+
+        menu.removeItemAtIndex_(6)
+        lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceOfflineNote:", "")
+        try:
+            with open(ApplicationData.get('presence_offline_note.pickle'), 'r') as f:
+                note = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            pass
+
+        title = NSAttributedString.alloc().initWithString_attributes_(note or 'Not set', attributes)
+        lastItem.setAttributedTitle_(title)
+        lastItem.setIndentationLevel_(2)
+        menu.insertItem_atIndex_(lastItem, 6)
+
+        for item in reversed(self.presence_notes_history):
+            # do stuff with item
+            if not item['note']:
+                continue
+            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "updatePresenceFromHistory:", "")
+            title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
+            lastItem.setAttributedTitle_(title)
+            lastItem.setRepresentedObject_(item)
+            if item['image'] is not None:
+                image = NSImage.imageNamed_(item['image'])
+                image.setScalesWhenResized_(True)
+                image.setSize_(NSMakeSize(12,12))
+                lastItem.setImage_(image)
+            else:
+                if item['extended_status'] is not None:
+                    lastItem.setImage_(dots[item['extended_status']])
+            lastItem.setRepresentedObject_(item)
+            lastItem.setTarget_(self)
+            menu.addItem_(lastItem)   
 
     def userDefaultsDidChange_(self, notification):
         self.setAlwaysOnTop()
@@ -950,28 +1020,24 @@ class ContactWindowController(NSWindowController):
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
-
+        
         activity_object = self.presenceActivityPopUp.selectedItem().representedObject()
-        if activity_object['rpid_activity'] == "on-the-phone":
+        if activity_object['title'] == on_the_phone_title:
             if not hasAudio and self.originalPresenceStatus:
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
-                NotificationCenter().post_notification("PresenceActivityHasChanged", sender=self)
-                for item in self.presenceMenu.itemArray():
-                    item.setState_(NSOnState if item.title() == self.originalPresenceStatus['name'] else NSOffState)
+                menu = self.presenceActivityPopUp.menu()
+                item = menu.itemWithTitle_(self.originalPresenceStatus['title'])
+                self.presenceActivityChanged_(item)
                 self.originalPresenceStatus = None
         else:
             if hasAudio:
-                i = self.presenceActivityPopUp.indexOfItemWithTitle_('On the Phone')
+                i = self.presenceActivityPopUp.indexOfItemWithTitle_(on_the_phone_title)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
+                menu = self.presenceActivityPopUp.menu()
+                item = menu.itemWithTitle_(on_the_phone_title)
+                self.presenceActivityChanged_(item)
                 self.originalPresenceStatus = activity_object
-
-                for item in self.presenceMenu.itemArray():
-                    item.setState_(NSOffState)
-                item = self.presenceMenu.itemWithTitle_('On the Phone')
-                item.setState_(NSOnState)
-
-                NotificationCenter().post_notification("PresenceActivityHasChanged", sender=self)
 
     def updateActionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
@@ -1037,6 +1103,35 @@ class ContactWindowController(NSWindowController):
     def addContact(self, uri, display_name=None):
         self.model.addContact(uri, name=display_name)
         self.contactOutline.reloadData()
+
+    @objc.IBAction
+    def definePresenceStatus_(self, sender):
+        status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
+        if status:
+            self.presenceActivityPopUp.selectItemWithTitle_(status)
+            for item in self.presenceMenu.itemArray():
+                item.setState_(NSOnState if item.title() == status else NSOffState)
+        controller = NewPresenceStatusController()
+        new_status = controller.runModal()
+        if new_status:
+            self.custom_presence_status[new_status['label']] = new_status['object']
+            storage_path = ApplicationData.get('custom_presence_status.pickle')
+            try:
+                cPickle.dump(self.custom_presence_status, open(storage_path, "w+"))
+            except (cPickle.PickleError, IOError):
+                pass
+    
+    @objc.IBAction
+    def setPresenceOfflineNote_(self, sender):
+        status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
+        if status:
+            self.presenceActivityPopUp.selectItemWithTitle_(status)
+            for item in self.presenceMenu.itemArray():
+                item.setState_(NSOnState if item.title() == status else NSOffState)
+        controller = OfflineNoteController()
+        note = controller.runModal()
+        if note is not None:
+            self.presencePublisher.set_offline_status(note)
 
     @objc.IBAction
     def backupContacts_(self, sender):
@@ -1971,13 +2066,29 @@ class ContactWindowController(NSWindowController):
         sender.resignFirstResponder()
 
     @objc.IBAction
+    def updatePresenceFromHistory_(self, sender):
+        item = sender.representedObject()
+        presence_note = item['note']
+        self.presenceNoteText.setStringValue_(presence_note)
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
+        value = item['title']
+        for item in self.presenceMenu.itemArray():
+            item.setState_(NSOffState)
+        item = self.presenceMenu.itemWithTitle_(value)
+        item.setState_(NSOnState)
+        
+        menu = self.presenceActivityPopUp.menu()
+        item = menu.itemWithTitle_(value)
+        self.presenceActivityPopUp.selectItem_(item)
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceStatus")
+    
+    @objc.IBAction
     def presenceNoteChanged_(self, sender):
         presence_note = unicode(self.presenceNoteText.stringValue())
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
         selected_presence_activity = self.presenceActivityPopUp.selectedItem().representedObject()
-        self.presence_notes[selected_presence_activity['name']] = presence_note
 
         storage_path = ApplicationData.get('presence_notes.pickle')
         try:
@@ -1985,10 +2096,25 @@ class ContactWindowController(NSWindowController):
         except (cPickle.PickleError, IOError):
             pass
 
+        if selected_presence_activity['basic_status'] != 'closed':
+            try:
+                entry = (entry for entry in self.presence_notes_history if entry['note'] == presence_note and entry['extended_status'] == selected_presence_activity['extended_status']).next()
+            except StopIteration:
+                history_object = dict(selected_presence_activity)
+                history_object['note'] = presence_note
+                self.presence_notes_history.append(history_object)
+                storage_path = ApplicationData.get('presence_notes_history.pickle')
+                try:
+                    cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+                except (cPickle.PickleError, IOError):
+                    pass
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
         value = sender.title()
+        if value == NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus"):
+            return
+
         NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceStatus")
 
         for item in self.presenceMenu.itemArray():
@@ -2010,6 +2136,18 @@ class ContactWindowController(NSWindowController):
         self.presenceNoteText.setStringValue_(presence_note)
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
 
+        try:
+            entry = (entry for entry in self.presence_notes_history if entry['note'] == presence_note and entry['extended_status'] == selected_presence_activity['extended_status']).next()
+        except StopIteration:
+            history_object = item.representedObject()
+            history_object['note'] = presence_note
+            self.presence_notes_history.append(history_object)
+            storage_path = ApplicationData.get('presence_notes_history.pickle')
+            try:
+                cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+            except (cPickle.PickleError, IOError):
+                pass
+    
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
     @objc.IBAction
@@ -3111,6 +3249,10 @@ class ContactWindowController(NSWindowController):
             self.updateContactContextMenu()
         elif menu == self.statusMenu:
             self.updateStatusMenu()
+        elif menu == self.presenceMenu:
+            self.updatePresenceMenu(menu)
+        elif menu == self.presencePopUpMenu:
+            self.updatePresenceMenu(menu, self.white)
         elif menu == self.callMenu:
             self.updateCallMenu()
         elif menu == self.groupMenu:
