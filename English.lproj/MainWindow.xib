@@ -1337,7 +1337,7 @@
 						<object class="NSPopUpButton" id="954942554">
 							<reference key="NSNextResponder" ref="439893737"/>
 							<int key="NSvFlags">265</int>
-							<string key="NSFrame">{{155, 408}, {112, 15}}</string>
+							<string key="NSFrame">{{155, 407}, {112, 15}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1049294170"/>
@@ -1411,8 +1411,8 @@
 							<reference key="NSNextKeyView" ref="1053838733"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="1008148782">
-								<int key="NSCellFlags">338820672</int>
-								<int key="NSCellFlags2">272925696</int>
+								<int key="NSCellFlags">337772096</int>
+								<int key="NSCellFlags2">272926784</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="432183556"/>
 								<string key="NSPlaceholderString">Add an Activity Note here</string>
@@ -1430,6 +1430,7 @@
 							<string key="NSFrame">{{0, 32}, {274, 350}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="384228997"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="954578565">
 									<string key="NSIdentifier">contacts</string>
@@ -1592,7 +1593,6 @@
 												<string key="NSFrame">{{0, 288}, {274, 60}}</string>
 												<reference key="NSSuperview" ref="384228997"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="954251869"/>
 												<string key="NSClassName">NSView</string>
 											</object>
 										</array>
