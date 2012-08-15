@@ -133,6 +133,8 @@ class PresencePublisher(object):
     gruu_addresses = {}
     hostname = socket.gethostname().split(".")[0]
     originalPresenceStatus = None
+    icon = None
+    offline_note = ''
 
     def __init__(self, owner):
         self.owner = owner
@@ -202,9 +204,21 @@ class PresencePublisher(object):
         if notification.data.modified.has_key("display_name"):
             account = notification.sender
             if account is not BonjourAccount():
-                if account.enabled and account.presence.enabled:
-                    pidf = self.build_pidf(account)
-                    account.presence_state = pidf
+                if account.enabled:
+                    if account.presence.enabled:
+                        pidf = self.build_pidf(account)
+                        account.presence_state = pidf
+                        
+        if notification.data.modified.has_key("xcap.enabled") or notification.data.modified.has_key("xcap.xcap_root"):
+            account = notification.sender
+            if account.xcap.enabled:
+                pidf = self.build_offline_pidf(account, self.offline_note)
+                offline_status = OfflineStatus(pidf) if pidf is not None else None
+                account.xcap_manager.set_offline_status(offline_status)
+                
+                if self.icon:
+                    icon = Icon(self.icon['data'], self.icon['mime_type'])
+                    account.xcap_manager.set_status_icon(icon)
 
         if notification.data.modified.has_key("chat.disabled"):
             self.publish()
@@ -344,13 +358,25 @@ class PresencePublisher(object):
             
     def publish(self, state=None):
         for account in AccountManager().iter_accounts():
-            if account.enabled and account is not BonjourAccount() and account.presence.enabled:
+            if account is not BonjourAccount():
                 presence_state = self.build_pidf(account, state)
                 account.presence_state = presence_state
 
-    def set_offline_status(self, note):
+    def set_offline_status(self, note=None):
+        if note is not None:
+            self.offline_note = note
+
         for account in AccountManager().iter_accounts():
-            if account.enabled and account is not BonjourAccount() and account.xcap.enabled and account.xcap.xcap_root:
-                pidf = self.build_offline_pidf(account, note)
+            if account is not BonjourAccount() and account.xcap.enabled and account.xcap.xcap_root is not None:
+                pidf = self.build_offline_pidf(account, self.offline_note)
                 offline_status = OfflineStatus(pidf) if pidf is not None else None
                 account.xcap_manager.set_offline_status(offline_status)
+
+    def set_status_icon(self):
+        if self.icon is None:
+            return
+
+        for account in AccountManager().iter_accounts():
+            if account is not BonjourAccount() and account.xcap.enabled and account.xcap.xcap_root is not None:
+                icon = Icon(self.icon['data'], self.icon['mime_type'])
+                account.xcap_manager.set_status_icon(icon)
