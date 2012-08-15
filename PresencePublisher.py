@@ -190,27 +190,23 @@ class PresencePublisher(object):
         self.unpublish()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
-        if notification.data.modified.has_key("display_name"):
+        if isinstance(notification.sender, Account):
             account = notification.sender
-            if account is not BonjourAccount():
-                if account.enabled:
-                    if account.presence.enabled:
-                        pidf = self.build_pidf(account)
-                        account.presence_state = pidf
+            if 'display_name' in notification.data.modified:
+                if account.enabled and account.presence.enabled:
+                    account.presence_state = self.build_pidf(account)
 
-        if notification.data.modified.has_key("xcap.enabled") or notification.data.modified.has_key("xcap.xcap_root"):
-            account = notification.sender
-            if account.xcap.enabled:
-                pidf = self.build_offline_pidf(account, self.offline_note)
-                offline_status = OfflineStatus(pidf) if pidf is not None else None
-                account.xcap_manager.set_offline_status(offline_status)
+            if set(['xcap.enabled', 'xcap.xcap_root']).intersection(notification.data.modified:
+                if account.xcap.enabled and account.xcap.discovered:
+                    offline_status = OfflineStatus(self.build_offline_pidf(account, self.offline_note))
+                    account.xcap_manager.set_offline_status(offline_status)
+                    if self.icon:
+                        icon = Icon(self.icon['data'], self.icon['mime_type'])
+                        account.xcap_manager.set_status_icon(icon)
 
-                if self.icon:
-                    icon = Icon(self.icon['data'], self.icon['mime_type'])
-                    account.xcap_manager.set_status_icon(icon)
-
-        if notification.data.modified.has_key("chat.disabled"):
-            self.publish()
+        if notification.sender is SIPSimpleSettings():
+            if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled']).intersection(notification.data.modified):
+                self.publish()
 
     def updateIdleTimer_(self, timer):
         must_publish = False
@@ -340,13 +336,12 @@ class PresencePublisher(object):
         return pidf_doc
 
     def build_offline_pidf(self, account, note):
-        if not note:
-            return None
         pidf_doc = pidf.PIDF(account.id)
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
         person.activities = rpid.Activities()
         person.activities.add('offline')
-        person.notes.add(rpid.Note(unicode(note)))
+        if note:
+            person.notes.add(rpid.Note(unicode(note)))
         pidf_doc.add(person)
         return pidf_doc
 
@@ -364,8 +359,7 @@ class PresencePublisher(object):
 
         for account in AccountManager().iter_accounts():
             if account is not BonjourAccount() and account.xcap.enabled and account.xcap.xcap_root is not None:
-                pidf = self.build_offline_pidf(account, self.offline_note)
-                offline_status = OfflineStatus(pidf) if pidf is not None else None
+                offline_status = OfflineStatus(self.build_offline_pidf(account, self.offline_note))
                 account.xcap_manager.set_offline_status(offline_status)
 
     def set_status_icon(self):
