@@ -119,7 +119,6 @@ class PresencePublisher(object):
         nc.add_observer(self, name="PresenceNoteHasChanged")
         nc.add_observer(self, name="PresenceActivityHasChanged")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
-        nc.add_observer(self, name="SIPApplicationWillEnd")
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
         nc.add_observer(self, name="SystemWillSleep")
@@ -132,10 +131,6 @@ class PresencePublisher(object):
         idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateIdleTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(idle_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(idle_timer, NSEventTrackingRunLoopMode)
-
-    def _NH_SIPApplicationWillEnd(self, notification):
-        presence_state = {'basic_status': 'closed', 'extended_status': 'away', 'rpid_activity': 'offline'}
-        self.publish(presence_state)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
         account = notification.sender
