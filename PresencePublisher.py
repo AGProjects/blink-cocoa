@@ -157,21 +157,16 @@ class PresencePublisher(object):
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
         account = notification.sender
         if account.enabled and account.presence.enabled:
+            old_gruu = self.gruu_addresses.get(account.id)
             new_gruu = str(account.contact.public_gruu) if account.contact.public_gruu is not None else None
-            try:
-                old_gruu = self.gruu_addresses[account.id]
-            except KeyError:
-                if new_gruu is not None:
-                    self.gruu_addresses[account.id] = new_gruu
-                old_gruu = None
-            else:
-                if new_gruu is None:
-                    del self.gruu_addresses[account.id]
 
-            if old_gruu is None or old_gruu != new_gruu:
+            if new_gruu is not None:
                 self.gruu_addresses[account.id] = new_gruu
-                pidf = self.build_pidf(account)
-                account.presence_state = pidf
+            else:
+                self.gruu_addresses.pop(account.id, None)
+
+            if old_gruu != new_gruu:
+                account.presence_state = self.build_pidf(account)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
