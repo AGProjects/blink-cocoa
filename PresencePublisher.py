@@ -339,10 +339,8 @@ class PresencePublisher(object):
         return pidf_doc
             
     def publish(self, state=None):
-        for account in AccountManager().iter_accounts():
-            if account is not BonjourAccount():
-                presence_state = self.build_pidf(account, state)
-                account.presence_state = presence_state
+        for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
+            account.presence_state = self.build_pidf(account, state)
 
     def set_offline_status(self, note=None):
         if note is not None:
