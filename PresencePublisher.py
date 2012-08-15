@@ -15,6 +15,7 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.account.xcap import OfflineStatus
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import pidf, rpid, cipid, caps
+from twisted.internet import reactor
 from zope.interface import implements
 from util import *
 
@@ -130,6 +131,7 @@ class PresencePublisher(object):
     originalPresenceActivity = None
     icon = None
     offline_note = ''
+    wakeup_timer = None
 
     def __init__(self, owner):
         self.owner = owner
@@ -184,7 +186,12 @@ class PresencePublisher(object):
         self.publish()
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
-        self.publish()
+        if self.wakeup_timer is None:
+            @run_in_gui_thread
+            def wakeup_action():
+                self.publish()
+                self.wakeup_timer = None
+            self.wakeup_timer = reactor.callLater(5, wakeup_action) # wait for system to stabilize
 
     def _NH_SystemWillSleep(self, notification):
         self.unpublish()
