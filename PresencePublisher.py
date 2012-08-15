@@ -23,7 +23,8 @@ objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEven
 
 on_the_phone_activity = {'title': 'Busy', 'note': 'I am on the phone'}
 
-PresenceActivityList = (
+PresenceStatusList = [
+                      (  
                        {
                        'title':           u"Available",
                        'type':            'menu_item',
@@ -32,11 +33,11 @@ PresenceActivityList = (
                                            'title':           u"Available",
                                            'basic_status':    'open',
                                            'extended_status': 'available',
-                                           'rpid_activity':   'available', 
-                                           'image':           'status-user-available-icon', 
+                                           'image':           'status-user-available-icon',
                                            'note':            ''
-                                           }
-                       },
+                       }
+                       }),
+                      (     
                        {
                        'title':           u"Away",
                        'type':            'menu_item',
@@ -45,51 +46,70 @@ PresenceActivityList = (
                                            'title':           u"Away",
                                            'basic_status':    'open',
                                            'extended_status': 'away',
-                                           'rpid_activity':   'away', 
                                            'image':           'status-user-away-icon',
                                            'note':            ''
-                                           }
-                       },
+                       }
+                       }),
+                      (   
                        {
-                       'title':           u"Busy", 
+                       'title':           u"Don't Disturb", 
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
                                            'title':           u"Busy",
                                            'basic_status':    'open',
-                                           'extended_status': 'busy',          
-                                           'rpid_activity':   'busy', 
-                                           'image':           'status-user-busy-icon', 
+                                           'extended_status': 'busy',
+                                           'image':           'status-user-busy-icon',
                                            'note':            ''
-                                           }
-                       },
+                       }
+                       }),
+                      (       
                        {
                        'title':            u"Invisible",
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
                                            'title':            u"Invisible",
-                                           'basic_status':     'closed', 
+                                           'basic_status':     'closed',
                                            'extended_status':  'offline',
-                                           'rpid_activity':    'offline' , 
-                                           'image':            None, 
+                                           'image':            None,
                                            'note':             ''
-                                           }
-                       },      
+                       }
+                       }),
+                      (       
                        {
                        'type':             'delimiter'
-                       },
+                       }),
+                      (       
                        {'title':            u"Set Offline Status...",      
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'represented_object': None
-                       },
+                       }),
+                      (       
                        {
                        'title':            u"Empty",
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'indentation':      2,
                        'represented_object': None
+                       }),
+                      (       
+                       {
+                       'type':             'delimiter'
+                       }),
+                      (  
+                       {
+                       'title':           u"On the Phone",
+                       'type':            'menu_item',
+                       'action':          'presenceActivityChanged:',
+                       'represented_object': {
+                                           'title':           u"On the Phone",
+                                           'basic_status':    'open',   
+                                           'extended_status': 'busy',
+                                           'rpid_activity':   'on-the-phone', 
+                                           'image':           'status-user-busy-icon',
+                                           'note':            'I am engaged in a phone call'
                        }
                       )
 
@@ -177,14 +197,14 @@ class PresencePublisher(object):
                     if account.presence.enabled:
                         pidf = self.build_pidf(account)
                         account.presence_state = pidf
-                        
+
         if notification.data.modified.has_key("xcap.enabled") or notification.data.modified.has_key("xcap.xcap_root"):
             account = notification.sender
             if account.xcap.enabled:
                 pidf = self.build_offline_pidf(account, self.offline_note)
                 offline_status = OfflineStatus(pidf) if pidf is not None else None
                 account.xcap_manager.set_offline_status(offline_status)
-                
+
                 if self.icon:
                     icon = Icon(self.icon['data'], self.icon['mime_type'])
                     account.xcap_manager.set_status_icon(icon)
@@ -237,7 +257,7 @@ class PresencePublisher(object):
                     if not self.idle_extended_mode:
                         self.idle_extended_mode = True
                         must_publish = True
-                        
+
         else:
             if self.idle_mode:
                 self.user_input = {'state': 'active', 'last_input': None}
@@ -269,7 +289,6 @@ class PresencePublisher(object):
                 return None
             status = pidf.Status(state['basic_status'])
             status.extended = state['extended_status']
-            person.activities.add(state['rpid_activity'])
         else:
             selected_item = self.owner.presenceActivityPopUp.selectedItem()
             if selected_item is None:
@@ -284,7 +303,6 @@ class PresencePublisher(object):
                 status.extended = 'extended-away'
             else:
                 status.extended = activity_object['extended_status']
-            person.activities.add(activity_object['rpid_activity'])
 
         person.timestamp = pidf.PersonTimestamp(timestamp)
         if account.display_name is not None:
@@ -320,7 +338,7 @@ class PresencePublisher(object):
         device.notes.add(rpid.Note(unicode(self.hostname)))
         pidf_doc.add(device)
         return pidf_doc
-            
+
     def build_offline_pidf(self, account, note):
         if not note:
             return None
@@ -331,7 +349,7 @@ class PresencePublisher(object):
         person.notes.add(rpid.Note(unicode(note)))
         pidf_doc.add(person)
         return pidf_doc
-            
+
     def publish(self, state=None):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = self.build_pidf(account, state)
