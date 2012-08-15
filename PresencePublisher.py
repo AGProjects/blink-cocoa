@@ -167,8 +167,7 @@ class PresencePublisher(object):
         self.publish()
 
     def _NH_SystemWillSleep(self, notification):
-        presence_state = {'basic_status': 'closed', 'extended_status': 'away', 'rpid_activity': 'offline'}
-        self.publish(presence_state)
+        self.unpublish()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if notification.data.modified.has_key("display_name"):
@@ -336,6 +335,10 @@ class PresencePublisher(object):
     def publish(self, state=None):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = self.build_pidf(account, state)
+
+    def unpublish(self):
+        for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
+            account.presence_state = None
 
     def set_offline_status(self, note=None):
         if note is not None:
