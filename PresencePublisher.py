@@ -125,7 +125,9 @@ class PresencePublisher(object):
     device_id = None
     user_input = {'state': 'active', 'last_input': None}
     idle_threshold = 600
+    extended_idle_threshold = 3600
     idle_mode = False
+    idle_extended_mode = False
     last_input = datetime.now()
     last_time_offset = rpid.TimeOffset()
     gruu_addresses = {}
@@ -241,9 +243,14 @@ class PresencePublisher(object):
                     i = self.owner.presenceActivityPopUp.indexOfItemWithTitle_('Away')
                     self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
                     self.originalPresenceStatus = activity_object
-
                 self.idle_mode = True
                 must_publish = True
+            else:
+                if last_idle_counter > self.extended_idle_threshold:
+                    if not self.idle_extended_mode:
+                        self.idle_extended_mode = True
+                        must_publish = True
+                        
         else:
             if self.idle_mode:
                 self.user_input = {'state': 'active', 'last_input': None}
@@ -254,6 +261,7 @@ class PresencePublisher(object):
                         self.originalPresenceStatus = None
 
                 self.idle_mode = False
+                self.idle_extended_mode = False
                 must_publish = True
 
         if must_publish:
@@ -282,7 +290,10 @@ class PresencePublisher(object):
             if activity_object['basic_status'] == 'closed':
                 return None
             status = pidf.Status(activity_object['basic_status'])
-            status.extended = activity_object['extended_status']
+            if self.idle_extended_mode:
+                status.extended = 'extended-away'
+            else:
+                status.extended = activity_object['extended_status']
             person.activities.add(activity_object['rpid_activity'])
 
         person.timestamp = pidf.PersonTimestamp(timestamp)
