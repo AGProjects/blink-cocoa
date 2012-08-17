@@ -325,7 +325,7 @@ class ContactWindowController(NSWindowController):
             for item in self.presenceMenu.itemArray():
                 item.setState_(NSOnState if item.title() == status else NSOffState)
         else:
-            item = self.presenceActivityPopUp.selectItem()
+            item = self.presenceActivityPopUp.selectedItem()
             NSUserDefaults.standardUserDefaults().setValue_forKey_(item.title(), "PresenceStatus")
 
         path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
