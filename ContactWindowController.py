@@ -215,7 +215,6 @@ class ContactWindowController(NSWindowController):
     ldap_found_contacts = []
     local_found_contacts = []
     sessionControllersManager = None
-    presence_notes = {}
     presence_notes_history = deque(maxlen=10)
     first_run = False
     presencePublisher = None
@@ -365,12 +364,6 @@ class ContactWindowController(NSWindowController):
         self.setSpeechRecognition()
         self.chat_journal_replicator = ChatHistoryReplicator()
         SessionHistoryReplicator()
-
-        try:
-            with open(ApplicationData.get('presence_notes.pickle'), 'r') as f:
-                self.presence_notes = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
-            pass
 
         try:
             with open(ApplicationData.get('presence_notes_history.pickle'), 'r') as f:
@@ -2113,12 +2106,6 @@ class ContactWindowController(NSWindowController):
         if not selected_presence_activity:
             return
 
-        storage_path = ApplicationData.get('presence_notes.pickle')
-        try:
-            cPickle.dump(self.presence_notes, open(storage_path, "w+"))
-        except (cPickle.PickleError, IOError):
-            pass
-
         if selected_presence_activity['basic_status'] != 'closed':
             history_object = dict(selected_presence_activity)
             history_object['note'] = presence_note
@@ -2156,10 +2143,7 @@ class ContactWindowController(NSWindowController):
 
         # set the note coresponding to this activity
         selected_presence_activity = item.representedObject()
-        try:
-            presence_note = self.presence_notes[selected_presence_activity['name']]
-        except KeyError:
-            presence_note = selected_presence_activity['note']
+        presence_note = selected_presence_activity['note']
 
         self.presenceNoteText.setStringValue_(presence_note or '')
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
