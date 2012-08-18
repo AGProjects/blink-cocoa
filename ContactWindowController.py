@@ -133,7 +133,7 @@ class ContactWindowController(NSWindowController):
 
     authFailPopupShown = False
 
-    originalPresenceStatus = None
+    presenceActivityBeforeOnThePhone = None
     disbandingConference = False
 
     contactsScrollView = objc.IBOutlet()
@@ -1022,15 +1022,15 @@ class ContactWindowController(NSWindowController):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
 
-        activity_object = self.presenceActivityPopUp.selectedItem().representedObject()
-        if activity_object['title'] == on_the_phone_title:
-            if not hasAudio and self.originalPresenceStatus:
-                i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
+        presence_activity_object = self.presenceActivityPopUp.selectedItem().representedObject()
+        if presence_activity_object['title'] == on_the_phone_title:
+            if not hasAudio and self.presenceActivityBeforeOnThePhone:
+                i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceActivityBeforeOnThePhone)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
                 menu = self.presenceActivityPopUp.menu()
-                item = menu.itemWithTitle_(self.originalPresenceStatus['title'])
+                item = menu.itemWithTitle_(self.presenceActivityBeforeOnThePhone['title'])
                 self.presenceActivityChanged_(item)
-                self.originalPresenceStatus = None
+                self.presenceActivityBeforeOnThePhone = None
         else:
             if hasAudio:
                 i = self.presenceActivityPopUp.indexOfItemWithTitle_(on_the_phone_title)
@@ -1038,7 +1038,7 @@ class ContactWindowController(NSWindowController):
                 menu = self.presenceActivityPopUp.menu()
                 item = menu.itemWithTitle_(on_the_phone_title)
                 self.presenceActivityChanged_(item)
-                self.originalPresenceStatus = activity_object
+                self.presenceActivityBeforeOnThePhone = presence_activity_object
 
     def updateActionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
