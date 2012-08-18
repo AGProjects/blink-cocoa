@@ -1015,8 +1015,8 @@ class ContactWindowController(NSWindowController):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
 
-        presence_activity_object = self.presenceActivityPopUp.selectedItem().representedObject()
-        if presence_activity_object['title'] == on_the_phone_title:
+        current_presence_activity = self.presenceActivityPopUp.selectedItem().representedObject()
+        if current_presence_activity['title'] == on_the_phone_title:
             if not hasAudio and self.presenceActivityBeforeOnThePhone:
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceActivityBeforeOnThePhone)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
@@ -1025,13 +1025,13 @@ class ContactWindowController(NSWindowController):
                 self.presenceActivityChanged_(item)
                 self.presenceActivityBeforeOnThePhone = None
         else:
-            if hasAudio:
+            if hasAudio and current_presence_activity['extended_status'] == 'available':
                 i = self.presenceActivityPopUp.indexOfItemWithTitle_(on_the_phone_title)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
                 menu = self.presenceActivityPopUp.menu()
                 item = menu.itemWithTitle_(on_the_phone_title)
                 self.presenceActivityChanged_(item)
-                self.presenceActivityBeforeOnThePhone = presence_activity_object
+                self.presenceActivityBeforeOnThePhone = current_presence_activity
 
     def updateActionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
