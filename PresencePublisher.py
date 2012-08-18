@@ -54,16 +54,16 @@ PresenceStatusList = [
                        }),
                       (   
                        {
-                       'title':           u"Don't Disturb", 
+                       'title':           u"Busy", 
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':           u"Don't Disturb",
+                                           'title':           u"Busy",
                                            'basic_status':    'open',
                                            'extended_status': 'busy',          
                                            'rpid_activity':   'busy', 
                                            'image':           'status-user-busy-icon', 
-                                           'note':            'Do not disturb me now'
+                                           'note':            'I am a bit busy now'
                        }
                        }),
                       (       
