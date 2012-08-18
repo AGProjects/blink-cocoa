@@ -2070,6 +2070,8 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def updatePresenceFromHistory_(self, sender):
         item = sender.representedObject()
+        history_object = item
+
         presence_note = item['note']
         self.presenceNoteText.setStringValue_(presence_note)
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
@@ -2083,6 +2085,18 @@ class ContactWindowController(NSWindowController):
         item = menu.itemWithTitle_(value)
         self.presenceActivityPopUp.selectItem_(item)
         NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceStatus")
+
+        try:
+            self.presence_notes_history.remove(history_object)
+        except ValueError:
+            pass
+        self.presence_notes_history.append(history_object)
+        storage_path = ApplicationData.get('presence_notes_history.pickle')
+        try:
+            cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
+
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
@@ -2106,19 +2120,19 @@ class ContactWindowController(NSWindowController):
             pass
 
         if selected_presence_activity['basic_status'] != 'closed':
+            history_object = dict(selected_presence_activity)
+            history_object['note'] = presence_note
+
             try:
-                entry = (entry for entry in self.presence_notes_history if entry['note'] == presence_note and entry['extended_status'] == selected_presence_activity['extended_status']).next()
-            except KeyError:
+                self.presence_notes_history.remove(history_object)
+            except ValueError:
                 pass
-            except StopIteration:
-                history_object = dict(selected_presence_activity)
-                history_object['note'] = presence_note
-                self.presence_notes_history.append(history_object)
-                storage_path = ApplicationData.get('presence_notes_history.pickle')
-                try:
-                    cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
-                except (cPickle.PickleError, IOError):
-                    pass
+            self.presence_notes_history.append(history_object)
+            storage_path = ApplicationData.get('presence_notes_history.pickle')
+            try:
+                cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+            except (cPickle.PickleError, IOError):
+                pass
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
@@ -2150,17 +2164,20 @@ class ContactWindowController(NSWindowController):
         self.presenceNoteText.setStringValue_(presence_note or '')
         NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
 
+        history_object = item.representedObject()
+        history_object['note'] = presence_note
+        
         try:
-            entry = (entry for entry in self.presence_notes_history if entry['note'] == presence_note and entry['extended_status'] == selected_presence_activity['extended_status']).next()
-        except StopIteration:
-            history_object = item.representedObject()
-            history_object['note'] = presence_note
-            self.presence_notes_history.append(history_object)
-            storage_path = ApplicationData.get('presence_notes_history.pickle')
-            try:
-                cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
-            except (cPickle.PickleError, IOError):
-                pass
+            self.presence_notes_history.remove(history_object)
+        except ValueError:
+            pass
+        
+        self.presence_notes_history.append(history_object)
+        storage_path = ApplicationData.get('presence_notes_history.pickle')
+        try:
+            cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
 
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
