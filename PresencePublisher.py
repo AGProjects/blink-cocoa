@@ -241,7 +241,11 @@ class PresencePublisher(object):
         if self.previous_idle_counter > last_idle_counter:
             self.last_input = datetime.now()
 
-        activity_object = self.owner.presenceActivityPopUp.selectedItem().representedObject()
+        selected_item = self.owner.presenceActivityPopUp.selectedItem()
+        if selected_item is None:
+            return
+
+        activity_object = selected_item.representedObject()
         if activity_object is None:
             return
 
@@ -298,7 +302,10 @@ class PresencePublisher(object):
             status.extended = state['extended_status']
             person.activities.add(state['rpid_activity'])
         else:
-            activity_object = self.owner.presenceActivityPopUp.selectedItem().representedObject()
+            selected_item = self.owner.presenceActivityPopUp.selectedItem()
+            if selected_item is None:
+                return pidf_doc
+            activity_object = selected_item.representedObject()
             if activity_object is None:
                 return pidf_doc
             if activity_object['basic_status'] == 'closed':

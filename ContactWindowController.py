@@ -1014,8 +1014,11 @@ class ContactWindowController(NSWindowController):
     def updatePresenceStatus(self):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
-
-        current_presence_activity = self.presenceActivityPopUp.selectedItem().representedObject()
+        selected_item = self.presenceActivityPopUp.selectedItem()
+        if selected_item is None:
+            return
+        
+        current_presence_activity = selected_item.representedObject()
         if current_presence_activity['title'] == on_the_phone_title:
             if not hasAudio and self.presenceActivityBeforeOnThePhone:
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceActivityBeforeOnThePhone)
@@ -2098,7 +2101,7 @@ class ContactWindowController(NSWindowController):
         NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
         item = self.presenceActivityPopUp.selectedItem()
-        if not item:
+        if item is None:
             return
 
         selected_presence_activity = item.representedObject()
