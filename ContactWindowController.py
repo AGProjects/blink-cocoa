@@ -1049,15 +1049,16 @@ class ContactWindowController(NSWindowController):
         contacts = self.getSelectedContacts()
         if account is not None:
             if tabItem == "contacts":
-                audioOk = len(contacts) > 0
-                if contacts and account is BonjourAccount() and not is_sip_aor_format(contacts[0].uri):
-                    chatOk = False
-                else:
-                    chatOk = audioOk
-                if contacts and not is_sip_aor_format(contacts[0].uri):
-                    desktopOk = False
-                else:
-                    desktopOk = audioOk
+                if len(contacts) and not is_anonymous(contacts[0].uri):
+                    audioOk = len(contacts) > 0
+                    if contacts and account is BonjourAccount() and not is_sip_aor_format(contacts[0].uri):
+                        chatOk = False
+                    else:
+                        chatOk = audioOk
+                    if contacts and not is_sip_aor_format(contacts[0].uri):
+                        desktopOk = False
+                    else:
+                        desktopOk = audioOk
             elif tabItem == "search":
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = audioOk
@@ -3072,7 +3073,7 @@ class ContactWindowController(NSWindowController):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
             else:
-                if not isinstance(item, BlinkBlockedPresenceContact):
+                if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uris[0].uri):
                     # Contact has a single URI
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
@@ -3143,7 +3144,7 @@ class ContactWindowController(NSWindowController):
                     if name_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
-            elif isinstance(item, HistoryBlinkContact):
+            elif isinstance(item, HistoryBlinkContact) and not is_anonymous(item.uris[0].uri):
                 if NSApp.delegate().applicationName != 'Blink Lite':
                     if item not in self.model.bonjour_group.contacts:
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

@@ -2,7 +2,7 @@
 #
 
 __all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'run_in_gui_thread',
-           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
+           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'AccountInfo', 'DictDiffer']
 
@@ -234,6 +234,21 @@ def is_sip_aor_format(uri):
         else:
             return sip_uri.user is not None and sip_uri.host is not None
 
+def is_anonymous(uri):
+    """
+        Check if the given URI is an anonymous uri
+        """
+    if isinstance(uri, (SIPURI, FrozenSIPURI)):
+        return uri.user == 'anonymous' and uri.host == 'anonymous.invalid'
+    else:
+        if not (uri.startswith('sip:') or uri.startswith('sips:')):
+            uri = "sip:%s" % uri
+        try:
+            sip_uri = SIPURI.parse(str(uri))
+        except:
+            return False
+        else:
+            return sip_uri.user == 'anonymous' and sip_uri.host == 'anonymous.invalid'
 
 def format_size(s, minsize=0, bits=False):
     if bits:
