@@ -239,7 +239,7 @@ def is_anonymous(uri):
         Check if the given URI is an anonymous uri
         """
     if isinstance(uri, (SIPURI, FrozenSIPURI)):
-        return uri.user == 'anonymous' and uri.host == 'anonymous.invalid'
+        return (uri.user is None or uri.user.lower() == 'anonymous') and (uri.host is None or uri.host.lower() == 'anonymous.invalid')
     else:
         if not (uri.startswith('sip:') or uri.startswith('sips:')):
             uri = "sip:%s" % uri
@@ -248,7 +248,7 @@ def is_anonymous(uri):
         except:
             return False
         else:
-            return sip_uri.user == 'anonymous' and sip_uri.host == 'anonymous.invalid'
+            return (sip_uri.user is None or sip_uri.user.lower() == 'anonymous') and (sip_uri.host is None or sip_uri.host.lower() == 'anonymous.invalid')
 
 def format_size(s, minsize=0, bits=False):
     if bits:

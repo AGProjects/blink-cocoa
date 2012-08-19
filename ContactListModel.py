@@ -857,7 +857,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                     icon = contact.avatar.icon
                 else:
                     icon = None
-                name = 'Anonymous' if target_uri == 'anonymous@anonymous.invalid' else name
+                name = 'Anonymous' if is_anonymous(target_uri) else name
                 blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=name)
                 blink_contact.detail = u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time))
                 contacts.append(blink_contact)
