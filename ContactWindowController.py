@@ -3109,8 +3109,8 @@ class ContactWindowController(NSWindowController):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
             else:
-                if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uris[0].uri):
-                    # Contact has a single URI
+                if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
+                    # Contact has a single URI                    
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_full_sip_uri:
