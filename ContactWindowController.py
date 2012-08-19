@@ -2190,13 +2190,13 @@ class ContactWindowController(NSWindowController):
             lastItem.setTarget_(self)
             menu.addItem_(lastItem)
         
-        if self.presence_notes_history:
-            menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "deletePresenceHistory:", "")
-            title = NSAttributedString.alloc().initWithString_attributes_('Clear History', attributes)
-            lastItem.setAttributedTitle_(title)
-            lastItem.setTarget_(self)
-            menu.addItem_(lastItem)
+            #if self.presence_notes_history:
+            #menu.addItem_(NSMenuItem.separatorItem())
+            #lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "deletePresenceHistory:", "")
+            #title = NSAttributedString.alloc().initWithString_attributes_('Clear History', attributes)
+            #lastItem.setAttributedTitle_(title)
+            #lastItem.setTarget_(self)
+            #menu.addItem_(lastItem)
 
     @objc.IBAction
     def showHelp_(self, sender):
