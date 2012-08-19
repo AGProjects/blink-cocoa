@@ -64,7 +64,7 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
-dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(2, 2, 8, 8))
+dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(1, 1, 11, 11))
 dots = {}
 for i, color in [('busy', NSColor.redColor()), ('away', NSColor.redColor()), ('extended-away', NSColor.redColor()), ('offline', NSColor.grayColor()), ('available', NSColor.greenColor())]:
     dot = NSImage.alloc().initWithSize_(NSMakeSize(12, 12))
