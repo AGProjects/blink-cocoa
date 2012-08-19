@@ -332,6 +332,8 @@ class SessionControllersManager(object):
         except ValueError:
             pass
 
+        NSApp.delegate().contactsWindowController.toggleOnThePhonePresenceActivity()
+
     def send_files_to_contact(self, account, contact_uri, filenames):
         if not self.isMediaTypeSupported('file-transfer'):
             return
@@ -1055,7 +1057,6 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
         self.destroyInfoPanel()
-        NSApp.delegate().contactsWindowController.updatePresenceStatus()
         call_id = None
         from_tag = None
         to_tag = None

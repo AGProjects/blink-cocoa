@@ -21,10 +21,9 @@ from util import *
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
-on_the_phone_title = 'On the Phone'
+on_the_phone_activity = {'title': 'Busy', 'note': 'I am on the phone'}
 
-PresenceStatusList = [
-                      (  
+PresenceActivityList = (
                        {
                        'title':           u"Available",
                        'type':            'menu_item',
@@ -36,9 +35,8 @@ PresenceStatusList = [
                                            'rpid_activity':   'available', 
                                            'image':           'status-user-available-icon', 
                                            'note':            'I am available now'
-                       }
-                       }),
-                      (     
+                                           }
+                       },
                        {
                        'title':           u"Away",
                        'type':            'menu_item',
@@ -50,9 +48,8 @@ PresenceStatusList = [
                                            'rpid_activity':   'away', 
                                            'image':           'status-user-away-icon',
                                            'note':            'I am away at this moment'
-                       }
-                       }),
-                      (   
+                                           }
+                       },
                        {
                        'title':           u"Busy", 
                        'type':             'menu_item',
@@ -64,9 +61,8 @@ PresenceStatusList = [
                                            'rpid_activity':   'busy', 
                                            'image':           'status-user-busy-icon', 
                                            'note':            'I am a bit busy now'
-                       }
-                       }),
-                      (       
+                                           }
+                       },
                        {
                        'title':            u"Invisible",
                        'type':             'menu_item',
@@ -78,45 +74,24 @@ PresenceStatusList = [
                                            'rpid_activity':    'offline' , 
                                            'image':            None, 
                                            'note':             ''
-                       }
-                       }),
-                      (       
+                                           }
+                       },      
                        {
                        'type':             'delimiter'
-                       }),
-                      (       
+                       },
                        {'title':            u"Set Offline Status...",      
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'represented_object': None
-                       }),
-                      (       
+                       },
                        {
                        'title':            u"Empty",
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'indentation':      2,
                        'represented_object': None
-                       }),
-                      (       
-                       {
-                       'type':             'delimiter'
-                       }),
-                      (  
-                       {
-                       'title':           u"On the Phone",
-                       'type':            'menu_item',
-                       'action':          'presenceActivityChanged:',
-                       'represented_object': {
-                                           'title':           u"On the Phone",
-                                           'basic_status':    'open',   
-                                           'extended_status': 'busy',
-                                           'rpid_activity':   'on-the-phone', 
-                                           'image':           'status-user-busy-icon',
-                                           'note':            'I am engaged in a phone call'
                        }
-                       })
-                      ]
+                      )
 
 
 class PresencePublisher(object):
@@ -132,7 +107,7 @@ class PresencePublisher(object):
     last_time_offset = rpid.TimeOffset()
     gruu_addresses = {}
     hostname = socket.gethostname().split(".")[0]
-    originalPresenceStatus = None
+    originalPresenceActivity = None
     icon = None
     offline_note = ''
 
@@ -260,7 +235,7 @@ class PresencePublisher(object):
                 if activity_object['title'] != "Away":
                     i = self.owner.presenceActivityPopUp.indexOfItemWithTitle_('Away')
                     self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
-                    self.originalPresenceStatus = activity_object
+                    self.originalPresenceActivity = activity_object
                 self.idle_mode = True
                 must_publish = True
             else:
@@ -273,10 +248,10 @@ class PresencePublisher(object):
             if self.idle_mode:
                 self.user_input = {'state': 'active', 'last_input': None}
                 if activity_object['title'] == "Away":
-                    if self.originalPresenceStatus:
-                        i = self.owner.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceStatus)
+                    if self.originalPresenceActivity:
+                        i = self.owner.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceActivity)
                         self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
-                        self.originalPresenceStatus = None
+                        self.originalPresenceActivity = None
 
                 self.idle_mode = False
                 self.idle_extended_mode = False
