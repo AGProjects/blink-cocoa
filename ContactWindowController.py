@@ -215,7 +215,7 @@ class ContactWindowController(NSWindowController):
     ldap_found_contacts = []
     local_found_contacts = []
     sessionControllersManager = None
-    presence_notes_history = deque(maxlen=10)
+    presence_notes_history = deque(maxlen=6)
     first_run = False
     presencePublisher = None
     white = None
