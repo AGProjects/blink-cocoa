@@ -1103,23 +1103,6 @@ class ContactWindowController(NSWindowController):
         self.contactOutline.reloadData()
 
     @objc.IBAction
-    def definePresenceStatus_(self, sender):
-        status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
-        if status:
-            self.presenceActivityPopUp.selectItemWithTitle_(status)
-            for item in self.presenceMenu.itemArray():
-                item.setState_(NSOnState if item.title() == status else NSOffState)
-        controller = NewPresenceStatusController()
-        new_status = controller.runModal()
-        if new_status:
-            self.custom_presence_status[new_status['label']] = new_status['object']
-            storage_path = ApplicationData.get('custom_presence_status.pickle')
-            try:
-                cPickle.dump(self.custom_presence_status, open(storage_path, "w+"))
-            except (cPickle.PickleError, IOError):
-                pass
-
-    @objc.IBAction
     def setPresenceOfflineNote_(self, sender):
         status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceStatus")
         if status:
