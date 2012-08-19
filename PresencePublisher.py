@@ -34,7 +34,7 @@ PresenceActivityList = (
                                            'extended_status': 'available',
                                            'rpid_activity':   'available', 
                                            'image':           'status-user-available-icon', 
-                                           'note':            'I am available now'
+                                           'note':            ''
                                            }
                        },
                        {
@@ -47,7 +47,7 @@ PresenceActivityList = (
                                            'extended_status': 'away',
                                            'rpid_activity':   'away', 
                                            'image':           'status-user-away-icon',
-                                           'note':            'I am away at this moment'
+                                           'note':            ''
                                            }
                        },
                        {
@@ -60,7 +60,7 @@ PresenceActivityList = (
                                            'extended_status': 'busy',          
                                            'rpid_activity':   'busy', 
                                            'image':           'status-user-busy-icon', 
-                                           'note':            'I am a bit busy now'
+                                           'note':            ''
                                            }
                        },
                        {
