@@ -300,7 +300,7 @@ class ContactWindowController(NSWindowController):
         self.sessionControllersManager = SessionControllersManager()
 
         self.refreshContactsList()
-        self.updateActionButtons()
+        self.updateStartSessionButtons()
 
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
@@ -1036,7 +1036,7 @@ class ContactWindowController(NSWindowController):
                 self.presenceActivityChanged_(item)
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
 
-    def updateActionButtons(self):
+    def updateStartSessionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
         audioOk = False
         chatOk = False
@@ -1163,7 +1163,7 @@ class ContactWindowController(NSWindowController):
             self.refreshAccountList()
 
     def contactSelectionChanged_(self, notification):
-        self.updateActionButtons()
+        self.updateStartSessionButtons()
         readonly = any((getattr(c, "editable", None) is False) for c in self.getSelectedContacts(True))
 
         self.contactsMenu.itemWithTag_(31).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=False)) > 0)
@@ -1185,7 +1185,7 @@ class ContactWindowController(NSWindowController):
         self.searchBox.setStringValue_("")
         self.addContactToConferenceDialPad.setEnabled_(False)
         self.addContactButtonDialPad.setEnabled_(False)
-        self.updateActionButtons()
+        self.updateStartSessionButtons()
         if self.ldap_search:
             self.ldap_search = None
             NotificationCenter().discard_observer(self, name="LDAPDirectorySearchFoundContact")
@@ -1450,7 +1450,7 @@ class ContactWindowController(NSWindowController):
 
     def searchContacts(self):
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
-            self.updateActionButtons()
+            self.updateStartSessionButtons()
             return
 
         text = self.searchBox.stringValue().strip()
@@ -1459,7 +1459,7 @@ class ContactWindowController(NSWindowController):
         else:
             self.contactOutline.deselectAll_(None)
             self.mainTabView.selectTabViewItemWithIdentifier_("search")
-        self.updateActionButtons()
+        self.updateStartSessionButtons()
 
         if self.mainTabView.selectedTabViewItem().identifier() == "search":
             self.local_found_contacts = []
@@ -2922,7 +2922,7 @@ class ContactWindowController(NSWindowController):
                         self.startSessionWithSIPURI(target)
                         self.resetWidgets()
 
-                    self.updateActionButtons()
+                    self.updateStartSessionButtons()
 
     def play_dtmf(self, key):
         self.playSilence()
