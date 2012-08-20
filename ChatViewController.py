@@ -17,10 +17,9 @@ import re
 import time
 import urllib
 
-from dateutil.tz import tzlocal
-
 from application.notification import NotificationCenter, NotificationData
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.util import ISOTimestamp
 
 from SmileyManager import SmileyManager
 from util import escape_html, format_identity_to_string
@@ -284,8 +283,8 @@ class ChatViewController(NSObject):
 
     def showSystemMessage(self, text, timestamp=None, is_error=False):
         if timestamp is None:
-            timestamp = datetime.datetime.now(tzlocal())
-        if type(timestamp) is datetime.datetime:
+            timestamp = ISOTimestamp.now()
+        if isinstance(timestamp, datetime.datetime):
             if timestamp.date() != datetime.date.today():
                 timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
             else:

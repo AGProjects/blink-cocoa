@@ -4,18 +4,15 @@
 from Foundation import *
 from AppKit import *
 
-import datetime
-
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
-from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
 from sipsimple.payloads.iscomposing import IsComposingMessage
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 
 import SIPManager
 
@@ -318,9 +315,9 @@ class SMSWindowManagerClass(NSObject):
                 replication_state = 'failed'
             replicated_timestamp = data.headers.get('X-Replication-Timestamp', Null).body
             try:
-                replication_timestamp = Timestamp.parse(replicated_timestamp)
-            except (TypeError, ValueError):
-                replication_timestamp = Timestamp(datetime.datetime.now(tzlocal()))
+                replication_timestamp = ISOTimestamp(replicated_timestamp)
+            except Exception:
+                replication_timestamp = ISOTimestamp.now()
 
         viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)

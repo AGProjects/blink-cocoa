@@ -6,7 +6,6 @@ from AppKit import *
 import cjson
 import cPickle
 from datetime import datetime
-from dateutil.tz import tzlocal
 import os
 import time
 import urlparse
@@ -36,7 +35,7 @@ from util import *
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 from zope.interface import implements
 
 
@@ -920,7 +919,7 @@ class SessionHistoryReplicator(object):
                             status = 'delivered'
                             cpim_from = remote_uri
                             cpim_to = local_uri
-                            timestamp = str(Timestamp(datetime.now(tzlocal())))
+                            timestamp = str(ISOTimestamp.now())
                             if success == 'missed':
                                 message = '<h3>Missed Incoming Audio Call</h3>'
                                 #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
@@ -1006,7 +1005,7 @@ class SessionHistoryReplicator(object):
                             status = 'delivered'
                             cpim_from = remote_uri
                             cpim_to = local_uri
-                            timestamp = str(Timestamp(datetime.now(tzlocal())))
+                            timestamp = str(ISOTimestamp.now())
                             media_type = 'audio'
                             if success == 'failed':
                                 message = '<h3>Failed Outgoing Audio Call</h3>'

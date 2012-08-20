@@ -16,7 +16,6 @@ import uuid
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.system import makedirs
 from application.python import Null
-from dateutil.tz import tzlocal
 from itertools import chain
 from zope.interface import implements
 
@@ -26,7 +25,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
 from sipsimple.streams.applications.chat import CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 
 from util import *
 
@@ -294,7 +293,7 @@ class ChatController(MediaStream):
     def sendOwnIcon(self):
         if self.stream and not self.sessionController.session.remote_focus:
             base64icon = Avatar(self.chatWindowController.own_icon).to_base64()
-            self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+            self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=ISOTimestamp.now())
 
     def setNickname(self, nickname):
         if self.stream and self.stream.nickname_allowed:
@@ -602,7 +601,7 @@ class ChatController(MediaStream):
                 sender_uri = sipuri_components_from_string(message.cpim_from)[0]
                 icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
 
-            timestamp=Timestamp.parse(message.cpim_timestamp)
+            timestamp=ISOTimestamp(message.cpim_timestamp)
             is_html = message.content_type != 'text'
             private = bool(int(message.private))
 
@@ -1108,7 +1107,7 @@ class ChatController(MediaStream):
         if flag:
             refresh = data.refresh if data.refresh is not None else 120
 
-            if data.last_active is not None and (data.last_active - datetime.datetime.now(tzlocal()) > datetime.timedelta(seconds=refresh)):
+            if data.last_active is not None and (data.last_active - ISOTimestamp.now() > datetime.timedelta(seconds=refresh)):
                 # message is old, discard it
                 return
 
@@ -1158,8 +1157,7 @@ class ChatController(MediaStream):
         if self.status == STREAM_CONNECTED:
             name = format_identity_to_string(self.sessionController.session.remote_identity, format='full')
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
-            now = datetime.datetime.now(tzlocal())
-            timestamp = Timestamp(now)
+            timestamp = ISOTimestamp.now()
             if self.chatViewController:
                 self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
 
@@ -1173,7 +1171,7 @@ class ChatController(MediaStream):
                 message = "Cannot establish connection: %s" % reason
             else:
                 message = "Session Cancelled"
-            self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+            self.showSystemMessage(message, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionDidStart(self, sender, data):
@@ -1189,20 +1187,20 @@ class ChatController(MediaStream):
         if self.last_failure_reason != data.failure_reason:
             message = "Proposal failed: %s" % data.failure_reason
             self.last_failure_reason = data.failure_reason
-            self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+            self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if data.code != 487:
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
                 message = "Proposal rejected: %s" % data.reason if data.code != 200 else "Proposal rejected"
-                self.showSystemMessage(message, datetime.datetime.now(tzlocal()), True)
+                self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
-        self.showSystemMessage("Session established", datetime.datetime.now(tzlocal()))
+        self.showSystemMessage("Session established", ISOTimestamp.now())
 
         # Set nickname if available
         nickname = self.sessionController.nickname
@@ -1224,7 +1222,7 @@ class ChatController(MediaStream):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         if self.session_succeeded:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-            self.showSystemMessage(close_message, datetime.datetime.now(tzlocal()))
+            self.showSystemMessage(close_message, ISOTimestamp.now())
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.reset()
 
@@ -1233,10 +1231,10 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
         if self.session_succeeded and not self.mediastream_ended:
             if data.reason in ('Connection was closed cleanly.', 'A TLS packet with unexpected length was received.', 'Cannot send chunk because MSRPSession is DONE'):
-                self.showSystemMessage('Connection has been closed', datetime.datetime.now(tzlocal()), True)
+                self.showSystemMessage('Connection has been closed', ISOTimestamp.now(), True)
             else:
                 reason = 'Timeout' if data.reason == 'MSRPConnectTimeout' else data.reason
-                self.showSystemMessage('Connection failed: %s' % reason, datetime.datetime.now(tzlocal()), True)
+                self.showSystemMessage('Connection failed: %s' % reason, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_FAILED, data.reason)
 
@@ -1451,8 +1449,7 @@ class MessageHandler(NSObject):
         return True
 
     def send(self, text, recipient=None, private=False):
-        now = datetime.datetime.now(tzlocal())
-        timestamp = Timestamp(now)
+        timestamp = ISOTimestamp.now()
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
 
@@ -1480,7 +1477,7 @@ class MessageHandler(NSObject):
                     self._send(msgid)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error sending message: %s" % e)
-                    self.delegate.showSystemMessage("Error sending message",now, True)
+                    self.delegate.showSystemMessage("Error sending message", timestamp, True)
                 else:
                     self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
             else:
@@ -1490,8 +1487,7 @@ class MessageHandler(NSObject):
         return True
 
     def resend(self, msgid, text, recipient=None, private=False):
-        now = datetime.datetime.now(tzlocal())
-        timestamp = Timestamp(now)
+        timestamp = ISOTimestamp.now()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
 
@@ -1502,7 +1498,7 @@ class MessageHandler(NSObject):
                 self._send(msgid)
             except Exception, e:
                 BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.showSystemMessage("Error sending message",now, True)
+                self.delegate.showSystemMessage("Error sending message", timestamp, True)
             else:
                 self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
         else:
@@ -1759,5 +1755,5 @@ class ConferenceScreenSharingHandler(object):
                 self.log_first_frame = False
             self.may_send = False
             if self.stream:
-                self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+                self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=ISOTimestamp.now())
 

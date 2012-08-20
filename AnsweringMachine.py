@@ -8,14 +8,13 @@ import urllib
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
-from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
@@ -142,7 +141,7 @@ class AnsweringMachine(object):
         status = 'delivered'
         cpim_from = format_identity_to_string(self.session.remote_identity)
         cpim_to = format_identity_to_string(self.session.remote_identity)
-        timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+        timestamp = str(ISOTimestamp.now())
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 

@@ -6,7 +6,6 @@ from __future__ import with_statement
 from Foundation import *
 from AppKit import *
 
-
 import cjson
 import os
 import re
@@ -41,7 +40,6 @@ from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread, Command
-from sipsimple.util import Timestamp
 
 from BlinkLogger import BlinkLogger, FileLogger
 

@@ -3,7 +3,6 @@
 
 import hashlib
 import datetime
-from dateutil.tz import tzlocal
 import os
 import re
 import time
@@ -21,7 +20,7 @@ from sipsimple.session import Session
 from sipsimple.streams import FileTransferStream, FileSelector
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 from threading import Event
 from twisted.internet import reactor
 from twisted.internet.error import ConnectionLost
@@ -160,7 +159,7 @@ class FileTransfer(object):
         status = 'delivered' if self.ft_info.status == 'completed' else 'failed'
         cpim_from = self.ft_info.remote_uri
         cpim_to = self.ft_info.remote_uri
-        timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+        timestamp = str(ISOTimestamp.now())
 
         ChatHistory().add_message(self.ft_info.transfer_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 

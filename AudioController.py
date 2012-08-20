@@ -14,7 +14,6 @@ import urllib
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from collections import deque
-from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.account import BonjourAccount
@@ -24,7 +23,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import AudioStream
 from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 import AudioSession
 
 from AnsweringMachine import AnsweringMachine
@@ -984,7 +983,7 @@ class AudioController(MediaStream):
         status = 'delivered'
         cpim_from = format_identity_to_string(self.sessionController.target_uri)
         cpim_to = format_identity_to_string(self.sessionController.target_uri)
-        timestamp = str(Timestamp(datetime.datetime.now(tzlocal())))
+        timestamp = str(ISOTimestamp.now())
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
@@ -1035,7 +1034,7 @@ class AudioController(MediaStream):
         self.addRecordingToHistory(data.filename)
         growl_data = NotificationData()
         growl_data.remote_party = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact')
-        growl_data.timestamp = datetime.datetime.now(tzlocal())
+        growl_data.timestamp = ISOTimestamp.now()
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
     @run_in_gui_thread

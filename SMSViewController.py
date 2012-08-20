@@ -9,7 +9,6 @@ import hashlib
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
-from dateutil.tz import tzlocal
 from zope.interface import implements
 
 from sipsimple.account import Account, BonjourAccount
@@ -19,7 +18,7 @@ from sipsimple.lookup import DNSLookup
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 
 
 from BlinkLogger import BlinkLogger
@@ -169,7 +168,7 @@ class SMSViewController(NSObject):
     def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
-        timestamp = timestamp or Timestamp(datetime.datetime.now(tzlocal()))
+        timestamp = timestamp or ISOTimestamp.now()
 
         hash = hashlib.sha1()
         hash.update(message.encode('utf-8')+str(timestamp)+str(sender))
@@ -200,7 +199,7 @@ class SMSViewController(NSObject):
             if refresh is None:
                 refresh = 120
 
-            if last_active is not None and (last_active - datetime.datetime.now(tzlocal()) > datetime.timedelta(seconds=refresh)):
+            if last_active is not None and (last_active - ISOTimestamp.now() > datetime.timedelta(seconds=refresh)):
                 # message is old, discard it
                 return
 
@@ -288,7 +287,7 @@ class SMSViewController(NSObject):
 
     @run_in_green_thread
     def sendReplicationMessage(self, response_code, text, content_type="message/cpim", timestamp=None):
-        timestamp = timestamp or datetime.datetime.now(tzlocal())
+        timestamp = timestamp or ISOTimestamp.now()
         # Lookup routes
         if self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host,
@@ -304,7 +303,7 @@ class SMSViewController(NSObject):
             pass
         else:
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
-            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(Timestamp(datetime.datetime.now())))]
+            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(routes[0].uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
@@ -371,7 +370,7 @@ class SMSViewController(NSObject):
     def sendMessage(self, text, content_type="text/plain"):
         self.lookup_destination(self.target_uri)
 
-        timestamp = Timestamp(datetime.datetime.now(tzlocal()))
+        timestamp = ISOTimestamp.now()
         hash = hashlib.sha1()
         hash.update(text.encode("utf-8")+str(timestamp))
         msgid = hash.hexdigest()
@@ -410,12 +409,12 @@ class SMSViewController(NSObject):
 
     def chatView_becameIdle_(self, chatView, last_active):
         if self.enableIsComposing:
-            content = IsComposingMessage(state=State("idle"), refresh=Refresh(60), last_active=LastActive(last_active or datetime.now()), content_type=ContentType('text')).toxml()
+            content = IsComposingMessage(state=State("idle"), refresh=Refresh(60), last_active=LastActive(last_active or ISOTimestamp.now()), content_type=ContentType('text')).toxml()
             self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatView_becameActive_(self, chatView, last_active):
         if self.enableIsComposing:
-            content = IsComposingMessage(state=State("active"), refresh=Refresh(60), last_active=LastActive(last_active or datetime.now()), content_type=ContentType('text')).toxml()
+            content = IsComposingMessage(state=State("active"), refresh=Refresh(60), last_active=LastActive(last_active or ISOTimestamp.now()), content_type=ContentType('text')).toxml()
             self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatViewDidLoad_(self, chatView):
@@ -437,7 +436,7 @@ class SMSViewController(NSObject):
                 sender_uri = sipuri_components_from_string(message.cpim_from)[0]
                 icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
 
-            timestamp=Timestamp.parse(message.cpim_timestamp)
+            timestamp=ISOTimestamp(message.cpim_timestamp)
             is_html = False if message.content_type == 'text' else True
 
             self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)

@@ -7,7 +7,7 @@ import datetime
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from sipsimple.threading.green import run_in_green_thread
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 from util import *
 from zope.interface import implements
 
@@ -321,8 +321,8 @@ class HistoryViewer(NSWindowController):
             # TODO: How to render the icons from Address Book? Especially in sandbox mode we do not have access to other folders
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
         try:
-            timestamp=Timestamp.parse(message.cpim_timestamp)
-        except ValueError:
+            timestamp=ISOTimestamp(message.cpim_timestamp)
+        except Exception:
             pass
         else:
             is_html = False if message.content_type == 'text' else True

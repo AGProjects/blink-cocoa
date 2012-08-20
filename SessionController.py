@@ -17,7 +17,6 @@ from application.python import Null
 from application.python.types import Singleton
 
 from datetime import datetime, timedelta
-from dateutil.tz import tzlocal
 
 from resources import Resources
 from sipsimple.account import Account, AccountManager, BonjourAccount
@@ -27,7 +26,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 
 from sipsimple.threading.green import run_in_green_thread
 
@@ -444,7 +443,7 @@ class SessionControllersManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
+            timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -483,7 +482,7 @@ class SessionControllersManager(object):
         status = 'delivered'
         cpim_from = data.target_uri
         cpim_to = format_identity_to_string(account)
-        timestamp = str(Timestamp(datetime.now(tzlocal())))
+        timestamp = str(ISOTimestamp.now())
 
         self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -517,7 +516,7 @@ class SessionControllersManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
+            timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -551,7 +550,7 @@ class SessionControllersManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
+            timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -582,7 +581,7 @@ class SessionControllersManager(object):
             status = 'delivered'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
+            timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -622,7 +621,7 @@ class SessionControllersManager(object):
             media_type = 'audio'
             cpim_from = data.target_uri
             cpim_to = local_uri
-            timestamp = str(Timestamp(datetime.now(tzlocal())))
+            timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))

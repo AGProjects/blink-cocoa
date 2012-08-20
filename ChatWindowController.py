@@ -6,9 +6,6 @@ from AppKit import *
 from WebKit import *
 from Quartz import *
 
-import datetime
-from dateutil.tz import tzlocal
-
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -16,7 +13,7 @@ from itertools import chain
 from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
-from sipsimple.util import Timestamp
+from sipsimple.util import ISOTimestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
 
@@ -724,7 +721,7 @@ class ChatWindowController(NSWindowController):
                 subject = controller.runModal(session.subject)
                 if chat_handler.stream:
                     body = u'SUBJECT %s' % subject if subject else u'SUBJECT'
-                    chat_handler.stream.send_message(body, content_type='sylkserver/control', timestamp=Timestamp(datetime.datetime.now(tzlocal())))
+                    chat_handler.stream.send_message(body, content_type='sylkserver/control', timestamp=ISOTimestamp.now())
                 if subject or (not subject and session.subject):
                     session.subject = subject if subject else None
 
