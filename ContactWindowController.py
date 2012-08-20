@@ -2057,17 +2057,13 @@ class ContactWindowController(NSWindowController):
         if selected_presence_activity is None:
             return
 
-        if selected_presence_activity['basic_status'] != 'closed':
-            history_object = dict(selected_presence_activity)
-            history_object['note'] = presence_note
-            self.savePresenceActivityToHistory(history_object)
+        history_object = dict(selected_presence_activity)
+        history_object['note'] = presence_note
+        self.savePresenceActivityToHistory(history_object)
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
         value = sender.title()
-        if value == NSUserDefaults.standardUserDefaults().stringForKey_("PresenceActivity"):
-            return
-
         NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceActivity")
 
         for item in self.presenceMenu.itemArray():
@@ -2077,9 +2073,6 @@ class ContactWindowController(NSWindowController):
 
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
-        if not item:
-            return
-
         self.presenceActivityPopUp.selectItem_(item)
 
         # set the note coresponding to this activity
