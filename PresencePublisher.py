@@ -71,7 +71,6 @@ PresenceActivityList = (
                                            'title':            u"Invisible",
                                            'basic_status':     'closed',
                                            'extended_status':  'offline',
-                                           'rpid_activity':    'offline' ,
                                            'image':            None,
                                            'note':             ''
                                            }
