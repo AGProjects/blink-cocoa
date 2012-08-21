@@ -305,8 +305,6 @@ class ContactWindowController(NSWindowController):
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
-        self.white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
-
         path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
         if path:
             self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
@@ -358,9 +356,11 @@ class ContactWindowController(NSWindowController):
 
         self.loaded = True
 
-    def fillPresenceMenu(self, presenceMenu, attributes=None):
-        if not attributes:
+    def fillPresenceMenu(self, presenceMenu):
+        if presenceMenu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+        else:
+            attributes = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
 
         for item in PresenceActivityList:
             if item['type'] == 'delimiter':
@@ -595,7 +595,7 @@ class ContactWindowController(NSWindowController):
         while self.presenceMenu.numberOfItems() > 0:
             self.presenceMenu.removeItemAtIndex_(0)
         self.fillPresenceMenu(self.presenceMenu)
-        self.fillPresenceMenu(self.presenceActivityPopUp.menu(), self.white)
+        self.fillPresenceMenu(self.presenceActivityPopUp.menu())
 
         note = settings.presence_state.note
         if note:
@@ -2138,10 +2138,12 @@ class ContactWindowController(NSWindowController):
                 self.presenceNoteChanged_(None)
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
 
-    def updatePresenceActivityMenu(self, menu, attributes=None):
-        if not attributes:
+    def updatePresenceActivityMenu(self, menu):
+        if menu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-        
+        else:
+            attributes = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
+
         while menu.numberOfItems() > len(PresenceActivityList):
             menu.removeItemAtIndex_(len(PresenceActivityList))
         
@@ -3300,7 +3302,7 @@ class ContactWindowController(NSWindowController):
         elif menu == self.presenceMenu:
             self.updatePresenceActivityMenu(menu)
         elif menu == self.presencePopUpMenu:
-            self.updatePresenceActivityMenu(menu, self.white)
+            self.updatePresenceActivityMenu(menu)
         elif menu == self.callMenu:
             self.updateCallMenu()
         elif menu == self.groupMenu:
