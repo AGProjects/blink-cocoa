@@ -101,10 +101,13 @@ class PhotoView(NSImageView):
         path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
         path.fill()
 
-        frect = NSZeroRect
         if self.image():
+            NSGraphicsContext.saveGraphicsState()
+            path.addClip()
+            frect = NSZeroRect
             frect.size = self.image().size()
-            self.image().drawInRect_fromRect_operation_fraction_(NSInsetRect(rect, 3, 3), frect, NSCompositeSourceOver, 1.0)
+            self.image().drawInRect_fromRect_operation_fraction_(rect, frect, NSCompositeSourceOver, 1.0)
+            NSGraphicsContext.restoreGraphicsState()
         NSColor.blackColor().colorWithAlphaComponent_(0.5).set()
         if self.entered:
             path.fill()
