@@ -47,6 +47,7 @@ from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
 from SessionController import SessionControllersManager
 from SIPManager import SIPManager, MWIData
+from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
 from VideoMirrorWindowController import VideoMirrorWindowController
@@ -198,8 +199,6 @@ class ContactWindowController(NSWindowController):
 
     historyViewer = None
     chatWindowController = None
-
-    picker = None
 
     searchInfoAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
                     NSFont.systemFontOfSize_(NSFont.labelFontSize()), NSFontAttributeName,
@@ -3400,16 +3399,12 @@ class ContactWindowController(NSWindowController):
         settings.save()
 
     def photoClicked(self, sender):
-        import PhotoPicker
-        if self.picker:
-            return
-        self.picker = PhotoPicker.PhotoPicker()
-        path, image = self.picker.runModal()
+        picker = PhotoPicker()
+        path, image = picker.runModal()
         if image and path:
             self.photoImage.setImage_(image)
             NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
             NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
-        self.picker = None
 
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()
