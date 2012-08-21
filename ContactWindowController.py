@@ -2055,7 +2055,7 @@ class ContactWindowController(NSWindowController):
     def presenceNoteChanged_(self, sender):
         presence_note = unicode(self.presenceNoteText.stringValue())
         settings = SIPSimpleSettings()
-        settings.presence_state.note = presence_note()
+        settings.presence_state.note = presence_note
         settings.save()
 
         item = self.presenceActivityPopUp.selectedItem()
