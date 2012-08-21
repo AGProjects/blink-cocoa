@@ -182,6 +182,8 @@ class PhotoPicker(NSObject):
             p = os.path.normpath(path+"/"+f)
             if p not in knownFiles:
                 image = NSImage.alloc().initWithContentsOfFile_(p)
+                if not image:
+                    continue
                 item = NSDictionary.dictionaryWithObjectsAndKeys_(image, "picture", p, "path")
                 array.addObject_(item)
 
