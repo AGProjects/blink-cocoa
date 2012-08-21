@@ -272,6 +272,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
+        nc.add_observer(self, name="SIPApplicationWillStart")
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SIPAccountDidActivate")
         nc.add_observer(self, name="SIPAccountDidDeactivate")
@@ -760,16 +761,17 @@ class ContactWindowController(NSWindowController):
         if notification.sender.type == "audio":
             self.updateAudioButtons()
 
-    def _NH_SIPApplicationDidStart(self, notification):
+    def _NH_SIPApplicationWillStart(self, notification):
         settings = SIPSimpleSettings()
         if settings.service_provider.name:
             window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
             self.window().setTitle_(window_title)
-
         self.loadPresenceState()
+        self.setSpeechSynthesis()
+
+    def _NH_SIPApplicationDidStart(self, notification):
         self.callPendingURIs()
         self.refreshLdapDirectory()
-        self.setSpeechSynthesis()
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
