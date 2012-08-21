@@ -101,6 +101,12 @@ class ContactsSettings(SettingsGroup):
     maximum_calls = Setting(type=NonNegativeInteger, default=5)
 
 
+class PresenceStateSettings(SettingsGroup):
+    status = Setting(type=unicode, default=None, nillable=True)
+    note = Setting(type=unicode, default=None, nillable=True)
+    offline_note = Setting(type=unicode, default=None, nillable=True)
+
+
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
@@ -114,5 +120,6 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     tls = TLSSettingsExtension
     contacts = ContactsSettings
     gui = GUISettings
+    presence_state = PresenceStateSettings
 
 

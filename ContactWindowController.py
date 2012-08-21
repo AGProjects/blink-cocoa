@@ -307,26 +307,6 @@ class ContactWindowController(NSWindowController):
 
         self.white = NSDictionary.dictionaryWithObjectsAndKeys_(self.nameText.font(), NSFontAttributeName)
 
-        # populate presence menus
-        self.presenceActivityPopUp.removeAllItems()
-        while self.presenceMenu.numberOfItems() > 0:
-            self.presenceMenu.removeItemAtIndex_(0)
-        self.fillPresenceMenu(self.presenceMenu)
-        self.fillPresenceMenu(self.presenceActivityPopUp.menu(), self.white)
-
-        note = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceNote")
-        if note:
-            self.presenceNoteText.setStringValue_(note)
-
-        status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceActivity")
-        if status:
-            self.presenceActivityPopUp.selectItemWithTitle_(status)
-            for item in self.presenceMenu.itemArray():
-                item.setState_(NSOnState if item.title() == status else NSOffState)
-        else:
-            item = self.presenceActivityPopUp.selectedItem()
-            NSUserDefaults.standardUserDefaults().setValue_forKey_(item.title(), "PresenceActivity")
-
         path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
         if path:
             self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
@@ -606,7 +586,31 @@ class ContactWindowController(NSWindowController):
             for uri, session_type, participants in NSApp.delegate().urisToOpen:
                 self.joinConference(uri, session_type, participants)
             NSApp.delegate().urisToOpen = []
-    
+
+    def loadPresenceState(self):
+        settings = SIPSimpleSettings()
+
+        # populate presence menus
+        self.presenceActivityPopUp.removeAllItems()
+        while self.presenceMenu.numberOfItems() > 0:
+            self.presenceMenu.removeItemAtIndex_(0)
+        self.fillPresenceMenu(self.presenceMenu)
+        self.fillPresenceMenu(self.presenceActivityPopUp.menu(), self.white)
+
+        note = settings.presence_state.note
+        if note:
+            self.presenceNoteText.setStringValue_(note)
+
+        status = settings.presence_state.status
+        if status:
+            self.presenceActivityPopUp.selectItemWithTitle_(status)
+            for item in self.presenceMenu.itemArray():
+                item.setState_(NSOnState if item.title() == status else NSOffState)
+        else:
+            item = self.presenceActivityPopUp.selectedItem()
+            settings.presence_state.status = item.title()
+            settings.save()
+
     def windowShouldClose_(self, sender):
         ev = NSApp.currentEvent()
         if ev.type() == NSKeyDown:
@@ -762,6 +766,7 @@ class ContactWindowController(NSWindowController):
             window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
             self.window().setTitle_(window_title)
 
+        self.loadPresenceState()
         self.callPendingURIs()
         self.refreshLdapDirectory()
         self.setSpeechSynthesis()
@@ -1996,7 +2001,8 @@ class ContactWindowController(NSWindowController):
         sender.resignFirstResponder()
 
     def setLastPresenceActivity(self):
-        status = NSUserDefaults.standardUserDefaults().stringForKey_("PresenceActivity")
+        settings = SIPSimpleSettings()
+        status = settings.presence_state.status
         if status:
             self.presenceActivityPopUp.selectItemWithTitle_(status)
             for item in self.presenceMenu.itemArray():
@@ -2018,17 +2024,20 @@ class ContactWindowController(NSWindowController):
         controller = OfflineNoteController()
         note = controller.runModal()
         if note is not None:
-            self.presencePublisher.set_offline_status(note)                
+            settings = SIPSimpleSettings()
+            settings.presence_state.offline_note = note
+            settings.save()
 
     @objc.IBAction
     def setPresenceActivityFromHistory_(self, sender):
+        settings = SIPSimpleSettings()
         item = sender.representedObject()
         history_object = item
 
         presence_note = item['note']
         self.presenceNoteText.setStringValue_(presence_note)
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
-        
+        settings.presence_state.note = presence_note
+
         value = item['title']
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
@@ -2038,15 +2047,16 @@ class ContactWindowController(NSWindowController):
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(value)
         self.presenceActivityPopUp.selectItem_(item)
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceActivity")
-
+        settings.presence_state.status = value
+        settings.save()
         self.savePresenceActivityToHistory(history_object)
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
         presence_note = unicode(self.presenceNoteText.stringValue())
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
-        NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
+        settings = SIPSimpleSettings()
+        settings.presence_state.note = presence_note()
+        settings.save()
 
         item = self.presenceActivityPopUp.selectedItem()
         if item is None:
@@ -2062,8 +2072,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
+        settings = SIPSimpleSettings()
         value = sender.title()
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(value, "PresenceActivity")
+        settings.presence_state.status = value
 
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
@@ -2079,13 +2090,12 @@ class ContactWindowController(NSWindowController):
         presence_note = selected_presence_activity['note']
 
         self.presenceNoteText.setStringValue_(presence_note or '')
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(presence_note, "PresenceNote")
+        settings.presence_state.note = presence_note
+        settings.save()
 
         history_object = item.representedObject()
         history_object['note'] = presence_note
         self.savePresenceActivityToHistory(history_object)
-                
-        NotificationCenter().post_notification("PresenceNoteHasChanged", sender=self)
 
     def savePresenceActivityToHistory(self, history_object):
         try:
@@ -2145,12 +2155,8 @@ class ContactWindowController(NSWindowController):
         
         menu.removeItemAtIndex_(offline_idx)
         lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceOfflineNote:", "")
-        try:
-            with open(ApplicationData.get('presence_offline_note.pickle'), 'r') as f:
-                note = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
-            note = None
-        
+        settings = SIPSimpleSettings()
+        note = settings.presence_state.offline_note
         title = NSAttributedString.alloc().initWithString_attributes_(note or 'Not set', attributes)
         lastItem.setAttributedTitle_(title)
         lastItem.setIndentationLevel_(2)

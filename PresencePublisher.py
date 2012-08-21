@@ -107,20 +107,18 @@ class PresencePublisher(object):
     hostname = socket.gethostname().split(".")[0]
     originalPresenceActivity = None
     icon = None
-    offline_note = ''
     wakeup_timer = None
 
     def __init__(self, owner):
         self.owner = owner
-        nc = NotificationCenter()
 
+        nc = NotificationCenter()
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
-        nc.add_observer(self, name="PresenceNoteHasChanged")
-        nc.add_observer(self, name="PresenceActivityHasChanged")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
         nc.add_observer(self, name="SystemWillSleep")
+        nc.add_observer(self, name="XCAPManagerDidReloadData")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -149,12 +147,6 @@ class PresencePublisher(object):
             if old_gruu != new_gruu:
                 account.presence_state = self.build_pidf(account)
 
-    def _NH_PresenceActivityHasChanged(self, notification):
-        self.publish()
-
-    def _NH_PresenceNoteHasChanged(self, notification):
-        self.publish()
-
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         if self.wakeup_timer is None:
             @run_in_gui_thread
@@ -175,15 +167,33 @@ class PresencePublisher(object):
 
             if set(['xcap.enabled', 'xcap.xcap_root']).intersection(notification.data.modified):
                 if account.xcap.enabled and account.xcap.discovered:
-                    offline_status = OfflineStatus(self.build_offline_pidf(account, self.offline_note))
+                    offline_pidf = self.build_offline_pidf(account)
+                    offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                     account.xcap_manager.set_offline_status(offline_status)
                     if self.icon:
                         icon = Icon(self.icon['data'], self.icon['mime_type'])
                         account.xcap_manager.set_status_icon(icon)
 
         if notification.sender is SIPSimpleSettings():
-            if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled']).intersection(notification.data.modified):
+            if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
                 self.publish()
+            if 'presence_state.offline_note' in notification.data.modified:
+                self.set_offline_status()
+
+    def _NH_XCAPManagerDidReloadData(self, notification):
+        offline_status = notification.data.offline_status
+        if offline_status is None:
+            return
+        offline_pidf = offline_status.pidf
+        try:
+            service = next(offline_pidf.services)
+            note = next(iter(service.notes))
+        except StopIteration:
+            pass
+        else:
+            settings = SIPSimpleSettings()
+            settings.presence_state.offline_note = unicode(note)
+            settings.save()
 
     def updateIdleTimer_(self, timer):
         must_publish = False
@@ -247,7 +257,7 @@ class PresencePublisher(object):
         if must_publish:
             self.publish()
 
-    def build_pidf(self, account, state=None):
+    def build_pidf(self, account):
         timestamp = datetime.now()
         settings = SIPSimpleSettings()
         instance_id = str(uuid.UUID(settings.instance_id))
@@ -258,25 +268,19 @@ class PresencePublisher(object):
         person.time_offset = rpid.TimeOffset()
         pidf_doc.add(person)
 
-        if state:
-            if state['basic_status'] == 'closed' and state['extended_status'] == 'offline':
-                return None
-            status = pidf.Status(state['basic_status'])
-            status.extended = state['extended_status']
+        selected_item = self.owner.presenceActivityPopUp.selectedItem()
+        if selected_item is None:
+            return None
+        activity_object = selected_item.representedObject()
+        if activity_object is None:
+            return None
+        if activity_object['basic_status'] == 'closed' and activity_object['extended_status'] == 'offline':
+            return None
+        status = pidf.Status(activity_object['basic_status'])
+        if self.idle_extended_mode:
+            status.extended = 'extended-away'
         else:
-            selected_item = self.owner.presenceActivityPopUp.selectedItem()
-            if selected_item is None:
-                return None
-            activity_object = selected_item.representedObject()
-            if activity_object is None:
-                return None
-            if activity_object['basic_status'] == 'closed' and activity_object['extended_status'] == 'offline':
-                return None
-            status = pidf.Status(activity_object['basic_status'])
-            if self.idle_extended_mode:
-                status.extended = 'extended-away'
-            else:
-                status.extended = activity_object['extended_status']
+            status.extended = activity_object['extended_status']
 
         service = pidf.Service("SID-%s" % instance_id, status=status)
         service.contact = pidf.Contact(str(account.contact.public_gruu or account.uri))
@@ -302,37 +306,39 @@ class PresencePublisher(object):
         pidf_doc.add(device)
         return pidf_doc
 
-    def build_offline_pidf(self, account, note):
+    def build_offline_pidf(self, account):
+        settings = SIPSimpleSettings()
+        note = settings.presence_state.offline_note
+        if not note:
+            return None
         pidf_doc = pidf.PIDF(account.id)
         account_hash = hashlib.md5(account.id).hexdigest()
         person = pidf.Person("PID-%s" % account_hash)
         person.activities = rpid.Activities()
         person.activities.add('offline')
-        if note:
-            person.notes.add(unicode(note))
+        person.notes.add(unicode(note))
         pidf_doc.add(person)
         service = pidf.Service("SID-%s" % account_hash)
         service.status = pidf.Status(basic='closed')
         service.status.extended = 'offline'
         service.contact = pidf.Contact(str(account.uri))
         service.capabilities = caps.ServiceCapabilities()
-        if note:
-            service.notes.add(unicode(note))
+        service.notes.add(unicode(note))
         pidf_doc.add(service)
         return pidf_doc
 
-    def publish(self, state=None):
+    def publish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
-            account.presence_state = self.build_pidf(account, state)
+            account.presence_state = self.build_pidf(account)
 
     def unpublish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = None
 
-    def set_offline_status(self, note=''):
-        self.offline_note = note
+    def set_offline_status(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
-            offline_status = OfflineStatus(self.build_offline_pidf(account, self.offline_note))
+            offline_pidf = self.build_offline_pidf(account)
+            offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
             account.xcap_manager.set_offline_status(offline_status)
 
     def set_status_icon(self):
