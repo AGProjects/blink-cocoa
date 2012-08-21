@@ -600,7 +600,6 @@ class ContactWindowController(NSWindowController):
 
         return contacts
 
-    @run_in_gui_thread
     def callPendingURIs(self):
         NSApp.delegate().ready = True
         if NSApp.delegate().urisToOpen:
