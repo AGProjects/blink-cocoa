@@ -115,6 +115,7 @@ class PresencePublisher(object):
         nc = NotificationCenter()
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
+        nc.add_observer(self, name="SIPAccountDidDiscoverXCAPSupport")
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
         nc.add_observer(self, name="SystemWillSleep")
@@ -146,6 +147,15 @@ class PresencePublisher(object):
 
             if old_gruu != new_gruu:
                 account.presence_state = self.build_pidf(account)
+
+    def _NH_SIPAccountDidDiscoverXCAPSupport(self, notification):
+        account = notification.sender
+        offline_pidf = self.build_offline_pidf(account)
+        offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
+        account.xcap_manager.set_offline_status(offline_status)
+        if self.icon:
+            icon = Icon(self.icon['data'], self.icon['mime_type'])
+            account.xcap_manager.set_status_icon(icon)
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         if self.wakeup_timer is None:
