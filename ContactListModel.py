@@ -111,7 +111,21 @@ class Avatar(object):
         return icon
 
     def to_base64(self):
-        tiff_data = self.icon.TIFFRepresentation()
+        # Scale it down if needed
+        size = self.icon.size()
+        self.icon_rep = self.icon.representations()[0]
+        real_size_w = self.icon_rep.pixelsWide()
+        real_size_h = self.icon_rep.pixelsHigh()
+        if real_size_w > ICON_SIZE or real_size_h > ICON_SIZE:
+            new_size_w = ICON_SIZE
+            new_size_h = ICON_SIZE * size.height/size.width
+            scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(new_size_w, new_size_h))
+            scaled_icon.lockFocus()
+            self.icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, new_size_w, new_size_h), NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1.0)
+            scaled_icon.unlockFocus()
+            tiff_data = scaled_icon.TIFFRepresentation()
+        else:
+            tiff_data = self.icon.TIFFRepresentation()
         bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
         png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
         return base64.b64encode(png_data)
