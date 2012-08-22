@@ -66,7 +66,7 @@ from resources import ApplicationData, Resources
 from util import *
 
 
-ICON_SIZE=64
+ICON_SIZE = 128
 
 PresenceActivityPrefix = {
     "Available": "is",

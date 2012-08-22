@@ -6,6 +6,7 @@ from AppKit import *
 import objc
 
 import cPickle
+import hashlib
 import os
 import re
 import random
@@ -16,8 +17,9 @@ from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
+from application.system import unlink
 from sipsimple.account import AccountManager, Account, BonjourAccount
-from sipsimple.addressbook import ContactURI, Policy
+from sipsimple.addressbook import ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
@@ -40,7 +42,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar
+from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -308,9 +310,6 @@ class ContactWindowController(NSWindowController):
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
-        path = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
-        if path:
-            self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
         self.photoImage.callback = self.photoClicked
 
         self.window().makeFirstResponder_(self.contactOutline)
@@ -768,6 +767,11 @@ class ContactWindowController(NSWindowController):
         if settings.service_provider.name:
             window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
             self.window().setTitle_(window_title)
+        if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
+            path = settings.presence_state.icon.path
+        else:
+            path = DefaultUserAvatar().path
+        self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
         self.loadPresenceState()
         self.setSpeechSynthesis()
 
@@ -841,6 +845,9 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.modified.has_key("sounds.enable_speech_synthesizer"):
             self.setSpeechSynthesis()
+
+        if 'presence_state.icon' in notification.data.modified:
+            self.loadUserIcon()
 
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         if notification.sender == self.ldap_search:
@@ -1077,10 +1084,11 @@ class ContactWindowController(NSWindowController):
         return DefaultUserAvatar().path
 
     def iconPathForSelf(self):
-        icon = NSUserDefaults.standardUserDefaults().stringForKey_("PhotoPath")
-        if not icon or not os.path.exists(unicode(icon)):
+        settings = SIPSimpleSettings()
+        if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
+            return settings.presence_state.icon.path
+        else:
             return DefaultUserAvatar().path
-        return unicode(icon)
 
     def addContact(self, uri, display_name=None):
         self.model.addContact(uri, name=display_name)
@@ -3406,8 +3414,49 @@ class ContactWindowController(NSWindowController):
         path, image = picker.runModal()
         if image and path:
             self.photoImage.setImage_(image)
-            NSUserDefaults.standardUserDefaults().setValue_forKey_(path, "PhotoPath")
-            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            # Scale it down if needed
+            size = image.size()
+            image_rep = image.representations()[0]
+            real_size_w = image_rep.pixelsWide()
+            real_size_h = image_rep.pixelsHigh()
+            if real_size_w > ICON_SIZE or real_size_h > ICON_SIZE:
+                new_size_w = ICON_SIZE
+                new_size_h = ICON_SIZE * size.height/size.width
+                scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(new_size_w, new_size_h))
+                scaled_image.lockFocus()
+                image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, new_size_w, new_size_h), NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1.0)
+                scaled_image.unlockFocus()
+                tiff_data = scaled_image.TIFFRepresentation()
+            else:
+                tiff_data = image.TIFFRepresentation()
+            bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+            png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+            self.saveUserIcon(str(png_data.bytes()))
+
+    def loadUserIcon(self):
+        # Call this in the GUI thread
+        settings = SIPSimpleSettings()
+        if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
+            path = settings.presence_state.icon.path
+        else:
+            path = DefaultUserAvatar().path
+        self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    @run_in_thread('file-io')
+    def saveUserIcon(self, data):
+        settings = SIPSimpleSettings()
+        data_h = hashlib.sha512(data).hexdigest()
+        if settings.presence_state.icon and settings.presence_state.icon.hash == data_h:
+            return
+        if settings.presence_state.icon:
+            unlink(settings.presence_state.icon.path)
+        filename = '%s.png' % unique_id(prefix='user_icon')
+        path = ApplicationData.get(os.path.join('photos', filename))
+        with open(path, 'w') as f:
+            f.write(data)
+        settings.presence_state.icon = path
+        settings.save()
 
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()

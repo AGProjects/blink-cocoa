@@ -13,7 +13,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from datetime import datetime
 from sipsimple.account import AccountManager, Account, BonjourAccount
-from sipsimple.account.xcap import OfflineStatus
+from sipsimple.account.xcap import Icon, OfflineStatus
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import pidf, rpid, cipid, caps
 from sipsimple.util import ISOTimestamp
@@ -106,7 +106,6 @@ class PresencePublisher(object):
     gruu_addresses = {}
     hostname = socket.gethostname().split(".")[0]
     originalPresenceActivity = None
-    icon = None
     wakeup_timer = None
 
     def __init__(self, owner):
@@ -153,9 +152,9 @@ class PresencePublisher(object):
         offline_pidf = self.build_offline_pidf(account)
         offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
         account.xcap_manager.set_offline_status(offline_status)
-        if self.icon:
-            icon = Icon(self.icon['data'], self.icon['mime_type'])
-            account.xcap_manager.set_status_icon(icon)
+        status_icon = self.build_status_icon()
+        icon = Icon(status_icon, 'image/png') if status_icon is not None else None
+        account.xcap_manager.set_status_icon(icon)
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         if self.wakeup_timer is None:
@@ -180,29 +179,44 @@ class PresencePublisher(object):
                     offline_pidf = self.build_offline_pidf(account)
                     offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                     account.xcap_manager.set_offline_status(offline_status)
-                    if self.icon:
-                        icon = Icon(self.icon['data'], self.icon['mime_type'])
-                        account.xcap_manager.set_status_icon(icon)
+                    icon = Icon(status_icon, 'image/png') if status_icon is not None else None
+                    account.xcap_manager.set_status_icon(icon)
 
         if notification.sender is SIPSimpleSettings():
             if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
                 self.publish()
             if 'presence_state.offline_note' in notification.data.modified:
                 self.set_offline_status()
+            if 'presence_state.icon' in notification.data.modified:
+                self.set_status_icon()
 
     def _NH_XCAPManagerDidReloadData(self, notification):
         offline_status = notification.data.offline_status
-        if offline_status is None:
-            return
-        offline_pidf = offline_status.pidf
-        try:
-            service = next(offline_pidf.services)
-            note = next(iter(service.notes))
-        except StopIteration:
-            pass
-        else:
-            settings = SIPSimpleSettings()
-            settings.presence_state.offline_note = unicode(note)
+        status_icon = notification.data.status_icon
+        settings = SIPSimpleSettings()
+        save = False
+
+        if offline_status:
+            offline_pidf = offline_status.pidf
+            try:
+                service = next(offline_pidf.services)
+                note = next(iter(service.notes))
+            except StopIteration:
+                settings.presence_state.offline_note = None
+            else:
+                settings.presence_state.offline_note = unicode(note)
+            save = True
+        elif settings.presence_state.offline_note:
+            settings.presence_state.offline_note = None
+            save = True
+
+        if status_icon:
+            # TODO: convert icon to PNG before saving it
+            self.owner.saveUserIcon(status_icon.data)
+        elif settings.presence_state.icon:
+            settings.presence_state.icon = None
+            save = True
+        if save:
             settings.save()
 
     def updateIdleTimer_(self, timer):
@@ -337,6 +351,15 @@ class PresencePublisher(object):
         pidf_doc.add(service)
         return pidf_doc
 
+    def build_status_icon(self):
+        settings = SIPSimpleSettings()
+        if not settings.presence_state.icon:
+            return None
+        try:
+            return open(settings.presence_state.icon.path, 'r').read()
+        except OSError:
+            return None
+
     def publish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = self.build_pidf(account)
@@ -352,9 +375,8 @@ class PresencePublisher(object):
             account.xcap_manager.set_offline_status(offline_status)
 
     def set_status_icon(self):
-        if self.icon is None:
-            return
+        status_icon = self.build_status_icon()
+        icon = Icon(status_icon, 'image/png') if status_icon is not None else None
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
-            icon = Icon(self.icon['data'], self.icon['mime_type'])
             account.xcap_manager.set_status_icon(icon)
 

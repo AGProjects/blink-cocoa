@@ -5,15 +5,13 @@
 Blink settings extensions.
 """
 
-import os
-
 __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
 
-from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, NightVolume
+from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
 
 
 class AnsweringMachineSettings(SettingsGroup):
@@ -105,6 +103,7 @@ class PresenceStateSettings(SettingsGroup):
     status = Setting(type=unicode, default=None, nillable=True)
     note = Setting(type=unicode, default=None, nillable=True)
     offline_note = Setting(type=unicode, default=None, nillable=True)
+    icon = Setting(type=UserIcon, default=None, nillable=True)
 
 
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
