@@ -82,7 +82,7 @@ class ListView(VerticalBoxView):
         self.insertItemView_before_(view, None)
 
     def mouseDown_(self, event):
-        pos = self.convertPointFromBase_(event.locationInWindow())
+        pos = self.convertPointFromBacking_(event.locationInWindow())
         row = -1
         for item in self.subviews():
             row += 1
