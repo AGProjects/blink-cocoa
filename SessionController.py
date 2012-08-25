@@ -25,7 +25,7 @@ from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
-from sipsimple.session import Session, IllegalStateError, IllegalDirectionError
+from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
 from sipsimple.util import ISOTimestamp
 
 from sipsimple.threading.green import run_in_green_thread
