@@ -57,7 +57,7 @@ kUIOptionDisableHide = 1 << 6
 
 MAX_MESSAGE_LENGTH = 16*1024
 
-TOOLBAR_SCREENSHARING_BUTTON = 200
+TOOLBAR_SCREENSHARING_POPUP_BUTTON = 204
 TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
 TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
 TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
@@ -711,36 +711,12 @@ class ChatController(MediaStream):
                 else:
                     item.setToolTip_('Click to add video to this session')
                     item.setImage_(NSImage.imageNamed_("video"))
-            elif identifier == 'desktop':
-                if not self.sessionController.remote_focus:
-                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
-                    menu = toolbar.delegate().desktopShareMenu
-                    item.setImage_(NSImage.imageNamed_("display"))
-
-                    title = self.sessionController.getTitleShort()
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                    mitem.setTitle_("Request Screen from %s" % title)
-                    mitem.setHidden_(False)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_("Share My Screen with %s" % title)
-                    mitem.setHidden_(False)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setHidden_(False)
-
-                    if self.sessionController.hasStreamOfType("desktop-sharing"):
-                        desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
-                        if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_("Cancel Screen Sharing Proposal")
-                        elif desktop_sharing_stream.status == STREAM_CONNECTED:
-                            mitem.setTitle_("Stop Screen Sharing")
-                    else:
-                        mitem.setTitle_("Cancel Screen Sharing Proposal")
-                else:
+            elif identifier == 'screen':
+                if self.sessionController.remote_focus:
                     item.setEnabled_(True if self.status == STREAM_CONNECTED and self.screensharing_allowed else False)
-                    item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
-
+                else:
+                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)                    
+                self.setScreenSharingToolbarIcon()
             elif identifier == 'smileys':
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
                 item.setEnabled_(True)
@@ -809,21 +785,15 @@ class ChatController(MediaStream):
                     return True
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
-        elif item.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL:
-            if not self.sessionController.remote_focus:
-                return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
-            elif self.screensharing_allowed:
-                return True
-        elif item.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE:
-            if not self.sessionController.remote_focus:
-                return True if self.sessionController.canProposeMediaStreamChanges() and not self.sessionController.hasStreamOfType("desktop-sharing") else False
-        elif item.tag() == TOOLBAR_SCREENSHARING_MENU_CANCEL:
-            if self.sessionController.hasStreamOfType("desktop-sharing"):
-                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
-                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
-                    return True if self.sessionController.canCancelProposal() else False
-                elif desktop_sharing_stream.status == STREAM_CONNECTED:
-                    return True if self.sessionController.canProposeMediaStreamChanges() else False
+            elif identifier == 'screen':
+                if self.sessionController.remote_focus:
+                    self.chatWindowController.screenSharingPopUpButton.setMenu_(self.chatWindowController.conferenceScreenSharingMenu)
+                    self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
+                    return self.status == STREAM_CONNECTED
+                else:
+                    self.chatWindowController.screenSharingPopUpButton.setMenu_(self.chatWindowController.desktopShareMenu)
+                    self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("desktop-sharing") else "display"))
+                    return True
         elif item.tag() in (TOOLBAR_SCREENSHOT_WINDOW_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM):
             if self.sessionController.remote_focus and self.screensharing_handler.connected:
                 return True
@@ -864,7 +834,6 @@ class ChatController(MediaStream):
                     sender.setToolTip_('Click to cancel the audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))
                     self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session)
-
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
                 if audio_stream.stream.recording_active:
                     audio_stream.stream.stop_recording()
@@ -1007,16 +976,20 @@ class ChatController(MediaStream):
         self.setScreenSharingToolbarIcon()
 
     def setScreenSharingToolbarIcon(self):
-        try:
-            item = (item for item in self.chatWindowController.toolbar.visibleItems() if item.tag() == TOOLBAR_SCREENSHARING_BUTTON).next()
-        except StopIteration:
-            pass
+        if self.sessionController.remote_focus:
+            menu = self.chatWindowController.conferenceScreenSharingMenu
+            self.chatWindowController.screenSharingPopUpButton.setMenu_(menu)
+            self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
         else:
-            item.setImage_(NSImage.imageNamed_("display_red" if self.share_screen_in_conference else "display"))
+            menu = self.chatWindowController.desktopShareMenu
+            self.chatWindowController.screenSharingPopUpButton.setMenu_(menu)
+            self.chatWindowController.desktopShareMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("desktop-sharing") else "display"))
 
-        menu = self.chatWindowController.toolbar.delegate().conferenceScreeningSharingMenu
+        menu = self.chatWindowController.conferenceScreenSharingMenu
         menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
         self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
+
+        self.chatWindowController.setScreenSharingToolbarIconSize()
 
     def resetEditorToolbarIcon(self):
         try:

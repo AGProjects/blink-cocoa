@@ -29,13 +29,14 @@ from SIPManager import SIPManager
 from NicknameController import NicknameController
 from SubjectController import SubjectController
 
-
 import FancyTabSwitcher
 from util import *
 
 import os
 import re
 import time
+
+
 
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
 PARTICIPANTS_MENU_ADD_CONTACT = 301
@@ -53,6 +54,9 @@ PARTICIPANTS_MENU_SEND_FILES = 323
 PARTICIPANTS_MENU_VIEW_SCREEN = 324
 PARTICIPANTS_MENU_SHOW_SESSION_INFO = 400
 
+TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
+TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
+TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
@@ -66,7 +70,7 @@ class ChatWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
-    conferenceScreeningSharingMenu = objc.IBOutlet()
+    conferenceScreenSharingMenu = objc.IBOutlet()
     screenshotShareMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
@@ -75,6 +79,7 @@ class ChatWindowController(NSWindowController):
     conferenceFilesTableView = objc.IBOutlet()
     drawerScrollView = objc.IBOutlet()
     drawerSplitView = objc.IBOutlet()
+    screenSharingPopUpButton = objc.IBOutlet()  
     actionsButton = objc.IBOutlet()
     editorButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
@@ -193,6 +198,13 @@ class ChatWindowController(NSWindowController):
         if path:
             self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
 
+    def setScreenSharingToolbarIconSize(self):
+        frame = self.screenSharingPopUpButton.frame()
+        frame.size.height = 38
+        frame.size.width = 54
+        frame.origin.y = 14
+        self.screenSharingPopUpButton.setFrame_(frame)
+    
     def updateTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
         session = self.selectedSessionController()
@@ -219,6 +231,7 @@ class ChatWindowController(NSWindowController):
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
         self.conferenceFilesTableView.setTarget_(self)
         self.conferenceFilesTableView.setDoubleAction_("doubleClickReceived:")
+        self.setScreenSharingToolbarIconSize()
 
     def splitView_shouldHideDividerAtIndex_(self, view, index):
         if self.conference_shared_files:
@@ -497,7 +510,23 @@ class ChatWindowController(NSWindowController):
             return False
 
     @objc.IBAction
-    def selectScreenSharingWindow_(self, sender):
+    def stopConferenceScreenSharing_(self, sender):
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            chat_stream = selectedSession.streamHandlerOfType("chat")
+            if chat_stream and chat_stream.screensharing_allowed:
+                if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected:
+                    chat_stream.toggleScreensharingWithConferenceParticipants()
+                    chat_stream.screensharing_handler.setWindowId(None)
+
+                i = 7
+                while i < self.conferenceScreenSharingMenu.numberOfItems() - 2:
+                    item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
+                    item.setState_(NSOffState)
+                    i += 1
+
+    @objc.IBAction
+    def selectConferenceScreenSharingWindow_(self, sender):
         selectedSession = self.selectedSessionController()
         if selectedSession:
             chat_stream = selectedSession.streamHandlerOfType("chat")
@@ -517,9 +546,9 @@ class ChatWindowController(NSWindowController):
                     chat_stream.toggleScreensharingWithConferenceParticipants()
                     chat_stream.screensharing_handler.setWindowId(id)
 
-                i = 6
-                while i < self.conferenceScreeningSharingMenu.numberOfItems():
-                    item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
+                i = 7
+                while i < self.conferenceScreenSharingMenu.numberOfItems() - 2:
+                    item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
                     item.setState_(NSOnState if item.representedObject()['id'] == id else NSOffState)
                     i += 1
 
@@ -851,7 +880,7 @@ class ChatWindowController(NSWindowController):
             session = self.selectedSessionController()
             if session:
                 if session.remote_focus:
-                    NSMenu.popUpContextMenu_withEvent_forView_(self.conferenceScreeningSharingMenu, event, sender)
+                    NSMenu.popUpContextMenu_withEvent_forView_(self.conferenceScreenSharingMenu, event, sender)
                 else:
                     NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
             return
@@ -912,12 +941,84 @@ class ChatWindowController(NSWindowController):
                 item.setState_(NSOffState)
                 item.setEnabled_(False)
 
-        elif menu == self.conferenceScreeningSharingMenu:
-            while self.conferenceScreeningSharingMenu.numberOfItems() > 6:
-                self.conferenceScreeningSharingMenu.removeItemAtIndex_(6)
+        elif menu == self.desktopShareMenu:
+            selectedSession = self.selectedSessionController()
+            if selectedSession:
+                title = selectedSession.getTitleShort()
+                if selectedSession.hasStreamOfType("desktop-sharing"):
+                    menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red"))
+                    desktop_sharing_stream = selectedSession.streamHandlerOfType("desktop-sharing")
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
+                    mitem.setEnabled_(True)
+                       
+                    if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                        mitem.setTitle_("Cancel Screen Sharing Request")
+                    elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                        mitem.setTitle_("Stop Screen Sharing")
 
-            for i in (0,1,2,3,4):
-                item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
+                    if desktop_sharing_stream.direction == 'active':
+                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                        if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                            mitem.setTitle_("Requesting Screen from %s..." % title)
+                        else:
+                            mitem.setTitle_("%s is Sharing Her Screen" % title)
+                        
+                        mitem.setEnabled_(False)
+                        mitem.setHidden_(False)
+
+                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                        mitem.setEnabled_(False)
+                        mitem.setHidden_(True)
+                    else:
+                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                        mitem.setHidden_(True)
+                        mitem.setEnabled_(False)
+                        
+                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                        if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                            mitem.setTitle_("Sharing My Screen with %s..." % title)
+                        else:
+                            mitem.setTitle_("My Screen is Shared with %s" % title)
+                        mitem.setEnabled_(False)
+                        mitem.setHidden_(False)
+
+                else:
+                    menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
+
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                    mitem.setTitle_("Request Screen from %s" % title)
+                    mitem.setEnabled_(True)
+                    mitem.setHidden_(False)
+                        
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                    mitem.setTitle_("Share My Screen with %s" % title)
+                    mitem.setEnabled_(True)
+                    mitem.setHidden_(False)
+        
+                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
+                    mitem.setTitle_("Cancel Screen Sharing Request")
+                    mitem.setEnabled_(False)
+            else:
+                menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
+
+                mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
+                mitem.setTitle_("Request Screen from %s" % title)
+                mitem.setEnabled_(False)
+                
+                mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
+                mitem.setTitle_("Share My Screen with %s" % title)
+                mitem.setEnabled_(False)
+                
+                mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
+                mitem.setTitle_("Cancel Screen Sharing Request")
+                mitem.setEnabled_(False)
+
+        elif menu == self.conferenceScreenSharingMenu:
+            while self.conferenceScreenSharingMenu.numberOfItems() > 7:
+                self.conferenceScreenSharingMenu.removeItemAtIndex_(7)
+
+            for i in (0,1,2,3,4,5):
+                item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
                 item.setHidden_(True)
 
             selected_window = None
@@ -927,7 +1028,7 @@ class ChatWindowController(NSWindowController):
                 if chat_stream and chat_stream.screensharing_handler:
                         selected_window = chat_stream.screensharing_handler.window_id
 
-            item = self.conferenceScreeningSharingMenu.addItemWithTitle_action_keyEquivalent_('Entire Desktop', "selectScreenSharingWindow:", "")
+            item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_('Entire Desktop', "selectConferenceScreenSharingWindow:", "")
             obj = {'application': 'entire desktop', 'id': 0, 'name': 'Desktop'}
             item.setRepresentedObject_(obj)
             item.setIndentationLevel_(2)
@@ -949,29 +1050,38 @@ class ChatWindowController(NSWindowController):
                         title = "%s (%s)" % (application, name or id)
                     else:
                         title = "%s (%d)" % (application, id)
-                    item = self.conferenceScreeningSharingMenu.addItemWithTitle_action_keyEquivalent_(title, "selectScreenSharingWindow:", "")
+                    item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_(title, "selectConferenceScreenSharingWindow:", "")
                     obj = {'id': id, 'name': name, 'application': application}
                     item.setRepresentedObject_(obj)
                     item.setIndentationLevel_(2)
                     item.setState_(NSOnState if selected_window == id else NSOffState)
                 i += 1
 
+            if i:
+                i += 2
+                self.conferenceScreenSharingMenu.addItem_(NSMenuItem.separatorItem())
+                item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_('Stop Screen Sharing', "stopConferenceScreenSharing:", "")
+                obj = {'id': None, 'name': None, 'application': None}
+                item.setRepresentedObject_(obj)
+                item.setIndentationLevel_(1)
+                item.setEnabled_(True if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected else False)
+
             if selectedSession and chat_stream:
-                item = self.conferenceScreeningSharingMenu.itemAtIndex_(0)
+                item = self.conferenceScreenSharingMenu.itemAtIndex_(0)
                 item.setEnabled_(True if chat_stream.screensharing_allowed else False)
 
                 if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected:
-                    for i in (1,2,3,4):
-                        item = self.conferenceScreeningSharingMenu.itemAtIndex_(i)
+                    for i in (2,3,4,5):
+                        item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
                         item.setHidden_(False)
 
-                    item = self.conferenceScreeningSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH)
+                    item = self.conferenceScreenSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH)
                     item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'high' else NSOffState)
                     item.setEnabled_(True)
-                    item = self.conferenceScreeningSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
+                    item = self.conferenceScreenSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
                     item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'low' else NSOffState)
                     item.setEnabled_(True)
-                    item = self.conferenceScreeningSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
+                    item = self.conferenceScreenSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
                     item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'medium' else NSOffState)
                     item.setEnabled_(True)
 
