@@ -37,7 +37,6 @@ import re
 import time
 
 
-
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
 PARTICIPANTS_MENU_ADD_CONTACT = 301
 PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE = 310
@@ -57,6 +56,7 @@ PARTICIPANTS_MENU_SHOW_SESSION_INFO = 400
 TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
 TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
 TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
+
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
@@ -71,7 +71,6 @@ class ChatWindowController(NSWindowController):
     tabSwitcher = objc.IBOutlet()
     desktopShareMenu = objc.IBOutlet()
     conferenceScreenSharingMenu = objc.IBOutlet()
-    screenshotShareMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
@@ -869,36 +868,39 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
-        if sender.tag() == 200: # desktop sharing menu button
-            for item in self.desktopShareMenu.itemArray():
-                item.setEnabled_(self.validateToolbarItem_(item))
-
-            point = sender.convertPointToBase_(NSZeroPoint)
-            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
-                0, 1, 0)
-            session = self.selectedSessionController()
-            if session:
-                if session.remote_focus:
-                    NSMenu.popUpContextMenu_withEvent_forView_(self.conferenceScreenSharingMenu, event, sender)
-                else:
-                    NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
-            return
-
-        elif sender.tag() == 300: # screenshot sharing menu button
-            point = sender.convertPointToBase_(NSZeroPoint)
-            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(), sender.window().graphicsContext(),
-                0, 1, 0)
-            NSMenu.popUpContextMenu_withEvent_forView_(self.screenshotShareMenu, event, sender)
-            return
-
         # dispatch the click to the active session
         selectedSession = self.selectedSessionController()
         if selectedSession:
             chatStream = selectedSession.streamHandlerOfType("chat")
             if chatStream:
                 chatStream.userClickedToolbarButton(sender)
+
+    @objc.IBAction
+    def userClickedConferenceScreenSharingQualityMenu_(self, sender):
+        # dispatch the click to the active session
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                chatStream.userClickedConferenceScreenSharingQualityMenu_(sender)
+
+    @objc.IBAction
+    def userClickedScreenSharingMenu_(self, sender):
+        # dispatch the click to the active session
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                chatStream.userClickedScreenSharingMenu_(sender)
+
+    @objc.IBAction
+    def userClickedScreenshotMenu_(self, sender):
+        # dispatch the click to the active session
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                chatStream.userClickedScreenshotMenu_(sender)
 
     @objc.IBAction
     def useClickedRemoveFromConference_(self, sender):

@@ -57,7 +57,6 @@ kUIOptionDisableHide = 1 << 6
 
 MAX_MESSAGE_LENGTH = 16*1024
 
-TOOLBAR_SCREENSHARING_POPUP_BUTTON = 204
 TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
 TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
 TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
@@ -65,11 +64,9 @@ TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
 TOOLBAR_SCREENSHOT_MENU_WINDOW = 301
 TOOLBAR_SCREENSHOT_MENU_AREA = 302
 
-TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU = 400
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
-TOOLBAR_SCREENSHOT_WINDOW_MENU = 500
 
 bundle = NSBundle.bundleWithPath_('/System/Library/Frameworks/Carbon.framework')
 objc.loadBundleFunctions(bundle, globals(), (('SetSystemUIMode', 'III', " Sets the presentation mode for system-provided user interface elements."),))
@@ -794,9 +791,8 @@ class ChatController(MediaStream):
                     self.chatWindowController.screenSharingPopUpButton.setMenu_(self.chatWindowController.desktopShareMenu)
                     self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("desktop-sharing") else "display"))
                     return True
-        elif item.tag() in (TOOLBAR_SCREENSHOT_WINDOW_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW, TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM):
-            if self.sessionController.remote_focus and self.screensharing_handler.connected:
-                return True
+            elif identifier == 'screenshot':
+                return self.status == STREAM_CONNECTED
 
         return False
 
@@ -912,31 +908,43 @@ class ChatController(MediaStream):
                 else:
                     contactWindow.historyViewer.filterByContact(format_identity_to_string(self.sessionController.target_uri), media_type='chat')
 
-        elif sender.tag() in (TOOLBAR_SCREENSHOT_MENU_WINDOW, TOOLBAR_SCREENSHOT_MENU_AREA):
-            screenshots_folder = ApplicationData.get('.tmp_screenshots')
-            if not os.path.exists(screenshots_folder):
-                os.mkdir(screenshots_folder, 0700)
-            filename = '%s/xscreencapture.png' % screenshots_folder
-            basename, ext = os.path.splitext(filename)
-            i = 1
-            while os.path.exists(filename):
-                filename = '%s_%d%s' % (basename, i, ext)
-                i += 1
+    def userClickedScreenshotMenu_(self, sender):
+        screenshots_folder = ApplicationData.get('.tmp_screenshots')
+        if not os.path.exists(screenshots_folder):
+            os.mkdir(screenshots_folder, 0700)
+        filename = '%s/xscreencapture.png' % screenshots_folder
+        basename, ext = os.path.splitext(filename)
+        i = 1
+        while os.path.exists(filename):
+            filename = '%s_%d%s' % (basename, i, ext)
+            i += 1
+        
+        self.screencapture_file = filename
+        self.screenshot_task = NSTask.alloc().init()
+        self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+        if sender.tag() == TOOLBAR_SCREENSHOT_MENU_WINDOW:
+            self.screenshot_task.setArguments_(['-W', '-tpng', self.screencapture_file])
+        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_AREA:
+            self.screenshot_task.setArguments_(['-s', '-tpng', self.screencapture_file])
+        else:
+            return
+        
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
+        self.screenshot_task.launch()
+   
+    def userClickedConferenceScreenSharingQualityMenu_(self, sender):
+        if sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH:
+            if self.screensharing_handler.connected:
+                self.screensharing_handler.setQuality('high')
+        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW:
+            if self.screensharing_handler.connected:
+                self.screensharing_handler.setQuality('low')
+        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM:
+            if self.screensharing_handler.connected:
+                self.screensharing_handler.setQuality('medium')
 
-            self.screencapture_file = filename
-            self.screenshot_task = NSTask.alloc().init()
-            self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
-            if sender.tag() == TOOLBAR_SCREENSHOT_MENU_WINDOW:
-                self.screenshot_task.setArguments_(['-W', '-tpng', self.screencapture_file])
-            elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_AREA:
-                self.screenshot_task.setArguments_(['-s', '-tpng', self.screencapture_file])
-            else:
-                return
-
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
-            self.screenshot_task.launch()
-
-        elif sender.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL and self.status == STREAM_CONNECTED:
+    def userClickedScreenSharingMenu_(self, sender):
+        if sender.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL and self.status == STREAM_CONNECTED:
             if not self.sessionController.remote_focus:
                 if not self.sessionController.hasStreamOfType("desktop-sharing"):
                     self.sessionController.addMyDesktopToSession()
@@ -954,15 +962,6 @@ class ChatController(MediaStream):
                     self.sessionController.cancelProposal(desktop_sharing_stream)
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:
                     self.sessionController.removeDesktopFromSession()
-        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH:
-            if self.screensharing_handler.connected:
-                self.screensharing_handler.setQuality('high')
-        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW:
-            if self.screensharing_handler.connected:
-                self.screensharing_handler.setQuality('low')
-        elif sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM:
-            if self.screensharing_handler.connected:
-                self.screensharing_handler.setQuality('medium')
 
     def toggleScreensharingWithConferenceParticipants(self):
         self.share_screen_in_conference = True if not self.share_screen_in_conference else False
