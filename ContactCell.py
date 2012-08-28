@@ -125,7 +125,4 @@ class ContactCell(NSTextFieldCell):
         icon.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(trect, rect, NSCompositeSourceOver, 1.0, True, None)
 
 
-class WatcherContactCell(ContactCell):
-    pass
-
 
