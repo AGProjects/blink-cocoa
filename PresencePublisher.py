@@ -179,6 +179,7 @@ class PresencePublisher(object):
                     offline_pidf = self.build_offline_pidf(account)
                     offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                     account.xcap_manager.set_offline_status(offline_status)
+                    status_icon = self.build_status_icon()
                     icon = Icon(status_icon, 'image/png') if status_icon is not None else None
                     account.xcap_manager.set_status_icon(icon)
 
