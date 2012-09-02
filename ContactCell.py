@@ -103,7 +103,7 @@ class ContactCell(NSTextFieldCell):
 
         if self.contact.presence_indicator == 'available':
             NSColor.greenColor().set()
-        elif self.contact.presence_indicator == 'activity':
+        elif self.contact.presence_indicator == 'away':
             NSColor.yellowColor().set()
         elif self.contact.presence_indicator == 'busy':
             NSColor.redColor().set()
@@ -115,6 +115,17 @@ class ContactCell(NSTextFieldCell):
         border.fill()
         NSColor.blackColor().set()
         border.stroke()
+
+        image = None
+        if hasattr(self.contact, "presence_state"):
+            if self.contact.presence_state['extended_status']['away']:
+                image = 'status-user-away-icon'
+
+        if image:
+            icon = NSImage.imageNamed_(image)
+            icon.setScalesWhenResized_(True)
+            icon.setSize_(NSMakeSize(12,12))
+            self.drawIcon(icon, 20, self.frame.origin.y + 22, 12, 12)
 
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()

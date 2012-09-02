@@ -401,10 +401,12 @@ class BlinkPresenceContactAttribute(object):
 
 class BlinkPresenceContact(BlinkContact):
     """Contact representation with Presence Enabled"""
+    implements(IObserver)
 
     auto_answer = BlinkPresenceContactAttribute('auto_answer')
     name = BlinkPresenceContactAttribute('name')
     uris = BlinkPresenceContactAttribute('uris')
+    nc = NotificationCenter()
 
     def __init__(self, contact):
         self.contact = contact
@@ -412,11 +414,99 @@ class BlinkPresenceContact(BlinkContact):
         self.avatar.save()
         self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
+        self.nc.add_observer(self, name="SIPAccountGotPresenceState")
 
         # presence related attributes
         self.presence_indicator = 'unknown'
         self.presence_note = None
-        self.presence_activity = None
+        self.presence_state = {'basic': 'closed',
+                               'extended_status': {'available': False,
+                                                   'away':      False,
+                                                   'busy':      False
+                                                  },
+                               'presence_notes': {},
+                               'pending_authorizations': {}
+                                }
+
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "presenceContactTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+
+    def presenceContactTimer_(self, timer):
+        self.setPresenceNote()
+
+    def dealloc(self):
+        self.avatar = None
+        self.timer.invalidate()
+        self.nc.remove_observer(self, name="SIPAccountGotPresenceState")
+        self.nc = None
+        super(BlinkContact, self).dealloc()
+
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_SIPAccountGotPresenceState(self, notification):
+        resources = list(notification.data.resource_map[key] for key in notification.data.resource_map.keys() if self.matchesURI(key.split(':')[1], exact_match=True))
+        if resources:
+            self.presence_state = { 'basic_status': 'closed',
+                                    'extended_status': {'available': False,
+                                                        'away':      False,
+                                                        'busy':      False
+                                                            },
+                                    'presence_notes': [],
+                                    'pending_authorizations': {}
+                                    }
+            pidfs = []
+            presence_notes = []
+            active_resources = list(resource for resource in resources if resource.state == 'active')
+            for active_resource in active_resources:
+                pidfs += active_resource.pidf_list
+
+            if pidfs:
+                for pidf in pidfs:
+                    if self.presence_state['extended_status']['away'] is False:
+                        self.presence_state['extended_status']['away'] = any(service for service in pidf.services if service.status.extended is not None or service.status.extended in ('away', 'extended-away'))
+
+                    if self.presence_state['extended_status']['busy'] is False:
+                        self.presence_state['extended_status']['busy'] = any(service for service in pidf.services if service.status.extended is not None or service.status.extended == 'busy')
+
+                    if self.presence_state['extended_status']['available'] is False:
+                        self.presence_state['extended_status']['available'] = any(service for service in pidf.services if service.status.extended is not None and service.status.extended == 'available')
+
+                    if self.presence_state['basic_status'] is 'closed':
+                        self.presence_state['basic_status'] = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
+
+                    for service in pidf.services:
+                        for note in service.notes:
+                            if note:
+                                presence_notes.append(note)
+
+                notes = list(unicode(note) for note in presence_notes)
+                self.presence_state['presence_notes'] = notes
+
+                if self.presence_state['extended_status']['busy']:
+                    self.setPresenceIndicator("busy")
+                elif self.presence_state['extended_status']['available']:
+                    self.setPresenceIndicator("available")
+                elif self.presence_state['extended_status']['away']:
+                    self.setPresenceIndicator("away")
+                elif self.presence_state['basic_status'] == 'open':
+                    self.setPresenceIndicator("available")
+                else:
+                    self.setPresenceIndicator("unknown")
+            else:
+                self.setPresenceIndicator("unknown")
+
+            self.pending_authorizations = {}
+            for resource in resources:
+                if resource.state == 'pending':
+                    self.presence_state['pending_authorizations'][resource.uri] = True
+
+            NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
@@ -508,11 +598,30 @@ class BlinkPresenceContact(BlinkContact):
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
 
-    def setPresenceNote(self, note):
-        self.presence_note = note
+    def setPresenceNote(self):
+        presence_notes = self.presence_state['presence_notes']
+        if presence_notes:
+            if self.presence_note is None:
+                self.presence_note = presence_notes[0]
+            else:
+                try:
+                    index = presence_notes.index(self.presence_note)
+                except ValueError:
+                    self.presence_note = presence_notes[0]
+                else:
+                    try:
+                        self.presence_note = presence_notes[index+1]
+                    except IndexError:
+                        self.presence_note = presence_notes[0]
+            detail = self.presence_note if self.presence_note else '%s (%s)' % (self.uri, self.uri_type)
+        else:
+            detail = '%s (%s)' % (self.uri, self.uri_type)
+            if self.presence_state['pending_authorizations'] and self.detail == detail:
+                detail = 'Pending authorization'          
 
-    def setPresenceActivity(self, activity):
-        self.presence_activity = activity
+        if detail != self.detail:
+            self.detail = detail
+            NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
 
 class HistoryBlinkContact(BlinkContact):
@@ -538,8 +647,7 @@ class BonjourBlinkContact(BlinkContact):
 
         # presence related attributes
         self.presence_indicator = None
-        self.presence_note = None
-        self.presence_activity = None
+        self.presence_notes = []
 
     def update_uri(self, uri):
         self.aor = uri
@@ -548,12 +656,6 @@ class BonjourBlinkContact(BlinkContact):
 
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
-
-    def setPresenceNote(self, note):
-        self.presence_note = note
-
-    def setPresenceActivity(self, activity):
-        self.presence_activity = activity
 
     def matchesURI(self, uri, exact_match=False):
         candidate = self.split_uri(uri)
@@ -1339,6 +1441,8 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="SIPApplicationWillEnd")
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
         self.nc.add_observer(self, name="SIPAccountGotPresenceWinfo")
+        self.nc.add_observer(self, name="BlinkContactPresenceHasChaged")
+
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -2264,6 +2368,11 @@ class ContactListModel(CustomListModel):
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
+
+    def _NH_BlinkContactPresenceHasChaged(self, notification):
+        groups = (group for group in self.groupsList if notification.sender in group.contacts)
+        for group in groups:
+            self.contactOutline.reloadItem_reloadChildren_(group, True)
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
