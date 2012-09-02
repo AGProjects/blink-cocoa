@@ -419,9 +419,10 @@ class BlinkPresenceContact(BlinkContact):
         # presence related attributes
         self.presence_indicator = 'unknown'
         self.presence_note = None
-        self.presence_state = {'basic': 'closed',
+        self.presence_state = {'basic_status': 'closed',
                                'extended_status': {'available': False,
                                                    'away':      False,
+                                                   'extended-away': False,
                                                    'busy':      False
                                                   },
                                'presence_notes': {},
@@ -454,6 +455,7 @@ class BlinkPresenceContact(BlinkContact):
         if resources:
             self.presence_state = { 'basic_status': 'closed',
                                     'extended_status': {'available': False,
+                                                        'extended-away': False,
                                                         'away':      False,
                                                         'busy':      False
                                                             },
@@ -468,17 +470,21 @@ class BlinkPresenceContact(BlinkContact):
 
             if pidfs:
                 for pidf in pidfs:
-                    if self.presence_state['extended_status']['away'] is False:
-                        self.presence_state['extended_status']['away'] = any(service for service in pidf.services if service.status.extended is not None or service.status.extended in ('away', 'extended-away'))
-
-                    if self.presence_state['extended_status']['busy'] is False:
-                        self.presence_state['extended_status']['busy'] = any(service for service in pidf.services if service.status.extended is not None or service.status.extended == 'busy')
-
-                    if self.presence_state['extended_status']['available'] is False:
-                        self.presence_state['extended_status']['available'] = any(service for service in pidf.services if service.status.extended is not None and service.status.extended == 'available')
-
+                    print pidf
                     if self.presence_state['basic_status'] is 'closed':
                         self.presence_state['basic_status'] = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
+
+                    if self.presence_state['extended_status']['available'] is False:
+                        self.presence_state['extended_status']['available'] = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and self.presence_state['basic_status'] == 'open'))
+
+                    if self.presence_state['extended_status']['busy'] is False:
+                        self.presence_state['extended_status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
+
+                    if self.presence_state['extended_status']['extended-away'] is False:
+                        self.presence_state['extended_status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
+                    
+                    if self.presence_state['extended_status']['away'] is False:
+                        self.presence_state['extended_status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
 
                     for service in pidf.services:
                         for note in service.notes:
@@ -490,11 +496,11 @@ class BlinkPresenceContact(BlinkContact):
 
                 if self.presence_state['extended_status']['busy']:
                     self.setPresenceIndicator("busy")
-                elif self.presence_state['extended_status']['available']:
-                    self.setPresenceIndicator("available")
+                elif self.presence_state['extended_status']['extended-away']:
+                    self.setPresenceIndicator("busy")
                 elif self.presence_state['extended_status']['away']:
                     self.setPresenceIndicator("away")
-                elif self.presence_state['basic_status'] == 'open':
+                elif self.presence_state['extended_status']['available']:
                     self.setPresenceIndicator("available")
                 else:
                     self.setPresenceIndicator("unknown")

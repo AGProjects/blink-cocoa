@@ -300,6 +300,9 @@
 		1F7CC99614730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F7CC99714730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F7CC99814730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
+		1F82CAF715F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F82CAF615F3CD890069AF43 /* status-user-extended-away-icon.png */; };
+		1F82CAF815F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F82CAF615F3CD890069AF43 /* status-user-extended-away-icon.png */; };
+		1F82CAF915F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F82CAF615F3CD890069AF43 /* status-user-extended-away-icon.png */; };
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
@@ -1245,6 +1248,7 @@
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
+		1F82CAF615F3CD890069AF43 /* status-user-extended-away-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "status-user-extended-away-icon.png"; path = "icons/status-user-extended-away-icon.png"; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F87B6EE1477D57000BDF25A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
@@ -1792,6 +1796,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F82CAF615F3CD890069AF43 /* status-user-extended-away-icon.png */,
 				1FB247DC15D8E5F100703D24 /* status-user-available-icon.png */,
 				1FB247C415D8DE5100703D24 /* status-user-away-icon.png */,
 				1FB247C515D8DE5100703D24 /* status-user-busy-icon.png */,
@@ -2484,6 +2489,7 @@
 				1FB247CA15D8DE5100703D24 /* status-user-busy-icon.png in Resources */,
 				1FB247DE15D8E5F100703D24 /* status-user-available-icon.png in Resources */,
 				1FB247E215D99AEB00703D24 /* OfflineNoteController.py in Resources */,
+				1F82CAF815F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2707,6 +2713,7 @@
 				1FB247CB15D8DE5100703D24 /* status-user-busy-icon.png in Resources */,
 				1FB247DF15D8E5F100703D24 /* status-user-available-icon.png in Resources */,
 				1FB247E315D99AEB00703D24 /* OfflineNoteController.py in Resources */,
+				1F82CAF915F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2928,6 +2935,7 @@
 				1FB247C915D8DE5100703D24 /* status-user-busy-icon.png in Resources */,
 				1FB247DD15D8E5F100703D24 /* status-user-available-icon.png in Resources */,
 				1FB247E115D99AEB00703D24 /* OfflineNoteController.py in Resources */,
+				1F82CAF715F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

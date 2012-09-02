@@ -106,7 +106,7 @@ class ContactCell(NSTextFieldCell):
         elif self.contact.presence_indicator == 'away':
             NSColor.yellowColor().set()
         elif self.contact.presence_indicator == 'busy':
-            NSColor.redColor().set()
+            NSColor.orangeColor().set()
         else:
             NSColor.whiteColor().set()
 
@@ -115,11 +115,19 @@ class ContactCell(NSTextFieldCell):
         border.fill()
         NSColor.blackColor().set()
         border.stroke()
-
+            
         image = None
         if hasattr(self.contact, "presence_state"):
-            if self.contact.presence_state['extended_status']['away']:
+            if self.contact.presence_state['extended_status']['busy']: 
+                image = 'status-user-busy-icon'
+            elif self.contact.presence_state['extended_status']['extended-away']:
+                image = 'status-user-extended-away-icon'
+            elif self.contact.presence_state['extended_status']['away']:
                 image = 'status-user-away-icon'
+            elif self.contact.presence_state['extended_status']['available']:
+                image = 'status-user-available-icon'
+            elif self.contact.presence_state['basic_status'] == 'open':
+                image = 'status-user-available-icon'
 
         if image:
             icon = NSImage.imageNamed_(image)
