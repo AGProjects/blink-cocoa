@@ -470,7 +470,6 @@ class BlinkPresenceContact(BlinkContact):
 
             if pidfs:
                 for pidf in pidfs:
-                    print pidf
                     if self.presence_state['basic_status'] is 'closed':
                         self.presence_state['basic_status'] = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
 
