@@ -9,6 +9,7 @@ class ContactCell(NSTextFieldCell):
     contact = None
     view = None
     frame = None
+    info_button = None
 
     audioIcon = NSImage.imageNamed_("audio_16")
     audioHoldIcon = NSImage.imageNamed_("paused_16")
@@ -24,6 +25,16 @@ class ContactCell(NSTextFieldCell):
 
     def setContact_(self, contact):
         self.contact = contact
+        self.info_button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 14, 14))
+        self.info_button.setImagePosition_(NSImageOnly)
+        self.info_button.setTarget_(NSApp.delegate().contactsWindowController)
+        self.info_button.setToolTip_('Show Presence Information')
+        self.info_button.setAction_("showPresenceInfo:")
+        self.info_button.setBordered_(False)
+        self.info_button.setAutoresizingMask_(NSViewMinXMargin)
+        self.info_button.setImage_(NSImage.imageNamed_("panel-info"))
+        self.info_button.cell().setRepresentedObject_(self.contact)
+        self.info_button.cell().setImageScaling_(NSImageScaleProportionallyUpOrDown)
 
     def setMessageIcon_(self, icon):
         self.messageIcon = icon
@@ -104,7 +115,7 @@ class ContactCell(NSTextFieldCell):
         if self.contact.presence_indicator == 'available':
             NSColor.greenColor().set()
         elif self.contact.presence_indicator == 'away':
-            NSColor.yellowColor().set()
+            NSColor.blueColor().set()
         elif self.contact.presence_indicator == 'busy':
             NSColor.orangeColor().set()
         else:
@@ -126,14 +137,18 @@ class ContactCell(NSTextFieldCell):
                 image = 'status-user-away-icon'
             elif self.contact.presence_state['extended_status']['available']:
                 image = 'status-user-available-icon'
-            elif self.contact.presence_state['basic_status'] == 'open':
-                image = 'status-user-available-icon'
 
         if image:
             icon = NSImage.imageNamed_(image)
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
             self.drawIcon(icon, 20, self.frame.origin.y + 22, 12, 12)
+            
+            frame = self.info_button.frame()
+            frame.origin.x = self.view.frame().size.width - 25
+            frame.origin.y = self.frame.origin.y + 12
+            self.info_button.setFrame_(frame)
+            self.view.addSubview_(self.info_button)
 
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()

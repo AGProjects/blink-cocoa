@@ -429,6 +429,7 @@ class BlinkPresenceContact(BlinkContact):
                                'pending_authorizations': {}
                                 }
 
+        self.pidfs = []
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "presenceContactTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
@@ -468,6 +469,7 @@ class BlinkPresenceContact(BlinkContact):
             for active_resource in active_resources:
                 pidfs += active_resource.pidf_list
 
+            self.pidfs = pidfs
             if pidfs:
                 for pidf in pidfs:
                     if self.presence_state['basic_status'] is 'closed':

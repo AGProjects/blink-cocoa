@@ -47,6 +47,7 @@ from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
+from PresenceInfoController import PresenceInfoController
 from SessionController import SessionControllersManager
 from SIPManager import SIPManager, MWIData
 from PhotoPicker import PhotoPicker
@@ -142,6 +143,7 @@ class ContactWindowController(NSWindowController):
     presenceActivityBeforeOnThePhone = None
     disbandingConference = False
 
+    toolTipView = objc.IBOutlet()
     contactsScrollView = objc.IBOutlet()
     drawer = objc.IBOutlet()
     mainTabView = objc.IBOutlet()
@@ -223,6 +225,7 @@ class ContactWindowController(NSWindowController):
     first_run = False
     presencePublisher = None
     white = None
+    presenceInfoPanel = None
 
 
     def awakeFromNib(self):
@@ -344,7 +347,6 @@ class ContactWindowController(NSWindowController):
         self.setSpeechRecognition()
         self.chat_journal_replicator = ChatHistoryReplicator()
         SessionHistoryReplicator()
-
         try:
             with open(ApplicationData.get('presence_notes_history.pickle'), 'r') as f:
                 self.presence_notes_history.extend(cPickle.load(f))
@@ -356,7 +358,7 @@ class ContactWindowController(NSWindowController):
 
         self.presencePublisher = PresencePublisher(self)
 
-        self.loaded = True
+        self.loaded = True    
 
     def fillPresenceMenu(self, presenceMenu):
         if presenceMenu == self.presenceMenu:
@@ -466,6 +468,13 @@ class ContactWindowController(NSWindowController):
 
     def showWindow_(self, sender):
         super(ContactWindowController, self).showWindow_(sender)
+
+    @objc.IBAction
+    def showPresenceInfo_(self, sender):
+        if not self.presenceInfoPanel:
+            self.presenceInfoPanel = PresenceInfoController()
+
+        self.presenceInfoPanel.show(sender.cell().representedObject())
 
     @objc.IBAction
     def showChatWindow_(self, sender):
