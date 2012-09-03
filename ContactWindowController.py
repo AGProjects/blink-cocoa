@@ -473,8 +473,7 @@ class ContactWindowController(NSWindowController):
     def showPresenceInfo_(self, sender):
         if not self.presenceInfoPanel:
             self.presenceInfoPanel = PresenceInfoController()
-
-        self.presenceInfoPanel.show(sender.cell().representedObject())
+        self.presenceInfoPanel.show(sender.representedObject())
 
     @objc.IBAction
     def showChatWindow_(self, sender):
@@ -3166,6 +3165,11 @@ class ContactWindowController(NSWindowController):
                             mitem.setEnabled_(has_full_sip_uri)
 
             if isinstance(item, BlinkPresenceContact):
+                if item.pidfs:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Presence Information...", "showPresenceInfo:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
                 mitem.setEnabled_(True)
