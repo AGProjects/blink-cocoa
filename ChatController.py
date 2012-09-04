@@ -131,6 +131,7 @@ class ChatController(MediaStream):
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.mediastream_failed = False
         self.mediastream_ended = False
+        self.mediastream_started = False
         self.session_succeeded = False
         self.last_failure_reason = None
         self.remoteIcon = None
@@ -1144,6 +1145,8 @@ class ChatController(MediaStream):
             else:
                 message = "Session Cancelled"
             self.showSystemMessage(message, ISOTimestamp.now(), True)
+        else:
+            self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionDidStart(self, sender, data):
@@ -1165,10 +1168,12 @@ class ChatController(MediaStream):
         if data.code != 487:
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
-                message = "Proposal rejected: %s" % data.reason if data.code != 200 else "Proposal rejected"
+                reason = 'Remote party failed to establish the connection' if data.reason == 'Internal Server Error' else '%s (%s)' % (data.reason,data.code)
+                message = "Proposal rejected: %s (%s)" % (reason, data.code) if data.code != 200 else "Proposal rejected"
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.mediastream_started = True
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
@@ -1192,7 +1197,7 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat stream ended")
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, sender=self.sessionController)
-        if self.session_succeeded:
+        if self.mediastream_started:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.showSystemMessage(close_message, ISOTimestamp.now())
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
@@ -1201,13 +1206,20 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         self.mediastream_failed = True
         self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
-        if self.session_succeeded and not self.mediastream_ended:
-            if data.reason in ('Connection was closed cleanly.', 'A TLS packet with unexpected length was received.', 'Cannot send chunk because MSRPSession is DONE'):
-                self.showSystemMessage('Connection has been closed', ISOTimestamp.now(), True)
-            else:
-                reason = 'Timeout' if data.reason == 'MSRPConnectTimeout' else data.reason
-                self.showSystemMessage('Connection failed: %s' % reason, ISOTimestamp.now(), True)
+        if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
+            reason = 'Connection has been closed'
+        elif data.reason == 'A TLS packet with unexpected length was received.':
+            reason = 'A TLS Connection error has occured'
+        elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout'):
+            reason = 'Network Timeout'
+        elif data.reason == 'MSRPRelayConnectTimeout':
+            reason = 'Timeout connecting to MSRP relay'
+        elif data.reason == 'MSRPRelayAuthError':
+            reason = 'Failed to authenticate to MSRP relay'
+        else:
+            reason = data.reason
 
+        self.showSystemMessage('Connection failed: %s' % reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
 
     def resetIsComposingTimer(self, refresh):
@@ -1250,6 +1262,7 @@ class ChatController(MediaStream):
         self.mediastream_failed = False
         self.mediastream_ended = False
         self.session_succeeded = False
+        self.mediastream_started = False
         self.last_failure_reason = None
         self.remoteIcon = None
         self.share_screen_in_conference = False
