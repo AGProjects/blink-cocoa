@@ -39,7 +39,7 @@ class PresenceInfoController(NSObject):
 
     def _NH_BlinkContactPresenceHasChaged(self, notification):
         if self.contact == notification.sender:
-            self.pidfs = notification.sender.pidfs
+            self.pidfs = chain(*(item for item in otification.sender.pidfs_map.itervalues()))
             self.render_pidf()
 
     def show(self, contact):
@@ -47,7 +47,6 @@ class PresenceInfoController(NSObject):
         self.window.setTitle_(u'Presence Information for %s' % contact.name)
         self.window.orderFront_(None)
         self.pidfs = chain(*(item for item in self.contact.pidfs_map.itervalues()))
-
         self.render_pidf()
 
     def render_pidf(self):  
