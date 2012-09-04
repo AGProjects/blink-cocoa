@@ -1483,6 +1483,7 @@ class SIPProxyAddressOption(UnicodeOption):
 
 PreferenceOptionTypes = {
 "str" : StringOption,
+"unicode" : StringOption,
 "NonNegativeInteger" : NonNegativeIntegerOption,
 "Hostname" : NullableStringOption,
 "bool" : BoolOption,
@@ -1545,7 +1546,8 @@ PreferenceOptionTypes = {
 "tls.certificate": TLSCertificatePathOption,
 "tls.protocol" : HiddenOption,
 "tls.timeout" : HiddenOption,
-"xcap.discovered": HiddenOption
+"xcap.discovered": HiddenOption,
+"UserIcon": HiddenOption
 }
 
 # These acount sections are always hidden
