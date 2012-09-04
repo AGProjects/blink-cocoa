@@ -6,6 +6,7 @@ from Foundation import *
 
 import datetime
 import urllib
+from itertools import chain
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
