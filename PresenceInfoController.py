@@ -45,13 +45,14 @@ class PresenceInfoController(NSObject):
         self.contact =  contact
         self.window.setTitle_(u'Presence Information for %s' % contact.name)
         self.window.orderFront_(None)
-        self.pidfs = self.contact.pidfs
+        self.pidfs = chain(*(item for item in self.contact.pidfs_map.itervalues()))
+
         self.render_pidf()
 
     def render_pidf(self):  
         text = ''
         for pidf in self.pidfs:
-            text += self.build_pidf_text(pidf) + '\n'
+            text += self.build_pidf_text(pidf) + '\n\n'
         self.presenceText.setStringValue_(text)
 
     def windowShouldClose_(self, sender):

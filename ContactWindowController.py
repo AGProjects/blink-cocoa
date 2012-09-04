@@ -478,10 +478,10 @@ class ContactWindowController(NSWindowController):
             row = self.contactOutline.selectedRow()
             selected = self.contactOutline.itemAtRow_(row) if row >=0 else None
             if selected:
-                has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs
+                has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs_map
                 if has_presence_info:
                     self.presenceInfoPanel.show(selected)
-        else: # contextul menu selected
+        else: # contextual menu selected
             self.presenceInfoPanel.show(sender.representedObject())
 
     @objc.IBAction
@@ -3174,7 +3174,7 @@ class ContactWindowController(NSWindowController):
                             mitem.setEnabled_(has_full_sip_uri)
 
             if isinstance(item, BlinkPresenceContact):
-                if item.pidfs:
+                if item.pidfs_map:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Presence Information", "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
@@ -3377,7 +3377,7 @@ class ContactWindowController(NSWindowController):
                 if isinstance(selected, BlinkContact):
                     selected_contact = selected
                     selected_group = self.contactOutline.parentForItem_(selected)
-                    has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs
+                    has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs_map
                 elif isinstance(selected, BlinkGroup):
                     selected_contact = None
                     selected_group = selected

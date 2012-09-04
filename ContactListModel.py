@@ -416,34 +416,35 @@ class BlinkPresenceContact(BlinkContact):
         self._set_username_and_domain()
         self.nc.add_observer(self, name="SIPAccountGotPresenceState")
 
-        # presence related attributes
         self.presence_indicator = 'unknown'
         self.presence_note = None
-        self.presence_state = {'basic_status': 'closed',
-                               'extended_status': {'available': False,
-                                                   'away':      False,
-                                                   'extended-away': False,
-                                                   'busy':      False
-                                                  },
-                               'presence_notes': {},
-                               'pending_authorizations': {}
-                                }
+        self.pidfs_map = []
+        self.init_presence_state()
 
-        self.pidfs = []
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "presenceContactTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+
+    def init_presence_state(self):
+        self.presence_state = { 'presence_notes': [],
+            'pending_authorizations':    {},
+            'status': { 'available':     False,
+                'extended-away': False,
+                'away':          False,
+                'busy':          False
+            }
+        }
 
     def presenceContactTimer_(self, timer):
         self.setPresenceNote()
 
     def dealloc(self):
         self.avatar = None
+        self.pidfs_map = None
         self.timer.invalidate()
         self.nc.remove_observer(self, name="SIPAccountGotPresenceState")
         self.nc = None
         super(BlinkContact, self).dealloc()
-
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -452,68 +453,67 @@ class BlinkPresenceContact(BlinkContact):
         handler(notification)
 
     def _NH_SIPAccountGotPresenceState(self, notification):
-        resources = list(notification.data.resource_map[key] for key in notification.data.resource_map.keys() if self.matchesURI(key.split(':')[1], exact_match=True))
-        if resources:
-            self.presence_state = { 'basic_status': 'closed',
-                                    'extended_status': {'available': False,
-                                                        'extended-away': False,
-                                                        'away':      False,
-                                                        'busy':      False
-                                                            },
-                                    'presence_notes': [],
-                                    'pending_authorizations': {}
-                                    }
-            pidfs = []
-            presence_notes = []
-            active_resources = list(resource for resource in resources if resource.state == 'active')
-            for active_resource in active_resources:
-                pidfs += active_resource.pidf_list
+        if notification.data.full_state:
+            self.pidfs_map = {}
 
-            self.pidfs = pidfs
-            if pidfs:
-                for pidf in pidfs:
-                    if self.presence_state['basic_status'] is 'closed':
-                        self.presence_state['basic_status'] = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
+        resource_map = notification.data.resource_map
+        resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key.split(':')[1], exact_match=True))
 
-                    if self.presence_state['extended_status']['available'] is False:
-                        self.presence_state['extended_status']['available'] = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and self.presence_state['basic_status'] == 'open'))
+        if not resources:
+            return              
 
-                    if self.presence_state['extended_status']['busy'] is False:
-                        self.presence_state['extended_status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
+        for uri, resource in resources.iteritems():
+            self.pidfs_map[uri] = resource.pidf_list
 
-                    if self.presence_state['extended_status']['extended-away'] is False:
-                        self.presence_state['extended_status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
-                    
-                    if self.presence_state['extended_status']['away'] is False:
-                        self.presence_state['extended_status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
+        presence_notes = []
+        basic_status = 'closed'
+        self.init_presence_state()
 
-                    for service in pidf.services:
-                        for note in service.notes:
-                            if note:
-                                presence_notes.append(note)
+        pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
+        if pidfs:
+            for pidf in pidfs:
+                if basic_status is 'closed':
+                    basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
 
-                notes = list(unicode(note) for note in presence_notes)
-                self.presence_state['presence_notes'] = notes
+                if self.presence_state['status']['available'] is False:
+                    self.presence_state['status']['available'] = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
 
-                if self.presence_state['extended_status']['busy']:
-                    self.setPresenceIndicator("busy")
-                elif self.presence_state['extended_status']['extended-away']:
-                    self.setPresenceIndicator("busy")
-                elif self.presence_state['extended_status']['away']:
-                    self.setPresenceIndicator("away")
-                elif self.presence_state['extended_status']['available']:
-                    self.setPresenceIndicator("available")
-                else:
-                    self.setPresenceIndicator("unknown")
+                if self.presence_state['status']['busy'] is False:
+                    self.presence_state['status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
+
+                if self.presence_state['status']['extended-away'] is False:
+                    self.presence_state['status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
+                
+                if self.presence_state['status']['away'] is False:
+                    self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
+
+                for service in pidf.services:
+                    for note in service.notes:
+                        if note:
+                            presence_notes.append(note)
+
+            notes = list(unicode(note) for note in presence_notes)
+            self.presence_state['presence_notes'] = notes
+
+            if self.presence_state['status']['busy']:
+                self.setPresenceIndicator("busy")
+            elif self.presence_state['status']['extended-away']:
+                self.setPresenceIndicator("busy")
+            elif self.presence_state['status']['away']:
+                self.setPresenceIndicator("away")
+            elif self.presence_state['status']['available']:
+                self.setPresenceIndicator("available")
             else:
                 self.setPresenceIndicator("unknown")
+        else:
+            self.setPresenceIndicator("unknown")
 
-            self.pending_authorizations = {}
-            for resource in resources:
-                if resource.state == 'pending':
-                    self.presence_state['pending_authorizations'][resource.uri] = True
+        self.pending_authorizations = {}
+        for uri, resource in resources.iteritems():
+            if resource.state == 'pending':
+                self.presence_state['pending_authorizations'][resource.uri] = True
 
-            NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+        NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
