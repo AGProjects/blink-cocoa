@@ -473,12 +473,12 @@ class BlinkPresenceContact(BlinkContact):
 
             if self.presence_state['status']['busy']:
                 self.setPresenceIndicator("busy")
+            elif self.presence_state['status']['available']:
+                self.setPresenceIndicator("available")
             elif self.presence_state['status']['extended-away']:
                 self.setPresenceIndicator("busy")
             elif self.presence_state['status']['away']:
                 self.setPresenceIndicator("away")
-            elif self.presence_state['status']['available']:
-                self.setPresenceIndicator("available")
             else:
                 self.setPresenceIndicator("unknown")
         else:
