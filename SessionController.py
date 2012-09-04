@@ -1446,11 +1446,11 @@ class SessionController(NSObject):
             self.call_id = ''
         try:
             self.to_tag = sender._invitation.to_header.parameters['tag']
-        except KeyError, AttributeError:
+        except (KeyError, AttributeError):
             self.to_tag = ''
         try:
             self.from_tag = sender._invitation.from_header.parameters['tag']
-        except KeyError, AttributeError:
+        except (KeyError, AttributeError):
             self.from_tag = ''
 
         if data.failure_reason == 'Unknown error 61':
