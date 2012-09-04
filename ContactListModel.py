@@ -68,30 +68,6 @@ from util import *
 
 ICON_SIZE = 128
 
-PresenceActivityPrefix = {
-    "Available": "is",
-    "Working": "is",
-    "Appointment": "has an",
-    "Busy": "is",
-    "Breakfast": "is having",
-    "Lunch": "is having",
-    "Dinner": "is having",
-    "Travel": "is in",
-    "Driving": "is",
-    "Playing": "is",
-    "Spectator": "is a",
-    "TV": "is watching",
-    "Away": "is",
-    "Invisible": "is",
-    "Meeting": "is in a",
-    "On the phone": "is",
-    "Presentation": "is at a",
-    "Performance": "gives a",
-    "Sleeping": "is",
-    "Vacation": "is in",
-    "Holiday": "is in"
-    }
-
 
 class Avatar(object):
     def __init__(self, icon, path=None):
