@@ -473,7 +473,16 @@ class ContactWindowController(NSWindowController):
     def showPresenceInfo_(self, sender):
         if not self.presenceInfoPanel:
             self.presenceInfoPanel = PresenceInfoController()
-        self.presenceInfoPanel.show(sender.representedObject())
+
+        if sender.tag() == 50: # main menu selected
+            row = self.contactOutline.selectedRow()
+            selected = self.contactOutline.itemAtRow_(row) if row >=0 else None
+            if selected:
+                has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs
+                if has_presence_info:
+                    self.presenceInfoPanel.show(selected)
+        else: # contextul menu selected
+            self.presenceInfoPanel.show(sender.representedObject())
 
     @objc.IBAction
     def showChatWindow_(self, sender):
@@ -3167,7 +3176,7 @@ class ContactWindowController(NSWindowController):
             if isinstance(item, BlinkPresenceContact):
                 if item.pidfs:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Presence Information...", "showPresenceInfo:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Presence Information", "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -3363,10 +3372,12 @@ class ContactWindowController(NSWindowController):
             selected_contact = None
             selected_group = None
             selected = self.contactOutline.itemAtRow_(row) if row >=0 else None
+            has_presence_info = False
             if selected:
                 if isinstance(selected, BlinkContact):
                     selected_contact = selected
                     selected_group = self.contactOutline.parentForItem_(selected)
+                    has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs
                 elif isinstance(selected, BlinkGroup):
                     selected_contact = None
                     selected_group = selected
@@ -3375,6 +3386,9 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(selected_contact and selected_contact.editable)
             item = self.contactsMenu.itemWithTag_(32) # Delete Contact
             item.setEnabled_(selected_contact and selected_contact.deletable)
+            item = self.contactsMenu.itemWithTag_(50) # Presence Info
+            item.setEnabled_(True)
+            item.setRepresentedObject_(selected if has_presence_info else None)
             item = self.contactsMenu.itemWithTag_(33) # Add Group
             item.setEnabled_(True)
             item = self.contactsMenu.itemWithTag_(34) # Edit Group
