@@ -312,11 +312,12 @@ class AddContactController(NSObject):
 
         contact_uri = self.uris[row]
         if column == 0:
-            if not self.checkURI(str(object)):
-                NSRunAlertPanel("Invalid address", "Please enter an address containing alpha numeric characters and no spaces",
+            uri = str(object).lower().replace(" ", "")
+            if not self.checkURI(uri):
+                NSRunAlertPanel("Invalid address", "Please enter an address containing alpha numeric characters",
                                 "OK", None, None)
                 return
-            contact_uri.uri = str(object)
+            contact_uri.uri = uri
         elif column == 1:
             contact_uri.type = str(cell.itemAtIndex_(object).title())
 
