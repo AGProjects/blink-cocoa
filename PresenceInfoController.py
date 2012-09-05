@@ -52,6 +52,7 @@ class PresenceInfoController(NSObject):
         self.name.setStringValue_(self.contact.name)
         self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
         self.window.orderFront_(None)
+        self.icon.setImage_(self.contact.avatar.icon)
         self.pidfs = chain(*(item for item in self.contact.pidfs_map.itervalues()))
         self.render_pidf()
 
@@ -64,8 +65,6 @@ class PresenceInfoController(NSObject):
         if text:
             astring = NSAttributedString.alloc().initWithString_(text)
             self.presenceText.textStorage().appendAttributedString_(astring)
-            self.presenceText.scrollRangeToVisible_(NSMakeRange(self.presenceText.textStorage().length()-1, 1))
-            self.icon.setImage_(self.contact.avatar.icon)
 
         image = None
         if self.contact.presence_state['status']['busy']: 
