@@ -257,7 +257,7 @@ class PresenceInfoController(NSObject):
                     offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
                 else:
                     offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
-                buf.append("          Current device time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
+                buf.append("          Current time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
 
         # display user input
         if service.user_input is not None:
