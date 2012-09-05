@@ -233,6 +233,32 @@ class PresenceInfoController(NSObject):
         # display status icon
         if service.status_icon is not None:
             buf.append("      Status icon: %s" % service.status_icon)
+        # display capabilities
+        if service.capabilities is not None:
+            caps = []
+            if service.capabilities.audio:
+                caps.append("Audio")
+            if service.capabilities.message:
+                caps.append("Chat")
+            if service.capabilities.file_transfer:
+                caps.append("File Transfer")
+            if service.capabilities.screen_sharing:
+                caps.append("Screen Sharing")
+            buf.append("      Media capabilities: %s" % ", ".join(caps))
+        # display capabilities
+        if service.device_info is not None:
+            buf.append("      Device information:")
+            buf.append("          Hostname: %s" % service.device_info.description)
+            buf.append("          User Agent: %s" % service.device_info.user_agent)
+            if service.device_info.time_offset is not None:
+                ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
+                time_offset = int(service.device_info.time_offset)/60.0
+                if time_offset == int(time_offset):
+                    offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                else:
+                    offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                buf.append("          Current device time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
+
         # display user input
         if service.user_input is not None:
             buf.append("      Service is %s" % service.user_input)
