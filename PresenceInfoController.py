@@ -297,36 +297,46 @@ class PresenceInfoController(NSObject):
         persons = {}
         devices = {}
         services = {}
+        is_blink = False 
         for child in pidf:
-            if isinstance(child, Person):
+            if isinstance(child, Service):
+                services[child.id] = child
+                if child.device_info is not None and child.device_info.user_agent is not None and child.device_info.user_agent.value.startswith('Blink'):
+                    is_blink = True 
+            elif isinstance(child, Person):
                 persons[child.id] = child
             elif isinstance(child, Device):
                 devices[child.id] = child
-            elif isinstance(child, Service):
-                services[child.id] = child
         
-        # handle person information
-        if len(persons) == 0:
-            if list(pidf.notes):
-                buf.append("  Person information:")
-                for note in pidf.notes:
-                    buf.append("      %s" % self._format_note(note))
+        if is_blink:
+            # handle services informaation
+            if len(services) > 0:
+                for service in services.values():
+                    buf.append("  Service: %s" % service.id)
+                    buf.extend(self._format_service(service, pidf))                    
         else:
-            for person in persons.values():
-                buf.append("  Person: %s" % person.id)
-                buf.extend(self._format_person(person, pidf))
+            # handle person information
+            if len(persons) == 0:
+                if list(pidf.notes):
+                    buf.append("  Person information:")
+                    for note in pidf.notes:
+                        buf.append("      %s" % self._format_note(note))
+            else:
+                for person in persons.values():
+                    buf.append("  Person: %s" % person.id)
+                    buf.extend(self._format_person(person, pidf))
 
-        # handle services informaation
-        if len(services) > 0:
-            for service in services.values():
-                buf.append("  Service: %s" % service.id)
-                buf.extend(self._format_service(service, pidf))
-        
-        # handle devices informaation
-        if len(devices) > 0:
-            for device in devices.values():
-                buf.append("  Device: %s" % device.id)
-                buf.extend(self._format_device(device, pidf))
-        
+            # handle services informaation
+            if len(services) > 0:
+                for service in services.values():
+                    buf.append("  Service: %s" % service.id)
+                    buf.extend(self._format_service(service, pidf))
+            
+            # handle devices informaation
+            if len(devices) > 0:
+                for device in devices.values():
+                    buf.append("  Device: %s" % device.id)
+                    buf.extend(self._format_device(device, pidf))
+            
         return '\n'.join(buf)
         
