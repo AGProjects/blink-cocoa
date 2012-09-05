@@ -3058,6 +3058,8 @@ class ContactWindowController(NSWindowController):
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
+        added_separator = False
+
         if isinstance(item, BlinkContact):
             has_full_sip_uri = is_sip_aor_format(item.uri)
             if len(item.uris) > 1 and not isinstance(item, BlinkBlockedPresenceContact):
@@ -3096,47 +3098,42 @@ class ContactWindowController(NSWindowController):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
 
-                    if NSApp.delegate().applicationName != 'Blink Lite':
-                        if item not in self.model.bonjour_group.contacts:
-                            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                            history_submenu = NSMenu.alloc().init()
-                            for uri in item.uris:
-                                history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "viewHistory:", "")
-                                history_item.setRepresentedObject_(uri.uri)
-                            if history_submenu.itemArray():
-                                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "", "")
-                                self.contactContextMenu.setSubmenu_forItem_(history_submenu, mitem)
-
-                    added_separator = False
                     if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
                         ds_submenu = NSMenu.alloc().init()
                         for uri in item.uris:
                             if is_sip_aor_format(uri.uri):
-                                if not added_separator:
-                                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                                    added_separator = True
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                                 ds_item.setRepresentedObject_(uri.uri)
                                 ds_item.setTag_(1)
-
+                        
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-
+                    
                     if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
                         ds_submenu = NSMenu.alloc().init()
                         for uri in item.uris:
                             if is_sip_aor_format(uri.uri):
-                                if not added_separator:
-                                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                                    added_separator = True
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                                 ds_item.setRepresentedObject_(uri.uri)
                                 ds_item.setTag_(2)
-
+                        
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
+
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    if item not in self.model.bonjour_group.contacts:
+                        history_submenu = NSMenu.alloc().init()
+                        for uri in item.uris:
+                            history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "viewHistory:", "")
+                            history_item.setRepresentedObject_(uri.uri)
+                        if history_submenu.itemArray():
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show History", "", "")
+                            self.contactContextMenu.setSubmenu_forItem_(history_submenu, mitem)
+                            mitem.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
+
+
             else:
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
                     # Contact has a single URI                    
@@ -3154,15 +3151,8 @@ class ContactWindowController(NSWindowController):
 
                         if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                             if has_full_sip_uri:
-                                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                                 self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
 
-                        if NSApp.delegate().applicationName != 'Blink Lite':
-                            if item not in self.model.bonjour_group.contacts:
-                                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
-
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         if self.sessionControllersManager.isMediaTypeSupported('desktop-client'):
                             contact = item.name
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startDesktopToSelected:", "")
@@ -3173,19 +3163,24 @@ class ContactWindowController(NSWindowController):
                             mitem.setTag_(2)
                             mitem.setEnabled_(has_full_sip_uri)
 
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        if item not in self.model.bonjour_group.contacts:
+                            self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show History", "viewHistory:", "")
+                            mitem.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
+
+
             if isinstance(item, BlinkPresenceContact):
                 if item.pidfs_map:
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Presence Information", "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
+                
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.auto_answer else NSOffState)
                 settings = SIPSimpleSettings()
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
