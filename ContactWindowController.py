@@ -3122,8 +3122,8 @@ class ContactWindowController(NSWindowController):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     if item not in self.model.bonjour_group.contacts:
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         history_submenu = NSMenu.alloc().init()
                         for uri in item.uris:
                             history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "viewHistory:", "")
@@ -3163,8 +3163,8 @@ class ContactWindowController(NSWindowController):
                             mitem.setTag_(2)
                             mitem.setEnabled_(has_full_sip_uri)
 
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         if item not in self.model.bonjour_group.contacts:
+                            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show History", "viewHistory:", "")
                             mitem.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
