@@ -49,6 +49,8 @@ class PresenceInfoController(NSObject):
     def show(self, contact):
         self.contact =  contact
         self.window.setTitle_(u'Presence Information for %s' % contact.name)
+        self.name.setStringValue_(self.contact.name)
+        self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
         self.window.orderFront_(None)
         self.pidfs = chain(*(item for item in self.contact.pidfs_map.itervalues()))
         self.render_pidf()
@@ -59,13 +61,13 @@ class PresenceInfoController(NSObject):
             text += self.build_pidf_text(pidf) + '\n\n'
 
         self.presenceText.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.presenceText.textStorage().length()))
-        astring = NSAttributedString.alloc().initWithString_(text)
-        self.presenceText.textStorage().appendAttributedString_(astring)
-        self.presenceText.scrollRangeToVisible_(NSMakeRange(self.presenceText.textStorage().length()-1, 1))
-        self.icon.setImage_(self.contact.avatar.icon)
-        self.name.setStringValue_(self.contact.name)
-        self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
+        if text:
+            astring = NSAttributedString.alloc().initWithString_(text)
+            self.presenceText.textStorage().appendAttributedString_(astring)
+            self.presenceText.scrollRangeToVisible_(NSMakeRange(self.presenceText.textStorage().length()-1, 1))
+            self.icon.setImage_(self.contact.avatar.icon)
 
+        image = None
         if self.contact.presence_state['status']['busy']: 
             image = 'status-user-busy-icon'
         elif self.contact.presence_state['status']['extended-away']:
@@ -75,7 +77,7 @@ class PresenceInfoController(NSObject):
         elif self.contact.presence_state['status']['available']:
             image = 'status-user-available-icon'
 
-        if image:
+        if image is not None:
             icon = NSImage.imageNamed_(image)
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
