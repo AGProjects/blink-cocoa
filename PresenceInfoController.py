@@ -19,6 +19,10 @@ class PresenceInfoController(NSObject):
     implements(IObserver)
 
     window = objc.IBOutlet()
+    icon = objc.IBOutlet()
+    presence_icon = objc.IBOutlet()
+    name = objc.IBOutlet()
+    addresses = objc.IBOutlet()
     presenceText = objc.IBOutlet()
     contact = None
     pidfs = []
@@ -53,7 +57,29 @@ class PresenceInfoController(NSObject):
         text = ''
         for pidf in self.pidfs:
             text += self.build_pidf_text(pidf) + '\n\n'
-        self.presenceText.setStringValue_(text)
+
+        self.presenceText.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.presenceText.textStorage().length()))
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.presenceText.textStorage().appendAttributedString_(astring)
+        self.presenceText.scrollRangeToVisible_(NSMakeRange(self.presenceText.textStorage().length()-1, 1))
+        self.icon.setImage_(self.contact.avatar.icon)
+        self.name.setStringValue_(self.contact.name)
+        self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
+
+        if self.contact.presence_state['status']['busy']: 
+            image = 'status-user-busy-icon'
+        elif self.contact.presence_state['status']['extended-away']:
+            image = 'status-user-extended-away-icon'
+        elif self.contact.presence_state['status']['away']:
+            image = 'status-user-away-icon'
+        elif self.contact.presence_state['status']['available']:
+            image = 'status-user-available-icon'
+
+        if image:
+            icon = NSImage.imageNamed_(image)
+            icon.setScalesWhenResized_(True)
+            icon.setSize_(NSMakeSize(12,12))
+            self.presence_icon.setImage_(icon)
 
     def windowShouldClose_(self, sender):
         self.contact = None
