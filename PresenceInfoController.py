@@ -220,10 +220,6 @@ class PresenceInfoController(NSObject):
         # display contact
         if service.contact is not None:
             buf.append("      Contact%s: %s" % ((service.contact.priority is not None) and (' priority %s' % service.contact.priority) or '', urllib.unquote(service.contact.value)))
-        # display device ID
-        if service.device_info is not None:
-            description = " (%s)" % urllib.unquote(service.device_info.description.value).decode('utf-8') if service.device_info.description else ""
-            buf.append("      Service offered by device: %s%s" % (service.device_info.id, description))
         # display relationship
         if service.relationship is not None:
             buf.append("      Relationship: %s" % service.relationship.value)
@@ -245,9 +241,10 @@ class PresenceInfoController(NSObject):
             if service.capabilities.screen_sharing:
                 caps.append("Screen Sharing")
             buf.append("      Media capabilities: %s" % ", ".join(caps))
-        # display capabilities
-        if service.device_info is not None and (service.device_info.user_agent is not None or service.device_info.description is not None):
-            buf.append("      Device information:")
+        # display device ID
+        if service.device_info is not None:
+            description = " (%s)" % urllib.unquote(service.device_info.description.value).decode('utf-8') if service.device_info.description else ""
+            buf.append("      Device: %s%s" % (service.device_info.id, description))
             if service.device_info.description is not None:
                 buf.append("          Hostname: %s" % service.device_info.description)
             if service.device_info.user_agent is not None:
