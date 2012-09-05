@@ -246,10 +246,12 @@ class PresenceInfoController(NSObject):
                 caps.append("Screen Sharing")
             buf.append("      Media capabilities: %s" % ", ".join(caps))
         # display capabilities
-        if service.device_info is not None:
+        if service.device_info is not None and (service.device_info.user_agent is not None or service.device_info.description is not None):
             buf.append("      Device information:")
-            buf.append("          Hostname: %s" % service.device_info.description)
-            buf.append("          User Agent: %s" % service.device_info.user_agent)
+            if service.device_info.description is not None:
+                buf.append("          Hostname: %s" % service.device_info.description)
+            if service.device_info.user_agent is not None:
+                buf.append("          User Agent: %s" % service.device_info.user_agent)
             if service.device_info.time_offset is not None:
                 ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
                 time_offset = int(service.device_info.time_offset)/60.0
@@ -293,7 +295,7 @@ class PresenceInfoController(NSObject):
 
     def build_pidf_text(self, pidf):
         buf = []
-        buf.append("Internet Address %s" % urllib.unquote(pidf.entity))
+        buf.append("Internet address: %s" % urllib.unquote(pidf.entity))
         persons = {}
         devices = {}
         services = {}
