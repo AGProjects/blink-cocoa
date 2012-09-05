@@ -192,12 +192,12 @@ class BlinkAppDelegate(NSObject):
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
                 if NSRunAlertPanel("Error Reading Configurations",
-                    """The configuration file could not be read. The file could be corrupted or written by an older version of Blink. You might need to Replace it and re-enter your account information. Your old file will be backed up.""",
+                    """The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. \n\nThe exception was: '%s'""" % (config_file, exc),
                     "Replace", "Quit", None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
-                os.rename(config_file, config_file+".oldfmt")
-                BlinkLogger().log_info(u"Renamed configuration file to %s" % config_file+".oldfmt")
+                os.rename(config_file, config_file+".corrupted")
+                BlinkLogger().log_info(u"Renamed configuration file to %s" % config_file+".corrupted")
             except BaseException, exc:
                 import traceback
                 print traceback.print_exc()
