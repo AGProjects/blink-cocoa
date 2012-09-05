@@ -19,8 +19,8 @@ from application.system import host, makedirs, unlink
 
 from collections import defaultdict
 from datetime import datetime
-from eventlet import api, coros, proc
-from eventlet.green import select
+from eventlib import api, coros, proc
+from eventlib.green import select
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
 from twisted.internet import reactor

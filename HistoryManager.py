@@ -22,7 +22,7 @@ from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, Unicod
 from sqlobject import connectionForURI
 from sqlobject import dberrors
 
-from eventlet.twistedutil import block_on
+from eventlib.twistedutil import block_on
 from twisted.internet import reactor
 from twisted.internet.threads import deferToThreadPool
 from twisted.python.threadpool import ThreadPool
