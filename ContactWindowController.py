@@ -2150,6 +2150,7 @@ class ContactWindowController(NSWindowController):
             return
         
         current_presence_activity = selected_item.representedObject()
+        current_presence_activity['note'] = self.presenceNoteText.stringValue()
         if self.presenceActivityBeforeOnThePhone:
             if not hasAudio and current_presence_activity['extended_status'] != 'available':
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceActivityBeforeOnThePhone)
