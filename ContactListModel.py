@@ -164,7 +164,7 @@ class DefaultMultiUserAvatar(Avatar):
         path = os.path.join(self.base_path, filename)
         makedirs(os.path.dirname(path))
         if not os.path.isfile(path):
-            icon = NSImage.imageNamed_("NSUserGroup")
+            icon = NSImage.imageNamed_("NSEveryone")
             icon.setSize_(NSMakeSize(32, 32))
             data = icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
             data.writeToFile_atomically_(path, False)

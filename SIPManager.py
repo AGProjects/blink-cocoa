@@ -26,6 +26,7 @@ from gnutls.errors import GNUTLSError
 from twisted.internet import reactor
 from zope.interface import implements
 
+from sipsimple.core import CORE_REVISION as core_version
 from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
@@ -407,8 +408,7 @@ class SIPManager(object):
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
-        BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s" % sdk_version)
-
+        BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s, core version %s" % (sdk_version, core_version))
         build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
         date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
         BlinkLogger().log_info(u"Build %s from %s" % (build, date))

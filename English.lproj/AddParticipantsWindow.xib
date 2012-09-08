@@ -2,13 +2,13 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1070</int>
-		<string key="IBDocument.SystemVersion">11C74</string>
-		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1138.23</string>
-		<string key="IBDocument.HIToolboxVersion">567.00</string>
+		<string key="IBDocument.SystemVersion">11E2620</string>
+		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
+		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">1938</string>
+			<string key="NS.object.0">2182</string>
 		</object>
 		<array key="IBDocument.IntegratedClassDependencies">
 			<string>NSSegmentedControl</string>
@@ -175,6 +175,7 @@
 							<string key="NSFrame">{{394, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="513279825">
 								<int key="NSCellFlags">67239424</int>
@@ -223,7 +224,7 @@
 								<string>NeXT Encapsulated PostScript v1.2 pasteboard type</string>
 								<string>NeXT TIFF v4.0 pasteboard type</string>
 							</set>
-							<string key="NSFrame">{{13, 259}, {89, 66}}</string>
+							<string key="NSFrame">{{57, 261}, {64, 47}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="811447867"/>
@@ -233,10 +234,10 @@
 								<int key="NSCellFlags2">33554432</int>
 								<object class="NSCustomResource" key="NSContents">
 									<string key="NSClassName">NSImage</string>
-									<string key="NSResourceName">test@conference.sip2sip.info</string>
+									<string key="NSResourceName">NSEveryone</string>
 								</object>
 								<int key="NSAlign">0</int>
-								<int key="NSScale">0</int>
+								<int key="NSScale">3</int>
 								<int key="NSStyle">0</int>
 								<bool key="NSAnimates">YES</bool>
 							</object>
@@ -600,7 +601,6 @@
 						<reference key="object" ref="1006"/>
 						<array class="NSMutableArray" key="children">
 							<reference ref="833830345"/>
-							<reference ref="932701144"/>
 							<reference ref="340710545"/>
 							<reference ref="766299549"/>
 							<reference ref="40196455"/>
@@ -610,6 +610,7 @@
 							<reference ref="443369633"/>
 							<reference ref="901789684"/>
 							<reference ref="811447867"/>
+							<reference ref="932701144"/>
 						</array>
 						<reference key="parent" ref="1005"/>
 					</object>
@@ -922,8 +923,8 @@
 		<int key="IBDocument.defaultPropertyAccessControl">3</int>
 		<dictionary class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">
 			<string key="NSAddTemplate">{8, 8}</string>
+			<string key="NSEveryone">{32, 32}</string>
 			<string key="NSRemoveTemplate">{8, 8}</string>
-			<string key="test@conference.sip2sip.info">{140, 140}</string>
 		</dictionary>
 	</data>
 </archive>

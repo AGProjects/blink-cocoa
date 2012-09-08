@@ -101,7 +101,7 @@ class AudioSession(NSView):
             NSString.stringWithString_(text).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
 
-        icon = NSImage.imageNamed_("NSUserGroup")
+        icon = NSImage.imageNamed_("NSEveryone")
         rect = frame
         s = icon.size()
         p = NSMakePoint(NSWidth(rect) - s.width - 8, rect.size.height - s.height - 8)
