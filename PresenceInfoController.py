@@ -62,9 +62,8 @@ class PresenceInfoController(NSObject):
             text += self.build_pidf_text(pidf) + '\n\n'
 
         self.presenceText.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.presenceText.textStorage().length()))
-        if text:
-            astring = NSAttributedString.alloc().initWithString_(text)
-            self.presenceText.textStorage().appendAttributedString_(astring)
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.presenceText.textStorage().appendAttributedString_(astring)
 
         image = None
         if self.contact.presence_state['status']['busy']: 
