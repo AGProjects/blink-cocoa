@@ -396,10 +396,7 @@ class BlinkPresenceContact(BlinkContact):
         self.presence_note = None
         self.pidfs_map = []
         self.init_presence_state()
-
-        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceContactTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+        self.timer = None
 
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
@@ -470,7 +467,6 @@ class BlinkPresenceContact(BlinkContact):
 
             notes = list(unicode(note) for note in presence_notes)
             self.presence_state['presence_notes'] = notes
-
             if self.presence_state['status']['busy']:
                 self.setPresenceIndicator("busy")
             elif self.presence_state['status']['available']:
@@ -488,6 +484,16 @@ class BlinkPresenceContact(BlinkContact):
         for uri, resource in resources.iteritems():
             if resource.state == 'pending':
                 self.presence_state['pending_authorizations'][resource.uri] = True
+
+        if len(self.presence_state['presence_notes']) > 1 and self.timer is None:
+            self.setPresenceNote()
+            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceContactTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+        elif not self.presence_state['presence_notes'] and self.timer is not None and self.timer.isValid():
+            self.setPresenceNote()
+            self.timer.invalidate()
+            self.timer = None
 
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
