@@ -1818,7 +1818,6 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def actionButtonClicked_(self, sender):
-
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             target = unicode(self.searchBox.stringValue()).strip()
             if not target:
@@ -1834,7 +1833,9 @@ class ContactWindowController(NSWindowController):
             except IndexError:
                 return
             if sender == self.contactOutline or sender == self.searchOutline:
-                if contact.preferred_media == "chat":
+                if isinstance(contact, BonjourBlinkContact) and 'isfocus' in contact.uri:
+                    media=('chat', 'audio')
+                elif contact.preferred_media == "chat":
                     media = "chat"
                 else:
                     media = "audio"
