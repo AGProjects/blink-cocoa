@@ -59,7 +59,11 @@ class PresenceInfoController(NSObject):
     def render_pidf(self):  
         text = ''
         for pidf in self.pidfs:
-            text += self.build_pidf_text(pidf) + '\n\n'
+            try:
+                text += self.build_pidf_text(pidf) + '\n\n'
+            except Exception, e:
+                text += "Internet address: %s\n" % urllib.unquote(pidf.entity)
+                text += 'Error parsing pidf:%s' % e + '\n\n'
 
         self.presenceText.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.presenceText.textStorage().length()))
         astring = NSAttributedString.alloc().initWithString_(text)
