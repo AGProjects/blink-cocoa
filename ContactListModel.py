@@ -332,12 +332,124 @@ class BlinkContact(NSObject):
 
 class BlinkConferenceContact(BlinkContact):
     """Contact representation for conference drawer UI"""
+    implements(IObserver)
+    nc = NotificationCenter()
 
-    def __init__(self, uri, name=None, icon=None):
+    def __init__(self, uri, name=None, icon=None, presence_contact=None):
         super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
         self.active_media = []
         self.screensharing_url = None
+        self.presence_contact = presence_contact
+        if self.presence_contact is not None:
+            self.nc.add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
+        
+        self.presence_indicator = 'unknown'
+        self.presence_note = None
+        self.init_presence_state()
+        self.updatePresenceState()
 
+    def dealloc(self):
+        self.avatar = None
+        if self.presence_contact is not None:
+            self.presence_contact = None
+            self.nc.remove_observer(self, name="BlinkContactPresenceHasChaged")
+        self.nc = None
+        super(BlinkConferenceContact, self).dealloc()
+
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def init_presence_state(self):
+        self.presence_state = { 'presence_notes': [],
+            'pending_authorizations':    {},
+            'status': { 'available':     False,
+                'extended-away': False,
+                'away':          False,
+                'busy':          False
+        }
+    }
+ 
+    def setPresenceIndicator(self, indicator):
+        self.presence_indicator = indicator
+    
+    def setPresenceNote(self):
+        presence_notes = self.presence_state['presence_notes']
+        if presence_notes:
+            if self.presence_note is None:
+                self.presence_note = presence_notes[0]
+            else:
+                try:
+                    index = presence_notes.index(self.presence_note)
+                except ValueError:
+                    self.presence_note = presence_notes[0]
+                else:
+                    try:
+                        self.presence_note = presence_notes[index+1]
+                    except IndexError:
+                        self.presence_note = presence_notes[0]
+            detail = self.presence_note if self.presence_note else '%s' % self.uri
+        else:
+            detail = '%s' % self.uri
+        
+        if detail != self.detail:
+            self.detail = detail
+   
+    def _NH_BlinkContactPresenceHasChaged(self, notification):
+        self.updatePresenceState() 
+    
+    def updatePresenceState(self):
+        if self.presence_contact is None:
+            return
+        pidfs = []
+        try:
+            uri = 'sip:%s' % self.uri
+            pidfs = self.presence_contact.pidfs_map[uri]
+        except KeyError:
+            pass
+
+        presence_notes = []
+        basic_status = 'closed'
+        self.init_presence_state()
+        
+        for pidf in pidfs:
+            if basic_status is 'closed':
+                basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
+            
+            if self.presence_state['status']['available'] is False:
+                self.presence_state['status']['available'] = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
+            
+            if self.presence_state['status']['busy'] is False:
+                self.presence_state['status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
+            
+            if self.presence_state['status']['extended-away'] is False:
+                self.presence_state['status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
+            
+            if self.presence_state['status']['away'] is False:
+                self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
+            
+            for service in pidf.services:
+                for note in service.notes:
+                    if note:
+                        presence_notes.append(note)
+    
+        notes = list(unicode(note) for note in presence_notes)
+        self.presence_state['presence_notes'] = notes
+        if self.presence_state['status']['busy']:
+            self.setPresenceIndicator("busy")
+        elif self.presence_state['status']['available']:
+            self.setPresenceIndicator("available")
+        elif self.presence_state['status']['extended-away']:
+            self.setPresenceIndicator("busy")
+        elif self.presence_state['status']['away']:
+            self.setPresenceIndicator("away")
+        else:
+            self.setPresenceIndicator("unknown")
+
+        self.setPresenceNote()
+
+        NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChaged", sender=self)
 
 class BlinkPendingWatcher(BlinkContact):
     """Contact representation for a pending watcher"""

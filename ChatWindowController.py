@@ -123,6 +123,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkDidRenegotiateStreams")
             self.notification_center.add_observer(self, name="BlinkVideoEnteredFullScreen")
             self.notification_center.add_observer(self, name="BlinkVideoExitedFullScreen")
+            self.notification_center.add_observer(self, name="BlinkConferenceContactPresenceHasChaged")
 
             ns_nc = NSNotificationCenter.defaultCenter()
             ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
@@ -169,6 +170,7 @@ class ChatWindowController(NSWindowController):
         self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
         self.notification_center.remove_observer(self, name="BlinkVideoEnteredFullScreen")
         self.notification_center.remove_observer(self, name="BlinkVideoExitedFullScreen")
+        self.notification_center.remove_observer(self, name="BlinkConferenceContactPresenceHasChaged")
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.participantsTableView)
@@ -507,6 +509,13 @@ class ChatWindowController(NSWindowController):
                 return chatStream.validateToolbarButton(item)
         else:
             return False
+            
+    def _NH_BlinkConferenceContactPresenceHasChaged(self, sender, data):
+        try:
+            idx = self.participants.index(sender)
+            self.participantsTableView.reloadDataForRowIndexes_columnIndexes_(NSIndexSet.indexSetWithIndex_(idx), NSIndexSet.indexSetWithIndex_(0))
+        except ValueError:
+            pass
 
     @objc.IBAction
     def stopConferenceScreenSharing_(self, sender):
@@ -1291,7 +1300,7 @@ class ChatWindowController(NSWindowController):
                 if contact:
                     if contact.icon:
                         icon = contact.icon
-                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=icon)
+                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=icon, presence_contact=contact)
                 else:
                     uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()
@@ -1330,7 +1339,7 @@ class ChatWindowController(NSWindowController):
                         contact = getContactMatchingURI(uri)
                         if contact:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                            contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
+                            contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon, presence_contact=contact)
                         else:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                             contact = BlinkConferenceContact(uri, name=display_name)
@@ -1577,7 +1586,7 @@ class ChatWindowController(NSWindowController):
                 getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
                 contact = getContactMatchingURI(uri)
                 if contact:
-                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
+                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact)
                 else:
                     contact = BlinkConferenceContact(uri, name=uri)
                 contact.detail = 'Invitation sent...'

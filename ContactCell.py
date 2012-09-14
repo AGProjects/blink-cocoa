@@ -73,7 +73,7 @@ class ContactCell(NSTextFieldCell):
             return
 
         padding = 16
-        left = self.frame.size.width
+        left = self.frame.size.width - 6
         if 'audio-onhold' in self.contact.active_media:
             left = left - padding
             self.drawIcon(self.audioHoldIcon, left, self.frame.origin.y +14, 16, 16)
