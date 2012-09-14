@@ -20,7 +20,7 @@ from urllib import unquote
 from MediaStream import *
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
-from ContactListModel import BlinkConferenceContact
+from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
 import ParticipantsTableView
@@ -1300,7 +1300,7 @@ class ChatWindowController(NSWindowController):
                 if contact:
                     if contact.icon:
                         icon = contact.icon
-                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=icon, presence_contact=contact)
+                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
                 else:
                     uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()
@@ -1339,7 +1339,7 @@ class ChatWindowController(NSWindowController):
                         contact = getContactMatchingURI(uri)
                         if contact:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                            contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon, presence_contact=contact)
+                            contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
                         else:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                             contact = BlinkConferenceContact(uri, name=display_name)
@@ -1586,7 +1586,7 @@ class ChatWindowController(NSWindowController):
                 getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
                 contact = getContactMatchingURI(uri)
                 if contact:
-                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact)
+                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
                 else:
                     contact = BlinkConferenceContact(uri, name=uri)
                 contact.detail = 'Invitation sent...'
