@@ -50,7 +50,7 @@ class PresenceInfoController(NSObject):
 
     def show(self, contact):
         self.contact =  contact
-        self.window.setTitle_(u'Presence Information for %s' % contact.name)
+        self.window.setTitle_(u'Presence Information published by %s' % contact.name)
         self.name.setStringValue_(self.contact.name)
         self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
         self.window.orderFront_(None)
