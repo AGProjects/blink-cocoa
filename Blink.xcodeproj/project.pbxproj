@@ -3305,6 +3305,7 @@
 					"$(inherited)",
 					/usr/local/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "F927A197-D9B2-4F8F-95E2-4EA5C4323ACA";
 				SDKROOT = macosx10.6;
@@ -3337,6 +3338,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "2A1BBBFF-11CC-4BFD-B96A-E9E65B82706C";
