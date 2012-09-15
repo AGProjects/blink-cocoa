@@ -37,6 +37,7 @@ import os
 import re
 import cPickle
 import unicodedata
+import urllib
 
 import AddressBook
 from Foundation import *
@@ -517,7 +518,8 @@ class BlinkPresenceContact(BlinkContact):
                 'extended-away': False,
                 'away':          False,
                 'busy':          False
-            }
+            },
+            'offset_info':   {}
         }
 
     def presenceContactTimer_(self, timer):
@@ -553,6 +555,7 @@ class BlinkPresenceContact(BlinkContact):
         presence_notes = []
         basic_status = 'closed'
         self.init_presence_state()
+        offset_infos = {}
 
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
         if pidfs:
@@ -577,6 +580,16 @@ class BlinkPresenceContact(BlinkContact):
                         if note:
                             presence_notes.append(note)
 
+                    if service.device_info is not None and service.device_info.time_offset is not None:
+                        ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
+                        time_offset = int(service.device_info.time_offset)/60.0
+                        if time_offset == int(time_offset):
+                            offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                        else:
+                            offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                        offset_infos[urllib.unquote(service.device_info.id)] = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
+
+            self.presence_state['offset_info'] = offset_infos
             notes = list(unicode(note) for note in presence_notes)
             self.presence_state['presence_notes'] = notes
             if self.presence_state['status']['busy']:
@@ -597,13 +610,12 @@ class BlinkPresenceContact(BlinkContact):
             if resource.state == 'pending':
                 self.presence_state['pending_authorizations'][resource.uri] = True
 
+        self.setPresenceNote()
         if len(self.presence_state['presence_notes']) > 1 and self.timer is None:
-            self.setPresenceNote()
             self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceContactTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
         elif not self.presence_state['presence_notes'] and self.timer is not None and self.timer.isValid():
-            self.setPresenceNote()
             self.timer.invalidate()
             self.timer = None
 
@@ -700,21 +712,36 @@ class BlinkPresenceContact(BlinkContact):
         self.presence_indicator = indicator
 
     def setPresenceNote(self):
+        def unique_values(d):
+            seen = {} # dict (value, key)
+            result = set() # keys with unique values
+            for k,v in d.iteritems():
+                if v in seen:
+                    result.discard(seen[v])
+                else:
+                    seen[v] = k
+                    result.add(v)
+            return list(result)
+
         presence_notes = self.presence_state['presence_notes']
+        offset_infos = self.presence_state['offset_info']
+        offset_info = ",".join(unique_values(offset_infos)) if offset_infos else ''
         if presence_notes:
             if self.presence_note is None:
-                self.presence_note = presence_notes[0]
+                self.presence_note = '%s %s' % (presence_notes[0], offset_info)
             else:
                 try:
                     index = presence_notes.index(self.presence_note)
                 except ValueError:
-                    self.presence_note = presence_notes[0]
+                    self.presence_note = '%s %s' % (presence_notes[0], offset_info)
                 else:
                     try:
-                        self.presence_note = presence_notes[index+1]
+                        self.presence_note = '%s %s' % (presence_notes[index+1], offset_info)
                     except IndexError:
-                        self.presence_note = presence_notes[0]
+                        self.presence_note = '%s %s' % (presence_notes[0], offset_info)
             detail = self.presence_note if self.presence_note else '%s (%s)' % (self.uri, self.uri_type)
+        elif offset_info:
+            detail = '%s %s' % (self.uri, offset_info)
         else:
             detail = '%s (%s)' % (self.uri, self.uri_type)
             if self.presence_state['pending_authorizations'] and self.detail == detail:
