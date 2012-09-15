@@ -8,6 +8,8 @@ import hashlib
 import objc
 import socket
 import uuid
+import urllib2
+import urlparse
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -17,6 +19,7 @@ from sipsimple.account.xcap import Icon, OfflineStatus
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import pidf, rpid, cipid, caps
 from sipsimple.util import ISOTimestamp
+from sipsimple.threading.green import run_in_green_thread
 from twisted.internet import reactor
 from zope.interface import implements
 from util import *
@@ -107,6 +110,8 @@ class PresencePublisher(object):
     hostname = socket.gethostname().split(".")[0]
     originalPresenceActivity = None
     wakeup_timer = None
+    location = None
+
 
     def __init__(self, owner):
         self.owner = owner
@@ -119,6 +124,7 @@ class PresencePublisher(object):
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="XCAPManagerDidReloadData")
+
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -147,6 +153,8 @@ class PresencePublisher(object):
             if old_gruu != new_gruu:
                 account.presence_state = self.build_pidf(account)
 
+        self.get_location(account)
+
     def _NH_SIPAccountDidDiscoverXCAPSupport(self, notification):
         account = notification.sender
         offline_pidf = self.build_offline_pidf(account)
@@ -170,7 +178,7 @@ class PresencePublisher(object):
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if isinstance(notification.sender, Account):
             account = notification.sender
-            if 'display_name' in notification.data.modified:
+            if 'display_name' in notification.data.modified or 'presence.disable_location' in notification.data.modified:
                 if account.enabled and account.presence.enabled:
                     account.presence_state = self.build_pidf(account)
 
@@ -291,6 +299,8 @@ class PresencePublisher(object):
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
         person.timestamp = pidf.PersonTimestamp(timestamp)
         person.time_offset = rpid.TimeOffset()
+        if self.location and not account.presence.disable_location:
+            person.map=cipid.Map(self.location)
         pidf_doc.add(person)
 
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
@@ -311,6 +321,8 @@ class PresencePublisher(object):
         service.contact = pidf.Contact(str(account.contact.public_gruu or account.uri))
         if account.display_name:
             service.display_name = cipid.DisplayName(account.display_name)
+        if self.location and not account.presence.disable_location:
+            service.map=cipid.Map(self.location)
         service.timestamp = pidf.ServiceTimestamp(timestamp)
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent, time_offset=pidf.TimeOffset())
@@ -380,4 +392,23 @@ class PresencePublisher(object):
         icon = Icon(status_icon, 'image/png') if status_icon is not None else None
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
             account.xcap_manager.set_status_icon(icon)
+
+    @run_in_green_thread
+    def get_location(self, account):
+        if account.id.domain != "sip2sip.info" or not account.server.settings_url or account.presence.disable_location:
+            return
+        
+        query_string = "action=get_location"
+        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        req = urllib2.Request(url)
+        try:
+            location = urllib2.urlopen(req)
+            raw_response = urllib2.urlopen(req)
+            location = raw_response.read()
+            if location and self.location != location:
+                self.location = location
+                self.publish()
+        except Exception:
+            pass
+
 

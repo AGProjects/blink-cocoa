@@ -115,7 +115,10 @@ class PresenceInfoController(NSObject):
         elif pidf.notes:
             for note in pidf.notes:
                 buf.append("      %s" % self._format_note(note))
-        # display activities
+        # display map
+        if person.map is not None:
+            buf.append("      Location: %s" % person.map.value)
+            # display activities
         if person.activities is not None:
             activities = list(person.activities)
             if len(activities) > 0:
@@ -221,6 +224,9 @@ class PresenceInfoController(NSObject):
                 buf.append("      Basic status: %s" % service.status.basic)
             if service.status.extended is not None:
                 buf.append("      Extended status: %s" % service.status.extended)
+        # display map
+        if service.map is not None:
+            buf.append("      Location: %s" % service.map.value)
         # display contact
         if service.contact is not None:
             buf.append("      Contact%s: %s" % ((service.contact.priority is not None) and (' priority %s' % service.contact.priority) or '', urllib.unquote(service.contact.value)))

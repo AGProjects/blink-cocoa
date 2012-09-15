@@ -54,6 +54,7 @@ class MSRPSettingsExtension(MSRPSettings):
 
 class PresenceSettingsExtension(PresenceSettings):
     enabled = Setting(type=bool, default=True)
+    disable_location = Setting(type=bool, default=False)
 
 
 class PSTNSettings(SettingsGroup):
