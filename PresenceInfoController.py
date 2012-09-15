@@ -221,9 +221,9 @@ class PresenceInfoController(NSObject):
         # display status
         if service.status is not None:
             if service.status.basic is not None:
-                buf.append("      Basic status: %s" % service.status.basic)
+                buf.append("      Basic status: %s" % str(service.status.basic).title())
             if service.status.extended is not None:
-                buf.append("      Extended status: %s" % service.status.extended)
+                buf.append("      Extended status: %s" % str(service.status.extended).title())
         # display map
         if service.map is not None:
             buf.append("      Location: %s" % service.map.value)
@@ -270,7 +270,7 @@ class PresenceInfoController(NSObject):
 
         # display user input
         if service.user_input is not None:
-            buf.append("      Service is %s" % service.user_input)
+            buf.append("      Device is %s" % service.user_input)
             if service.user_input.last_input:
                 buf.append("          Last input at: %s" % service.user_input.last_input)
             if service.user_input.idle_threshold:
