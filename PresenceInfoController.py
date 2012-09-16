@@ -65,6 +65,13 @@ class PresenceInfoController(NSObject):
                 text += "Internet address: %s\n" % urllib.unquote(pidf.entity)
                 text += 'Error parsing pidf:%s' % e + '\n\n'
 
+        if self.contact.presence_state['pending_authorizations']:
+            text += "Pending authorizations:\n"
+
+        pending_authorizations = self.contact.presence_state['pending_authorizations']
+        for key in pending_authorizations.keys():
+            text += "    Subscription to %s\n" % key.split(':')[1]
+
         self.presenceText.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.presenceText.textStorage().length()))
         astring = NSAttributedString.alloc().initWithString_(text)
         self.presenceText.textStorage().appendAttributedString_(astring)
