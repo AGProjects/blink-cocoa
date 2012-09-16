@@ -522,7 +522,7 @@ class BlinkPresenceContact(BlinkContact):
             'offset_info':   {}
         }
 
-    def presenceContactTimer_(self, timer):
+    def presenceNoteTimer_(self, timer):
         self.setPresenceNote()
 
     def dealloc(self):
@@ -611,11 +611,12 @@ class BlinkPresenceContact(BlinkContact):
                 self.presence_state['pending_authorizations'][resource.uri] = True
 
         self.setPresenceNote()
-        if len(self.presence_state['presence_notes']) > 1 and self.timer is None:
-            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceContactTimer:", None, True)
+        has_notes = len(self.presence_state['presence_notes']) > 1 or self.presence_state['pending_authorizations']
+        if has_notes and self.timer is None:
+            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceNoteTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
-        elif not self.presence_state['presence_notes'] and self.timer is not None and self.timer.isValid():
+        elif not has_notes and self.timer is not None and self.timer.isValid():
             self.timer.invalidate()
             self.timer = None
 
@@ -743,9 +744,16 @@ class BlinkPresenceContact(BlinkContact):
         elif offset_info:
             detail = '%s %s' % (self.uri, offset_info)
         else:
-            detail = '%s (%s)' % (self.uri, self.uri_type)
-            if self.presence_state['pending_authorizations'] and self.detail == detail:
-                detail = 'Pending authorization'          
+            detail_uri = '%s (%s)' % (self.uri, self.uri_type)
+            detail = detail_uri
+            detail_pending = 'Pending authorization'
+            if self.presence_state['pending_authorizations']:
+                if self.detail == detail_uri:
+                    detail = detail_pending
+                elif self.detail == detail_pending:
+                    detail = detail_uri
+            else:
+                detail = detail_uri
 
         if detail != self.detail:
             self.detail = detail
