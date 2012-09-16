@@ -42,7 +42,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, ICON_SIZE
+from ContactListModel import status_icon_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -194,6 +194,7 @@ class ContactWindowController(NSWindowController):
     toolsMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
+    presenceWatchersMenu = objc.IBOutlet() 
     presencePopUpMenu = objc.IBOutlet()
     windowMenu = objc.IBOutlet()
     restoreContactsMenu = objc.IBOutlet()
@@ -1084,8 +1085,8 @@ class ContactWindowController(NSWindowController):
     def isAddParticipantsWindowOpen(self):
         return any(window for window in NSApp().windows() if window.title() == 'Add Participants' and window.isVisible())
 
-    def getContactMatchingURI(self, uri):
-        return self.model.getContactMatchingURI(uri)
+    def getContactMatchingURI(self, uri, exact_match=False):
+        return self.model.getContactMatchingURI(uri, exact_match)
 
     def hasContactMatchingURI(self, uri, exact_match=False):
         return self.model.hasContactMatchingURI(uri, exact_match)
@@ -1264,14 +1265,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def editContact_(self, sender):
-        try:
-            contact = self.getSelectedContacts()[0]
-        except IndexError:
-            self.renameGroup_(sender)
-        else:
-            self.model.editContact(contact)
-            self.refreshContactsList()
-            self.searchContacts()
+        self.model.editContact(sender.representedObject())
+        self.refreshContactsList()
+        self.searchContacts()
 
     @objc.IBAction
     def mergeContacts_(self, sender):
@@ -2168,6 +2164,42 @@ class ContactWindowController(NSWindowController):
                 self.presenceNoteText.setStringValue_(on_the_phone_activity['note'])
                 self.presenceNoteChanged_(None)
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
+
+    def updatePresenceWatchersMenu(self, menu):
+        while self.presenceWatchersMenu.numberOfItems() > 0:
+            self.presenceWatchersMenu.removeItemAtIndex_(0)
+        i = 0
+
+        for key in self.model.active_watchers_map.keys():
+            active_watchers = self.model.active_watchers_map[key]
+            if not active_watchers:
+                continue
+
+            if i:
+                self.presenceWatchersMenu.addItem_(NSMenuItem.separatorItem())
+            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'Account %s' % key, "", "")
+            lastItem.setEnabled_(False)
+            self.presenceWatchersMenu.addItem_(lastItem)
+            i += 1
+
+            for watcher in active_watchers.keys():
+                uri = watcher.split(':')[1]
+                contact = self.getContactMatchingURI(uri, exact_match=True)
+                title = '%s <%s>' % (contact.name, uri) if contact else uri
+                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, "", "")
+                lastItem.setIndentationLevel_(1)
+                image = None
+                if contact:
+                    image = status_icon_for_contact(contact)
+                    if contact.editable:
+                        lastItem.setRepresentedObject_(contact)
+                        lastItem.setAction_('editContact:')
+                
+                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                icon.setScalesWhenResized_(True)
+                icon.setSize_(NSMakeSize(12,12))
+                lastItem.setImage_(icon)
+                self.presenceWatchersMenu.addItem_(lastItem)
 
     def updatePresenceActivityMenu(self, menu):
         if menu == self.presenceMenu:
@@ -3189,6 +3221,7 @@ class ContactWindowController(NSWindowController):
                 mitem.setState_(NSOnState if item.favorite else NSOffState)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
+                lastItem.setRepresentedObject_(item)
             elif isinstance(item, BlinkBlockedPresenceContact):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deletePolicyItem:", "")
                 lastItem.setEnabled_(item.deletable)
@@ -3196,6 +3229,7 @@ class ContactWindowController(NSWindowController):
             elif isinstance(item, SystemAddressBookBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
+                lastItem.setRepresentedObject_(item)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, LdapSearchResultContact):
@@ -3332,6 +3366,8 @@ class ContactWindowController(NSWindowController):
             self.updateStatusMenu()
         elif menu == self.presenceMenu:
             self.updatePresenceActivityMenu(menu)
+        elif menu == self.presenceWatchersMenu:
+            self.updatePresenceWatchersMenu(menu)
         elif menu == self.presencePopUpMenu:
             self.updatePresenceActivityMenu(menu)
         elif menu == self.callMenu:
@@ -3381,6 +3417,7 @@ class ContactWindowController(NSWindowController):
 
             item = self.contactsMenu.itemWithTag_(31) # Edit Contact
             item.setEnabled_(selected_contact and selected_contact.editable)
+            item.setRepresentedObject_(selected_contact)
             item = self.contactsMenu.itemWithTag_(32) # Delete Contact
             item.setEnabled_(selected_contact and selected_contact.deletable)
             item = self.contactsMenu.itemWithTag_(50) # Presence Info
@@ -3390,6 +3427,7 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(True)
             item = self.contactsMenu.itemWithTag_(34) # Edit Group
             item.setEnabled_(selected_group)
+            item.setRepresentedObject_(selected_group)
             item = self.contactsMenu.itemWithTag_(35) # Delete Group
             item.setEnabled_(selected_group and selected_group.deletable)
             item = self.contactsMenu.itemWithTag_(36) # Expand Group

@@ -27,7 +27,8 @@ __all__ = ['BlinkContact',
            'DefaultMultiUserAvatar',
            'PresenceContactAvatar',
            'ContactListModel',
-           'SearchContactListModel']
+           'SearchContactListModel',
+           'status_icon_for_contact']
 
 import bisect
 import base64
@@ -69,6 +70,19 @@ from util import *
 
 ICON_SIZE = 128
 
+def status_icon_for_contact(contact):
+    image = None
+    if hasattr(contact, "presence_state"):
+        if contact.presence_state['status']['busy']: 
+            image = 'status-user-busy-icon'
+        elif contact.presence_state['status']['extended-away']:
+            image = 'status-user-extended-away-icon'
+        elif contact.presence_state['status']['away']:
+            image = 'status-user-away-icon'
+        elif contact.presence_state['status']['available']:
+            image = 'status-user-available-icon'
+    return image
+            
 
 class Avatar(object):
     def __init__(self, icon, path=None):
@@ -1532,6 +1546,7 @@ class ContactListModel(CustomListModel):
     nc = NotificationCenter()
     presence_contacts = []
     pending_watchers_map = {}
+    active_watchers_map = {}
 
     def init(self):
         self.all_contacts_group = AllContactsBlinkGroup()
@@ -1607,9 +1622,9 @@ class ContactListModel(CustomListModel):
     def hasContactMatchingURI(self, uri, exact_match=False):
         return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
 
-    def getContactMatchingURI(self, uri):
+    def getContactMatchingURI(self, uri, exact_match=False):
         try:
-            return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri)).next()
+            return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
         except StopIteration:
             return None
 
@@ -1962,6 +1977,7 @@ class ContactListModel(CustomListModel):
             # TODO: don't remove all of them, just the ones that match?
             self.pending_watchers_group.contacts = []
             self.pending_watchers_map[notification.sender.id] = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
+            self.active_watchers_map[notification.sender.id] = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
             all_pending_watchers = {}
             [all_pending_watchers.update(d) for d in self.pending_watchers_map.values()]
             for watcher in all_pending_watchers.itervalues():
@@ -1975,8 +1991,8 @@ class ContactListModel(CustomListModel):
                     self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
 
         elif notification.data.state == 'partial':
-            tmp_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
-            for watcher in tmp_watchers.itervalues():
+            tmp_pending_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
+            for watcher in tmp_pending_watchers.itervalues():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
                 try:
                     gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
@@ -2004,6 +2020,11 @@ class ContactListModel(CustomListModel):
                 else:
                     self.pending_watchers_group.contacts.remove(gui_watcher)
                     del self.pending_watchers_map[notification.sender.id][watcher.sipuri]
+                    try:
+                        del self.active_watchers_map[notification.sender.id][watcher.sipuri]
+                    except KeyError:
+                        pass
+                        
 
         self.renderPendingWatchersGroupIfNecessary()
 

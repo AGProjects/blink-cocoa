@@ -4,6 +4,8 @@
 from Foundation import *
 from AppKit import *
 
+from ContactListModel import status_icon_for_contact
+
 
 class ContactCell(NSTextFieldCell):
     contact = None
@@ -115,17 +117,8 @@ class ContactCell(NSTextFieldCell):
         border.fill()
         NSColor.blackColor().set()
         border.stroke()
-            
-        image = None
-        if hasattr(self.contact, "presence_state"):
-            if self.contact.presence_state['status']['busy']: 
-                image = 'status-user-busy-icon'
-            elif self.contact.presence_state['status']['extended-away']:
-                image = 'status-user-extended-away-icon'
-            elif self.contact.presence_state['status']['away']:
-                image = 'status-user-away-icon'
-            elif self.contact.presence_state['status']['available']:
-                image = 'status-user-available-icon'
+
+        image = status_icon_for_contact(self.contact)
 
         if image:
             icon = NSImage.imageNamed_(image)

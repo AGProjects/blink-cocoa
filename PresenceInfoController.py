@@ -14,6 +14,8 @@ from sipsimple.payloads.pidf import Device, Person, Service
 from zope.interface import implements
 from util import *
 
+from ContactListModel import status_icon_for_contact
+
 
 class PresenceInfoController(NSObject):
     implements(IObserver)
@@ -76,15 +78,7 @@ class PresenceInfoController(NSObject):
         astring = NSAttributedString.alloc().initWithString_(text)
         self.presenceText.textStorage().appendAttributedString_(astring)
 
-        image = None
-        if self.contact.presence_state['status']['busy']: 
-            image = 'status-user-busy-icon'
-        elif self.contact.presence_state['status']['extended-away']:
-            image = 'status-user-extended-away-icon'
-        elif self.contact.presence_state['status']['away']:
-            image = 'status-user-away-icon'
-        elif self.contact.presence_state['status']['available']:
-            image = 'status-user-available-icon'
+        image = status_icon_for_contact(self.contact)
 
         if image is not None:
             icon = NSImage.imageNamed_(image)
