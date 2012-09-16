@@ -2187,17 +2187,16 @@ class ContactWindowController(NSWindowController):
                 uri = watcher.split(':')[1]
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
-                items[title] = {'action': '', 'image': None, 'contact' : None}                
-                if contact:
+                items[title] = {'image': None, 'contact' : None}                
+                if isinstance(contact, BlinkPresenceContact):
                     items[title]['image'] = status_icon_for_contact(contact)
-                    if contact.editable:
-                        items[title]['action'] = 'editContact:'   
+                    items[title]['contact'] = contact
 
             keys = items.keys()
             keys.sort()
             for title in keys:
                 item = items[title]
-                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, item['action'], "")
+                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, 'editContact:', "")
                 lastItem.setRepresentedObject_(item['contact'])
                 lastItem.setIndentationLevel_(1)
                 icon = dots['offline'] if not item['image'] else NSImage.imageNamed_(item['image'])
