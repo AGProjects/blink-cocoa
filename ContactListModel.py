@@ -28,7 +28,8 @@ __all__ = ['BlinkContact',
            'PresenceContactAvatar',
            'ContactListModel',
            'SearchContactListModel',
-           'status_icon_for_contact']
+           'status_icon_for_contact',
+           'presence_indicator_bar_for_contact']
 
 import bisect
 import base64
@@ -75,14 +76,26 @@ def status_icon_for_contact(contact):
     if hasattr(contact, "presence_state"):
         if contact.presence_state['status']['busy']: 
             image = 'status-user-busy-icon'
-        elif contact.presence_state['status']['extended-away']:
-            image = 'status-user-extended-away-icon'
-        elif contact.presence_state['status']['away']:
-            image = 'status-user-away-icon'
         elif contact.presence_state['status']['available']:
             image = 'status-user-available-icon'
+        elif contact.presence_state['status']['away']:
+            image = 'status-user-away-icon'
+        elif contact.presence_state['status']['extended-away']:
+            image = 'status-user-extended-away-icon'
     return image
-            
+
+def presence_indicator_bar_for_contact(contact):
+    if hasattr(contact, "presence_state"):
+        if contact.presence_state['status']['busy']:
+            return "busy"
+        elif contact.presence_state['status']['available']:
+            return "available"
+        elif contact.presence_state['status']['extended-away']:
+            return "busy"
+        elif contact.presence_state['status']['away']:
+            return "away"
+    
+    return "unknown"                        
 
 class Avatar(object):
     def __init__(self, icon, path=None):
@@ -451,16 +464,9 @@ class BlinkConferenceContact(BlinkContact):
     
         notes = list(unicode(note) for note in presence_notes)
         self.presence_state['presence_notes'] = notes
-        if self.presence_state['status']['busy']:
-            self.setPresenceIndicator("busy")
-        elif self.presence_state['status']['available']:
-            self.setPresenceIndicator("available")
-        elif self.presence_state['status']['extended-away']:
-            self.setPresenceIndicator("busy")
-        elif self.presence_state['status']['away']:
-            self.setPresenceIndicator("away")
-        else:
-            self.setPresenceIndicator("unknown")
+
+        indicator_bar = presence_indicator_bar_for_contact(self)
+        self.setPresenceIndicator(indicator_bar)
 
         self.setPresenceNote()
 
@@ -606,16 +612,8 @@ class BlinkPresenceContact(BlinkContact):
             self.presence_state['offset_info'] = offset_infos
             notes = list(unicode(note) for note in presence_notes)
             self.presence_state['presence_notes'] = notes
-            if self.presence_state['status']['busy']:
-                self.setPresenceIndicator("busy")
-            elif self.presence_state['status']['available']:
-                self.setPresenceIndicator("available")
-            elif self.presence_state['status']['extended-away']:
-                self.setPresenceIndicator("busy")
-            elif self.presence_state['status']['away']:
-                self.setPresenceIndicator("away")
-            else:
-                self.setPresenceIndicator("unknown")
+            indicator_bar = presence_indicator_bar_for_contact(self)
+            self.setPresenceIndicator(indicator_bar)
         else:
             self.setPresenceIndicator("unknown")
 
