@@ -2181,21 +2181,26 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
             self.presenceWatchersMenu.addItem_(lastItem)
             i += 1
-
+            
+            items = {}
             for watcher in active_watchers.keys():
                 uri = watcher.split(':')[1]
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
-                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, "", "")
-                lastItem.setIndentationLevel_(1)
-                image = None
+                items[title] = {'action': '', 'image': None, 'contact' : None}                
                 if contact:
-                    image = status_icon_for_contact(contact)
+                    items[title]['image'] = status_icon_for_contact(contact)
                     if contact.editable:
-                        lastItem.setRepresentedObject_(contact)
-                        lastItem.setAction_('editContact:')
-                
-                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                        items[title]['action'] = 'editContact:'   
+
+            keys = items.keys()
+            keys.sort()
+            for title in keys:
+                item = items[title]
+                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, item['action'], "")
+                lastItem.setRepresentedObject_(item['contact'])
+                lastItem.setIndentationLevel_(1)
+                icon = dots['offline'] if not item['image'] else NSImage.imageNamed_(item['image'])
                 icon.setScalesWhenResized_(True)
                 icon.setSize_(NSMakeSize(12,12))
                 lastItem.setImage_(icon)
