@@ -299,8 +299,6 @@ class PresencePublisher(object):
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
         person.timestamp = pidf.PersonTimestamp(timestamp)
         person.time_offset = rpid.TimeOffset()
-        if self.location and not account.presence.disable_location:
-            person.map=cipid.Map(self.location)
         pidf_doc.add(person)
 
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
