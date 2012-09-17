@@ -179,7 +179,7 @@ class PresencePublisher(object):
         if isinstance(notification.sender, Account):
             account = notification.sender
             
-            if set(['display_name', 'presence.disable_location', 'presence.disable_icon', 'presence.homepage']).intersection(notification.data.modified):
+            if set(['display_name', 'presence.disable_location', 'presence.homepage']).intersection(notification.data.modified):
                 if account.enabled and account.presence.enabled:
                     account.presence_state = self.build_pidf(account)
 
@@ -325,7 +325,7 @@ class PresencePublisher(object):
         if self.location and not account.presence.disable_location:
             service.map=cipid.Map(self.location)
 
-        if account.xcap_manager.status_icon.content is not None and not account.presence.disable_icon:
+        if account.xcap_manager.status_icon.content is not None:
             service.icon=cipid.Icon(account.xcap_manager.status_icon.uri)
 
         if account.presence.homepage is not None:
