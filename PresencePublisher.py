@@ -8,7 +8,7 @@ import hashlib
 import objc
 import socket
 import uuid
-import urllib2
+from eventlib.green import urllib2
 import urlparse
 
 from application.notification import NotificationCenter, IObserver
