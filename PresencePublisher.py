@@ -178,7 +178,8 @@ class PresencePublisher(object):
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if isinstance(notification.sender, Account):
             account = notification.sender
-            if 'display_name' in notification.data.modified or 'presence.disable_location' in notification.data.modified:
+            
+            if set(['display_name', 'presence.disable_location', 'presence.disable_icon', 'presence.homepage']).intersection(notification.data.modified):
                 if account.enabled and account.presence.enabled:
                     account.presence_state = self.build_pidf(account)
 
@@ -326,6 +327,9 @@ class PresencePublisher(object):
 
         if account.xcap_manager.status_icon.content is not None and not account.presence.disable_icon:
             service.icon=cipid.Icon(account.xcap_manager.status_icon.uri)
+
+        if account.presence.homepage is not None:
+            service.homepage=cipid.Homepage(account.presence.homepage)
 
         service.timestamp = pidf.ServiceTimestamp(timestamp)
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))

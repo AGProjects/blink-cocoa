@@ -238,6 +238,9 @@ class PresenceInfoController(NSObject):
         # display icon
         if service.icon is not None:
             buf.append(u"      Icon: %s" % service.icon)
+        # display homepage
+        if service.homepage is not None:
+            buf.append(u"      Homepage: %s" % service.homepage)
         # display capabilities
         if service.capabilities is not None:
             caps = []

@@ -56,6 +56,7 @@ class PresenceSettingsExtension(PresenceSettings):
     enabled = Setting(type=bool, default=True)
     disable_location = Setting(type=bool, default=False)
     disable_icon = Setting(type=bool, default=False)
+    homepage = Setting(type=HTTPURL, default=None, nillable=True)
 
 
 class PSTNSettings(SettingsGroup):
