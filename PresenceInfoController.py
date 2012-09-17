@@ -58,14 +58,10 @@ class PresenceInfoController(NSObject):
         self.pidfs = chain(*(item for item in self.contact.pidfs_map.itervalues()))
         self.render_pidf()
 
-    def render_pidf(self):  
+    def render_pidf(self):
         text = ''
         for pidf in self.pidfs:
-            try:
-                text += self.build_pidf_text(pidf) + '\n\n'
-            except Exception, e:
-                text += "Internet address: %s\n" % urllib.unquote(pidf.entity)
-                text += 'Error parsing pidf:%s' % e + '\n\n'
+            text += self.build_pidf_text(pidf) + '\n\n'
 
         if self.contact.presence_state['pending_authorizations']:
             text += "Pending authorizations:\n"
@@ -79,7 +75,6 @@ class PresenceInfoController(NSObject):
         self.presenceText.textStorage().appendAttributedString_(astring)
 
         image = status_icon_for_contact(self.contact)
-
         if image is not None:
             icon = NSImage.imageNamed_(image)
             icon.setScalesWhenResized_(True)
@@ -105,20 +100,20 @@ class PresenceInfoController(NSObject):
         buf = []
         # display class
         if person.rpid_class is not None:
-            buf.append("      Class: %s" % person.rpid_class)
+            buf.append(u"      Class: %s" % person.rpid_class)
         # display timestamp
         if person.timestamp is not None:
-            buf.append("      Timestamp: %s" % person.timestamp)
+            buf.append(u"      Timestamp: %s" % person.timestamp)
         # display notes
         if person.notes:
             for note in person.notes:
-                buf.append("      %s" % self._format_note(note))
+                buf.append(u"      %s" % self._format_note(note))
         elif pidf.notes:
             for note in pidf.notes:
-                buf.append("      %s" % self._format_note(note))
+                buf.append(u"      %s" % self._format_note(note))
         # display map
         if person.map is not None:
-            buf.append("      Location: %s" % person.map.value)
+            buf.append(u"      Location: %s" % person.map.value)
             # display activities
         if person.activities is not None:
             activities = list(person.activities)
@@ -134,11 +129,11 @@ class PresenceInfoController(NSObject):
                 buf.append(text)
                 if len(person.activities.notes) > 0:
                     for note in person.activities.notes:
-                        buf.append("      %s" % self._format_note(note))
+                        buf.append(u"      %s" % self._format_note(note))
             elif len(person.activities.notes) > 0:
-                buf.append("      Activities")
+                buf.append(u"      Activities")
                 for note in person.activities.notes:
-                    buf.append("      %s" % self._format_note(note))
+                    buf.append(u"      %s" % self._format_note(note))
         # display mood
         if person.mood is not None:
             moods = list(person.mood)
@@ -154,12 +149,12 @@ class PresenceInfoController(NSObject):
                 buf.append(text)
                 if len(person.mood.notes) > 0:
                     for note in person.mood.notes:
-                        buf.append("      %s" % self._format_note(note))
+                        buf.append(u"      %s" % self._format_note(note))
         # display place is
         if person.place_is is not None:
             place_info = ', '.join('%s %s' % (key.capitalize(), getattr(person.place_is, key).value) for key in ('audio', 'video', 'text') if getattr(person.place_is, key) and getattr(person.place_is, key).value)
             if place_info != '':
-                buf.append("      Place information: " + place_info)
+                buf.append(u"      Place information: " + place_info)
         # display privacy
         if person.privacy is not None:
             text = "      Private conversation possible with: "
@@ -186,10 +181,10 @@ class PresenceInfoController(NSObject):
                 timeinfo = ' (' + ', '.join(timeinfo) + ')'
             else:
                 timeinfo = ''
-            buf.append("      Current sphere%s: %s" % (timeinfo, person.sphere.value))
+            buf.append(u"      Current sphere%s: %s" % (timeinfo, person.sphere.value))
         # display status icon
         if person.status_icon is not None:
-            buf.append("      Status icon: %s" % person.status_icon)
+            buf.append(u"      Status icon: %s" % person.status_icon)
         # display time and time offset
         if person.time_offset is not None:
             ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(person.time_offset))
@@ -198,48 +193,48 @@ class PresenceInfoController(NSObject):
                 offset_info = '(UTC+%d%s)' % (time_offset, (person.time_offset.description is not None and (' (%s)' % person.time_offset.description) or ''))
             else:
                 offset_info = '(UTC+%.1f%s)' % (time_offset, (person.time_offset.description is not None and (' (%s)' % person.time_offset.description) or ''))
-            buf.append("      Current user time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
+            buf.append(u"      Current user time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
         # display user input
         if person.user_input is not None:
-            buf.append("      User is %s" % person.user_input)
+            buf.append(u"      User is %s" % person.user_input)
             if person.user_input.last_input:
-                buf.append("          Last input at: %s" % person.user_input.last_input)
+                buf.append(u"          Last input at: %s" % person.user_input.last_input)
             if person.user_input.idle_threshold:
-                buf.append("          Idle threshold: %s seconds" % person.user_input.idle_threshold)
+                buf.append(u"          Idle threshold: %s seconds" % person.user_input.idle_threshold)
         return buf
 
     def _format_service(self, service, pidf):
         buf = []
         # display class
         if service.rpid_class is not None:
-            buf.append("      Class: %s" % service.rpid_class)
+            buf.append(u"      Class: %s" % service.rpid_class)
         # display timestamp
         if service.timestamp is not None:
-            buf.append("      Timestamp: %s" % service.timestamp)
+            buf.append(u"      Timestamp: %s" % service.timestamp)
         # display notes
         for note in service.notes:
-            buf.append("      %s" % self._format_note(note))
+            buf.append(u"      %s" % self._format_note(note))
         # display status
         if service.status is not None:
             if service.status.basic is not None:
-                buf.append("      Basic status: %s" % str(service.status.basic).title())
+                buf.append(u"      Basic status: %s" % str(service.status.basic).title())
             if service.status.extended is not None:
-                buf.append("      Extended status: %s" % str(service.status.extended).title())
+                buf.append(u"      Extended status: %s" % str(service.status.extended).title())
         # display map
         if service.map is not None:
-            buf.append("      Location: %s" % service.map.value)
+            buf.append(u"      Location: %s" % service.map.value)
         # display contact
         if service.contact is not None:
-            buf.append("      Contact%s: %s" % ((service.contact.priority is not None) and (' priority %s' % service.contact.priority) or '', urllib.unquote(service.contact.value)))
+            buf.append(u"      Contact%s: %s" % ((service.contact.priority is not None) and (' priority %s' % service.contact.priority) or '', urllib.unquote(service.contact.value)))
         # display relationship
         if service.relationship is not None:
-            buf.append("      Relationship: %s" % service.relationship.value)
+            buf.append(u"      Relationship: %s" % service.relationship.value)
         # display service-class
         if service.service_class is not None:
-            buf.append("      Service class: %s" % service.service_class.value)
+            buf.append(u"      Service class: %s" % service.service_class.value)
         # display status icon
         if service.status_icon is not None:
-            buf.append("      Status icon: %s" % service.status_icon)
+            buf.append(u"      Status icon: %s" % service.status_icon)
         # display capabilities
         if service.capabilities is not None:
             caps = []
@@ -251,15 +246,15 @@ class PresenceInfoController(NSObject):
                 caps.append("File Transfer")
             if service.capabilities.screen_sharing:
                 caps.append("Screen Sharing")
-            buf.append("      Media capabilities: %s" % ", ".join(caps))
+            buf.append(u"      Media capabilities: %s" % ", ".join(caps))
         # display device ID
         if service.device_info is not None:
-            description = " (%s)" % urllib.unquote(service.device_info.description.value).decode('utf-8') if service.device_info.description else ""
-            buf.append("      Device: %s%s" % (service.device_info.id, description))
+            description = u" (%s)" % service.device_info.description.value if service.device_info.description else ""
+            buf.append(u"      Device: %s%s" % (service.device_info.id, description))
             if service.device_info.description is not None:
-                buf.append("          Hostname: %s" % service.device_info.description)
+                buf.append(u"          Hostname: %s" % service.device_info.description)
             if service.device_info.user_agent is not None:
-                buf.append("          User Agent: %s" % service.device_info.user_agent)
+                buf.append(u"          User Agent: %s" % service.device_info.user_agent)
             if service.device_info.time_offset is not None:
                 ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
                 time_offset = int(service.device_info.time_offset)/60.0
@@ -267,86 +262,86 @@ class PresenceInfoController(NSObject):
                     offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
                 else:
                     offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
-                buf.append("          Current time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
+                buf.append(u"          Current time: %s %s" % (ctime.strftime("%H:%M"), offset_info))
 
         # display user input
         if service.user_input is not None:
-            buf.append("      Device is %s" % service.user_input)
+            buf.append(u"      Device is %s" % service.user_input)
             if service.user_input.last_input:
-                buf.append("          Last input at: %s" % service.user_input.last_input)
+                buf.append(u"          Last input at: %s" % service.user_input.last_input)
             if service.user_input.idle_threshold:
-                buf.append("          Idle threshold: %s seconds" % service.user_input.idle_threshold)
+                buf.append(u"          Idle threshold: %s seconds" % service.user_input.idle_threshold)
         return buf
 
     def _format_device(self, device, pidf):
         buf = []
         # display device ID
         if device.device_id is not None:
-            buf.append("      Device id: %s" % device.device_id)
+            buf.append(u"      Device id: %s" % device.device_id)
         # display class
         if device.rpid_class is not None:
-            buf.append("      Class: %s" % device.rpid_class)
+            buf.append(u"      Class: %s" % device.rpid_class)
         # display timestamp
         if device.timestamp is not None:
-            buf.append("      Timestamp: %s" % device.timestamp)
+            buf.append(u"      Timestamp: %s" % device.timestamp)
         # display notes
         for note in device.notes:
-            buf.append("      %s" % self._format_note(note))
+            buf.append(u"      %s" % self._format_note(note))
         # display user input
         if device.user_input is not None:
-            buf.append("      Device is %s" % device.user_input)
+            buf.append(u"      Device is %s" % device.user_input)
             if device.user_input.last_input:
-                buf.append("          Last input at: %s" % device.user_input.last_input)
+                buf.append(u"          Last input at: %s" % device.user_input.last_input)
             if device.user_input.idle_threshold:
-                buf.append("          Idle threshold: %s seconds" % device.user_input.idle_threshold)
+                buf.append(u"          Idle threshold: %s seconds" % device.user_input.idle_threshold)
         return buf
 
     def build_pidf_text(self, pidf):
         buf = []
-        buf.append("Internet address: %s" % urllib.unquote(pidf.entity))
+        buf.append(u"Internet address: %s" % urllib.unquote(pidf.entity))
         persons = {}
         devices = {}
         services = {}
-        is_blink = False 
+        is_blink = False
         for child in pidf:
             if isinstance(child, Service):
                 services[child.id] = child
                 if child.device_info is not None and child.device_info.user_agent is not None and child.device_info.user_agent.value.startswith('Blink'):
-                    is_blink = True 
+                    is_blink = True
             elif isinstance(child, Person):
                 persons[child.id] = child
             elif isinstance(child, Device):
                 devices[child.id] = child
-        
+
         if is_blink:
             # handle services informaation
             if len(services) > 0:
                 for service in services.values():
                     buf.append("  Service: %s" % service.id)
-                    buf.extend(self._format_service(service, pidf))                    
+                    buf.extend(self._format_service(service, pidf))
         else:
             # handle person information
             if len(persons) == 0:
                 if list(pidf.notes):
-                    buf.append("  Person information:")
+                    buf.append(u"  Person information:")
                     for note in pidf.notes:
                         buf.append("      %s" % self._format_note(note))
             else:
                 for person in persons.values():
-                    buf.append("  Person: %s" % person.id)
+                    buf.append(u"  Person: %s" % person.id)
                     buf.extend(self._format_person(person, pidf))
 
             # handle services informaation
             if len(services) > 0:
                 for service in services.values():
-                    buf.append("  Service: %s" % service.id)
+                    buf.append(u"  Service: %s" % service.id)
                     buf.extend(self._format_service(service, pidf))
-            
+
             # handle devices informaation
             if len(devices) > 0:
                 for device in devices.values():
-                    buf.append("  Device: %s" % device.id)
+                    buf.append(u"  Device: %s" % device.id)
                     buf.extend(self._format_device(device, pidf))
-            
-        return '\n'.join(buf)
-        
+
+        return u'\n'.join(buf)
+
