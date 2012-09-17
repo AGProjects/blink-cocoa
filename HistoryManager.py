@@ -467,7 +467,7 @@ class ChatHistory(object):
 
             return True
         except Exception, e:
-            BlinkLogger().log_error(u"Error updating record %s to history table: %s" % (msgid, e))
+            pass
         return False
 
     @run_in_db_thread
