@@ -308,19 +308,19 @@ class PresenceInfoController(NSObject):
         persons = {}
         devices = {}
         services = {}
-        is_blink = False
+        device_info_extension_supported = False
         for child in pidf:
             if isinstance(child, Service):
                 services[child.id] = child
-                if child.device_info is not None and child.device_info.user_agent is not None and child.device_info.user_agent.value.startswith('Blink'):
-                    is_blink = True
+                if child.device_info is not None:
+                    device_info_extension_supported = True
             elif isinstance(child, Person):
                 persons[child.id] = child
             elif isinstance(child, Device):
                 devices[child.id] = child
 
-        if is_blink:
-            # handle services informaation
+        if device_info_extension_supported:
+            # handle services information
             if len(services) > 0:
                 for service in services.values():
                     buf.append("  Service: %s" % service.id)
@@ -337,13 +337,13 @@ class PresenceInfoController(NSObject):
                     buf.append(u"  Person: %s" % person.id)
                     buf.extend(self._format_person(person, pidf))
 
-            # handle services informaation
+            # handle services information
             if len(services) > 0:
                 for service in services.values():
                     buf.append(u"  Service: %s" % service.id)
                     buf.extend(self._format_service(service, pidf))
 
-            # handle devices informaation
+            # handle devices information
             if len(devices) > 0:
                 for device in devices.values():
                     buf.append(u"  Device: %s" % device.id)
