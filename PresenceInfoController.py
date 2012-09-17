@@ -235,6 +235,9 @@ class PresenceInfoController(NSObject):
         # display status icon
         if service.status_icon is not None:
             buf.append(u"      Status icon: %s" % service.status_icon)
+        # display icon
+        if service.icon is not None:
+            buf.append(u"      Icon: %s" % service.icon)
         # display capabilities
         if service.capabilities is not None:
             caps = []

@@ -317,10 +317,16 @@ class PresencePublisher(object):
 
         service = pidf.Service("SID-%s" % instance_id, status=status)
         service.contact = pidf.Contact(str(account.contact.public_gruu or account.uri))
+
         if account.display_name:
             service.display_name = cipid.DisplayName(account.display_name)
+
         if self.location and not account.presence.disable_location:
             service.map=cipid.Map(self.location)
+
+        if account.xcap_manager.status_icon.content is not None and not account.presence.disable_icon:
+            service.icon=cipid.Icon(account.xcap_manager.status_icon.uri)
+
         service.timestamp = pidf.ServiceTimestamp(timestamp)
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent, time_offset=pidf.TimeOffset())
