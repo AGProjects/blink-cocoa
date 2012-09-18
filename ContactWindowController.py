@@ -3105,6 +3105,13 @@ class ContactWindowController(NSWindowController):
                 for uri in item.uris:
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
                     audio_item.setRepresentedObject_(uri.uri)
+                    if isinstance(item, BlinkPresenceContact):
+                        image = status_icon_for_contact(item, uri.uri)
+                        icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                        icon.setScalesWhenResized_(True)
+                        icon.setSize_(NSMakeSize(12,12))
+                        audio_item.setImage_(icon)
+
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
@@ -3114,6 +3121,12 @@ class ContactWindowController(NSWindowController):
                         if is_sip_aor_format(uri.uri):
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
                             chat_item.setRepresentedObject_(uri.uri)
+                            if isinstance(item, BlinkPresenceContact):
+                                image = status_icon_for_contact(item, uri.uri)
+                                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(12,12))
+                                chat_item.setImage_(icon)
                     if chat_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "", "")
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
@@ -3122,6 +3135,12 @@ class ContactWindowController(NSWindowController):
                     for uri in item.uris:
                         sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
                         sms_item.setRepresentedObject_(uri.uri)
+                        if isinstance(item, BlinkPresenceContact):
+                            image = status_icon_for_contact(item, uri.uri)
+                            icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(12,12))
+                            sms_item.setImage_(icon)
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
@@ -3132,6 +3151,12 @@ class ContactWindowController(NSWindowController):
                             if is_sip_aor_format(uri.uri):
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
                                 ft_item.setRepresentedObject_(uri.uri)
+                                if isinstance(item, BlinkPresenceContact):
+                                    image = status_icon_for_contact(item, uri.uri)
+                                    icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(12,12))
+                                    ft_item.setImage_(icon)
                         if ft_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
@@ -3143,7 +3168,13 @@ class ContactWindowController(NSWindowController):
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                                 ds_item.setRepresentedObject_(uri.uri)
                                 ds_item.setTag_(1)
-                        
+                                if isinstance(item, BlinkPresenceContact):
+                                    image = status_icon_for_contact(item, uri.uri)
+                                    icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(12,12))
+                                    ds_item.setImage_(icon)
+                                            
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
@@ -3155,6 +3186,12 @@ class ContactWindowController(NSWindowController):
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startDesktopToSelected:", "")
                                 ds_item.setRepresentedObject_(uri.uri)
                                 ds_item.setTag_(2)
+                                if isinstance(item, BlinkPresenceContact):
+                                    image = status_icon_for_contact(item, uri.uri)
+                                    icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(12,12))
+                                    ds_item.setImage_(icon)
                         
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")

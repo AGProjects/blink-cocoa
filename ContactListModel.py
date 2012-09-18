@@ -71,18 +71,59 @@ from util import *
 
 ICON_SIZE = 128
 
-def status_icon_for_contact(contact):
+def status_icon_for_contact(contact, uri=None):
     image = None
-    if hasattr(contact, "presence_state"):
-        if contact.presence_state['status']['busy']: 
-            image = 'status-user-busy-icon'
-        elif contact.presence_state['status']['available']:
-            image = 'status-user-available-icon'
-        elif contact.presence_state['status']['away']:
-            image = 'status-user-away-icon'
-        elif contact.presence_state['status']['extended-away']:
-            image = 'status-user-extended-away-icon'
-    return image
+    if uri is None:
+        if hasattr(contact, "presence_state"):
+            if contact.presence_state['status']['busy']: 
+                image = 'status-user-busy-icon'
+            elif contact.presence_state['status']['available']:
+                image = 'status-user-available-icon'
+            elif contact.presence_state['status']['away']:
+                image = 'status-user-away-icon'
+            elif contact.presence_state['status']['extended-away']:
+                image = 'status-user-extended-away-icon'
+        return image
+    else:
+        try:
+            uri = 'sip:%s' % uri
+            pidfs = contact.pidfs_map[uri]
+        except KeyError:
+            pass
+        else:
+            basic_status = 'closed'
+            available = False
+            away = False
+            busy = False
+            extended_away = False
+            
+            for pidf in pidfs:
+                if basic_status is 'closed':
+                    basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
+
+                if available is False:
+                    available = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
+                
+                if busy is False:
+                    busy = any(service for service in pidf.services if service.status.extended == 'busy')
+                
+                if extended_away is False:
+                    extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
+                
+                if away is False:
+                    away = any(service for service in pidf.services if service.status.extended == 'away')
+
+            if busy: 
+                image = 'status-user-busy-icon'
+            elif available:
+                image = 'status-user-available-icon'
+            elif away:
+                image = 'status-user-away-icon'
+            elif extended_away:
+                image = 'status-user-extended-away-icon'
+        
+        return image     
+
 
 def presence_indicator_bar_for_contact(contact):
     if hasattr(contact, "presence_state"):
