@@ -29,6 +29,7 @@ __all__ = ['BlinkContact',
            'ContactListModel',
            'SearchContactListModel',
            'status_icon_for_contact',
+           'status_icon_for_device',
            'presence_indicator_bar_for_contact']
 
 import bisect
@@ -70,6 +71,19 @@ from util import *
 
 
 ICON_SIZE = 128
+
+def status_icon_for_device(status):
+    image = None
+    if status == 'busy': 
+        image = 'status-user-busy-icon'
+    elif status == 'available':
+        image = 'status-user-available-icon'
+    elif status == 'away':
+        image = 'status-user-away-icon'
+    elif status == 'extended-away':
+        image = 'status-user-extended-away-icon'
+    return image
+
 
 def status_icon_for_contact(contact, uri=None):
     image = None
@@ -432,12 +446,12 @@ class BlinkConferenceContact(BlinkContact):
 
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
-            'pending_authorizations':    {},
-            'status': { 'available':     False,
-                'extended-away': False,
-                'away':          False,
-                'busy':          False
-        }
+                                'pending_authorizations':    {},
+                                'status': { 'available':     False,
+                                            'extended-away': False,
+                                            'away':          False,
+                                            'busy':          False
+                            }
     }
  
     def setPresenceIndicator(self, indicator):
@@ -574,13 +588,13 @@ class BlinkPresenceContact(BlinkContact):
 
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
-            'pending_authorizations':    {},
-            'status': { 'available':     False,
-                'extended-away': False,
-                'away':          False,
-                'busy':          False
-            },
-            'offset_info':   {}
+                                'pending_authorizations':    {},
+                                'status': { 'available':     False,
+                                            'extended-away': False,
+                                            'away':          False,
+                                            'busy':          False
+                                },
+                                'devices': {}
         }
 
     def presenceNoteTimer_(self, timer):
@@ -619,6 +633,7 @@ class BlinkPresenceContact(BlinkContact):
         offset_infos = {}
 
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
+        devices = {}
         if pidfs:
             for pidf in pidfs:
                 if basic_status is 'closed':
@@ -636,11 +651,21 @@ class BlinkPresenceContact(BlinkContact):
                 if self.presence_state['status']['away'] is False:
                     self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
 
-                for service in pidf.services:
-                    for note in service.notes:
-                        if note:
-                            presence_notes.append(note)
+                if self.presence_state['status']['busy']: 
+                    wining_status = 'busy'
+                elif self.presence_state['status']['available']:
+                    wining_status = 'available'
+                elif self.presence_state['status']['away']:
+                    wining_status = 'away'
+                elif self.presence_state['status']['extended-away']:
+                    wining_status = 'extended-away'
+                else:
+                    wining_status = 'offline'
+                
+                _presence_notes = [unicode(note) for service in pidf.services for note in service.notes if note]
+                presence_notes += _presence_notes
 
+                for service in pidf.services:
                     if service.device_info is not None and service.device_info.time_offset is not None:
                         ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
                         time_offset = int(service.device_info.time_offset)/60.0
@@ -648,11 +673,40 @@ class BlinkPresenceContact(BlinkContact):
                             offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
                         else:
                             offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
-                        offset_infos[urllib.unquote(service.device_info.id)] = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
+                        offset_info_text = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
 
-            self.presence_state['offset_info'] = offset_infos
-            notes = list(unicode(note) for note in presence_notes)
-            self.presence_state['presence_notes'] = notes
+                        contact = str(urllib.unquote(service.contact.value).split(":")[1])
+                        if not contact.startswith(('sip:', 'sips:')):
+                            contact = 'sip:'+contact
+
+                        aor = str(urllib.unquote(pidf.entity))
+                        if not aor.startswith(('sip:', 'sips:')):
+                            aor = 'sip:'+aor
+
+                        devices[service.device_info.id] = {
+                                                           'description': service.device_info.description,
+                                                           'user_agent': service.device_info.user_agent,
+                                                           'aor': aor,
+                                                           'contact': contact, 
+                                                           'location': service.map.value if service.map is not None else None,
+                                                           'local_time': offset_info_text, 
+                                                           'time_offset': offset_info, 
+                                                           'notes': _presence_notes, 
+                                                           'status': wining_status}
+
+            # discard notes from offline devices if others are online
+            if devices:
+                has_on_line_devices = any(device for device in devices.values() if device['status'] != 'offline')
+                if has_on_line_devices:
+                    notes_to_purge = [note for device in devices.values() if device['status'] == 'offline' for note in device['notes']]
+                    for note in notes_to_purge:
+                        try:
+                            presence_notes.remove(note)
+                        except ValueError:
+                            pass                   
+            
+            self.presence_state['presence_notes'] = presence_notes
+            self.presence_state['devices'] = devices
             indicator_bar = presence_indicator_bar_for_contact(self)
             self.setPresenceIndicator(indicator_bar)
         else:
@@ -778,8 +832,12 @@ class BlinkPresenceContact(BlinkContact):
             return list(result)
 
         presence_notes = self.presence_state['presence_notes']
-        offset_infos = self.presence_state['offset_info']
-        offset_info = ",".join(unique_values(offset_infos)) if offset_infos else ''
+        offset_infos = []
+        for device in self.presence_state['devices'].values():
+            if device['local_time'] not in offset_infos:
+                offset_infos.append(device['local_time'])
+
+        offset_info = ",".join(offset_infos)
         if presence_notes:
             if self.presence_note is None:
                 self.presence_note = '%s %s' % (presence_notes[0], offset_info)
