@@ -111,6 +111,7 @@ class PresencePublisher(object):
     originalPresenceActivity = None
     wakeup_timer = None
     location = None
+    xcap_caps_discovered = {}
 
 
     def __init__(self, owner):
@@ -124,7 +125,7 @@ class PresencePublisher(object):
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="XCAPManagerDidReloadData")
-
+        nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -184,13 +185,22 @@ class PresencePublisher(object):
                     account.presence_state = self.build_pidf(account)
 
             if set(['xcap.enabled', 'xcap.xcap_root']).intersection(notification.data.modified):
+                if not account.xcap.enabled:
+                    try:
+                        del self.xcap_caps_discovered[account]
+                    except KeyError:
+                        pass
+
                 if account.xcap.enabled and account.xcap.discovered:
                     offline_pidf = self.build_offline_pidf(account)
                     offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
-                    account.xcap_manager.set_offline_status(offline_status)
+                    if account.xcap_manager is not None:
+                        account.xcap_manager.set_offline_status(offline_status)
                     status_icon = self.build_status_icon()
                     icon = Icon(status_icon, 'image/png') if status_icon is not None else None
-                    account.xcap_manager.set_status_icon(icon)
+                    if account.xcap_manager is not None:
+                        account.xcap_manager.set_status_icon(icon)
+
 
         if notification.sender is SIPSimpleSettings():
             if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
@@ -199,6 +209,12 @@ class PresencePublisher(object):
                 self.set_offline_status()
             if 'presence_state.icon' in notification.data.modified:
                 self.set_status_icon()
+
+    def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
+        account = notification.sender.account
+        self.xcap_caps_discovered[account] = True
+        if account.enabled and account.presence.enabled:
+            account.presence_state = self.build_pidf(account)
 
     def _NH_XCAPManagerDidReloadData(self, notification):
         offline_status = notification.data.offline_status
@@ -325,8 +341,13 @@ class PresencePublisher(object):
         if self.location and not account.presence.disable_location:
             service.map=cipid.Map(self.location)
 
-        if account.xcap_manager.status_icon.content is not None:
-            service.icon=cipid.Icon(account.xcap_manager.status_icon.uri)
+        try:
+            xcap_caps_discovered = self.xcap_caps_discovered[account]
+        except KeyError:
+            pass
+        else:
+            if account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None:
+                service.icon=cipid.Icon(account.xcap_manager.status_icon.uri)
 
         if account.presence.homepage is not None:
             service.homepage=cipid.Homepage(account.presence.homepage)
@@ -393,13 +414,15 @@ class PresencePublisher(object):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
             offline_pidf = self.build_offline_pidf(account)
             offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
-            account.xcap_manager.set_offline_status(offline_status)
+            if account.xcap_manager is not None:
+                account.xcap_manager.set_offline_status(offline_status)
 
     def set_status_icon(self):
         status_icon = self.build_status_icon()
         icon = Icon(status_icon, 'image/png') if status_icon is not None else None
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
-            account.xcap_manager.set_status_icon(icon)
+            if account.xcap_manager is not None:
+                account.xcap_manager.set_status_icon(icon)
 
     @run_in_green_thread
     def get_location(self, account):
