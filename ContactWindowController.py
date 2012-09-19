@@ -454,9 +454,6 @@ class ContactWindowController(NSWindowController):
         # initialize debug window
         self.debugWindow = DebugWindow.alloc().init()
 
-        # video mirror window
-        self.mirrorWindow = VideoMirrorWindowController.alloc().init()
-
         # instantiate the SMS handler
         SMSWindowManager.SMSWindowManager().setOwner_(self)
 
@@ -2022,6 +2019,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def toggleMirrorWindow_(self, sender):
+        if self.mirrorWindow is None:
+            self.mirrorWindow = VideoMirrorWindowController.alloc().init()
+
         if self.mirrorWindow.visible:
             self.mirrorWindow.hide()
         else:
@@ -2331,7 +2331,7 @@ class ContactWindowController(NSWindowController):
         item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
 
         item = self.statusMenu.itemWithTag_(61) # my video
-        item.setState_(self.mirrorWindow.visible and NSOnState or NSOffState)
+        item.setState_(self.mirrorWindow and self.mirrorWindow.visible and NSOnState or NSOffState)
         item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
 
     def updateToolsMenu(self):
