@@ -2343,6 +2343,7 @@ class ContactWindowController(NSWindowController):
         item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
 
+    @allocate_autorelease_pool
     def updateCallMenu(self):
         menu = self.callMenu
 
@@ -2429,6 +2430,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(account)
 
+    @allocate_autorelease_pool
     def updateRecordingsMenu(self):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
@@ -2698,6 +2700,7 @@ class ContactWindowController(NSWindowController):
 
         self.renderHistoryMenu(entries)
 
+    @allocate_autorelease_pool
     @run_in_gui_thread
     def renderHistoryMenu(self, entries):
         menu = self.historyMenu
@@ -3057,6 +3060,7 @@ class ContactWindowController(NSWindowController):
     def close_(self, sender):
         self.window().close()
 
+    @allocate_autorelease_pool
     def updateContactContextMenu(self):
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             sel = self.contactOutline.selectedRow()
