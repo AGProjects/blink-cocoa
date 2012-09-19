@@ -3,6 +3,7 @@
 
 from Foundation import *
 from AppKit import *
+from util import allocate_autorelease_pool
 
 from ContactListModel import status_icon_for_contact
 
@@ -38,6 +39,7 @@ class ContactCell(NSTextFieldCell):
             return super(ContactCell, self).cellSize()
         return NSMakeSize(100, 30)
 
+    @allocate_autorelease_pool
     def drawWithFrame_inView_(self, frame, view):
         if self.contact is None:
             return super(ContactCell, self).drawWithFrame_inView_(frame, view)
@@ -53,6 +55,7 @@ class ContactCell(NSTextFieldCell):
         self.drawSecondLine()
         self.drawPresenceIndicator()
 
+    @allocate_autorelease_pool
     def drawFirstLine(self):
         frame = self.frame
         frame.origin.x = 35
@@ -62,6 +65,7 @@ class ContactCell(NSTextFieldCell):
         attrs = self.firstLineAttributes if not self.isHighlighted() else self.firstLineAttributes_highlighted
         self.stringValue().drawInRect_withAttributes_(rect, attrs)
 
+    @allocate_autorelease_pool
     def drawSecondLine(self):
         frame = self.frame
         frame.origin.y += 15
@@ -70,6 +74,7 @@ class ContactCell(NSTextFieldCell):
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
             self.contact.detail.drawInRect_withAttributes_(rect, attrs)
 
+    @allocate_autorelease_pool
     def drawActiveMedia(self):
         if not hasattr(self.contact, "active_media"):
             return
@@ -91,6 +96,7 @@ class ContactCell(NSTextFieldCell):
             left = left - padding - 2
             self.drawIcon(self.screenIcon, left, self.frame.origin.y +14, 16, 16)
 
+    @allocate_autorelease_pool
     def drawPresenceIndicator(self):
         if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
@@ -126,6 +132,7 @@ class ContactCell(NSTextFieldCell):
             icon.setSize_(NSMakeSize(12,12))
             self.drawIcon(icon, 20, self.frame.origin.y + 22, 12, 12)
 
+    @allocate_autorelease_pool
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
         if not size or not size.height:
