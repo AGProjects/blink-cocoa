@@ -325,6 +325,7 @@ class DebugWindow(NSObject):
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @allocate_autorelease_pool
     def renderSIP(self, notification):
         event_data = notification.data
         self.sipBytes += len(event_data.data)
