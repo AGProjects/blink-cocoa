@@ -450,10 +450,10 @@ class ChatController(MediaStream):
         self.updateToolbarMuteIcon()
 
     def showVideoMirror(self):
-        NSApp.delegate().contactsWindowController.mirrorWindow.show()
+        NSApp.delegate().contactsWindowController.showVideoMirrorWindow()
 
     def hideVideoMirror(self):
-        NSApp.delegate().contactsWindowController.mirrorWindow.hide()
+        NSApp.delegate().contactsWindowController.hideVideoMirrorWindow()
 
     def toggleVideoMirror(self):
         if NSApp.delegate().contactsWindowController.mirrorWindow.visible:

@@ -2019,13 +2019,19 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def toggleMirrorWindow_(self, sender):
-        if self.mirrorWindow is None:
-            self.mirrorWindow = VideoMirrorWindowController.alloc().init()
-
-        if self.mirrorWindow.visible:
-            self.mirrorWindow.hide()
+        if self.mirrorWindow and self.mirrorWindow.visible:
+            self.hideVideoMirrorWindow.hide()
         else:
-            self.mirrorWindow.show()
+            self.showVideoMirrorWindow()
+
+    def hideVideoMirrorWindow(self):
+        if self.mirrorWindow and self.mirrorWindow.visible:
+            self.mirrorWindow.hide()
+            
+    def showVideoMirrorWindow(self):
+        if self.mirrorWindow is None:
+            self.mirrorWindow = VideoMirrorWindowController.alloc().init()    
+        self.mirrorWindow.show()
 
     @objc.IBAction
     def displayNameChanged_(self, sender):
