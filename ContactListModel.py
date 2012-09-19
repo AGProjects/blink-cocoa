@@ -456,6 +456,7 @@ class BlinkConferenceContact(BlinkContact):
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
     
+    @allocate_autorelease_pool
     def setPresenceNote(self):
         presence_notes = self.presence_state['presence_notes']
         if presence_notes:
@@ -480,7 +481,8 @@ class BlinkConferenceContact(BlinkContact):
    
     def _NH_BlinkContactPresenceHasChaged(self, notification):
         self.updatePresenceState() 
-    
+
+    @allocate_autorelease_pool
     def updatePresenceState(self):
         if self.presence_contact is None:
             return
@@ -515,6 +517,7 @@ class BlinkConferenceContact(BlinkContact):
                 for note in service.notes:
                     if note:
                         presence_notes.append(note)
+        pidfs = None
     
         notes = list(unicode(note) for note in presence_notes)
         self.presence_state['presence_notes'] = notes
@@ -841,6 +844,7 @@ class BlinkPresenceContact(BlinkContact):
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
 
+    @allocate_autorelease_pool
     def setPresenceNote(self):
         if self.presence_state['status']['busy']:
             wining_status = 'busy'
@@ -895,6 +899,7 @@ class BlinkPresenceContact(BlinkContact):
             else:
                 detail = detail_uri
 
+        presence_notes = []
         if detail != self.detail:
             self.detail = detail
             NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
@@ -2652,10 +2657,12 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @allocate_autorelease_pool
     def _NH_BlinkContactPresenceHasChaged(self, notification):
         groups = (group for group in self.groupsList if notification.sender in group.contacts)
         for group in groups:
             self.contactOutline.reloadItem_reloadChildren_(group, True)
+        groups = None
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
