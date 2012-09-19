@@ -3121,7 +3121,7 @@ class ContactWindowController(NSWindowController):
             
             devices = None
             if isinstance(item, BlinkPresenceContact):
-                devices = [device for device in item.presence_state['devices'].values() if device['contact'] != device['aor']]
+                devices = [device for device in item.presence_state['devices'].values() if device['contact'] != device['aor'] and device['user_agent'] is None and device['description'] is not None and device['local_time']]
     
             has_multiple_uris = len(item.uris) > 1
             

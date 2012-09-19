@@ -446,7 +446,6 @@ class BlinkConferenceContact(BlinkContact):
 
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
-                                'pending_authorizations':    {},
                                 'status': { 'available':     False,
                                             'extended-away': False,
                                             'away':          False,
@@ -587,8 +586,7 @@ class BlinkPresenceContact(BlinkContact):
         self.timer = None
 
     def init_presence_state(self):
-        self.presence_state = { 'presence_notes': [],
-                                'pending_authorizations':    {},
+        self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
                                             'extended-away': False,
                                             'away':          False,
@@ -627,10 +625,10 @@ class BlinkPresenceContact(BlinkContact):
         for uri, resource in resources.iteritems():
             self.pidfs_map[uri] = resource.pidf_list
 
-        presence_notes = []
         basic_status = 'closed'
         self.init_presence_state()
         offset_infos = {}
+        has_notes = 0
 
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
         devices = {}
@@ -639,49 +637,61 @@ class BlinkPresenceContact(BlinkContact):
                 if basic_status is 'closed':
                     basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
 
+                _available = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
+
                 if self.presence_state['status']['available'] is False:
-                    self.presence_state['status']['available'] = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
+                    self.presence_state['status']['available'] = _available
+
+                _busy = any(service for service in pidf.services if service.status.extended == 'busy')
 
                 if self.presence_state['status']['busy'] is False:
-                    self.presence_state['status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
+                    self.presence_state['status']['busy'] = _busy
+
+                _extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
 
                 if self.presence_state['status']['extended-away'] is False:
-                    self.presence_state['status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
+                    self.presence_state['status']['extended-away'] = _extended_away
+                
+                _away = any(service for service in pidf.services if service.status.extended == 'away')
                 
                 if self.presence_state['status']['away'] is False:
-                    self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
+                    self.presence_state['status']['away'] = _away
 
-                if self.presence_state['status']['busy']: 
-                    wining_status = 'busy'
-                elif self.presence_state['status']['available']:
-                    wining_status = 'available'
-                elif self.presence_state['status']['away']:
-                    wining_status = 'away'
-                elif self.presence_state['status']['extended-away']:
-                    wining_status = 'extended-away'
+                if _busy: 
+                    device_wining_status = 'busy'
+                elif _available:
+                    device_wining_status = 'available'
+                elif _away:
+                    device_wining_status = 'away'
+                elif _extended_away:
+                    device_wining_status = 'extended-away'
                 else:
-                    wining_status = 'offline'
+                    device_wining_status = 'offline'
                 
                 _presence_notes = [unicode(note) for service in pidf.services for note in service.notes if note]
-                presence_notes += _presence_notes
+                has_notes += len(_presence_notes)
 
                 for service in pidf.services:
-                    if service.device_info is not None and service.device_info.time_offset is not None:
-                        ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
-                        time_offset = int(service.device_info.time_offset)/60.0
-                        if time_offset == int(time_offset):
-                            offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                    aor = str(urllib.unquote(pidf.entity))
+                    if not aor.startswith(('sip:', 'sips:')):
+                        aor = 'sip:'+aor
+                            
+                    if service.device_info is not None:
+                        if service.device_info.time_offset is not None:
+                            ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
+                            time_offset = int(service.device_info.time_offset)/60.0
+                            if time_offset == int(time_offset):
+                                offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                            else:
+                                offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                            offset_info_text = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
                         else:
-                            offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
-                        offset_info_text = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
+                            offset_info_text = None
+                            offset_info = None
 
                         contact = str(urllib.unquote(service.contact.value).split(":")[1])
                         if not contact.startswith(('sip:', 'sips:')):
                             contact = 'sip:'+contact
-
-                        aor = str(urllib.unquote(pidf.entity))
-                        if not aor.startswith(('sip:', 'sips:')):
-                            aor = 'sip:'+aor
 
                         devices[service.device_info.id] = {
                                                            'description': service.device_info.description,
@@ -692,7 +702,20 @@ class BlinkPresenceContact(BlinkContact):
                                                            'local_time': offset_info_text, 
                                                            'time_offset': offset_info, 
                                                            'notes': _presence_notes, 
-                                                           'status': wining_status}
+                                                           'status': device_wining_status}
+                    else:
+                        devices[service.id] = {
+                                                            'description': None,
+                                                            'user_agent': None,
+                                                            'aor': aor,
+                                                            'contact': aor, 
+                                                            'location': None,
+                                                            'local_time': None, 
+                                                            'time_offset': None, 
+                                                            'notes': _presence_notes, 
+                                                            'status': device_wining_status
+                                                            }
+                    
 
             # discard notes from offline devices if others are online
             if devices:
@@ -705,7 +728,6 @@ class BlinkPresenceContact(BlinkContact):
                         except ValueError:
                             pass                   
             
-            self.presence_state['presence_notes'] = presence_notes
             self.presence_state['devices'] = devices
             indicator_bar = presence_indicator_bar_for_contact(self)
             self.setPresenceIndicator(indicator_bar)
@@ -718,7 +740,7 @@ class BlinkPresenceContact(BlinkContact):
                 self.presence_state['pending_authorizations'][resource.uri] = True
 
         self.setPresenceNote()
-        has_notes = len(self.presence_state['presence_notes']) > 1 or self.presence_state['pending_authorizations']
+        has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
         if has_notes and self.timer is None:
             self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceNoteTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
@@ -820,40 +842,47 @@ class BlinkPresenceContact(BlinkContact):
         self.presence_indicator = indicator
 
     def setPresenceNote(self):
-        def unique_values(d):
-            seen = {} # dict (value, key)
-            result = set() # keys with unique values
-            for k,v in d.iteritems():
-                if v in seen:
-                    result.discard(seen[v])
-                else:
-                    seen[v] = k
-                    result.add(v)
-            return list(result)
+        if self.presence_state['status']['busy']:
+            wining_status = 'busy'
+        elif self.presence_state['status']['available']:
+            wining_status = 'available'
+        elif self.presence_state['status']['away']:
+            wining_status = 'away'
+        elif self.presence_state['status']['extended-away']:
+            wining_status = 'extended-away'
+        else:
+            wining_status = 'offline'
 
-        presence_notes = self.presence_state['presence_notes']
-        offset_infos = []
+        presence_notes = []
         for device in self.presence_state['devices'].values():
-            if device['local_time'] not in offset_infos:
-                offset_infos.append(device['local_time'])
+            if wining_status == 'busy' and device['status'] != 'busy':
+                # only show busy notes
+                continue
+            for note in device['notes']:
+                presence_notes.append('%s %s' % (note, device['local_time']) if device['local_time'] is not None else note)
 
-        offset_info = ",".join(offset_infos)
+        local_times = []
+        if not presence_notes:
+            for device in self.presence_state['devices'].values():
+                if device['local_time'] is not None and device['local_time'] not in local_times:
+                    local_times.append(device['local_time'])
+
         if presence_notes:
             if self.presence_note is None:
-                self.presence_note = '%s %s' % (presence_notes[0], offset_info)
+                self.presence_note = presence_notes[0]
             else:
                 try:
                     index = presence_notes.index(self.presence_note)
-                except ValueError:
-                    self.presence_note = '%s %s' % (presence_notes[0], offset_info)
+                except ValueError, e:
+                    self.presence_note = presence_notes[0]
                 else:
                     try:
-                        self.presence_note = '%s %s' % (presence_notes[index+1], offset_info)
-                    except IndexError:
-                        self.presence_note = '%s %s' % (presence_notes[0], offset_info)
+                        self.presence_note = presence_notes[index+1]
+                    except IndexError, e:
+                        self.presence_note = presence_notes[0]
             detail = self.presence_note if self.presence_note else '%s (%s)' % (self.uri, self.uri_type)
-        elif offset_info:
-            detail = '%s %s' % (self.uri, offset_info)
+        elif local_times:
+            detail = '%s %s' % (self.uri, ",".join(local_times))
         else:
             detail_uri = '%s (%s)' % (self.uri, self.uri_type)
             detail = detail_uri
