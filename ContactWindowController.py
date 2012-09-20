@@ -1139,6 +1139,7 @@ class ContactWindowController(NSWindowController):
             enroll.setupForAdditionalAccounts()
             enroll.runModal()
             self.refreshAccountList()
+            enroll.release()
 
     def contactSelectionChanged_(self, notification):
         self.updateStartSessionButtons()
