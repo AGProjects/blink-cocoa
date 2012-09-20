@@ -620,7 +620,11 @@ class BlinkPresenceContact(BlinkContact):
             self.pidfs_map = {}
 
         resource_map = notification.data.resource_map
-        resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key.split(':')[1], exact_match=True))
+        try:
+            resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key.split(':')[1], exact_match=True))
+        except IndexError, e:
+            print e
+            return 
 
         if not resources:
             return              

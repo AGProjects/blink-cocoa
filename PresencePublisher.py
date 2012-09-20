@@ -180,7 +180,7 @@ class PresencePublisher(object):
         if isinstance(notification.sender, Account):
             account = notification.sender
             
-            if set(['display_name', 'presence.disable_location', 'presence.homepage']).intersection(notification.data.modified):
+            if set(['display_name', 'presence.disable_location', 'disable_timezone', 'presence.homepage']).intersection(notification.data.modified):
                 if account.enabled and account.presence.enabled:
                     account.presence_state = self.build_pidf(account)
 
@@ -308,6 +308,9 @@ class PresencePublisher(object):
             self.publish()
 
     def build_pidf(self, account):
+        if not account.enabled or not account.presence.enabled:
+            return None
+
         timestamp = datetime.now()
         settings = SIPSimpleSettings()
         instance_id = str(uuid.UUID(settings.instance_id))
@@ -315,7 +318,8 @@ class PresencePublisher(object):
         pidf_doc = pidf.PIDF(str(account.uri))
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
         person.timestamp = pidf.PersonTimestamp(timestamp)
-        person.time_offset = rpid.TimeOffset()
+        if not account.presence.disable_timezone:
+            person.time_offset = rpid.TimeOffset()
         pidf_doc.add(person)
 
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
@@ -354,7 +358,9 @@ class PresencePublisher(object):
 
         service.timestamp = pidf.ServiceTimestamp(timestamp)
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
-        service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent, time_offset=pidf.TimeOffset())
+        service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
+        if not account.presence.disable_timezone:
+            service.time_offset=pidf.TimeOffset()
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
         service.capabilities.message = not settings.chat.disabled
         service.capabilities.file_transfer = not settings.file_transfer.disabled
