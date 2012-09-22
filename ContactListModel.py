@@ -621,9 +621,8 @@ class BlinkPresenceContact(BlinkContact):
 
         resource_map = notification.data.resource_map
         try:
-            resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key.split(':')[1], exact_match=True))
-        except IndexError, e:
-            print e
+            resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key, exact_match=True))
+        except Exception:
             return 
 
         if not resources:
