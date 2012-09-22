@@ -1554,6 +1554,7 @@ class ChatWindowController(NSWindowController):
 
         return NSDragOperationNone
 
+    @allocate_autorelease_pool
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
         pboard = info.draggingPasteboard()
         session = self.selectedSessionController()

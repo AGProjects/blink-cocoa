@@ -314,22 +314,35 @@ class JoinConferenceWindowController(NSObject):
     def awakeFromNib(self):
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
 
+    @allocate_autorelease_pool
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
-        if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
-            participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
-            if participant and "@" not in participant and self.default_domain:
-                participant = '%s@%s' % (participant, self.default_domain)
-            if participant:
-                participant = sip_prefix_pattern.sub("", str(participant))
-            try:
-                if participant not in self._participants:
-                    self._participants.append(participant)
-                    self.participantsTable.reloadData()
-                    self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
-                    self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
+        pboard = info.draggingPasteboard()
+        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
+            if blink_contact is not None:
+                sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
+                sourceContact = sourceGroup.contacts[blink_contact]
+                
+                if len(sourceContact.uris) > 1:
+                    point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
+                    event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                                                              NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
+                                                                                                                                              table.window().graphicsContext(), 0, 1, 0)
+                    invite_menu = NSMenu.alloc().init()
+                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                    titem.setEnabled_(False)
+                    for uri in sourceContact.uris:
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "addContactUriToInvitationList:", "")
+                        titem.setIndentationLevel_(1)
+                        titem.setTarget_(self)
+                        titem.setRepresentedObject_(uri.uri)
+                    
+                    NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, table)
                     return True
-            except:
-                pass
+                else:
+                    participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+                    self.addContactUriToInvitationList(participant)
+                    return True
         return False
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
@@ -344,6 +357,27 @@ class JoinConferenceWindowController(NSObject):
             return NSDragOperationGeneric
         else:
             return NSDragOperationNone
+
+    @objc.IBAction
+    def addContactUriToInvitationList_(self, sender):
+        participant = sender.representedObject()
+        self.addContactUriToInvitationList(participant)
+
+    def addContactUriToInvitationList(self, participant):
+        if participant and "@" not in participant and self.default_domain:
+            participant = '%s@%s' % (participant, self.default_domain)
+        
+        if participant:
+            participant = sip_prefix_pattern.sub("", str(participant))
+        
+        try:
+            if participant not in self._participants:
+                self._participants.append(participant)
+                self.participantsTable.reloadData()
+                self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
+                self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
+        except:
+            pass
 
     def run(self):
         contactsWindow = NSApp.delegate().contactsWindowController.window()
@@ -524,35 +558,71 @@ class AddParticipantsWindowController(NSObject):
     def awakeFromNib(self):
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
 
+    @allocate_autorelease_pool
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, oper):
-        participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+        pboard = info.draggingPasteboard()
+        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
+            if blink_contact is not None:
+                sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
+                sourceContact = sourceGroup.contacts[blink_contact]
+                
+                if len(sourceContact.uris) > 1:
+                    point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
+                    event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                                                              NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
+                                                                                                                                              table.window().graphicsContext(), 0, 1, 0)
+                    invite_menu = NSMenu.alloc().init()
+                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                    titem.setEnabled_(False)
+                    for uri in sourceContact.uris:
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "addContactUriToInvitationList:", "")
+                        titem.setIndentationLevel_(1)
+                        titem.setTarget_(self)
+                        titem.setRepresentedObject_(uri.uri)
+                    
+                    NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, table)
+                    return True
+                else:
+                    participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+                    self.addContactUriToInvitationList(participant)
+                    return True
+        return False
+    
+    def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
+        if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
+            participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
+            if participant:
+                participant = sip_prefix_pattern.sub("", str(participant))
+            if participant and "@" not in participant and self.default_domain:
+                participant = '%s@%s' % (participant, self.default_domain)
+            if participant is None or not validateParticipant(participant):
+                return NSDragOperationNone
+            return NSDragOperationGeneric
+        else:
+            return NSDragOperationNone
+    
+    @objc.IBAction
+    def addContactUriToInvitationList_(self, sender):
+        participant = sender.representedObject()
+        self.addContactUriToInvitationList(participant)
+    
+    def addContactUriToInvitationList(self, participant):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
+        
         if participant:
             participant = sip_prefix_pattern.sub("", str(participant))
+        
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
                 self.participantsTable.reloadData()
+                self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
                 self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
-                return True
         except:
             pass
-        return False
-
-    def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
-        participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
-        if participant and "@" not in participant and self.default_domain:
-            participant = '%s@%s' % (participant, self.default_domain)
-        if participant:
-            participant = sip_prefix_pattern.sub("", str(participant))
-        try:
-            if participant is None or not validateParticipant(participant):
-                return NSDragOperationNone
-        except:
-            return NSDragOperationNone
-        return NSDragOperationGeneric
-
+    
     def run(self):
         self._participants = []
         contactsWindow = NSApp.delegate().contactsWindowController.window()
