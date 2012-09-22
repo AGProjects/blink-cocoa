@@ -887,7 +887,8 @@ class SessionController(NSObject):
 
     def acceptIncomingProposal(self, streams):
         self.handleIncomingStreams(streams, True)
-        self.session.accept_proposal(streams)
+        if self.session is not None:
+            self.session.accept_proposal(streams)
 
     def handleIncomingStreams(self, streams, is_update=False):
         try:
@@ -955,11 +956,11 @@ class SessionController(NSObject):
     def end(self):
         if self.state in (STATE_DNS_FAILED, STATE_DNS_LOOKUP):
             return
-        if  self.session:
+        if self.session is not None:
             self.session.end()
 
     def endStream(self, streamHandler):
-        if self.session:
+        if self.session is not None:
             if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
                 # if session is desktop-sharing end it
                 self.end()
@@ -998,7 +999,7 @@ class SessionController(NSObject):
                 return False
 
     def cancelProposal(self, stream):
-        if self.session:
+        if self.session is not None:
             if self.canCancelProposal():
                 self.log_info("Cancelling proposal")
                 self.cancelledStream = stream
@@ -1324,7 +1325,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
     def transferSession(self, target, replaced_session_controller=None):
-        if self.session:
+        if self.session is not None:
             target_uri = str(target)
             if '@' not in target_uri:
                 target_uri = target_uri + '@' + self.account.id.domain
@@ -1339,26 +1340,29 @@ class SessionController(NSObject):
                 self.log_info("Outgoing transfer request to %s" % sip_prefix_pattern.sub("", str(target_uri)))
 
     def _acceptTransfer(self):
-        self.log_info("Transfer request accepted by user")
-        try:
-            self.session.accept_transfer()
-        except IllegalDirectionError:
-            pass
+        if self.session is not None:
+            self.log_info("Transfer request accepted by user")
+            try:
+                self.session.accept_transfer()
+            except IllegalDirectionError:
+                pass
         self.transfer_window = None
 
     def _rejectTransfer(self):
-        self.log_info("Transfer request rejected by user")
-        try:
-            self.session.reject_transfer()
-        except IllegalDirectionError:
-            pass
+        if self.session is not None:
+            self.log_info("Transfer request rejected by user")
+            try:
+                self.session.reject_transfer()
+            except IllegalDirectionError:
+                pass
         self.transfer_window = None
 
     def reject(self, code, reason):
-        try:
-            self.session.reject(code, reason)
-        except IllegalStateError:
-            pass
+        if self.session is not None:
+            try:
+                self.session.reject(code, reason)
+            except IllegalStateError:
+                pass
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1403,7 +1407,6 @@ class SessionController(NSObject):
         self.log_info("Session will start")
 
     def _NH_SIPSessionDidStart(self, sender, data):
-
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
         if self.session.remote_focus:
             self.remote_focus = True
