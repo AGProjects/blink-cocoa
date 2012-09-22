@@ -146,7 +146,7 @@ def presence_indicator_bar_for_contact(contact):
         elif contact.presence_state['status']['available']:
             return "available"
         elif contact.presence_state['status']['extended-away']:
-            return "busy"
+            return "away"
         elif contact.presence_state['status']['away']:
             return "away"
     
