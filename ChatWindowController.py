@@ -727,7 +727,7 @@ class ChatWindowController(NSWindowController):
                 return
 
             try:
-                recipient = CPIMIdentity(SIPURI.parse('sip:%s' % contact.uri), display_name=contact.name)
+                recipient = CPIMIdentity(SIPURI.parse('sip:%s' % str(contact.uri)), display_name=contact.name)
             except SIPCoreError:
                 return
 
