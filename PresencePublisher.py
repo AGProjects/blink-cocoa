@@ -332,9 +332,14 @@ class PresencePublisher(object):
             return None
         status = pidf.Status(activity_object['basic_status'])
         if self.idle_extended_mode:
-            status.extended = 'extended-away'
+            extended_status = 'extended-away'
         else:
-            status.extended = activity_object['extended_status']
+             extended_status = activity_object['extended_status']
+
+        status.extended = extended_status
+
+        person.activities = rpid.Activities()
+        person.activities.add(extended_status)
 
         service = pidf.Service("SID-%s" % instance_id, status=status)
         service.contact = pidf.Contact(str(account.contact.public_gruu or account.uri))
