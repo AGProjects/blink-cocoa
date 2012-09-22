@@ -2107,9 +2107,10 @@ class ContactWindowController(NSWindowController):
         if selected_presence_activity is None:
             return
 
-        history_object = dict(selected_presence_activity)
-        history_object['note'] = presence_note
-        self.savePresenceActivityToHistory(history_object)
+        if presence_note:
+            history_object = dict(selected_presence_activity)
+            history_object['note'] = presence_note
+            self.savePresenceActivityToHistory(history_object)
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
@@ -2134,9 +2135,10 @@ class ContactWindowController(NSWindowController):
         settings.presence_state.note = presence_note
         settings.save()
 
-        history_object = item.representedObject()
-        history_object['note'] = presence_note
-        self.savePresenceActivityToHistory(history_object)
+        if presence_note:
+            history_object = item.representedObject()
+            history_object['note'] = presence_note
+            self.savePresenceActivityToHistory(history_object)
 
     def savePresenceActivityToHistory(self, history_object):
         try:
