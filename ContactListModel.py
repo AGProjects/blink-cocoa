@@ -584,7 +584,7 @@ class BlinkPresenceContact(BlinkContact):
 
         self.presence_indicator = 'unknown'
         self.presence_note = None
-        self.pidfs_map = []
+        self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
 
