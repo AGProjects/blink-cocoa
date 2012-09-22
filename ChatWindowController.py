@@ -1544,20 +1544,6 @@ class ChatWindowController(NSWindowController):
                         uri = sip_prefix_pattern.sub("", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
-
-                        # do not invite remote party itself
-                        remote_uri = format_identity_to_string(session.remotePartyObject)
-                        if uri == remote_uri:
-                            return NSDragOperationNone
-                        # do not invite users already invited
-                        for contact in session.invited_participants:
-                            if uri == contact.uri:
-                                return NSDragOperationNone
-                        # do not invite users already present in the conference
-                        if session.conference_info is not None:
-                            for user in session.conference_info.users:
-                                if uri == sip_prefix_pattern.sub("", user.entity):
-                                    return NSDragOperationNone
                     except:
                         return NSDragOperationNone
                     return NSDragOperationAll
@@ -1576,33 +1562,74 @@ class ChatWindowController(NSWindowController):
             return False
 
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
-            uri = str(pboard.stringForType_("x-blink-sip-uri"))
-            if uri:
-                uri = sip_prefix_pattern.sub("", str(uri))
-                if "@" not in uri:
-                    uri = '%s@%s' % (uri, session.account.id.domain)
-
-            if session.remote_focus:
-                getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
-                contact = getContactMatchingURI(uri)
-                if contact:
-                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+            group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
+            if blink_contact is not None:
+                sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
+                sourceContact = sourceGroup.contacts[blink_contact]
+                
+                if len(sourceContact.uris) > 1:
+                    point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
+                    event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                                                              NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
+                                                                                                                                              table.window().graphicsContext(), 0, 1, 0)
+                    invite_menu = NSMenu.alloc().init()
+                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                    titem.setEnabled_(False)
+                    for uri in sourceContact.uris:
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedInviteToConference:", "")
+                        titem.setIndentationLevel_(1)
+                        titem.setTarget_(self)
+                        titem.setRepresentedObject_({'session': session, 'uri': uri.uri, 'contact':sourceContact})
+                    
+                    NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, table)
                 else:
-                    contact = BlinkConferenceContact(uri, name=uri)
-                contact.detail = 'Invitation sent...'
-                session.invited_participants.append(contact)
-                session.participants_log.add(uri)
-                self.refreshDrawer()
-                session.log_info(u"Invite %s to conference" % uri)
-                session.session.conference.add_participant(uri)
-            elif not isinstance(session.account, BonjourAccount):
-                self.joinConferenceWindow(session, [uri])
+                    uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                    self.inviteContactToConferenceSessionWithUri(session, uri, sourceContact)
+                
             return True
         elif pboard.types().containsObject_(NSFilenamesPboardType):
             chat_controller = session.streamHandlerOfType("chat")
             ws = NSWorkspace.sharedWorkspace()
             fnames = pboard.propertyListForType_(NSFilenamesPboardType)
             return chat_controller.sendFiles(fnames)
+
+    @objc.IBAction
+    def userClickedInviteToConference_(self, sender):
+        session = sender.representedObject()['session']
+        uri = sender.representedObject()['uri']
+        contact = sender.representedObject()['contact']
+        self.inviteContactToConferenceSessionWithUri(session, uri, contact)
+            
+    def inviteContactToConferenceSessionWithUri(self, session, uri, contact):
+        if uri:
+            uri = sip_prefix_pattern.sub("", str(uri))
+        if "@" not in uri:
+            uri = '%s@%s' % (uri, session.account.id.domain)
+
+        # do not invite remote party itself
+        remote_uri = format_identity_to_string(session.remotePartyObject)
+        if uri == remote_uri:
+            return False
+        # do not invite users already invited
+        for contact in session.invited_participants:
+            if uri == contact.uri:
+                return False
+        # do not invite users already present in the conference
+        if session.conference_info is not None:
+            for user in session.conference_info.users:
+                if uri == sip_prefix_pattern.sub("", user.entity):
+                    return False
+        
+        if session.remote_focus:
+            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+            contact.detail = 'Invitation sent...'
+            session.invited_participants.append(contact)
+            session.participants_log.add(uri)
+            self.refreshDrawer()
+            session.log_info(u"Invite %s to conference" % uri)
+            session.session.conference.add_participant(uri)
+        elif not isinstance(session.account, BonjourAccount):
+            self.joinConferenceWindow(session, [uri])
 
 
 class ConferenceFile(NSObject):
