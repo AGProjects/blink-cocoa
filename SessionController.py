@@ -1305,6 +1305,9 @@ class SessionController(NSObject):
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
 
+        if self.session is None:
+            return
+
         self.log_info('Starting outgoing session to %s' % format_identity_to_string(self.target_uri, format='compact'))
         streams = [s.stream for s in self.streamHandlers]
         target_uri = SIPURI.new(self.target_uri)
