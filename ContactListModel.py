@@ -643,27 +643,27 @@ class BlinkPresenceContact(BlinkContact):
                 if basic_status is 'closed':
                     basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
 
+                _busy = any(service for service in pidf.services if service.status.extended == 'busy')
+                
+                if self.presence_state['status']['busy'] is False:
+                    self.presence_state['status']['busy'] = _busy
+                
                 _available = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
 
                 if self.presence_state['status']['available'] is False:
                     self.presence_state['status']['available'] = _available
 
-                _busy = any(service for service in pidf.services if service.status.extended == 'busy')
-
-                if self.presence_state['status']['busy'] is False:
-                    self.presence_state['status']['busy'] = _busy
-
+                _away = any(service for service in pidf.services if service.status.extended == 'away')
+                
+                if self.presence_state['status']['away'] is False:
+                    self.presence_state['status']['away'] = _away
+                
                 _extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
 
                 if self.presence_state['status']['extended-away'] is False:
                     self.presence_state['status']['extended-away'] = _extended_away
                 
-                _away = any(service for service in pidf.services if service.status.extended == 'away')
-                
-                if self.presence_state['status']['away'] is False:
-                    self.presence_state['status']['away'] = _away
-
-                if _busy: 
+                if _busy:
                     device_wining_status = 'busy'
                 elif _available:
                     device_wining_status = 'available'
@@ -723,6 +723,7 @@ class BlinkPresenceContact(BlinkContact):
                                                             }
                     
 
+            # TODO
             # discard notes from offline devices if others are online
             if devices:
                 has_on_line_devices = any(device for device in devices.values() if device['status'] != 'offline')

@@ -3124,7 +3124,7 @@ class ContactWindowController(NSWindowController):
             
             devices = None
             if isinstance(item, BlinkPresenceContact):
-                devices = [device for device in item.presence_state['devices'].values() if device['contact'] != device['aor'] and device['user_agent'] is None and device['description'] is not None and device['local_time']]
+                devices = [device for device in item.presence_state['devices'].values() if device['contact'] != device['aor'] and device['description']]
     
             has_multiple_uris = len(item.uris) > 1
             
@@ -3147,8 +3147,11 @@ class ContactWindowController(NSWindowController):
                     audio_item.setEnabled_(False)
 
                     for device in devices:
-                        title = '%s @ %s %s' % (device['user_agent'], device['description'], device['local_time'])
-                        title += ' in %s' % device['location'] if device['location'] else ''
+                        if device['user_agent'] and device['local_time']:
+                            title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                        else:
+                            title = unicode(device['description'])
+                        title += ' in %s' % unicode(device['location']) if device['location'] else ''
                         audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_(title, "startAudioSessionWithSIPURI:", "")
                         audio_item.setRepresentedObject_(device['contact'])
                         image = status_icon_for_device(device['status'])
@@ -3182,8 +3185,11 @@ class ContactWindowController(NSWindowController):
                         chat_item.setEnabled_(False)
                
                         for device in devices:
-                            title = '%s @ %s %s' % (device['user_agent'], device['description'], device['local_time'])
-                            title += ' in %s' % device['location'] if device['location'] else ''
+                            if device['user_agent'] and device['local_time']:
+                                title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                            else:
+                                title = unicode(device['description'])
+                            title += ' in %s' % unicode(device['location']) if device['location'] else ''
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_(title, "startChatSessionWithSIPURI:", "")
                             chat_item.setRepresentedObject_(device['contact'])
                             image = status_icon_for_device(device['status'])
@@ -3232,8 +3238,11 @@ class ContactWindowController(NSWindowController):
                             ft_item.setEnabled_(False)
                             
                             for device in devices:
-                                title = '%s @ %s %s' % (device['user_agent'], device['description'], device['local_time'])
-                                title += ' in %s' % device['location'] if device['location'] else ''
+                                if device['user_agent'] and device['local_time']:
+                                    title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                                else:
+                                    title = unicode(device['description'])
+                                title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_(title, "sendFile:", "")
                                 ft_item.setRepresentedObject_(device['contact'])
                                 image = status_icon_for_device(device['status'])
@@ -3268,8 +3277,11 @@ class ContactWindowController(NSWindowController):
                             ds_item.setEnabled_(False)
                             
                             for device in devices:
-                                title = '%s @ %s %s' % (device['user_agent'], device['description'], device['local_time'])
-                                title += ' in %s' % device['location'] if device['location'] else ''
+                                if device['user_agent'] and device['local_time']:
+                                    title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                                else:
+                                    title = unicode(device['description'])
+                                title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
                                 image = status_icon_for_device(device['status'])
@@ -3305,8 +3317,11 @@ class ContactWindowController(NSWindowController):
                             ds_item.setEnabled_(False)
 
                             for device in devices:
-                                title = '%s @ %s %s' % (device['user_agent'], device['description'], device['local_time'])
-                                title += ' in %s' % device['location'] if device['location'] else ''
+                                if device['user_agent'] and device['local_time']:
+                                    title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                                else:
+                                    title = unicode(device['description'])
+                                title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
                                 image = status_icon_for_device(device['status'])
