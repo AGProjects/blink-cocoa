@@ -4,6 +4,7 @@
 from Foundation import *
 from AppKit import *
 
+import cjson
 import hashlib
 import objc
 import socket
@@ -348,7 +349,11 @@ class PresencePublisher(object):
             service.display_name = cipid.DisplayName(account.display_name)
 
         if self.location and not account.presence.disable_location:
-            service.map=cipid.Map(self.location)
+            if self.location['city']:
+                location = '%s/%s' % (self.location['country'], self.location['city'])
+                service.map=cipid.Map(location)
+            elif self.location['country']:
+                service.map=cipid.Map(location['country'])           
 
         try:
             xcap_caps_discovered = self.xcap_caps_discovered[account]
@@ -446,10 +451,16 @@ class PresencePublisher(object):
         try:
             location = urllib2.urlopen(req)
             raw_response = urllib2.urlopen(req)
-            location = raw_response.read()
-            if location and self.location != location:
-                self.location = location
-                self.publish()
+            json_data = raw_response.read()
+            
+            try:
+                response = cjson.decode(json_data.replace('\\/', '/'))
+            except TypeError:
+                pass
+            else:
+                if response and self.location != response:
+                    self.location = response
+                    self.publish()
         except Exception:
             pass
 

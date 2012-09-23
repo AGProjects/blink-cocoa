@@ -656,6 +656,9 @@
 		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
+		1FD67308160F14120070F599 /* PTMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FD67307160F14120070F599 /* PTMapView.m */; };
+		1FD67309160F14120070F599 /* PTMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FD67307160F14120070F599 /* PTMapView.m */; };
+		1FD6730A160F14120070F599 /* PTMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FD67307160F14120070F599 /* PTMapView.m */; };
 		1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8C15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
@@ -1327,6 +1330,8 @@
 		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
+		1FD67306160F14120070F599 /* PTMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PTMapView.h; sourceTree = "<group>"; };
+		1FD67307160F14120070F599 /* PTMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PTMapView.m; sourceTree = "<group>"; };
 		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
@@ -2043,6 +2048,8 @@
 				1FB247E015D99AEB00703D24 /* OfflineNoteController.py */,
 				1F3C358415F522FA005356AE /* PresenceInfoController.py */,
 				1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */,
+				1FD67306160F14120070F599 /* PTMapView.h */,
+				1FD67307160F14120070F599 /* PTMapView.m */,
 			);
 			name = Presence;
 			sourceTree = "<group>";
@@ -2963,6 +2970,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F22732212B554F50010A8B2 /* main.m in Sources */,
+				1FD67309160F14120070F599 /* PTMapView.m in Sources */,
 				1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2973,6 +2981,7 @@
 			files = (
 				1F8DC3BF135084FA0034815C /* main.m in Sources */,
 				1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */,
+				1FD6730A160F14120070F599 /* PTMapView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2982,6 +2991,7 @@
 			files = (
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */,
+				1FD67308160F14120070F599 /* PTMapView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
