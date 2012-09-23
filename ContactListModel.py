@@ -682,7 +682,20 @@ class BlinkPresenceContact(BlinkContact):
                     if not aor.startswith(('sip:', 'sips:')):
                         aor = 'sip:'+aor
                             
+                    if service.capabilities is not None:
+                        caps = []
+                        if service.capabilities.audio:
+                            caps.append("audio")
+                        if service.capabilities.message:
+                            caps.append("chat")
+                        if service.capabilities.file_transfer:
+                            caps.append("file_transfer")
+                        if service.capabilities.screen_sharing:
+                            caps.append("screen_sharing")
+                    else:
+                        caps = None
                     if service.device_info is not None:
+                    
                         if service.device_info.time_offset is not None:
                             ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
                             time_offset = int(service.device_info.time_offset)/60.0
@@ -708,7 +721,8 @@ class BlinkPresenceContact(BlinkContact):
                                                            'local_time': offset_info_text, 
                                                            'time_offset': offset_info, 
                                                            'notes': _presence_notes, 
-                                                           'status': device_wining_status}
+                                                           'status': device_wining_status,
+                                                           'caps': caps}
                     else:
                         devices[service.id] = {
                                                             'description': None,
@@ -719,7 +733,8 @@ class BlinkPresenceContact(BlinkContact):
                                                             'local_time': None, 
                                                             'time_offset': None, 
                                                             'notes': _presence_notes, 
-                                                            'status': device_wining_status
+                                                            'status': device_wining_status,
+                                                            'caps': caps
                                                             }
                     
 

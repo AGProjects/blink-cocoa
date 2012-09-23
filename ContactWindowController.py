@@ -3160,7 +3160,9 @@ class ContactWindowController(NSWindowController):
                         icon.setSize_(NSMakeSize(12,12))
                         audio_item.setImage_(icon)
                         audio_item.setIndentationLevel_(1)
-    
+                        if device['caps'] is not None and 'audio' not in device['caps']:
+                            audio_item.setEnabled_(False)
+
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
@@ -3198,6 +3200,8 @@ class ContactWindowController(NSWindowController):
                             icon.setSize_(NSMakeSize(12,12))
                             chat_item.setImage_(icon)
                             chat_item.setIndentationLevel_(1)
+                            if device['caps'] is not None and 'chat' not in device['caps']:
+                                chat_item.setEnabled_(False)
 
                     if chat_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "", "")
@@ -3251,6 +3255,8 @@ class ContactWindowController(NSWindowController):
                                 icon.setSize_(NSMakeSize(12,12))
                                 ft_item.setImage_(icon)
                                 ft_item.setIndentationLevel_(1)
+                                if device['caps'] is not None and 'file_transfer' not in device['caps']:
+                                    ft_item.setEnabled_(False)
 
                         if ft_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "", "")
@@ -3291,7 +3297,9 @@ class ContactWindowController(NSWindowController):
                                 icon.setSize_(NSMakeSize(12,12))
                                 ds_item.setImage_(icon)
                                 ds_item.setIndentationLevel_(1)
-                                            
+                                if device['caps'] is not None and 'screen_sharing' not in device['caps']:
+                                    ds_item.setEnabled_(False)
+
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
