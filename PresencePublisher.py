@@ -370,7 +370,7 @@ class PresencePublisher(object):
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
-            service.time_offset=pidf.TimeOffset()
+            service.device_info.time_offset=pidf.TimeOffset()
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
         service.capabilities.message = not settings.chat.disabled
         service.capabilities.file_transfer = not settings.file_transfer.disabled
