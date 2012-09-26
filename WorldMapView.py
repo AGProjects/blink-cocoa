@@ -533,6 +533,9 @@ class MapView(NSView):
         for key in worldMap.allKeys():
             parts = worldMap.objectForKey_(key)
             i = 0
+            highest_point = 0
+            most_right_point = 0
+            most_left_point = 0
             while i < parts.count():
                 object = parts.objectAtIndex_(i)
                 values = object.split(";")
@@ -595,22 +598,23 @@ class MapView(NSView):
                         icon.setScalesWhenResized_(True)
                         icon.setSize_(size)
                         
-                        try:
-                            button = self.buttons[device['id']]
-                        except KeyError:
-                            startPoint = country_start_points[key]
-                            trect = NSMakeRect(startPoint.x + shift_x, startPoint.y + shift_y + 10, 16, 16)
-                            button = NSButton.alloc().initWithFrame_(trect)
-                            button.setImagePosition_(NSImageOnly)
-                            button.setButtonType_(NSMomentaryChangeButton)
-                            button.cell().setBezelStyle_(NSSmallSquareBezelStyle)
-                            button.setBordered_(False)
-                            button.setAutoresizingMask_(NSViewWidthSizable| NSViewHeightSizable| NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin)
-                            button.setImage_(icon)
-                            button.setTarget_(self)
-                            button.setAction_("startSession:")
-                            self.addSubview_(button)
-                            self.buttons[device['id']] = button
+                if icon is not None:
+                    try:
+                        button = self.buttons[device['id']]
+                    except KeyError:
+                        startPoint = country_start_points[key]
+                        trect = NSMakeRect(startPoint.x + shift_x, startPoint.y + shift_y + 10, 16, 16)
+                        button = NSButton.alloc().initWithFrame_(trect)
+                        button.setImagePosition_(NSImageOnly)
+                        button.setButtonType_(NSMomentaryChangeButton)
+                        button.cell().setBezelStyle_(NSSmallSquareBezelStyle)
+                        button.setBordered_(False)
+                        button.setAutoresizingMask_(NSViewWidthSizable| NSViewHeightSizable| NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin)
+                        button.setImage_(icon)
+                        button.setTarget_(self)
+                        button.setAction_("startSession:")
+                        self.addSubview_(button)
+                        self.buttons[device['id']] = button
 
                 shift_x += 16
 
@@ -623,7 +627,7 @@ class MapView(NSView):
                         text = country_name
                         break
     
-                text = '%s (%s)' % (text, local_time) if local_time is not None else text
+                text = '%s %s' % (text, local_time) if local_time is not None else text
                 labelView = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 180, 14))
                 labelView.setStringValue_(text)
                 labelView.cell().setFont_(NSFont.systemFontOfSize_(10))
@@ -631,13 +635,11 @@ class MapView(NSView):
                 labelView.setDrawsBackground_(False)
                 labelView.setEditable_(False)
                 labelView.setAlignment_(NSLeftTextAlignment)
-                labelView.setFrameOrigin_(NSMakePoint(startPoint.x, startPoint.y + shift_y + 28))
+                labelView.setFrameOrigin_(NSMakePoint(startPoint.x, startPoint.y + shift_y + 24))
                 labelView.setAutoresizingMask_(NSViewWidthSizable| NSViewHeightSizable| NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin)
                 
                 self.addSubview_(labelView)
                 self.labels[key] = labelView
-
-            shift_y += 44
 
     @allocate_autorelease_pool
     def startSession_(self, sender):

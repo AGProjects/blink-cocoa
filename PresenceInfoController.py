@@ -27,6 +27,7 @@ class PresenceInfoController(NSObject):
     window = objc.IBOutlet()
     splitView = objc.IBOutlet()
     pidfView = objc.IBOutlet()
+    statusLabel = objc.IBOutlet() 
     mapViewSplitView = objc.IBOutlet()
     mapView = objc.IBOutlet()
     icon = objc.IBOutlet()
@@ -43,6 +44,7 @@ class PresenceInfoController(NSObject):
     def __init__(self):
         self.notification_center = NotificationCenter()
         NSBundle.loadNibNamed_owner_("PresenceInfoPanel", self)
+        self.statusLabel.setStringValue_("")
         NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChaged")
 
     @allocate_autorelease_pool
@@ -75,8 +77,14 @@ class PresenceInfoController(NSObject):
 
     def render_pidf(self):
         has_locations = False
+        status_label = ''        
         if self.contact.presence_state['devices']:
             has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
+            count = len(self.contact.presence_state['devices'])
+            if count == 1:
+                status_label = 'One device available'
+            elif count > 1:
+                status_label = '%d devices available' % count
 
         splitViewFrame = self.splitView.frame()
         mapViewFrame = self.mapViewSplitView.frame()
@@ -89,11 +97,18 @@ class PresenceInfoController(NSObject):
                 pidfViewFrame.size.height -= SPLITTER_HEIGHT
                 self.pidfView.setFrame_(pidfViewFrame)
             self.mapView.setContact(self.contact)
+            nr_countries = len(self.mapView.selectedCountries)
+            if nr_countries == 1: 
+                status_label += ' in one country'
+            elif nr_countries > 1:
+                status_label += ' in %d countries' % nr_countries
         else:
             mapViewFrame.size.height = 0
             self.mapViewSplitView.setFrame_(mapViewFrame)
             pidfViewFrame.size.height = splitViewFrame.size.height
             self.pidfView.setFrame_(pidfViewFrame)
+
+        self.statusLabel.setStringValue_(status_label)
             
         text = ''
         for pidf in self.pidfs:
