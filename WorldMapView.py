@@ -477,6 +477,17 @@ class MapView(NSView):
             self.labels = {}
             self.buttons = {}
             self.icons = {}
+
+            labelView = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, frame.size.width, 14))
+            labelView.setStringValue_('Click on the device icons to start a session')
+            labelView.cell().setFont_(NSFont.systemFontOfSize_(10))
+            labelView.setBordered_(False)
+            labelView.setEditable_(False)
+            labelView.setAlignment_(NSCenterTextAlignment)
+            labelView.setFrameOrigin_(NSMakePoint(0, frame.size.height-14))
+            labelView.setAutoresizingMask_(NSViewWidthSizable| NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin)
+            
+            self.addSubview_(labelView)
             
         return self
 
