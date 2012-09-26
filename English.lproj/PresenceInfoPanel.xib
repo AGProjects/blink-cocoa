@@ -191,7 +191,7 @@
 														<object class="NSTextView" id="1064085305">
 															<reference key="NSNextResponder" ref="753435104"/>
 															<int key="NSvFlags">2322</int>
-															<string key="NSFrameSize">{614, 19}</string>
+															<string key="NSFrameSize">{614, 14}</string>
 															<reference key="NSSuperview" ref="753435104"/>
 															<reference key="NSWindow"/>
 															<reference key="NSNextKeyView" ref="990714818"/>
@@ -342,20 +342,56 @@
 									<reference key="NSNextResponder" ref="55977457"/>
 									<int key="NSvFlags">256</int>
 									<array class="NSMutableArray" key="NSSubviews">
+										<object class="NSCustomView" id="633416143">
+											<reference key="NSNextResponder" ref="851557989"/>
+											<int key="NSvFlags">266</int>
+											<array class="NSMutableArray" key="NSSubviews">
+												<object class="NSTextField" id="683456074">
+													<reference key="NSNextResponder" ref="633416143"/>
+													<int key="NSvFlags">266</int>
+													<string key="NSFrame">{{-3, 3}, {617, 14}}</string>
+													<reference key="NSSuperview" ref="633416143"/>
+													<reference key="NSWindow"/>
+													<reference key="NSNextKeyView" ref="849840323"/>
+													<string key="NSReuseIdentifierKey">_NS:1505</string>
+													<bool key="NSEnabled">YES</bool>
+													<object class="NSTextFieldCell" key="NSCell" id="883604518">
+														<int key="NSCellFlags">68288064</int>
+														<int key="NSCellFlags2">138544128</int>
+														<string key="NSContents">Click on device icons on the map to start a session</string>
+														<object class="NSFont" key="NSSupport">
+															<string key="NSName">LucidaGrande</string>
+															<double key="NSSize">11</double>
+															<int key="NSfFlags">3100</int>
+														</object>
+														<string key="NSCellIdentifier">_NS:1505</string>
+														<reference key="NSControlView" ref="683456074"/>
+														<reference key="NSBackgroundColor" ref="497878259"/>
+														<reference key="NSTextColor" ref="345887811"/>
+													</object>
+												</object>
+											</array>
+											<string key="NSFrame">{{0, 212}, {611, 19}}</string>
+											<reference key="NSSuperview" ref="851557989"/>
+											<reference key="NSWindow"/>
+											<reference key="NSNextKeyView" ref="683456074"/>
+											<string key="NSReuseIdentifierKey">_NS:9</string>
+											<string key="NSClassName">NSView</string>
+										</object>
 										<object class="NSCustomView" id="849840323">
 											<reference key="NSNextResponder" ref="851557989"/>
 											<int key="NSvFlags">274</int>
-											<string key="NSFrameSize">{611, 231.5}</string>
+											<string key="NSFrameSize">{611, 211.5}</string>
 											<reference key="NSSuperview" ref="851557989"/>
 											<reference key="NSWindow"/>
 											<string key="NSReuseIdentifierKey">_NS:9</string>
-											<string key="NSClassName">PTMapView</string>
+											<string key="NSClassName">MapView</string>
 										</object>
 									</array>
 									<string key="NSFrame">{{0, 227.5}, {611, 231.5}}</string>
 									<reference key="NSSuperview" ref="55977457"/>
 									<reference key="NSWindow"/>
-									<reference key="NSNextKeyView" ref="849840323"/>
+									<reference key="NSNextKeyView" ref="633416143"/>
 									<string key="NSReuseIdentifierKey">_NS:13</string>
 									<string key="NSClassName">NSView</string>
 								</object>
@@ -373,10 +409,17 @@
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="792117519"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">PresenceInfoPanel</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
+			</object>
+			<object class="NSCustomView" id="62013198">
+				<nil key="NSNextResponder"/>
+				<int key="NSvFlags">268</int>
+				<string key="NSFrameSize">{387, 42}</string>
+				<string key="NSReuseIdentifierKey">_NS:9</string>
+				<string key="NSClassName">NSView</string>
 			</object>
 		</array>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
@@ -582,6 +625,7 @@
 						<reference key="object" ref="851557989"/>
 						<array class="NSMutableArray" key="children">
 							<reference ref="849840323"/>
+							<reference ref="633416143"/>
 						</array>
 						<reference key="parent" ref="55977457"/>
 					</object>
@@ -613,7 +657,34 @@
 					<object class="IBObjectRecord">
 						<int key="objectID">149</int>
 						<reference key="object" ref="849840323"/>
+						<array class="NSMutableArray" key="children"/>
 						<reference key="parent" ref="851557989"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">159</int>
+						<reference key="object" ref="62013198"/>
+						<reference key="parent" ref="0"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">160</int>
+						<reference key="object" ref="633416143"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="683456074"/>
+						</array>
+						<reference key="parent" ref="851557989"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">161</int>
+						<reference key="object" ref="683456074"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="883604518"/>
+						</array>
+						<reference key="parent" ref="633416143"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">162</int>
+						<reference key="object" ref="883604518"/>
+						<reference key="parent" ref="683456074"/>
 					</object>
 				</array>
 			</object>
@@ -657,22 +728,26 @@
 				<string key="153.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<dictionary class="NSMutableDictionary" key="154.IBAttributePlaceholdersKey"/>
 				<string key="154.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="159.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="160.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="161.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="162.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			</dictionary>
 			<dictionary class="NSMutableDictionary" key="unlocalizedProperties"/>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">158</int>
+			<int key="maxID">162</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
 				<object class="IBPartialClassDescription">
-					<string key="className">PTMapView</string>
+					<string key="className">MapView</string>
 					<string key="superclassName">NSView</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PTMapView.h</string>
+						<string key="minorKey">./Classes/MapView.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

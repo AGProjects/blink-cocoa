@@ -257,6 +257,9 @@
 		1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
+		1F3BF8BE1611D06800F84EB9 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
+		1F3BF8BF1611D06800F84EB9 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
+		1F3BF8C01611D06800F84EB9 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
 		1F3C357F15F521A8005356AE /* PresenceInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */; };
 		1F3C358015F521A8005356AE /* PresenceInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */; };
 		1F3C358115F521A8005356AE /* PresenceInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */; };
@@ -656,9 +659,6 @@
 		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
-		1FD67308160F14120070F599 /* PTMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FD67307160F14120070F599 /* PTMapView.m */; };
-		1FD67309160F14120070F599 /* PTMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FD67307160F14120070F599 /* PTMapView.m */; };
-		1FD6730A160F14120070F599 /* PTMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FD67307160F14120070F599 /* PTMapView.m */; };
 		1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8C15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
@@ -1240,6 +1240,7 @@
 		1F2FBFFC1462A444008B3D52 /* container-migration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "container-migration.plist"; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
+		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
 		1F3C358215F521A8005356AE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
 		1F3C358415F522FA005356AE /* PresenceInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresenceInfoController.py; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
@@ -1330,8 +1331,6 @@
 		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
-		1FD67306160F14120070F599 /* PTMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PTMapView.h; sourceTree = "<group>"; };
-		1FD67307160F14120070F599 /* PTMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PTMapView.m; sourceTree = "<group>"; };
 		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
@@ -2048,8 +2047,6 @@
 				1FB247E015D99AEB00703D24 /* OfflineNoteController.py */,
 				1F3C358415F522FA005356AE /* PresenceInfoController.py */,
 				1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */,
-				1FD67306160F14120070F599 /* PTMapView.h */,
-				1FD67307160F14120070F599 /* PTMapView.m */,
 			);
 			name = Presence;
 			sourceTree = "<group>";
@@ -2096,6 +2093,7 @@
 		2BEFC1A00FD1C2DE00447EFB /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
+				1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */,
 				DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */,
 				2B5DE9EA100447D700701821 /* VerticalBoxView.py */,
 				2B2DF5EC105D467000F267F9 /* ListView.py */,
@@ -2509,6 +2507,7 @@
 				1F82CAF815F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */,
 				1F3C358015F521A8005356AE /* PresenceInfoPanel.xib in Resources */,
 				1F3C358615F522FA005356AE /* PresenceInfoController.py in Resources */,
+				1F3BF8BF1611D06800F84EB9 /* WorldMapView.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2735,6 +2734,7 @@
 				1F82CAF915F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */,
 				1F3C358115F521A8005356AE /* PresenceInfoPanel.xib in Resources */,
 				1F3C358715F522FA005356AE /* PresenceInfoController.py in Resources */,
+				1F3BF8C01611D06800F84EB9 /* WorldMapView.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2959,6 +2959,7 @@
 				1F82CAF715F3CD890069AF43 /* status-user-extended-away-icon.png in Resources */,
 				1F3C357F15F521A8005356AE /* PresenceInfoPanel.xib in Resources */,
 				1F3C358515F522FA005356AE /* PresenceInfoController.py in Resources */,
+				1F3BF8BE1611D06800F84EB9 /* WorldMapView.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2970,7 +2971,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F22732212B554F50010A8B2 /* main.m in Sources */,
-				1FD67309160F14120070F599 /* PTMapView.m in Sources */,
 				1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2981,7 +2981,6 @@
 			files = (
 				1F8DC3BF135084FA0034815C /* main.m in Sources */,
 				1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */,
-				1FD6730A160F14120070F599 /* PTMapView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2991,7 +2990,6 @@
 			files = (
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */,
-				1FD67308160F14120070F599 /* PTMapView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

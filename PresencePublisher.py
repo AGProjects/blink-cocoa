@@ -442,7 +442,7 @@ class PresencePublisher(object):
 
     @run_in_green_thread
     def get_location(self, account):
-        if account.id.domain != "sip2sip.info" or not account.server.settings_url or account.presence.disable_location:
+        if not account.server.settings_url or account.presence.disable_location:
             return
         
         query_string = "action=get_location"

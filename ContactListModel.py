@@ -662,7 +662,7 @@ class BlinkPresenceContact(BlinkContact):
 
                 if self.presence_state['status']['extended-away'] is False:
                     self.presence_state['status']['extended-away'] = _extended_away
-                
+
                 if _busy:
                     device_wining_status = 'busy'
                 elif _available:
@@ -689,13 +689,13 @@ class BlinkPresenceContact(BlinkContact):
                         if service.capabilities.message:
                             caps.append("chat")
                         if service.capabilities.file_transfer:
-                            caps.append("file_transfer")
+                            caps.append("file-transfer")
                         if service.capabilities.screen_sharing:
-                            caps.append("screen_sharing")
+                            caps.append("screen-sharing")
                     else:
                         caps = None
+
                     if service.device_info is not None:
-                    
                         if service.device_info.time_offset is not None:
                             ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
                             time_offset = int(service.device_info.time_offset)/60.0
@@ -712,7 +712,20 @@ class BlinkPresenceContact(BlinkContact):
                         if not contact.startswith(('sip:', 'sips:')):
                             contact = 'sip:'+contact
 
+                        if service.status.extended is not None:
+                            if service.status.extended == 'busy':
+                                device_wining_status = 'busy'
+                            elif service.status.extended == 'available':
+                                device_wining_status = 'available'
+                            elif service.status.extended == 'away':
+                                device_wining_status = 'away'
+                            elif service.status.extended == 'extended-away':
+                                device_wining_status = 'extended-away'
+                            else:
+                                device_wining_status = 'offline'
+                                    
                         devices[service.device_info.id] = {
+                                                           'id': service.device_info.id,
                                                            'description': service.device_info.description,
                                                            'user_agent': service.device_info.user_agent,
                                                            'aor': aor,
@@ -724,7 +737,7 @@ class BlinkPresenceContact(BlinkContact):
                                                            'status': device_wining_status,
                                                            'caps': caps}
                     else:
-                        devices[service.id] = {
+                        devices[service.id] = {             'id': service.id,
                                                             'description': None,
                                                             'user_agent': None,
                                                             'aor': aor,

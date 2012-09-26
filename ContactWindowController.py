@@ -3255,7 +3255,7 @@ class ContactWindowController(NSWindowController):
                                 icon.setSize_(NSMakeSize(12,12))
                                 ft_item.setImage_(icon)
                                 ft_item.setIndentationLevel_(1)
-                                if device['caps'] is not None and 'file_transfer' not in device['caps']:
+                                if device['caps'] is not None and 'file-transfer' not in device['caps']:
                                     ft_item.setEnabled_(False)
 
                         if ft_submenu.itemArray():
@@ -3297,7 +3297,7 @@ class ContactWindowController(NSWindowController):
                                 icon.setSize_(NSMakeSize(12,12))
                                 ds_item.setImage_(icon)
                                 ds_item.setIndentationLevel_(1)
-                                if device['caps'] is not None and 'screen_sharing' not in device['caps']:
+                                if device['caps'] is not None and 'screen-sharing' not in device['caps']:
                                     ds_item.setEnabled_(False)
 
                         if ds_submenu.itemArray():
