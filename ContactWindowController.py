@@ -2252,7 +2252,7 @@ class ContactWindowController(NSWindowController):
         if self.presence_notes_history:
             menu.addItem_(NSMenuItem.separatorItem())
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "", "")
-            title = NSAttributedString.alloc().initWithString_attributes_('Previous Activities', attributes)
+            title = NSAttributedString.alloc().initWithString_attributes_('Previous Availability And Notes', attributes)
             lastItem.setAttributedTitle_(title)
             lastItem.setEnabled_(False)
             menu.addItem_(lastItem)
@@ -3394,7 +3394,7 @@ class ContactWindowController(NSWindowController):
 
             if isinstance(item, BlinkPresenceContact):
                 if item.pidfs_map:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Presence Information", "showPresenceInfo:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Availability Information", "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
                 
