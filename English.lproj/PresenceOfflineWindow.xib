@@ -41,7 +41,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 348}, {407, 122}}</string>
 				<int key="NSWTFlags">536870912</int>
-				<string key="NSWindowTitle">Presence Offline Note</string>
+				<string key="NSWindowTitle">Offline Note</string>
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
@@ -56,6 +56,7 @@
 							<int key="NSvFlags">266</int>
 							<string key="NSFrame">{{14, 58}, {373, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="430040629"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="621585036">
@@ -94,7 +95,7 @@
 							<int key="NSvFlags">289</int>
 							<string key="NSFrame">{{297, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSNextKeyView"/>
+							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="748348173">
 								<int key="NSCellFlags">-2080244224</int>
@@ -115,12 +116,13 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{11, 88}, {336, 17}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="172394695"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="331115937">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">Publish this information while I am offline:</string>
+								<string key="NSContents">Publish This Note While Offline:</string>
 								<reference key="NSSupport" ref="706082366"/>
 								<reference key="NSControlView" ref="200107379"/>
 								<object class="NSColor" key="NSBackgroundColor">
@@ -145,6 +147,7 @@
 							<int key="NSvFlags">289</int>
 							<string key="NSFrame">{{201, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="555276737"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="950345722">
@@ -164,6 +167,7 @@
 					</array>
 					<string key="NSFrameSize">{407, 122}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="200107379"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>

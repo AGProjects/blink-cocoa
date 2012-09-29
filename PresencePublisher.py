@@ -82,7 +82,7 @@ PresenceActivityList = (
                        {
                        'type':             'delimiter'
                        },
-                       {'title':            u"Set Offline Status...",
+                       {'title':            u"Publish This Note While Offline...",
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'represented_object': None
