@@ -187,10 +187,12 @@ class AlertPanel(NSObject, object):
         if len(self.sessions) == 1:
             self.panel.setTitle_(u"Incoming Call from %s" % format_identity_to_string(session.remote_identity, check_contact=True, format='compact'))
             if settings.sounds.enable_speech_synthesizer:
-                if stream_type_list == ["chat"]:
+                if stream_type_list == ["file-transfer"]:
+                    base_text = "File transfer from %s"
+                elif stream_type_list == ["chat"]:
                     base_text = "Chat from %s"
                 else:
-                    base_text = "Call from %s"
+                    base_text = "Audio call from %s"
                 self.speak_text = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
                 self.startSpeechSynthesizerTimer()
         else:
