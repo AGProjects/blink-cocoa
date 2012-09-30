@@ -327,7 +327,7 @@ class EnrollmentController(NSObject):
                     sip_address = None
         else:
             sip_address = None
-            error_message = "No response received from %s" % url
+            error_message = "No response received from Enrollment Server"
 
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
@@ -335,7 +335,7 @@ class EnrollmentController(NSObject):
 
         if sip_address is None:
             NSRunAlertPanel("Sign Up to SIP Account",
-                            "Error creating account: %s" % error_message, "OK", None, None)
+                            "Error creating SIP account: %s" % error_message, "OK", None, None)
             return False
 
         try:
