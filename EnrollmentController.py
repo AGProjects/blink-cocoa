@@ -240,6 +240,7 @@ class EnrollmentController(NSObject):
         req = urllib2.Request(url, data)
         raw_response = urllib2.urlopen(req)
         json_data = raw_response.read()
+        sip_address = None
 
         try:
             response = cjson.decode(json_data.replace('\\/', '/'))
@@ -332,7 +333,7 @@ class EnrollmentController(NSObject):
         self.progressIndicator.setHidden_(True)
         self.progressText.setHidden_(True)
 
-        if not sip_address:
+        if sip_address is None:
             NSRunAlertPanel("Sign Up to SIP Account",
                             "Error creating account: %s" % error_message, "OK", None, None)
             return False
