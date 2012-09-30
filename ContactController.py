@@ -59,6 +59,7 @@ class AddContactController(NSObject):
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
         self.loadGroupNames()
+        self.addButton.setEnabled_(False)
 
     @property
     def model(self):
@@ -139,6 +140,8 @@ class AddContactController(NSObject):
                 self.addressText.setStringValue_(self.uris[0].uri)
             else:
                 self.addressText.setStringValue_('')
+
+        self.addButton.setEnabled_(True if self.uris else False)
 
     def windowShouldClose_(self, sender):
         self.startDeallocTimer()
@@ -344,6 +347,7 @@ class AddContactController(NSObject):
             if draggedRow < row:
                 row -= 1
             self.uris.insert(row, item)
+            self.update_default_uri()
             table.reloadData()
             return True
         return False
@@ -374,6 +378,8 @@ class EditContactController(AddContactController):
             type = format_uri_type(item.type)
             if type not in address_types:
                 self.addressTypesPopUpButton.addItemWithTitle_(type)
+
+        self.addButton.setEnabled_(True if blink_contact.contact.uris else False)
         self.default_uri = blink_contact.default_uri
         self.uris = list(blink_contact.contact.uris)
         self.update_default_uri()
