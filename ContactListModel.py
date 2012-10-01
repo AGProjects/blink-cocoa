@@ -708,7 +708,7 @@ class BlinkPresenceContact(BlinkContact):
                             offset_info_text = None
                             offset_info = None
 
-                        contact = str(urllib.unquote(service.contact.value).split(":")[1])
+                        contact = urllib.unquote(service.contact.value) if service.contact is not None else aor
                         if not contact.startswith(('sip:', 'sips:')):
                             contact = 'sip:'+contact
 
