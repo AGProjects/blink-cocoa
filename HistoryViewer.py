@@ -466,7 +466,7 @@ class HistoryViewer(NSWindowController):
                     self.searchMedia.selectItemAtIndex_(tag)
 
         self.search_media = media_type
-        self.search_contact = contact_uri
+        self.search_contact = unicode(contact_uri)
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
