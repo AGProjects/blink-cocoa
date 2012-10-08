@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1070</int>
-		<string key="IBDocument.SystemVersion">11E2620</string>
+		<string key="IBDocument.SystemVersion">11G56</string>
 		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
-		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.AppKitVersion">1138.51</string>
 		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1458,7 +1458,7 @@
 								<int key="NSCellFlags2">272926784</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="432183556"/>
-								<string key="NSPlaceholderString">Publish a note</string>
+								<string key="NSPlaceholderString">Publish a note to my contacts</string>
 								<reference key="NSControlView" ref="1049294170"/>
 								<object class="NSColor" key="NSBackgroundColor" id="1036855206">
 									<int key="NSColorSpace">1</int>
@@ -2357,7 +2357,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="485186698"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{274, 154}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">ContactWindow</string>
@@ -7041,12 +7041,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="954942554"/>
-						<string key="accessibilityValue">Set My availability</string>
+						<string key="accessibilityValue">Set my availability</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="954942554"/>
-						<string key="toolTip">Set My Availability</string>
+						<string key="toolTip">Set my availability</string>
 					</object>
 				</dictionary>
 				<string key="551.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7130,7 +7130,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="1049294170"/>
-						<string key="toolTip">Publish A Note To People Watching My Availability</string>
+						<string key="toolTip">Publish A Note To Contacts That Subscribed To My Availability</string>
 					</object>
 				</dictionary>
 				<string key="691.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
