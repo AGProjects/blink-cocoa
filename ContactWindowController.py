@@ -469,17 +469,18 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showPresenceInfo_(self, sender):
-        if not self.presenceInfoPanel:
-            self.presenceInfoPanel = PresenceInfoController()
-
         if sender.tag() == 50: # main menu selected
             row = self.contactOutline.selectedRow()
             selected = self.contactOutline.itemAtRow_(row) if row >=0 else None
-            if selected:
+            if selected is not None:
                 has_presence_info = isinstance(selected, BlinkPresenceContact) and selected.pidfs_map
                 if has_presence_info:
+                    if not self.presenceInfoPanel:
+                        self.presenceInfoPanel = PresenceInfoController()
                     self.presenceInfoPanel.show(selected)
         else: # contextual menu selected
+            if not self.presenceInfoPanel:
+                self.presenceInfoPanel = PresenceInfoController()
             self.presenceInfoPanel.show(sender.representedObject())
 
     @objc.IBAction
@@ -3612,6 +3613,7 @@ class ContactWindowController(NSWindowController):
             item = self.contactsMenu.itemWithTag_(50) # Presence Info
             item.setEnabled_(True)
             item.setRepresentedObject_(selected if has_presence_info else None)
+            item.setEnabled_(bool(has_presence_info))
             item = self.contactsMenu.itemWithTag_(33) # Add Group
             item.setEnabled_(True)
             item = self.contactsMenu.itemWithTag_(34) # Edit Group
