@@ -741,8 +741,8 @@ class AlertPanel(NSObject, object):
         try:
             session_controller = (controller for controller in self.sessionControllersManager.sessionControllers if controller.session == session).next()
         except StopIteration:
+            BlinkLogger().log_info("Cannot find session controller for session: %s" % session)
             session.reject_proposal()
-            session_controller.log_info("Cannot find session controller for session: %s" % session)
         else:
             session_controller.acceptIncomingProposal(session.proposed_streams)
 
