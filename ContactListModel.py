@@ -751,7 +751,6 @@ class BlinkPresenceContact(BlinkContact):
                                                             }
                     
 
-            # TODO
             # discard notes from offline devices if others are online
             if devices:
                 has_on_line_devices = any(device for device in devices.values() if device['status'] != 'offline')
@@ -759,7 +758,7 @@ class BlinkPresenceContact(BlinkContact):
                     notes_to_purge = [note for device in devices.values() if device['status'] == 'offline' for note in device['notes']]
                     for note in notes_to_purge:
                         try:
-                            presence_notes.remove(note)
+                            device['notes'].remove(note)
                         except ValueError:
                             pass                   
             
