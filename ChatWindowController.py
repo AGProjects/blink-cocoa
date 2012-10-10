@@ -424,22 +424,6 @@ class ChatWindowController(NSWindowController):
         self.revalidateToolbar()
         self.refreshDrawer()
 
-        # Update drawer status when not connected
-        state = data.state
-        detail = data.reason
-        if state == STATE_CONNECTING:
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-            self.audioStatus.setHidden_(False)
-            self.audioStatus.setStringValue_(u"Connecting...")
-        elif state == STATE_CONNECTED:
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-            self.audioStatus.setHidden_(False)
-            self.audioStatus.setStringValue_(u"Connected")
-        elif state == STATE_FINISHED:
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-            self.audioStatus.setHidden_(True)
-            self.audioStatus.setStringValue_('')
-
     def _NH_BlinkAudioStreamChangedHoldState(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
@@ -1248,6 +1232,26 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
 
         session = self.selectedSessionController()
+        
+        if session is not None:
+            state = session.state
+            if state == STATE_CONNECTING:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setHidden_(False)
+                self.audioStatus.setStringValue_(u"Connecting...")
+            elif state == STATE_CONNECTED:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setHidden_(False)
+                self.audioStatus.setStringValue_(u"Connected")
+            else:
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setHidden_(True)
+                self.audioStatus.setStringValue_('')
+        else:
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setHidden_(True)
+            self.audioStatus.setStringValue_('')
+
         if session is not None and session.session is None:
             if session.account is BonjourAccount():
                 own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
@@ -1393,9 +1397,6 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setStringValue_(u"Connected")
                 self.audioStatus.setHidden_(False)
-            else:
-                self.audioStatus.setHidden_(False)
-                self.audioStatus.setStringValue_(u"Not Connected")
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_NICKNAME).setEnabled_(self.canSetNickname())
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SUBJECT).setEnabled_(self.canSetSubject())
