@@ -22,6 +22,11 @@ from zope.interface import implements
 from SIPManager import SIPManager
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
 
+def random_room():
+    return random.choice('123456789') + ''.join(random.choice('0123456789') for x in range(6))
+
+default_conference_server = 'conference.sip2sip.info'
+
 
 class ServerConferenceRoom(object):
     def __init__(self, target, media_types=None, participants=None, nickname=None):
@@ -66,8 +71,6 @@ class JoinConferenceWindowController(NSObject):
     configurationsButton = objc.IBOutlet()
     bonjour_server_combolist = objc.IBOutlet()
     ok_button = objc.IBOutlet()
-
-    default_conference_server = 'conference.sip2sip.info'
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -473,7 +476,7 @@ class JoinConferenceWindowController(NSObject):
 
     def validateRoom(self, allow_random_room=True):
         if not self.room.stringValue().strip() and allow_random_room:
-            room = random.choice('123456789') + ''.join(random.choice('0123456789') for x in range(6))
+            room = random_room()
         else:
             room=self.room.stringValue().lower().strip()
 
@@ -515,7 +518,7 @@ class JoinConferenceWindowController(NSObject):
                 if account.conference.server_address:
                     self.target = u'%s@%s' % (room, account.conference.server_address)
                 else:
-                    self.target = u'%s@%s' % (room, self.default_conference_server)
+                    self.target = u'%s@%s' % (room, default_conference_server)
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target

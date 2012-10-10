@@ -46,7 +46,7 @@ from ContactListModel import status_icon_for_contact, status_icon_for_device, Bl
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
-from ConferenceController import JoinConferenceWindowController, AddParticipantsWindowController
+from ConferenceController import random_room, default_conference_server, JoinConferenceWindowController, AddParticipantsWindowController
 from PresenceInfoController import PresenceInfoController
 from SessionController import SessionControllersManager
 from SIPManager import SIPManager, MWIData
@@ -1021,7 +1021,27 @@ class ContactWindowController(NSWindowController):
         self.disbandingConference = False
         self.conferenceButton.setState_(NSOffState)
         BlinkLogger().log_info(u"Audio conference ended")
-
+    
+    def moveConferenceToServer(self):
+        participants = []
+        for session in self.sessionControllersManager.sessionControllers:
+            if session.hasStreamOfType("audio"):
+                stream = session.streamHandlerOfType("audio")
+                if stream.isConferencing:
+                    participants.append(format_identity_to_string(session.target_uri))
+ 
+        account = AccountManager().default_account
+        if not isinstance(account, BonjourAccount):
+            room = random_room()
+            if account.conference.server_address:
+                target = u'%s@%s' % (room, account.conference.server_address)
+            else:
+                target = u'%s@%s' % (room, default_conference_server)
+                  
+            self.joinConference(target, ("chat", "audio"), participants)
+            BlinkLogger().log_info(u"Move conference to server root %s" % target)
+            self.disbandConference()
+    
     def finalizeAudioSession(self, streamController):
         if streamController.isConferencing and self.conference is not None:
             self.removeAudioSessionFromConference(streamController)

@@ -16,7 +16,7 @@ from application.python import Null
 from collections import deque
 from zope.interface import implements
 
-from sipsimple.account import BonjourAccount
+from sipsimple.account import BonjourAccount, AccountManager
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -813,7 +813,7 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(10) # add Chat
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat'))
 
-            item = menu.itemWithTag_(40) # add Video
+            item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
             item.setHidden_(not(self.sessionControllersManager.isMediaTypeSupported('video')))
 
@@ -845,13 +845,16 @@ class AudioController(MediaStream):
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
             item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
 
+            item = menu.itemWithTag_(40) # move conference to server
+            item.setEnabled_(self.isConferencing and AccountManager().default_account is not BonjourAccount())
+
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 10: # add chat
             NSApp.delegate().contactsWindowController.drawer.close()
             self.sessionController.addChatToSession()
-        elif tag == 40: # add video
+        elif tag == 14: # add video
             NSApp.delegate().contactsWindowController.drawer.close()
             self.sessionController.addVideoToSession()
         elif tag == 11: # share remote screen
@@ -875,7 +878,9 @@ class AudioController(MediaStream):
         elif tag == 30: #
             if self.sessionController.info_panel is not None:
                 self.sessionController.info_panel.toggle()
-
+        elif tag == 40: #
+            NSApp.delegate().contactsWindowController.moveConferenceToServer()
+    
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
         target_session_controller = sender.representedObject()
