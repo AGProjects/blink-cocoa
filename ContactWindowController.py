@@ -1562,7 +1562,13 @@ class ContactWindowController(NSWindowController):
                 return
             display_name = ''
         else:
-            target = uri or contact.uri
+            if uri:
+                target = uri
+            else:
+                target = contact.uri
+                if contact.uri_type.lower() == 'xmpp':
+                    target += ';xmpp'
+
             display_name = contact.name
             selected_contact = contact
 
@@ -3154,7 +3160,8 @@ class ContactWindowController(NSWindowController):
                 audio_submenu.setAutoenablesItems_(False)
                 for uri in item.uris:
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
-                    audio_item.setRepresentedObject_(uri.uri)
+                    target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                    audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
                         image = status_icon_for_contact(item, uri.uri)
                         icon = dots['offline'] if not image else NSImage.imageNamed_(image)
@@ -3194,7 +3201,8 @@ class ContactWindowController(NSWindowController):
                     for uri in item.uris:
                         if is_sip_aor_format(uri.uri):
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
-                            chat_item.setRepresentedObject_(uri.uri)
+                            target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                            chat_item.setRepresentedObject_(target_uri)
                             if isinstance(item, BlinkPresenceContact):
                                 image = status_icon_for_contact(item, uri.uri)
                                 icon = dots['offline'] if not image else NSImage.imageNamed_(image)
@@ -3232,7 +3240,8 @@ class ContactWindowController(NSWindowController):
                     sms_submenu.setAutoenablesItems_(False)
                     for uri in item.uris:
                         sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
-                        sms_item.setRepresentedObject_(uri.uri)
+                        target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                        sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
                             image = status_icon_for_contact(item, uri.uri)
                             icon = dots['offline'] if not image else NSImage.imageNamed_(image)
@@ -3248,7 +3257,8 @@ class ContactWindowController(NSWindowController):
                         for uri in item.uris:
                             if is_sip_aor_format(uri.uri):
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
-                                ft_item.setRepresentedObject_(uri.uri)
+                                target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri                                
+                                ft_item.setRepresentedObject_(target_uri)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
                                     icon = dots['offline'] if not image else NSImage.imageNamed_(image)
@@ -3378,7 +3388,7 @@ class ContactWindowController(NSWindowController):
 
             else:
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
-                    # Contact has a single URI                    
+                    # Contact has a single URI
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_fully_qualified_sip_uri:
