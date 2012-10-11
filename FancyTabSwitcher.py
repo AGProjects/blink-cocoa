@@ -46,7 +46,7 @@ class FancyTabItem(NSView):
         self = NSView.initWithFrame_(self, NSMakeRect(0, 2, 100, 18))
         if self:
             self.closeIcon.setSize_(NSMakeSize(12, 12))
-            self.closeButton = NSButton.alloc().initWithFrame_(NSMakeRect(5, 5, 12, 14))
+            self.closeButton = NSButton.alloc().initWithFrame_(NSMakeRect(3, 5, 12, 14))
             self.closeButton.setImagePosition_(NSImageOnly)
             self.closeButton.setButtonType_(NSMomentaryChangeButton)
             self.closeButton.cell().setBezelStyle_(NSSmallSquareBezelStyle)
@@ -131,19 +131,19 @@ class FancyTabItem(NSView):
             size.width += 4
             if size.width < 12:
                 size.width = 12
-            bez = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(NSMakeRect(4, 5, size.width, 12), 6, 6)
+            bez = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(NSMakeRect(3, 5, size.width, 12), 6, 6)
             gradient.drawInBezierPath_angle_(bez, 90+45)
-            self.badgeLabel.drawInRect_(NSMakeRect(4, 5, size.width, 12))
+            self.badgeLabel.drawInRect_(NSMakeRect(3, 5, size.width, 12))
 
         if not self.mouseInside and not self.busyIndicator and self.composing:
             rect = NSZeroRect.copy()
             rect.size = self.composeIcon.size()
-            self.composeIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(3, 3), rect, NSCompositeSourceOver, 1)
+            self.composeIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(1, 3), rect, NSCompositeSourceOver, 1)
 
-        if not self.mouseInside and not self.busyIndicator and self.screen_sharing and not self.composing:
+        if not self.busyIndicator and self.screen_sharing:
             rect = NSZeroRect.copy()
             rect.size = self.screenIcon.size()
-            self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(10, 3), rect, NSCompositeSourceOver, 1)
+            self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(17, 3), rect, NSCompositeSourceOver, 1)
 
         if not self.draggedOut:
             shadow = NSShadow.alloc().init()
@@ -162,9 +162,9 @@ class FancyTabItem(NSView):
             rect = self.bounds()
             rect.origin.y -= 3
             rect.origin.x += 20
-            rect.origin.x = rect.origin.x + 8 if self.screen_sharing else rect.origin.x
+            rect.origin.x = rect.origin.x + 12 if self.screen_sharing else rect.origin.x
             rect.size.width -= 46
-            rect.size.width = rect.size.width - 8 if self.screen_sharing else rect.size.width
+            rect.size.width = rect.size.width - 12 if self.screen_sharing else rect.size.width
             self.label.drawInRect_withAttributes_(rect, attribs)
 
     def mouseEntered_(self, event):
