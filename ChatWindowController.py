@@ -1374,6 +1374,7 @@ class ChatWindowController(NSWindowController):
             self.participants.sort(key=attrgetter('name'))
 
             # Add invited participants if any
+        
             if session.invited_participants:
                 for contact in session.invited_participants:
                     self.participants.append(contact)
@@ -1612,10 +1613,12 @@ class ChatWindowController(NSWindowController):
         remote_uri = format_identity_to_string(session.remotePartyObject)
         if uri == remote_uri:
             return False
+
         # do not invite users already invited
-        for contact in session.invited_participants:
-            if uri == contact.uri:
+        for old_contact in session.invited_participants:
+            if uri == old_contact.uri:
                 return False
+
         # do not invite users already present in the conference
         if session.conference_info is not None:
             for user in session.conference_info.users:
@@ -1623,9 +1626,9 @@ class ChatWindowController(NSWindowController):
                     return False
         
         if session.remote_focus:
-            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
-            contact.detail = 'Invitation sent...'
-            session.invited_participants.append(contact)
+            new_contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+            new_contact.detail = 'Invitation sent...'
+            session.invited_participants.append(new_contact)
             session.participants_log.add(uri)
             self.refreshDrawer()
             session.log_info(u"Invite %s to conference" % uri)
