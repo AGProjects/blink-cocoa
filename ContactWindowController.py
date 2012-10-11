@@ -1566,7 +1566,7 @@ class ContactWindowController(NSWindowController):
                 target = uri
             else:
                 target = contact.uri
-                if contact.uri_type.lower() == 'xmpp':
+                if hasattr(contact, 'uri_type') and contact.uri_type.lower() == 'xmpp':
                     target += ';xmpp'
 
             display_name = contact.name
