@@ -96,8 +96,8 @@ class AudioController(MediaStream):
 
 
     @classmethod
-    def createStream(self, account):
-        return AudioStream(account)
+    def createStream(self):
+        return AudioStream()
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
@@ -880,7 +880,7 @@ class AudioController(MediaStream):
                 self.sessionController.info_panel.toggle()
         elif tag == 40: #
             NSApp.delegate().contactsWindowController.moveConferenceToServer()
-    
+
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
         target_session_controller = sender.representedObject()

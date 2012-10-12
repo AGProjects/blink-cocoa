@@ -1123,7 +1123,7 @@ class SessionController(NSObject):
 
                 if self.sessionControllersManager.isMediaTypeSupported(stype):
                     handlerClass = StreamHandlerForType[stype]
-                    stream = handlerClass.createStream(self.account)
+                    stream = handlerClass.createStream()
 
                 if not stream:
                     self.log_info("Cancelled session")
@@ -1151,7 +1151,7 @@ class SessionController(NSObject):
                 if stype == 'chat':
                     streamController = self.streamHandlerOfType('chat')
                     handlerClass = StreamHandlerForType[stype]
-                    stream = handlerClass.createStream(self.account)
+                    stream = handlerClass.createStream()
                     streamController.stream = stream
 
                     if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:

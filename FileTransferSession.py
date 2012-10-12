@@ -565,7 +565,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         settings = SIPSimpleSettings()
 
-        self.stream = FileTransferStream(self.account, self.file_selector, 'sendonly')
+        self.stream = FileTransferStream(self.file_selector, 'sendonly')
         self.session = Session(self.account)
 
         notification_center.add_observer(self, sender=self.session)
@@ -660,7 +660,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
         BlinkLogger().log_info("Pull File Transfer Request started %s" % self.file_path)
 
-        self.stream = FileTransferStream(self.account, self.file_selector, 'recvonly')
+        self.stream = FileTransferStream(self.file_selector, 'recvonly')
         self.session = Session(self.account)
 
         notification_center.add_observer(self, sender=self)

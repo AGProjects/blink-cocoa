@@ -290,14 +290,12 @@ class DesktopSharingController(MediaStream):
 
 class DesktopSharingViewerController(DesktopSharingController):
     @classmethod
-    def createStream(cls, account):
-        handler = ExternalVNCViewerHandler()
-        return DesktopSharingStream(account, handler)
+    def createStream(cls):
+        return DesktopSharingStream(ExternalVNCViewerHandler())
 
 
 class DesktopSharingServerController(DesktopSharingController):
     @classmethod
-    def createStream(cls, account):
-        handler = ExternalVNCServerHandler(("localhost", cls.vncServerPort))
-        return DesktopSharingStream(account, handler)
+    def createStream(cls):
+        return DesktopSharingStream(ExternalVNCServerHandler(("localhost", cls.vncServerPort)))
 

@@ -123,8 +123,8 @@ class ChatController(MediaStream):
     nickname_request_map = {} # message id -> nickname
 
     @classmethod
-    def createStream(self, account):
-        return ChatStream(account)
+    def createStream(self):
+        return ChatStream()
 
     def initWithOwner_stream_(self, sessionController, stream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
@@ -713,7 +713,7 @@ class ChatController(MediaStream):
                 if self.sessionController.remote_focus:
                     item.setEnabled_(True if self.status == STREAM_CONNECTED and self.screensharing_allowed else False)
                 else:
-                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)                    
+                    item.setEnabled_(True if self.status == STREAM_CONNECTED else False)
                 self.setScreenSharingToolbarIcon()
             elif identifier == 'smileys':
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
@@ -919,7 +919,7 @@ class ChatController(MediaStream):
         while os.path.exists(filename):
             filename = '%s_%d%s' % (basename, i, ext)
             i += 1
-        
+
         self.screencapture_file = filename
         self.screenshot_task = NSTask.alloc().init()
         self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
@@ -929,10 +929,10 @@ class ChatController(MediaStream):
             self.screenshot_task.setArguments_(['-s', '-tpng', self.screencapture_file])
         else:
             return
-        
+
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
         self.screenshot_task.launch()
-   
+
     def userClickedConferenceScreenSharingQualityMenu_(self, sender):
         if sender.tag() == TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH:
             if self.screensharing_handler.connected:
