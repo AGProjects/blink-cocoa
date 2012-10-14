@@ -3554,7 +3554,7 @@ class ContactWindowController(NSWindowController):
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
                     if settings.audio.input_device == dev and settings.audio.output_device == dev:
                         state = NSOnState
-                    elif dev == u'Built-in Microphone and Output' and settings.audio.input_device == u'Built-in Microphone' and settings.audio.output_device == u'Built-in Output':
+                    elif dev == u'Built-in Microphone and Output' and settings.audio.input_device.startswith('Built-in Microph') and settings.audio.output_device == u'Built-in Output':
                         state = NSOnState
                     else:
                         state = NSOffState
