@@ -3554,7 +3554,7 @@ class ContactWindowController(NSWindowController):
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
                     if settings.audio.input_device == dev and settings.audio.output_device == dev:
                         state = NSOnState
-                    elif dev == u'Built-in Microphone and Output' and settings.audio.input_device.startswith('Built-in Mic') and settings.audio.output_device == u'Built-in Output':
+                    elif dev == u'Built-in Microphone and Output' and (settings.audio.input_device is not None and settings.audio.input_device.startswith('Built-in Mic')) and settings.audio.output_device == u'Built-in Output':
                         state = NSOnState
                     else:
                         state = NSOffState
@@ -3568,7 +3568,7 @@ class ContactWindowController(NSWindowController):
 
         if menu == self.devicesMenu:
             in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
-            if any(input_device for input_device in self.backend._app.engine.input_devices if input_device.startswith('Built-in Mic')) and u'Built-in Output' in self.backend._app.engine.output_devices:
+            if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and u'Built-in Output' in self.backend._app.engine.output_devices:
                 in_out_devices.append(u'Built-in Microphone and Output')
             setupAudioInputOutputDeviceMenu(menu, 404, in_out_devices, "selectInputOutputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
@@ -3680,7 +3680,7 @@ class ContactWindowController(NSWindowController):
         dev = sender.representedObject()
         if dev == u'Built-in Microphone and Output':
             try:
-                input_device = (input_device for input_device in self.backend._app.engine.input_devices if input_device.startswith('Built-in Mic')).next()
+                input_device = (input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))).next()
             except StopIteration:
                 pass
             else:
