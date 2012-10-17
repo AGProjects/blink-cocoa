@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1070</int>
-		<string key="IBDocument.SystemVersion">11E2620</string>
+		<string key="IBDocument.SystemVersion">11G63</string>
 		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
-		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.AppKitVersion">1138.51</string>
 		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -942,19 +942,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 								<string key="NSKeyEquivalent"/>
 								<int key="NSPeriodicDelay">400</int>
 								<int key="NSPeriodicInterval">75</int>
-								<object class="NSMenuItem" key="NSMenuItem" id="46828699">
-									<reference key="NSMenu" ref="189998304"/>
-									<bool key="NSIsSeparator">YES</bool>
-									<bool key="NSIsHidden">YES</bool>
-									<string key="NSTitle"/>
-									<string key="NSKeyEquiv"/>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<int key="NSState">1</int>
-									<reference key="NSOnImage" ref="270490793"/>
-									<reference key="NSMixedImage" ref="748515761"/>
-									<string key="NSAction">_popUpItemAction:</string>
-									<reference key="NSTarget" ref="1011215250"/>
-								</object>
+								<nil key="NSMenuItem"/>
 								<bool key="NSMenuItemRespectAlignment">YES</bool>
 								<object class="NSMenu" key="NSMenu" id="189998304">
 									<string key="NSTitle">OtherViews</string>
@@ -985,7 +973,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="533347693">
 											<reference key="NSMenu" ref="189998304"/>
 											<bool key="NSIsDisabled">YES</bool>
-											<string key="NSTitle">Presence</string>
+											<string key="NSTitle">Availability</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSMnemonicLoc">2147483647</int>
 											<reference key="NSOnImage" ref="270490793"/>
@@ -996,7 +984,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="261364942">
 											<reference key="NSMenu" ref="189998304"/>
 											<int key="NSIndent">2</int>
-											<string key="NSTitle">Subscribe to Contact's Presence Information</string>
+											<string key="NSTitle">Subscribe to Contact's Availability Information</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
@@ -1009,7 +997,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 										<object class="NSMenuItem" id="804253095">
 											<reference key="NSMenu" ref="189998304"/>
 											<int key="NSIndent">2</int>
-											<string key="NSTitle">Allow Contact to see my Presence Information</string>
+											<string key="NSTitle">Allow Contact to see my Availability Information</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
@@ -1019,7 +1007,19 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 											<int key="NSTag">2</int>
 											<reference key="NSTarget" ref="1011215250"/>
 										</object>
-										<reference ref="46828699"/>
+										<object class="NSMenuItem" id="46828699">
+											<reference key="NSMenu" ref="189998304"/>
+											<bool key="NSIsDisabled">YES</bool>
+											<bool key="NSIsSeparator">YES</bool>
+											<bool key="NSIsHidden">YES</bool>
+											<string key="NSTitle"/>
+											<string key="NSKeyEquiv"/>
+											<int key="NSMnemonicLoc">2147483647</int>
+											<reference key="NSOnImage" ref="270490793"/>
+											<reference key="NSMixedImage" ref="748515761"/>
+											<string key="NSAction">_popUpItemAction:</string>
+											<reference key="NSTarget" ref="1011215250"/>
+										</object>
 										<object class="NSMenuItem" id="418519785">
 											<reference key="NSMenu" ref="189998304"/>
 											<bool key="NSIsDisabled">YES</bool>
@@ -1065,7 +1065,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 									<bool key="NSNoAutoenable">YES</bool>
 									<reference key="NSMenuFont" ref="756971317"/>
 								</object>
-								<int key="NSSelectedIndex">5</int>
+								<int key="NSSelectedIndex">-1</int>
 								<int key="NSPreferredEdge">1</int>
 								<bool key="NSUsesItemFromMenu">YES</bool>
 								<bool key="NSAltersState">YES</bool>
