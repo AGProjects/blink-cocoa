@@ -62,7 +62,7 @@ def processHTMLText(text, usesmileys=True, is_html=False):
     for token in tokens:
         if not is_html and _url_pattern_exact.match(token):
             type, d, rest = token.partition(":")
-            url = type + d + urllib.quote(rest, "/%?&=;:,@+$#")
+            url = type + d + urllib.quote(rest.encode('utf-8'), "/%?&=;:,@+$#")
             token = r'<a href=\"%s\">%s</a>' % (url, escape_html(token))
         else:
             if not is_html:
