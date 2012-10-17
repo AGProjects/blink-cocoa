@@ -185,18 +185,25 @@ class AlertPanel(NSObject, object):
         stream_type_list = list(set(stream.type for stream in streams))
 
         if len(self.sessions) == 1:
-            self.panel.setTitle_(u"Incoming Call from %s" % format_identity_to_string(session.remote_identity, check_contact=True, format='compact'))
+            if "desktop-sharing" in stream_type_list:
+                base_text = u"Screen Sharing from %s"
+            elif "audio" in stream_type_list:
+                base_text = u"Audio call from %s"
+            elif stream_type_list == ["file-transfer"]:
+                base_text = u"File transfer from %s"
+            elif stream_type_list == ["chat"]:
+                base_text = u"Chat from %s"
+            else:
+                base_text = u"Call from %s"
+
+            title = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
+            self.panel.setTitle_(title)
+
             if settings.sounds.enable_speech_synthesizer:
-                if stream_type_list == ["file-transfer"]:
-                    base_text = "File transfer from %s"
-                elif stream_type_list == ["chat"]:
-                    base_text = "Chat from %s"
-                else:
-                    base_text = "Audio call from %s"
-                self.speak_text = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
+                self.speak_text = title
                 self.startSpeechSynthesizerTimer()
         else:
-            self.panel.setTitle_(u"Multiple Incoming Calls")
+            self.panel.setTitle_(u"Incoming Calls")
 
         NotificationCenter().add_observer(self, sender=session)
 
