@@ -626,9 +626,11 @@ class BlinkPresenceContact(BlinkContact):
             return 
 
         if not resources:
-            return              
+            return
 
         for uri, resource in resources.iteritems():
+            if resource.state == 'pending':
+                self.presence_state['pending_authorizations'][resource.uri] = True
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -723,7 +725,9 @@ class BlinkPresenceContact(BlinkContact):
                                 device_wining_status = 'extended-away'
                             else:
                                 device_wining_status = 'offline'
-                                    
+                        
+                        device_text = '%s / %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
+                        BlinkLogger().log_info(u"Got presence from %s of %s: %s" % (device_text, aor, device_wining_status))
                         devices[service.device_info.id] = {
                                                            'id': service.device_info.id,
                                                            'description': service.device_info.description,
@@ -737,6 +741,7 @@ class BlinkPresenceContact(BlinkContact):
                                                            'status': device_wining_status,
                                                            'caps': caps}
                     else:
+                        BlinkLogger().log_info(u"Got presence from service %s of %s: %s" % (service.id, aor, device_wining_status))
                         devices[service.id] = {             'id': service.id,
                                                             'description': None,
                                                             'user_agent': None,
@@ -769,9 +774,6 @@ class BlinkPresenceContact(BlinkContact):
             self.setPresenceIndicator("unknown")
 
         self.pending_authorizations = {}
-        for uri, resource in resources.iteritems():
-            if resource.state == 'pending':
-                self.presence_state['pending_authorizations'][resource.uri] = True
 
         self.setPresenceNote()
         has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
