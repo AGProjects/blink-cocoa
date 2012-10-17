@@ -42,7 +42,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import status_icon_for_contact, status_icon_for_device, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, ICON_SIZE
+from ContactListModel import status_icon_for_contact, status_icon_for_device, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -1109,7 +1109,7 @@ class ContactWindowController(NSWindowController):
     def hasContactMatchingURI(self, uri, exact_match=False):
         return self.model.hasContactMatchingURI(uri, exact_match)
 
-    def iconPathForURI(self, uri):
+    def iconPathForURI(self, uri, is_focus=False):
         if AccountManager().has_account(uri):
             return self.iconPathForSelf()
         contact = self.getContactMatchingURI(uri)
@@ -1117,7 +1117,7 @@ class ContactWindowController(NSWindowController):
             path = contact.avatar.path
             if path is not None and os.path.isfile(path):
                 return path
-        return DefaultUserAvatar().path
+        return DefaultUserAvatar().path if not is_focus else DefaultMultiUserAvatar().path
 
     def iconPathForSelf(self):
         settings = SIPSimpleSettings()
