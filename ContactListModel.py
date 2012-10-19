@@ -629,8 +629,12 @@ class BlinkPresenceContact(BlinkContact):
             return
 
         for uri, resource in resources.iteritems():
+            uri_text = sip_prefix_pattern.sub('', uri)
             if resource.state == 'pending':
                 self.presence_state['pending_authorizations'][resource.uri] = True
+                BlinkLogger().log_info(u"Subscription for availability information of %s is pending" % uri_text)                                                                                                                 
+            if resource.state == 'terminated':
+                BlinkLogger().log_info(u"Subscription for availability information of %s is terminated" % uri_text)                                                                                                                 
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -728,7 +732,7 @@ class BlinkPresenceContact(BlinkContact):
                         
                         device_text = '%s / %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
                         uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Got availability info from %s of %s: %s" % (device_text, uri_text, device_wining_status))
+                        BlinkLogger().log_info(u"Got availability information from %s of %s: %s" % (device_text, uri_text, device_wining_status))
                         devices[service.device_info.id] = {
                                                            'id': service.device_info.id,
                                                            'description': service.device_info.description,
@@ -743,7 +747,7 @@ class BlinkPresenceContact(BlinkContact):
                                                            'caps': caps}
                     else:
                         uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Got availability info from service %s of %s: %s" % (service.id, uri_text, device_wining_status))
+                        BlinkLogger().log_info(u"Got availability information from service %s of %s: %s" % (service.id, uri_text, device_wining_status))
                         devices[service.id] = {             'id': service.id,
                                                             'description': None,
                                                             'user_agent': None,
