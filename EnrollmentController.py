@@ -45,6 +45,7 @@ class EnrollmentController(NSObject):
     displayNameText = objc.IBOutlet()
     addressText = objc.IBOutlet()
     passwordText = objc.IBOutlet()
+    domainButton = objc.IBOutlet()
 
     newDisplayNameText = objc.IBOutlet()
     newUsernameText = objc.IBOutlet()
@@ -217,6 +218,7 @@ class EnrollmentController(NSObject):
         email = unicode(self.newEmailText.stringValue())
 
         self.progressIndicator.setHidden_(False)
+        self.domainButton.setHidden_(True)
         self.progressText.setHidden_(False)
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(None)
@@ -332,6 +334,7 @@ class EnrollmentController(NSObject):
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
         self.progressText.setHidden_(True)
+        self.domainButton.setHidden_(False)
 
         if sip_address is None:
             NSRunAlertPanel("Sign Up to SIP Account",
@@ -408,3 +411,9 @@ class EnrollmentController(NSObject):
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)
         return False
+
+    @objc.IBAction
+    def howToUseMyOwnDomain_(self, sender):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://myownsipdomain.sip2sip.info"))
+
+
