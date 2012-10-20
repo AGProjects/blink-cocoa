@@ -1209,9 +1209,9 @@ class ChatController(MediaStream):
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
             reason = 'Connection has been closed'
         elif data.reason == 'A TLS packet with unexpected length was received.':
-            reason = 'A TLS Connection error has occured'
+            reason = 'TLS connection error'
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout'):
-            reason = 'Network Timeout'
+            reason = 'Network connectivity failure'
         elif data.reason == 'MSRPRelayConnectTimeout':
             reason = 'Timeout connecting to MSRP relay'
         elif data.reason == 'MSRPRelayAuthError':
@@ -1219,7 +1219,7 @@ class ChatController(MediaStream):
         else:
             reason = data.reason
 
-        self.showSystemMessage('Connection failed: %s' % reason, ISOTimestamp.now(), True)
+        self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
 
     def resetIsComposingTimer(self, refresh):
