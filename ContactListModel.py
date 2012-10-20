@@ -426,7 +426,7 @@ class BlinkConferenceContact(BlinkContact):
         if self.presence_contact is not None:
             self.nc.add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
         
-        self.presence_indicator = 'unknown'
+        self.presence_indicator = None
         self.presence_note = None
         self.init_presence_state()
         self.updatePresenceState()
@@ -582,7 +582,7 @@ class BlinkPresenceContact(BlinkContact):
         self._set_username_and_domain()
         self.nc.add_observer(self, name="SIPAccountGotPresenceState")
 
-        self.presence_indicator = 'unknown'
+        self.presence_indicator = 'unknown' if self.contact.presence.subscribe else None
         self.presence_note = None
         self.pidfs_map = {}
         self.init_presence_state()
@@ -2507,6 +2507,13 @@ class ContactListModel(CustomListModel):
         if 'icon' in notification.data.modified:
             blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
             blink_contact.avatar.save()
+        
+        if 'presence.subscribe' in notification.data.modified:
+            if contact.presence.subscribe and blink_contact.presence_indicator is None:
+                blink_contact.presence_indicator = 'unknown'
+            elif not contact.presence.subscribe:
+                blink_contact.presence_indicator = None
+    
         if set(['default_uri', 'uris']).intersection(notification.data.modified):
             blink_contact.detail = blink_contact.uri
             blink_contact._set_username_and_domain()
@@ -2919,7 +2926,7 @@ class ContactListModel(CustomListModel):
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
             contact.save()
-
+    
             self.removePolicyForContactURIs(contact)
 
             old_groups = set(self.getBlinkGroupsForBlinkContact(item))
