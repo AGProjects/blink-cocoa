@@ -607,6 +607,14 @@ class BlinkPresenceContact(BlinkContact):
         self.timer.invalidate()
         self.nc.remove_observer(self, name="SIPAccountGotPresenceState")
         self.nc = None
+        model = NSApp.delegate().contactsWindowController.model
+        try:
+            online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
+        except StopIteration:
+            pass
+        else:
+            model.online_contacts_group.contacts.remove(self)
+
         super(BlinkContact, self).dealloc()
 
     @allocate_autorelease_pool
@@ -791,7 +799,22 @@ class BlinkPresenceContact(BlinkContact):
             self.timer.invalidate()
             self.timer = None
 
+        self.addToOrRemoveFromOnlineGroup()
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+
+    def addToOrRemoveFromOnlineGroup(self):
+        status = presence_indicator_bar_for_contact(self)
+        model = NSApp.delegate().contactsWindowController.model
+        online_contact = None
+        try:
+            online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
+        except StopIteration:
+            if status != "unknown":
+                model.online_contacts_group.contacts.append(self)
+                model.online_contacts_group.sortContacts()
+        else:
+            if status == "unknown":
+                self.online_group.contacts.remove(online_contact)
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
@@ -1213,6 +1236,19 @@ class BlockedGroup(VirtualBlinkGroup):
         super(BlockedGroup, self).__init__(name)
 
 
+class OnlineGroup(VirtualBlinkGroup):
+    type = 'online_contacts'
+    deletable = False
+    ignore_search = True
+    
+    add_contact_allowed = False
+    remove_contact_allowed = False
+    delete_contact_allowed = False
+    
+    def __init__(self, name=u'Online Contacts'):
+        super(OnlineGroup, self).__init__(name)
+
+
 class AllContactsBlinkGroup(VirtualBlinkGroup):
     """Group representation for all contacts"""
     type = 'all_contacts'
@@ -1494,7 +1530,10 @@ class CustomListModel(NSObject):
 
                 if isinstance(proposed_item, BlockedGroup):
                     return NSDragOperationNone
-
+                
+                if isinstance(proposed_item, OnlineGroup):
+                    return NSDragOperationNone
+                
                 if isinstance(proposed_item, BlinkBlockedPresenceContact):
                     return NSDragOperationNone                    
 
@@ -1722,6 +1761,7 @@ class ContactListModel(CustomListModel):
         self.all_contacts_group = AllContactsBlinkGroup()
         self.pending_watchers_group = PendingWatchersGroup()
         self.blocked_contacts_group = BlockedGroup()
+        self.online_contacts_group = OnlineGroup()
         self.no_group = NoBlinkGroup()
         self.bonjour_group = BonjourBlinkGroup()
         self.addressbook_group = AddressBookBlinkGroup()
@@ -2214,6 +2254,7 @@ class ContactListModel(CustomListModel):
         self.no_group.load_group()
         self.pending_watchers_group.load_group()
         self.blocked_contacts_group.load_group()
+        self.online_contacts_group.load_group()
         self.addressbook_group.load_group()
         self.missed_calls_group.load_group()
         self.outgoing_calls_group.load_group()
@@ -2301,6 +2342,16 @@ class ContactListModel(CustomListModel):
                 self.saveGroupPosition()
             elif not settings.contacts.enable_blocked_group and self.blocked_contacts_group in self.groupsList:
                 self.groupsList.remove(self.blocked_contacts_group)
+                self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+        if notification.data.modified.has_key("contacts.enable_online_group"):
+            if settings.contacts.enable_online_group and self.online_contacts_group not in self.groupsList:
+                position = len(self.groupsList) if self.groupsList else 0
+                self.groupsList.insert(position, self.online_contacts_group)
+                self.saveGroupPosition()
+            elif not settings.contacts.enable_online_group and self.online_contacts_group in self.groupsList:
+                self.groupsList.remove(self.online_contacts_group)
                 self.saveGroupPosition()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
@@ -2452,7 +2503,7 @@ class ContactListModel(CustomListModel):
             else:
                 self.blocked_contacts_group.contacts.remove(policy_contact)
                 changes += 1
-                    
+
             # add to pending if we have watchers
             for watcher_dict in self.pending_watchers_map.itervalues():
                 for watcher in watcher_dict.values():
@@ -2635,6 +2686,12 @@ class ContactListModel(CustomListModel):
                     group.position = max(len(self.groupsList)-1, 0)
                     group.save()
                 self.groupsList.insert(index, self.blocked_contacts_group)
+        elif group.id == "online_contacts":
+            if settings.contacts.enable_online_group:
+                if not group.position:
+                    group.position = max(len(self.groupsList)-1, 0)
+                    group.save()
+                self.groupsList.insert(index, self.online_contacts_group)
         elif group.id == "pending_watchers":
             group.position = 0
             group.save()
@@ -2795,7 +2852,7 @@ class ContactListModel(CustomListModel):
 
     def removeContactFromBlinkGroups(self, contact, groups):
         try:
-            blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
+            blink_contact = (blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact).next()
         except StopIteration:
             return
         for group in (group for group in groups if blink_contact in group.contacts):

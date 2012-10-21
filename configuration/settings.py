@@ -95,7 +95,8 @@ class ContactsSettings(SettingsGroup):
     enable_incoming_calls_group = Setting(type=bool, default=False)
     enable_missed_calls_group = Setting(type=bool, default=True)
     enable_outgoing_calls_group = Setting(type=bool, default=False)
-    enable_blocked_group = Setting(type=bool, default=False)
+    enable_blocked_group = Setting(type=bool, default=True)
+    enable_online_group = Setting(type=bool, default=True)
     maximum_calls = Setting(type=NonNegativeInteger, default=5)
 
 
