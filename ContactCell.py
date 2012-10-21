@@ -120,7 +120,7 @@ class ContactCell(NSTextFieldCell):
             NSColor.whiteColor().set()
 
         border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 2.0, 2.0)
-        border.setLineWidth_(0.1)
+        border.setLineWidth_(0.2)
         border.fill()
         NSColor.blackColor().set()
         border.stroke()
