@@ -325,7 +325,7 @@ class JoinConferenceWindowController(NSObject):
             if blink_contact is not None:
                 sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
-                
+
                 if len(sourceContact.uris) > 1:
                     point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
                     event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -339,7 +339,7 @@ class JoinConferenceWindowController(NSObject):
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_(uri.uri)
-                    
+
                     NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, table)
                     return True
                 else:
@@ -369,10 +369,10 @@ class JoinConferenceWindowController(NSObject):
     def addContactUriToInvitationList(self, participant):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
-        
+
         if participant:
             participant = sip_prefix_pattern.sub("", str(participant))
-        
+
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
@@ -569,7 +569,7 @@ class AddParticipantsWindowController(NSObject):
             if blink_contact is not None:
                 sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
-                
+
                 if len(sourceContact.uris) > 1:
                     point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
                     event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -583,7 +583,7 @@ class AddParticipantsWindowController(NSObject):
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_(uri.uri)
-                    
+
                     NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, table)
                     return True
                 else:
@@ -591,7 +591,7 @@ class AddParticipantsWindowController(NSObject):
                     self.addContactUriToInvitationList(participant)
                     return True
         return False
-    
+
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
             participant = info.draggingPasteboard().stringForType_("x-blink-sip-uri")
@@ -604,19 +604,19 @@ class AddParticipantsWindowController(NSObject):
             return NSDragOperationGeneric
         else:
             return NSDragOperationNone
-    
+
     @objc.IBAction
     def addContactUriToInvitationList_(self, sender):
         participant = sender.representedObject()
         self.addContactUriToInvitationList(participant)
-    
+
     def addContactUriToInvitationList(self, participant):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
-        
+
         if participant:
             participant = sip_prefix_pattern.sub("", str(participant))
-        
+
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
@@ -625,7 +625,7 @@ class AddParticipantsWindowController(NSObject):
                 self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
         except:
             pass
-    
+
     def run(self):
         self._participants = []
         contactsWindow = NSApp.delegate().contactsWindowController.window()

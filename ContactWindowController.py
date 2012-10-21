@@ -194,7 +194,7 @@ class ContactWindowController(NSWindowController):
     toolsMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
-    presenceWatchersMenu = objc.IBOutlet() 
+    presenceWatchersMenu = objc.IBOutlet()
     presencePopUpMenu = objc.IBOutlet()
     windowMenu = objc.IBOutlet()
     restoreContactsMenu = objc.IBOutlet()
@@ -359,7 +359,7 @@ class ContactWindowController(NSWindowController):
 
         self.presencePublisher = PresencePublisher(self)
 
-        self.loaded = True    
+        self.loaded = True
 
     def fillPresenceMenu(self, presenceMenu):
         if presenceMenu == self.presenceMenu:
@@ -494,7 +494,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def showChangelog_(self, sender):
         settings = SIPSimpleSettings()
-        
+
         if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
         else:
@@ -874,7 +874,7 @@ class ContactWindowController(NSWindowController):
                         contact = LdapSearchResultContact(str(uri), uri_type=format_uri_type(type), name=notification.data.name, icon=NSImage.imageNamed_("ldap"))
                         contact.detail = '%s (%s)' % (str(uri), format_uri_type(type))
                         self.ldap_found_contacts.append(contact)
-            
+
             if self.ldap_found_contacts:
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
@@ -888,7 +888,7 @@ class ContactWindowController(NSWindowController):
             settings.audio.input_device = unicode(device)
             settings.audio.output_device = unicode(device)
             settings.save()
-        
+
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         settings = SIPSimpleSettings()
         if hasAudio or settings.audio.automatic_device_switch:
@@ -910,11 +910,11 @@ class ContactWindowController(NSWindowController):
             NSApp.endModalSession_(session)
             panel.close()
             NSReleaseAlertPanel(panel)
-            
+
             if ret == NSAlertDefaultReturn:
                 BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
                 call_in_thread('device-io', switch_device, device)
-        
+
         self.menuWillOpen_(self.devicesMenu)
 
     def showAudioSession(self, streamController):
@@ -1021,7 +1021,7 @@ class ContactWindowController(NSWindowController):
         self.disbandingConference = False
         self.conferenceButton.setState_(NSOffState)
         BlinkLogger().log_info(u"Audio conference ended")
-    
+
     def moveConferenceToServer(self):
         participants = []
         for session in self.sessionControllersManager.sessionControllers:
@@ -1029,7 +1029,7 @@ class ContactWindowController(NSWindowController):
                 stream = session.streamHandlerOfType("audio")
                 if stream.isConferencing:
                     participants.append(format_identity_to_string(session.target_uri))
- 
+
         account = AccountManager().default_account
         if not isinstance(account, BonjourAccount):
             room = random_room()
@@ -1037,11 +1037,11 @@ class ContactWindowController(NSWindowController):
                 target = u'%s@%s' % (room, account.conference.server_address)
             else:
                 target = u'%s@%s' % (room, default_conference_server)
-                  
+
             self.joinConference(target, ("chat", "audio"), participants)
             BlinkLogger().log_info(u"Move conference to server root %s" % target)
             self.disbandConference()
-    
+
     def finalizeAudioSession(self, streamController):
         if streamController.isConferencing and self.conference is not None:
             self.removeAudioSessionFromConference(streamController)
@@ -2055,10 +2055,10 @@ class ContactWindowController(NSWindowController):
     def hideVideoMirrorWindow(self):
         if self.mirrorWindow and self.mirrorWindow.visible:
             self.mirrorWindow.hide()
-            
+
     def showVideoMirrorWindow(self):
         if self.mirrorWindow is None:
-            self.mirrorWindow = VideoMirrorWindowController.alloc().init()    
+            self.mirrorWindow = VideoMirrorWindowController.alloc().init()
         self.mirrorWindow.show()
 
     @objc.IBAction
@@ -2084,8 +2084,8 @@ class ContactWindowController(NSWindowController):
         try:
             cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
-            pass            
-    
+            pass
+
     @objc.IBAction
     def setPresenceOfflineNote_(self, sender):
         self.setLastPresenceActivity()
@@ -2175,7 +2175,7 @@ class ContactWindowController(NSWindowController):
                 self.presence_notes_history.remove(history_object)
             except ValueError:
                 pass
-            
+
             self.presence_notes_history.append(history_object)
             storage_path = ApplicationData.get('presence_notes_history.pickle')
             try:
@@ -2189,7 +2189,7 @@ class ContactWindowController(NSWindowController):
         selected_item = self.presenceActivityPopUp.selectedItem()
         if selected_item is None:
             return
-        
+
         current_presence_activity = selected_item.representedObject()
         current_presence_activity['note'] = self.presenceNoteText.stringValue()
         if self.presenceActivityBeforeOnThePhone:
@@ -2225,13 +2225,13 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
             self.presenceWatchersMenu.addItem_(lastItem)
             i += 1
-            
+
             items = {}
             for watcher in active_watchers.keys():
                 uri = watcher.split(':')[1]
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
-                items[title] = {'image': None, 'contact' : None}                
+                items[title] = {'image': None, 'contact' : None}
                 if isinstance(contact, BlinkPresenceContact):
                     items[title]['image'] = status_icon_for_contact(contact)
                     items[title]['contact'] = contact
@@ -2257,15 +2257,15 @@ class ContactWindowController(NSWindowController):
 
         while menu.numberOfItems() > len(PresenceActivityList):
             menu.removeItemAtIndex_(len(PresenceActivityList))
-        
+
         offline_idx = 0
         for item in PresenceActivityList:
             offline_idx += 1
             if item['type'] == 'delimiter':
                 continue
             if item['action'] == 'setPresenceOfflineNote:':
-                break        
-        
+                break
+
         menu.removeItemAtIndex_(offline_idx)
         lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceOfflineNote:", "")
         settings = SIPSimpleSettings()
@@ -2275,7 +2275,7 @@ class ContactWindowController(NSWindowController):
         lastItem.setIndentationLevel_(2)
         lastItem.setEnabled_(False)
         menu.insertItem_atIndex_(lastItem, offline_idx)
-        
+
         if self.presence_notes_history:
             menu.addItem_(NSMenuItem.separatorItem())
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "", "")
@@ -2283,7 +2283,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setAttributedTitle_(title)
             lastItem.setEnabled_(False)
             menu.addItem_(lastItem)
-        
+
         for item in reversed(self.presence_notes_history):
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceActivityFromHistory:", "")
             title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
@@ -2300,7 +2300,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setRepresentedObject_(item)
             lastItem.setTarget_(self)
             menu.addItem_(lastItem)
-        
+
             #if self.presence_notes_history:
             #menu.addItem_(NSMenuItem.separatorItem())
             #lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "deletePresenceHistory:", "")
@@ -2470,7 +2470,7 @@ class ContactWindowController(NSWindowController):
     def updateRecordingsMenu(self):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
-        
+
         def format_item(name, when):
             a = NSMutableAttributedString.alloc().init()
             normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -2481,33 +2481,33 @@ class ContactWindowController(NSWindowController):
             t = NSAttributedString.alloc().initWithString_attributes_(when, mini_blue)
             a.appendAttributedString_(t)
             return a
-        
+
         while not self.recordingsMenu.itemAtIndex_(0).isSeparatorItem():
             self.recordingsMenu.removeItemAtIndex_(0)
         self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_audio_recordings_directory())
-        
+
         recordings = self.backend.get_audio_recordings()[-10:]
         if not recordings:
             item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
             item.setEnabled_(False)
-        
+
         for dt, name, f in recordings:
             title = name + "  " + dt
             item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
             item.setTarget_(self)
             item.setRepresentedObject_(f)
             item.setAttributedTitle_(format_item(name,dt))
-    
+
     def updateRestoreContactsMenu(self):
         while not self.restoreContactsMenu.itemAtIndex_(0).isSeparatorItem():
             self.restoreContactsMenu.removeItemAtIndex_(0)
         self.restoreContactsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_contacts_backup_directory())
-        
+
         contact_backups = self.backend.get_contact_backups()[-10:]
         if not contact_backups:
             item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No backups available", "", "", 0)
             item.setEnabled_(False)
-        
+
         for timestamp, file in contact_backups:
             title = u'From Backup Taken at %s...' % timestamp
             item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "restoreContactsClicked:", "", 0)
@@ -2569,7 +2569,7 @@ class ContactWindowController(NSWindowController):
                 self.historyMenu.addItem_(NSMenuItem.separatorItem())
             self.get_session_history_entries()
 
-                
+
     def getAccountWitDialPlan(self, uri):
         try:
             account = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.pstn.dial_plan and any(prefix for prefix in account.pstn.dial_plan.split(" ") if uri.startswith(prefix))).next()
@@ -2577,18 +2577,18 @@ class ContactWindowController(NSWindowController):
         except StopIteration:
             account = AccountManager().default_account
         return account
-    
+
     def conferenceHistoryClicked_(self, sender):
         item = sender.representedObject()
         target = item["target_uri"]
         participants = item["participants"] or []
         media = item["streams"] or []
-        
+
         account = self.activeAccount()
         conference = self.showJoinConferenceWindow(target=target, participants=participants, media=media, default_domain=account.id.domain)
         if conference is not None:
             self.joinConference(conference.target, conference.media_types, conference.participants)
-        
+
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
 
@@ -2862,13 +2862,13 @@ class ContactWindowController(NSWindowController):
         if sender.tag() == 700:
             account.sip.always_use_my_proxy = False
             account.save()
-        
+
         elif sender.tag() == 701:
             account.sip.outbound_proxy = account.sip.primary_proxy
             account.sip.always_use_my_proxy = True
             account.sip.selected_proxy = 0
             account.save()
-        
+
         elif sender.tag() == 702:
             account.sip.outbound_proxy = account.sip.alternative_proxy
             account.sip.always_use_my_proxy = True
@@ -3148,13 +3148,13 @@ class ContactWindowController(NSWindowController):
 
         if isinstance(item, BlinkContact):
             has_fully_qualified_sip_uri = is_sip_aor_format(item.uri)
-            
+
             devices = None
             if isinstance(item, BlinkPresenceContact):
                 devices = [device for device in item.presence_state['devices'].values() if device['contact'] != device['aor'] and device['description']]
-    
+
             has_multiple_uris = len(item.uris) > 1
-            
+
             if (has_multiple_uris or devices) and not isinstance(item, BlinkBlockedPresenceContact):
                 audio_submenu = NSMenu.alloc().init()
                 audio_submenu.setAutoenablesItems_(False)
@@ -3214,7 +3214,7 @@ class ContactWindowController(NSWindowController):
                         chat_submenu.addItem_(NSMenuItem.separatorItem())
                         chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
                         chat_item.setEnabled_(False)
-               
+
                         for device in devices:
                             if device['user_agent'] and device['local_time']:
                                 title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
@@ -3257,7 +3257,7 @@ class ContactWindowController(NSWindowController):
                         for uri in item.uris:
                             if is_sip_aor_format(uri.uri):
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
-                                target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri                                
+                                target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                                 ft_item.setRepresentedObject_(target_uri)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
@@ -3271,7 +3271,7 @@ class ContactWindowController(NSWindowController):
                             ft_submenu.setAutoenablesItems_(False)
                             ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
                             ft_item.setEnabled_(False)
-                            
+
                             for device in devices:
                                 if device['user_agent'] and device['local_time']:
                                     title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
@@ -3312,7 +3312,7 @@ class ContactWindowController(NSWindowController):
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
                             ds_item.setEnabled_(False)
-                            
+
                             for device in devices:
                                 if device['user_agent'] and device['local_time']:
                                     title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
@@ -3334,7 +3334,7 @@ class ContactWindowController(NSWindowController):
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-                    
+
                     if self.sessionControllersManager.isMediaTypeSupported('desktop-server'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
@@ -3428,7 +3428,7 @@ class ContactWindowController(NSWindowController):
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Availability Information", "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
-                
+
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
                 mitem.setEnabled_(True)
@@ -3825,7 +3825,7 @@ class ContactWindowController(NSWindowController):
                         uri = sip_prefix_pattern.sub("", str(uri))
                     try:
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
-                        
+
                         # do not invite remote party itself
                         remote_uri = format_identity_to_string(session.remotePartyObject)
                         if uri == remote_uri:
@@ -3846,23 +3846,23 @@ class ContactWindowController(NSWindowController):
                     return NSDragOperationAll
             elif not isinstance(session.account, BonjourAccount):
                 return NSDragOperationAll
-        
+
         return NSDragOperationNone
 
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
         pboard = info.draggingPasteboard()
         session = self.getSelectedAudioSession()
-        
+
         if not session:
             return False
-        
+
         if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
             uri = str(pboard.stringForType_("x-blink-sip-uri"))
             if uri:
                 uri = sip_prefix_pattern.sub("", str(uri))
                 if "@" not in uri:
                     uri = '%s@%s' % (uri, session.account.id.domain)
-            
+
             if session.remote_focus:
                 contact = self.getContactMatchingURI(uri)
                 if contact:

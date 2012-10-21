@@ -180,7 +180,7 @@ class PresencePublisher(object):
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if isinstance(notification.sender, Account):
             account = notification.sender
-            
+
             if set(['display_name', 'presence.disable_location', 'disable_timezone', 'presence.homepage']).intersection(notification.data.modified):
                 if account.enabled and account.presence.enabled:
                     account.presence_state = self.build_pidf(account)
@@ -353,7 +353,7 @@ class PresencePublisher(object):
                 location = '%s/%s' % (self.location['country'], self.location['city'])
                 service.map=cipid.Map(location)
             elif self.location['country']:
-                service.map=cipid.Map(location['country'])           
+                service.map=cipid.Map(location['country'])
 
         try:
             xcap_caps_discovered = self.xcap_caps_discovered[account]
@@ -444,7 +444,7 @@ class PresencePublisher(object):
     def get_location(self, account):
         if not account.server.settings_url or account.presence.disable_location:
             return
-        
+
         query_string = "action=get_location"
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         req = urllib2.Request(url)
@@ -452,7 +452,7 @@ class PresencePublisher(object):
             location = urllib2.urlopen(req)
             raw_response = urllib2.urlopen(req)
             json_data = raw_response.read()
-            
+
             try:
                 response = cjson.decode(json_data.replace('\\/', '/'))
             except TypeError:

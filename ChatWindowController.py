@@ -78,7 +78,7 @@ class ChatWindowController(NSWindowController):
     conferenceFilesTableView = objc.IBOutlet()
     drawerScrollView = objc.IBOutlet()
     drawerSplitView = objc.IBOutlet()
-    screenSharingPopUpButton = objc.IBOutlet()  
+    screenSharingPopUpButton = objc.IBOutlet()
     actionsButton = objc.IBOutlet()
     editorButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
@@ -205,7 +205,7 @@ class ChatWindowController(NSWindowController):
         frame.size.width = 54
         frame.origin.y = 14
         self.screenSharingPopUpButton.setFrame_(frame)
-    
+
     def updateTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
         session = self.selectedSessionController()
@@ -493,7 +493,7 @@ class ChatWindowController(NSWindowController):
                 return chatStream.validateToolbarButton(item)
         else:
             return False
-            
+
     def _NH_BlinkConferenceContactPresenceHasChaged(self, sender, data):
         try:
             idx = self.participants.index(sender)
@@ -945,7 +945,7 @@ class ChatWindowController(NSWindowController):
                     desktop_sharing_stream = selectedSession.streamHandlerOfType("desktop-sharing")
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setEnabled_(True)
-                       
+
                     if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                         mitem.setTitle_("Cancel Screen Sharing Request")
                     elif desktop_sharing_stream.status == STREAM_CONNECTED:
@@ -957,7 +957,7 @@ class ChatWindowController(NSWindowController):
                             mitem.setTitle_("Requesting Screen from %s..." % title)
                         else:
                             mitem.setTitle_("%s is Sharing Her Screen" % title)
-                        
+
                         mitem.setEnabled_(False)
                         mitem.setHidden_(False)
 
@@ -968,7 +968,7 @@ class ChatWindowController(NSWindowController):
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                         mitem.setHidden_(True)
                         mitem.setEnabled_(False)
-                        
+
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                         if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                             mitem.setTitle_("Sharing My Screen with %s..." % title)
@@ -984,12 +984,12 @@ class ChatWindowController(NSWindowController):
                     mitem.setTitle_("Request Screen from %s" % title)
                     mitem.setEnabled_(True)
                     mitem.setHidden_(False)
-                        
+
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                     mitem.setTitle_("Share My Screen with %s" % title)
                     mitem.setEnabled_(True)
                     mitem.setHidden_(False)
-        
+
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setTitle_("Cancel Screen Sharing Request")
                     mitem.setEnabled_(False)
@@ -999,11 +999,11 @@ class ChatWindowController(NSWindowController):
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                 mitem.setTitle_("Request Screen from %s" % title)
                 mitem.setEnabled_(False)
-                
+
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                 mitem.setTitle_("Share My Screen with %s" % title)
                 mitem.setEnabled_(False)
-                
+
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                 mitem.setTitle_("Cancel Screen Sharing Request")
                 mitem.setEnabled_(False)
@@ -1232,7 +1232,7 @@ class ChatWindowController(NSWindowController):
         self.updateTitle()
 
         session = self.selectedSessionController()
-        
+
         if session is not None:
             state = session.state
             if state == STATE_CONNECTING:
@@ -1374,7 +1374,7 @@ class ChatWindowController(NSWindowController):
             self.participants.sort(key=attrgetter('name'))
 
             # Add invited participants if any
-        
+
             if session.invited_participants:
                 for contact in session.invited_participants:
                     self.participants.append(contact)
@@ -1569,7 +1569,7 @@ class ChatWindowController(NSWindowController):
             if blink_contact is not None:
                 sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
                 sourceContact = sourceGroup.contacts[blink_contact]
-                
+
                 if len(sourceContact.uris) > 1:
                     point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
                     event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -1583,12 +1583,12 @@ class ChatWindowController(NSWindowController):
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_({'session': session, 'uri': uri.uri, 'contact':sourceContact})
-                    
+
                     NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, table)
                 else:
                     uri = str(pboard.stringForType_("x-blink-sip-uri"))
                     self.inviteContactToConferenceSessionWithUri(session, uri, sourceContact)
-                
+
             return True
         elif pboard.types().containsObject_(NSFilenamesPboardType):
             chat_controller = session.streamHandlerOfType("chat")
@@ -1602,7 +1602,7 @@ class ChatWindowController(NSWindowController):
         uri = sender.representedObject()['uri']
         contact = sender.representedObject()['contact']
         self.inviteContactToConferenceSessionWithUri(session, uri, contact)
-            
+
     def inviteContactToConferenceSessionWithUri(self, session, uri, contact):
         if uri:
             uri = sip_prefix_pattern.sub("", str(uri))
@@ -1624,7 +1624,7 @@ class ChatWindowController(NSWindowController):
             for user in session.conference_info.users:
                 if uri == sip_prefix_pattern.sub("", user.entity):
                     return False
-        
+
         if session.remote_focus:
             new_contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
             new_contact.detail = 'Invitation sent...'

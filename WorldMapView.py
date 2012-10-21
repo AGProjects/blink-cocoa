@@ -473,7 +473,7 @@ class MapView(NSView):
             self.selectedColor = NSColor.redColor()
             self.textColor = NSColor.blackColor()
             self.selectedCountries = {}
-            self.contact = None 
+            self.contact = None
             self.labels = {}
             self.buttons = {}
             self.icons = {}
@@ -486,9 +486,9 @@ class MapView(NSView):
             labelView.setAlignment_(NSCenterTextAlignment)
             labelView.setFrameOrigin_(NSMakePoint(0, frame.size.height-14))
             labelView.setAutoresizingMask_(NSViewWidthSizable| NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin)
-            
+
             self.addSubview_(labelView)
-            
+
         return self
 
     @allocate_autorelease_pool
@@ -500,15 +500,15 @@ class MapView(NSView):
         for view in self.labels.values():
             view.removeFromSuperview()
         self.labels = {}
-        
+
         for view in self.buttons.values():
             view.removeFromSuperview()
         self.buttons = {}
-            
+
         if self.contact.presence_state['devices']:
             devices_with_location = [device for device in self.contact.presence_state['devices'].values() if device['location'] is not None]
             for device in devices_with_location:
-                country = device['location'].split("/")[0] 
+                country = device['location'].split("/")[0]
                 try:
                     iso_code = country_iso_map[country]
                 except KeyError:
@@ -553,7 +553,7 @@ class MapView(NSView):
 
                 j = 1
                 while j < len(values):
-                    endPoint = NSPointFromString(NSString.stringWithString_(values[j]))            
+                    endPoint = NSPointFromString(NSString.stringWithString_(values[j]))
                     endPoint.x = endPoint.x * ratioX
                     endPoint.y = endPoint.y * ratioY
                     endPoint.y = rect.size.height - endPoint.y
@@ -565,7 +565,7 @@ class MapView(NSView):
                     if endPoint.x < most_left_point:
                         most_left_point = endPoint.x
                     j += 1
-                    
+
                 path.closePath()
                 NSColor.grayColor().set();
                 path.stroke()
@@ -597,7 +597,7 @@ class MapView(NSView):
                         self.icons[device['status']] = icon
                         icon.setScalesWhenResized_(True)
                         icon.setSize_(size)
-                        
+
                 if icon is not None:
                     try:
                         button = self.buttons[device['id']]
@@ -626,7 +626,7 @@ class MapView(NSView):
                     if country_iso_code == key:
                         text = country_name
                         break
-    
+
                 text = '%s %s' % (text, local_time) if local_time is not None else text
                 labelView = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 180, 14))
                 labelView.setStringValue_(text)
@@ -637,7 +637,7 @@ class MapView(NSView):
                 labelView.setAlignment_(NSLeftTextAlignment)
                 labelView.setFrameOrigin_(NSMakePoint(startPoint.x, startPoint.y + shift_y + 24))
                 labelView.setAutoresizingMask_(NSViewWidthSizable| NSViewHeightSizable| NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin)
-                
+
                 self.addSubview_(labelView)
                 self.labels[key] = labelView
 
@@ -680,7 +680,7 @@ class MapView(NSView):
                 item.setEnabled_(True if device['caps'] is not None and 'chat' in device['caps'] else False)
             else:
                 item.setEnabled_(False)
-            
+
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
             item = menu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
             item.setTarget_(NSApp.delegate().contactsWindowController)
@@ -689,7 +689,7 @@ class MapView(NSView):
                 item.setEnabled_(True if device['caps'] is not None and 'file-transfer' in device['caps'] else False)
             else:
                 item.setEnabled_(False)
-                
+
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('desktop-client'):
             item = menu.addItemWithTitle_action_keyEquivalent_("Request Screen", "startScreenSharing:", "")
             item.setTarget_(NSApp.delegate().contactsWindowController)
@@ -711,15 +711,15 @@ class MapView(NSView):
                 item.setEnabled_(False)
 
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, sender)
- 
+
     def dealloc(self):
         self.backgroundColor.release()
         self.color.release()
         self.selectedColor.release()
         self.selectedCountries = {}
-        self.contact = None 
+        self.contact = None
         self.labels = {}
         self.icons = {}
         self.buttons = {}
         super(MapView, self).dealloc()
-    
+

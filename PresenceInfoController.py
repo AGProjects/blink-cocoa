@@ -27,7 +27,7 @@ class PresenceInfoController(NSObject):
     window = objc.IBOutlet()
     splitView = objc.IBOutlet()
     pidfView = objc.IBOutlet()
-    statusLabel = objc.IBOutlet() 
+    statusLabel = objc.IBOutlet()
     mapViewSplitView = objc.IBOutlet()
     mapView = objc.IBOutlet()
     icon = objc.IBOutlet()
@@ -77,7 +77,7 @@ class PresenceInfoController(NSObject):
 
     def render_pidf(self):
         has_locations = False
-        status_label = ''        
+        status_label = ''
         if self.contact.presence_state['devices']:
             has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             count = len(self.contact.presence_state['devices'])
@@ -98,7 +98,7 @@ class PresenceInfoController(NSObject):
                 self.pidfView.setFrame_(pidfViewFrame)
             self.mapView.setContact(self.contact)
             nr_countries = len(self.mapView.selectedCountries)
-            if nr_countries == 1: 
+            if nr_countries == 1:
                 status_label += ' in one country'
             elif nr_countries > 1:
                 status_label += ' in %d countries' % nr_countries
@@ -109,7 +109,7 @@ class PresenceInfoController(NSObject):
             self.pidfView.setFrame_(pidfViewFrame)
 
         self.statusLabel.setStringValue_(status_label)
-            
+
         text = ''
         for pidf in self.pidfs:
             text += self.build_pidf_text(pidf) + '\n\n'

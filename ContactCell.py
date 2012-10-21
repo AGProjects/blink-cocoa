@@ -132,15 +132,15 @@ class ContactCell(NSTextFieldCell):
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
             self.drawIcon(icon, 20, self.frame.origin.y + 22, 12, 12)
-        
+
         if not hasattr(self.contact, "presence_state"):
             return
-            
+
         try:
             has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
         except KeyError:
             return
-        
+
         if has_locations:
             left = self.view.frame().size.width - 20
             self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)

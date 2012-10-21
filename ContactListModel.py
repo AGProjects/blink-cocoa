@@ -74,7 +74,7 @@ ICON_SIZE = 128
 
 def status_icon_for_device(status):
     image = None
-    if status == 'busy': 
+    if status == 'busy':
         image = 'status-user-busy-icon'
     elif status == 'available':
         image = 'status-user-available-icon'
@@ -89,7 +89,7 @@ def status_icon_for_contact(contact, uri=None):
     image = None
     if uri is None:
         if hasattr(contact, "presence_state"):
-            if contact.presence_state['status']['busy']: 
+            if contact.presence_state['status']['busy']:
                 image = 'status-user-busy-icon'
             elif contact.presence_state['status']['available']:
                 image = 'status-user-available-icon'
@@ -110,24 +110,24 @@ def status_icon_for_contact(contact, uri=None):
             away = False
             busy = False
             extended_away = False
-            
+
             for pidf in pidfs:
                 if basic_status is 'closed':
                     basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
 
                 if available is False:
                     available = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
-                
+
                 if busy is False:
                     busy = any(service for service in pidf.services if service.status.extended == 'busy')
-                
+
                 if extended_away is False:
                     extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
-                
+
                 if away is False:
                     away = any(service for service in pidf.services if service.status.extended == 'away')
 
-            if busy: 
+            if busy:
                 image = 'status-user-busy-icon'
             elif available:
                 image = 'status-user-available-icon'
@@ -135,8 +135,8 @@ def status_icon_for_contact(contact, uri=None):
                 image = 'status-user-away-icon'
             elif extended_away:
                 image = 'status-user-extended-away-icon'
-        
-        return image     
+
+        return image
 
 
 def presence_indicator_bar_for_contact(contact):
@@ -149,8 +149,8 @@ def presence_indicator_bar_for_contact(contact):
             return "away"
         elif contact.presence_state['status']['away']:
             return "away"
-    
-    return "unknown"                        
+
+    return "unknown"
 
 class Avatar(object):
     def __init__(self, icon, path=None):
@@ -425,7 +425,7 @@ class BlinkConferenceContact(BlinkContact):
         self.presence_contact = presence_contact
         if self.presence_contact is not None:
             self.nc.add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
-        
+
         self.presence_indicator = None
         self.presence_note = None
         self.init_presence_state()
@@ -452,10 +452,10 @@ class BlinkConferenceContact(BlinkContact):
                                             'busy':          False
                             }
     }
- 
+
     def setPresenceIndicator(self, indicator):
         self.presence_indicator = indicator
-    
+
     @allocate_autorelease_pool
     def setPresenceNote(self):
         presence_notes = self.presence_state['presence_notes']
@@ -475,12 +475,12 @@ class BlinkConferenceContact(BlinkContact):
             detail = self.presence_note if self.presence_note else '%s' % self.uri
         else:
             detail = '%s' % self.uri
-        
+
         if detail != self.detail:
             self.detail = detail
-   
+
     def _NH_BlinkContactPresenceHasChaged(self, notification):
-        self.updatePresenceState() 
+        self.updatePresenceState()
 
     @allocate_autorelease_pool
     def updatePresenceState(self):
@@ -496,29 +496,29 @@ class BlinkConferenceContact(BlinkContact):
         presence_notes = []
         basic_status = 'closed'
         self.init_presence_state()
-        
+
         for pidf in pidfs:
             if basic_status is 'closed':
                 basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
-            
+
             if self.presence_state['status']['available'] is False:
                 self.presence_state['status']['available'] = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
-            
+
             if self.presence_state['status']['busy'] is False:
                 self.presence_state['status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
-            
+
             if self.presence_state['status']['extended-away'] is False:
                 self.presence_state['status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
-            
+
             if self.presence_state['status']['away'] is False:
                 self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
-            
+
             for service in pidf.services:
                 for note in service.notes:
                     if note:
                         presence_notes.append(note)
         pidfs = None
-    
+
         notes = list(unicode(note) for note in presence_notes)
         self.presence_state['presence_notes'] = notes
 
@@ -538,7 +538,7 @@ class BlinkPendingWatcher(BlinkContact):
         uri = sip_prefix_pattern.sub('', watcher.sipuri)
         super(BlinkPendingWatcher, self).__init__(uri, name=watcher.display_name)
         self.avatar = PendingWatcherAvatar()
-            
+
 
 class BlinkBlockedPresenceContact(BlinkContact):
     """Contact representation for a blocked policy contact"""
@@ -631,7 +631,7 @@ class BlinkPresenceContact(BlinkContact):
         try:
             resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key, exact_match=True))
         except Exception:
-            return 
+            return
 
         if not resources:
             return
@@ -640,9 +640,9 @@ class BlinkPresenceContact(BlinkContact):
             uri_text = sip_prefix_pattern.sub('', uri)
             if resource.state == 'pending':
                 self.presence_state['pending_authorizations'][resource.uri] = True
-                BlinkLogger().log_info(u"Subscription for availability information of %s is pending" % uri_text)                                                                                                                 
+                BlinkLogger().log_info(u"Subscription for availability information of %s is pending" % uri_text)
             if resource.state == 'terminated':
-                BlinkLogger().log_info(u"Subscription for availability information of %s is terminated" % uri_text)                                                                                                                 
+                BlinkLogger().log_info(u"Subscription for availability information of %s is terminated" % uri_text)
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -658,20 +658,20 @@ class BlinkPresenceContact(BlinkContact):
                     basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
 
                 _busy = any(service for service in pidf.services if service.status.extended == 'busy')
-                
+
                 if self.presence_state['status']['busy'] is False:
                     self.presence_state['status']['busy'] = _busy
-                
+
                 _available = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
 
                 if self.presence_state['status']['available'] is False:
                     self.presence_state['status']['available'] = _available
 
                 _away = any(service for service in pidf.services if service.status.extended == 'away')
-                
+
                 if self.presence_state['status']['away'] is False:
                     self.presence_state['status']['away'] = _away
-                
+
                 _extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
 
                 if self.presence_state['status']['extended-away'] is False:
@@ -687,7 +687,7 @@ class BlinkPresenceContact(BlinkContact):
                     device_wining_status = 'extended-away'
                 else:
                     device_wining_status = 'offline'
-                
+
                 _presence_notes = [unicode(note) for service in pidf.services for note in service.notes if note]
                 has_notes += len(_presence_notes)
 
@@ -695,7 +695,7 @@ class BlinkPresenceContact(BlinkContact):
                     aor = str(urllib.unquote(pidf.entity))
                     if not aor.startswith(('sip:', 'sips:')):
                         aor = 'sip:'+aor
-                            
+
                     if service.capabilities is not None:
                         caps = []
                         if service.capabilities.audio:
@@ -737,7 +737,7 @@ class BlinkPresenceContact(BlinkContact):
                                 device_wining_status = 'extended-away'
                             else:
                                 device_wining_status = 'offline'
-                        
+
                         device_text = '%s / %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
                         uri_text = sip_prefix_pattern.sub('', aor)
                         BlinkLogger().log_info(u"Got availability information from %s, device %s is %s" % (uri_text, device_text, device_wining_status))
@@ -746,11 +746,11 @@ class BlinkPresenceContact(BlinkContact):
                                                            'description': service.device_info.description,
                                                            'user_agent': service.device_info.user_agent,
                                                            'aor': aor,
-                                                           'contact': contact, 
+                                                           'contact': contact,
                                                            'location': service.map.value if service.map is not None else None,
-                                                           'local_time': offset_info_text, 
-                                                           'time_offset': offset_info, 
-                                                           'notes': _presence_notes, 
+                                                           'local_time': offset_info_text,
+                                                           'time_offset': offset_info,
+                                                           'notes': _presence_notes,
                                                            'status': device_wining_status,
                                                            'caps': caps}
                     else:
@@ -760,15 +760,15 @@ class BlinkPresenceContact(BlinkContact):
                                                             'description': None,
                                                             'user_agent': None,
                                                             'aor': aor,
-                                                            'contact': aor, 
+                                                            'contact': aor,
                                                             'location': None,
-                                                            'local_time': None, 
-                                                            'time_offset': None, 
-                                                            'notes': _presence_notes, 
+                                                            'local_time': None,
+                                                            'time_offset': None,
+                                                            'notes': _presence_notes,
                                                             'status': device_wining_status,
                                                             'caps': caps
                                                             }
-                    
+
 
             # discard notes from offline devices if others are online
             if devices:
@@ -779,8 +779,8 @@ class BlinkPresenceContact(BlinkContact):
                         try:
                             device['notes'].remove(note)
                         except ValueError:
-                            pass                   
-            
+                            pass
+
             self.presence_state['devices'] = devices
             indicator_bar = presence_indicator_bar_for_contact(self)
             self.setPresenceIndicator(indicator_bar)
@@ -1231,7 +1231,7 @@ class BlockedGroup(VirtualBlinkGroup):
     add_contact_allowed = False
     remove_contact_allowed = False
     delete_contact_allowed = False
-    
+
     def __init__(self, name=u'Blocked Contacts'):
         super(BlockedGroup, self).__init__(name)
 
@@ -1240,11 +1240,11 @@ class OnlineGroup(VirtualBlinkGroup):
     type = 'online_contacts'
     deletable = False
     ignore_search = True
-    
+
     add_contact_allowed = False
     remove_contact_allowed = False
     delete_contact_allowed = False
-    
+
     def __init__(self, name=u'Online Contacts'):
         super(OnlineGroup, self).__init__(name)
 
@@ -1530,12 +1530,12 @@ class CustomListModel(NSObject):
 
                 if isinstance(proposed_item, BlockedGroup):
                     return NSDragOperationNone
-                
+
                 if isinstance(proposed_item, OnlineGroup):
                     return NSDragOperationNone
-                
+
                 if isinstance(proposed_item, BlinkBlockedPresenceContact):
-                    return NSDragOperationNone                    
+                    return NSDragOperationNone
 
                 if isinstance(proposed_item, BlinkGroup):
                     # Dragged a contact to a group
@@ -2054,26 +2054,26 @@ class ContactListModel(CustomListModel):
         path = ApplicationData.get('contacts_')
         if not os.path.exists(path):
             return
-        
+
         BlinkLogger().log_info(u"Migrating old contacts to the new model...")
-        
+
         try:
             with open(path, 'r') as f:
                 data = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
             BlinkLogger().log_info(u"Couldn't load old contacts")
             return
-        
+
         for group_item in data:
             if type(group_item) == tuple:
                 if len(group_item) == 3:
                     group_item = (group_item[0], group_item[-1])
                 group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
-            
+
             # workaround because the special attribute wasn't saved
             if "special" not in group_item:
                 group_item["special"] = None
-            
+
             if group_item["special"] is None:
                 try:
                     group = Group()
@@ -2083,7 +2083,7 @@ class ContactListModel(CustomListModel):
                     group.save()
                 except DuplicateIDError:
                     pass
-                
+
                 if group:
                     for pickled_contact in group_item["contacts"]:
                         uri = unicode(pickled_contact["uri"].strip())
@@ -2092,20 +2092,20 @@ class ContactListModel(CustomListModel):
                             contact.name = pickled_contact["display_name"]
                         except KeyError:
                             pass
-                        
+
                         try:
                             contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
                         except KeyError:
                             pass
-                        
+
                         try:
                             contact.save()
                         except DuplicateIDError:
                             pass
         unlink(path)
-    
+
     def updatePresenceIndicator(self):
-        return        
+        return
         if change:
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
@@ -2119,8 +2119,8 @@ class ContactListModel(CustomListModel):
         elif self.pending_watchers_group in self.groupsList:
             self.groupsList.remove(self.pending_watchers_group)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-                        
-    def addPendingWatchers(self):   
+
+    def addPendingWatchers(self):
         for watcher_dict in self.pending_watchers_map.itervalues():
             for watcher in watcher_dict.values():
                 if not self.presencePolicyExistsForURI_(watcher.sipuri):
@@ -2180,7 +2180,7 @@ class ContactListModel(CustomListModel):
         # Load virtual groups
         vgm = VirtualGroupsManager()
         vgm.load()
-                        
+
     def _NH_SIPAccountGotPresenceWinfo(self, notification):
         watcher_list = notification.data.watcher_list
         if notification.data.state == 'full':
@@ -2228,7 +2228,7 @@ class ContactListModel(CustomListModel):
                 else:
                     # TODO: set displayname if it didn't have one?
                     pass
-            
+
             terminated_watchers = set([watcher.sipuri for watcher in watcher_list.terminated])
             for sipuri in terminated_watchers:
                 uri = sip_prefix_pattern.sub('', sipuri)
@@ -2244,7 +2244,7 @@ class ContactListModel(CustomListModel):
                         del self.active_watchers_map[notification.sender.id][watcher.sipuri]
                     except KeyError:
                         pass
-                        
+
 
         self.renderPendingWatchersGroupIfNecessary()
 
@@ -2490,7 +2490,7 @@ class ContactListModel(CustomListModel):
                 self.pending_watchers_group.contacts.remove(gui_watcher)
                 self.renderPendingWatchersGroupIfNecessary()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-    
+
     def _NH_AddressbookPolicyWasDeleted(self, notification):
         policy = notification.sender
         if policy.presence.policy == 'block':
@@ -2549,7 +2549,7 @@ class ContactListModel(CustomListModel):
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group]+self.groupsList)
         self.presence_contacts.remove(blink_contact)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-        self.addPendingWatchers()   
+        self.addPendingWatchers()
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
@@ -2558,13 +2558,13 @@ class ContactListModel(CustomListModel):
         if 'icon' in notification.data.modified:
             blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
             blink_contact.avatar.save()
-        
+
         if 'presence.subscribe' in notification.data.modified:
             if contact.presence.subscribe and blink_contact.presence_indicator is None:
                 blink_contact.presence_indicator = 'unknown'
             elif not contact.presence.subscribe:
                 blink_contact.presence_indicator = None
-    
+
         if set(['default_uri', 'uris']).intersection(notification.data.modified):
             blink_contact.detail = blink_contact.uri
             blink_contact._set_username_and_domain()
@@ -2983,7 +2983,7 @@ class ContactListModel(CustomListModel):
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
             contact.save()
-    
+
             self.removePolicyForContactURIs(contact)
 
             old_groups = set(self.getBlinkGroupsForBlinkContact(item))
