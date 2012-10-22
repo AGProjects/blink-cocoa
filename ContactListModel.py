@@ -814,7 +814,7 @@ class BlinkPresenceContact(BlinkContact):
                 model.online_contacts_group.sortContacts()
         else:
             if status == "unknown":
-                self.online_group.contacts.remove(online_contact)
+                model.online_contacts_group.contacts.remove(online_contact)
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
