@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1070</int>
-		<string key="IBDocument.SystemVersion">11E2620</string>
+		<string key="IBDocument.SystemVersion">11G63</string>
 		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
-		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.AppKitVersion">1138.51</string>
 		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -42,7 +42,7 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSWindowTemplate" id="1005">
-				<int key="NSWindowStyleMask">143</int>
+				<int key="NSWindowStyleMask">15</int>
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 240}, {633, 532}}</string>
 				<int key="NSWTFlags">1618477056</int>
@@ -125,7 +125,7 @@
 							<string key="NSFrame">{{69, 471}, {516, 23}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="450212841"/>
+							<reference key="NSNextKeyView" ref="55977457"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<string key="NSAntiCompressionPriority">{250, 750}</string>
 							<bool key="NSEnabled">YES</bool>
@@ -194,7 +194,7 @@
 														<object class="NSTextView" id="1064085305">
 															<reference key="NSNextResponder" ref="753435104"/>
 															<int key="NSvFlags">2322</int>
-															<string key="NSFrameSize">{614, 12}</string>
+															<string key="NSFrameSize">{614, 14}</string>
 															<reference key="NSSuperview" ref="753435104"/>
 															<reference key="NSWindow"/>
 															<reference key="NSNextKeyView" ref="319407803"/>
@@ -351,7 +351,7 @@
 											<string key="NSFrameSize">{611, 224.5}</string>
 											<reference key="NSSuperview" ref="851557989"/>
 											<reference key="NSWindow"/>
-											<reference key="NSNextKeyView"/>
+											<reference key="NSNextKeyView" ref="450212841"/>
 											<string key="NSReuseIdentifierKey">_NS:9</string>
 											<string key="NSClassName">MapView</string>
 										</object>
@@ -377,7 +377,7 @@
 							<string key="NSFrame">{{15, 3}, {610, 11}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="55977457"/>
+							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:1505</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="379863486">
