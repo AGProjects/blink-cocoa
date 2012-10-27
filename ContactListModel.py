@@ -2381,6 +2381,10 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BonjourGroupWasActivated", sender=self)
         else:
             self.updatePresenceIndicator()
+            try:
+                del self.active_watchers_map[notification.sender.id]
+            except KeyError:
+                pass
 
     def _NH_SIPAccountDidDeactivate(self, notification):
         if notification.sender is BonjourAccount():
