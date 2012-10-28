@@ -740,7 +740,7 @@ class BlinkPresenceContact(BlinkContact):
 
                         device_text = '%s / %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
                         uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Got availability information from %s, device %s is %s" % (uri_text, device_text, device_wining_status))
+                        BlinkLogger().log_info(u"Received availability information from %s, device %s is %s" % (uri_text, device_text, device_wining_status))
                         devices[service.device_info.id] = {
                                                            'id': service.device_info.id,
                                                            'description': service.device_info.description,
@@ -755,7 +755,7 @@ class BlinkPresenceContact(BlinkContact):
                                                            'caps': caps}
                     else:
                         uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Got availability information from %s, service %s is %s" % (uri_text, service.id, device_wining_status))
+                        BlinkLogger().log_info(u"Received availability information from %s, service %s is %s" % (uri_text, service.id, device_wining_status))
                         devices[service.id] = {             'id': service.id,
                                                             'description': None,
                                                             'user_agent': None,
