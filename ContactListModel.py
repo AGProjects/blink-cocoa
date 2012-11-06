@@ -1094,8 +1094,11 @@ class SystemAddressBookBlinkContact(BlinkContact):
         self.detail = detail
         image_data = ab_contact.imageData()
         if image_data:
-            icon = NSImage.alloc().initWithData_(image_data)
-            self.avatar = Avatar(icon)
+            try:
+                icon = NSImage.alloc().initWithData_(image_data)
+                self.avatar = Avatar(icon)
+            except Exception:
+                self.avatar = DefaultUserAvatar()
         else:
             self.avatar = DefaultUserAvatar()
         self._set_username_and_domain()
