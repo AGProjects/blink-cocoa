@@ -641,9 +641,9 @@ class BlinkPresenceContact(BlinkContact):
             uri_text = sip_prefix_pattern.sub('', uri)
             if resource.state == 'pending':
                 self.presence_state['pending_authorizations'][resource.uri] = True
-                BlinkLogger().log_info(u"Subscription for availability information of %s is pending" % uri_text)
+                BlinkLogger().log_info(u"Subscription for availability of %s is pending" % uri_text)
             if resource.state == 'terminated':
-                BlinkLogger().log_info(u"Subscription for availability information of %s is terminated" % uri_text)
+                BlinkLogger().log_info(u"Subscription for availability of %s is terminated" % uri_text)
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -739,9 +739,9 @@ class BlinkPresenceContact(BlinkContact):
                             else:
                                 device_wining_status = 'offline'
 
-                        device_text = '%s / %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
+                        device_text = '%s running %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
                         uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Received availability information from %s, device %s is %s" % (uri_text, device_text, device_wining_status))
+                        BlinkLogger().log_info(u"Device %s of %s is %s" % (device_text, uri_text, device_wining_status))
                         devices[service.device_info.id] = {
                                                            'id': service.device_info.id,
                                                            'description': service.device_info.description,
@@ -756,7 +756,7 @@ class BlinkPresenceContact(BlinkContact):
                                                            'caps': caps}
                     else:
                         uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Received availability information from %s, service %s is %s" % (uri_text, service.id, device_wining_status))
+                        BlinkLogger().log_info(u"Service %s of %s is %s" % (service.id, uri_text, device_wining_status))
                         devices[service.id] = {             'id': service.id,
                                                             'description': None,
                                                             'user_agent': None,
@@ -804,6 +804,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     def addToOrRemoveFromOnlineGroup(self):
+        # TODO, why an invisible contact does no vanish from online group? 
         status = presence_indicator_bar_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         online_contact = None
@@ -2922,6 +2923,7 @@ class ContactListModel(CustomListModel):
                 blink_group.group.save()
 
     def addContact(self, address="", group=None, name=None, type=None):
+        # TODO: Add button is disabled when add contact from new contact request
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
