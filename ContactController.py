@@ -59,7 +59,7 @@ class AddContactController(NSObject):
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
         self.loadGroupNames()
-        self.addButton.setEnabled_(False)
+        self.addButton.setEnabled_(True if self.uris else False)
 
     @property
     def model(self):
