@@ -804,7 +804,6 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     def addToOrRemoveFromOnlineGroup(self):
-        # TODO, why an invisible contact does no vanish from online group? 
         status = presence_indicator_bar_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         online_contact = None
@@ -2923,7 +2922,6 @@ class ContactListModel(CustomListModel):
                 blink_group.group.save()
 
     def addContact(self, address="", group=None, name=None, type=None):
-        # TODO: Add button is disabled when add contact from new contact request
         if isinstance(address, SIPURI):
             address = address.user + "@" + address.host
 
