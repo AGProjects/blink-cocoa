@@ -602,11 +602,8 @@ class BlinkPresenceContact(BlinkContact):
         self.setPresenceNote()
 
     def dealloc(self):
-        self.avatar = None
-        self.pidfs_map = None
         self.timer.invalidate()
         self.nc.remove_observer(self, name="SIPAccountGotPresenceState")
-        self.nc = None
         model = NSApp.delegate().contactsWindowController.model
         try:
             online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
@@ -614,7 +611,11 @@ class BlinkPresenceContact(BlinkContact):
             pass
         else:
             model.online_contacts_group.contacts.remove(self)
+            self.nc.post_notification("BlinkContactPresenceHasChaged", sender=self)
 
+        self.avatar = None
+        self.pidfs_map = None
+        self.nc = None
         super(BlinkContact, self).dealloc()
 
     @allocate_autorelease_pool
