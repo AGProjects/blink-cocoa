@@ -353,7 +353,7 @@ class PresencePublisher(object):
                 location = '%s/%s' % (self.location['country'], self.location['city'])
                 service.map=cipid.Map(location)
             elif self.location['country']:
-                service.map=cipid.Map(location['country'])
+                service.map=cipid.Map(self.location['country'])
 
         try:
             xcap_caps_discovered = self.xcap_caps_discovered[account]
