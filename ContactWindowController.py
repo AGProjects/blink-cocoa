@@ -228,8 +228,10 @@ class ContactWindowController(NSWindowController):
     white = None
     presenceInfoPanel = None
 
+    statusbar = NSStatusBar.systemStatusBar()
 
     def awakeFromNib(self):
+
         # check how much space there is left for the search Outline, so we can restore it after
         # minimizing
         self.searchOutlineTopOffset = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - NSHeight(self.searchOutline.enclosingScrollView().frame())
@@ -359,6 +361,16 @@ class ContactWindowController(NSWindowController):
 
         self.presencePublisher = PresencePublisher(self)
 
+        self.statusitem = self.statusbar.statusItemWithLength_(NSVariableStatusItemLength)
+        icon = NSImage.imageNamed_('blink')
+        icon.setScalesWhenResized_(True)
+        icon.setSize_(NSMakeSize(16,16))
+
+        self.statusitem.setImage_(icon)
+        self.statusitem.setHighlightMode_(1)
+        self.statusitem.setToolTip_(NSApp.delegate().applicationName)
+        self.statusitem.setMenu_(self.presenceMenu)
+                
         self.loaded = True
 
     def fillPresenceMenu(self, presenceMenu):
