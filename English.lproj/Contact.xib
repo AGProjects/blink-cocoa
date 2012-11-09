@@ -127,27 +127,28 @@
 						<object class="NSButton" id="745738533">
 							<reference key="NSNextResponder" ref="921081791"/>
 							<int key="NSvFlags">265</int>
-							<string key="NSFrame">{{96, 142}, {25, 19}}</string>
+							<string key="NSFrame">{{50, 146}, {70, 16}}</string>
 							<reference key="NSSuperview" ref="921081791"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="857803524"/>
+							<reference key="NSNextKeyView" ref="35706404"/>
 							<int key="NSTag">21</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="909953818">
 								<int key="NSCellFlags">-2080244224</int>
-								<int key="NSCellFlags2">134217728</int>
-								<string key="NSContents"/>
+								<int key="NSCellFlags2">134479872</int>
+								<string key="NSContents">Clear</string>
 								<object class="NSFont" key="NSSupport">
-									<string key="NSName">LucidaGrande-Bold</string>
-									<double key="NSSize">12</double>
-									<int key="NSfFlags">16</int>
+									<string key="NSName">LucidaGrande</string>
+									<double key="NSSize">9</double>
+									<int key="NSfFlags">3614</int>
 								</object>
 								<reference key="NSControlView" ref="745738533"/>
-								<int key="NSButtonFlags">-2042347265</int>
-								<int key="NSButtonFlags2">109</int>
-								<object class="NSCustomResource" key="NSNormalImage">
-									<string key="NSClassName">NSImage</string>
-									<string key="NSResourceName">trash</string>
+								<int key="NSButtonFlags">-2038021889</int>
+								<int key="NSButtonFlags2">65</int>
+								<object class="NSFont" key="NSAlternateImage">
+									<string key="NSName">LucidaGrande</string>
+									<double key="NSSize">9</double>
+									<int key="NSfFlags">16</int>
 								</object>
 								<string key="NSAlternateContents"/>
 								<string key="NSKeyEquivalent"/>
@@ -184,7 +185,7 @@
 							<string key="NSFrame">{{129, 271}, {337, 22}}</string>
 							<reference key="NSSuperview" ref="921081791"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="35706404"/>
+							<reference key="NSNextKeyView" ref="745738533"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="707394472">
 								<int key="NSCellFlags">-1271792063</int>
@@ -295,7 +296,7 @@
 								<string>NeXT Encapsulated PostScript v1.2 pasteboard type</string>
 								<string>NeXT TIFF v4.0 pasteboard type</string>
 							</set>
-							<string key="NSFrame">{{41, 165}, {78, 83}}</string>
+							<string key="NSFrame">{{48, 167}, {74, 80}}</string>
 							<reference key="NSSuperview" ref="921081791"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="479516009"/>
@@ -775,7 +776,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 									<string key="NSFrame">{{458, 17}, {15, 228}}</string>
 									<reference key="NSSuperview" ref="479516009"/>
 									<reference key="NSWindow"/>
-									<reference key="NSNextKeyView" ref="745738533"/>
+									<reference key="NSNextKeyView" ref="857803524"/>
 									<reference key="NSTarget" ref="479516009"/>
 									<string key="NSAction">_doScroller:</string>
 									<double key="NSCurValue">37</double>
@@ -942,22 +943,22 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 								<string key="NSKeyEquivalent"/>
 								<int key="NSPeriodicDelay">400</int>
 								<int key="NSPeriodicInterval">75</int>
-								<nil key="NSMenuItem"/>
+								<object class="NSMenuItem" key="NSMenuItem" id="1012869653">
+									<reference key="NSMenu" ref="189998304"/>
+									<string key="NSTitle">Click to Manage Policy</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<int key="NSState">1</int>
+									<reference key="NSOnImage" ref="270490793"/>
+									<reference key="NSMixedImage" ref="748515761"/>
+									<string key="NSAction">_popUpItemAction:</string>
+									<reference key="NSTarget" ref="1011215250"/>
+								</object>
 								<bool key="NSMenuItemRespectAlignment">YES</bool>
 								<object class="NSMenu" key="NSMenu" id="189998304">
 									<string key="NSTitle">OtherViews</string>
 									<array class="NSMutableArray" key="NSMenuItems">
-										<object class="NSMenuItem" id="1012869653">
-											<reference key="NSMenu" ref="189998304"/>
-											<string key="NSTitle">Click to Manage Policy</string>
-											<string key="NSKeyEquiv"/>
-											<int key="NSMnemonicLoc">2147483647</int>
-											<int key="NSState">1</int>
-											<reference key="NSOnImage" ref="270490793"/>
-											<reference key="NSMixedImage" ref="748515761"/>
-											<string key="NSAction">_popUpItemAction:</string>
-											<reference key="NSTarget" ref="1011215250"/>
-										</object>
+										<reference ref="1012869653"/>
 										<object class="NSMenuItem" id="422792385">
 											<reference key="NSMenu" ref="189998304"/>
 											<bool key="NSIsDisabled">YES</bool>
@@ -1078,7 +1079,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="244898210"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">add-contact</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
@@ -1330,9 +1331,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<reference ref="215405587"/>
 							<reference ref="479516009"/>
 							<reference ref="785564323"/>
-							<reference ref="35706404"/>
 							<reference ref="649453017"/>
-							<reference ref="745738533"/>
 							<reference ref="857803524"/>
 							<reference ref="727414931"/>
 							<reference ref="91485061"/>
@@ -1341,6 +1340,8 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<reference ref="917737642"/>
 							<reference ref="895964238"/>
 							<reference ref="975612710"/>
+							<reference ref="745738533"/>
+							<reference ref="35706404"/>
 						</array>
 						<reference key="parent" ref="595080466"/>
 					</object>
@@ -2039,7 +2040,6 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 		<dictionary class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">
 			<string key="NSMenuCheckmark">{11, 11}</string>
 			<string key="NSMenuMixedState">{10, 3}</string>
-			<string key="trash">{128, 128}</string>
 		</dictionary>
 	</data>
 </archive>
