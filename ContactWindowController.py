@@ -190,7 +190,6 @@ class ContactWindowController(NSWindowController):
     recordingsMenu = objc.IBOutlet()
     contactsMenu = objc.IBOutlet()
     devicesMenu = objc.IBOutlet()
-    statusMenu = objc.IBOutlet()
     toolsMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
@@ -325,10 +324,8 @@ class ContactWindowController(NSWindowController):
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             # Answering machine
-            item = self.statusMenu.itemWithTag_(50)
+            item = self.statusBarMenu.itemWithTag_(50)
             item.setEnabled_(False)
-            item.setHidden_(True)
-            item = self.statusMenu.itemWithTag_(55)
             item.setHidden_(True)
 
             # History menu
@@ -2381,27 +2378,6 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(5).setHidden_(True)
             self.blinkMenu.itemWithTag_(6).setHidden_(True)
 
-    def updateStatusMenu(self):
-        settings = SIPSimpleSettings()
-
-        item = self.statusMenu.itemWithTag_(50) # answering machine
-        item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
-
-        item = self.statusMenu.itemWithTag_(51) # chat
-        item.setState_(settings.chat.auto_accept and NSOnState or NSOffState)
-        item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('chat'))
-
-        item = self.statusMenu.itemWithTag_(52) # file
-        item.setState_(settings.file_transfer.auto_accept and NSOnState or NSOffState)
-        item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
-
-        item = self.statusMenu.itemWithTag_(60) # my video delimiter
-        item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
-
-        item = self.statusMenu.itemWithTag_(61) # my video
-        item.setState_(self.mirrorWindow and self.mirrorWindow.visible and NSOnState or NSOffState)
-        item.setHidden_(False if self.sessionControllersManager.isMediaTypeSupported('video') else True)
-
     def updateToolsMenu(self):
         account = self.activeAccount()
 
@@ -3614,8 +3590,6 @@ class ContactWindowController(NSWindowController):
             self.updateRecordingsMenu()
         elif menu == self.contactContextMenu:
             self.updateContactContextMenu()
-        elif menu == self.statusMenu:
-            self.updateStatusMenu()
         elif menu == self.presenceWatchersMenu:
             self.updatePresenceWatchersMenu(menu)
         elif menu == self.presenceMenu:
@@ -3623,6 +3597,10 @@ class ContactWindowController(NSWindowController):
         elif menu == self.presencePopUpMenu:
             self.updatePresenceActivityMenu(menu)
         elif menu == self.statusBarMenu:
+            settings = SIPSimpleSettings()
+            item = menu.itemWithTag_(50) # answering machine
+            item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
+
             item = menu.itemWithTag_(300) # mute
             item.setState_(NSOnState if self.backend.is_muted() else NSOffState)
 
