@@ -2885,6 +2885,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def focusSearchTextField_(self, sender):
+        NSApp.activateIgnoringOtherApps_(True)
         self.focusSearchTextField()
 
     def focusSearchTextField(self):

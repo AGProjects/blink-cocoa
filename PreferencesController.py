@@ -93,6 +93,7 @@ class PreferencesController(NSWindowController, object):
             view.restore()
 
         self.validateAddAccountButton()
+        NSApp.activateIgnoringOtherApps_(True)
         NSWindowController.showWindow_(self, sender)
 
     def validateAddAccountButton(self):
