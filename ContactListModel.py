@@ -75,13 +75,15 @@ ICON_SIZE = 128
 def status_icon_for_device(status):
     image = None
     if status == 'busy':
-        image = 'status-user-busy-icon'
+        image = 'busy'
     elif status == 'available':
-        image = 'status-user-available-icon'
+        image = 'available'
     elif status == 'away':
-        image = 'status-user-away-icon'
+        image = 'away'
     elif status == 'extended-away':
-        image = 'status-user-extended-away-icon'
+        image = 'away'
+    elif status == 'offline':
+        image = 'offline'
     return image
 
 
@@ -90,13 +92,13 @@ def status_icon_for_contact(contact, uri=None):
     if uri is None:
         if hasattr(contact, "presence_state"):
             if contact.presence_state['status']['busy']:
-                image = 'status-user-busy-icon'
+                image = 'busy'
             elif contact.presence_state['status']['available']:
-                image = 'status-user-available-icon'
+                image = 'available'
             elif contact.presence_state['status']['away']:
-                image = 'status-user-away-icon'
+                image = 'away'
             elif contact.presence_state['status']['extended-away']:
-                image = 'status-user-extended-away-icon'
+                image = 'away'
         return image
     else:
         try:
@@ -128,13 +130,13 @@ def status_icon_for_contact(contact, uri=None):
                     away = any(service for service in pidf.services if service.status.extended == 'away')
 
             if busy:
-                image = 'status-user-busy-icon'
+                image = 'busy'
             elif available:
-                image = 'status-user-available-icon'
+                image = 'available'
             elif away:
-                image = 'status-user-away-icon'
+                image = 'away'
             elif extended_away:
-                image = 'status-user-extended-away-icon'
+                image = 'away'
 
         return image
 

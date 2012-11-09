@@ -39,7 +39,7 @@ PresenceActivityList = (
                                            'title':           u"Available",
                                            'basic_status':    'open',
                                            'extended_status': 'available',
-                                           'image':           'status-user-available-icon',
+                                           'image':           'available',
                                            'note':            ''
                                            }
                        },
@@ -51,7 +51,7 @@ PresenceActivityList = (
                                            'title':           u"Away",
                                            'basic_status':    'open',
                                            'extended_status': 'away',
-                                           'image':           'status-user-away-icon',
+                                           'image':           'away',
                                            'note':            ''
                                            }
                        },
@@ -63,7 +63,7 @@ PresenceActivityList = (
                                            'title':           u"Busy",
                                            'basic_status':    'open',
                                            'extended_status': 'busy',
-                                           'image':           'status-user-busy-icon',
+                                           'image':           'busy',
                                            'note':            ''
                                            }
                        },
@@ -75,7 +75,7 @@ PresenceActivityList = (
                                            'title':            u"Invisible",
                                            'basic_status':     'closed',
                                            'extended_status':  'offline',
-                                           'image':            None,
+                                           'image':            'offline',
                                            'note':             ''
                                            }
                        },

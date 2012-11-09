@@ -384,17 +384,15 @@ class ContactWindowController(NSWindowController):
 
             if item['represented_object'] is not None:
                 try:
-                    if item['represented_object']['image'] is not None:
-                        image = NSImage.imageNamed_(item['represented_object']['image'])
-                        image.setScalesWhenResized_(True)
-                        image.setSize_(NSMakeSize(12,12))
-                        lastItem.setImage_(image)
-                    else:
-                        try:
-                            extended_status = item['represented_object']['extended_status']
-                            lastItem.setImage_(dots[item['represented_object']['extended_status']])
-                        except KeyError:
-                            pass
+                    try:
+                        icon = status_icon_for_device(item['represented_object']['extended_status'])
+                        if icon is not None:
+                            image = NSImage.imageNamed_(icon)
+                            image.setScalesWhenResized_(True)
+                            image.setSize_(NSMakeSize(15,15))
+                            lastItem.setImage_(image)                    
+                    except KeyError:
+                        pass
                 except KeyError:
                     pass
                 lastItem.setRepresentedObject_(item['represented_object'])
@@ -2245,7 +2243,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setIndentationLevel_(1)
                 icon = dots['offline'] if not item['image'] else NSImage.imageNamed_(item['image'])
                 icon.setScalesWhenResized_(True)
-                icon.setSize_(NSMakeSize(12,12))
+                icon.setSize_(NSMakeSize(15,15))
                 lastItem.setImage_(icon)
                 self.presenceWatchersMenu.addItem_(lastItem)
 
@@ -2289,14 +2287,12 @@ class ContactWindowController(NSWindowController):
             title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
             lastItem.setAttributedTitle_(title)
             lastItem.setRepresentedObject_(item)
-            if item['image'] is not None:
-                image = NSImage.imageNamed_(item['image'])
+            icon = status_icon_for_device(item['extended_status'])
+            if icon is not None:
+                image = NSImage.imageNamed_(icon)
                 image.setScalesWhenResized_(True)
-                image.setSize_(NSMakeSize(12,12))
+                image.setSize_(NSMakeSize(15,15))
                 lastItem.setImage_(image)
-            else:
-                if item['extended_status'] is not None:
-                    lastItem.setImage_(dots[item['extended_status']])
             lastItem.setRepresentedObject_(item)
             lastItem.setTarget_(self)
             menu.addItem_(lastItem)
@@ -3166,7 +3162,7 @@ class ContactWindowController(NSWindowController):
                         image = status_icon_for_contact(item, uri.uri)
                         icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                         icon.setScalesWhenResized_(True)
-                        icon.setSize_(NSMakeSize(12,12))
+                        icon.setSize_(NSMakeSize(15,15))
                         audio_item.setImage_(icon)
 
                 if devices:
@@ -3185,7 +3181,7 @@ class ContactWindowController(NSWindowController):
                         image = status_icon_for_device(device['status'])
                         icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                         icon.setScalesWhenResized_(True)
-                        icon.setSize_(NSMakeSize(12,12))
+                        icon.setSize_(NSMakeSize(15,15))
                         audio_item.setImage_(icon)
                         audio_item.setIndentationLevel_(1)
                         if device['caps'] is not None and 'audio' not in device['caps']:
@@ -3207,7 +3203,7 @@ class ContactWindowController(NSWindowController):
                                 image = status_icon_for_contact(item, uri.uri)
                                 icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(12,12))
+                                icon.setSize_(NSMakeSize(15,15))
                                 chat_item.setImage_(icon)
 
                     if devices:
@@ -3226,7 +3222,7 @@ class ContactWindowController(NSWindowController):
                             image = status_icon_for_device(device['status'])
                             icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                             icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(12,12))
+                            icon.setSize_(NSMakeSize(15,15))
                             chat_item.setImage_(icon)
                             chat_item.setIndentationLevel_(1)
                             if device['caps'] is not None and 'chat' not in device['caps']:
@@ -3246,7 +3242,7 @@ class ContactWindowController(NSWindowController):
                             image = status_icon_for_contact(item, uri.uri)
                             icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                             icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(12,12))
+                            icon.setSize_(NSMakeSize(15,15))
                             sms_item.setImage_(icon)
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
@@ -3263,7 +3259,7 @@ class ContactWindowController(NSWindowController):
                                     image = status_icon_for_contact(item, uri.uri)
                                     icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(12,12))
+                                    icon.setSize_(NSMakeSize(15,15))
                                     ft_item.setImage_(icon)
 
                         if devices:
@@ -3283,7 +3279,7 @@ class ContactWindowController(NSWindowController):
                                 image = status_icon_for_device(device['status'])
                                 icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(12,12))
+                                icon.setSize_(NSMakeSize(15,15))
                                 ft_item.setImage_(icon)
                                 ft_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'file-transfer' not in device['caps']:
@@ -3305,7 +3301,7 @@ class ContactWindowController(NSWindowController):
                                     image = status_icon_for_contact(item, uri.uri)
                                     icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(12,12))
+                                    icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
 
                         if devices:
@@ -3325,7 +3321,7 @@ class ContactWindowController(NSWindowController):
                                 icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                 ds_item.setTag_(1)
                                 icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(12,12))
+                                icon.setSize_(NSMakeSize(15,15))
                                 ds_item.setImage_(icon)
                                 ds_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'screen-sharing' not in device['caps']:
@@ -3347,7 +3343,7 @@ class ContactWindowController(NSWindowController):
                                     image = status_icon_for_contact(item, uri.uri)
                                     icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(12,12))
+                                    icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
 
                         if devices:
@@ -3366,7 +3362,7 @@ class ContactWindowController(NSWindowController):
                                 image = status_icon_for_device(device['status'])
                                 icon = dots['offline'] if not image else NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(12,12))
+                                icon.setSize_(NSMakeSize(15,15))
                                 ds_item.setTag_(2)
                                 ds_item.setImage_(icon)
                                 ds_item.setIndentationLevel_(1)
