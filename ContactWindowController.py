@@ -229,6 +229,7 @@ class ContactWindowController(NSWindowController):
     presenceInfoPanel = None
 
     statusbar = NSStatusBar.systemStatusBar()
+    statusBarMenu = objc.IBOutlet()
 
     def awakeFromNib(self):
 
@@ -365,8 +366,8 @@ class ContactWindowController(NSWindowController):
         self.setStatusItemIcon()
         self.statusitem.setHighlightMode_(1)
         self.statusitem.setToolTip_(NSApp.delegate().applicationName)
-        self.statusitem.setMenu_(self.presenceMenu)
-                
+        self.statusitem.setMenu_(self.statusBarMenu)
+
         self.loaded = True
 
     def fillPresenceMenu(self, presenceMenu):
@@ -3615,12 +3616,24 @@ class ContactWindowController(NSWindowController):
             self.updateContactContextMenu()
         elif menu == self.statusMenu:
             self.updateStatusMenu()
-        elif menu == self.presenceMenu:
-            self.updatePresenceActivityMenu(menu)
         elif menu == self.presenceWatchersMenu:
             self.updatePresenceWatchersMenu(menu)
+        elif menu == self.presenceMenu:
+            self.updatePresenceActivityMenu(menu)
         elif menu == self.presencePopUpMenu:
             self.updatePresenceActivityMenu(menu)
+        elif menu == self.statusBarMenu:
+            item = menu.itemWithTag_(300) # mute
+            item.setState_(NSOnState if self.backend.is_muted() else NSOffState)
+
+            item = menu.itemWithTag_(301) # silent
+            settings = SIPSimpleSettings()
+            item.setState_(NSOnState if settings.audio.silent else NSOffState)
+
+            item = menu.itemWithTag_(302) # dnd
+            account = AccountManager().default_account
+            item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
+            item.setEnabled_(True)
         elif menu == self.callMenu:
             self.updateCallMenu()
         elif menu == self.groupMenu:
