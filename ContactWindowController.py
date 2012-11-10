@@ -2274,8 +2274,8 @@ class ContactWindowController(NSWindowController):
         menu.removeItemAtIndex_(offline_idx)
         lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceOfflineNote:", "")
         settings = SIPSimpleSettings()
-        note = settings.presence_state.offline_note
-        title = NSAttributedString.alloc().initWithString_attributes_(note or 'Not set', attributes)
+        offline_note = settings.presence_state.offline_note
+        title = NSAttributedString.alloc().initWithString_attributes_(offline_note or 'Not Set', attributes)
         lastItem.setAttributedTitle_(title)
         lastItem.setIndentationLevel_(2)
         lastItem.setEnabled_(False)
