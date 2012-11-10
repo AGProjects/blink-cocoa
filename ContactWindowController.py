@@ -68,16 +68,6 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
-dotPath = NSBezierPath.bezierPathWithOvalInRect_(NSMakeRect(1, 1, 11, 11))
-dots = {}
-for i, color in [('busy', NSColor.redColor()), ('away', NSColor.redColor()), ('extended-away', NSColor.redColor()), ('offline', NSColor.grayColor()), ('available', NSColor.greenColor())]:
-    dot = NSImage.alloc().initWithSize_(NSMakeSize(12, 12))
-    dot.lockFocus()
-    color.set()
-    dotPath.fill()
-    dot.unlockFocus()
-    dots[i] = dot
-
 
 class PhotoView(NSImageView):
     entered = False
@@ -2244,7 +2234,7 @@ class ContactWindowController(NSWindowController):
                 uri = watcher.split(':')[1]
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
-                items[title] = {'image': None, 'contact' : None}
+                items[title] = {'image': 'offline', 'contact' : None}
                 if isinstance(contact, BlinkPresenceContact):
                     items[title]['image'] = status_icon_for_contact(contact)
                     items[title]['contact'] = contact
@@ -2256,7 +2246,7 @@ class ContactWindowController(NSWindowController):
                 lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, 'editContact:', "")
                 lastItem.setRepresentedObject_(item['contact'])
                 lastItem.setIndentationLevel_(1)
-                icon = dots['offline'] if not item['image'] else NSImage.imageNamed_(item['image'])
+                icon = NSImage.imageNamed_(item['image'])
                 icon.setScalesWhenResized_(True)
                 icon.setSize_(NSMakeSize(15,15))
                 lastItem.setImage_(icon)
@@ -3173,7 +3163,7 @@ class ContactWindowController(NSWindowController):
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
                         image = status_icon_for_contact(item, uri.uri)
-                        icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                        icon = NSImage.imageNamed_(image)
                         icon.setScalesWhenResized_(True)
                         icon.setSize_(NSMakeSize(15,15))
                         audio_item.setImage_(icon)
@@ -3192,7 +3182,7 @@ class ContactWindowController(NSWindowController):
                         audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_(title, "startAudioSessionWithSIPURI:", "")
                         audio_item.setRepresentedObject_(device['contact'])
                         image = status_icon_for_device(device['status'])
-                        icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                        icon = NSImage.imageNamed_(image)
                         icon.setScalesWhenResized_(True)
                         icon.setSize_(NSMakeSize(15,15))
                         audio_item.setImage_(icon)
@@ -3214,7 +3204,7 @@ class ContactWindowController(NSWindowController):
                             chat_item.setRepresentedObject_(target_uri)
                             if isinstance(item, BlinkPresenceContact):
                                 image = status_icon_for_contact(item, uri.uri)
-                                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                icon = NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
                                 chat_item.setImage_(icon)
@@ -3233,7 +3223,7 @@ class ContactWindowController(NSWindowController):
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_(title, "startChatSessionWithSIPURI:", "")
                             chat_item.setRepresentedObject_(device['contact'])
                             image = status_icon_for_device(device['status'])
-                            icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                            icon = NSImage.imageNamed_(image)
                             icon.setScalesWhenResized_(True)
                             icon.setSize_(NSMakeSize(15,15))
                             chat_item.setImage_(icon)
@@ -3253,7 +3243,7 @@ class ContactWindowController(NSWindowController):
                         sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
                             image = status_icon_for_contact(item, uri.uri)
-                            icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                            icon = NSImage.imageNamed_(image)
                             icon.setScalesWhenResized_(True)
                             icon.setSize_(NSMakeSize(15,15))
                             sms_item.setImage_(icon)
@@ -3270,7 +3260,7 @@ class ContactWindowController(NSWindowController):
                                 ft_item.setRepresentedObject_(target_uri)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
-                                    icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                    icon = NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ft_item.setImage_(icon)
@@ -3290,7 +3280,7 @@ class ContactWindowController(NSWindowController):
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_(title, "sendFile:", "")
                                 ft_item.setRepresentedObject_(device['contact'])
                                 image = status_icon_for_device(device['status'])
-                                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                icon = NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
                                 ft_item.setImage_(icon)
@@ -3312,7 +3302,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setTag_(1)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
-                                    icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                    icon = NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
@@ -3331,7 +3321,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
                                 image = status_icon_for_device(device['status'])
-                                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                icon = NSImage.imageNamed_(image)
                                 ds_item.setTag_(1)
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
@@ -3354,7 +3344,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setTag_(2)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
-                                    icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                    icon = NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
@@ -3373,7 +3363,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
                                 image = status_icon_for_device(device['status'])
-                                icon = dots['offline'] if not image else NSImage.imageNamed_(image)
+                                icon = NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
                                 ds_item.setTag_(2)

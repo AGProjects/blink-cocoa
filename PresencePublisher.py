@@ -68,11 +68,11 @@ PresenceActivityList = (
                                            }
                        },
                        {
-                       'title':            u"Invisible",
+                       'title':            u"Offline",
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':            u"Invisible",
+                                           'title':            u"Offline",
                                            'basic_status':     'closed',
                                            'extended_status':  'offline',
                                            'image':            'offline',

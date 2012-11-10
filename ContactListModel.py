@@ -101,6 +101,8 @@ def status_icon_for_contact(contact, uri=None):
                 image = 'away'
             elif contact.presence_state['status']['extended-away']:
                 image = 'away'
+            else:
+                image = 'offline'
         return image
     else:
         try:
@@ -139,9 +141,10 @@ def status_icon_for_contact(contact, uri=None):
                 image = 'away'
             elif extended_away:
                 image = 'away'
+            else:
+                image = 'offline'
 
         return image
-
 
 def presence_indicator_bar_for_contact(contact):
     if hasattr(contact, "presence_state"):
