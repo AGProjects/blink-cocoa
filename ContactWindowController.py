@@ -42,7 +42,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import status_icon_for_contact, status_icon_for_device, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
+from ContactListModel import presence_status_for_contact, presence_status_for_device, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -381,12 +381,11 @@ class ContactWindowController(NSWindowController):
             if item['represented_object'] is not None:
                 try:
                     try:
-                        icon = status_icon_for_device(item['represented_object']['extended_status'])
-                        if icon is not None:
-                            image = NSImage.imageNamed_(icon)
-                            image.setScalesWhenResized_(True)
-                            image.setSize_(NSMakeSize(15,15))
-                            lastItem.setImage_(image)                    
+                        status = presence_status_for_device(item['represented_object']['extended_status'])
+                        image = presence_status_icons[status]
+                        image.setScalesWhenResized_(True)
+                        image.setSize_(NSMakeSize(15,15))
+                        lastItem.setImage_(image)           
                     except KeyError:
                         pass
                 except KeyError:
@@ -2238,7 +2237,7 @@ class ContactWindowController(NSWindowController):
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
                 items[title] = {'image': 'offline', 'contact' : None}
                 if isinstance(contact, BlinkPresenceContact):
-                    items[title]['image'] = status_icon_for_contact(contact)
+                    items[title]['image'] = presence_status_for_contact(contact)
                     items[title]['contact'] = contact
 
             keys = items.keys()
@@ -2296,12 +2295,15 @@ class ContactWindowController(NSWindowController):
             title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
             lastItem.setAttributedTitle_(title)
             lastItem.setRepresentedObject_(item)
-            icon = status_icon_for_device(item['extended_status'])
-            if icon is not None:
-                image = NSImage.imageNamed_(icon)
+            status = presence_status_for_device(item['extended_status'])
+            try:
+                image = presence_status_icons[status]
                 image.setScalesWhenResized_(True)
                 image.setSize_(NSMakeSize(15,15))
                 lastItem.setImage_(image)
+            except KeyError:
+                pass
+
             lastItem.setRepresentedObject_(item)
             lastItem.setTarget_(self)
             menu.addItem_(lastItem)
@@ -3171,7 +3173,7 @@ class ContactWindowController(NSWindowController):
                     target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
-                        image = status_icon_for_contact(item, uri.uri)
+                        image = presence_status_for_contact(item, uri.uri)
                         if image:
                             icon = NSImage.imageNamed_(image)
                             icon.setScalesWhenResized_(True)
@@ -3191,11 +3193,14 @@ class ContactWindowController(NSWindowController):
                         title += ' in %s' % unicode(device['location']) if device['location'] else ''
                         audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_(title, "startAudioSessionWithSIPURI:", "")
                         audio_item.setRepresentedObject_(device['contact'])
-                        image = status_icon_for_device(device['status'])
-                        icon = NSImage.imageNamed_(image)
-                        icon.setScalesWhenResized_(True)
-                        icon.setSize_(NSMakeSize(15,15))
-                        audio_item.setImage_(icon)
+                        status = presence_status_for_device(device['status'])
+                        try:
+                            image = presence_status_icons[status]
+                            image.setScalesWhenResized_(True)
+                            image.setSize_(NSMakeSize(15,15))
+                            audio_item.setImage_(image)
+                        except KeyError:
+                            pass                    
                         audio_item.setIndentationLevel_(1)
                         if device['caps'] is not None and 'audio' not in device['caps']:
                             audio_item.setEnabled_(False)
@@ -3213,7 +3218,7 @@ class ContactWindowController(NSWindowController):
                             target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                             chat_item.setRepresentedObject_(target_uri)
                             if isinstance(item, BlinkPresenceContact):
-                                image = status_icon_for_contact(item, uri.uri)
+                                image = presence_status_for_contact(item, uri.uri)
                                 if image:
                                     icon = NSImage.imageNamed_(image)
                                     icon.setScalesWhenResized_(True)
@@ -3233,11 +3238,14 @@ class ContactWindowController(NSWindowController):
                             title += ' in %s' % unicode(device['location']) if device['location'] else ''
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_(title, "startChatSessionWithSIPURI:", "")
                             chat_item.setRepresentedObject_(device['contact'])
-                            image = status_icon_for_device(device['status'])
-                            icon = NSImage.imageNamed_(image)
-                            icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(15,15))
-                            chat_item.setImage_(icon)
+                            status = presence_status_for_device(device['status'])
+                            try:
+                                image = presence_status_icons[status]
+                                image.setScalesWhenResized_(True)
+                                image.setSize_(NSMakeSize(15,15))
+                                chat_item.setImage_(icon)
+                            except KeyError:
+                                pass                        
                             chat_item.setIndentationLevel_(1)
                             if device['caps'] is not None and 'chat' not in device['caps']:
                                 chat_item.setEnabled_(False)
@@ -3253,7 +3261,7 @@ class ContactWindowController(NSWindowController):
                         target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                         sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
-                            image = status_icon_for_contact(item, uri.uri)
+                            image = presence_status_for_contact(item, uri.uri)
                             if image:
                                 icon = NSImage.imageNamed_(image)
                                 icon.setScalesWhenResized_(True)
@@ -3271,7 +3279,7 @@ class ContactWindowController(NSWindowController):
                                 target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                                 ft_item.setRepresentedObject_(target_uri)
                                 if isinstance(item, BlinkPresenceContact):
-                                    image = status_icon_for_contact(item, uri.uri)
+                                    image = presence_status_for_contact(item, uri.uri)
                                     if image:
                                         icon = NSImage.imageNamed_(image)
                                         icon.setScalesWhenResized_(True)
@@ -3292,11 +3300,14 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_(title, "sendFile:", "")
                                 ft_item.setRepresentedObject_(device['contact'])
-                                image = status_icon_for_device(device['status'])
-                                icon = NSImage.imageNamed_(image)
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15,15))
-                                ft_item.setImage_(icon)
+                                status = presence_status_for_device(device['status'])
+                                try:
+                                    image = presence_status_icons[status]
+                                    image.setScalesWhenResized_(True)
+                                    image.setSize_(NSMakeSize(15,15))
+                                    ft_item.setImage_(image)
+                                except KeyError:
+                                    pass                        
                                 ft_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'file-transfer' not in device['caps']:
                                     ft_item.setEnabled_(False)
@@ -3314,7 +3325,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setRepresentedObject_(uri.uri)
                                 ds_item.setTag_(1)
                                 if isinstance(item, BlinkPresenceContact):
-                                    image = status_icon_for_contact(item, uri.uri)
+                                    image = presence_status_for_contact(item, uri.uri)
                                     if image:
                                         icon = NSImage.imageNamed_(image)
                                         icon.setScalesWhenResized_(True)
@@ -3334,12 +3345,14 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
-                                image = status_icon_for_device(device['status'])
-                                icon = NSImage.imageNamed_(image)
-                                ds_item.setTag_(1)
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15,15))
-                                ds_item.setImage_(icon)
+                                status = presence_status_for_device(device['status'])
+                                try:
+                                    image = presence_status_icons[status]
+                                    image.setScalesWhenResized_(True)
+                                    image.setSize_(NSMakeSize(15,15))
+                                    ds_item.setImage_(image)
+                                except KeyError:
+                                    pass                        
                                 ds_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'screen-sharing' not in device['caps']:
                                     ds_item.setEnabled_(False)
@@ -3357,7 +3370,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setRepresentedObject_(uri.uri)
                                 ds_item.setTag_(2)
                                 if isinstance(item, BlinkPresenceContact):
-                                    image = status_icon_for_contact(item, uri.uri)
+                                    image = presence_status_for_contact(item, uri.uri)
                                     if image:
                                         icon = NSImage.imageNamed_(image)
                                         icon.setScalesWhenResized_(True)
@@ -3377,12 +3390,15 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
-                                image = status_icon_for_device(device['status'])
-                                icon = NSImage.imageNamed_(image)
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15,15))
+                                status = presence_status_for_device(device['status'])
+                                try:
+                                    image = presence_status_icons[status]
+                                    image.setScalesWhenResized_(True)
+                                    image.setSize_(NSMakeSize(15,15))
+                                    ds_item.setImage_(image)
+                                except KeyError:
+                                    pass                        
                                 ds_item.setTag_(2)
-                                ds_item.setImage_(icon)
                                 ds_item.setIndentationLevel_(1)
 
                         if ds_submenu.itemArray():

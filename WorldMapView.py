@@ -3,7 +3,7 @@
 
 from Foundation import *
 from AppKit import *
-from ContactListModel import status_icon_for_device
+from ContactListModel import presence_status_for_device, presence_status_icons
 from util import *
 
 
@@ -591,12 +591,14 @@ class MapView(NSView):
                 try:
                     icon = self.icons[device['status']]
                 except KeyError:
-                    image = status_icon_for_device(device['status'])
-                    if image:
-                        icon = NSImage.imageNamed_(image)
+                    status = presence_status_for_device(device['status'])
+                    try:
+                        icon = presence_status_icons[status]
                         self.icons[device['status']] = icon
                         icon.setScalesWhenResized_(True)
                         icon.setSize_(size)
+                    except KeyError:
+                        pass                        
 
                 if icon is not None:
                     try:

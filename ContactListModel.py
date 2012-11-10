@@ -28,8 +28,9 @@ __all__ = ['BlinkContact',
            'PresenceContactAvatar',
            'ContactListModel',
            'SearchContactListModel',
-           'status_icon_for_contact',
-           'status_icon_for_device']
+           'presence_status_for_contact',
+           'presence_status_for_device',
+           'presence_status_icons']
 
 import bisect
 import base64
@@ -71,51 +72,58 @@ from util import *
 
 ICON_SIZE = 128
 
-def status_icon_for_device(status):
-    image = None
-    if status == 'busy':
-        image = 'busy'
-    elif status == 'available':
-        image = 'available'
-    elif status == 'away':
-        image = 'away'
-    elif status == 'extended-away':
-        image = 'away'
-    elif status == 'offline':
-        image = 'offline'
-    return image
+presence_status_icons = {'away': NSImage.imageNamed_("away"),
+                         'busy': NSImage.imageNamed_("busy"),
+                         'available': NSImage.imageNamed_("available"),
+                         'offline': NSImage.imageNamed_("offline"),
+                         'blocked': NSImage.imageNamed_("blocked")
+                         }
+
+def presence_status_for_device(device_status):
+    status = None
+    if device_status == 'busy':
+        status = 'busy'
+    elif device_status == 'available':
+        status = 'available'
+    elif device_status == 'away':
+        status = 'away'
+    elif device_status == 'extended-away':
+        status = 'away'
+    elif device_status == 'offline':
+        status = 'offline'
+    return status
 
 
-def status_icon_for_contact(contact, uri=None):
-    image = None
+def presence_status_for_contact(contact, uri=None):
+    status = None
     if uri is None:
         if isinstance(contact, BlinkPresenceContact):
             if contact.contact.presence.policy == 'block':
                 return 'blocked'
             if contact.presence_state['status']['busy']:
-                image = 'busy'
+                status = 'busy'
             elif contact.presence_state['status']['available']:
-                image = 'available'
+                status = 'available'
             elif contact.presence_state['status']['away']:
-                image = 'away'
+                status = 'away'
             elif contact.presence_state['status']['extended-away']:
-                image = 'away'
+                status = 'away'
             elif contact.contact.presence.subscribe:
-                image = 'offline'
+                status = 'offline'
         elif isinstance(contact, BlinkConferenceContact) and contact.presence_contact is not None:
             if contact.presence_contact.contact.presence.policy == 'block':
                 return 'blocked'
             elif contact.presence_state['status']['busy']:
-                image = 'busy'
+                status = 'busy'
             elif contact.presence_state['status']['available']:
-                image = 'available'
+                status = 'available'
             elif contact.presence_state['status']['away']:
-                image = 'away'
+                status = 'away'
             elif contact.presence_state['status']['extended-away']:
-                image = 'away'
+                status = 'away'
             elif contact.presence_contact.contact.presence.subscribe:
-                image = 'offline'
-        return image
+                status = 'offline'
+        return status
     else:
         try:
             uri = 'sip:%s' % uri
@@ -146,17 +154,17 @@ def status_icon_for_contact(contact, uri=None):
                     away = any(service for service in pidf.services if service.status.extended == 'away')
 
             if busy:
-                image = 'busy'
+                status = 'busy'
             elif available:
-                image = 'available'
+                status = 'available'
             elif away:
-                image = 'away'
+                status = 'away'
             elif extended_away:
-                image = 'away'
+                status = 'away'
             else:
-                image = 'offline'
+                status = 'offline'
 
-        return image
+        return status
 
 class Avatar(object):
     def __init__(self, icon, path=None):
@@ -797,17 +805,17 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     def addToOrRemoveFromOnlineGroup(self):    
-        status = status_icon_for_contact(self)
+        status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         online_contact = None
         try:
             online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
         except StopIteration:
-            if status != "unknown":
+            if status != "offline":
                 model.online_contacts_group.contacts.append(self)
                 model.online_contacts_group.sortContacts()
         else:
-            if status == "unknown":
+            if status == "offline":
                 model.online_contacts_group.contacts.remove(online_contact)
 
     def _get_favorite(self):

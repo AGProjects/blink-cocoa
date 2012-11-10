@@ -5,7 +5,7 @@ from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
 
-from ContactListModel import status_icon_for_contact
+from ContactListModel import presence_status_for_contact, presence_status_icons
 
 
 class ContactCell(NSTextFieldCell):
@@ -18,11 +18,6 @@ class ContactCell(NSTextFieldCell):
     chatIcon = NSImage.imageNamed_("pencil")
     screenIcon = NSImage.imageNamed_("display_16")
     locationIcon = NSImage.imageNamed_("location")
-    blockedIcon = NSImage.imageNamed_("blocked")
-    awayIcon = NSImage.imageNamed_("away")
-    busyIcon = NSImage.imageNamed_("busy")
-    availableIcon = NSImage.imageNamed_("available")
-    offlineIcon = NSImage.imageNamed_("offline")
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
@@ -104,13 +99,14 @@ class ContactCell(NSTextFieldCell):
 
     @allocate_autorelease_pool
     def drawPresenceIcon(self):
-        image = '%sIcon' % status_icon_for_contact(self.contact)
-        
-        if image and hasattr(self, image):
-            icon =  getattr(self, image)
+        status = presence_status_for_contact(self.contact)
+        try:
+            icon = presence_status_icons[status]
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
-            self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)        
+            self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
+        except KeyError:
+            pass
 
         if not hasattr(self.contact, "presence_state"):
             return

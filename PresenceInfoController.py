@@ -16,7 +16,7 @@ from zope.interface import implements
 from util import *
 import WorldMapView
 
-from ContactListModel import status_icon_for_contact
+from ContactListModel import presence_status_for_contact
 
 
 SPLITTER_HEIGHT = 300
@@ -125,7 +125,7 @@ class PresenceInfoController(NSObject):
         astring = NSAttributedString.alloc().initWithString_(text)
         self.presenceText.textStorage().appendAttributedString_(astring)
 
-        image = status_icon_for_contact(self.contact)
+        image = presence_status_for_contact(self.contact)
         if image:
             icon = NSImage.imageNamed_(image)
             icon.setScalesWhenResized_(True)
