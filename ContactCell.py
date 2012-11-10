@@ -18,6 +18,11 @@ class ContactCell(NSTextFieldCell):
     chatIcon = NSImage.imageNamed_("pencil")
     screenIcon = NSImage.imageNamed_("display_16")
     locationIcon = NSImage.imageNamed_("location")
+    blockedIcon = NSImage.imageNamed_("blocked")
+    awayIcon = NSImage.imageNamed_("away")
+    busyIcon = NSImage.imageNamed_("busy")
+    availableIcon = NSImage.imageNamed_("available")
+    offlineIcon = NSImage.imageNamed_("offline")
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
@@ -99,6 +104,14 @@ class ContactCell(NSTextFieldCell):
 
     @allocate_autorelease_pool
     def drawPresenceIndicator(self):
+        image = '%sIcon' % status_icon_for_contact(self.contact)
+        
+        if image and hasattr(self, image):
+            icon =  getattr(self, image)
+            icon.setScalesWhenResized_(True)
+            icon.setSize_(NSMakeSize(12,12))
+            self.drawIcon(icon, 20, self.frame.origin.y + 5, 12, 12)        
+
         if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
 
@@ -124,14 +137,6 @@ class ContactCell(NSTextFieldCell):
         border.fill()
         NSColor.blackColor().set()
         border.stroke()
-
-        image = status_icon_for_contact(self.contact)
-
-        if image:
-            icon = NSImage.imageNamed_(image)
-            icon.setScalesWhenResized_(True)
-            icon.setSize_(NSMakeSize(12,12))
-            self.drawIcon(icon, 20, self.frame.origin.y + 22, 12, 12)
 
         if not hasattr(self.contact, "presence_state"):
             return
