@@ -1829,13 +1829,13 @@ class ContactWindowController(NSWindowController):
             self.startSessionToSelectedContact(("desktop-server", "audio"), uri)
 
     @objc.IBAction
-    def setPresencePolicyForContact_(self, sender):
+    def setPresencePolicy_(self, sender):
         item = sender.representedObject()
         item.contact.presence.policy = 'allow' if item.contact.presence.policy in ('default', 'block') else 'block'
         item.contact.save()
 
     @objc.IBAction
-    def setDialogPolicyForContact_(self, sender):
+    def setDialogPolicy_(self, sender):
         item = sender.representedObject()
         item.contact.dialog.policy = 'allow' if item.contact.dialog.policy in ('default', 'block') else 'block'
         item.contact.save()
@@ -3493,6 +3493,14 @@ class ContactWindowController(NSWindowController):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_((item, group))
+
+            if isinstance(item, BlinkPresenceContact):
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide My Availability", "setPresencePolicy:", "")
+                mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
+                mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
             lastItem.setRepresentedObject_(item)

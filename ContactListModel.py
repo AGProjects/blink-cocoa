@@ -90,6 +90,8 @@ def status_icon_for_device(status):
 def status_icon_for_contact(contact, uri=None):
     image = None
     if uri is None:
+        if contact.contact.presence.policy == 'block':
+            return 'blocked'
         if hasattr(contact, "presence_state"):
             if contact.presence_state['status']['busy']:
                 image = 'busy'
