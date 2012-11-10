@@ -103,6 +103,19 @@ def status_icon_for_contact(contact, uri=None):
                 image = 'away'
             elif contact.contact.presence.subscribe:
                 image = 'offline'
+        elif isinstance(contact, BlinkConferenceContact) and contact.presence_contact is not None:
+            if contact.presence_contact.contact.presence.policy == 'block':
+                return 'blocked'
+            elif contact.presence_state['status']['busy']:
+                image = 'busy'
+            elif contact.presence_state['status']['available']:
+                image = 'available'
+            elif contact.presence_state['status']['away']:
+                image = 'away'
+            elif contact.presence_state['status']['extended-away']:
+                image = 'away'
+            elif contact.presence_contact.contact.presence.subscribe:
+                image = 'offline'
         return image
     else:
         try:

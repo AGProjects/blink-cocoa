@@ -5,7 +5,7 @@ from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
 
-from ContactListModel import status_icon_for_contact
+from ContactListModel import status_icon_for_contact, BlinkPresenceContact
 
 
 class ContactCell(NSTextFieldCell):
@@ -115,28 +115,29 @@ class ContactCell(NSTextFieldCell):
         if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
             return
 
-        indicator_width = 5
-        frame = self.frame
-        frame.size.width = indicator_width
-        frame.origin.x = self.view.frame().size.width - indicator_width
-        frame.origin.y -= 17
+        if isinstance(self.contact, BlinkPresenceContact):
+            indicator_width = 5
+            frame = self.frame
+            frame.size.width = indicator_width
+            frame.origin.x = self.view.frame().size.width - indicator_width
+            frame.origin.y -= 17
 
-        rect = NSInsetRect(frame, 0, 0)
+            rect = NSInsetRect(frame, 0, 0)
 
-        if self.contact.presence_indicator == 'available':
-            NSColor.greenColor().set()
-        elif self.contact.presence_indicator == 'away':
-            NSColor.yellowColor().set()
-        elif self.contact.presence_indicator == 'busy':
-            NSColor.redColor().set()
-        else:
-            NSColor.whiteColor().set()
+            if self.contact.presence_indicator == 'available':
+                NSColor.greenColor().set()
+            elif self.contact.presence_indicator == 'away':
+                NSColor.yellowColor().set()
+            elif self.contact.presence_indicator == 'busy':
+                NSColor.redColor().set()
+            else:
+                NSColor.whiteColor().set()
 
-        border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 2.0, 2.0)
-        border.setLineWidth_(0.2)
-        border.fill()
-        NSColor.blackColor().set()
-        border.stroke()
+            border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 2.0, 2.0)
+            border.setLineWidth_(0.2)
+            border.fill()
+            NSColor.blackColor().set()
+            border.stroke()
 
         if not hasattr(self.contact, "presence_state"):
             return
