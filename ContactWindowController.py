@@ -2245,8 +2245,9 @@ class ContactWindowController(NSWindowController):
             keys.sort()
             for title in keys:
                 item = items[title]
-                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, 'editContact:', "")
-                lastItem.setRepresentedObject_(item['contact'])
+                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, 'showChatWindowForUri:', "")
+                lastItem.setTarget_(self)
+                lastItem.setRepresentedObject_(item['contact'].uri)
                 lastItem.setIndentationLevel_(1)
                 if item['image']:
                     icon = NSImage.imageNamed_(item['image'])
@@ -2606,6 +2607,11 @@ class ContactWindowController(NSWindowController):
                 group.group.expanded = True
                 group.group.save()
 
+    @objc.IBAction
+    def showChatWindowForUri_(self, sender):
+        account = self.activeAccount()
+        self.startSessionWithLocalAndRemoteURI(account.id, sender.representedObject(), "chat")
+                        
     @run_in_green_thread
     def show_last_chat_conversations(self):
         results = SessionHistory().get_last_chat_conversations(4)
