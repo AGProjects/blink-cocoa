@@ -101,7 +101,7 @@ def status_icon_for_contact(contact, uri=None):
                 image = 'away'
             elif contact.presence_state['status']['extended-away']:
                 image = 'away'
-            else:
+            elif contact.contact.presence.subscribe:
                 image = 'offline'
         return image
     else:

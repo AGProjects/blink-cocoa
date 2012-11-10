@@ -2248,10 +2248,11 @@ class ContactWindowController(NSWindowController):
                 lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, 'editContact:', "")
                 lastItem.setRepresentedObject_(item['contact'])
                 lastItem.setIndentationLevel_(1)
-                icon = NSImage.imageNamed_(item['image'])
-                icon.setScalesWhenResized_(True)
-                icon.setSize_(NSMakeSize(15,15))
-                lastItem.setImage_(icon)
+                if item['image']:
+                    icon = NSImage.imageNamed_(item['image'])
+                    icon.setScalesWhenResized_(True)
+                    icon.setSize_(NSMakeSize(15,15))
+                    lastItem.setImage_(icon)
                 self.presenceWatchersMenu.addItem_(lastItem)
 
     def updatePresenceActivityMenu(self, menu):
@@ -3165,10 +3166,11 @@ class ContactWindowController(NSWindowController):
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
                         image = status_icon_for_contact(item, uri.uri)
-                        icon = NSImage.imageNamed_(image)
-                        icon.setScalesWhenResized_(True)
-                        icon.setSize_(NSMakeSize(15,15))
-                        audio_item.setImage_(icon)
+                        if image:
+                            icon = NSImage.imageNamed_(image)
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            audio_item.setImage_(icon)
 
                 if devices:
                     audio_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3206,10 +3208,11 @@ class ContactWindowController(NSWindowController):
                             chat_item.setRepresentedObject_(target_uri)
                             if isinstance(item, BlinkPresenceContact):
                                 image = status_icon_for_contact(item, uri.uri)
-                                icon = NSImage.imageNamed_(image)
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15,15))
-                                chat_item.setImage_(icon)
+                                if image:
+                                    icon = NSImage.imageNamed_(image)
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(15,15))
+                                    chat_item.setImage_(icon)
 
                     if devices:
                         chat_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3245,10 +3248,11 @@ class ContactWindowController(NSWindowController):
                         sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
                             image = status_icon_for_contact(item, uri.uri)
-                            icon = NSImage.imageNamed_(image)
-                            icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(15,15))
-                            sms_item.setImage_(icon)
+                            if image:
+                                icon = NSImage.imageNamed_(image)
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                sms_item.setImage_(icon)
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
@@ -3262,10 +3266,11 @@ class ContactWindowController(NSWindowController):
                                 ft_item.setRepresentedObject_(target_uri)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
-                                    icon = NSImage.imageNamed_(image)
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ft_item.setImage_(icon)
+                                    if image:
+                                        icon = NSImage.imageNamed_(image)
+                                        icon.setScalesWhenResized_(True)
+                                        icon.setSize_(NSMakeSize(15,15))
+                                        ft_item.setImage_(icon)
 
                         if devices:
                             ft_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3304,10 +3309,11 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setTag_(1)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
-                                    icon = NSImage.imageNamed_(image)
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(icon)
+                                    if image:
+                                        icon = NSImage.imageNamed_(image)
+                                        icon.setScalesWhenResized_(True)
+                                        icon.setSize_(NSMakeSize(15,15))
+                                        ds_item.setImage_(icon)
 
                         if devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3346,10 +3352,11 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setTag_(2)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = status_icon_for_contact(item, uri.uri)
-                                    icon = NSImage.imageNamed_(image)
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(icon)
+                                    if image:
+                                        icon = NSImage.imageNamed_(image)
+                                        icon.setScalesWhenResized_(True)
+                                        icon.setSize_(NSMakeSize(15,15))
+                                        ds_item.setImage_(icon)
 
                         if devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())

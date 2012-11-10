@@ -126,7 +126,7 @@ class PresenceInfoController(NSObject):
         self.presenceText.textStorage().appendAttributedString_(astring)
 
         image = status_icon_for_contact(self.contact)
-        if image is not None:
+        if image:
             icon = NSImage.imageNamed_(image)
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
