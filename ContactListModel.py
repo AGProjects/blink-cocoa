@@ -29,8 +29,7 @@ __all__ = ['BlinkContact',
            'ContactListModel',
            'SearchContactListModel',
            'status_icon_for_contact',
-           'status_icon_for_device',
-           'presence_indicator_bar_for_contact']
+           'status_icon_for_device']
 
 import bisect
 import base64
@@ -158,19 +157,6 @@ def status_icon_for_contact(contact, uri=None):
                 image = 'offline'
 
         return image
-
-def presence_indicator_bar_for_contact(contact):
-    if hasattr(contact, "presence_state"):
-        if contact.presence_state['status']['busy']:
-            return "busy"
-        elif contact.presence_state['status']['available']:
-            return "available"
-        elif contact.presence_state['status']['extended-away']:
-            return "away"
-        elif contact.presence_state['status']['away']:
-            return "away"
-
-    return "unknown"
 
 class Avatar(object):
     def __init__(self, icon, path=None):
@@ -446,7 +432,6 @@ class BlinkConferenceContact(BlinkContact):
         if self.presence_contact is not None:
             self.nc.add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
 
-        self.presence_indicator = None
         self.presence_note = None
         self.init_presence_state()
         self.updatePresenceState()
@@ -472,9 +457,6 @@ class BlinkConferenceContact(BlinkContact):
                                             'busy':          False
                             }
     }
-
-    def setPresenceIndicator(self, indicator):
-        self.presence_indicator = indicator
 
     @allocate_autorelease_pool
     def setPresenceNote(self):
@@ -542,9 +524,6 @@ class BlinkConferenceContact(BlinkContact):
         notes = list(unicode(note) for note in presence_notes)
         self.presence_state['presence_notes'] = notes
 
-        indicator_bar = presence_indicator_bar_for_contact(self)
-        self.setPresenceIndicator(indicator_bar)
-
         self.setPresenceNote()
 
         NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChaged", sender=self)
@@ -601,8 +580,6 @@ class BlinkPresenceContact(BlinkContact):
         self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
         self.nc.add_observer(self, name="SIPAccountGotPresenceState")
-
-        self.presence_indicator = 'unknown' if self.contact.presence.subscribe else None
         self.presence_note = None
         self.pidfs_map = {}
         self.init_presence_state()
@@ -803,10 +780,6 @@ class BlinkPresenceContact(BlinkContact):
                             pass
 
             self.presence_state['devices'] = devices
-            indicator_bar = presence_indicator_bar_for_contact(self)
-            self.setPresenceIndicator(indicator_bar)
-        else:
-            self.setPresenceIndicator("unknown")
 
         self.pending_authorizations = {}
 
@@ -823,8 +796,8 @@ class BlinkPresenceContact(BlinkContact):
         self.addToOrRemoveFromOnlineGroup()
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
-    def addToOrRemoveFromOnlineGroup(self):
-        status = presence_indicator_bar_for_contact(self)
+    def addToOrRemoveFromOnlineGroup(self):    
+        status = status_icon_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         online_contact = None
         try:
@@ -924,9 +897,6 @@ class BlinkPresenceContact(BlinkContact):
         else:
             return uri.type or 'SIP'
 
-    def setPresenceIndicator(self, indicator):
-        self.presence_indicator = indicator
-
     @allocate_autorelease_pool
     def setPresenceNote(self):
         if self.presence_state['status']['busy']:
@@ -1010,16 +980,12 @@ class BonjourBlinkContact(BlinkContact):
             self.avatar = DefaultUserAvatar()
 
         # presence related attributes
-        self.presence_indicator = None
         self.presence_notes = []
 
     def update_uri(self, uri):
         self.aor = uri
         self.uris = [ContactURI(uri=str(uri), type='SIP')]
         self._set_username_and_domain()
-
-    def setPresenceIndicator(self, indicator):
-        self.presence_indicator = indicator
 
     def matchesURI(self, uri, exact_match=False):
         candidate = self.split_uri(uri)
@@ -2128,11 +2094,6 @@ class ContactListModel(CustomListModel):
                             pass
         unlink(path)
 
-    def updatePresenceIndicator(self):
-        return
-        if change:
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
     def renderPendingWatchersGroupIfNecessary(self):
         if self.pending_watchers_group.contacts:
             if self.pending_watchers_group not in self.groupsList:
@@ -2389,9 +2350,6 @@ class ContactListModel(CustomListModel):
             if settings.contacts.enable_incoming_calls_group:
                 self.incoming_calls_group.load_history()
 
-        if notification.data.modified.has_key("presence.enabled"):
-            self.updatePresenceIndicator()
-
         if isinstance(notification.sender, Account):
             self.pending_watchers_map.pop(notification.sender.id, None)
 
@@ -2404,7 +2362,6 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             self.nc.post_notification("BonjourGroupWasActivated", sender=self)
         else:
-            self.updatePresenceIndicator()
             try:
                 del self.active_watchers_map[notification.sender.id]
             except KeyError:
@@ -2426,7 +2383,6 @@ class ContactListModel(CustomListModel):
 
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.not_filtered_contacts):
             blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
-            blink_contact.setPresenceIndicator("available")
             self.bonjour_group.not_filtered_contacts.append(blink_contact)
 
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
@@ -2434,11 +2390,9 @@ class ContactListModel(CustomListModel):
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
                 if not tls_neighbours:
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
-                    blink_contact.setPresenceIndicator("available")
                     self.bonjour_group.contacts.append(blink_contact)
             else:
                 blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
-                blink_contact.setPresenceIndicator("available")
                 self.bonjour_group.contacts.append(blink_contact)
             non_tls_neighbours = [n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport != 'tls']
 
@@ -2465,10 +2419,8 @@ class ContactListModel(CustomListModel):
             if uri.transport != 'tls':
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
                 if not tls_neighbours:
-                    blink_contact.setPresenceIndicator("unknown")
                     self.bonjour_group.contacts.append(blink_contact)
             else:
-                blink_contact.setPresenceIndicator("unknown")
                 self.bonjour_group.contacts.append(blink_contact)
         else:
             blink_contact.name = name
@@ -2586,12 +2538,6 @@ class ContactListModel(CustomListModel):
         if 'icon' in notification.data.modified:
             blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
             blink_contact.avatar.save()
-
-        if 'presence.subscribe' in notification.data.modified:
-            if contact.presence.subscribe and blink_contact.presence_indicator is None:
-                blink_contact.presence_indicator = 'unknown'
-            elif not contact.presence.subscribe:
-                blink_contact.presence_indicator = None
 
         if set(['default_uri', 'uris']).intersection(notification.data.modified):
             blink_contact.detail = blink_contact.uri

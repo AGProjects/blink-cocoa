@@ -5,7 +5,7 @@ from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
 
-from ContactListModel import status_icon_for_contact, BlinkPresenceContact
+from ContactListModel import status_icon_for_contact
 
 
 class ContactCell(NSTextFieldCell):
@@ -59,7 +59,7 @@ class ContactCell(NSTextFieldCell):
         self.drawActiveMedia()
         self.drawFirstLine()
         self.drawSecondLine()
-        self.drawPresenceIndicator()
+        self.drawPresenceIcon()
 
     @allocate_autorelease_pool
     def drawFirstLine(self):
@@ -103,41 +103,14 @@ class ContactCell(NSTextFieldCell):
             self.drawIcon(self.screenIcon, left, self.frame.origin.y +14, 16, 16)
 
     @allocate_autorelease_pool
-    def drawPresenceIndicator(self):
+    def drawPresenceIcon(self):
         image = '%sIcon' % status_icon_for_contact(self.contact)
         
         if image and hasattr(self, image):
             icon =  getattr(self, image)
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
-            self.drawIcon(icon, 20, self.frame.origin.y + 5, 12, 12)        
-
-        if not hasattr(self.contact, "presence_indicator") or self.contact.presence_indicator is None:
-            return
-
-        if isinstance(self.contact, BlinkPresenceContact):
-            indicator_width = 5
-            frame = self.frame
-            frame.size.width = indicator_width
-            frame.origin.x = self.view.frame().size.width - indicator_width
-            frame.origin.y -= 17
-
-            rect = NSInsetRect(frame, 0, 0)
-
-            if self.contact.presence_indicator == 'available':
-                NSColor.greenColor().set()
-            elif self.contact.presence_indicator == 'away':
-                NSColor.yellowColor().set()
-            elif self.contact.presence_indicator == 'busy':
-                NSColor.redColor().set()
-            else:
-                NSColor.whiteColor().set()
-
-            border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 2.0, 2.0)
-            border.setLineWidth_(0.2)
-            border.fill()
-            NSColor.blackColor().set()
-            border.stroke()
+            self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)        
 
         if not hasattr(self.contact, "presence_state"):
             return
@@ -148,6 +121,8 @@ class ContactCell(NSTextFieldCell):
             return
 
         if has_locations:
+            frame = self.frame
+            frame.origin.y -= 17
             left = self.view.frame().size.width - 20
             self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
 
