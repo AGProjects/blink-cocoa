@@ -2105,8 +2105,10 @@ class ContactWindowController(NSWindowController):
         status = item['title']
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
+        status = 'Offline' if status == 'Invisible' else status
         item = self.presenceMenu.itemWithTitle_(status)
-        item.setState_(NSOnState)
+        if item is not None:
+            item.setState_(NSOnState)
 
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTitle_(status)
