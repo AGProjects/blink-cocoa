@@ -68,6 +68,11 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
+gray_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+                                                      NSColor.grayColor(), NSForegroundColorAttributeName)
+red_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+                                                      NSColor.redColor(), NSForegroundColorAttributeName)
+
 
 class PhotoView(NSImageView):
     entered = False
@@ -2452,7 +2457,7 @@ class ContactWindowController(NSWindowController):
 
         mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
                                                                NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
-        mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+        red_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
                                                               NSColor.redColor(), NSForegroundColorAttributeName)
 
         menu.addItem_(NSMenuItem.separatorItem())
@@ -2464,7 +2469,7 @@ class ContactWindowController(NSWindowController):
                 lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
                 mwi_data = MWIData.get(account.id)
                 lastItem.setEnabled_(account.voicemail_uri is not None)
-                lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, mini_red, mini_blue))
+                lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, red_font_color, mini_blue))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTag_(555)
                 lastItem.setTarget_(self)
@@ -2627,6 +2632,9 @@ class ContactWindowController(NSWindowController):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+
         def format_date(dt):
             if not dt:
                 return "unknown"
@@ -2743,63 +2751,56 @@ class ContactWindowController(NSWindowController):
             }
             entries['conferences'].append(item)
 
-        self.renderHistoryMenu(entries)
+        self.renderHistoryEntriesInHistoryMenu(entries)
+        self.renderHistoryEntriesInStatusBarMenu(entries)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
-    def renderHistoryMenu(self, entries):
+    def renderHistoryEntriesInStatusBarMenu(self, entries):
+        menu = self.statusBarMenu
+        for i in range(10):
+            missed_call_item = menu.itemWithTag_(1001+i)
+            if missed_call_item:
+                self.statusBarMenu.removeItem_(missed_call_item)
+            else:
+                break
+            
+        index = menu.indexOfItem_(menu.itemWithTag_(1000))
+        tag = 1001
+        for item in entries['missed']:
+            lastItem = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "",index+1)
+            lastItem.setAttributedTitle_(self.format_history_menu_item(item))
+            lastItem.setIndentationLevel_(1)
+            lastItem.setTarget_(self)
+            lastItem.setTag_(tag)
+            lastItem.setRepresentedObject_(item)
+            tag += 1
+            index += 1
+
+    @run_in_gui_thread
+    def renderHistoryEntriesInHistoryMenu(self, entries):
         menu = self.historyMenu
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
-
+        
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
-
-        ok_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.grayColor(), NSForegroundColorAttributeName)
-        mini_red = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-            NSColor.redColor(), NSForegroundColorAttributeName)
-
-        def format_history_menu_item(item):
-            a = NSMutableAttributedString.alloc().init()
-            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  "%item, normal)
-            a.appendAttributedString_(n)
-            text = "%(start_time)s"%item
-            if (item["duration"].seconds > 0):
-                text += " for "
-                dur = item["duration"]
-                if dur.days > 0 or dur.seconds > 60*60:
-                    text += "%i hours, "%(dur.days*60*60*24 + int(dur.seconds/(60*60)))
-                s = dur.seconds%(60*60)
-                text += "%02i:%02i"%(int(s/60), s%60)
-            else:
-                if item['status'] == 'failed':
-                    text += " %s" % item['failure_reason'].capitalize()
-                elif item['status'] not in ('completed', 'missed'):
-                    text += " %s" % item['status'].capitalize()
-
-            text_format = mini_red if item['status'] == 'failed' else ok_color
-            t = NSAttributedString.alloc().initWithString_attributes_(text, text_format)
-            a.appendAttributedString_(t)
-            return a
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
         lastItem.setEnabled_(False)
         for item in entries['missed']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_history_menu_item(item))
+            lastItem.setAttributedTitle_(self.format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
-
+        
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming", "", "")
         lastItem.setEnabled_(False)
         for item in entries['incoming']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_history_menu_item(item))
+            lastItem.setAttributedTitle_(self.format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
@@ -2809,7 +2810,7 @@ class ContactWindowController(NSWindowController):
         lastItem.setEnabled_(False)
         for item in entries['outgoing']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
-            lastItem.setAttributedTitle_(format_history_menu_item(item))
+            lastItem.setAttributedTitle_(self.format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
@@ -2821,7 +2822,7 @@ class ContactWindowController(NSWindowController):
 
             for item in entries['conferences']:
                 lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
-                lastItem.setAttributedTitle_(format_history_menu_item(item))
+                lastItem.setAttributedTitle_(self.format_history_menu_item(item))
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(item)
@@ -2832,6 +2833,30 @@ class ContactWindowController(NSWindowController):
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
 
+    def format_history_menu_item(self, item):
+        a = NSMutableAttributedString.alloc().init()
+        normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+        n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  "%item, normal)
+        a.appendAttributedString_(n)
+        text = "%(start_time)s"%item
+        if (item["duration"].seconds > 0):
+            text += " for "
+            dur = item["duration"]
+            if dur.days > 0 or dur.seconds > 60*60:
+                text += "%i hours, "%(dur.days*60*60*24 + int(dur.seconds/(60*60)))
+            s = dur.seconds%(60*60)
+            text += "%02i:%02i"%(int(s/60), s%60)
+        else:
+            if item['status'] == 'failed':
+                text += " %s" % item['failure_reason'].capitalize()
+            elif item['status'] not in ('completed', 'missed'):
+                text += " %s" % item['status'].capitalize()
+        
+        text_format = red_font_color if item['status'] == 'failed' else gray_font_color
+        t = NSAttributedString.alloc().initWithString_attributes_(text, text_format)
+        a.appendAttributedString_(t)
+        return a
+            
     @allocate_autorelease_pool
     def delete_session_history_entries(self):
         SessionHistory().delete_entries()
@@ -3642,6 +3667,8 @@ class ContactWindowController(NSWindowController):
             account = AccountManager().default_account
             item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
             item.setEnabled_(True)
+            self.updateHistoryMenu()
+
         elif menu == self.callMenu:
             self.updateCallMenu()
         elif menu == self.groupMenu:
