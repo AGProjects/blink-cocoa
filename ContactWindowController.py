@@ -2299,7 +2299,7 @@ class ContactWindowController(NSWindowController):
         if self.presence_notes_history:
             menu.addItem_(NSMenuItem.separatorItem())
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "", "")
-            title = NSAttributedString.alloc().initWithString_attributes_('Previous Availability And Notes', attributes)
+            title = NSAttributedString.alloc().initWithString_attributes_('My Recent Availability', attributes)
             lastItem.setAttributedTitle_(title)
             lastItem.setEnabled_(False)
             menu.addItem_(lastItem)
