@@ -2263,6 +2263,12 @@ class ContactWindowController(NSWindowController):
                     lastItem.setImage_(icon)
                 self.presenceWatchersMenu.addItem_(lastItem)
 
+        if not i:
+            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'Nobody', "", "")
+            lastItem.setEnabled_(False)
+            self.presenceWatchersMenu.addItem_(lastItem)
+    
+
     def updatePresenceActivityMenu(self, menu):
         if menu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
