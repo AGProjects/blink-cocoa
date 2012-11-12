@@ -811,11 +811,11 @@ class BlinkPresenceContact(BlinkContact):
         try:
             online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
         except StopIteration:
-            if status != "offline":
+            if status not in (None, "offline"):
                 model.online_contacts_group.contacts.append(self)
                 model.online_contacts_group.sortContacts()
         else:
-            if status == "offline":
+            if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
 
     def _get_favorite(self):
