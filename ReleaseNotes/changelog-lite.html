@@ -8,34 +8,46 @@
 
 <h2>Version 2.0.0</h2>
 
-<p>October 12nd, 2012
+
+<p>November 14th, 2012
 
 <ul>
-<li>Added Presence support (PUBLISH, SUBSCRIBE/NOTIFY using RLS)
+<li>Added Presence support (PUBLISH and SUBSCRIBE/NOTIFY methods using RLS)
 <li>Added Address Book storage using XCAP rls-services and resource-lists
 <li>Added Presence Policy using XCAP org.openmobilealliance.pres-rules
 <li>Added Icon Storage using XCAP org.openmobilealliance.pres-content
 <li>Added Offline Presence using XCAP pidf-manipulation
-<li>Added XMPP interoperability for @sip2sip.info accounts
+<li>Added XMPP interoperability for SIP2SIP accounts
 <li>Added publish for Status, Icon, Activity, Note, Timezone, User-Input and Media Caps
-<li>Added Presence Info Panel and render devices on world map
+<li>Added Presence Info Panel and render devices on a world map
 <li>Added menu to select a particular uri when dragging contact to create conference
 <li>Added menu to select a particular uri when dragging contact to conference drawer
-<li>Added posibility to start sessions to specific devices (using GRUU)
+<li>Added possibility to start sessions to specific devices (using GRUU)
 <li>Added move conference to server functionality
-<li>Activate Add contact button in Contact window if at least one uri is set
-<li>Print reason when the configuration file is corrupted
-<li>Speak different text for incoming file transfer
-<li>Refactored Chat window to work on retina displays
-<li>Improved copy of SIP URI from Contacts
-<li>Refactored re-usage of streams for chat sessions 
-<li>Update Chat window drawer when removing audio streams
-<li>Fixed passing curently selected group to add contact dialog
-<li>Fixed crash when enrollment for free SIP account fails
+<li>Added back cmd-D shortcut key for Show dialpad
+<li>Added Blink system bar menu
+<li>Added a new multi-user avatar for messages originating from a conference focus
+<li>Added hint for how to use own Internet domain for a SIP account
+<li>Fixed passing curently selected group to the Add Contact dialog
+<li>Fixed crash when enrollment for SIP2SIP account fails
 <li>Fixed validating Contacts backups
-<li>Improve layout of icons in chat window tab switcher
+<li>Fixed processing HTTP links with unicode characters
+<li>Fixed selecting audio device menu items in Mountain Lion
+<li>Fixed selecting built-in devices in Mountain Lion
 <li>Fixed setting display name and icon for invited participants in chat drawer
-<li>Append xmpp sip uri parameter when calling contact URIs marked as XMPP
+<li>Fixed bug that triggered high CPU usage in case of poor connectivity conditions
+<li>Fixed several multi-threading issues in the middleware
+<li>Fixed Chat window toolbar menu items to work on retina displays
+<li>Fixed updating Chat window drawer when removing audio streams
+<li>Fixed check if audio input device is not None
+<li>Improved copy of SIP URI from Contacts
+<li>Improved layout of icons in chat window tab switcher
+<li>Improved chat connectivity failure logs
+<li>Improved title of alert panel depending on proposed media type
+<li>Improved re-usage of streams for chat sessions
+<li>Activate Add contact button in Contact window if at least one uri is set
+<li>Print the reason when the configuration file is corrupted
+<li>Speak different text for incoming file transfer
 </ul>      
 
 <h2>Version 1.7.0</h2>
