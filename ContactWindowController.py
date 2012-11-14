@@ -2097,6 +2097,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def setPresenceOfflineNote_(self, sender):
         self.setLastPresenceActivity()
+        NSApp.activateIgnoringOtherApps_(True)
         controller = OfflineNoteController()
         note = controller.runModal()
         if note is not None:
@@ -2881,6 +2882,7 @@ class ContactWindowController(NSWindowController):
         SessionHistory().delete_entries()
 
     def historyClicked_(self, sender):
+        NSApp.activateIgnoringOtherApps_(True)
         if sender.tag() == 444:
             self.delete_session_history_entries()
         elif sender.tag() == 555:
