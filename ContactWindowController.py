@@ -354,11 +354,11 @@ class ContactWindowController(NSWindowController):
 
         self.presencePublisher = PresencePublisher(self)
 
-        self.statusitem = self.statusbar.statusItemWithLength_(NSVariableStatusItemLength)
-        self.setStatusItemIcon()
-        self.statusitem.setHighlightMode_(1)
-        self.statusitem.setToolTip_(NSApp.delegate().applicationName)
-        self.statusitem.setMenu_(self.statusBarMenu)
+        self.statusBarItem = self.statusbar.statusItemWithLength_(NSVariableStatusItemLength)
+        self.setStatusBarIcon()
+        self.statusBarItem.setHighlightMode_(1)
+        self.statusBarItem.setToolTip_(NSApp.delegate().applicationName)
+        self.statusBarItem.setMenu_(self.statusBarMenu)
 
         self.loaded = True
 
@@ -603,31 +603,6 @@ class ContactWindowController(NSWindowController):
                 self.joinConference(uri, session_type, participants)
             NSApp.delegate().urisToOpen = []
 
-    def loadPresenceState(self):
-        settings = SIPSimpleSettings()
-
-        # populate presence menus
-        self.presenceActivityPopUp.removeAllItems()
-        while self.presenceMenu.numberOfItems() > 0:
-            self.presenceMenu.removeItemAtIndex_(0)
-        self.fillPresenceMenu(self.presenceMenu)
-        self.fillPresenceMenu(self.presenceActivityPopUp.menu())
-
-        note = settings.presence_state.note
-        if note:
-            self.presenceNoteText.setStringValue_(note)
-
-        status = settings.presence_state.status    
-        if status:
-            self.setStatusItemIcon(status)
-            self.presenceActivityPopUp.selectItemWithTitle_(status)
-            for item in self.presenceMenu.itemArray():
-                item.setState_(NSOnState if item.title() == status else NSOffState)
-        else:
-            item = self.presenceActivityPopUp.selectedItem()
-            settings.presence_state.status = item.title()
-            settings.save()
-
     def windowShouldClose_(self, sender):
         ev = NSApp.currentEvent()
         if ev.type() == NSKeyDown:
@@ -685,6 +660,10 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.refreshAccountList()
         self.refreshLdapDirectory()
+
+        settings = SIPSimpleSettings()
+        status = settings.presence_state.status
+        self.setStatusBarIcon(status)
 
     def _NH_SIPAccountWillRegister(self, notification):
         try:
@@ -1362,6 +1341,10 @@ class ContactWindowController(NSWindowController):
         if account is not BonjourAccount:
             account.audio.do_not_disturb = not account.audio.do_not_disturb
             account.save()
+
+            settings = SIPSimpleSettings()
+            status = settings.presence_state.status
+            self.setStatusBarIcon(status)
 
     @objc.IBAction
     def muteClicked_(self, sender):
@@ -2067,11 +2050,36 @@ class ContactWindowController(NSWindowController):
         self.activeAccount().save()
         sender.resignFirstResponder()
 
+    def loadPresenceState(self):
+        settings = SIPSimpleSettings()
+        
+        # populate presence menus
+        self.presenceActivityPopUp.removeAllItems()
+        while self.presenceMenu.numberOfItems() > 0:
+            self.presenceMenu.removeItemAtIndex_(0)
+        self.fillPresenceMenu(self.presenceMenu)
+        self.fillPresenceMenu(self.presenceActivityPopUp.menu())
+        
+        note = settings.presence_state.note
+        if note:
+            self.presenceNoteText.setStringValue_(note)
+        
+        status = settings.presence_state.status    
+        if status:
+            self.setStatusBarIcon(status)
+            self.presenceActivityPopUp.selectItemWithTitle_(status)
+            for item in self.presenceMenu.itemArray():
+                item.setState_(NSOnState if item.title() == status else NSOffState)
+        else:
+            item = self.presenceActivityPopUp.selectedItem()
+            settings.presence_state.status = item.title()
+            settings.save()
+
     def setLastPresenceActivity(self):
         settings = SIPSimpleSettings()
         status = settings.presence_state.status
         if status:
-            self.setStatusItemIcon(status)
+            self.setStatusBarIcon(status)
             self.presenceActivityPopUp.selectItemWithTitle_(status)
             for item in self.presenceMenu.itemArray():
                 item.setState_(NSOnState if item.title() == status else NSOffState)
@@ -2109,7 +2117,6 @@ class ContactWindowController(NSWindowController):
         status = item['title']
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
-        status = 'Offline' if status == 'Invisible' else status
         item = self.presenceMenu.itemWithTitle_(status)
         if item is not None:
             item.setState_(NSOnState)
@@ -2118,7 +2125,7 @@ class ContactWindowController(NSWindowController):
         item = menu.itemWithTitle_(status)
         self.presenceActivityPopUp.selectItem_(item)
         settings.presence_state.status = status
-        self.setStatusItemIcon(status)
+        self.setStatusBarIcon(status)
         settings.save()
         self.savePresenceActivityToHistory(history_object)
 
@@ -2148,7 +2155,7 @@ class ContactWindowController(NSWindowController):
         status = sender.title()
         settings.presence_state.status = status
 
-        self.setStatusItemIcon(status)
+        self.setStatusBarIcon(status)
 
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
@@ -2205,7 +2212,7 @@ class ContactWindowController(NSWindowController):
                 item = menu.itemWithTitle_(self.presenceActivityBeforeOnThePhone['title'])
                 self.presenceNoteText.setStringValue_(self.presenceActivityBeforeOnThePhone['note'])
                 self.presenceActivityChanged_(item)
-                self.setStatusItemIcon(self.presenceActivityBeforeOnThePhone['extended_status'])
+                self.setStatusBarIcon(self.presenceActivityBeforeOnThePhone['extended_status'])
                 self.presenceActivityBeforeOnThePhone = None               
 
         else:
@@ -2216,7 +2223,7 @@ class ContactWindowController(NSWindowController):
                 self.presenceNoteChanged_(None)
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
 
-                self.setStatusItemIcon('busy')
+                self.setStatusBarIcon('busy')
 
     def updatePresenceWatchersMenu(self, menu):
         while self.presenceWatchersMenu.numberOfItems() > 0:
@@ -2330,12 +2337,14 @@ class ContactWindowController(NSWindowController):
             #lastItem.setTarget_(self)
             #menu.addItem_(lastItem)
 
-    def setStatusItemIcon(self, status=None):
+    def setStatusBarIcon(self, status=None):
         if status is None:
             return
 
-        status=status.lower()        
-        if status == 'busy': 
+        status=status.lower()
+        account = AccountManager().default_account
+
+        if status == 'busy' or account.audio.do_not_disturb:
             icon = NSImage.imageNamed_('blink-status-red')
         elif status == 'away':
             icon = NSImage.imageNamed_('blink-status-yellow')
@@ -2346,7 +2355,7 @@ class ContactWindowController(NSWindowController):
 
         icon.setScalesWhenResized_(True)
         icon.setSize_(NSMakeSize(18,18))
-        self.statusitem.setImage_(icon)
+        self.statusBarItem.setImage_(icon)
 
     @objc.IBAction
     def showHelp_(self, sender):
