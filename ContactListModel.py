@@ -49,6 +49,7 @@ from AppKit import *
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from application.python.descriptor import classproperty
+from application.python.types import Singleton
 from application.system import makedirs, unlink
 from itertools import chain
 from sipsimple.configuration import DuplicateIDError
@@ -211,6 +212,8 @@ class Avatar(object):
 
 
 class DefaultUserAvatar(Avatar):
+    __metaclass__ = Singleton
+
     def __init__(self):
         filename = 'default_user_icon.tiff'
         path = os.path.join(self.base_path, filename)
@@ -226,6 +229,8 @@ class DefaultUserAvatar(Avatar):
 
 
 class PendingWatcherAvatar(Avatar):
+    __metaclass__ = Singleton
+
     def __init__(self):
         filename = 'pending_watcher.tiff'
         path = os.path.join(self.base_path, filename)
@@ -241,6 +246,8 @@ class PendingWatcherAvatar(Avatar):
 
 
 class BlockedPolicyAvatar(Avatar):
+    __metaclass__ = Singleton
+
     def __init__(self):
         filename = 'blocked.png'
         path = os.path.join(self.base_path, filename)
@@ -256,6 +263,8 @@ class BlockedPolicyAvatar(Avatar):
 
 
 class DefaultMultiUserAvatar(Avatar):
+    __metaclass__ = Singleton
+
     def __init__(self):
         filename = 'default_multi_user_icon.tiff'
         path = os.path.join(self.base_path, filename)

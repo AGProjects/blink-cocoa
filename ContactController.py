@@ -36,9 +36,11 @@ class AddContactController(NSObject):
     addressTable = objc.IBOutlet()
     addressTypesPopUpButton = objc.IBOutlet()
     addressTableDatasource = NSMutableArray.array()
-    defaultPhotoImage = NSImage.imageNamed_("NSUser")
+    defaultPhotoImage = None
 
     def __new__(cls, *args, **kwargs):
+        from ContactListModel import DefaultUserAvatar
+        cls.defaultPhotoImage = DefaultUserAvatar().icon
         return cls.alloc().init()
 
     def __init__(self, uri=None, name=None, group=None, type=None):
@@ -404,7 +406,7 @@ class EditContactController(AddContactController):
                     'uris'            : self.uris,
                     'name'            : unicode(self.nameText.stringValue()),
                     'groups'          : self.belonging_groups,
-                    'icon'            : None if self.photoImage.image() == self.defaultPhotoImage else self.photoImage.image(),
+                    'icon'            : None if self.photoImage.image() is self.defaultPhotoImage else self.photoImage.image(),
                     'preferred_media' : "audio" if self.preferredMedia.selectedCell().tag() == 1 else "chat",
                     'subscriptions'   : self.subscriptions
                     }
