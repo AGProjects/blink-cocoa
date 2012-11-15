@@ -15,10 +15,11 @@ class ContactOutlineView(NSOutlineView):
         return self.menu()
 
     def keyDown_(self, event):
-        if event.characters() == "\r":
+        key = event.characters()
+        if key == "\r":
             self.target().performSelector_withObject_(self.doubleAction(), self)
         else:
-            super(ContactOutlineView, self).keyDown_(event)
+            self.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
 
     def acceptsFirstResponder(self):
         return True
