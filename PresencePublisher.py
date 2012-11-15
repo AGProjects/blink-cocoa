@@ -102,9 +102,7 @@ class PresencePublisher(object):
 
     user_input = {'state': 'active', 'last_input': None}
     idle_threshold = 600
-    extended_idle_threshold = 3600
     idle_mode = False
-    idle_extended_mode = False
     last_input = ISOTimestamp.now()
     last_time_offset = int(pidf.TimeOffset())
     gruu_addresses = {}
@@ -286,12 +284,6 @@ class PresencePublisher(object):
                     self.originalPresenceActivity = activity_object
                 self.idle_mode = True
                 must_publish = True
-            else:
-                if last_idle_counter > self.extended_idle_threshold:
-                    if not self.idle_extended_mode:
-                        self.idle_extended_mode = True
-                        must_publish = True
-
         else:
             if self.idle_mode:
                 self.user_input = {'state': 'active', 'last_input': None}
@@ -300,9 +292,7 @@ class PresencePublisher(object):
                         i = self.owner.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceActivity)
                         self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
                         self.originalPresenceActivity = None
-
                 self.idle_mode = False
-                self.idle_extended_mode = False
                 must_publish = True
 
         if must_publish:
@@ -332,15 +322,10 @@ class PresencePublisher(object):
         if activity_object['basic_status'] == 'closed' and activity_object['extended_status'] == 'offline':
             return None
         status = pidf.Status(activity_object['basic_status'])
-        if self.idle_extended_mode:
-            extended_status = 'extended-away'
-        else:
-             extended_status = activity_object['extended_status']
-
-        status.extended = extended_status
+        status.extended = activity_object['extended_status']
 
         person.activities = rpid.Activities()
-        person.activities.add(extended_status)
+        person.activities.add(unicode(status.extended))
 
         service = pidf.Service("SID-%s" % instance_id, status=status)
         service.contact = pidf.Contact(str(account.contact.public_gruu or account.uri))

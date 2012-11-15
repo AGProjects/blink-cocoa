@@ -42,7 +42,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, presence_status_for_device, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
+from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -386,11 +386,11 @@ class ContactWindowController(NSWindowController):
             if item['represented_object'] is not None:
                 try:
                     try:
-                        status = presence_status_for_device(item['represented_object']['extended_status'])
+                        status = item['represented_object']['extended_status']
                         image = presence_status_icons[status]
                         image.setScalesWhenResized_(True)
                         image.setSize_(NSMakeSize(15,15))
-                        lastItem.setImage_(image)           
+                        lastItem.setImage_(image)
                     except KeyError:
                         pass
                 except KeyError:
@@ -2052,19 +2052,19 @@ class ContactWindowController(NSWindowController):
 
     def loadPresenceState(self):
         settings = SIPSimpleSettings()
-        
+
         # populate presence menus
         self.presenceActivityPopUp.removeAllItems()
         while self.presenceMenu.numberOfItems() > 0:
             self.presenceMenu.removeItemAtIndex_(0)
         self.fillPresenceMenu(self.presenceMenu)
         self.fillPresenceMenu(self.presenceActivityPopUp.menu())
-        
+
         note = settings.presence_state.note
         if note:
             self.presenceNoteText.setStringValue_(note)
-        
-        status = settings.presence_state.status    
+
+        status = settings.presence_state.status
         if status:
             self.setStatusBarIcon(status)
             self.presenceActivityPopUp.selectItemWithTitle_(status)
@@ -2214,7 +2214,7 @@ class ContactWindowController(NSWindowController):
                 self.presenceNoteText.setStringValue_(self.presenceActivityBeforeOnThePhone['note'])
                 self.presenceActivityChanged_(item)
                 self.setStatusBarIcon(self.presenceActivityBeforeOnThePhone['extended_status'])
-                self.presenceActivityBeforeOnThePhone = None               
+                self.presenceActivityBeforeOnThePhone = None
 
         else:
             if hasAudio and current_presence_activity['extended_status'] == 'available':
@@ -2275,7 +2275,7 @@ class ContactWindowController(NSWindowController):
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'Nobody', "", "")
             lastItem.setEnabled_(False)
             self.presenceWatchersMenu.addItem_(lastItem)
-    
+
 
     def updatePresenceActivityMenu(self, menu):
         if menu == self.presenceMenu:
@@ -2317,7 +2317,7 @@ class ContactWindowController(NSWindowController):
             title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
             lastItem.setAttributedTitle_(title)
             lastItem.setRepresentedObject_(item)
-            status = presence_status_for_device(item['extended_status'])
+            status = item['extended_status']
             try:
                 image = presence_status_icons[status]
                 image.setScalesWhenResized_(True)
@@ -2638,7 +2638,7 @@ class ContactWindowController(NSWindowController):
         object = sender.representedObject()
         if object is not None:
             self.startSessionWithLocalAndRemoteURI(object['account'], object['target_uri'], "chat")
-                        
+
     @run_in_green_thread
     def show_last_chat_conversations(self):
         results = SessionHistory().get_last_chat_conversations(4)
@@ -2783,7 +2783,7 @@ class ContactWindowController(NSWindowController):
                 self.statusBarMenu.removeItem_(missed_call_item)
             else:
                 break
-            
+
         index = menu.indexOfItem_(menu.itemWithTag_(1000))
         tag = 1001
         for item in entries['missed']:
@@ -2802,7 +2802,7 @@ class ContactWindowController(NSWindowController):
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             return
-        
+
         while menu.numberOfItems() > 4:
             menu.removeItemAtIndex_(4)
 
@@ -2814,7 +2814,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
-        
+
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming", "", "")
         lastItem.setEnabled_(False)
@@ -2871,12 +2871,12 @@ class ContactWindowController(NSWindowController):
                 text += " %s" % item['failure_reason'].capitalize()
             elif item['status'] not in ('completed', 'missed'):
                 text += " %s" % item['status'].capitalize()
-        
+
         text_format = red_font_color if item['status'] == 'failed' else gray_font_color
         t = NSAttributedString.alloc().initWithString_attributes_(text, text_format)
         a.appendAttributedString_(t)
         return a
-            
+
     @allocate_autorelease_pool
     def delete_session_history_entries(self):
         SessionHistory().delete_entries()
@@ -3239,14 +3239,14 @@ class ContactWindowController(NSWindowController):
                         title += ' in %s' % unicode(device['location']) if device['location'] else ''
                         audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_(title, "startAudioSessionWithSIPURI:", "")
                         audio_item.setRepresentedObject_(device['contact'])
-                        status = presence_status_for_device(device['status'])
+                        status = device['status']
                         try:
                             image = presence_status_icons[status]
                             image.setScalesWhenResized_(True)
                             image.setSize_(NSMakeSize(15,15))
                             audio_item.setImage_(image)
                         except KeyError:
-                            pass                    
+                            pass
                         audio_item.setIndentationLevel_(1)
                         if device['caps'] is not None and 'audio' not in device['caps']:
                             audio_item.setEnabled_(False)
@@ -3284,14 +3284,14 @@ class ContactWindowController(NSWindowController):
                             title += ' in %s' % unicode(device['location']) if device['location'] else ''
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_(title, "startChatSessionWithSIPURI:", "")
                             chat_item.setRepresentedObject_(device['contact'])
-                            status = presence_status_for_device(device['status'])
+                            status = device['status']
                             try:
                                 image = presence_status_icons[status]
                                 image.setScalesWhenResized_(True)
                                 image.setSize_(NSMakeSize(15,15))
                                 chat_item.setImage_(icon)
                             except KeyError:
-                                pass                        
+                                pass
                             chat_item.setIndentationLevel_(1)
                             if device['caps'] is not None and 'chat' not in device['caps']:
                                 chat_item.setEnabled_(False)
@@ -3346,14 +3346,14 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_(title, "sendFile:", "")
                                 ft_item.setRepresentedObject_(device['contact'])
-                                status = presence_status_for_device(device['status'])
+                                status = device['status']
                                 try:
                                     image = presence_status_icons[status]
                                     image.setScalesWhenResized_(True)
                                     image.setSize_(NSMakeSize(15,15))
                                     ft_item.setImage_(image)
                                 except KeyError:
-                                    pass                        
+                                    pass
                                 ft_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'file-transfer' not in device['caps']:
                                     ft_item.setEnabled_(False)
@@ -3391,14 +3391,14 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
-                                status = presence_status_for_device(device['status'])
+                                status = device['status']
                                 try:
                                     image = presence_status_icons[status]
                                     image.setScalesWhenResized_(True)
                                     image.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(image)
                                 except KeyError:
-                                    pass                        
+                                    pass
                                 ds_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'screen-sharing' not in device['caps']:
                                     ds_item.setEnabled_(False)
@@ -3436,14 +3436,14 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
-                                status = presence_status_for_device(device['status'])
+                                status = device['status']
                                 try:
                                     image = presence_status_icons[status]
                                     image.setScalesWhenResized_(True)
                                     image.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(image)
                                 except KeyError:
-                                    pass                        
+                                    pass
                                 ds_item.setTag_(2)
                                 ds_item.setIndentationLevel_(1)
 

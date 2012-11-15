@@ -29,7 +29,6 @@ __all__ = ['BlinkContact',
            'ContactListModel',
            'SearchContactListModel',
            'presence_status_for_contact',
-           'presence_status_for_device',
            'presence_status_icons']
 
 import bisect
@@ -80,20 +79,6 @@ presence_status_icons = {'away': NSImage.imageNamed_("away"),
                          'blocked': NSImage.imageNamed_("blocked")
                          }
 
-def presence_status_for_device(device_status):
-    status = None
-    if device_status == 'busy':
-        status = 'busy'
-    elif device_status == 'available':
-        status = 'available'
-    elif device_status == 'away':
-        status = 'away'
-    elif device_status == 'extended-away':
-        status = 'away'
-    elif device_status == 'offline':
-        status = 'offline'
-    return status
-
 
 def presence_status_for_contact(contact, uri=None):
     status = None
@@ -107,8 +92,6 @@ def presence_status_for_contact(contact, uri=None):
                 status = 'available'
             elif contact.presence_state['status']['away']:
                 status = 'away'
-            elif contact.presence_state['status']['extended-away']:
-                status = 'away'
             elif contact.contact.presence.subscribe:
                 status = 'offline'
         elif isinstance(contact, BlinkConferenceContact) and contact.presence_contact is not None:
@@ -119,8 +102,6 @@ def presence_status_for_contact(contact, uri=None):
             elif contact.presence_state['status']['available']:
                 status = 'available'
             elif contact.presence_state['status']['away']:
-                status = 'away'
-            elif contact.presence_state['status']['extended-away']:
                 status = 'away'
             elif contact.presence_contact.contact.presence.subscribe:
                 status = 'offline'
@@ -136,7 +117,6 @@ def presence_status_for_contact(contact, uri=None):
             available = False
             away = False
             busy = False
-            extended_away = False
 
             for pidf in pidfs:
                 if basic_status is 'closed':
@@ -148,9 +128,6 @@ def presence_status_for_contact(contact, uri=None):
                 if busy is False:
                     busy = any(service for service in pidf.services if service.status.extended == 'busy')
 
-                if extended_away is False:
-                    extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
-
                 if away is False:
                     away = any(service for service in pidf.services if service.status.extended == 'away')
 
@@ -159,8 +136,6 @@ def presence_status_for_contact(contact, uri=None):
             elif available:
                 status = 'available'
             elif away:
-                status = 'away'
-            elif extended_away:
                 status = 'away'
             else:
                 status = 'offline'
@@ -469,7 +444,6 @@ class BlinkConferenceContact(BlinkContact):
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
                                 'status': { 'available':     False,
-                                            'extended-away': False,
                                             'away':          False,
                                             'busy':          False
                             }
@@ -525,9 +499,6 @@ class BlinkConferenceContact(BlinkContact):
 
             if self.presence_state['status']['busy'] is False:
                 self.presence_state['status']['busy'] = any(service for service in pidf.services if service.status.extended == 'busy')
-
-            if self.presence_state['status']['extended-away'] is False:
-                self.presence_state['status']['extended-away'] = any(service for service in pidf.services if service.status.extended == 'extended-away')
 
             if self.presence_state['status']['away'] is False:
                 self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
@@ -605,7 +576,6 @@ class BlinkPresenceContact(BlinkContact):
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
-                                            'extended-away': False,
                                             'away':          False,
                                             'busy':          False
                                 },
@@ -687,19 +657,12 @@ class BlinkPresenceContact(BlinkContact):
                 if self.presence_state['status']['away'] is False:
                     self.presence_state['status']['away'] = _away
 
-                _extended_away = any(service for service in pidf.services if service.status.extended == 'extended-away')
-
-                if self.presence_state['status']['extended-away'] is False:
-                    self.presence_state['status']['extended-away'] = _extended_away
-
                 if _busy:
                     device_wining_status = 'busy'
                 elif _available:
                     device_wining_status = 'available'
                 elif _away:
                     device_wining_status = 'away'
-                elif _extended_away:
-                    device_wining_status = 'extended-away'
                 else:
                     device_wining_status = 'offline'
 
@@ -748,8 +711,6 @@ class BlinkPresenceContact(BlinkContact):
                                 device_wining_status = 'available'
                             elif service.status.extended == 'away':
                                 device_wining_status = 'away'
-                            elif service.status.extended == 'extended-away':
-                                device_wining_status = 'extended-away'
                             else:
                                 device_wining_status = 'offline'
 
@@ -813,7 +774,7 @@ class BlinkPresenceContact(BlinkContact):
         self.addToOrRemoveFromOnlineGroup()
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
-    def addToOrRemoveFromOnlineGroup(self):    
+    def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         online_contact = None
@@ -922,8 +883,6 @@ class BlinkPresenceContact(BlinkContact):
             wining_status = 'available'
         elif self.presence_state['status']['away']:
             wining_status = 'away'
-        elif self.presence_state['status']['extended-away']:
-            wining_status = 'extended-away'
         else:
             wining_status = 'offline'
 
