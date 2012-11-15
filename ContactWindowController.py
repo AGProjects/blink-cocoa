@@ -3696,7 +3696,7 @@ class ContactWindowController(NSWindowController):
                 item.setTitle_('Redial %s' % self.sessionControllersManager.redial_uri)
             else:
                 item.setTitle_('Redial')
-                item.setEnabled_(True)
+                item.setEnabled_(False)
         
 
         elif menu == self.callMenu:
