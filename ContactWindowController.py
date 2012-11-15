@@ -3689,6 +3689,15 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
             item.setEnabled_(True)
             self.updateHistoryMenu()
+   
+            item = menu.itemWithTag_(25) # redial
+            if self.sessionControllersManager.redial_uri is not None:
+                item.setEnabled_(True)
+                item.setTitle_('Redial %s' % self.sessionControllersManager.redial_uri)
+            else:
+                item.setTitle_('Redial')
+                item.setEnabled_(True)
+        
 
         elif menu == self.callMenu:
             self.updateCallMenu()

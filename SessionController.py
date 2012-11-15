@@ -98,6 +98,7 @@ class SessionControllersManager(object):
         self.incomingSessions = set()
         self.activeAudioStreams = set()
         self.pause_music = True
+        self.redial_uri = None
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -108,7 +109,18 @@ class SessionControllersManager(object):
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.ringer.start()
         self.ringer.update_ringtones()
-        settings = SIPSimpleSettings()
+        self.get_redial_uri_from_history()
+
+    @run_in_green_thread
+    def get_redial_uri_from_history(self):
+        results = SessionHistory().get_entries(direction='outgoing', count=1)
+        try:
+            session_info = results[0]
+        except IndexError:
+            pass
+        else:
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
+            self.redial_uri = fancy_uri
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ringer.stop()
@@ -532,6 +544,7 @@ class SessionControllersManager(object):
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri)
+        self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
@@ -560,12 +573,15 @@ class SessionControllersManager(object):
         if account is BonjourAccount():
             return
 
+        self.redial_uri = controller.target_uri
+
         id=str(uuid.uuid1())
         media_types = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri)
+        self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = ''
         call_id = data.call_id if data.call_id is not None else ''
         from_tag = data.from_tag if data.from_tag is not None else ''
@@ -587,6 +603,7 @@ class SessionControllersManager(object):
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
+
         account = controller.account
         session = controller.session
         if account is BonjourAccount():
@@ -598,6 +615,7 @@ class SessionControllersManager(object):
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri)
+        self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         direction = 'incoming'
         status = 'delivered'
         failure_reason = ''
