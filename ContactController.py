@@ -387,9 +387,9 @@ class EditContactController(AddContactController):
 
         self.subscriptions = {
                               'presence': {'subscribe': blink_contact.contact.presence.subscribe,
-                                           'policy': blink_contact.contact.presence.policy if blink_contact.contact.presence.policy != 'default' else 'block'},
+                                           'policy': blink_contact.contact.presence.policy},
                               'dialog': {'subscribe': blink_contact.contact.dialog.subscribe,
-                                         'policy': blink_contact.contact.dialog.policy if blink_contact.contact.dialog.policy != 'default' else 'block'}
+                                         'policy': blink_contact.contact.dialog.policy}
         }
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
