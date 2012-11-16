@@ -4,6 +4,7 @@
 from Foundation import *
 from AppKit import *
 from VerticalBoxView import VerticalBoxView
+from util import osx_version
 
 
 class ListView(VerticalBoxView):
@@ -82,7 +83,7 @@ class ListView(VerticalBoxView):
         self.insertItemView_before_(view, None)
 
     def mouseDown_(self, event):
-        pos = self.convertPointFromBacking_(event.locationInWindow())
+        pos = self._convertPointFromBacking(event.locationInWindow())
         row = -1
         for item in self.subviews():
             row += 1
@@ -117,4 +118,9 @@ class ListView(VerticalBoxView):
 
         self.relayout()
 
+    def _convertPointFromBacking(self, *args, **kw):
+        if osx_version == '10.6':
+            return self.convertPointFromBase_(*args, **kw)
+        else:
+            return self.convertPointFromBacking_(*args, **kw)
 

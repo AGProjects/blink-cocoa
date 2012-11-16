@@ -12,6 +12,7 @@ from Quartz import CoreVideo
 
 from application.system import makedirs
 from resources import ApplicationData
+from util import osx_version
 
 
 class IconViewBox(NSBox):
@@ -47,7 +48,7 @@ class EditImageView(NSImageView):
 
     def mouseDown_(self, event):
         if self.cropRectangle:
-            p = self.convertPointFromBacking_(event.locationInWindow())
+            p = self._convertPointFromBacking(event.locationInWindow())
             if p.x > NSMinX(self.cropRectangle) and p.x < NSMaxX(self.cropRectangle) and\
                p.y > NSMinY(self.cropRectangle) and p.y < NSMaxY(self.cropRectangle):
                 self.dragPos = p
@@ -59,7 +60,7 @@ class EditImageView(NSImageView):
 
     def mouseDragged_(self, event):
         if self.cropRectangle and self.dragPos:
-            p = self.convertPointFromBacking_(event.locationInWindow())
+            p = self._convertPointFromBacking(event.locationInWindow())
             dx = self.dragPos.x - p.x
             dy = self.dragPos.y - p.y
 
@@ -95,6 +96,12 @@ class EditImageView(NSImageView):
 
             NSColor.blackColor().colorWithAlphaComponent_(0.6).set()
             NSBezierPath.bezierPathWithRect_(rect).fill()
+
+    def _convertPointFromBacking(self, *args, **kw):
+        if osx_version == '10.6':
+            return self.convertPointFromBase_(*args, **kw)
+        else:
+            return self.convertPointFromBacking_(*args, **kw)
 
 
 class PhotoPicker(NSObject):
