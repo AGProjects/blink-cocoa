@@ -100,16 +100,16 @@ class ContactCell(NSTextFieldCell):
     @allocate_autorelease_pool
     def drawPresenceIcon(self):
         status = presence_status_for_contact(self.contact)
+        if not status:
+            return
         try:
             icon = presence_status_icons[status]
+        except KeyError:
+            pass
+        else:
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(12,12))
             self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
-        except KeyError:
-            pass
-
-        if not hasattr(self.contact, "presence_state"):
-            return
 
         try:
             has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
