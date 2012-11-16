@@ -393,6 +393,16 @@
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">50</int>
 								</object>
+								<object class="NSMenuItem" id="273435786">
+									<reference key="NSMenu" ref="728662662"/>
+									<string key="NSTitle">Block Contact...</string>
+									<string key="NSKeyEquiv">i</string>
+									<int key="NSKeyEquivModMask">1572864</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">50</int>
+								</object>
 								<object class="NSMenuItem" id="968085631">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
@@ -1503,7 +1513,6 @@
 												<string key="NSFrame">{{0, 288}, {274, 60}}</string>
 												<reference key="NSSuperview" ref="384228997"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="954251869"/>
 												<string key="NSClassName">NSView</string>
 											</object>
 										</array>
@@ -2194,7 +2203,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="NSFrame">{{232, 6}, {29, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="722602892">
 								<int key="NSCellFlags">67239424</int>
@@ -4562,6 +4570,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1800</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">blockContact:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="273435786"/>
+					</object>
+					<int key="connectionID">1806</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
 						<string key="label">link</string>
 						<reference key="source" ref="954251869"/>
@@ -5687,6 +5703,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="896498523"/>
 							<reference ref="16377066"/>
 							<reference ref="473755635"/>
+							<reference ref="273435786"/>
 						</array>
 						<reference key="parent" ref="556337794"/>
 					</object>
@@ -6804,6 +6821,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="1005946465"/>
 						<reference key="parent" ref="806384761"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1804</int>
+						<reference key="object" ref="273435786"/>
+						<reference key="parent" ref="728662662"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -7009,6 +7031,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="1801.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1802.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1803.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1804.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="19.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="197.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="198.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7366,10 +7389,18 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1803</int>
+			<int key="maxID">1806</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<object class="IBPartialClassDescription">
+					<string key="className">ContactCell</string>
+					<string key="superclassName">NSTextFieldCell</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ContactCell.h</string>
+					</object>
+				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">ContactListModel</string>
 					<string key="superclassName">CustomListModel</string>
@@ -7390,14 +7421,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">ContactOutlineView</string>
-					<string key="superclassName">NSOutlineView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactOutlineView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">ContactWindowController</string>
 					<string key="superclassName">NSWindowController</string>
 					<dictionary class="NSMutableDictionary" key="actions">
@@ -7409,6 +7432,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="addGroup:">id</string>
 						<string key="backToContacts:">id</string>
 						<string key="backupContacts:">id</string>
+						<string key="blockContact:">id</string>
 						<string key="clearSearchField:">id</string>
 						<string key="close:">id</string>
 						<string key="conferenceClicked:">id</string>
@@ -7507,6 +7531,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="backupContacts:">
 							<string key="name">backupContacts:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="blockContact:">
+							<string key="name">blockContact:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="clearSearchField:">

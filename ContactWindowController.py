@@ -38,6 +38,7 @@ import SMSWindowManager
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from AudioSession import AudioSession
+from BlockedContact import BlockedContact
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
@@ -1173,6 +1174,20 @@ class ContactWindowController(NSWindowController):
         if self.ldap_search:
             self.ldap_search = None
             NotificationCenter().discard_observer(self, name="LDAPDirectorySearchFoundContact")
+
+    @objc.IBAction
+    def blockContact_(self, sender):
+        controller = BlockedContact()
+        contact = controller.runModal()
+        if not contact:
+            return
+
+        policy_contact = Policy()
+        policy_contact.name = contact['name']
+        policy_contact.uri = contact['address']
+        policy_contact.presence.policy = 'block'
+        policy_contact.dialog.policy = 'block'
+        policy_contact.save()
 
     @objc.IBAction
     def addGroup_(self, sender):

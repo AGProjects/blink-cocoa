@@ -563,6 +563,12 @@
 		1FA6252013828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
 		1FA6252113828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
 		1FA6252213828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
+		1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
+		1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
+		1FAA83A016566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
+		1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
+		1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
+		1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAF8C5D12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
 		1FAF8C5E12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
 		1FAF8D5312DA31100029857C /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
@@ -1298,6 +1304,8 @@
 		1FA4907F1549631A0011EE27 /* AddressBookURL-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookURL-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookURL-plugin-setup.py"; sourceTree = "<group>"; };
 		1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookURL-plugin.py"; path = "PlugIn/AddressBook/AddressBookURL-plugin.py"; sourceTree = "<group>"; };
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
+		1FAA839D16566D8C00C4C212 /* BlockedContact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlockedContact.py; sourceTree = "<group>"; };
+		1FAA83A81656745500C4C212 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
 		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
 		1FB22A07140306EC0024F921 /* lock-zrtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "lock-zrtp.png"; path = "icons/lock-zrtp.png"; sourceTree = "<group>"; };
@@ -1997,6 +2005,8 @@
 				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2BAF38080FE088C70040117A /* Contact.xib */,
 				2B4CA93110AA5FAE00D5F19E /* GroupController.py */,
+				1FAA839D16566D8C00C4C212 /* BlockedContact.py */,
+				1FAA83A91656745500C4C212 /* BlockedContact.xib */,
 				2B4CA92D10AA5F2F00D5F19E /* Group.xib */,
 				DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */,
 			);
@@ -2553,6 +2563,8 @@
 				1FD3F87C164D7B3A008F56E8 /* blink-status-green.png in Resources */,
 				1FD3F87F164D7B3A008F56E8 /* blink-status-red.png in Resources */,
 				1FD3F882164D7B3A008F56E8 /* blink-status-yellow.png in Resources */,
+				1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */,
+				1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2786,6 +2798,8 @@
 				1FD3F87D164D7B3A008F56E8 /* blink-status-green.png in Resources */,
 				1FD3F880164D7B3A008F56E8 /* blink-status-red.png in Resources */,
 				1FD3F883164D7B3A008F56E8 /* blink-status-yellow.png in Resources */,
+				1FAA83A016566D8C00C4C212 /* BlockedContact.py in Resources */,
+				1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3017,6 +3031,8 @@
 				1FD3F87B164D7B3A008F56E8 /* blink-status-green.png in Resources */,
 				1FD3F87E164D7B3A008F56E8 /* blink-status-red.png in Resources */,
 				1FD3F881164D7B3A008F56E8 /* blink-status-yellow.png in Resources */,
+				1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */,
+				1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3147,6 +3163,14 @@
 				1F87B6EE1477D57000BDF25A /* English */,
 			);
 			name = NightVolumeSetting.xib;
+			sourceTree = "<group>";
+		};
+		1FAA83A91656745500C4C212 /* BlockedContact.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FAA83A81656745500C4C212 /* English */,
+			);
+			name = BlockedContact.xib;
 			sourceTree = "<group>";
 		};
 		1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */ = {
