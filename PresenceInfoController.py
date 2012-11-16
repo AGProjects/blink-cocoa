@@ -66,6 +66,7 @@ class PresenceInfoController(NSObject):
         return NSNumber.numberWithInt_(0)
 
     def show(self, contact):
+        NSApp.activateIgnoringOtherApps_(True)
         self.contact =  contact
         self.window.setTitle_(u'Availability Information published by %s' % contact.name)
         self.name.setStringValue_(self.contact.name)
