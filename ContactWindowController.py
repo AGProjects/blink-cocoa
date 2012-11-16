@@ -534,10 +534,13 @@ class ContactWindowController(NSWindowController):
                 item.setImage_(image)
             else:
                 if not account_info.registration_state == 'succeeded':
-                    if account_info.failure_reason and account_info.failure_code:
-                        name = '%s (%s %s)' % (account_info.name, account_info.failure_code, account_info.failure_reason)
-                    elif account_info.failure_reason:
-                        name = '%s (%s)' % (account_info.name, account_info.failure_reason)
+                    if account_info.account.sip.register:
+                        if account_info.failure_reason and account_info.failure_code:
+                            name = '%s (%s %s)' % (account_info.name, account_info.failure_code, account_info.failure_reason)
+                        elif account_info.failure_reason:
+                            name = '%s (%s)' % (account_info.name, account_info.failure_reason)
+                        else:
+                            name = account_info.name
                     else:
                         name = account_info.name
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
@@ -835,6 +838,9 @@ class ContactWindowController(NSWindowController):
             self.refreshLdapDirectory()
 
         if isinstance(notification.sender, (Account, BonjourAccount)) and 'order' in notification.data.modified:
+            self.refreshAccountList()
+
+        if isinstance(notification.sender, Account) and 'sip.register' in notification.data.modified:
             self.refreshAccountList()
 
         if notification.data.modified.has_key("sounds.enable_speech_synthesizer"):
