@@ -1184,7 +1184,7 @@ class ChatHistoryReplicator(object):
         for entry in results:
             try:
                 msgid          = entry['id']
-                journal_id     = entry['journal_id']
+                journal_id     = str(entry['journal_id'])
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to update journal id from history replication server of %s" % account)
             else:
@@ -1238,7 +1238,7 @@ class ChatHistoryReplicator(object):
                 data           = entry['data']
                 uuid           = entry['uuid']
                 timestamp      = entry['timestamp']
-                journal_id     = entry['id']
+                journal_id     = str(entry['id'])
                 self.last_journal_id[account] = journal_id
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to parse server replication results for %s" % account)
@@ -1274,9 +1274,9 @@ class ChatHistoryReplicator(object):
                         notify_data[data['remote_uri']] += 1
 
                 if data['direction'] == 'incoming':
-                    BlinkLogger().log_debug(u"Replicate %s chat message %s from %s to %s" % (data['direction'], journal_id, data['remote_uri'], account))
+                    BlinkLogger().log_debug(u"Save locally %s chat msg id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, data['remote_uri'], account, uuid))
                 else:
-                    BlinkLogger().log_debug(u"Replicate %s chat message %s from %s to %s" % (data['direction'], journal_id, account, data['remote_uri']))
+                    BlinkLogger().log_debug(u"Save locally %s chat msg id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
 
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to apply journal to local history database for %s" % account)
@@ -1421,7 +1421,7 @@ class ChatHistoryReplicator(object):
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Incoming journal for %s received from %s" % (key, self.connections_for_incoming_replication[key]['url']))
+            BlinkLogger().log_debug(u"Incoming chat journal for %s received from %s" % (key, self.connections_for_incoming_replication[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
