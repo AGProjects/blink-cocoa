@@ -227,6 +227,7 @@ class BlinkAppDelegate(NSObject):
     def applicationShouldTerminate_(self, sender):
         self.contactsWindowController.closeAllSessions()
         self.contactsWindowController.chat_journal_replicator.save_journal_on_disk()
+        self.contactsWindowController.chat_journal_replicator.save_journal_timestamp_on_disk()
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
 
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")

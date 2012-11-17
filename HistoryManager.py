@@ -446,18 +446,6 @@ class ChatHistory(object):
         return False
 
     @run_in_db_thread
-    def _get_last_journal_entry(self, local_uri):
-        query = "select journal_id from chat_messages where local_uri = %s and journal_id <> '' order by id desc limit 1" % SessionHistoryEntry.sqlrepr(local_uri)
-        try:
-            return list(self.db.queryAll(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting contacts from chat history table: %s" % e)
-            return None
-
-    def get_last_journal_entry(self, local_uri):
-        return block_on(self._get_last_journal_entry(local_uri))
-
-    @run_in_db_thread
     def update_from_journal_put_results(self, msgid, journal_id):
         try:
             results = ChatMessage.selectBy(msgid=msgid)
@@ -912,7 +900,7 @@ class SessionHistoryReplicator(object):
 
                         success = 'completed' if duration > 0 else 'missed'
 
-                        BlinkLogger().log_debug(u"Adding incoming %s call at %s from %s from server history" % (success, start_time, remote_uri))
+                        BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
                         self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                         if 'audio' in media:
                             direction = 'incoming'
@@ -996,7 +984,7 @@ class SessionHistoryReplicator(object):
                         else:
                             success = 'cancelled' if status == "487" else 'failed'
 
-                        BlinkLogger().log_debug(u"Adding outgoing %s call at %s to %s from server history" % (success, start_time, remote_uri))
+                        BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
                         self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                         if 'audio' in media:
                             local_uri = local_uri
@@ -1053,7 +1041,7 @@ class ChatHistoryReplicator(object):
     incoming_entries = {}
     connections_for_outgoing_replication = {}
     connections_for_incoming_replication = {}
-    last_journal_id = {}
+    last_journal_timestamp = {}
     disabled_accounts = set()
     paused = False
     debug = False
@@ -1066,14 +1054,35 @@ class ChatHistoryReplicator(object):
         notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         notification_center.add_observer(self, name='SystemWillSleep')
         try:
-            with open(ApplicationData.get('chat_journal.pickle'), 'r') as f:
+            with open(ApplicationData.get('chat_replication_journal.pickle'), 'r') as f:
                 self.outgoing_entries = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            pass
+
+        try:
+            with open(ApplicationData.get('chat_replication_timestamp.pickle'), 'r') as f:
+                self.last_journal_timestamp = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
             pass
 
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(180.0, self, "updateTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+
+    def save_journal_on_disk(self):
+        storage_path = ApplicationData.get('chat_replication_journal.pickle')
+        try:
+            cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
+    
+    def save_journal_timestamp_on_disk(self):
+        storage_path = ApplicationData.get('chat_replication_timestamp.pickle')
+        try:
+            cPickle.dump(self.last_journal_timestamp, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
+            
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -1138,23 +1147,14 @@ class ChatHistoryReplicator(object):
         BlinkLogger().log_debug(u"Disabled chat history replication for %s" % account)
         self.disabled_accounts.add(account)
 
-    def get_last_journal_entry(self, account):
+    def get_last_journal_timestamp(self, account):
+        last_journal_timestamp = {'timestamp': 0, 'msgid_list': []}
         try:
-            entry = ChatHistory().get_last_journal_entry(str(account))
-        except Exception, e:
-            return None
-
-        if len(entry):
-            return entry[0][0]
-        else:
-            return None
-
-    def save_journal_on_disk(self):
-        storage_path = ApplicationData.get('chat_journal.pickle')
-        try:
-            cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
-        except (cPickle.PickleError, IOError):
+            last_journal_timestamp = self.last_journal_timestamp[account]
+        except KeyError:
             pass
+
+        return last_journal_timestamp    
 
     def updateLocalHistoryWithRemoteJournalPutREsults(self, journal, account):
         try:
@@ -1188,6 +1188,7 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to update journal id from history replication server of %s" % account)
             else:
+                BlinkLogger().log_debug(u"Update local chat history message %s with remote journal id %s" % (msgid, journal_id))
                 ChatHistory().update_from_journal_put_results(msgid, journal_id)
 
     @run_in_green_thread
@@ -1225,13 +1226,6 @@ class ChatHistoryReplicator(object):
         else:
             replication_password = acc.chat.replication_password
 
-        try:
-            reset_journal_id = journal['reset_journal_id']
-        except KeyError:
-            pass
-        else:
-            self.last_journal_id[account] = 0
-
         notify_data = {}
         for entry in results:
             try:
@@ -1239,7 +1233,15 @@ class ChatHistoryReplicator(object):
                 uuid           = entry['uuid']
                 timestamp      = entry['timestamp']
                 journal_id     = str(entry['id'])
-                self.last_journal_id[account] = journal_id
+                try:
+                    last_journal_timestamp = self.last_journal_timestamp[account]
+                    old_timestamp = last_journal_timestamp['timestamp']
+                except KeyError:
+                    self.last_journal_timestamp[account] = {'timestamp': timestamp, 'msgid_list': []}
+                else:
+                    if old_timestamp < timestamp:
+                        self.last_journal_timestamp[account] = {'timestamp': timestamp, 'msgid_list': []}
+
             except KeyError:
                 BlinkLogger().log_debug(u"Failed to parse server replication results for %s" % account)
                 self.disableReplication(account)
@@ -1259,28 +1261,30 @@ class ChatHistoryReplicator(object):
                 BlinkLogger().log_debug(u"Failed to decode replication journal for %s: %s" % (account, e))
                 continue
 
-            try:
-                ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id)
-                now = datetime(*time.localtime()[:6])
-                start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
-                elapsed = now - start_time
-                elapsed_hours = elapsed.seconds / (60*60)
-                if elapsed_hours < 72:
-                    try:
-                        log = notify_data[data['remote_uri']]
-                    except KeyError:
-                        notify_data[data['remote_uri']] = 1
+            if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
+                try:
+                    self.last_journal_timestamp[account]['msgid_list'].append(data['msgid'])
+                    ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id)
+                    now = datetime(*time.localtime()[:6])
+                    start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
+                    elapsed = now - start_time
+                    elapsed_hours = elapsed.seconds / (60*60)
+                    if elapsed_hours < 72:
+                        try:
+                            log = notify_data[data['remote_uri']]
+                        except KeyError:
+                            notify_data[data['remote_uri']] = 1
+                        else:
+                            notify_data[data['remote_uri']] += 1
+
+                    if data['direction'] == 'incoming':
+                        BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, data['remote_uri'], account, uuid))
                     else:
-                        notify_data[data['remote_uri']] += 1
+                        BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
 
-                if data['direction'] == 'incoming':
-                    BlinkLogger().log_debug(u"Save locally %s chat msg id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, data['remote_uri'], account, uuid))
-                else:
-                    BlinkLogger().log_debug(u"Save locally %s chat msg id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
-
-            except KeyError:
-                BlinkLogger().log_debug(u"Failed to apply journal to local history database for %s" % account)
-                return
+                except KeyError:
+                    BlinkLogger().log_debug(u"Failed to apply journal to local history database for %s" % account)
+                    return
 
         if notify_data:
             for key in notify_data.keys():
@@ -1339,31 +1343,29 @@ class ChatHistoryReplicator(object):
     @run_in_green_thread
     def prepareConnectionForIncomingReplication(self, account):
         try:
-            from_journal_id = self.last_journal_id[account.id]
+            last_journal_timestamp = self.last_journal_timestamp[account.id]
+            timestamp = last_journal_timestamp['timestamp']
         except KeyError:
-            from_journal_id = self.get_last_journal_entry(account.id)
-            BlinkLogger().log_debug(u"Starting chat history replication for %s from journal id %s" % (account.id, from_journal_id))
-            self.last_journal_id[account.id] = from_journal_id
+            last_journal_timestamp = self.get_last_journal_timestamp(account.id)
+            self.last_journal_timestamp[account.id] = last_journal_timestamp
+            timestamp = last_journal_timestamp['timestamp']
 
-        from_journal_id = self.last_journal_id[account.id]
-        self.startConnectionForIncomingReplication(account, from_journal_id)
+        self.startConnectionForIncomingReplication(account, timestamp)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def startConnectionForIncomingReplication(self, account, from_journal_id=None):
+    def startConnectionForIncomingReplication(self, account, after_timestamp):
         settings = SIPSimpleSettings()
-        query_string_variables = {'action': 'get_journal_entries', 'except_uuid': settings.instance_id}
-        if from_journal_id:
-            query_string_variables['after_id'] = urllib.quote(from_journal_id)
+        query_string_variables = {'action': 'get_journal_entries', 'except_uuid': settings.instance_id, 'after_timestamp': after_timestamp}
         query_string = "&".join(("%s=%s" % (key, value) for key, value in query_string_variables.items()))
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        BlinkLogger().log_debug(u"Retrieving chat history replication for %s from %s" % (account.id, url))
         nsurl = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
         self.connections_for_incoming_replication[account.id] = {'responseData': '','authRequestCount': 0, 'connection':connection, 'url': url}
 
     # NSURLConnection delegate methods
-
     def connection_didReceiveData_(self, connection, data):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1449,6 +1451,7 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
+                BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], error))
                 self.connections_for_outgoing_replication[key]['connection'] = None
 
         try:
@@ -1461,6 +1464,7 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
+                BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], error))
                 self.connections_for_incoming_replication[key]['connection'] = None
 
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
