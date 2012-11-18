@@ -39,14 +39,14 @@
 			<object class="NSWindowTemplate" id="1005">
 				<int key="NSWindowStyleMask">3</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{621, 488}, {374, 152}}</string>
+				<string key="NSWindowRect">{{621, 488}, {354, 152}}</string>
 				<int key="NSWTFlags">544735232</int>
 				<string key="NSWindowTitle">Block Availability for Contact</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
-				<string key="NSWindowContentMaxSize">{374, 152}</string>
-				<string key="NSWindowContentMinSize">{374, 152}</string>
+				<string key="NSWindowContentMaxSize">{354, 152}</string>
+				<string key="NSWindowContentMinSize">{354, 152}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -54,7 +54,7 @@
 						<object class="NSTextField" id="868233115">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">266</int>
-							<string key="NSFrame">{{17, 123}, {340, 17}}</string>
+							<string key="NSFrame">{{17, 123}, {320, 17}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="242218964"/>
@@ -62,7 +62,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="968081865">
 								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">Add A New Contact To The Blocked Contacts Group:</string>
+								<string key="NSContents">Add a new contact to the Blocked Contacts group:</string>
 								<object class="NSFont" key="NSSupport" id="800372090">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
@@ -128,7 +128,7 @@
 						<object class="NSTextField" id="423033468">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">266</int>
-							<string key="NSFrame">{{115, 86}, {239, 22}}</string>
+							<string key="NSFrame">{{115, 86}, {219, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1062246269"/>
@@ -161,7 +161,7 @@
 						<object class="NSTextField" id="530029246">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">266</int>
-							<string key="NSFrame">{{115, 56}, {239, 22}}</string>
+							<string key="NSFrame">{{115, 56}, {219, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="413963959"/>
@@ -181,7 +181,7 @@
 						<object class="NSButton" id="688382439">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">289</int>
-							<string key="NSFrame">{{264, 12}, {96, 32}}</string>
+							<string key="NSFrame">{{244, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
@@ -203,7 +203,7 @@
 						<object class="NSButton" id="413963959">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">289</int>
-							<string key="NSFrame">{{168, 12}, {96, 32}}</string>
+							<string key="NSFrame">{{148, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="688382439"/>
@@ -223,14 +223,14 @@
 							</object>
 						</object>
 					</array>
-					<string key="NSFrameSize">{374, 152}</string>
+					<string key="NSFrameSize">{354, 152}</string>
 					<reference key="NSSuperview"/>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="868233115"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-				<string key="NSMinSize">{374, 174}</string>
-				<string key="NSMaxSize">{374, 174}</string>
+				<string key="NSMinSize">{354, 174}</string>
+				<string key="NSMaxSize">{354, 174}</string>
 				<string key="NSFrameAutosaveName">blocked-subscriber</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
@@ -319,10 +319,10 @@
 							<reference ref="423033468"/>
 							<reference ref="530029246"/>
 							<reference ref="868233115"/>
-							<reference ref="688382439"/>
-							<reference ref="413963959"/>
 							<reference ref="242218964"/>
 							<reference ref="1062246269"/>
+							<reference ref="688382439"/>
+							<reference ref="413963959"/>
 						</array>
 						<reference key="parent" ref="1005"/>
 					</object>
