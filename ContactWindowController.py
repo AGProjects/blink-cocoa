@@ -3787,7 +3787,7 @@ class ContactWindowController(NSWindowController):
             if selected_group:
                 item.setTitle_('Expand Group' if not selected_group.group.expanded else 'Collapse Group')
             else:
-                item.setTitle_('Toggle Expansion')
+                item.setTitle_('Toggle Group Expansion')
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
