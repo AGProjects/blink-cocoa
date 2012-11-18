@@ -315,21 +315,25 @@ class AddContactController(NSObject):
                 if not has_empty_cell:
                     self.uris.append(ContactURI(uri="", type="SIP"))
 
-        contact_uri = self.uris[row]
-        if column == 0:
-            uri = str(object).lower().replace(" ", "")
-            if not self.checkURI(uri):
-                NSRunAlertPanel("Invalid address", "Please enter an address containing alpha numeric characters",
-                                "OK", None, None)
-                return
-            contact_uri.uri = uri
-        elif column == 1:
-            contact_uri.type = str(cell.itemAtIndex_(object).title())
+        try:
+            contact_uri = self.uris[row]
+        except IndexError:
+            pass
+        else:
+            if column == 0:
+                uri = str(object).lower().replace(" ", "")
+                if not self.checkURI(uri):
+                    NSRunAlertPanel("Invalid address", "Please enter an address containing alpha numeric characters",
+                                    "OK", None, None)
+                    return
+                contact_uri.uri = uri
+            elif column == 1:
+                contact_uri.type = str(cell.itemAtIndex_(object).title())
 
-        self.update_default_uri()
-        table.reloadData()
-        row = self.addressTable.selectedRow()
-        self.defaultButton.setEnabled_(row < len(self.uris))
+            self.update_default_uri()
+            table.reloadData()
+            row = self.addressTable.selectedRow()
+            self.defaultButton.setEnabled_(row < len(self.uris))
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if oper == NSTableViewDropOn:
