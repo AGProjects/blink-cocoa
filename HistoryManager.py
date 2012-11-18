@@ -1082,7 +1082,6 @@ class ChatHistoryReplicator(object):
             cPickle.dump(self.last_journal_timestamp, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
             pass
-            
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -1288,10 +1287,12 @@ class ChatHistoryReplicator(object):
 
         if notify_data:
             for key in notify_data.keys():
+                log_text = '%d new chat messages for %s retrieved from chat replication server' % (notify_data[key], key)
                 # notify growl
+                BlinkLogger().log_info(log_text)
                 growl_data = NotificationData()
                 growl_data.sender = key
-                growl_data.content = '%d new chat messages retrieved from replication server' % notify_data[key]
+                growl_data.content = log_text
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
     @allocate_autorelease_pool
