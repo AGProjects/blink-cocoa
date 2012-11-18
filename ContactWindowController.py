@@ -776,6 +776,7 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationDidStart(self, notification):
         self.callPendingURIs()
         self.refreshLdapDirectory()
+        self.updateHistoryMenu()
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
