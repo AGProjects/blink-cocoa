@@ -1140,7 +1140,12 @@ class SessionController(NSObject):
                 stream = None
 
                 if self.sessionControllersManager.isMediaTypeSupported(stype):
-                    handlerClass = StreamHandlerForType[stype]
+                    try:
+                        handlerClass = StreamHandlerForType[stype]
+                    except KeyError:
+                        self.log_info("Cannot find media handler for stream of type %s" % stype)
+                        return False
+
                     stream = handlerClass.createStream()
 
                 if not stream:
