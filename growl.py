@@ -37,7 +37,7 @@ class GrowlNotifications(object):
 
     def _NH_GrowlContactRequest(self, notification):
         title = 'New Contact Request'
-        message = '%s would like to see your presence information' % notification.data.watcher
+        message = '%s has subscribed to my availability' % notification.data.watcher
         self.growl.notify('New Contact Request', title, message)
 
     def _NH_GrowlGotSMS(self, notification):
