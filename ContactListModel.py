@@ -567,6 +567,7 @@ class BlinkPresenceContact(BlinkContact):
         self.avatar.save()
         self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
+        # TODO: fix memory leak: dealloc() will never be called because the NotificationCenter holds a reference to the contact
         self.nc.add_observer(self, name="SIPAccountGotPresenceState")
         self.presence_note = None
         self.pidfs_map = {}
