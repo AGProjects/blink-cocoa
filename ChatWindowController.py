@@ -1120,11 +1120,11 @@ class ChatWindowController(NSWindowController):
             elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
             elif tag == PARTICIPANTS_MENU_START_AUDIO_SESSION:
-                NSApp.delegate().contactsWindowController.startSessionWithAccount(session.account, uri, "audio")
+                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="audio", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_START_VIDEO_SESSION:
-                NSApp.delegate().contactsWindowController.startSessionWithAccount(session.account, uri, "video")
+                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="video", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_START_CHAT_SESSION:
-                NSApp.delegate().contactsWindowController.startSessionWithAccount(session.account, uri, "chat")
+                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="chat", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_VIEW_SCREEN:
                 try:
                     remoteScreen = self.remoteScreens[uri]

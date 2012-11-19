@@ -381,7 +381,7 @@ class AudioController(MediaStream):
                   peer))
             # start audio session to peer and add it to conference
             self.view.setConferencing_(True)
-            session = NSApp.delegate().contactsWindowController.startSessionWithSIPURI(peer)
+            session = NSApp.delegate().contactsWindowController.startSessionWithTarget(peer)
             if session:
                 peer = session.streamHandlerOfType("audio")
                 peer.view.setConferencing_(True)

@@ -1440,10 +1440,10 @@ class ContactWindowController(NSWindowController):
                     try:
                         media_type = _split[0].split("=")[1]
                     except IndexError:
-                        media_type = None
+                        media_type = 'audio'
 
                     self.resetWidgets()
-                    self.startSessionWithSIPURI(text, media_type)
+                    self.startSessionWithTarget(text, media_type=media_type)
 
             self.searchContacts()
 
@@ -1540,7 +1540,7 @@ class ContactWindowController(NSWindowController):
                 handler = s.streamHandlerOfType("audio")
                 handler.view.setConferencing_(True)
 
-            session = self.startSessionWithSIPURI(target, "audio")
+            session = self.startSessionWithTarget(target, media_type="audio")
             handler = session.streamHandlerOfType("audio")
             handler.view.setConferencing_(True)
             handler.addToConference()
@@ -1553,10 +1553,6 @@ class ContactWindowController(NSWindowController):
             session.end()
 
     def startSessionToSelectedContact(self, media_type, uri=None):
-        # activate the app in case the app is not active
-        NSApp.activateIgnoringOtherApps_(True)
-
-        account = None
         selected_contact = None
         try:
             contact = self.getSelectedContacts()[0]
@@ -1566,6 +1562,7 @@ class ContactWindowController(NSWindowController):
                 return
             display_name = ''
         else:
+            selected_contact = contact
             if uri:
                 target = uri
             else:
@@ -1573,126 +1570,68 @@ class ContactWindowController(NSWindowController):
                 if hasattr(contact, 'uri_type') and contact.uri_type.lower() == 'xmpp':
                     target += ';xmpp'
 
-            display_name = contact.name
-            selected_contact = contact
-
-        if not account:
-            account = self.getAccountWitDialPlan(target)
-
-        if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
-            return
-
-        target = normalize_sip_uri_for_outgoing_session(target, account)
-        if not target:
-            return
-
-        if contact in self.model.bonjour_group.contacts:
-            account = BonjourAccount()
-
-        session = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(display_name))
-        session.selected_contact = selected_contact
-
-        if media_type == "video":
-            media_type = ("video", "audio")
-
-        if type(media_type) is not tuple:
-            if media_type == "chat" and account is not BonjourAccount():
-                # just show the window and wait for user to type before starting the outgoing session
-                session.open_chat_window_only = True
-
-            if not session.startSessionWithStreamOfType(media_type):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
-        else:
-            if not session.startCompositeSessionWithStreamsOfTypes(media_type):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
+        account = self.getAccountWitDialPlan(target)
+        local_uri = account.id if account is not None else None
+        self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
 
     @run_in_gui_thread
-    def startSessionWithLocalAndRemoteURI(self, local_uri, remote_uri, media_type="chat"):
-        NSApp.activateIgnoringOtherApps_(True)
-        try:
-            account = AccountManager().get_account(local_uri)
-        except KeyError:
-            return
-
-        target_uri = normalize_sip_uri_for_outgoing_session(remote_uri, account)
-        if not target_uri:
-            return
-
-        contact = self.getContactMatchingURI(remote_uri)
-        display_name = contact.name if contact else ''
-
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
-
-        if media_type == "video":
-            media_type = ("video", "audio")
-
-        if type(media_type) is not tuple:
-            if media_type == "chat" and account is not BonjourAccount():
-                # just show the window and wait for user to type before starting the outgoing session
-                session_controller.open_chat_window_only = True
-
-            if not session_controller.startSessionWithStreamOfType(media_type):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
-        else:
-            if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
-
-    def startSessionWithAccount(self, account, target, media_type):
+    def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
-        if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
+
+        if not target:
+            BlinkLogger().log_error(u"Missing target")
             return
 
-        target_uri = normalize_sip_uri_for_outgoing_session(target, account)
-        if not target_uri:
-            return
+        account = None
+        if local_uri is not None:
+            try:
+                account = AccountManager().get_account(local_uri)
+            except KeyError:
+                pass
 
-        contact = self.getContactMatchingURI(target_uri)
-        display_name = contact.name if contact else ''
-
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
-
-        if type(media_type) is not tuple:
-            if not session_controller.startSessionWithStreamOfType(media_type):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
-        else:
-            if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
-
-    def startSessionWithSIPURI(self, text, media_type="audio", invite_participants=[]):
-        if not text:
-            return None
-
-        displayName = None
+        display_name = None
         try:
-            contact = (contact for contact in self.model.bonjour_group.contacts if contact.uri == text).next()
+            contact = (contact for contact in self.model.bonjour_group.contacts if contact.uri == target).next()
         except StopIteration:
-            account = self.activeAccount()
+            if account is None:            
+                account = self.activeAccount()
+            if selected_contact:
+                display_name = selected_contact.name
+            else:
+                contact = self.getContactMatchingURI(target)
+                display_name = contact.name if contact else ''
         else:
             account = BonjourAccount()
-            displayName = contact.name
+            display_name = contact.name
 
         if not account:
             NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
                             "OK", None, None)
             return None
 
-        target_uri = normalize_sip_uri_for_outgoing_session(text, account)
-        if target_uri:
-            session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, displayName)
-            if media_type == "audio":
-                session_controller.startAudioSession()
-            elif media_type == "chat":
-                session_controller.startChatSession()
-            else:
-                session_controller.startAudioSession()
-            return session_controller
-        else:
-            BlinkLogger().log_error(u"Error parsing URI %s"%text)
-            return None
+        target_uri = normalize_sip_uri_for_outgoing_session(target, account)
+        if not target_uri:
+            BlinkLogger().log_error(u"Error parsing URI %s" % target)
+            return
 
+        if media_type == "video":
+            media_type = ("video", "audio")
+
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
+        session_controller.selected_contact = selected_contact
+
+        if type(media_type) is not tuple:
+            if media_type == "chat" and account is not BonjourAccount():
+                # just show the window and wait for user to type before starting the outgoing session
+                session_controller.open_chat_window_only = True
+            
+            if not session_controller.startSessionWithStreamOfType(media_type):
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
+        else:
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
+        
     def joinConference(self, target, media_type, participants=[], nickname=None):
         BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media_type))
         if participants:
@@ -1737,11 +1676,11 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startAudioSessionWithSIPURI_(self, sender):
-        self.startSessionWithSIPURI(sender.representedObject(), media_type="audio")
+        self.startSessionWithTarget(sender.representedObject(), media_type="audio")
 
     @objc.IBAction
     def startChatSessionWithSIPURI_(self, sender):
-        self.startSessionWithSIPURI(sender.representedObject(), media_type="chat")
+        self.startSessionWithTarget(sender.representedObject(), media_type="chat")
 
     @objc.IBAction
     def startAudioToSelected_(self, sender):
@@ -1856,11 +1795,11 @@ class ContactWindowController(NSWindowController):
             if not target:
                 return
 
-            self.startSessionWithSIPURI(target)
+            self.startSessionWithTarget(target)
             self.searchBox.setStringValue_(u"")
             self.addContactToConferenceDialPad.setEnabled_(False)
         else:
-            media_type = None
+            media_type = "audio"
             try:
                 contact = self.getSelectedContacts()[0]
             except IndexError:
@@ -1892,8 +1831,6 @@ class ContactWindowController(NSWindowController):
                                 sender.window().graphicsContext(), 0, 1, 0)
                 NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
                 return
-            else:
-                media_type = "audio"
 
             self.startSessionToSelectedContact(media_type)
 
@@ -2659,7 +2596,7 @@ class ContactWindowController(NSWindowController):
     def showChatWindowForAccountWithTargetUri_(self, sender):
         object = sender.representedObject()
         if object is not None:
-            self.startSessionWithLocalAndRemoteURI(object['account'], object['target_uri'], "chat")
+            self.startSessionWithTarget(object['target_uri'], media_type="chat", local_uri=object['account'])
 
     @run_in_green_thread
     def show_last_chat_conversations(self):
@@ -2669,7 +2606,7 @@ class ContactWindowController(NSWindowController):
     @run_in_gui_thread
     def open_last_chat_conversations(self, conversations=[]):
         for parties in conversations:
-            self.startSessionWithLocalAndRemoteURI(parties[0], parties[1], "chat")
+            self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0])
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -2984,7 +2921,7 @@ class ContactWindowController(NSWindowController):
             account = None
 
         target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
-        streams = session_info.media_type.split(",")
+        streams = session_info.media_types.split(",")
 
         BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account, target_uri, streams))
         if not account:
@@ -3143,7 +3080,7 @@ class ContactWindowController(NSWindowController):
                         if not target:
                             return
 
-                        self.startSessionWithSIPURI(target)
+                        self.startSessionWithTarget(target)
                         self.resetWidgets()
 
                     self.updateStartSessionButtons()
@@ -4124,11 +4061,11 @@ class ContactWindowController(NSWindowController):
             elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(session.conference_info.host_info.web_page.value))
             elif tag == PARTICIPANTS_MENU_START_AUDIO_SESSION:
-                self.startSessionWithAccount(session.account, uri, "audio")
+                self.startSessionWithTarget(uri, media_type="audio", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_START_VIDEO_SESSION:
-                self.startSessionWithAccount(session.account, uri, "video")
+                self.startSessionWithTarget(uri, media_type="video", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_START_CHAT_SESSION:
-                self.startSessionWithAccount(session.account, uri, "chat")
+                self.startSessionWithTarget(uri, media_type="chat", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
 

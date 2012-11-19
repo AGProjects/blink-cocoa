@@ -612,7 +612,7 @@ class HistoryViewer(NSWindowController):
         except IndexError:
             return
 
-        NSApp.delegate().contactsWindowController.startSessionWithSIPURI(contact.uri)
+        NSApp.delegate().contactsWindowController.startSessionWithTarget(contact.uri)
 
     @objc.IBAction
     def userClickedContactMenu_(self, sender):
