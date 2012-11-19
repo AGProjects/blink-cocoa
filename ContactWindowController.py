@@ -603,8 +603,8 @@ class ContactWindowController(NSWindowController):
     def callPendingURIs(self):
         NSApp.delegate().ready = True
         if NSApp.delegate().urisToOpen:
-            for uri, session_type, participants in NSApp.delegate().urisToOpen:
-                self.joinConference(uri, session_type, participants)
+            for uri, media_type, participants in NSApp.delegate().urisToOpen:
+                self.joinConference(uri, media_type, participants)
             NSApp.delegate().urisToOpen = []
 
     def windowShouldClose_(self, sender):
@@ -1201,13 +1201,13 @@ class ContactWindowController(NSWindowController):
         account = self.activeAccount()
         conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
-            self.joinConference(conference.target, conference.media_types, conference.participants, conference.nickname)
+            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
 
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
 
-    def showJoinConferenceWindow(self, target=None, participants=None, media=None, default_domain=None):
-        self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media=media, default_domain=default_domain)
+    def showJoinConferenceWindow(self, target=None, participants=None, media_type=None, default_domain=None):
+        self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media_type=media_type, default_domain=default_domain)
         conference = self.joinConferenceWindow.run()
         return conference
 
@@ -1438,12 +1438,12 @@ class ContactWindowController(NSWindowController):
                             _split.remove(item)
                     text = ";".join(_text)
                     try:
-                        session_type = _split[0].split("=")[1]
+                        media_type = _split[0].split("=")[1]
                     except IndexError:
-                        session_type = None
+                        media_type = None
 
                     self.resetWidgets()
-                    self.startSessionWithSIPURI(text, session_type)
+                    self.startSessionWithSIPURI(text, media_type)
 
             self.searchContacts()
 
@@ -1552,7 +1552,7 @@ class ContactWindowController(NSWindowController):
         for session in self.sessionControllersManager.sessionControllers[:]:
             session.end()
 
-    def startSessionToSelectedContact(self, media, uri=None):
+    def startSessionToSelectedContact(self, media_type, uri=None):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
 
@@ -1593,22 +1593,22 @@ class ContactWindowController(NSWindowController):
         session = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(display_name))
         session.selected_contact = selected_contact
 
-        if media == "video":
-            media = ("video", "audio")
+        if media_type == "video":
+            media_type = ("video", "audio")
 
-        if type(media) is not tuple:
-            if media == "chat" and account is not BonjourAccount():
+        if type(media_type) is not tuple:
+            if media_type == "chat" and account is not BonjourAccount():
                 # just show the window and wait for user to type before starting the outgoing session
                 session.open_chat_window_only = True
 
-            if not session.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
+            if not session.startSessionWithStreamOfType(media_type):
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
         else:
-            if not session.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
+            if not session.startCompositeSessionWithStreamsOfTypes(media_type):
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
 
     @run_in_gui_thread
-    def startSessionWithLocalAndRemoteURI(self, local_uri, remote_uri, media="chat"):
+    def startSessionWithLocalAndRemoteURI(self, local_uri, remote_uri, media_type="chat"):
         NSApp.activateIgnoringOtherApps_(True)
         try:
             account = AccountManager().get_account(local_uri)
@@ -1624,21 +1624,21 @@ class ContactWindowController(NSWindowController):
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
-        if media == "video":
-            media = ("video", "audio")
+        if media_type == "video":
+            media_type = ("video", "audio")
 
-        if type(media) is not tuple:
-            if media == "chat" and account is not BonjourAccount():
+        if type(media_type) is not tuple:
+            if media_type == "chat" and account is not BonjourAccount():
                 # just show the window and wait for user to type before starting the outgoing session
                 session_controller.open_chat_window_only = True
 
-            if not session_controller.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
+            if not session_controller.startSessionWithStreamOfType(media_type):
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
         else:
-            if not session_controller.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
 
-    def startSessionWithAccount(self, account, target, media):
+    def startSessionWithAccount(self, account, target, media_type):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
         if not account:
@@ -1654,14 +1654,14 @@ class ContactWindowController(NSWindowController):
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
 
-        if type(media) is not tuple:
-            if not session_controller.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
+        if type(media_type) is not tuple:
+            if not session_controller.startSessionWithStreamOfType(media_type):
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
         else:
-            if not session_controller.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
 
-    def startSessionWithSIPURI(self, text, session_type="audio", invite_participants=[]):
+    def startSessionWithSIPURI(self, text, media_type="audio", invite_participants=[]):
         if not text:
             return None
 
@@ -1682,9 +1682,9 @@ class ContactWindowController(NSWindowController):
         target_uri = normalize_sip_uri_for_outgoing_session(text, account)
         if target_uri:
             session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, displayName)
-            if session_type == "audio":
+            if media_type == "audio":
                 session_controller.startAudioSession()
-            elif session_type == "chat":
+            elif media_type == "chat":
                 session_controller.startChatSession()
             else:
                 session_controller.startAudioSession()
@@ -1693,8 +1693,8 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_error(u"Error parsing URI %s"%text)
             return None
 
-    def joinConference(self, target, media, participants=[], nickname=None):
-        BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media))
+    def joinConference(self, target, media_type, participants=[], nickname=None):
+        BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media_type))
         if participants:
             BlinkLogger().log_info(u"Inviting participants: %s" % participants)
 
@@ -1725,23 +1725,23 @@ class ContactWindowController(NSWindowController):
                 session_controller.invited_participants.append(contact)
                 session_controller.participants_log.add(uri)
 
-        if not media:
-            media = 'audio'
+        if not media_type:
+            media_type = 'audio'
 
-        if type(media) in (tuple, list):
-            if not session_controller.startCompositeSessionWithStreamsOfTypes(media):
-                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media))
+        if type(media_type) in (tuple, list):
+            if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
+                BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
         else:
-            if not session_controller.startSessionWithStreamOfType(media):
-                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media)
+            if not session_controller.startSessionWithStreamOfType(media_type):
+                BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
 
     @objc.IBAction
     def startAudioSessionWithSIPURI_(self, sender):
-        self.startSessionWithSIPURI(sender.representedObject(), session_type="audio")
+        self.startSessionWithSIPURI(sender.representedObject(), media_type="audio")
 
     @objc.IBAction
     def startChatSessionWithSIPURI_(self, sender):
-        self.startSessionWithSIPURI(sender.representedObject(), session_type="chat")
+        self.startSessionWithSIPURI(sender.representedObject(), media_type="chat")
 
     @objc.IBAction
     def startAudioToSelected_(self, sender):
@@ -1860,18 +1860,18 @@ class ContactWindowController(NSWindowController):
             self.searchBox.setStringValue_(u"")
             self.addContactToConferenceDialPad.setEnabled_(False)
         else:
-            media = None
+            media_type = None
             try:
                 contact = self.getSelectedContacts()[0]
             except IndexError:
                 return
             if sender == self.contactOutline or sender == self.searchOutline:
                 if isinstance(contact, BonjourBlinkContact) and 'isfocus' in contact.uri:
-                    media=('chat', 'audio')
+                    media_type=('chat', 'audio')
                 elif contact.preferred_media == "chat":
-                    media = "chat"
+                    media_type = "chat"
                 else:
-                    media = "audio"
+                    media_type = "audio"
             elif sender.selectedSegment() == 1:
                 # IM button
                 point = sender.convertPointToBase_(NSZeroPoint)
@@ -1893,9 +1893,9 @@ class ContactWindowController(NSWindowController):
                 NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
                 return
             else:
-                media = "audio"
+                media_type = "audio"
 
-            self.startSessionToSelectedContact(media)
+            self.startSessionToSelectedContact(media_type)
 
     @objc.IBAction
     def sessionButtonClicked_(self, sender):
@@ -2632,12 +2632,12 @@ class ContactWindowController(NSWindowController):
         item = sender.representedObject()
         target = item["target_uri"]
         participants = item["participants"] or []
-        media = item["streams"] or []
+        media_type = item["streams"] or []
 
         account = self.activeAccount()
-        conference = self.showJoinConferenceWindow(target=target, participants=participants, media=media, default_domain=account.id.domain)
+        conference = self.showJoinConferenceWindow(target=target, participants=participants, media_type=media_type, default_domain=account.id.domain)
         if conference is not None:
-            self.joinConference(conference.target, conference.media_types, conference.participants)
+            self.joinConference(conference.target, conference.media_type, conference.participants)
 
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
@@ -2984,7 +2984,7 @@ class ContactWindowController(NSWindowController):
             account = None
 
         target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
-        streams = session_info.media_types.split(",")
+        streams = session_info.media_type.split(",")
 
         BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account, target_uri, streams))
         if not account:

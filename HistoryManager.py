@@ -179,11 +179,11 @@ class SessionHistory(object):
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_entry(self, session_id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
+    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
-                          media_types         = media_types,
+                          media_types         = media_type,
                           direction           = direction,
                           status              = status,
                           failure_reason      = failure_reason,
@@ -886,7 +886,7 @@ class SessionHistoryReplicator(object):
                         except KeyError:
                             continue
 
-                        media_types = ", ".join(media) or 'audio'
+                        media_type = ", ".join(media) or 'audio'
 
                         try:
                             start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
@@ -901,7 +901,7 @@ class SessionHistoryReplicator(object):
                         success = 'completed' if duration > 0 else 'missed'
 
                         BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
-                        self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                         if 'audio' in media:
                             direction = 'incoming'
                             status = 'delivered'
@@ -935,7 +935,7 @@ class SessionHistoryReplicator(object):
                                 else:
                                     growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
                                     growl_data.timestamp = start_time
-                                    growl_data.streams = media_types
+                                    growl_data.streams = media_type
                                     growl_data.account = str(account.id)
                                     self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                                     growl_notifications[remote_uri] = True
@@ -967,7 +967,7 @@ class SessionHistoryReplicator(object):
                         except KeyError:
                             continue
 
-                        media_types = ", ".join(media) or 'audio'
+                        media_type = ", ".join(media) or 'audio'
 
                         try:
                             start_time = datetime.strptime(startTime, "%Y-%m-%d  %H:%M:%S")
@@ -985,7 +985,7 @@ class SessionHistoryReplicator(object):
                             success = 'cancelled' if status == "487" else 'failed'
 
                         BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
-                        self.sessionControllersManager.add_to_history(id, media_types, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
                         if 'audio' in media:
                             local_uri = local_uri
                             remote_uri = remote_uri

@@ -288,7 +288,7 @@ class BlinkAppDelegate(NSObject):
 
     def getURL_withReplyEvent_(self, event, replyEvent):
         participants = set()
-        media = set()
+        media_type = set()
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
         url = self.normalizeExternalURL(url)
 
@@ -300,9 +300,9 @@ class BlinkAppDelegate(NSObject):
             if item.startswith("participant="):
                 puri = item.split("=")[1]
                 participants.add(puri)
-            elif item.startswith("media="):
+            elif item.startswith("media_type="):
                 m = item.split("=")[1]
-                media.add(m)
+                media_type.add(m)
             else:
                 _url.append(item)
                 _split.remove(item)
@@ -310,9 +310,9 @@ class BlinkAppDelegate(NSObject):
         url = ";".join(_url)
 
         if not self.ready:
-            self.urisToOpen.append((unicode(url), list(media), list(participants)))
+            self.urisToOpen.append((unicode(url), list(media_type), list(participants)))
         else:
-            self.contactsWindowController.joinConference(unicode(url), list(media), list(participants))
+            self.contactsWindowController.joinConference(unicode(url), list(media_type), list(participants))
 
 
     def registerURLHandler(self):

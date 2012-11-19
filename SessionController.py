@@ -434,7 +434,7 @@ class SessionControllersManager(object):
             return
 
         id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
+        media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri)
@@ -445,7 +445,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(id, media_type, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -467,7 +467,7 @@ class SessionControllersManager(object):
             return
 
         id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
+        media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri)
@@ -482,7 +482,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(id, media_type, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -505,7 +505,7 @@ class SessionControllersManager(object):
             return
 
         id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
+        media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri)
@@ -515,7 +515,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(id, media_type, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
@@ -539,7 +539,7 @@ class SessionControllersManager(object):
             return
 
         id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
+        media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
@@ -550,7 +550,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(id, media_type, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
@@ -576,7 +576,7 @@ class SessionControllersManager(object):
         self.redial_uri = controller.target_uri
 
         id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
+        media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
@@ -587,7 +587,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_types, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(id, media_type, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
@@ -610,7 +610,7 @@ class SessionControllersManager(object):
             return
 
         id=str(uuid.uuid1())
-        media_types = ",".join(data.streams)
+        media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
@@ -629,7 +629,7 @@ class SessionControllersManager(object):
 
         duration = session.end_time - session.start_time
 
-        self.add_to_history(id, media_types, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(id, media_type, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -658,8 +658,8 @@ class SessionControllersManager(object):
         return duration_print
 
     @run_in_green_thread
-    def add_to_history(self, id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
-        SessionHistory().add_entry(id, media_types, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
+    def add_to_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
+        SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
 
     @run_in_green_thread
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):

@@ -29,19 +29,19 @@ default_conference_server = 'conference.sip2sip.info'
 
 
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_types=None, participants=None, nickname=None):
+    def __init__(self, target, media_type=None, participants=None, nickname=None):
         self.target = target
-        self.media_types = media_types
+        self.media_type = media_type
         self.participants = participants
         self.nickname = nickname
 
 
 class ConferenceConfiguration(object):
-    def __init__(self, name, target, participants=None, media_types=None, nickname=None):
+    def __init__(self, name, target, participants=None, media_type=None, nickname=None):
         self.name = name
         self.target = target
         self.participants = participants
-        self.media_types = media_types
+        self.media_type = media_type
         self.nickname = nickname
 
 
@@ -75,7 +75,7 @@ class JoinConferenceWindowController(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, target=None, participants=[], media=["chat"], default_domain=None):
+    def __init__(self, target=None, participants=[], media_type=["chat"], default_domain=None):
         NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
 
         self.notification_center = NotificationCenter()
@@ -110,9 +110,9 @@ class JoinConferenceWindowController(NSObject):
         self.participantsTable.reloadData()
         self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
 
-        if media:
-            self.audio.setState_(NSOnState if "audio" in media else NSOffState)
-            self.chat.setState_(NSOnState if "chat" in media else NSOffState)
+        if media_type:
+            self.audio.setState_(NSOnState if "audio" in media_type else NSOffState)
+            self.chat.setState_(NSOnState if "chat" in media_type else NSOffState)
 
         self.updatePopupButtons()
 
@@ -179,21 +179,21 @@ class JoinConferenceWindowController(NSObject):
                     configuration_name = configurationPanel.runModal()
 
                 if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
-                    media_types = ("chat", "audio")
+                    media_type = ("chat", "audio")
                 elif self.chat.state() == NSOnState:
-                    media_types = "chat"
+                    media_type = "chat"
                 else:
-                    media_types = "audio"
+                    media_type = "audio"
 
                 if configuration_name:
                     if configuration_name in self.conference_configurations.keys():
                         self.conference_configurations[configuration_name].name = configuration_name
                         self.conference_configurations[configuration_name].target = self.target
                         self.conference_configurations[configuration_name].participants = self._participants
-                        self.conference_configurations[configuration_name].media_types = media_types
+                        self.conference_configurations[configuration_name].media_type = media_type
                         self.conference_configurations[configuration_name].nickname = self.nickname
                     else:
-                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_types=media_types, nickname=self.nickname)
+                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_type=media_type, nickname=self.nickname)
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
@@ -228,8 +228,8 @@ class JoinConferenceWindowController(NSObject):
                 self._participants = configuration.participants
                 self.participantsTable.reloadData()
                 self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
-                self.audio.setState_(NSOnState if "audio" in configuration.media_types else NSOffState)
-                self.chat.setState_(NSOnState if "chat" in configuration.media_types else NSOffState)
+                self.audio.setState_(NSOnState if "audio" in configuration.media_type else NSOffState)
+                self.chat.setState_(NSOnState if "chat" in configuration.media_type else NSOffState)
             else:
                 self.setDefaults()
 
@@ -393,11 +393,11 @@ class JoinConferenceWindowController(NSObject):
 
         if rc == NSOKButton:
             if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
-                media_types = ("chat", "audio")
+                media_type = ("chat", "audio")
             elif self.chat.state() == NSOnState:
-                media_types = "chat"
+                media_type = "chat"
             else:
-                media_types = "audio"
+                media_type = "audio"
 
             # make a copy of the participants and reset the table data source,
             participants = self._participants
@@ -409,7 +409,7 @@ class JoinConferenceWindowController(NSObject):
             # prevent loops
             if self.target in participants:
                 participants.remove(self.target)
-            return ServerConferenceRoom(self.target, media_types=media_types, participants=participants, nickname=self.nickname)
+            return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname)
         else:
             return None
 
