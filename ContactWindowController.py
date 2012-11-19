@@ -43,7 +43,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
+from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -3711,7 +3711,7 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
             item.setEnabled_(True)
             self.updateHistoryMenu()
-   
+
             item = menu.itemWithTag_(25) # redial
             if self.sessionControllersManager.redial_uri is not None:
                 item.setEnabled_(True)
@@ -3719,7 +3719,7 @@ class ContactWindowController(NSWindowController):
             else:
                 item.setTitle_('Redial')
                 item.setEnabled_(False)
-        
+
 
         elif menu == self.callMenu:
             self.updateCallMenu()
@@ -4065,7 +4065,7 @@ class ContactWindowController(NSWindowController):
                     contact.detail = 'Removal requested...'
 
                 if own_uri and own_icon and contact.uri == own_uri:
-                    contact.avatar.icon = own_icon
+                    contact.avatar = Avatar(own_icon)
 
                 if contact not in self.participants:
                     self.participants.append(contact)
