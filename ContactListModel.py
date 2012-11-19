@@ -588,15 +588,6 @@ class BlinkPresenceContact(BlinkContact):
     def dealloc(self):
         self.timer.invalidate()
         self.nc.remove_observer(self, name="SIPAccountGotPresenceState")
-        model = NSApp.delegate().contactsWindowController.model
-        try:
-            online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
-        except StopIteration:
-            pass
-        else:
-            model.online_contacts_group.contacts.remove(self)
-            self.nc.post_notification("BlinkContactPresenceHasChaged", sender=self)
-
         self.avatar = None
         self.pidfs_map = None
         self.nc = None
@@ -1719,7 +1710,6 @@ class ContactListModel(CustomListModel):
     implements(IObserver)
     contactOutline = objc.IBOutlet()
     nc = NotificationCenter()
-    presence_contacts = []
     pending_watchers_map = {}
     active_watchers_map = {}
 
@@ -2480,7 +2470,6 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
         blink_contact = BlinkPresenceContact(contact)
-        self.presence_contacts.append(blink_contact)
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
@@ -2500,26 +2489,30 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
-        blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
+        blink_contact = next(blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.contact == contact)
         blink_contact.avatar.delete()
-        self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group]+self.groupsList)
-        self.presence_contacts.remove(blink_contact)
+        self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group, self.online_contacts_group])
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.addPendingWatchers()
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
-        blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
 
         if 'icon' in notification.data.modified:
-            blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
-            blink_contact.avatar.save()
+            new_avatar = PresenceContactAvatar.from_contact(contact)
+            new_avatar.save()
+        else:
+            new_avatar = None
 
-        if set(['default_uri', 'uris']).intersection(notification.data.modified):
-            blink_contact.detail = blink_contact.uri
-            blink_contact._set_username_and_domain()
+        for blink_contact in (blink_contact for blink_group in self.groupsList for blink_contact in blink_group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact == contact):
+            if new_avatar is not None:
+                blink_contact.avatar = new_avatar
 
-        [g.sortContacts() for g in self.groupsList if blink_contact in g.contacts]
+            if set(['default_uri', 'uris']).intersection(notification.data.modified):
+                blink_contact.detail = blink_contact.uri
+                blink_contact._set_username_and_domain()
+
+        [g.sortContacts() for g in self.groupsList]
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if contact.presence.policy != 'default':
@@ -2548,9 +2541,10 @@ class ContactListModel(CustomListModel):
             group.save()
         blink_group = BlinkGroup(name=group.name, group=group)
         self.groupsList.insert(index, blink_group)
-        for blink_contact in (blink_contact for blink_contact in self.presence_contacts if blink_contact.contact.id in group.contacts):
+        for contact in group.contacts:
+            blink_contact = BlinkPresenceContact(contact)
             blink_group.contacts.append(blink_contact)
-            self.removeContactFromBlinkGroups(blink_contact.contact, [self.no_group])
+            self.removeContactFromBlinkGroups(contact, [self.no_group])
         blink_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
@@ -2587,10 +2581,9 @@ class ContactListModel(CustomListModel):
             removed = notification.data.modified['contacts'].removed
             for contact in added:
                 try:
-                    blink_contact = next(blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact)
+                    blink_contact = next(blink_contact for blink_contact in blink_group.contacts if blink_contact.contact == contact)
                 except StopIteration:
-                    pass
-                else:
+                    blink_contact = BlinkPresenceContact(contact)
                     blink_group.contacts.append(blink_contact)
                     self.removeContactFromBlinkGroups(contact, [self.no_group])
             for contact in removed:
@@ -2602,8 +2595,8 @@ class ContactListModel(CustomListModel):
                     blink_group.contacts.remove(blink_contact)
                     if not self.getBlinkGroupsForBlinkContact(blink_contact):
                         self.no_group.contacts.append(blink_contact)
-                        self.no_group.sortContacts()
             blink_group.sortContacts()
+            self.no_group.sortContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
@@ -2734,7 +2727,11 @@ class ContactListModel(CustomListModel):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
 
     def getBlinkGroupsForBlinkContact(self, blink_contact):
-        return [group for group in self.groupsList if group.add_contact_allowed and blink_contact in group.contacts]
+        allowed_groups = [group for group in self.groupsList if group.add_contact_allowed]
+        if not isinstance(blink_contact, BlinkPresenceContact):
+            return [group for group in allowed_groups if blink_contact in group.contacts]
+        else:
+            return [group for group in allowed_groups if blink_contact.contact in (item.contact for item in group.contacts if isinstance(item, BlinkPresenceContact))]
 
     def saveGroupPosition(self):
         # save groups position
@@ -2801,13 +2798,14 @@ class ContactListModel(CustomListModel):
             blink_group.group.save()
 
     def removeContactFromBlinkGroups(self, contact, groups):
-        try:
-            blink_contact = (blink_contact for blink_contact in self.presence_contacts if blink_contact.contact == contact).next()
-        except StopIteration:
-            return
-        for group in (group for group in groups if blink_contact in group.contacts):
-            group.contacts.remove(blink_contact)
-            group.sortContacts()
+        for group in groups:
+            try:
+                blink_contact = next(blink_contact for blink_contact in group.contacts if blink_contact.contact == contact)
+            except StopIteration:
+                pass
+            else:
+                group.contacts.remove(blink_contact)
+                group.sortContacts()
 
     def removePolicyForContactURIs(self, contact):
         addressbook_manager = AddressbookManager()
