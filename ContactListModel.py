@@ -564,7 +564,6 @@ class BlinkPresenceContact(BlinkContact):
     def __init__(self, contact):
         self.contact = contact
         self.avatar = PresenceContactAvatar.from_contact(contact)
-        self.avatar.save()
         self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
         # TODO: fix memory leak: dealloc() will never be called because the NotificationCenter holds a reference to the contact
@@ -2471,6 +2470,7 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
         blink_contact = BlinkPresenceContact(contact)
+        blink_contact.avatar.save()
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
