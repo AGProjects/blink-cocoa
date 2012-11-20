@@ -3470,7 +3470,7 @@ class ContactWindowController(NSWindowController):
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.auto_answer else NSOffState)
                 settings = SIPSimpleSettings()
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites Group", "showInFavoritesGroup:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites", "showInFavoritesGroup:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.favorite else NSOffState)
