@@ -770,16 +770,17 @@ class BlinkPresenceContact(BlinkContact):
     def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
-        online_contact = None
         try:
-            online_contact = (online_contact for online_contact in model.online_contacts_group.contacts if online_contact == self).next()
+            online_contact = next(online_contact for online_contact in model.online_contacts_group.contacts if online_contact.contact == self.contact)
         except StopIteration:
             if status not in (None, "offline"):
-                model.online_contacts_group.contacts.append(self)
-                model.online_contacts_group.sortContacts()
+                online_contact = BlinkPresenceContact(self.contact)
+                model.online_contacts_group.contacts.append(online_contact)
         else:
             if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
+        finally:
+                model.online_contacts_group.sortContacts()
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
