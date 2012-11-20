@@ -75,9 +75,10 @@ class JoinConferenceWindowController(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, target=None, participants=[], media_type=["chat"], default_domain=None):
+    def __init__(self, target=None, participants=[], media_type=["chat"], default_domain=None, autostart=False):
         NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
 
+        self.autostart = autostart
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BonjourConferenceServicesDidRemoveServer')
         self.notification_center.add_observer(self, name='BonjourConferenceServicesDidUpdateServer')
@@ -386,12 +387,13 @@ class JoinConferenceWindowController(NSObject):
         contactsWindow = NSApp.delegate().contactsWindowController.window()
         worksWhenModal = contactsWindow.worksWhenModal()
         contactsWindow.setWorksWhenModal_(True)
-        self.window.makeKeyAndOrderFront_(None)
-        rc = NSApp.runModalForWindow_(self.window)
+        if not self.autostart:
+            self.window.makeKeyAndOrderFront_(None)
+            rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         contactsWindow.setWorksWhenModal_(worksWhenModal)
 
-        if rc == NSOKButton:
+        if (self.autostart and self.validateConference()) or rc == NSOKButton:
             if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
                 media_type = ("chat", "audio")
             elif self.chat.state() == NSOnState:

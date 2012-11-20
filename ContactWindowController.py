@@ -1206,8 +1206,8 @@ class ContactWindowController(NSWindowController):
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
 
-    def showJoinConferenceWindow(self, target=None, participants=None, media_type=None, default_domain=None):
-        self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media_type=media_type, default_domain=default_domain)
+    def showJoinConferenceWindow(self, target=None, participants=None, media_type=None, default_domain=None, autostart=False):
+        self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media_type=media_type, default_domain=default_domain, autostart=autostart)
         conference = self.joinConferenceWindow.run()
         return conference
 

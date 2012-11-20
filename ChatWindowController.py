@@ -599,9 +599,9 @@ class ChatWindowController(NSWindowController):
         if format_identity_to_string(session.remotePartyObject) not in participants:
             participants.append(format_identity_to_string(session.remotePartyObject))
 
-        conference = NSApp.delegate().contactsWindowController.showJoinConferenceWindow(participants=participants, media_type=media_type)
+        conference = NSApp.delegate().contactsWindowController.showJoinConferenceWindow(participants=participants, media_type=media_type, autostart=True)
         if conference is not None:
-            NSApp.delegate().contactsWindowController.joinConference(conference.target, conference.media_type_type, conference.participants, conference.nickname)
+            NSApp.delegate().contactsWindowController.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
 
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()
