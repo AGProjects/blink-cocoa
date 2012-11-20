@@ -1564,7 +1564,8 @@ class ChatWindowController(NSWindowController):
         if not session:
             return False
 
-        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+        sourceContact = None
+        if pboard.availableTypeFromArray_(["dragged-contact"]):
             group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
             if blink_contact is not None:
                 sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
@@ -1590,6 +1591,9 @@ class ChatWindowController(NSWindowController):
                     self.inviteContactToConferenceSessionWithUri(session, uri, sourceContact)
 
             return True
+        elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            uri = str(pboard.stringForType_("x-blink-sip-uri"))
+            self.inviteContactToConferenceSessionWithUri(session, uri)
         elif pboard.types().containsObject_(NSFilenamesPboardType):
             chat_controller = session.streamHandlerOfType("chat")
             ws = NSWorkspace.sharedWorkspace()
@@ -1603,7 +1607,7 @@ class ChatWindowController(NSWindowController):
         contact = sender.representedObject()['contact']
         self.inviteContactToConferenceSessionWithUri(session, uri, contact)
 
-    def inviteContactToConferenceSessionWithUri(self, session, uri, contact):
+    def inviteContactToConferenceSessionWithUri(self, session, uri, contact=None):
         if uri:
             uri = sip_prefix_pattern.sub("", str(uri))
         if "@" not in uri:
@@ -1626,7 +1630,7 @@ class ChatWindowController(NSWindowController):
                     return False
 
         if session.remote_focus:
-            new_contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+            new_contact = BlinkConferenceContact(uri, name=contact.name if contact else None, icon=contact.icon if contact else None, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
             new_contact.detail = 'Invitation sent...'
             session.invited_participants.append(new_contact)
             session.participants_log.add(uri)
