@@ -2320,7 +2320,9 @@ class ContactListModel(CustomListModel):
                 self.incoming_calls_group.load_history()
 
         if isinstance(notification.sender, Account):
-            self.pending_watchers_map.pop(notification.sender.id, None)
+            account = notification.sender
+            if set(['enabled', 'presence.enabled']).intersection(notification.data.modified) and not account.enabled or not account.presence.enabled:
+                self.pending_watchers_map.pop(account.id, None)
 
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount():
