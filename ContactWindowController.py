@@ -2340,19 +2340,20 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
 
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationNamePrint)
+        find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
+        sylkserver_exists = find_sylkserver[2] is not None
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
+            self.blinkMenu.itemWithTag_(7).setHidden_(False)   
+            self.blinkMenu.itemWithTag_(8).setHidden_(False)
         else:
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
-            self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
-    
-        find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
-        sylkserver_exists = find_sylkserver[2] is not None
-        self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
+            self.blinkMenu.itemWithTag_(8).setHidden_(sylkserver_exists)
+            self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
 
         if settings.service_provider.name:
             if settings.service_provider.about_url or settings.service_provider.help_url:
