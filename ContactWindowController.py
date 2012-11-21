@@ -531,7 +531,7 @@ class ContactWindowController(NSWindowController):
         account_manager = AccountManager()
 
         for account_info in (account_info for account_info in self.accounts if account_info.account.enabled):
-            self.accountPopUp.addItemWithTitle_(account_info.name)
+            self.accountPopUp.addItemWithTitle_(account_info.account.gui.account_label or account_info.name)
             item = self.accountPopUp.lastItem()
             item.setRepresentedObject_(account_info.account)
             if isinstance(account_info.account, BonjourAccount):
@@ -846,6 +846,9 @@ class ContactWindowController(NSWindowController):
             self.refreshLdapDirectory()
 
         if isinstance(notification.sender, (Account, BonjourAccount)) and 'order' in notification.data.modified:
+            self.refreshAccountList()
+
+        if isinstance(notification.sender, (Account, BonjourAccount)) and 'gui.account_label' in notification.data.modified:
             self.refreshAccountList()
 
         if isinstance(notification.sender, Account) and 'sip.register' in notification.data.modified:

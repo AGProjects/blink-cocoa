@@ -99,6 +99,10 @@ class ConferenceSettings(SettingsGroup):
     nickname = Setting(type=str, default='', nillable=True)
 
 
+class GUISettings(SettingsGroup):
+    account_label = Setting(type=str, default='', nillable=True)
+
+
 class WebAlertSettings(SettingsGroup):
     alert_url = Setting(type=HTTPURL, default=None, nillable=True)
     show_alert_page_after_connect = Setting(type=bool, default=False)
@@ -147,6 +151,7 @@ class AccountExtension(SettingsObjectExtension):
     tls = TLSSettingsExtension
     xcap = XCAPSettingsExtension
     web_alert = WebAlertSettings
+    gui = GUISettings
 
 
 class BonjourAccountExtension(SettingsObjectExtension):
@@ -159,4 +164,5 @@ class BonjourAccountExtension(SettingsObjectExtension):
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
     tls = TLSSettingsExtension
+    gui = GUISettings
 

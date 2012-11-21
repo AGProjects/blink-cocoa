@@ -1660,7 +1660,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'nat_traversal','server', 'ldap')
+AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'nat_traversal','server', 'ldap', 'gui')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
@@ -1691,6 +1691,7 @@ ToolTips = {
              'audio.call_waiting' : 'If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress',
              'auth.username': 'Enter authentication username if different than the SIP Address username',
              'chat.replication_password': 'Enter a password to encrypt the content of your messages on the replication server',
+             'gui.account_label': 'Label displayed in account popup up menu instead of the sip address',
              'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
              'nat_traversal.msrp_relay': 'If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain',
              'nat_traversal.use_ice': 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays',
