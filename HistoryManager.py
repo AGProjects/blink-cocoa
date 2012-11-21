@@ -1290,10 +1290,6 @@ class ChatHistoryReplicator(object):
                 log_text = '%d new chat messages for %s retrieved from chat replication server' % (notify_data[key], key)
                 # notify growl
                 BlinkLogger().log_info(log_text)
-                growl_data = NotificationData()
-                growl_data.sender = key
-                growl_data.content = log_text
-                NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
