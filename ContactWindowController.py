@@ -31,6 +31,8 @@ from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
 from zope.interface import implements
 
+from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
+
 import ContactOutlineView
 import ListView
 import SMSWindowManager
@@ -506,6 +508,10 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def showBlinkPro_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://itunes.apple.com/us/app/blink-pro/id404360415?mt=12&ls=1"))
+
+    @objc.IBAction
+    def showSylkServer_(self, sender):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://itunes.apple.com/us/app/sylkserver/id560866009?mt=12"))
 
     @objc.IBAction
     def showServiceProvider_(self, sender):
@@ -2340,6 +2346,10 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
+    
+        find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
+        sylkserver_exists = find_sylkserver[2] is not None
+        self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
 
         if settings.service_provider.name:
             if settings.service_provider.about_url or settings.service_provider.help_url:
