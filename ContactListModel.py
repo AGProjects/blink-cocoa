@@ -949,9 +949,6 @@ class BonjourBlinkContact(BlinkContact):
         else:
             self.avatar = DefaultUserAvatar()
 
-        # presence related attributes
-        self.presence_notes = []
-
     def update_uri(self, uri):
         self.aor = uri
         self.uris = [ContactURI(uri=str(uri), type='SIP')]
