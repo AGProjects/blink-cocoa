@@ -845,8 +845,18 @@ class AudioController(MediaStream):
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
             item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
 
+            can_move_conference_to_server = self.isConferencing and AccountManager().default_account is not BonjourAccount()
             item = menu.itemWithTag_(40) # move conference to server
-            item.setEnabled_(self.isConferencing and AccountManager().default_account is not BonjourAccount())
+            index = menu.indexOfItem_(item)
+            delimiter_item = menu.itemAtIndex_(index - 1)
+            if can_move_conference_to_server:
+                item.setHidden_(False)
+                item.setEnabled_(True)
+                delimiter_item.setHidden_(False)
+            else:
+                item.setHidden_(True)
+                delimiter_item.setHidden_(True)
+
 
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):
