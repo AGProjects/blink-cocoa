@@ -3476,27 +3476,11 @@ class ContactWindowController(NSWindowController):
                             mitem.setRepresentedObject_(item.uri)
 
                         if item not in self.model.bonjour_group.contacts:
-                            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                             self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show History", "viewHistory:", "")
                             mitem.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
 
             if isinstance(item, BlinkPresenceContact):
-                if item.pidfs_map:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Availability", "showPresenceInfo:", "")
-                    mitem.setEnabled_(True)
-                    mitem.setRepresentedObject_(item)
-
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Auto Answer", "setAutoAnswer:", "")
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
-                mitem.setState_(NSOnState if item.auto_answer else NSOffState)
-                settings = SIPSimpleSettings()
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites", "showInFavoritesGroup:", "")
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
-                mitem.setState_(NSOnState if item.favorite else NSOffState)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
                 lastItem.setRepresentedObject_(item)
@@ -3526,7 +3510,6 @@ class ContactWindowController(NSWindowController):
             elif isinstance(item, HistoryBlinkContact) and not is_anonymous(item.uris[0].uri):
                 if NSApp.delegate().applicationName != 'Blink Lite':
                     if item not in self.model.bonjour_group.contacts:
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
                 if not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -3544,6 +3527,13 @@ class ContactWindowController(NSWindowController):
                 lastItem.setRepresentedObject_((item, group))
 
             if isinstance(item, BlinkPresenceContact):
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites", "showInFavoritesGroup:", "")
+                mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+                mitem.setState_(NSOnState if item.favorite else NSOffState)
+
+
+            if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Subscribe to %s's Availability" % item.name, "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
@@ -3555,6 +3545,10 @@ class ContactWindowController(NSWindowController):
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
+                if item.pidfs_map:
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show %s' Availability" % item.name, "showPresenceInfo:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
 
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
