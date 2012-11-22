@@ -1779,6 +1779,12 @@ class ContactWindowController(NSWindowController):
             self.startSessionToSelectedContact(("desktop-server", "audio"), uri)
 
     @objc.IBAction
+    def setSubscribeToPresence_(self, sender):
+        item = sender.representedObject()
+        item.contact.presence.subscribe = not item.contact.presence.subscribe
+        item.contact.save()
+
+    @objc.IBAction
     def setPresencePolicy_(self, sender):
         item = sender.representedObject()
         item.contact.presence.policy = 'allow' if item.contact.presence.policy in ('default', 'block') else 'block'
@@ -3539,10 +3545,16 @@ class ContactWindowController(NSWindowController):
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide My Availability", "setPresencePolicy:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Subscribe to %s's Availability" % item.name, "setSubscribeToPresence:", "")
+                mitem.setState_(item.contact.presence.subscribe)
+                mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide My Availability to %s" % item.name , "setPresencePolicy:", "")
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
+
 
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
