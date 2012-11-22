@@ -1583,14 +1583,13 @@ class ContactWindowController(NSWindowController):
         local_uri = account.id if account is not None else None
         self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
 
-    @run_in_gui_thread
     def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
 
         if not target:
             BlinkLogger().log_error(u"Missing target")
-            return
+            return None
 
         account = None
         if local_uri is not None:
@@ -1622,7 +1621,7 @@ class ContactWindowController(NSWindowController):
         target_uri = normalize_sip_uri_for_outgoing_session(target, account)
         if not target_uri:
             BlinkLogger().log_error(u"Error parsing URI %s" % target)
-            return
+            return None
 
         if media_type == "video":
             media_type = ("video", "audio")
@@ -1637,9 +1636,13 @@ class ContactWindowController(NSWindowController):
             
             if not session_controller.startSessionWithStreamOfType(media_type):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
+                return None
         else:
             if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
                 BlinkLogger().log_error(u"Failed to start session with streams of types %s" % str(media_type))
+                return None
+
+        return session_controller
         
     def joinConference(self, target, media_type, participants=[], nickname=None):
         BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media_type))

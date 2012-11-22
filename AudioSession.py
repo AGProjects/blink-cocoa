@@ -184,7 +184,7 @@ class AudioSession(NSView):
 
     def draggingEntered_(self, info):
         if self.delegate is None:
-            return
+            return NSDragOperationNone
 
         def highlight(view):
             view.highlighted = True
