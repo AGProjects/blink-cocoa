@@ -1054,7 +1054,6 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=NotificationData(state=newstate, reason=fail_reason))
 
     def resetSession(self):
-
         self.state = STATE_IDLE
         self.session = None
         self.endingBy = None
@@ -1553,6 +1552,7 @@ class SessionController(NSObject):
         except KeyError:
             self.from_tag = ''
 
+        self.conference_info = None
         self.log_info("Session ended")
         self.changeSessionState(STATE_FINISHED, data.originator)
         log_data = NotificationData(target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
@@ -1711,8 +1711,11 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
-        self.log_info(u"Received conference-info update")
+        # Skip processing if session has ended
+        if self.state == STATE_FINISHED:
+            return
 
+        self.log_info(u"Received conference-info update")
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.conference_shared_files = []
