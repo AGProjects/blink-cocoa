@@ -338,6 +338,9 @@ class BlinkContact(NSObject):
         self.avatar = None
         super(BlinkContact, self).dealloc()
 
+    def destroy(self):
+        pass
+
     def _set_username_and_domain(self):
         # save username and domain to speed up name lookups in the contacts list
         uri_string = self.uri
@@ -418,40 +421,40 @@ class BlinkContact(NSObject):
 class BlinkConferenceContact(BlinkContact):
     """Contact representation for conference drawer UI"""
     implements(IObserver)
-    nc = NotificationCenter()
 
     def __init__(self, uri, name=None, icon=None, presence_contact=None):
         super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
         self.active_media = []
         self.screensharing_url = None
         self.presence_contact = presence_contact
-        if self.presence_contact is not None:
-            self.nc.add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
-
+        if presence_contact is not None:
+            NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
         self.presence_note = None
         self.init_presence_state()
         self.updatePresenceState()
 
-    def dealloc(self):
-        self.avatar = None
+    @allocate_autorelease_pool
+    def destroy(self):
+        super(BlinkConferenceContact, self).destroy()
         if self.presence_contact is not None:
+            NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
             self.presence_contact = None
-            self.nc.remove_observer(self, name="BlinkContactPresenceHasChaged")
-        self.nc = None
-        super(BlinkConferenceContact, self).dealloc()
 
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    def _NH_BlinkContactPresenceHasChaged(self, notification):
+        self.updatePresenceState()
+
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
                                 'status': { 'available':     False,
                                             'away':          False,
                                             'busy':          False
-                            }
-    }
+                                          }
+                              }
 
     @allocate_autorelease_pool
     def setPresenceNote(self):
@@ -475,9 +478,6 @@ class BlinkConferenceContact(BlinkContact):
 
         if detail != self.detail:
             self.detail = detail
-
-    def _NH_BlinkContactPresenceHasChaged(self, notification):
-        self.updatePresenceState()
 
     @allocate_autorelease_pool
     def updatePresenceState(self):
@@ -543,6 +543,10 @@ class BlinkBlockedPresenceContact(BlinkContact):
         super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
         self.avatar = BlockedPolicyAvatar()
 
+    def destroy(self):
+        super(BlinkBlockedPresenceContact, self).destroy()
+        self.policy = None
+
 
 class BlinkPresenceContactAttribute(object):
     def __init__(self, name):
@@ -563,39 +567,39 @@ class BlinkPresenceContact(BlinkContact):
     auto_answer = BlinkPresenceContactAttribute('auto_answer')
     name = BlinkPresenceContactAttribute('name')
     uris = BlinkPresenceContactAttribute('uris')
-    nc = NotificationCenter()
 
     def __init__(self, contact):
         self.contact = contact
         self.avatar = PresenceContactAvatar.from_contact(contact)
         self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
-        # TODO: fix memory leak: dealloc() will never be called because the NotificationCenter holds a reference to the contact
-        self.nc.add_observer(self, name="SIPAccountGotPresenceState")
         self.presence_note = None
         self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
+        NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
 
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
                                             'away':          False,
                                             'busy':          False
-                                },
+                                          },
                                 'devices': {}
         }
 
     def presenceNoteTimer_(self, timer):
         self.setPresenceNote()
 
-    def dealloc(self):
-        self.timer.invalidate()
-        self.nc.remove_observer(self, name="SIPAccountGotPresenceState")
-        self.avatar = None
+    @allocate_autorelease_pool
+    def destroy(self):
+        super(BlinkPresenceContact, self).destroy()
+        NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
+        self.contact = None
+        if self.timer:
+            self.timer.invalidate()
+        self.timer = None
         self.pidfs_map = None
-        self.nc = None
-        super(BlinkContact, self).dealloc()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -604,6 +608,9 @@ class BlinkPresenceContact(BlinkContact):
         handler(notification)
 
     def _NH_SIPAccountGotPresenceState(self, notification):
+        if not self.contact:
+            return
+
         if notification.data.full_state:
             self.pidfs_map = {}
 
@@ -769,7 +776,7 @@ class BlinkPresenceContact(BlinkContact):
             self.timer = None
 
         self.addToOrRemoveFromOnlineGroup()
-        NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+        notification.center.post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
@@ -783,6 +790,7 @@ class BlinkPresenceContact(BlinkContact):
         else:
             if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
+                online_contact.destroy()
         finally:
                 model.online_contacts_group.sortContacts()
 
@@ -2495,6 +2503,7 @@ class ContactListModel(CustomListModel):
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
+            blink_contact = BlinkPresenceContact(contact)
             self.no_group.contacts.append(blink_contact)
             self.no_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
@@ -2577,6 +2586,7 @@ class ContactListModel(CustomListModel):
             if not self.getBlinkGroupsForBlinkContact(blink_contact):
                 self.no_group.contacts.append(blink_contact)
         self.no_group.sortContacts()
+        blink_group.contacts = []
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
@@ -2607,6 +2617,8 @@ class ContactListModel(CustomListModel):
                     blink_group.contacts.remove(blink_contact)
                     if not self.getBlinkGroupsForBlinkContact(blink_contact):
                         self.no_group.contacts.append(blink_contact)
+                    else:
+                        blink_contact.destroy()
             blink_group.sortContacts()
             self.no_group.sortContacts()
 
@@ -2820,6 +2832,7 @@ class ContactListModel(CustomListModel):
                 pass
             else:
                 group.contacts.remove(blink_contact)
+                blink_contact.destroy()
                 group.sortContacts()
 
     def removePolicyForContactURIs(self, contact):

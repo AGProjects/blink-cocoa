@@ -1063,7 +1063,6 @@ class SessionController(NSObject):
         self.remote_focus = False
         self.remote_focus_log = False
         self.conference_info = None
-        self.invited_participants = []
         self.nickname = None
         self.subject = None
         self.conference_shared_files = []
@@ -1077,6 +1076,9 @@ class SessionController(NSObject):
         call_id = None
         from_tag = None
         to_tag = None
+        for item in self.invited_participants:
+            item.destroy()
+        self.invited_participants = []
 
         SessionControllersManager().removeController(self)
 
@@ -1435,6 +1437,8 @@ class SessionController(NSObject):
             self.remote_focus_log = True
         else:
             # Remove any invited participants as the remote party does not support conferencing
+            for item in self.invited_participants:
+                item.destroy()
             self.invited_participants = []
             self.conference_shared_files = []
         self.mustShowDrawer = True
@@ -1744,6 +1748,7 @@ class SessionController(NSObject):
                 pass
             else:
                 self.invited_participants.remove(contact)
+                contact.destroy()
 
         if data.conference_info.conference_description.resources is not None and data.conference_info.conference_description.resources.files is not None:
             for file in data.conference_info.conference_description.resources.files:
@@ -1761,6 +1766,7 @@ class SessionController(NSObject):
             pass
         else:
             self.invited_participants.remove(contact)
+            contact.destroy()
             # notify controllers who need conference information
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 

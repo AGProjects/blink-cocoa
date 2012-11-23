@@ -1602,7 +1602,7 @@ class ContactWindowController(NSWindowController):
         try:
             contact = (contact for contact in self.model.bonjour_group.contacts if contact.uri == target).next()
         except StopIteration:
-            if account is None:            
+            if account is None:
                 account = self.activeAccount()
             if selected_contact:
                 display_name = selected_contact.name
@@ -1633,7 +1633,7 @@ class ContactWindowController(NSWindowController):
             if media_type == "chat" and account is not BonjourAccount():
                 # just show the window and wait for user to type before starting the outgoing session
                 session_controller.open_chat_window_only = True
-            
+
             if not session_controller.startSessionWithStreamOfType(media_type):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
                 return None
@@ -1643,7 +1643,7 @@ class ContactWindowController(NSWindowController):
                 return None
 
         return session_controller
-        
+
     def joinConference(self, target, media_type, participants=[], nickname=None):
         BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media_type))
         if participants:
@@ -2355,7 +2355,7 @@ class ContactWindowController(NSWindowController):
         if NSApp.delegate().applicationName == 'Blink Lite':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
-            self.blinkMenu.itemWithTag_(7).setHidden_(False)   
+            self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(False)
         else:
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
@@ -3980,8 +3980,12 @@ class ContactWindowController(NSWindowController):
 
     @allocate_autorelease_pool
     def updateParticipantsView(self):
-        self.participants = []
         session = self.getSelectedAudioSession()
+
+        participants, self.participants = self.participants, []
+        for item in set(participants).difference(session.invited_participants if session else []):
+            item.destroy()
+        del participants
 
         if session and session.conference_info is not None:
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
@@ -4104,6 +4108,8 @@ class ContactWindowController(NSWindowController):
                    session.invited_participants.remove(contact)
                except ValueError:
                    pass
+               else:
+                   contact.destroy()
 
             if session.remote_focus and self.isConferenceParticipant(uri):
                 session.log_info(u"Request server for removal of %s from conference" % uri)
@@ -4179,11 +4185,10 @@ class ContactWindowController(NSWindowController):
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
                         contact.detail = 'Invitation sent...'
-                        if contact not in session.invited_participants:
-                            session.invited_participants.append(contact)
-                            session.participants_log.add(uri)
-                            session.log_info(u"Invite %s to conference" % uri)
-                            session.session.conference.add_participant(uri)
+                        session.invited_participants.append(contact)
+                        session.participants_log.add(uri)
+                        session.log_info(u"Invite %s to conference" % uri)
+                        session.session.conference.add_participant(uri)
 
     def getConferenceTitle(self):
         title = None

@@ -190,6 +190,7 @@ class ChatWindowController(NSWindowController):
                         uri_time = session.failed_to_join_participants[uri]
                         if uri == contact.uri and (time.time() - uri_time > 5):
                             session.invited_participants.remove(contact)
+                            contact.destroy()
                             del session.failed_to_join_participants[uri]
                             change = True
                     except KeyError:
@@ -763,6 +764,8 @@ class ChatWindowController(NSWindowController):
                    session.invited_participants.remove(contact)
                except ValueError:
                    pass
+               else:
+                   contact.destroy()
 
             if session.remote_focus and self.isConferenceParticipant(uri):
                 session.log_info(u"Request server for removal of %s from conference" % uri)
@@ -792,11 +795,10 @@ class ChatWindowController(NSWindowController):
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
                         contact.detail = 'Invitation sent...'
-                        if contact not in session.invited_participants:
-                            session.invited_participants.append(contact)
-                            session.participants_log.add(uri)
-                            session.log_info(u"Invite %s to conference" % uri)
-                            session.session.conference.add_participant(uri)
+                        session.invited_participants.append(contact)
+                        session.participants_log.add(uri)
+                        session.log_info(u"Invite %s to conference" % uri)
+                        session.session.conference.add_participant(uri)
 
                 self.refreshDrawer()
             else:
@@ -1200,11 +1202,14 @@ class ChatWindowController(NSWindowController):
     def refreshDrawer(self):
         getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
 
-        self.participants = []
+        session = self.selectedSessionController()
+
+        participants, self.participants = self.participants, []
+        for item in set(participants).difference(session.invited_participants if session else []):
+            item.destroy()
+        del participants
 
         self.updateTitle()
-
-        session = self.selectedSessionController()
 
         if session is not None:
             state = session.state
