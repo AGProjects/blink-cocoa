@@ -773,8 +773,6 @@ class BlinkPresenceContact(BlinkContact):
 
             self.presence_state['devices'] = devices
 
-        self.pending_authorizations = {}
-
         self.setPresenceNote()
         has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
         if has_notes and self.timer is None:
