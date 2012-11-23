@@ -3532,9 +3532,13 @@ class ContactWindowController(NSWindowController):
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.favorite else NSOffState)
 
-
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                if item.pidfs_map:
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show %s' Availability" % item.name, "showPresenceInfo:", "")
+                    mitem.setEnabled_(True)
+                    mitem.setRepresentedObject_(item)
+                
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Subscribe to %s's Availability" % item.name, "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)
@@ -3544,11 +3548,6 @@ class ContactWindowController(NSWindowController):
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
-
-                if item.pidfs_map:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show %s' Availability" % item.name, "showPresenceInfo:", "")
-                    mitem.setEnabled_(True)
-                    mitem.setRepresentedObject_(item)
 
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
