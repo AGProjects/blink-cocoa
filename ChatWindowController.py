@@ -152,33 +152,6 @@ class ChatWindowController(NSWindowController):
 
         return self
 
-    def dealloc(self):
-        self.notification_center = NotificationCenter()
-        self.notification_center.remove_observer(self, name="AudioStreamDidStartRecordingAudio")
-        self.notification_center.remove_observer(self, name="AudioStreamDidStopRecordingAudio")
-        self.notification_center.remove_observer(self, name="BlinkAudioStreamChangedHoldState")
-        self.notification_center.remove_observer(self, name="BlinkColaborativeEditorContentHasChanged")
-        self.notification_center.remove_observer(self, name="BlinkConferenceGotUpdate")
-        self.notification_center.remove_observer(self, name="BlinkContactsHaveChanged")
-        self.notification_center.remove_observer(self, name="BlinkGotProposal")
-        self.notification_center.remove_observer(self, name="BlinkSentAddProposal")
-        self.notification_center.remove_observer(self, name="BlinkSentRemoveProposal")
-        self.notification_center.remove_observer(self, name="BlinkProposalGotRejected")
-        self.notification_center.remove_observer(self, name="BlinkMuteChangedState")
-        self.notification_center.remove_observer(self, name="BlinkSessionChangedState")
-        self.notification_center.remove_observer(self, name="BlinkStreamHandlerChangedState")
-        self.notification_center.remove_observer(self, name="BlinkStreamHandlersChanged")
-        self.notification_center.remove_observer(self, name="BlinkVideoEnteredFullScreen")
-        self.notification_center.remove_observer(self, name="BlinkVideoExitedFullScreen")
-        self.notification_center.remove_observer(self, name="BlinkConferenceContactPresenceHasChaged")
-
-        ns_nc = NSNotificationCenter.defaultCenter()
-        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.participantsTableView)
-        ns_nc.removeObserver_name_object_(self, u"NSTableViewSelectionDidChangeNotification", self.conferenceFilesTableView)
-        ns_nc.removeObserver_name_object_(self, u"NSSplitViewDidResizeSubviewsNotification", self.drawerSplitView)
-
-        super(ChatWindowController, self).dealloc()
-
     @property
     def sessionControllersManager(self):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
