@@ -16,12 +16,9 @@ SharedSetting.set_namespace('ag-projects:blink')
 
 
 class BlinkContactExtension(ContactExtension):
+    auto_answer = SharedSetting(type=Boolean, default=False)
     default_uri = SharedSetting(type=str, default=None, nillable=True)
     preferred_media = SharedSetting(type=str, default='audio')
-    icon = SharedSetting(type=str, default=None, nillable=True)
-    presence_policy = Setting(type=str, default=None, nillable=True)
-    dialog_policy = Setting(type=str, default=None, nillable=True)
-    auto_answer = SharedSetting(type=Boolean, default=False)
 
 
 class BlinkGroupExtension(GroupExtension):

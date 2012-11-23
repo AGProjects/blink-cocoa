@@ -31,8 +31,8 @@ __all__ = ['BlinkContact',
            'presence_status_for_contact',
            'presence_status_icons']
 
-import bisect
 import base64
+import bisect
 import datetime
 import glob
 import os
@@ -142,6 +142,30 @@ def presence_status_for_contact(contact, uri=None):
 
         return status
 
+
+def encode_icon(icon):
+    if not icon:
+        return None
+    try:
+        tiff_data = icon.TIFFRepresentation()
+        bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+        png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+    except Exception:
+        return None
+    else:
+        return base64.b64encode(png_data)
+
+
+def decode_icon(data):
+    if not data:
+        return None
+    try:
+        data = base64.b64decode(data)
+        return NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
+    except Exception:
+        return None
+
+
 class Avatar(object):
     def __init__(self, icon, path=None):
         self.icon = self.scale_icon(icon)
@@ -158,26 +182,6 @@ class Avatar(object):
             icon.setScalesWhenResized_(True)
             icon.setSize_(NSMakeSize(ICON_SIZE, ICON_SIZE * size.height/size.width))
         return icon
-
-    def to_base64(self):
-        # Scale it down if needed
-        size = self.icon.size()
-        self.icon_rep = self.icon.representations()[0]
-        real_size_w = self.icon_rep.pixelsWide()
-        real_size_h = self.icon_rep.pixelsHigh()
-        if real_size_w > ICON_SIZE or real_size_h > ICON_SIZE:
-            new_size_w = ICON_SIZE
-            new_size_h = ICON_SIZE * size.height/size.width
-            scaled_icon = NSImage.alloc().initWithSize_(NSMakeSize(new_size_w, new_size_h))
-            scaled_icon.lockFocus()
-            self.icon.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, new_size_w, new_size_h), NSMakeRect(0, 0, size.width, size.height), NSCompositeSourceOver, 1.0)
-            scaled_icon.unlockFocus()
-            tiff_data = scaled_icon.TIFFRepresentation()
-        else:
-            tiff_data = self.icon.TIFFRepresentation()
-        bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
-        png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-        return base64.b64encode(png_data)
 
     def save(self):
         pass
@@ -255,18 +259,18 @@ class DefaultMultiUserAvatar(Avatar):
 
 
 class PresenceContactAvatar(Avatar):
+
     @classmethod
     def from_contact(cls, contact):
-        if contact.icon is None:
+        path = cls.path_for_contact(contact)
+        if not os.path.isfile(path):
             return DefaultUserAvatar()
-        try:
-            data = base64.b64decode(contact.icon)
-            icon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
-        except Exception:
-            return DefaultUserAvatar()
-        else:
-            path = os.path.join(cls.base_path, '%s.tiff' % contact.id)
-            return cls(icon, path)
+        icon = NSImage.alloc().initWithContentsOfFile_(path)
+        return cls(icon, path)
+
+    @classmethod
+    def path_for_contact(cls, contact):
+        return os.path.join(cls.base_path, '%s.tiff' % contact.id)
 
     def save(self):
         data = self.icon.TIFFRepresentationUsingCompression_factor_(NSTIFFCompressionLZW, 1)
@@ -1655,9 +1659,11 @@ class CustomListModel(NSObject):
                                 targetContact.contact.uris.add(new_uri)
                                 target_changed = True
 
-                        if targetContact.contact.icon is None and sourceContact.contact.icon is not None:
-                            targetContact.contact.icon = sourceContact.contact.icon
-                            target_changed = True
+                        if targetContact.avatar is DefaultUserAvatar() and sourceContact.avatar is not DefaultUserAvatar():
+                            avatar = PresenceContactAvatar(sourceContact.avatar.icon)
+                            avatar.path = avatar.path_for_contact(targetContact.contact)
+                            avatar.save()
+                            targetContact.avatar = avatar
 
                     with addressbook_manager.transaction():
                         if target_changed:
@@ -1836,10 +1842,13 @@ class ContactListModel(CustomListModel):
                 'default_uri'     : contact.default_uri,
                 'uris'            : list((uri.uri, uri.type) for uri in iter(contact.uris)),
                 'preferred_media' : contact.preferred_media,
-                'icon'            : contact.icon,
                 'presence'        : {'policy': contact.presence.policy, 'subscribe': contact.presence.subscribe},
-                'dialog'          : {'policy': contact.dialog.policy,   'subscribe': contact.dialog.subscribe}
+                'dialog'          : {'policy': contact.dialog.policy,   'subscribe': contact.dialog.subscribe},
+                'icon'            : None
             }
+            avatar = PresenceContactAvatar.from_contact(contact)
+            if avatar is not DefaultUserAvatar():
+                backup_contact['icon'] = encode_icon(avatar.icon)
             backup_contacts.append(backup_contact)
 
         for group in AddressbookManager().get_groups():
@@ -1908,8 +1917,13 @@ class ContactListModel(CustomListModel):
                             contact.uris.add(ContactURI(uri=backup_contact['uri'], type='SIP'))
                             contact.name = backup_contact['name'] or ''
                             contact.preferred_media = backup_contact['preferred_media'] or 'audio'
-                            contact.icon = backup_contact['icon']
                             contact.save()
+
+                            icon = decode_icon(backup_contact['icon'])
+                            if icon:
+                                avatar = PresenceContactAvatar(icon)
+                                avatar.path = os.path.join(avatar.base_path, '%s.tiff' % contact.id)
+                                avatar.save()
 
                             self.removePolicyForContactURIs(contact)
 
@@ -1935,7 +1949,6 @@ class ContactListModel(CustomListModel):
                             for uri in backup_contact['uris']:
                                 contact.uris.add(ContactURI(uri=uri[0], type=uri[1]))
                             contact.preferred_media = backup_contact['preferred_media']
-                            contact.icon = backup_contact['icon']
                             presence = backup_contact['presence']
                             dialog = backup_contact['dialog']
                             contact.presence.policy = presence['policy']
@@ -1943,6 +1956,13 @@ class ContactListModel(CustomListModel):
                             contact.dialog.policy = dialog['policy']
                             contact.dialog.subscribe = dialog['subscribe']
                             contact.save()
+
+                            icon = backup_contact['icon']
+                            if icon:
+                                avatar = PresenceContactAvatar(icon)
+                                avatar.path = os.path.join(avatar.base_path, '%s.tiff' % contact.id)
+                                avatar.save()
+
                             self.removePolicyForContactURIs(contact)
 
                             restored_contacts += 1
@@ -2472,7 +2492,6 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
         blink_contact = BlinkPresenceContact(contact)
-        blink_contact.avatar.save()
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
@@ -2500,17 +2519,7 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
-
-        if 'icon' in notification.data.modified:
-            new_avatar = PresenceContactAvatar.from_contact(contact)
-            new_avatar.save()
-        else:
-            new_avatar = None
-
         for blink_contact in (blink_contact for blink_group in self.groupsList for blink_contact in blink_group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact == contact):
-            if new_avatar is not None:
-                blink_contact.avatar = new_avatar
-
             if set(['default_uri', 'uris']).intersection(notification.data.modified):
                 blink_contact.detail = blink_contact.uri
                 blink_contact._set_username_and_domain()
@@ -2769,6 +2778,10 @@ class ContactListModel(CustomListModel):
         for uri, data in test_contacts.iteritems():
             path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
             icon = NSImage.alloc().initWithContentsOfFile_(path)
+            # Save avatar with appropriate name
+            avatar = PresenceContactAvatar(icon)
+            avatar.path = os.path.join(avatar.base_path, '%s.tiff' % data['id'])
+            avatar.save()
 
             contact = Contact(id=data['id'])
             contact_uri = ContactURI(uri=uri, type='SIP')
@@ -2776,7 +2789,6 @@ class ContactListModel(CustomListModel):
             contact.default_uri = contact_uri.id
             contact.name = data['name']
             contact.preferred_media = data['preferred_media']
-            contact.icon = Avatar(icon).to_base64()
             contact.save()
             group.contacts.add(contact)
 
@@ -2838,6 +2850,17 @@ class ContactListModel(CustomListModel):
                 policy_contact.dialog.policy = 'block'
                 policy_contact.save()
 
+    def updateIconForContact(self, contact, icon):
+        if icon is not None:
+            avatar = PresenceContactAvatar(icon)
+            avatar.path = avatar.path_for_contact(contact)
+            avatar.save()
+        else:
+            avatar = DefaultUserAvatar()
+        for blink_contact in (blink_contact for blink_group in self.groupsList for blink_contact in blink_group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact == contact):
+            blink_contact.avatar = avatar
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
     def addGroup(self):
         controller = AddGroupController()
         name = controller.runModal()
@@ -2882,20 +2905,22 @@ class ContactListModel(CustomListModel):
             default_uri = new_contact['default_uri']
             contact.default_uri = default_uri.id if default_uri is not None else None
             contact.preferred_media = new_contact['preferred_media']
-            icon = new_contact['icon']
-            if icon is None:
-                contact.icon = None
-            else:
-                contact.icon = Avatar(icon).to_base64()
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+
+            icon = new_contact['icon']
+            if icon is not None and icon is not DefaultUserAvatar().icon:
+                avatar = PresenceContactAvatar(icon)
+                avatar.path = avatar.path_for_contact(contact)
+                avatar.save()
+
             contact.save()
 
             self.removePolicyForContactURIs(contact)
-
             self.addGroupsForContact(contact, new_contact['groups'] or [])
+
         return True
 
     def editContact(self, item):
@@ -2923,17 +2948,16 @@ class ContactListModel(CustomListModel):
             default_uri = new_contact['default_uri']
             contact.default_uri = default_uri.id if default_uri is not None else None
             contact.preferred_media = new_contact['preferred_media']
-            icon = new_contact['icon']
-            if icon is None:
-                item.avatar.delete()
-                contact.icon = None
-            else:
-                contact.icon = Avatar(icon).to_base64()
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
             contact.save()
+
+            icon = new_contact['icon']
+            if icon is None and item.avatar is not DefaultUserAvatar() or icon is not item.avatar.icon:
+                item.avatar.delete()
+                self.updateIconForContact(contact, new_contact['icon'])
 
             self.removePolicyForContactURIs(contact)
 

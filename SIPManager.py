@@ -106,6 +106,20 @@ class SIPManager(object):
                 Account.server.web_password.dirty[account.server] = True
                 account.save()
 
+    def cleanupIcons(self):
+        save = False
+        configuration_manager = ConfigurationManager()
+        try:
+            contacts = configuration_manager.get(['Addressbook', 'Contacts'])
+        except Exception:
+            return
+        for data in contacts.itervalues():
+            if 'icon' in data:
+                del data['icon']
+                save = True
+        if save:
+            configuration_manager.save()
+
     def init(self):
         self._version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
 
@@ -414,6 +428,7 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Build %s from %s" % (build, date))
 
         self.migratePasswordsToKeychain()
+        self.cleanupIcons()
 
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 16000

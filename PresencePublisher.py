@@ -18,9 +18,11 @@ from datetime import datetime
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.account.xcap import Icon, OfflineStatus
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.payloads import pidf, rpid, cipid, caps
+from sipsimple.payloads import pidf, rpid, cipid, caps, IterateItems
+from sipsimple.payloads.addressbook import Contact
 from sipsimple.util import ISOTimestamp
-from sipsimple.threading.green import run_in_green_thread
+from sipsimple.threading import run_in_twisted_thread
+from sipsimple.threading.green import run_in_green_thread, Command
 from twisted.internet import reactor
 from zope.interface import implements
 from util import *
@@ -112,6 +114,8 @@ class PresencePublisher(object):
     location = None
     xcap_caps_discovered = {}
 
+    # Cleanup old base64 encoded icons
+    _cleanedup_accounts = set()
 
     def __init__(self, owner):
         self.owner = owner
@@ -243,6 +247,21 @@ class PresencePublisher(object):
             save = True
         if save:
             settings.save()
+
+        # Cleanup old base64 encoded icons from payload
+        account = notification.sender.account
+        if account.id not in self._cleanedup_accounts:
+            self._cleanup_icons(account)
+
+    @run_in_twisted_thread
+    def _cleanup_icons(self, account):
+        self._cleanedup_accounts.add(account.id)
+        with account.xcap_manager.transaction():
+            address_book = account.xcap_manager.resource_lists.content['sipsimple_addressbook']
+            for contact in address_book[Contact, IterateItems]:
+                if contact.attributes and contact.attributes.get('icon') is not None:
+                    contact.attributes['icon'] = None
+        account.xcap_manager.command_channel.send(Command('update'))
 
     def updateIdleTimer_(self, timer):
         must_publish = False

@@ -5,7 +5,6 @@ from Foundation import *
 from AppKit import *
 from Quartz import *
 
-import base64
 import datetime
 import hashlib
 import os
@@ -33,7 +32,7 @@ import ChatWindowController
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import *
-from ContactListModel import Avatar
+from ContactListModel import encode_icon, decode_icon
 
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -290,7 +289,7 @@ class ChatController(MediaStream):
 
     def sendOwnIcon(self):
         if self.stream and not self.sessionController.session.remote_focus:
-            base64icon = Avatar(self.chatWindowController.own_icon).to_base64()
+            base64icon = encode_icon(self.chatWindowController.own_icon)
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=ISOTimestamp.now())
 
     def setNickname(self, nickname):
@@ -1029,8 +1028,7 @@ class ChatController(MediaStream):
         message = data.message
         if message.content_type == 'application/blink-icon':
             try:
-                data = base64.b64decode(message.body)
-                self.remoteIcon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
+                self.remoteIcon = decode_icon(message.body)
             except Exception:
                 pass
             else:
