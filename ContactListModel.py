@@ -82,8 +82,14 @@ presence_status_icons = {'away': NSImage.imageNamed_("away"),
 
 def presence_status_for_contact(contact, uri=None):
     status = None
+
+    if contact is None:
+        return None
+
     if uri is None:
         if isinstance(contact, BlinkPresenceContact):
+            if contact.contact is None:
+                return None
             if contact.contact.presence.policy == 'block':
                 return 'blocked'
             if contact.presence_state['status']['busy']:
@@ -106,7 +112,7 @@ def presence_status_for_contact(contact, uri=None):
             elif contact.presence_contact.contact.presence.subscribe:
                 status = 'offline'
         return status
-    else:
+    elif hasattr(contact, "pidfs_map"):
         try:
             uri = 'sip:%s' % uri
             pidfs = contact.pidfs_map[uri]
@@ -142,6 +148,7 @@ def presence_status_for_contact(contact, uri=None):
 
         return status
 
+    return None
 
 def encode_icon(icon):
     if not icon:
@@ -313,7 +320,7 @@ class BlinkContact(NSObject):
 
     @property
     def icon(self):
-        return self.avatar.icon
+        return self.avatar.icon if self.avatar is not None else None
 
     @property
     def uri(self):
@@ -554,10 +561,13 @@ class BlinkPresenceContactAttribute(object):
     def __get__(self, obj, objtype=None):
         if obj is None:
             return None
+        if obj.contact is None:
+            return None
         return getattr(obj.contact, self.name)
     def __set__(self, obj, value):
-        setattr(obj.contact, self.name, value)
-        obj.contact.save()
+        if obj.contact is not None and self is not None:
+            setattr(obj.contact, self.name, value)
+            obj.contact.save()
 
 
 class BlinkPresenceContact(BlinkContact):
@@ -839,6 +849,9 @@ class BlinkPresenceContact(BlinkContact):
     del _get_preferred_media, _set_preferred_media
 
     def _get_default_uri(self):
+        if self.contact is None:
+            return None
+        
         if self.contact.default_uri is not None:
             try:
                 return self.contact.uris[self.contact.default_uri]
@@ -846,6 +859,8 @@ class BlinkPresenceContact(BlinkContact):
                 pass
         return None
     def _set_default_uri(self, value):
+        if self.contact is None:
+            return None
         if value:
             if value.id not in self.contact.uris:
                 self.contact.uris.add(value)
@@ -861,6 +876,9 @@ class BlinkPresenceContact(BlinkContact):
 
     @property
     def uri(self):
+        if self.contact is None:
+            return None 
+        
         if self.default_uri is not None:
             return self.default_uri.uri
         try:

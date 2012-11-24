@@ -48,8 +48,9 @@ class ContactCell(NSTextFieldCell):
         self.frame = frame
         self.view = view
 
-        icon = self.contact.avatar.icon
-        self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
+        if self.contact.avatar is not None:
+            icon = self.contact.avatar.icon
+            self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
 
         self.drawActiveMedia()
         self.drawFirstLine()
@@ -99,6 +100,9 @@ class ContactCell(NSTextFieldCell):
 
     @allocate_autorelease_pool
     def drawPresenceIcon(self):
+        if self.contact is None:
+            return
+
         status = presence_status_for_contact(self.contact)
         if not status:
             return
