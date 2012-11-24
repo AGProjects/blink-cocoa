@@ -603,13 +603,13 @@ class BlinkPresenceContact(BlinkContact):
 
     @allocate_autorelease_pool
     def destroy(self):
-        super(BlinkPresenceContact, self).destroy()
         NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
         self.contact = None
         if self.timer:
             self.timer.invalidate()
         self.timer = None
         self.pidfs_map = None
+        super(BlinkPresenceContact, self).destroy()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -795,14 +795,15 @@ class BlinkPresenceContact(BlinkContact):
             online_contact = next(online_contact for online_contact in model.online_contacts_group.contacts if online_contact.contact == self.contact)
         except StopIteration:
             if status not in (None, "offline"):
-                online_contact = BlinkPresenceContact(self.contact)
+                online_contact = BlinkOnlineContact(self.contact)
                 model.online_contacts_group.contacts.append(online_contact)
+                model.online_contacts_group.sortContacts()
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
         else:
             if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
-        finally:
-                model.online_contacts_group.sortContacts()
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
@@ -956,6 +957,10 @@ class BlinkPresenceContact(BlinkContact):
         if detail != self.detail:
             self.detail = detail
             NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+
+
+class BlinkOnlineContact(BlinkPresenceContact):
+    pass
 
 
 class HistoryBlinkContact(BlinkContact):
