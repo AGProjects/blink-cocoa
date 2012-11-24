@@ -71,13 +71,16 @@ class ContactCell(NSTextFieldCell):
     def drawSecondLine(self):
         frame = self.frame
         frame.origin.y += 15
-        if self.contact.detail:
+        if self.contact is not None and self.contact.detail:
             rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width-10, frame.size.height)
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
             self.contact.detail.drawInRect_withAttributes_(rect, attrs)
 
     @allocate_autorelease_pool
     def drawActiveMedia(self):
+        if self.contact is None:
+            return
+
         if not hasattr(self.contact, "active_media"):
             return
 
@@ -125,6 +128,7 @@ class ContactCell(NSTextFieldCell):
             frame.origin.y -= 17
             left = self.view.frame().size.width - 20
             self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
+
 
     @allocate_autorelease_pool
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
