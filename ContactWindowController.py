@@ -1436,7 +1436,7 @@ class ContactWindowController(NSWindowController):
                 try:
                     text = unicode(text)
                 except:
-                    NSRunAlertPanel(u"Invalid URI", u"The supplied URI contains invalid characters", u"OK", None, None)
+                    NSRunAlertPanel(u"Invalid Address", u"The address contains invalid characters", u"OK", None, None)
                     return
                 else:
                     _split = text.split(';')
