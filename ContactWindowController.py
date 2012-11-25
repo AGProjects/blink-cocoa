@@ -1083,7 +1083,7 @@ class ContactWindowController(NSWindowController):
                 desktopOk = audioOk
             elif tabItem == "dialpad":
                 audioOk = self.searchBox.stringValue().strip() != u""
-                chatOk = audioOk
+                chatOk = False
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk and self.sessionControllersManager.isMediaTypeSupported('chat'), 1)
