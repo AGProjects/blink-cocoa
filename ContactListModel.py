@@ -3014,7 +3014,7 @@ class ContactListModel(CustomListModel):
         if ret == NSAlertDefaultReturn:
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
-                self.addBlockedPolicyForContactURIs(blink_contact.contact)
+                #self.addBlockedPolicyForContactURIs(blink_contact.contact)
                 blink_contact.contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
