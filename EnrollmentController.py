@@ -55,11 +55,15 @@ class EnrollmentController(NSObject):
 
     nextButton = objc.IBOutlet()
     purchaseProLabel = objc.IBOutlet()
+    syncWithiCloudCheckbox = objc.IBOutlet()
 
 
     def init(self):
         if self:
             NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
+            icloud_sync_enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
+            self.syncWithiCloudCheckbox.setHidden_(not icloud_sync_enabled)
+            
             self.selectRadio_(self.radioMatrix)
             if not SIPManager().validateAddAccountAction():
                 self.nextButton.setEnabled_(False)
@@ -175,11 +179,13 @@ class EnrollmentController(NSObject):
             display_name = unicode(self.displayNameText.stringValue())
             address = unicode(self.addressText.stringValue())
             password = unicode(self.passwordText.stringValue())
+            sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
 
             account = Account(str(address))
             account.display_name = display_name
             account.auth.password = password
             account.enabled = True
+            account.gui.sync_with_icloud = sync_with_icloud
             account.save()
         except ValueError, e:
             NSRunAlertPanel("Sign In to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
@@ -382,6 +388,9 @@ class EnrollmentController(NSObject):
 
             if ldap_port:
                 account.ldap.port = ldap_port
+
+        sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
+        account.gui.sync_with_icloud = sync_with_icloud
 
         account.save()
 
