@@ -2551,12 +2551,14 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
-        for blink_contact in (blink_contact for blink_group in self.groupsList for blink_contact in blink_group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact == contact):
-            if set(['default_uri', 'uris']).intersection(notification.data.modified):
+
+        if set(['default_uri', 'uris']).intersection(notification.data.modified):
+            groups = [blink_group for blink_group in self.groupsList if any(isinstance(item, BlinkPresenceContact) and item.contact == contact for item in blink_group.contacts)]
+            for blink_contact in (blink_contact for blink_contact in chain(*(g.contacts for g in groups)) if blink_contact.contact == contact):
                 blink_contact.detail = blink_contact.uri
                 blink_contact._set_username_and_domain()
+            [g.sortContacts() for g in groups]
 
-        [g.sortContacts() for g in self.groupsList]
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if contact.presence.policy != 'default':
