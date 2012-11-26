@@ -601,13 +601,14 @@ class BlinkPresenceContact(BlinkContact):
     def presenceNoteTimer_(self, timer):
         self.setPresenceNote()
 
-    def _clone_presence_state(self):
+    def _clone_presence_state(self, other=None):
         # TODO: remove this ugly hack, also, need to 'synchronize' timers
         model = NSApp.delegate().contactsWindowController.model
-        try:
-            other = next(item for item in model.all_contacts_group.contacts if item.contact == self.contact)
-        except StopIteration:
-            return
+        if other is None:
+            try:
+                other = next(item for item in model.all_contacts_group.contacts if item.contact == self.contact)
+            except StopIteration:
+                return
         self.pidfs_map = other.pidfs_map.copy()
         self.presence_state = other.presence_state.copy()
         self.presence_note = other.presence_note
@@ -810,7 +811,7 @@ class BlinkPresenceContact(BlinkContact):
         except StopIteration:
             if status not in (None, "offline"):
                 online_contact = BlinkOnlineContact(self.contact)
-                online_contact._clone_presence_state()
+                online_contact._clone_presence_state(other=self)
                 model.online_contacts_group.contacts.append(online_contact)
                 model.online_contacts_group.sortContacts()
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
