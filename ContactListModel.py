@@ -601,6 +601,22 @@ class BlinkPresenceContact(BlinkContact):
     def presenceNoteTimer_(self, timer):
         self.setPresenceNote()
 
+    def _clone_presence_state(self):
+        # TODO: remove this ugly hack, also, need to 'synchronize' timers
+        model = NSApp.delegate().contactsWindowController.model
+        try:
+            other = next(item for item in model.all_contacts_group.contacts if item.contact == self.contact)
+        except StopIteration:
+            return
+        self.pidfs_map = other.pidfs_map.copy()
+        self.presence_state = other.presence_state.copy()
+        self.presence_note = other.presence_note
+        self.setPresenceNote()
+        if other.timer is not None and other.timer.isValid():
+            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceNoteTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+
     @allocate_autorelease_pool
     def destroy(self):
         NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
@@ -794,6 +810,7 @@ class BlinkPresenceContact(BlinkContact):
         except StopIteration:
             if status not in (None, "offline"):
                 online_contact = BlinkOnlineContact(self.contact)
+                online_contact._clone_presence_state()
                 model.online_contacts_group.contacts.append(online_contact)
                 model.online_contacts_group.sortContacts()
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
@@ -2585,6 +2602,7 @@ class ContactListModel(CustomListModel):
         self.groupsList.insert(index, blink_group)
         for contact in group.contacts:
             blink_contact = BlinkPresenceContact(contact)
+            blink_contact._clone_presence_state()
             blink_group.contacts.append(blink_contact)
             self.removeContactFromBlinkGroups(contact, [self.no_group])
         blink_group.sortContacts()
@@ -2627,6 +2645,7 @@ class ContactListModel(CustomListModel):
                     blink_contact = next(blink_contact for blink_contact in blink_group.contacts if blink_contact.contact == contact)
                 except StopIteration:
                     blink_contact = BlinkPresenceContact(contact)
+                    blink_contact._clone_presence_state()
                     blink_group.contacts.append(blink_contact)
                     self.removeContactFromBlinkGroups(contact, [self.no_group])
             for contact in removed:
