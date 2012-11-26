@@ -792,7 +792,9 @@ class BlinkPresenceContact(BlinkContact):
 
         self.setPresenceNote()
         has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
-        if has_notes and self.timer is None:
+        if has_notes:
+            if self.timer is not None and self.timer.isValid():
+                self.timer.invalidate()
             self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "presenceNoteTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
