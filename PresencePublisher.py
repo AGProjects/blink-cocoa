@@ -453,19 +453,16 @@ class PresencePublisher(object):
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         req = urllib2.Request(url)
         try:
-            location = urllib2.urlopen(req)
-            raw_response = urllib2.urlopen(req)
-            json_data = raw_response.read()
-
+            data = urllib2.urlopen(req).read()
+        except Exception:
+            pass
+        else:
             try:
-                response = cjson.decode(json_data.replace('\\/', '/'))
+                response = cjson.decode(data.replace('\\/', '/'))
             except TypeError:
                 pass
             else:
                 if response and self.location != response:
                     self.location = response
                     self.publish()
-        except Exception:
-            pass
-
 
