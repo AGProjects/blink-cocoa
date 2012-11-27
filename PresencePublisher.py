@@ -207,7 +207,7 @@ class PresencePublisher(object):
 
 
         if notification.sender is SIPSimpleSettings():
-            if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
+            if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
                 self.publish()
             if 'presence_state.offline_note' in notification.data.modified:
                 self.set_offline_status()
