@@ -9,17 +9,18 @@
 
 <h2>Version 2.0.0</h2>
 
-<p>November 21st, 2012
+<p>November 27th, 2012
 
 <ul>
 <li>Added Presence support (PUBLISH and SUBSCRIBE/NOTIFY methods using RLS)
+    Detailed info available at http://projects.ag-projects.com/news/15
 <li>Added Address Book storage using XCAP rls-services and resource-lists
 <li>Added Presence Policy using XCAP org.openmobilealliance.pres-rules
 <li>Added Icon Storage using XCAP org.openmobilealliance.pres-content
 <li>Added Offline Presence using XCAP pidf-manipulation
 <li>Added XMPP interoperability for SIP2SIP accounts
 <li>Added publish for Status, Icon, Activity, Note, Timezone, User-Input and Media Caps
-<li>Added Presence Info Panel and render devices on a world map
+<li>Added Presence Info Panel and render SIP devices on a world map
 <li>Added menu to select a particular uri when dragging contact to create conference
 <li>Added menu to select a particular uri when dragging contact to conference drawer
 <li>Added possibility to start sessions to specific devices (using GRUU)
@@ -35,6 +36,7 @@
 <li>Fixed crash when enrollment for SIP2SIP account fails
 <li>Fixed validating Contacts backups
 <li>Fixed processing HTTP links with unicode characters
+<li>Fixed setting local hold state after direction was inactive
 <li>Fixed selecting audio device menu items in Mountain Lion
 <li>Fixed selecting built-in devices in Mountain Lion
 <li>Fixed setting display name and icon for invited participants in chat drawer
@@ -46,11 +48,13 @@
 <li>Fixed chat message replication with history server
 <li>Fixed sharing contact widgets across groups
 <li>Fixed calling API functions on Snow Leopard
+<li>Fixed race conditions when deleting an account
 <li>Improved copy of SIP URI from Contacts
 <li>Improved layout of icons in chat window tab switcher
 <li>Improved chat connectivity failure logs
 <li>Improved title of alert panel depending on proposed media type
 <li>Improved re-usage of streams for chat sessions
+<li>Terminate session if a stream fails and can't be removed from the session
 <li>Activate Add contact button in Contact window if at least one uri is set
 <li>Print the reason when the configuration file is corrupted
 <li>Speak different text for incoming file transfer
