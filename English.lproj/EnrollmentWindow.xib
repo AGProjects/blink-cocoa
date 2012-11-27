@@ -715,7 +715,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 								<object class="NSTextField" id="972917323">
 									<reference key="NSNextResponder" ref="68490699"/>
 									<int key="NSvFlags">268</int>
-									<string key="NSFrame">{{18, 150}, {129, 17}}</string>
+									<string key="NSFrame">{{53, 150}, {94, 17}}</string>
 									<reference key="NSSuperview" ref="68490699"/>
 									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView" ref="251779913"/>
@@ -912,7 +912,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="451790729"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{438, 377}</string>
 				<string key="NSMaxSize">{438, 456}</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
@@ -1715,6 +1715,14 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 				<string key="15.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="155.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="156.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<object class="NSMutableDictionary" key="159.IBAttributePlaceholdersKey">
+					<string key="NS.key.0">ToolTip</string>
+					<object class="IBToolTipAttribute" key="NS.object.0">
+						<string key="name">ToolTip</string>
+						<reference key="object" ref="178839545"/>
+						<string key="toolTip">Synchronize this account to all my computers using my iCloud account</string>
+					</object>
+				</object>
 				<string key="159.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="16.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="160.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
