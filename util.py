@@ -4,6 +4,7 @@
 __all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
+           'BLINK_URL_TOKEN',
            'AccountInfo', 'DictDiffer']
 
 import platform
@@ -30,6 +31,9 @@ _pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
 _pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
 _pstn_match_regexp = re.compile("^\+?([0-9]|%s)+$" % _pstn_addressbook_chars)
 _pstn_plus_regexp = re.compile("^\+")
+
+
+BLINK_URL_TOKEN = 'B1nKC13n7'
 
 
 def strip_addressbook_special_characters(contact):

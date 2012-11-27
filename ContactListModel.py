@@ -50,12 +50,14 @@ from application.python import Null
 from application.python.descriptor import classproperty
 from application.python.types import Singleton
 from application.system import makedirs, unlink
+from eventlib.green import urllib2
 from itertools import chain
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group, unique_id, Policy
 from sipsimple.account import Account, AccountManager, BonjourAccount
+from sipsimple.payloads import prescontent
 from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
 
@@ -266,6 +268,9 @@ class PresenceContactAvatar(Avatar):
         if not os.path.isfile(path):
             return DefaultUserAvatar()
         icon = NSImage.alloc().initWithContentsOfFile_(path)
+        if not icon:
+            unlink(path)
+            return DefaultUserAvatar()
         return cls(icon, path)
 
     @classmethod
@@ -651,7 +656,6 @@ class BlinkPresenceContact(BlinkContact):
 
         basic_status = 'closed'
         self.init_presence_state()
-        offset_infos = {}
         has_notes = 0
 
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
@@ -711,6 +715,11 @@ class BlinkPresenceContact(BlinkContact):
                     if not contact.startswith(('sip:', 'sips:')):
                         contact = 'sip:'+contact
 
+                    if service.icon is not None:
+                        icon = unicode(service.icon)
+                    else:
+                        icon = None
+
                     if service.device_info is not None:
                         if service.device_info.time_offset is not None:
                             ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
@@ -732,21 +741,25 @@ class BlinkPresenceContact(BlinkContact):
                         device_text = 'Service %s' % service.id
                         description = None
                         user_agent = None
+                        offset_info = None
+                        offset_info_text = None
 
                     BlinkLogger().log_info(u"%s of %s is %s" % (device_text, uri_text, device_wining_status))
                     devices[service.id] = {
-                                                'id': service.id,
-                                                'description': description,
-                                                'user_agent': user_agent,
-                                                'aor': aor,
-                                                'contact': contact,
-                                                'location': service.map.value if service.map is not None else None,
-                                                'local_time': offset_info_text,
-                                                'time_offset': offset_info,
-                                                'notes': _presence_notes,
-                                                'status': device_wining_status,
-                                                'account': notification.sender.id,
-                                                'caps': caps}
+                                                'id'          : service.id,
+                                                'description' : description,
+                                                'user_agent'  : user_agent,
+                                                'aor'         : aor,
+                                                'contact'     : contact,
+                                                'location'    : service.map.value if service.map is not None else None,
+                                                'local_time'  : offset_info_text,
+                                                'time_offset' : offset_info,
+                                                'notes'       : _presence_notes,
+                                                'status'      : device_wining_status,
+                                                'account'     : notification.sender.id,
+                                                'caps'        : caps,
+                                                'icon'        : icon
+                                        }
 
             # discard notes from offline devices if others are online
             if devices:
@@ -773,8 +786,80 @@ class BlinkPresenceContact(BlinkContact):
             self.timer.invalidate()
             self.timer = None
 
+        # Get the winning icon
+        if not self.contact.icon_info.local:
+            available_devices = (dev for dev in devices.itervalues() if dev['status'] == 'available' and dev['icon'] is not None)
+            offline_devices = (dev for dev in devices.itervalues() if dev['status'] == 'offline' and dev['icon'] is not None)
+            away_devices = (dev for dev in devices.itervalues() if dev['status'] == 'away' and dev['icon'] is not None)
+            busy_devices = (dev for dev in devices.itervalues() if dev['status'] == 'busy' and dev['icon'] is not None)
+            try:
+                wining_dev = next(chain(busy_devices, available_devices, away_devices, offline_devices))
+            except StopIteration:
+                wining_icon = None
+            else:
+                wining_icon = wining_dev['icon']
+            self._process_icon(wining_icon)
+
         self.addToOrRemoveFromOnlineGroup()
         notification.center.post_notification("BlinkContactPresenceHasChaged", sender=self)
+
+    @allocate_autorelease_pool
+    @run_in_green_thread
+    def _process_icon(self, icon_url):
+        # TODO: naive attempt for not downloading the sam icon multiple times, contacts should
+        # not listen for this notification in the first place
+        if getattr(self.contact, 'updating_remote_icon', False):
+            return
+        self.contact.updating_remote_icon = True
+
+        if not icon_url:
+            # Don't remove icon, keep last used one around
+            self.contact.updating_remote_icon = False
+            return
+
+        if BLINK_URL_TOKEN in icon_url:
+            # Fast path
+            if self.contact.icon_info.url == icon_url:
+                self.contact.updating_remote_icon = False
+                return
+        # Need to download
+        headers = {'If-None-Match': self.contact.icon_info.etag} if self.contact.icon_info.etag else {}
+        req = urllib2.Request(icon_url, headers=headers)
+        try:
+            response = urllib2.urlopen(req)
+            content = response.read()
+            info = response.info()
+            content_type = info.getheader('content-type')
+            etag = info.getheader('etag')
+        except (urllib2.HTTPError, urllib2.URLError):
+            self.contact.updating_remote_icon = False
+            return
+        else:
+            if etag.startswith('W/'):
+                etag = etag[2:]
+            etag = etag.replace('\"', '')
+        if content_type == prescontent.PresenceContentDocument.content_type:
+            try:
+                pres_content = prescontent.PresenceContentDocument.parse(content)
+                content = base64.decodestring(pres_content.data.value)
+            except Exception:
+                self.contact.updating_remote_icon = False
+                return
+
+        # Check if the icon can be loaded in a NSImage
+        try:
+            icon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(content, len(content)))
+        except Exception:
+            self.contact.updating_remote_icon = False
+            return
+        del icon
+
+        with open(PresenceContactAvatar.path_for_contact(self.contact), 'w') as f:
+            f.write(content)
+        self.contact.icon_info.url = icon_url
+        self.contact.icon_info.etag = etag
+        self.contact.save()
+        self.contact.updating_remote_icon = False
 
     def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
@@ -2533,11 +2618,17 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
 
-        if set(['default_uri', 'uris']).intersection(notification.data.modified):
+        uri_attributes = set(['default_uri', 'uris'])
+        icon_attributes = set(['icon_info.url', 'icon_info.etag', 'icon_info.local'])
+
+        if set(uri_attributes | icon_attributes).intersection(notification.data.modified):
             groups = [blink_group for blink_group in self.groupsList if any(isinstance(item, BlinkPresenceContact) and item.contact == contact for item in blink_group.contacts)]
             for blink_contact in (blink_contact for blink_contact in chain(*(g.contacts for g in groups)) if blink_contact.contact == contact):
-                blink_contact.detail = blink_contact.uri
-                blink_contact._set_username_and_domain()
+                if uri_attributes.intersection(notification.data.modified):
+                    blink_contact.detail = blink_contact.uri
+                    blink_contact._set_username_and_domain()
+                if icon_attributes.intersection(notification.data.modified):
+                    blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
             [g.sortContacts() for g in groups]
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
@@ -2871,17 +2962,6 @@ class ContactListModel(CustomListModel):
                 policy_contact.dialog.policy = 'block'
                 policy_contact.save()
 
-    def updateIconForContact(self, contact, icon):
-        if icon is not None:
-            avatar = PresenceContactAvatar(icon)
-            avatar.path = avatar.path_for_contact(contact)
-            avatar.save()
-        else:
-            avatar = DefaultUserAvatar()
-        for blink_contact in (blink_contact for blink_group in self.groupsList for blink_contact in blink_group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact == contact):
-            blink_contact.avatar = avatar
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
     def addGroup(self):
         controller = AddGroupController()
         name = controller.runModal()
@@ -2936,6 +3016,9 @@ class ContactListModel(CustomListModel):
                 avatar = PresenceContactAvatar(icon)
                 avatar.path = avatar.path_for_contact(contact)
                 avatar.save()
+                contact.icon_info.url = None
+                contact.icon_info.etag = None
+                contact.icon_info.local = True
 
             contact.save()
 
@@ -2973,12 +3056,21 @@ class ContactListModel(CustomListModel):
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-            contact.save()
 
             icon = new_contact['icon']
             if icon is None and item.avatar is not DefaultUserAvatar() or icon is not item.avatar.icon:
                 item.avatar.delete()
-                self.updateIconForContact(contact, new_contact['icon'])
+                contact.icon_info.url = None
+                contact.icon_info.etag = None
+                if icon is not None:
+                    avatar = PresenceContactAvatar(icon)
+                    avatar.path = avatar.path_for_contact(contact)
+                    avatar.save()
+                    contact.icon_info.local = True
+                else:
+                    contact.icon_info.local = False
+
+            contact.save()
 
             self.removePolicyForContactURIs(contact)
 

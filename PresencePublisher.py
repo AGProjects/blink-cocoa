@@ -27,6 +27,7 @@ from twisted.internet import reactor
 from zope.interface import implements
 from util import *
 
+
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
@@ -365,7 +366,8 @@ class PresencePublisher(object):
             pass
         else:
             if account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None:
-                service.icon=cipid.Icon(account.xcap_manager.status_icon.uri)
+                icon = account.xcap_manager.status_icon
+                service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
 
         if account.presence.homepage is not None:
             service.homepage=cipid.Homepage(account.presence.homepage)
