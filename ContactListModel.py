@@ -692,6 +692,7 @@ class BlinkPresenceContact(BlinkContact):
                     aor = str(urllib.unquote(pidf.entity))
                     if not aor.startswith(('sip:', 'sips:')):
                         aor = 'sip:'+aor
+                    uri_text = sip_prefix_pattern.sub('', aor)
 
                     if service.capabilities is not None:
                         caps = []
@@ -706,6 +707,10 @@ class BlinkPresenceContact(BlinkContact):
                     else:
                         caps = None
 
+                    contact = urllib.unquote(service.contact.value) if service.contact is not None else aor
+                    if not contact.startswith(('sip:', 'sips:')):
+                        contact = 'sip:'+contact
+
                     if service.device_info is not None:
                         if service.device_info.time_offset is not None:
                             ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
@@ -716,56 +721,32 @@ class BlinkPresenceContact(BlinkContact):
                                 offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
                             offset_info_text = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
                         else:
-                            offset_info_text = None
                             offset_info = None
-
-                        contact = urllib.unquote(service.contact.value) if service.contact is not None else aor
-                        if not contact.startswith(('sip:', 'sips:')):
-                            contact = 'sip:'+contact
-
+                            offset_info_text = None
                         if service.status.extended is not None:
-                            if service.status.extended == 'busy':
-                                device_wining_status = 'busy'
-                            elif service.status.extended == 'available':
-                                device_wining_status = 'available'
-                            elif service.status.extended == 'away':
-                                device_wining_status = 'away'
-                            else:
-                                device_wining_status = 'offline'
-
-                        device_text = '%s running %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
-                        uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Device %s of %s is %s" % (device_text, uri_text, device_wining_status))
-                        devices[service.device_info.id] = {
-                                                           'id': service.device_info.id,
-                                                           'description': service.device_info.description,
-                                                           'user_agent': service.device_info.user_agent,
-                                                           'aor': aor,
-                                                           'contact': contact,
-                                                           'location': service.map.value if service.map is not None else None,
-                                                           'local_time': offset_info_text,
-                                                           'time_offset': offset_info,
-                                                           'notes': _presence_notes,
-                                                           'status': device_wining_status,
-                                                           'account': notification.sender.id,
-                                                           'caps': caps}
+                            device_wining_status = str(service.status.extended)
+                        device_text = 'Device %s running %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
+                        description = service.device_info.description
+                        user_agent = service.device_info.user_agent
                     else:
-                        uri_text = sip_prefix_pattern.sub('', aor)
-                        BlinkLogger().log_info(u"Service %s of %s is %s" % (service.id, uri_text, device_wining_status))
-                        devices[service.id] = {             'id': service.id,
-                                                            'description': None,
-                                                            'user_agent': None,
-                                                            'aor': aor,
-                                                            'contact': aor,
-                                                            'location': None,
-                                                            'local_time': None,
-                                                            'time_offset': None,
-                                                            'notes': _presence_notes,
-                                                            'status': device_wining_status,
-                                                            'account': notification.sender.id,
-                                                            'caps': caps
-                                                            }
+                        device_text = 'Service %s' % service.id
+                        description = None
+                        user_agent = None
 
+                    BlinkLogger().log_info(u"%s of %s is %s" % (device_text, uri_text, device_wining_status))
+                    devices[service.id] = {
+                                                'id': service.id,
+                                                'description': description,
+                                                'user_agent': user_agent,
+                                                'aor': aor,
+                                                'contact': contact,
+                                                'location': service.map.value if service.map is not None else None,
+                                                'local_time': offset_info_text,
+                                                'time_offset': offset_info,
+                                                'notes': _presence_notes,
+                                                'status': device_wining_status,
+                                                'account': notification.sender.id,
+                                                'caps': caps}
 
             # discard notes from offline devices if others are online
             if devices:
