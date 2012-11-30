@@ -4169,7 +4169,6 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.remote_focus:
                 participants = self.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
-                self.addParticipantsWindow.release()
                 self.addParticipantsWindow = None
                 if participants is not None:
                     remote_uri = format_identity_to_string(session.remotePartyObject)
