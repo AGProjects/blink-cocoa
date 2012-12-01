@@ -11,7 +11,7 @@ from sipsimple.util import ISOTimestamp
 from util import *
 from zope.interface import implements
 
-from ContactListModel import BlinkContact
+from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
 
 SQL_LIMIT=2000
@@ -176,38 +176,62 @@ class HistoryViewer(NSWindowController):
     @run_in_gui_thread
     def renderContacts(self, results):
         index = 0
+        found_uris = []
+
+        for item in self.contacts:
+            item.destroy()
+
+        for item in self.allContacts:
+            item.destroy()
 
         getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
 
         self.contacts = [self.all_contacts, self.bonjour_contact]
         self.allContacts = []
+
         if results:
             for row in results:
-                contact = getContactMatchingURI(row[0])
-                if contact:
-                    detail = contact.uri
-                    contact = BlinkContact(unicode(row[0]), name=contact.name, icon=contact.icon)
+                found_contact = getContactMatchingURI(row[0], exact_match=True)
+                if found_contact:
+                    contact_exist = False
+                    for contact_uri in found_contact.uris:
+                        if contact_uri.uri in found_uris:
+                            contact_exist = True
+                            break
+                    if contact_exist:
+                        continue
+                    contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon, presence_contact=found_contact if isinstance(found_contact, BlinkPresenceContact) else None)
+                    for contact_uri in found_contact.uris:
+                        found_uris.append(contact_uri.uri)                       
                 else:
-                    detail = unicode(row[0])
-                    contact = BlinkContact(unicode(row[0]), name=unicode(row[0]))
+                    if row[0] in found_uris:
+                        continue
+                    found_uris.append(row[0])
+                    contact = BlinkConferenceContact(unicode(row[0]), name=unicode(row[0]))
 
-                contact.detail = detail
                 self.contacts.append(contact)
                 self.allContacts.append(contact)
+    
         elif self.search_uris:
             for uri in self.search_uris:
-                contact = getContactMatchingURI(uri, exact_match=True)
-                if contact:
-                    detail = contact.uri
-                    contact = BlinkContact(unicode(uri), name=contact.name, icon=contact.icon)
+                found_contact = getContactMatchingURI(uri, exact_match=True)
+                if found_contact:
+                    contact_exist = False
+                    for contact_uri in found_contact.uris:
+                        if contact_uri.uri in found_uris:
+                            contact_exist = True
+                            break
+                    if contact_exist:
+                        continue
+                    contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon, presence_contact=found_contact if isinstance(found_contact, BlinkPresenceContact) else None)
+                    for contact_uri in found_contact.uris:
+                        found_uris.append(contact_uri.uri)                       
                 else:
-                    detail = unicode(uri)
-                    contact = BlinkContact(unicode(uri), name=unicode(uri))
+                    if uri in found_uris:
+                        continue
+                    found_uris.append(uri)
+                    contact = BlinkConferenceContact(unicode(uri), name=unicode(uri))
 
-                if contact in self.contacts:
-                    continue
-
-                contact.detail = detail
                 self.contacts.append(contact)
                 self.allContacts.append(contact)
                 index = self.contacts.index(contact)
@@ -418,16 +442,17 @@ class HistoryViewer(NSWindowController):
                 row = self.contactTable.selectedRow()
                 if row == 0:
                     self.search_local = None
-                    if self.search_uris:
-                        self.search_uris = None
-                        self.refreshContacts()
+                    self.search_uris = None
+                    self.refreshContacts()
                 elif row == 1:
                     self.search_local = 'bonjour'
                     self.search_uris = None
                 elif row > 1:
                     self.search_local = None
-                    self.search_uris = (self.contacts[row].uri,)
-
+                    if self.contacts[row].presence_contact is not None:
+                        self.search_uris = list(unicode(contact_uri.uri) for contact_uri in self.contacts[row].presence_contact.uris)
+                    else:
+                        self.search_uris = (self.contacts[row].uri,)
                 self.refreshDailyEntries()
                 self.refreshMessages()
             else:
