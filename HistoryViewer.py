@@ -67,7 +67,7 @@ class HistoryViewer(NSWindowController):
     # search filters
     start = 0
     search_text = None
-    search_contact = None
+    search_uris = None
     search_local = None
     search_media = None
     after_date = None
@@ -102,6 +102,7 @@ class HistoryViewer(NSWindowController):
 
     def __init__(self):
         if self:
+
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.all_contacts = BlinkContact('Any Address', name=u'All Contacts')
@@ -133,8 +134,6 @@ class HistoryViewer(NSWindowController):
             else:
                 self.before_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
 
-            self.refreshViewer()
-
             self.selectedTableView = self.contactTable
 
     def awakeFromNib(self):
@@ -147,10 +146,6 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def refreshViewer(self):
-        self.search_text = None
-        self.search_contact = None
-        self.search_local = None
-
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
@@ -159,59 +154,81 @@ class HistoryViewer(NSWindowController):
     def delete_messages(self, local_uri=None, remote_uri=None, date=None, after_date=None, before_date=None, media_type=None):
         self.chat_history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type)
         self.session_history.delete_entries(local_uri=local_uri, remote_uri=remote_uri, after_date=after_date, before_date=before_date)
+        self.search_text = None
+        self.search_uris = None
+        self.search_local = None
         self.refreshViewer()
 
     @run_in_green_thread
     def refreshContacts(self):
         if self.chat_history:
             self.updateBusyIndicator(True)
+            remote_uri = self.search_uris if self.search_uris else None
             media_type = self.search_media if self.search_media else None
             search_text = self.search_text if self.search_text else None
             after_date = self.after_date if self.after_date else None
             before_date = self.before_date if self.before_date else None
-            results = self.chat_history.get_contacts(media_type=media_type, search_text=search_text, after_date=after_date, before_date=before_date)
+            results = self.chat_history.get_contacts(remote_uri=remote_uri, media_type=media_type, search_text=search_text, after_date=after_date, before_date=before_date)
             self.renderContacts(results)
             self.updateBusyIndicator(False)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderContacts(self, results):
+        index = 0
+
         getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
 
         self.contacts = [self.all_contacts, self.bonjour_contact]
         self.allContacts = []
-        for row in results:
-            contact = getContactMatchingURI(row[0])
-            if contact:
-                detail = contact.uri
-                contact = BlinkContact(unicode(row[0]), name=contact.name, icon=contact.icon)
-            else:
-                detail = unicode(row[0])
-                contact = BlinkContact(unicode(row[0]), name=unicode(row[0]))
+        if results:
+            for row in results:
+                contact = getContactMatchingURI(row[0])
+                if contact:
+                    detail = contact.uri
+                    contact = BlinkContact(unicode(row[0]), name=contact.name, icon=contact.icon)
+                else:
+                    detail = unicode(row[0])
+                    contact = BlinkContact(unicode(row[0]), name=unicode(row[0]))
 
-            contact.detail = detail
-            self.contacts.append(contact)
-            self.allContacts.append(contact)
+                contact.detail = detail
+                self.contacts.append(contact)
+                self.allContacts.append(contact)
+        elif self.search_uris:
+            for uri in self.search_uris:
+                contact = getContactMatchingURI(uri, exact_match=True)
+                if contact:
+                    detail = contact.uri
+                    contact = BlinkContact(unicode(uri), name=contact.name, icon=contact.icon)
+                else:
+                    detail = unicode(uri)
+                    contact = BlinkContact(unicode(uri), name=unicode(uri))
+
+                if contact in self.contacts:
+                    continue
+
+                contact.detail = detail
+                self.contacts.append(contact)
+                self.allContacts.append(contact)
+                index = self.contacts.index(contact)
 
         real_contacts = len(self.contacts)-2
 
         self.contactTable.reloadData()
 
-        if self.search_contact:
+        if self.search_uris and not index:
             try:
-                contact = (contact for contact in self.contacts if contact.uri == self.search_contact).next()
+                contact = (contact for contact in self.contacts if contact.uri in self.search_uris).next()
             except StopIteration:
                 pass
             else:
                 try:
-                    row = self.contacts.index(contact)
-                    self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
-                    self.contactTable.scrollRowToVisible_(row)
+                    index = self.contacts.index(contact)
                 except:
                     pass
-        else:
-            self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
-            self.contactTable.scrollRowToVisible_(0)
+
+        self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
+        self.contactTable.scrollRowToVisible_(index)
 
         self.contactTable.tableColumnWithIdentifier_('contacts').headerCell(). setStringValue_(u'%d Contacts'%real_contacts if real_contacts else u'Contacts')
 
@@ -221,7 +238,7 @@ class HistoryViewer(NSWindowController):
             self.resetDailyEntries()
             self.updateBusyIndicator(True)
             search_text = self.search_text if self.search_text else None
-            remote_uri = self.search_contact if self.search_contact else None
+            remote_uri = self.search_uris if self.search_uris else None
             local_uri = self.search_local if self.search_local else None
             media_type = self.search_media if self.search_media else None
             after_date = self.after_date if self.after_date else None
@@ -254,7 +271,7 @@ class HistoryViewer(NSWindowController):
         self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
         self.indexTable.reloadData()
 
-        if self.search_contact and not self.dayly_entries:
+        if self.search_uris and not self.dayly_entries:
             self.contactTable.deselectAll_(True)
 
     @run_in_green_thread
@@ -264,7 +281,7 @@ class HistoryViewer(NSWindowController):
         if self.chat_history:
             search_text = self.search_text if self.search_text else None
             if not remote_uri:
-                remote_uri = self.search_contact if self.search_contact else None
+                remote_uri = self.search_uris if self.search_uris else None
             if not local_uri:
                 local_uri = self.search_local if self.search_local else None
             if not media_type:
@@ -401,20 +418,22 @@ class HistoryViewer(NSWindowController):
                 row = self.contactTable.selectedRow()
                 if row == 0:
                     self.search_local = None
-                    self.search_contact = None
+                    if self.search_uris:
+                        self.search_uris = None
+                        self.refreshContacts()
                 elif row == 1:
                     self.search_local = 'bonjour'
-                    self.search_contact = None
+                    self.search_uris = None
                 elif row > 1:
                     self.search_local = None
-                    self.search_contact = self.contacts[row].uri
+                    self.search_uris = (self.contacts[row].uri,)
 
                 self.refreshDailyEntries()
                 self.refreshMessages()
             else:
                 row = self.indexTable.selectedRow()
                 if row >= 0:
-                    self.refreshMessages(remote_uri=self.dayly_entries[row].objectForKey_("remote_uri_sql"), local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
+                    self.refreshMessages(remote_uri=(self.dayly_entries[row].objectForKey_("remote_uri_sql"),), local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
 
     def numberOfRowsInTableView_(self, table):
         if table == self.indexTable:
@@ -458,7 +477,7 @@ class HistoryViewer(NSWindowController):
         self.window().makeKeyAndOrderFront_(None)
 
     @run_in_gui_thread
-    def filterByContact(self, contact_uri, media_type=None):
+    def filterByURIs(self, uris=(), media_type=None):
         self.search_text = None
         self.search_local = None
         if media_type != self.search_media:
@@ -467,7 +486,7 @@ class HistoryViewer(NSWindowController):
                     self.searchMedia.selectItemAtIndex_(tag)
 
         self.search_media = media_type
-        self.search_contact = unicode(contact_uri)
+        self.search_uris = uris
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
@@ -596,7 +615,22 @@ class HistoryViewer(NSWindowController):
 
     def menuWillOpen_(self, menu):
         if menu == self.contactMenu:
-            pass
+            try:
+                row = self.contactTable.selectedRow()
+            except:
+                return
+
+            if row < 2:
+                return
+
+            try:
+                contact = self.contacts[row]
+            except IndexError:
+                return
+
+            hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
+            remote_uri=self.contacts[row].uri
+            self.contactMenu.itemWithTag_(1).setEnabled_(not hasContactMatchingURI(remote_uri, exact_match=True))
 
     @objc.IBAction
     def doubleClick_(self, sender):

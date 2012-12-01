@@ -1908,6 +1908,7 @@ class ContactWindowController(NSWindowController):
         if NSApp.delegate().applicationName != 'Blink Lite':
             if not self.historyViewer:
                 self.historyViewer = HistoryViewer()
+                self.historyViewer.refreshViewer()
             self.historyViewer.showWindow_(None)
 
     @objc.IBAction
@@ -2980,14 +2981,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def viewHistory_(self, sender):
-        uri = sender.representedObject()
-        try:
-            contact = self.getSelectedContacts()[0]
-        except IndexError:
-            pass
-        else:
-            self.showHistoryViewer_(None)
-            self.historyViewer.filterByContact(uri or contact.uri)
+        self.showHistoryViewer_(None)
+        self.historyViewer.filterByURIs(sender.representedObject())
 
     @objc.IBAction
     def recordingClicked_(self, sender):
@@ -3194,6 +3189,7 @@ class ContactWindowController(NSWindowController):
             has_multiple_uris = len(item.uris) > 1
 
             if (has_multiple_uris or devices) and not isinstance(item, BlinkBlockedPresenceContact):
+                # Contact has multiple URIs
                 audio_submenu = NSMenu.alloc().init()
                 audio_submenu.setAutoenablesItems_(False)
                 for uri in item.uris:
@@ -3433,20 +3429,9 @@ class ContactWindowController(NSWindowController):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
-                    if item not in self.model.bonjour_group.contacts:
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        history_submenu = NSMenu.alloc().init()
-                        for uri in item.uris:
-                            history_item = history_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "viewHistory:", "")
-                            history_item.setRepresentedObject_(uri.uri)
-                        if history_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show History", "", "")
-                            self.contactContextMenu.setSubmenu_forItem_(history_submenu, mitem)
-                            mitem.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
-
             else:
+                # Contact has a single URI
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
-                    # Contact has a single URI
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_fully_qualified_sip_uri:
@@ -3475,10 +3460,15 @@ class ContactWindowController(NSWindowController):
                             mitem.setEnabled_(has_fully_qualified_sip_uri)
                             mitem.setRepresentedObject_(item.uri)
 
-                        if item not in self.model.bonjour_group.contacts:
-                            self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show History", "viewHistory:", "")
-                            mitem.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
-
+            if isinstance(item, BlinkPresenceContact):
+                if item not in self.model.bonjour_group.contacts:
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    all_uris = []
+                    for uri in item.uris:
+                        all_uris.append(unicode(uri.uri))
+                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Conversations History', "viewHistory:", "")
+                    history_item.setRepresentedObject_(all_uris)
+                    history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -3510,7 +3500,9 @@ class ContactWindowController(NSWindowController):
             elif isinstance(item, HistoryBlinkContact) and not is_anonymous(item.uris[0].uri):
                 if NSApp.delegate().applicationName != 'Blink Lite':
                     if item not in self.model.bonjour_group.contacts:
-                        self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("View History", "viewHistory:", "")
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer", "viewHistory:", "")
+                        mitem.setRepresentedObject_((unicode(item.uri),))
                 if not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")

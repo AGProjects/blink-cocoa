@@ -145,7 +145,7 @@ class SMSWindowController(NSWindowController):
             contactWindow = self._owner._owner
             contactWindow.showHistoryViewer_(None)
             session = self.selectedSessionController()
-            contactWindow.historyViewer.filterByContact(format_identity_to_string(session.target_uri), media_type='sms')
+            contactWindow.historyViewer.filterByURIs((format_identity_to_string(session.target_uri),), media_type='sms')
 
     @objc.IBAction
     def printDocument_(self, sender):

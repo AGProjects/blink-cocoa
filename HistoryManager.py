@@ -459,8 +459,14 @@ class ChatHistory(object):
         return False
 
     @run_in_db_thread
-    def _get_contacts(self, media_type, search_text, after_date, before_date):
+    def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
         query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour'"
+        if remote_uri:
+            remote_uri_sql = ""
+            for uri in remote_uri:
+                remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
         if search_text:
@@ -476,13 +482,17 @@ class ChatHistory(object):
             BlinkLogger().log_error(u"Error getting contacts from chat history table: %s" % e)
             return []
 
-    def get_contacts(self, media_type=None, search_text=None, after_date=None, before_date=None):
-        return block_on(self._get_contacts(media_type, search_text, after_date, before_date))
+    def get_contacts(self, remote_uri=None, media_type=None, search_text=None, after_date=None, before_date=None):
+        return block_on(self._get_contacts(remote_uri, media_type, search_text, after_date, before_date))
 
     @run_in_db_thread
     def _get_daily_entries(self, local_uri, remote_uri, media_type, search_text, order_text, after_date, before_date):
         if remote_uri:
-            query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri = %s" % ChatMessage.sqlrepr(remote_uri)
+            remote_uri_sql = ""
+            for uri in remote_uri:
+                remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri in (%s)" % remote_uri_sql
             if media_type:
                 query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
             if search_text:
@@ -548,7 +558,11 @@ class ChatHistory(object):
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
-            query += " and remote_uri=%s" % ChatMessage.sqlrepr(remote_uri)
+            remote_uri_sql = ""
+            for uri in remote_uri:
+                remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
             query += " and media_type=%s" % ChatMessage.sqlrepr(media_type)
         if search_text:
@@ -560,6 +574,7 @@ class ChatHistory(object):
         if before_date:
             query += " and date < %s" % ChatMessage.sqlrepr(before_date)
         query += " order by %s %s limit %d" % (orderBy, orderType, count)
+
         try:
             return list(ChatMessage.select(query))
         except Exception, e:
@@ -575,7 +590,11 @@ class ChatHistory(object):
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
-            query += " and remote_uri=%s" % ChatMessage.sqlrepr(remote_uri)
+            remote_uri_sql = ""
+            for uri in remote_uri:
+                remote_uri_sql += ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
              query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
         if date:
