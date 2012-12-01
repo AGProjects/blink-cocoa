@@ -283,7 +283,7 @@ class HistoryViewer(NSWindowController):
         getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
         self.dayly_entries = NSMutableArray.array()
         for result in results:
-            contact = getContactMatchingURI(result[2])
+            contact = getContactMatchingURI(result[2], exact_match=True)
             if contact:
                 remote_uri = '%s <%s>' % (contact.name, contact.uri)
             else:
