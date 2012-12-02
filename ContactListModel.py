@@ -583,7 +583,8 @@ class BlinkPresenceContact(BlinkContact):
     name = BlinkPresenceContactAttribute('name')
     uris = BlinkPresenceContactAttribute('uris')
 
-    def __init__(self, contact):
+    def __init__(self, contact, log_presence_transitions=False):
+        self.log_presence_transitions = log_presence_transitions
         self.contact = contact
         self.old_devices = []
         self.avatar = PresenceContactAvatar.from_contact(contact)
@@ -658,11 +659,12 @@ class BlinkPresenceContact(BlinkContact):
 
         for uri, resource in resources.iteritems():
             uri_text = sip_prefix_pattern.sub('', uri)
-            if resource.state == 'pending':
-                self.presence_state['pending_authorizations'][resource.uri] = True
-                BlinkLogger().log_info(u"Subscription for availability of %s is pending" % uri_text)
-            if resource.state == 'terminated':
-                BlinkLogger().log_info(u"Subscription for availability of %s is terminated" % uri_text)
+            if self.log_presence_transitions:
+                if resource.state == 'pending':
+                    self.presence_state['pending_authorizations'][resource.uri] = True
+                    BlinkLogger().log_info(u"Subscription for availability of %s is pending" % uri_text)
+                if resource.state == 'terminated':
+                    BlinkLogger().log_info(u"Subscription for availability of %s is terminated" % uri_text)
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -746,11 +748,11 @@ class BlinkPresenceContact(BlinkContact):
                             offset_info_text = None
                         if service.status.extended is not None:
                             device_wining_status = str(service.status.extended)
-                        device_text = 'Device %s running %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
+                        device_text = '%s running %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
                         description = service.device_info.description
                         user_agent = service.device_info.user_agent
                     else:
-                        device_text = 'Service %s' % service.id
+                        device_text = '%s' % service.id
                         description = None
                         user_agent = None
                         offset_info = None
@@ -772,33 +774,33 @@ class BlinkPresenceContact(BlinkContact):
                                                 'icon'        : icon
                                         }
                                             
-                    something_has_changed = False
-                    try:  
-                        old_device = (device for device in self.old_devices if device['id'] == service.id).next()
-                    except StopIteration:
-                        something_has_changed = True
-                        pass
-                    else:
-                        if old_device['status'] != device_wining_status or old_device['notes'] != _presence_notes:
+                    if self.log_presence_transitions:
+                        something_has_changed = False
+                        try:
+                            old_device = (device for device in self.old_devices if device['id'] == service.id).next()
+                        except StopIteration:
                             something_has_changed = True
-                       
-                    # TODO: how to detect state transitions? I am not able to save old_devices between subsequent notifications! 
-                    if something_has_changed and service.id:
-                        log_line = u"%s of %s is %s" % (device_text, uri_text, device_wining_status)
-                        BlinkLogger().log_info(log_line)
-                        message= '<h3>Availability Information</h3>'
-                        message += '<p>%s' % log_line
-                        media_type = 'availability'
-                        local_uri = str(notification.sender.id)
-                        remote_uri = str(urllib.unquote(pidf.entity))
-                        direction = 'incoming'
-                        status = 'delivered'
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(ISOTimestamp.now())
-                        id=str(uuid.uuid1())
+                            pass
+                        else:
+                            if old_device['status'] != device_wining_status or old_device['notes'] != _presence_notes:
+                                something_has_changed = True
+                           
+                        if something_has_changed and service.id:
+                            log_line = u"Device %s of %s is %s" % (device_text, uri_text, device_wining_status)
+                            BlinkLogger().log_info(log_line)
+                            message= '<h3>Availability Information</h3>'
+                            message += '<p>%s' % log_line
+                            media_type = 'availability'
+                            local_uri = str(notification.sender.id)
+                            remote_uri = str(urllib.unquote(pidf.entity))
+                            direction = 'incoming'
+                            status = 'delivered'
+                            cpim_from = remote_uri
+                            cpim_to = local_uri
+                            timestamp = str(ISOTimestamp.now())
+                            id=str(uuid.uuid1())
 
-                            #NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+                            NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
 
 
             # discard notes from offline devices if others are online
@@ -814,7 +816,8 @@ class BlinkPresenceContact(BlinkContact):
 
             self.presence_state['devices'] = devices
 
-        self.old_devices = self.presence_state['devices'].values()
+            if self.log_presence_transitions:
+                self.old_devices = self.presence_state['devices'].values()
 
         self.setPresenceNote()
         has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
@@ -853,7 +856,7 @@ class BlinkPresenceContact(BlinkContact):
             # Contact may have been destroyed before this function runs
             return
 
-        # TODO: naive attempt for not downloading the sam icon multiple times, contacts should
+        # TODO: naive attempt for not downloading the same icon multiple times, contacts should
         # not listen for this notification in the first place
         if getattr(contact, 'updating_remote_icon', False):
             return
@@ -2635,7 +2638,7 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
-        blink_contact = BlinkPresenceContact(contact)
+        blink_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
