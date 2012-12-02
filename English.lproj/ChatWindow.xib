@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1070</int>
-		<string key="IBDocument.SystemVersion">11E2620</string>
+		<string key="IBDocument.SystemVersion">11G63</string>
 		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
-		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.AppKitVersion">1138.51</string>
 		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -216,6 +216,7 @@
 								<int key="NSvFlags">292</int>
 								<string key="NSFrame">{{15, 14}, {54, 47}}</string>
 								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<int key="NSTag">204</int>
@@ -365,6 +366,7 @@
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{6, 14}, {54, 42}}</string>
 								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
@@ -526,7 +528,7 @@
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
-								<string key="NSResourceName">NSMultipleDocuments</string>
+								<string key="NSResourceName">time</string>
 							</object>
 							<nil key="NSToolbarItemTarget"/>
 							<nil key="NSToolbarItemAction"/>
@@ -2914,6 +2916,7 @@
 						<string key="useClickedRemoveFromConference:">id</string>
 						<string key="userClickedActionsButton:">id</string>
 						<string key="userClickedConferenceScreenSharingQualityMenu:">id</string>
+						<string key="userClickedInviteToConference:">id</string>
 						<string key="userClickedParticipantMenu:">id</string>
 						<string key="userClickedScreenSharingMenu:">id</string>
 						<string key="userClickedScreenshotMenu:">id</string>
@@ -2951,6 +2954,10 @@
 						</object>
 						<object class="IBActionInfo" key="userClickedConferenceScreenSharingQualityMenu:">
 							<string key="name">userClickedConferenceScreenSharingQualityMenu:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedInviteToConference:">
+							<string key="name">userClickedInviteToConference:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="userClickedParticipantMenu:">
@@ -3158,7 +3165,6 @@
 			<string key="NSEveryone">{32, 32}</string>
 			<string key="NSMenuCheckmark">{11, 11}</string>
 			<string key="NSMenuMixedState">{10, 3}</string>
-			<string key="NSMultipleDocuments">{32, 32}</string>
 			<string key="NSToolbarPrint">{32, 32}</string>
 			<string key="audio">{239.11438777804796, 239.11438777804796}</string>
 			<string key="display">{32, 32}</string>
@@ -3171,6 +3177,7 @@
 			<string key="screenshot">{128, 128}</string>
 			<string key="smiley_on">{32, 32}</string>
 			<string key="start_chat">{26.400880888766633, 26.400880888766633}</string>
+			<string key="time">{128, 128}</string>
 			<string key="upfile">{32, 32}</string>
 			<string key="video">{154, 154}</string>
 		</dictionary>
