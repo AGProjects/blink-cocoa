@@ -6,15 +6,16 @@ from AppKit import *
 import datetime
 
 from application.notification import IObserver, NotificationCenter, NotificationData
+from application.python import Null
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from util import *
 from zope.interface import implements
 
-from ContactListModel import BlinkContact, BlinkConferenceContact, BlinkPresenceContact
+from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
 
-SQL_LIMIT=2000
+SQL_LIMIT=1000
 MAX_MESSAGES_PER_PAGE=15
 
 class MyTableView(NSTableView):
@@ -56,7 +57,6 @@ class HistoryViewer(NSWindowController):
     contactMenu = objc.IBOutlet()
 
     # viewer sections
-    allContacts = []
     contacts = []
     dayly_entries = NSMutableArray.array()
     messages = []
@@ -105,14 +105,15 @@ class HistoryViewer(NSWindowController):
 
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
-            self.all_contacts = BlinkContact('Any Address', name=u'All Contacts')
-            self.bonjour_contact = BlinkContact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+            self.all_contacts = BlinkConferenceContact('Any Address', name=u'All Contacts')
+            self.bonjour_contact = BlinkConferenceContact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
             self.notification_center.add_observer(self, name='AudioCallLoggedToHistory')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
             self.notification_center.add_observer(self, name='BlinkTableViewSelectionChaged')
+            self.notification_center.add_observer(self, name='BlinkConferenceContactPresenceHasChaged')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
@@ -181,13 +182,34 @@ class HistoryViewer(NSWindowController):
         for item in self.contacts:
             item.destroy()
 
-        for item in self.allContacts:
-            item.destroy()
-
         getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
 
         self.contacts = [self.all_contacts, self.bonjour_contact]
-        self.allContacts = []
+
+        if self.search_uris:
+            for uri in self.search_uris:
+                found_contact = getContactMatchingURI(uri, exact_match=True)
+                if found_contact:
+                    contact_exist = False
+                    for contact_uri in found_contact.uris:
+                        if contact_uri.uri in found_uris:
+                            contact_exist = True
+                            break
+                    if contact_exist:
+                        continue
+                    contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon)
+                    for contact_uri in found_contact.uris:
+                        found_uris.append(contact_uri.uri)
+                    self.contacts.append(contact)
+                    if isinstance(found_contact, BlinkPresenceContact):
+                        contact.setPresenceContact_(found_contact)
+                else:
+                    if uri in found_uris:
+                        continue
+                    found_uris.append(uri)
+                    contact = BlinkConferenceContact(unicode(uri), name=unicode(uri))
+
+                index = self.contacts.index(contact)
 
         if results:
             for row in results:
@@ -210,46 +232,10 @@ class HistoryViewer(NSWindowController):
                     contact = BlinkConferenceContact(unicode(row[0]), name=unicode(row[0]))
 
                 self.contacts.append(contact)
-                self.allContacts.append(contact)
-    
-        elif self.search_uris:
-            for uri in self.search_uris:
-                found_contact = getContactMatchingURI(uri, exact_match=True)
-                if found_contact:
-                    contact_exist = False
-                    for contact_uri in found_contact.uris:
-                        if contact_uri.uri in found_uris:
-                            contact_exist = True
-                            break
-                    if contact_exist:
-                        continue
-                    contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon, presence_contact=found_contact if isinstance(found_contact, BlinkPresenceContact) else None)
-                    for contact_uri in found_contact.uris:
-                        found_uris.append(contact_uri.uri)                       
-                else:
-                    if uri in found_uris:
-                        continue
-                    found_uris.append(uri)
-                    contact = BlinkConferenceContact(unicode(uri), name=unicode(uri))
-
-                self.contacts.append(contact)
-                self.allContacts.append(contact)
-                index = self.contacts.index(contact)
 
         real_contacts = len(self.contacts)-2
 
         self.contactTable.reloadData()
-
-        if self.search_uris and not index:
-            try:
-                contact = (contact for contact in self.contacts if contact.uri in self.search_uris).next()
-            except StopIteration:
-                pass
-            else:
-                try:
-                    index = self.contacts.index(contact)
-                except:
-                    pass
 
         self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
         self.contactTable.scrollRowToVisible_(index)
@@ -430,7 +416,7 @@ class HistoryViewer(NSWindowController):
     @objc.IBAction
     def searchContacts_(self, sender):
         text = unicode(self.searchContactBox.stringValue().strip())
-        contacts = [contact for contact in self.allContacts if text in contact] if text else self.allContacts
+        contacts = [contact for contact in self.contacts[2:] if text in contact] if text else self.contacts[2:]
         self.contacts = [self.all_contacts, self.bonjour_contact] + contacts
         self.contactTable.reloadData()
         self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
@@ -438,9 +424,11 @@ class HistoryViewer(NSWindowController):
 
     def tableViewSelectionDidChange_(self, notification):
         if self.chat_history:
-            if not notification or notification.object() == self.contactTable:
+            if notification.object() == self.contactTable:
                 row = self.contactTable.selectedRow()
-                if row == 0:
+                if row < 0:
+                    return
+                elif row == 0:
                     self.search_local = None
                     self.search_uris = None
                     self.refreshContacts()
@@ -616,30 +604,49 @@ class HistoryViewer(NSWindowController):
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
-        if notification.name in ("ChatViewControllerDidDisplayMessage", "AudioCallLoggedToHistory"):
-            if notification.data.local_party != 'bonjour':
-                exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
-                if not exists:
-                    self.refreshContacts()
-        elif notification.name == 'BlinkContactsHaveChanged':
-            self.refreshContacts()
-            self.toolbar.validateVisibleItems()
-        elif notification.name == 'BlinkTableViewSelectionChaged':
-            self.selectedTableView = notification.sender
-            self.toolbar.validateVisibleItems()
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_ChatViewControllerDidDisplayMessage(self, notification):
+        if notification.data.local_party != 'bonjour':
+            exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
+            if not exists:
+                self.refreshContacts()
+
+    def _NH_AudioCallLoggedToHistory(self, notification):
+        if notification.data.local_party != 'bonjour':
+            exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
+            if not exists:
+                self.refreshContacts()
+
+    def _NH_BlinkContactsHaveChanged(self, notification):
+        self.refreshContacts()
+        self.toolbar.validateVisibleItems()
+
+    def _NH_BlinkTableViewSelectionChaged(self, notification):
+        self.selectedTableView = notification.sender
+        self.toolbar.validateVisibleItems()
+
+    def _NH_BlinkConferenceContactPresenceHasChaged(self, notification):
+        try:
+            contact = (contact for contact in self.contacts[2:] if contact == notification.sender).next()
+        except StopIteration:
+            return
+        else:
+            try:
+                idx = self.contacts.index(contact)
+                self.contactTable.reloadDataForRowIndexes_columnIndexes_(NSIndexSet.indexSetWithIndex_(idx), NSIndexSet.indexSetWithIndex_(0))
+            except ValueError:
+                pass
 
     def contactSelectionChanged_(self, notification):
-        hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
-        try:
-            row = self.contactTable.selectedRow()
-            remote_uri=self.contacts[row].uri
-            self.contactMenu.itemWithTag_(1).setEnabled_(False if hasContactMatchingURI(remote_uri) or row < 2 else True)
-            self.contactMenu.itemWithTag_(3).setEnabled_(False if row < 2 else True)
-        except:
-            self.contactMenu.itemWithTag_(1).setEnabled_(False)
+        pass
 
     def menuWillOpen_(self, menu):
         if menu == self.contactMenu:
+            self.contactMenu.itemWithTag_(2).setEnabled_(False)
+            self.contactMenu.itemWithTag_(3).setEnabled_(False)
+            self.contactMenu.itemWithTag_(4).setEnabled_(False)
             try:
                 row = self.contactTable.selectedRow()
             except:
@@ -653,9 +660,11 @@ class HistoryViewer(NSWindowController):
             except IndexError:
                 return
 
-            hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
-            remote_uri=self.contacts[row].uri
-            self.contactMenu.itemWithTag_(1).setEnabled_(not hasContactMatchingURI(remote_uri, exact_match=True))
+            contact_exists = bool(contact.presence_contact is not None)
+            self.contactMenu.itemWithTag_(2).setEnabled_(True)
+            self.contactMenu.itemWithTag_(3).setEnabled_(not contact_exists)
+            self.contactMenu.itemWithTag_(4).setEnabled_(contact_exists)
+
 
     @objc.IBAction
     def doubleClick_(self, sender):
@@ -681,6 +690,9 @@ class HistoryViewer(NSWindowController):
         except:
             return
 
+        if row < 2:
+            return
+
         try:
             contact = self.contacts[row]
         except IndexError:
@@ -689,15 +701,17 @@ class HistoryViewer(NSWindowController):
         tag = sender.tag()
 
         if tag == 1:
-            NSApp.delegate().contactsWindowController.addContact(contact.uri, contact.name)
-        elif tag == 2:
             self.showDeleteConfirmationDialog(row)
-        elif tag == 3:
+        elif tag == 2:
             NSApp.delegate().contactsWindowController.searchBox.setStringValue_(contact.uri)
             NSApp.delegate().contactsWindowController.searchContacts()
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
             NSApp.delegate().contactsWindowController.window().deminiaturize_(sender)
             NSApp.delegate().contactsWindowController.window().makeKeyWindow()
+        elif tag == 3:
+            NSApp.delegate().contactsWindowController.addContact(contact.uri, contact.name)
+        elif tag == 4 and contact.presence_contact is not None:
+            NSApp.delegate().contactsWindowController.model.editContact(contact.presence_contact)
 
     @objc.IBAction
     def userClickedActionsButton_(self, sender):

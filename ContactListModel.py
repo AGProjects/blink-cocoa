@@ -438,6 +438,14 @@ class BlinkConferenceContact(BlinkContact):
         self.init_presence_state()
         self.updatePresenceState()
 
+    def setPresenceContact_(self, presence_contact):
+        if self.presence_contact is None and presence_contact is not None:
+            NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChaged", sender=presence_contact)
+        elif self.presence_contact is not None and presence_contact is None:
+            NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
+        self.presence_contact = presence_contact
+        self.updatePresenceState()
+
     @allocate_autorelease_pool
     def destroy(self):
         super(BlinkConferenceContact, self).destroy()
@@ -524,6 +532,7 @@ class BlinkConferenceContact(BlinkContact):
         self.setPresenceNote()
 
         NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChaged", sender=self)
+
 
 class BlinkPendingWatcher(BlinkContact):
     """Contact representation for a pending watcher"""
