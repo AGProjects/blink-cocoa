@@ -87,6 +87,7 @@
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {205, 22}}</string>
 								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSSearchFieldCell" key="NSCell" id="884355243">
 									<int key="NSCellFlags">343539264</int>
@@ -178,6 +179,7 @@
 								<int key="NSvFlags">265</int>
 								<string key="NSFrame">{{0, 14}, {149, 22}}</string>
 								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="155804980">
 									<int key="NSCellFlags">-2076049856</int>
@@ -337,6 +339,7 @@
 								<int key="NSvFlags">265</int>
 								<string key="NSFrame">{{0, 14}, {135, 22}}</string>
 								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="149939024">
 									<int key="NSCellFlags">-2076049856</int>
@@ -429,7 +432,7 @@
 											</object>
 											<object class="NSMenuItem" id="1037522895">
 												<reference key="NSMenu" ref="814217873"/>
-												<string key="NSTitle">Video Recordings</string>
+												<string key="NSTitle">Availability</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSKeyEquivModMask">1048576</int>
 												<int key="NSMnemonicLoc">2147483647</int>
@@ -465,7 +468,6 @@
 											</object>
 										</array>
 									</object>
-									<int key="NSSelectedIndex">-1</int>
 									<bool key="NSUsesItemFromMenu">YES</bool>
 									<bool key="NSAltersState">YES</bool>
 									<int key="NSArrowPosition">2</int>
@@ -494,6 +496,7 @@
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {127, 22}}</string>
 								<reference key="NSSuperview"/>
+								<reference key="NSWindow"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSSearchFieldCell" key="NSCell" id="117868059">
 									<int key="NSCellFlags">343539264</int>
@@ -1301,7 +1304,7 @@
 						<reference key="NSMixedImage" ref="407674830"/>
 						<int key="NSTag">2</int>
 					</object>
-					<object class="NSMenuItem" id="171914303">
+					<object class="NSMenuItem" id="548385549">
 						<reference key="NSMenu" ref="512228850"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<bool key="NSIsSeparator">YES</bool>
@@ -1321,7 +1324,7 @@
 						<reference key="NSMixedImage" ref="407674830"/>
 						<int key="NSTag">3</int>
 					</object>
-					<object class="NSMenuItem" id="1005375276">
+					<object class="NSMenuItem" id="175739810">
 						<reference key="NSMenu" ref="512228850"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<string key="NSTitle">Edit Contact... </string>
@@ -1565,7 +1568,7 @@
 					<object class="IBActionConnection" key="connection">
 						<string key="label">userClickedContactMenu:</string>
 						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="1005375276"/>
+						<reference key="destination" ref="175739810"/>
 					</object>
 					<int key="connectionID">185</int>
 				</object>
@@ -2176,9 +2179,9 @@
 						<array class="NSMutableArray" key="children">
 							<reference ref="166331562"/>
 							<reference ref="537960881"/>
-							<reference ref="171914303"/>
+							<reference ref="548385549"/>
 							<reference ref="117047996"/>
-							<reference ref="1005375276"/>
+							<reference ref="175739810"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -2237,12 +2240,12 @@
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">182</int>
-						<reference key="object" ref="171914303"/>
+						<reference key="object" ref="548385549"/>
 						<reference key="parent" ref="512228850"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">183</int>
-						<reference key="object" ref="1005375276"/>
+						<reference key="object" ref="175739810"/>
 						<reference key="parent" ref="512228850"/>
 					</object>
 				</array>
@@ -2388,6 +2391,51 @@
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<object class="IBPartialClassDescription">
+					<string key="className">ChatViewController</string>
+					<string key="superclassName">NSObject</string>
+					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="delegate">id</string>
+						<string key="inputText">id</string>
+						<string key="inputView">id</string>
+						<string key="outputView">id</string>
+						<string key="view">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="delegate">
+							<string key="name">delegate</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="inputText">
+							<string key="name">inputText</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="inputView">
+							<string key="name">inputView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="outputView">
+							<string key="name">outputView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="view">
+							<string key="name">view</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ChatViewController.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">ContactCell</string>
+					<string key="superclassName">NSTextFieldCell</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ContactCell.h</string>
+					</object>
+				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">HistoryViewer</string>
 					<string key="superclassName">NSWindowController</string>
