@@ -815,24 +815,29 @@ class BlinkPresenceContact(BlinkContact):
     @allocate_autorelease_pool
     @run_in_green_thread
     def _process_icon(self, icon_url):
+        contact = self.contact
+        if not contact:
+            # Contact may have been destroyed before this function runs
+            return
+
         # TODO: naive attempt for not downloading the sam icon multiple times, contacts should
         # not listen for this notification in the first place
-        if getattr(self.contact, 'updating_remote_icon', False):
+        if getattr(contact, 'updating_remote_icon', False):
             return
-        self.contact.updating_remote_icon = True
+        contact.updating_remote_icon = True
 
         if not icon_url:
             # Don't remove icon, keep last used one around
-            self.contact.updating_remote_icon = False
+            contact.updating_remote_icon = False
             return
 
         if BLINK_URL_TOKEN in icon_url:
             # Fast path
-            if self.contact.icon_info.url == icon_url:
-                self.contact.updating_remote_icon = False
+            if contact.icon_info.url == icon_url:
+                contact.updating_remote_icon = False
                 return
         # Need to download
-        headers = {'If-None-Match': self.contact.icon_info.etag} if self.contact.icon_info.etag else {}
+        headers = {'If-None-Match': contact.icon_info.etag} if contact.icon_info.etag else {}
         req = urllib2.Request(icon_url, headers=headers)
         try:
             response = urllib2.urlopen(req)
@@ -841,7 +846,7 @@ class BlinkPresenceContact(BlinkContact):
             content_type = info.getheader('content-type')
             etag = info.getheader('etag')
         except (urllib2.HTTPError, urllib2.URLError):
-            self.contact.updating_remote_icon = False
+            contact.updating_remote_icon = False
             return
         else:
             if etag.startswith('W/'):
@@ -852,23 +857,23 @@ class BlinkPresenceContact(BlinkContact):
                 pres_content = prescontent.PresenceContentDocument.parse(content)
                 content = base64.decodestring(pres_content.data.value)
             except Exception:
-                self.contact.updating_remote_icon = False
+                contact.updating_remote_icon = False
                 return
 
         # Check if the icon can be loaded in a NSImage
         try:
             icon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(content, len(content)))
         except Exception:
-            self.contact.updating_remote_icon = False
+            contact.updating_remote_icon = False
             return
         del icon
 
-        with open(PresenceContactAvatar.path_for_contact(self.contact), 'w') as f:
+        with open(PresenceContactAvatar.path_for_contact(contact), 'w') as f:
             f.write(content)
-        self.contact.icon_info.url = icon_url
-        self.contact.icon_info.etag = etag
-        self.contact.save()
-        self.contact.updating_remote_icon = False
+        contact.icon_info.url = icon_url
+        contact.icon_info.etag = etag
+        contact.save()
+        contact.updating_remote_icon = False
 
     def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
