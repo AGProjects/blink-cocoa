@@ -209,7 +209,10 @@ class HistoryViewer(NSWindowController):
                     found_uris.append(uri)
                     contact = BlinkConferenceContact(unicode(uri), name=unicode(uri))
 
-                index = self.contacts.index(contact)
+                try:
+                    index = self.contacts.index(contact)
+                except ValueError:
+                    pass
 
         if results:
             for row in results:
@@ -240,7 +243,14 @@ class HistoryViewer(NSWindowController):
         self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
         self.contactTable.scrollRowToVisible_(index)
 
-        self.contactTable.tableColumnWithIdentifier_('contacts').headerCell(). setStringValue_(u'%d Contacts'%real_contacts if real_contacts else u'Contacts')
+        if real_contacts == 1:
+            title = u"1 Contact"
+        elif real_contacts > 1:
+            title =  u'%d Contacts'%real_contacts
+        else:
+            title = 'Contacts'
+    
+        self.contactTable.tableColumnWithIdentifier_('contacts').headerCell(). setStringValue_(title)
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
@@ -668,10 +678,7 @@ class HistoryViewer(NSWindowController):
 
     @objc.IBAction
     def doubleClick_(self, sender):
-        try:
-            row = self.contactTable.selectedRow()
-        except:
-            return
+        row = self.contactTable.selectedRow()
 
         if row < 2:
             return
@@ -685,13 +692,7 @@ class HistoryViewer(NSWindowController):
 
     @objc.IBAction
     def userClickedContactMenu_(self, sender):
-        try:
-            row = self.contactTable.selectedRow()
-        except:
-            return
-
-        if row < 2:
-            return
+        row = self.contactTable.selectedRow()
 
         try:
             contact = self.contacts[row]
