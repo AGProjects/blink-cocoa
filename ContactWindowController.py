@@ -2040,7 +2040,7 @@ class ContactWindowController(NSWindowController):
 
         note = settings.presence_state.note
         if note:
-            self.presenceNoteText.setStringValue_(note)
+            self.presenceNoteText.setStringValue_(note if note != on_the_phone_activity['note'] else '')
 
         status = settings.presence_state.status
         if status:
@@ -2159,6 +2159,9 @@ class ContactWindowController(NSWindowController):
             self.savePresenceActivityToHistory(history_object)
 
     def savePresenceActivityToHistory(self, history_object):
+        if history_object['note'] == on_the_phone_activity['note'] and history_object['title'] == on_the_phone_activity['title']:
+            return
+
         try:
             item = (item for item in PresenceActivityList if item['type'] == 'menu_item' and item['action'] == 'presenceActivityChanged:' and item['represented_object']['title'] == history_object['title'] and item['represented_object']['note'] == history_object['note']).next()
         except StopIteration:
@@ -2183,6 +2186,7 @@ class ContactWindowController(NSWindowController):
 
         current_presence_activity = selected_item.representedObject()
         current_presence_activity['note'] = self.presenceNoteText.stringValue()
+
         if self.presenceActivityBeforeOnThePhone:
             if not hasAudio and current_presence_activity['extended_status'] != 'available':
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceActivityBeforeOnThePhone)
