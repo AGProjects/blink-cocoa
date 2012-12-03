@@ -558,6 +558,8 @@ class ChatHistory(object):
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
+            if remote_uri is not tuple:
+                remote_uri = (remote_uri,)
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
