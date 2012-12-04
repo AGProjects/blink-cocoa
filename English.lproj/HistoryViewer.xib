@@ -87,7 +87,7 @@
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {205, 22}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
+								<reference key="NSNextKeyView"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSSearchFieldCell" key="NSCell" id="884355243">
 									<int key="NSCellFlags">343539264</int>
@@ -179,7 +179,7 @@
 								<int key="NSvFlags">265</int>
 								<string key="NSFrame">{{0, 14}, {149, 22}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
+								<reference key="NSNextKeyView"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="155804980">
 									<int key="NSCellFlags">-2076049856</int>
@@ -339,7 +339,7 @@
 								<int key="NSvFlags">265</int>
 								<string key="NSFrame">{{0, 14}, {135, 22}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
+								<reference key="NSNextKeyView"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="149939024">
 									<int key="NSCellFlags">-2076049856</int>
@@ -488,15 +488,15 @@
 							<object class="NSMutableString" key="NSToolbarItemIdentifier">
 								<characters key="NS.bytes">518AE8FE-A72E-43F6-9D3D-7AB3FEB40465</characters>
 							</object>
-							<string key="NSToolbarItemLabel">Filter by Contact</string>
-							<string key="NSToolbarItemPaletteLabel">Filter by Contact</string>
+							<string key="NSToolbarItemLabel">Filter Contact Results</string>
+							<string key="NSToolbarItemPaletteLabel">Filter Contact Results</string>
 							<string key="NSToolbarItemToolTip">Type text and press Enter</string>
 							<object class="NSSearchField" key="NSToolbarItemView" id="889615600">
 								<reference key="NSNextResponder"/>
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {127, 22}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
+								<reference key="NSNextKeyView"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSSearchFieldCell" key="NSCell" id="117868059">
 									<int key="NSCellFlags">343539264</int>
@@ -696,7 +696,7 @@
 													<string key="NSFrameSize">{180, 487}</string>
 													<reference key="NSSuperview" ref="736256798"/>
 													<reference key="NSWindow"/>
-													<reference key="NSNextKeyView" ref="25743253"/>
+													<reference key="NSNextKeyView" ref="704902306"/>
 													<bool key="NSEnabled">YES</bool>
 													<object class="NSTableHeaderView" key="NSHeaderView" id="648299759">
 														<reference key="NSNextResponder" ref="753269786"/>
@@ -831,7 +831,7 @@
 									<string key="NSFrameSize">{180, 504}</string>
 									<reference key="NSSuperview" ref="288036754"/>
 									<reference key="NSWindow"/>
-									<reference key="NSNextKeyView" ref="736256798"/>
+									<reference key="NSNextKeyView" ref="25743253"/>
 									<int key="NSsFlags">133648</int>
 									<reference key="NSVScroller" ref="704902306"/>
 									<reference key="NSHScroller" ref="25743253"/>
@@ -857,7 +857,7 @@
 															<string key="NSFrameSize">{565, 149}</string>
 															<reference key="NSSuperview" ref="295510613"/>
 															<reference key="NSWindow"/>
-															<reference key="NSNextKeyView" ref="1034774608"/>
+															<reference key="NSNextKeyView" ref="333580344"/>
 															<bool key="NSEnabled">YES</bool>
 															<object class="NSTableHeaderView" key="NSHeaderView" id="715529912">
 																<reference key="NSNextResponder" ref="542898515"/>
@@ -1074,7 +1074,7 @@
 											<string key="NSFrameSize">{567, 167}</string>
 											<reference key="NSSuperview" ref="837884604"/>
 											<reference key="NSWindow"/>
-											<reference key="NSNextKeyView" ref="295510613"/>
+											<reference key="NSNextKeyView" ref="1034774608"/>
 											<int key="NSsFlags">133650</int>
 											<reference key="NSVScroller" ref="333580344"/>
 											<reference key="NSHScroller" ref="1034774608"/>
@@ -1220,6 +1220,7 @@
 							<string key="NSFrame">{{722, 1}, {16, 16}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<int key="NSpiFlags">20746</int>
 							<double key="NSMaxValue">100</double>
 						</object>

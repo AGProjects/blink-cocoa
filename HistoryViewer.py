@@ -236,21 +236,12 @@ class HistoryViewer(NSWindowController):
 
                 self.contacts.append(contact)
 
-        real_contacts = len(self.contacts)-2
-
         self.contactTable.reloadData()
 
         self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
         self.contactTable.scrollRowToVisible_(index)
 
-        if real_contacts == 1:
-            title = u"1 Contact"
-        elif real_contacts > 1:
-            title =  u'%d Contacts'%real_contacts
-        else:
-            title = 'Contacts'
-    
-        self.contactTable.tableColumnWithIdentifier_('contacts').headerCell(). setStringValue_(title)
+        self.updateContactsColumnHeader()
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
@@ -431,7 +422,22 @@ class HistoryViewer(NSWindowController):
         self.contactTable.reloadData()
         self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
         self.contactTable.scrollRowToVisible_(0)
+        self.updateContactsColumnHeader()
 
+        if not text: 
+            self.refreshContacts()
+
+    def updateContactsColumnHeader(self):
+        found_contacts = len(self.contacts)-2
+        if found_contacts == 1:
+            title = u"1 Contact Found"
+        elif found_contacts > 1:
+            title =  u'%d Contacts Found'%found_contacts
+        else:
+            title = 'Contacts'
+        
+        self.contactTable.tableColumnWithIdentifier_('contacts').headerCell().setStringValue_(title)
+                    
     def tableViewSelectionDidChange_(self, notification):
         if self.chat_history:
             if notification.object() == self.contactTable:
@@ -441,6 +447,7 @@ class HistoryViewer(NSWindowController):
                 elif row == 0:
                     self.search_local = None
                     self.search_uris = None
+                    self.searchContactBox.setStringValue_('')
                     self.refreshContacts()
                 elif row == 1:
                     self.search_local = 'bonjour'
