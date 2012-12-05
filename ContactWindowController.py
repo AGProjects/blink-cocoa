@@ -3473,7 +3473,7 @@ class ContactWindowController(NSWindowController):
                     all_uris = []
                     for uri in item.uris:
                         all_uris.append(unicode(uri.uri))
-                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Conversations History', "viewHistory:", "")
+                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Show History...', "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)
                     history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
@@ -3534,7 +3534,7 @@ class ContactWindowController(NSWindowController):
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 if item.pidfs_map:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show %s's Availability" % item.name, "showPresenceInfo:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show %s's Availability Information..." % item.name, "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
 
