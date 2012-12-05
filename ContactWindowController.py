@@ -36,6 +36,7 @@ from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
 import ContactOutlineView
 import ListView
 import SMSWindowManager
+import ChatWindowController
 
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
@@ -486,8 +487,10 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatWindow_(self, sender):
-        has_chat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers)
-        if has_chat:
+        if self.chatWindowController is None:
+            self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
+
+        if self.chatWindowController.tabView.tabViewItems():
             self.chatWindowController.window().makeKeyAndOrderFront_(None)
         else:
             self.show_last_chat_conversations()
