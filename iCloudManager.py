@@ -195,12 +195,13 @@ class iCloudManager(NSObject):
                         changes +=  1
 
         for key in self.storage_keys:
-            try:
-                AccountManager().get_account(key)
-            except KeyError:
-                BlinkLogger().log_info(u"Adding %s from iCloud" % key)
-                self.updateAccountFromCloud(key)
-                changes +=  1
+            if '@' in key:
+                try:
+                    AccountManager().get_account(key)
+                except KeyError:
+                    BlinkLogger().log_info(u"Adding %s from iCloud" % key)
+                    self.updateAccountFromCloud(key)
+                    changes +=  1
 
         if not self.first_sync_completed:
             self.first_sync_completed = True
