@@ -309,25 +309,27 @@ class HistoryViewer(NSWindowController):
             for e in reversed(results):
                 self.messages.append(e)
 
-            # reset pagination
-            self.start=0
-            self.renderMessages()
+            # reset pagination to the last page
+            start = len(self.messages) - len(self.messages)%MAX_MESSAGES_PER_PAGE if len(self.messages) > MAX_MESSAGES_PER_PAGE else 0
+            self.renderMessages(start)
         self.updateBusyIndicator(False)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def renderMessages(self):
+    def renderMessages(self, start=None):
         self.chatViewController.clear()
         self.chatViewController.resetRenderedMessages()
 
-        end = self.start + MAX_MESSAGES_PER_PAGE if self.start + MAX_MESSAGES_PER_PAGE < len(self.messages) else len(self.messages)
-        for row in self.messages[self.start:end]:
+        start_from = start or self.start
+
+        end = start_from + MAX_MESSAGES_PER_PAGE if start_from + MAX_MESSAGES_PER_PAGE < len(self.messages) else len(self.messages)
+        for row in self.messages[start_from:end]:
             self.renderMessage(row)
 
-        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and self.start > MAX_MESSAGES_PER_PAGE else False, 0)
-        self.paginationButton.setEnabled_forSegment_(True if self.start else False, 1)
-        self.paginationButton.setEnabled_forSegment_(True if self.start+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 2)
-        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and len(self.messages) - self.start > 2*MAX_MESSAGES_PER_PAGE else False, 3)
+        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and start_from > MAX_MESSAGES_PER_PAGE else False, 0)
+        self.paginationButton.setEnabled_forSegment_(True if start_from else False, 1)
+        self.paginationButton.setEnabled_forSegment_(True if start_from+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 2)
+        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and len(self.messages) - start_from > 2*MAX_MESSAGES_PER_PAGE else False, 3)
 
         text = u'No entry found'
         if len(self.messages):
@@ -336,7 +338,7 @@ class HistoryViewer(NSWindowController):
             elif MAX_MESSAGES_PER_PAGE > len(self.messages):
                 text = u'Displaying %d entries' % end
             else:
-                text = u'Displaying %d to %d out of %d entries' % (self.start+1, end, len(self.messages))
+                text = u'Displaying %d to %d out of %d entries' % (start_from+1, end, len(self.messages))
 
         self.foundMessagesLabel.setStringValue_(text)
 
@@ -357,6 +359,7 @@ class HistoryViewer(NSWindowController):
             is_html = False if message.content_type == 'text' else True
             private = True if message.private == "1" else False
             self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+
 
     @objc.IBAction
     def paginateResults_(self, sender):
