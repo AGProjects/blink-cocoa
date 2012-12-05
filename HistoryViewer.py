@@ -591,7 +591,7 @@ class HistoryViewer(NSWindowController):
         media_print = self.search_media or 'All'
         tag = self.afterDate.selectedItem().tag()
 
-        period = '%s %s' % (' newer than ' if tag < 4 else ' older than ', self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
+        period = '%s %s' % (' newer than' if tag < 4 else ' older than', self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
 
         if row == 0:
             ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries%s. This operation cannot be undone."%(media_print, period), u"Confirm", u"Cancel", None)
