@@ -3534,7 +3534,7 @@ class ContactWindowController(NSWindowController):
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show %s's Availability" % item.name, "showPresenceInfo:", "")
                     mitem.setEnabled_(True)
                     mitem.setRepresentedObject_(item)
-                
+
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Subscribe to %s's Availability" % item.name, "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)

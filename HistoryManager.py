@@ -260,8 +260,8 @@ class SessionHistory(object):
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",)")          
-            remote_uri_sql = remote_uri_sql.lstrip("(")           
+            remote_uri_sql = remote_uri_sql.rstrip(",)")
+            remote_uri_sql = remote_uri_sql.lstrip("(")
             query += " and remote_uri in (%s)" % remote_uri_sql
         if after_date:
             query += " and start_time >= %s" % ChatMessage.sqlrepr(after_date)
@@ -474,8 +474,8 @@ class ChatHistory(object):
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",)")          
-            remote_uri_sql = remote_uri_sql.lstrip("(")           
+            remote_uri_sql = remote_uri_sql.rstrip(",)")
+            remote_uri_sql = remote_uri_sql.lstrip("(")
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
@@ -501,7 +501,7 @@ class ChatHistory(object):
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            remote_uri_sql = remote_uri_sql.rstrip(",")
             query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri in (%s)" % remote_uri_sql
             if media_type:
                 query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
@@ -573,8 +573,8 @@ class ChatHistory(object):
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",)")          
-            remote_uri_sql = remote_uri_sql.lstrip("(")           
+            remote_uri_sql = remote_uri_sql.rstrip(",)")
+            remote_uri_sql = remote_uri_sql.lstrip("(")
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
             query += " and media_type=%s" % ChatMessage.sqlrepr(media_type)
@@ -608,8 +608,8 @@ class ChatHistory(object):
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",)")          
-            remote_uri_sql = remote_uri_sql.lstrip("(")           
+            remote_uri_sql = remote_uri_sql.rstrip(",)")
+            remote_uri_sql = remote_uri_sql.lstrip("(")
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
              query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
@@ -1110,7 +1110,7 @@ class ChatHistoryReplicator(object):
             cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
             pass
-    
+
     def save_journal_timestamp_on_disk(self):
         storage_path = ApplicationData.get('chat_replication_timestamp.pickle')
         try:
@@ -1188,7 +1188,7 @@ class ChatHistoryReplicator(object):
         except KeyError:
             pass
 
-        return last_journal_timestamp    
+        return last_journal_timestamp
 
     def updateLocalHistoryWithRemoteJournalPutREsults(self, journal, account):
         try:

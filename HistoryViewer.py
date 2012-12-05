@@ -227,7 +227,7 @@ class HistoryViewer(NSWindowController):
                         continue
                     contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon, presence_contact=found_contact if isinstance(found_contact, BlinkPresenceContact) else None)
                     for contact_uri in found_contact.uris:
-                        found_uris.append(contact_uri.uri)                       
+                        found_uris.append(contact_uri.uri)
                 else:
                     if row[0] in found_uris:
                         continue
@@ -424,7 +424,7 @@ class HistoryViewer(NSWindowController):
         self.contactTable.scrollRowToVisible_(0)
         self.updateContactsColumnHeader()
 
-        if not text: 
+        if not text:
             self.refreshContacts()
 
     def updateContactsColumnHeader(self):
@@ -435,9 +435,9 @@ class HistoryViewer(NSWindowController):
             title =  u'%d Contacts Found'%found_contacts
         else:
             title = 'Contacts'
-        
+
         self.contactTable.tableColumnWithIdentifier_('contacts').headerCell().setStringValue_(title)
-                    
+
     def tableViewSelectionDidChange_(self, notification):
         if self.chat_history:
             if notification.object() == self.contactTable:

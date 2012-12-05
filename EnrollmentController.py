@@ -63,7 +63,7 @@ class EnrollmentController(NSObject):
             NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
             icloud_sync_enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
             self.syncWithiCloudCheckbox.setHidden_(not icloud_sync_enabled)
-            
+
             self.selectRadio_(self.radioMatrix)
             if not SIPManager().validateAddAccountAction():
                 self.nextButton.setEnabled_(False)

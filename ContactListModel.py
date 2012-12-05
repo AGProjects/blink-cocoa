@@ -773,7 +773,7 @@ class BlinkPresenceContact(BlinkContact):
                                                 'caps'        : caps,
                                                 'icon'        : icon
                                         }
-                                            
+
                     if self.log_presence_transitions:
                         something_has_changed = False
                         try:
@@ -784,7 +784,7 @@ class BlinkPresenceContact(BlinkContact):
                         else:
                             if old_device['status'] != device_wining_status or old_device['notes'] != _presence_notes:
                                 something_has_changed = True
-                           
+
                         if something_has_changed and service.id:
                             log_line = u"Device %s of %s is %s" % (device_text, uri_text, device_wining_status)
                             BlinkLogger().log_info(log_line)
