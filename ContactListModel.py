@@ -792,7 +792,7 @@ class BlinkPresenceContact(BlinkContact):
                             message += '<p>%s' % log_line
                             media_type = 'availability'
                             local_uri = str(notification.sender.id)
-                            remote_uri = str(urllib.unquote(pidf.entity))
+                            remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
                             direction = 'incoming'
                             status = 'delivered'
                             cpim_from = remote_uri
