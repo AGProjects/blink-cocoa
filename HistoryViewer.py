@@ -272,7 +272,7 @@ class HistoryViewer(NSWindowController):
         for result in results:
             contact = getContactMatchingURI(result[2], exact_match=True)
             if contact:
-                remote_uri = '%s <%s>' % (contact.name, contact.uri)
+                remote_uri = '%s <%s>' % (contact.name, result[2])
             else:
                 remote_uri = result[2]
 
@@ -600,8 +600,12 @@ class HistoryViewer(NSWindowController):
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(local_uri='bonjour', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         else:
-            remote_uri=self.contacts[row].uri
-            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s%s. This operation cannot be undone."%(media_print, remote_uri, period), u"Confirm", u"Cancel", None)
+            contact = self.contacts[row]
+            if contact.presence_contact is not None:
+                remote_uri = list(unicode(contact.uri) for contact in contact.presence_contact.uris)
+            else:
+                remote_uri = contact.uri
+            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s%s. This operation cannot be undone."%(media_print, contact.name, period), u"Confirm", u"Cancel", None)
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(remote_uri=remote_uri, media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
 

@@ -255,7 +255,14 @@ class SessionHistory(object):
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
-            query += " and remote_uri=%s" % ChatMessage.sqlrepr(remote_uri)
+            if remote_uri is not tuple:
+                remote_uri = (remote_uri,)
+            remote_uri_sql = ""
+            for uri in remote_uri:
+                remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",)")          
+            remote_uri_sql = remote_uri_sql.lstrip("(")           
+            query += " and remote_uri in (%s)" % remote_uri_sql
         if after_date:
             query += " and start_time >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
@@ -462,10 +469,13 @@ class ChatHistory(object):
     def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
         query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour'"
         if remote_uri:
+            if remote_uri is not tuple:
+                remote_uri = (remote_uri,)
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            remote_uri_sql = remote_uri_sql.rstrip(",)")          
+            remote_uri_sql = remote_uri_sql.lstrip("(")           
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
@@ -563,7 +573,8 @@ class ChatHistory(object):
             remote_uri_sql = ""
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",")            
+            remote_uri_sql = remote_uri_sql.rstrip(",)")          
+            remote_uri_sql = remote_uri_sql.lstrip("(")           
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
             query += " and media_type=%s" % ChatMessage.sqlrepr(media_type)
@@ -592,10 +603,13 @@ class ChatHistory(object):
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
+            if remote_uri is not tuple:
+                remote_uri = (remote_uri,)
             remote_uri_sql = ""
             for uri in remote_uri:
-                remote_uri_sql += ChatMessage.sqlrepr(uri)
-            remote_uri_sql = remote_uri_sql.rstrip(",")            
+                remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",)")          
+            remote_uri_sql = remote_uri_sql.lstrip("(")           
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
              query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
