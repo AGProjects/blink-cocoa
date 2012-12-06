@@ -779,7 +779,7 @@ class ContactWindowController(NSWindowController):
         else:
             path = DefaultUserAvatar().path
         self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
-        self.loadPresenceState()
+        self.loadPresenceStateAtStart()
         self.setSpeechSynthesis()
 
     def _NH_SIPApplicationDidStart(self, notification):
@@ -2031,7 +2031,7 @@ class ContactWindowController(NSWindowController):
         self.activeAccount().save()
         sender.resignFirstResponder()
 
-    def loadPresenceState(self):
+    def loadPresenceStateAtStart(self):
         settings = SIPSimpleSettings()
 
         # populate presence menus
@@ -2115,30 +2115,32 @@ class ContactWindowController(NSWindowController):
     def presenceNoteChanged_(self, sender):
         presence_note = unicode(self.presenceNoteText.stringValue())
         settings = SIPSimpleSettings()
-        settings.presence_state.note = presence_note
-        settings.save()
+        if settings.presence_state.note != presence_note:
+            settings.presence_state.note = presence_note
+            settings.save()
 
-        item = self.presenceActivityPopUp.selectedItem()
-        if item is None:
-            return
+            if presence_note:
+                item = self.presenceActivityPopUp.selectedItem()
+                if item is None:
+                    return
 
-        selected_presence_activity = item.representedObject()
-        if selected_presence_activity is None:
-            return
+                selected_presence_activity = item.representedObject()
+                if selected_presence_activity is None:
+                    return
 
-        if presence_note:
-            history_object = dict(selected_presence_activity)
-            history_object['note'] = presence_note
-            self.savePresenceActivityToHistory(history_object)
+                history_object = dict(selected_presence_activity)
+                history_object['note'] = presence_note
+                self.savePresenceActivityToHistory(history_object)
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
         settings = SIPSimpleSettings()
-        status = sender.title()
-        settings.presence_state.status = status
 
+        # update system status bar
+        status = sender.title()
         self.setStatusBarIcon(status)
 
+        # update presence activity popup menu
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
         item = self.presenceMenu.itemWithTitle_(status)
@@ -2149,12 +2151,24 @@ class ContactWindowController(NSWindowController):
         self.presenceActivityPopUp.selectItem_(item)
 
         # set the note coresponding to this activity
-        selected_presence_activity = item.representedObject()
-        presence_note = selected_presence_activity['note']
+        if settings.presence_state.status != status:
+            selected_presence_activity = item.representedObject()
+            presence_note = selected_presence_activity['note']
+        else:
+            # if is the same status, delete existing note
+            presence_note = ''
 
-        self.presenceNoteText.setStringValue_(presence_note or '')
-        settings.presence_state.note = presence_note
-        settings.save()
+        change = False
+        if settings.presence_state.status != status:
+            settings.presence_state.status = status
+            change = True
+        if settings.presence_state.note != presence_note:
+            self.presenceNoteText.setStringValue_(presence_note or '')
+            settings.presence_state.note = presence_note
+            change = True
+
+        if change:
+            settings.save()
 
         if presence_note:
             history_object = item.representedObject()
