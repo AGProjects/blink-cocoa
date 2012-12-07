@@ -763,9 +763,7 @@ class BlinkPresenceContact(BlinkContact):
                                 except IndexError:
                                     pass
                                 else:
-                                    _p_timestamp = ISOTimestamp(str(last_published_timestamp))
-                                    _s_timestamp = ISOTimestamp(str(service.timestamp))
-                                    if last_published_timestamp is None or _p_timestamp < _s_timestamp:
+                                    if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
                                         own_data = NotificationData()
                                         own_data.status = device_wining_status
                                         own_data.account = notification.sender.id
