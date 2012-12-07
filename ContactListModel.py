@@ -753,12 +753,13 @@ class BlinkPresenceContact(BlinkContact):
                         user_agent = service.device_info.user_agent
 
                         if self.contact.id == 'myself' and self.log_presence_transitions and device_wining_status not in ('away'):
+                            presencePublisher = NSApp.delegate().contactsWindowController.presencePublisher
                             settings = SIPSimpleSettings()
                             own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
 
-                            if own_service_id != service.id and notification.sender.id == uri_text:
+                            if own_service_id != service.id and notification.sender.id == uri_text and not presencePublisher.idle_mode:
                                 try:
-                                    last_published_timestamp = NSApp.delegate().contactsWindowController.presencePublisher.last_service_timestamp[notification.sender.id]
+                                    last_published_timestamp = presencePublisher.last_service_timestamp[notification.sender.id]
                                 except IndexError:
                                     pass
                                 else:
