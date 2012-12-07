@@ -114,6 +114,7 @@ class PresencePublisher(object):
     wakeup_timer = None
     location = None
     xcap_caps_discovered = {}
+    last_service_timestamp = {}
 
     # Cleanup old base64 encoded icons
     _cleanedup_accounts = set()
@@ -130,6 +131,11 @@ class PresencePublisher(object):
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="XCAPManagerDidReloadData")
         nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+
+        self.refreshTimestamp()
+
+    def refreshTimestamp(self):
+        self.timestamp = datetime.now()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -322,13 +328,12 @@ class PresencePublisher(object):
         if not account.enabled or not account.presence.enabled:
             return None
 
-        timestamp = datetime.now()
         settings = SIPSimpleSettings()
         instance_id = str(uuid.UUID(settings.instance_id))
 
         pidf_doc = pidf.PIDF(str(account.uri))
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
-        person.timestamp = pidf.PersonTimestamp(timestamp)
+        person.timestamp = pidf.PersonTimestamp(self.timestamp)
         if not account.presence.disable_timezone:
             person.time_offset = rpid.TimeOffset()
         pidf_doc.add(person)
@@ -372,7 +377,7 @@ class PresencePublisher(object):
         if account.presence.homepage is not None:
             service.homepage=cipid.Homepage(account.presence.homepage)
 
-        service.timestamp = pidf.ServiceTimestamp(timestamp)
+        service.timestamp = pidf.ServiceTimestamp(self.timestamp)
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
@@ -389,9 +394,10 @@ class PresencePublisher(object):
         pidf_doc.add(service)
 
         device = pidf.Device("DID-%s" % instance_id, device_id=pidf.DeviceID(instance_id))
-        device.timestamp = pidf.DeviceTimestamp(timestamp)
+        device.timestamp = pidf.DeviceTimestamp(self.timestamp)
         device.notes.add(u'%s at %s' % (settings.user_agent, self.hostname))
         pidf_doc.add(device)
+        self.last_service_timestamp[account.id] = service.timestamp
         return pidf_doc
 
     def build_offline_pidf(self, account):

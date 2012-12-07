@@ -751,6 +751,39 @@ class BlinkPresenceContact(BlinkContact):
                         device_text = '%s running %s' % (service.device_info.description, service.device_info.user_agent) if service.device_info.user_agent else service.device_info.description
                         description = service.device_info.description
                         user_agent = service.device_info.user_agent
+
+                        if self.log_presence_transitions:
+                            settings = SIPSimpleSettings()
+                            own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
+
+                            if own_service_id != service.id and notification.sender.id == uri_text:
+                                try:
+                                    last_published_timestamp = NSApp.delegate().contactsWindowController.presencePublisher.last_service_timestamp[notification.sender.id]
+                                except IndexError:
+                                    pass
+                                else:
+                                    _p_timestamp = ISOTimestamp(str(last_published_timestamp))
+                                    _s_timestamp = ISOTimestamp(str(service.timestamp))
+                                    if last_published_timestamp is None or _p_timestamp < _s_timestamp:
+                                        own_data = NotificationData()
+                                        own_data.status = device_wining_status
+                                        own_data.account = notification.sender.id
+                                        own_data.contact = contact
+                                        own_data.device = str(service.id)[4:]
+                                        own_data.description = service.device_info.description
+                                        notes = sorted([unicode(note) for note in service.notes if note])
+                                        try:
+                                            own_data.note = notes[0]
+                                        except IndexError:
+                                            own_data.note = ''
+
+                                        self.last_other_service_timestamp = _s_timestamp
+
+                                        log_line = 'My device %s availability became %s' % (service.device_info.description, device_wining_status)
+                                        BlinkLogger().log_info(log_line)
+
+                                        notification.center.post_notification("BlinkOwnPresenceHasChaged", sender=self, data=own_data)
+
                     else:
                         device_text = '%s' % service.id
                         description = None
@@ -786,7 +819,8 @@ class BlinkPresenceContact(BlinkContact):
                                 something_has_changed = True
 
                         if something_has_changed and service.id:
-                            log_line = u"Device %s of %s is %s" % (device_text, uri_text, device_wining_status)
+                            prefix = 'My device' if notification.sender.id == uri_text else 'Device'
+                            log_line = u"%s %s of %s is %s" % (prefix, device_text, uri_text, device_wining_status)
                             BlinkLogger().log_info(log_line)
                             message= '<h3>Availability Information</h3>'
                             message += '<p>%s' % log_line
@@ -801,7 +835,6 @@ class BlinkPresenceContact(BlinkContact):
                             id=str(uuid.uuid1())
 
                             NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-
 
             # discard notes from offline devices if others are online
             if devices:

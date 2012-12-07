@@ -274,6 +274,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkMuteChangedState")
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
+        nc.add_observer(self, name="BlinkOwnPresenceHasChaged")
         nc.add_observer(self, name="BonjourAccountWillRegister")
         nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
@@ -876,6 +877,9 @@ class ContactWindowController(NSWindowController):
             if self.ldap_found_contacts:
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
+
+    def _NH_BlinkOwnPresenceHasChaged(self, notification):
+        self.setPresenceActivityFromObject_(notification.data)
 
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
@@ -2088,6 +2092,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def setPresenceActivityFromHistory_(self, sender):
+        self.presencePublisher.refreshTimestamp()
         settings = SIPSimpleSettings()
         item = sender.representedObject()
         history_object = item
@@ -2111,8 +2116,46 @@ class ContactWindowController(NSWindowController):
         settings.save()
         self.savePresenceActivityToHistory(history_object)
 
+    def setPresenceActivityFromObject_(self, object):
+        settings = SIPSimpleSettings()
+        note = object.note
+        status = object.status
+
+        change = False
+        if note != settings.presence_state.note:
+            self.presenceNoteText.setStringValue_(note)
+            settings.presence_state.note = note
+            change = True
+
+        try:
+            history_object = (item for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
+        except StopIteration:
+            return
+
+        title = history_object['represented_object']['title']
+        if title != settings.presence_state.status:
+            change = True
+            for item in self.presenceMenu.itemArray():
+                item.setState_(NSOffState)
+            item = self.presenceMenu.itemWithTitle_(title)
+            if item is not None:
+                item.setState_(NSOnState)
+
+            menu = self.presenceActivityPopUp.menu()
+            item = menu.itemWithTitle_(title)
+            self.presenceActivityPopUp.selectItem_(item)
+
+            settings.presence_state.status = title
+            self.setStatusBarIcon(status)
+
+        if change:
+            settings.save()
+            history_object['represented_object']['note'] = note
+            self.savePresenceActivityToHistory(history_object['represented_object'])
+
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
+        self.presencePublisher.refreshTimestamp()
         presence_note = unicode(self.presenceNoteText.stringValue())
         settings = SIPSimpleSettings()
         if settings.presence_state.note != presence_note:
@@ -2134,6 +2177,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
+        self.presencePublisher.refreshTimestamp()
         settings = SIPSimpleSettings()
 
         # update system status bar
@@ -2312,22 +2356,26 @@ class ContactWindowController(NSWindowController):
             menu.addItem_(lastItem)
 
         for item in reversed(self.presence_notes_history):
-            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceActivityFromHistory:", "")
-            title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
-            lastItem.setAttributedTitle_(title)
-            lastItem.setRepresentedObject_(item)
-            status = item['extended_status']
             try:
-                image = presence_status_icons[status]
-                image.setScalesWhenResized_(True)
-                image.setSize_(NSMakeSize(15,15))
-                lastItem.setImage_(image)
-            except KeyError:
+                status = item['extended_status']
+            except IndexError:
                 pass
+            else:
+                lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceActivityFromHistory:", "")
+                title = NSAttributedString.alloc().initWithString_attributes_(item['note'], attributes)
+                lastItem.setAttributedTitle_(title)
+                lastItem.setRepresentedObject_(item)
+                try:
+                    image = presence_status_icons[status]
+                    image.setScalesWhenResized_(True)
+                    image.setSize_(NSMakeSize(15,15))
+                    lastItem.setImage_(image)
+                except KeyError:
+                    pass
 
-            lastItem.setRepresentedObject_(item)
-            lastItem.setTarget_(self)
-            menu.addItem_(lastItem)
+                lastItem.setRepresentedObject_(item)
+                lastItem.setTarget_(self)
+                menu.addItem_(lastItem)
 
             #if self.presence_notes_history:
             #menu.addItem_(NSMenuItem.separatorItem())
