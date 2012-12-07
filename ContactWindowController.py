@@ -2128,11 +2128,11 @@ class ContactWindowController(NSWindowController):
             change = True
 
         try:
-            history_object = (item for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
+            selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
         except StopIteration:
             return
 
-        title = history_object['represented_object']['title']
+        title = selected_presence_activity['title']
         if title != settings.presence_state.status:
             change = True
             for item in self.presenceMenu.itemArray():
@@ -2150,8 +2150,9 @@ class ContactWindowController(NSWindowController):
 
         if change:
             settings.save()
-            history_object['represented_object']['note'] = note
-            self.savePresenceActivityToHistory(history_object['represented_object'])
+            history_object = dict(selected_presence_activity)
+            history_object['note'] = note
+            self.savePresenceActivityToHistory(history_object)
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
@@ -2222,7 +2223,6 @@ class ContactWindowController(NSWindowController):
     def savePresenceActivityToHistory(self, history_object):
         if history_object['note'] == on_the_phone_activity['note'] and history_object['title'] == on_the_phone_activity['title']:
             return
-
         try:
             item = (item for item in PresenceActivityList if item['type'] == 'menu_item' and item['action'] == 'presenceActivityChanged:' and item['represented_object']['title'] == history_object['title'] and item['represented_object']['note'] == history_object['note']).next()
         except StopIteration:
