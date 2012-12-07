@@ -752,7 +752,7 @@ class BlinkPresenceContact(BlinkContact):
                         description = service.device_info.description
                         user_agent = service.device_info.user_agent
 
-                        if self.log_presence_transitions:
+                        if self.log_presence_transitions and device_wining_status not in ('away'):
                             settings = SIPSimpleSettings()
                             own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
 
