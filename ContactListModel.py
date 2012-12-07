@@ -752,7 +752,7 @@ class BlinkPresenceContact(BlinkContact):
                         description = service.device_info.description
                         user_agent = service.device_info.user_agent
 
-                        if self.log_presence_transitions and device_wining_status not in ('away'):
+                        if self.contact.id == 'myself' and self.log_presence_transitions and device_wining_status not in ('away'):
                             settings = SIPSimpleSettings()
                             own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
 
@@ -2676,8 +2676,9 @@ class ContactListModel(CustomListModel):
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
             blink_contact = BlinkPresenceContact(contact)
-            self.no_group.contacts.append(blink_contact)
-            self.no_group.sortContacts()
+            if contact.id != 'myself':
+                self.no_group.contacts.append(blink_contact)
+                self.no_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if contact.presence.policy != 'default':

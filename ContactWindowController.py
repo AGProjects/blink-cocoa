@@ -19,7 +19,7 @@ from application.notification import NotificationCenter, IObserver, Notification
 from application.python import Null
 from application.system import unlink
 from sipsimple.account import AccountManager, Account, BonjourAccount
-from sipsimple.addressbook import ContactURI, Policy, unique_id
+from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
@@ -652,6 +652,9 @@ class ContactWindowController(NSWindowController):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
         self.refreshAccountList()
+        account = notification.data.account
+        if account is not BonjourAccount():
+            self.removePresenceContactForOurselves(account)
 
     def _NH_SIPAccountDidActivate(self, notification):
         account = notification.sender
@@ -659,6 +662,8 @@ class ContactWindowController(NSWindowController):
             account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
             account.save()
         self.refreshAccountList()
+        if account is not BonjourAccount():
+            self.addPresenceContactForOurselves(account)
 
     def _NH_BonjourGroupWasActivated(self, notification):
         self.updateGroupMenu()
@@ -2035,6 +2040,39 @@ class ContactWindowController(NSWindowController):
         self.activeAccount().save()
         sender.resignFirstResponder()
 
+    def addPresenceContactForOurselves(self, account):
+        addressbook_manager = AddressbookManager()
+        try:
+            contact = addressbook_manager.get_contact('myself')
+        except KeyError:
+            contact = Contact('myself')
+            contact.name = 'Myself'
+            contact.presence.subscribe = True
+            contact.presence.policy = 'allow'
+            contact.uris = [ContactURI(uri=account.id, type='SIP')]
+            contact.save()
+        else:
+           try:
+               has_uri = (uri.uri for uri in contact.uris if uri.uri == account.id).next()
+           except StopIteration:
+               contact.uris.add(ContactURI(uri=account.id, type='SIP'))
+               contact.save()
+
+    def removePresenceContactForOurselves(self, account):
+       addressbook_manager = AddressbookManager()
+       try:
+           contact = addressbook_manager.get_contact('myself')
+       except KeyError:
+           pass
+       else:
+           try:
+               uri = (uri for uri in contact.uris if uri.uri == account.id).next()
+           except StopIteration:
+               pass
+           else:
+               contact.uris.remove(uri)
+               contact.save()
+
     def loadPresenceStateAtStart(self):
         settings = SIPSimpleSettings()
 
@@ -2288,7 +2326,14 @@ class ContactWindowController(NSWindowController):
 
             items = {}
             for watcher in active_watchers.keys():
-                uri = watcher.split(':')[1]
+                uri = sip_prefix_pattern.sub("",watcher)
+                try:
+                    is_myself = AccountManager().get_account(uri)
+                except KeyError:
+                    pass
+                else:
+                    # skip ourselves 
+                    continue
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
                 items[title] = {'image': 'offline', 'contact' : None}
