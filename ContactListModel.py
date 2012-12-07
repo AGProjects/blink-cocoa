@@ -819,19 +819,20 @@ class BlinkPresenceContact(BlinkContact):
                             prefix = 'My device' if notification.sender.id == uri_text else 'Device'
                             log_line = u"%s %s of %s is %s" % (prefix, device_text, uri_text, device_wining_status)
                             BlinkLogger().log_info(log_line)
-                            message= '<h3>Availability Information</h3>'
-                            message += '<p>%s' % log_line
-                            media_type = 'availability'
-                            local_uri = str(notification.sender.id)
-                            remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
-                            direction = 'incoming'
-                            status = 'delivered'
-                            cpim_from = remote_uri
-                            cpim_to = local_uri
-                            timestamp = str(ISOTimestamp.now())
-                            id=str(uuid.uuid1())
+                            if self.contact.id != 'myself':
+                                message= '<h3>Availability Information</h3>'
+                                message += '<p>%s' % log_line
+                                media_type = 'availability'
+                                local_uri = str(notification.sender.id)
+                                remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
+                                direction = 'incoming'
+                                status = 'delivered'
+                                cpim_from = remote_uri
+                                cpim_to = local_uri
+                                timestamp = str(ISOTimestamp.now())
+                                id=str(uuid.uuid1())
 
-                            NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+                                NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
 
             # discard notes from offline devices if others are online
             if devices:
@@ -848,6 +849,9 @@ class BlinkPresenceContact(BlinkContact):
 
             if self.log_presence_transitions:
                 self.old_devices = self.presence_state['devices'].values()
+
+        if self.contact.id == 'myself':
+            return
 
         self.setPresenceNote()
         has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
@@ -942,6 +946,8 @@ class BlinkPresenceContact(BlinkContact):
         contact.updating_remote_icon = False
 
     def addToOrRemoveFromOnlineGroup(self):
+        if self.contact.id == 'myself':
+            return
         status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         try:
