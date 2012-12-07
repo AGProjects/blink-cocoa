@@ -776,8 +776,6 @@ class BlinkPresenceContact(BlinkContact):
                                         except IndexError:
                                             own_data.note = ''
 
-                                        self.last_other_service_timestamp = _s_timestamp
-
                                         log_line = 'My device %s availability became %s' % (service.device_info.description, device_wining_status)
                                         BlinkLogger().log_info(log_line)
 
