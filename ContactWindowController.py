@@ -2334,7 +2334,7 @@ class ContactWindowController(NSWindowController):
                 except KeyError:
                     pass
                 else:
-                    # skip ourselves 
+                    # skip ourselves
                     continue
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
@@ -3267,6 +3267,9 @@ class ContactWindowController(NSWindowController):
 
         while self.contactContextMenu.numberOfItems() > 0:
             self.contactContextMenu.removeItemAtIndex_(0)
+
+        if isinstance(item, BlinkPresenceContact) and item.contact.id == 'myself':
+            return
 
         if isinstance(item, BlinkPendingWatcher):
             if not self.hasContactMatchingURI(item.uri, exact_match=True):
