@@ -1487,8 +1487,6 @@ class ContactWindowController(NSWindowController):
             found_count = {}
             for local_found_contact in local_found_contacts:
                 if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None:
-                    if local_found_contact.contact.id == 'myself':
-                        continue
                     if local_found_contact.contact.id in found_count.keys():
                         continue
                     else:
@@ -3267,9 +3265,6 @@ class ContactWindowController(NSWindowController):
 
         while self.contactContextMenu.numberOfItems() > 0:
             self.contactContextMenu.removeItemAtIndex_(0)
-
-        if isinstance(item, BlinkPresenceContact) and item.contact.id == 'myself':
-            return
 
         if isinstance(item, BlinkPendingWatcher):
             if not self.hasContactMatchingURI(item.uri, exact_match=True):

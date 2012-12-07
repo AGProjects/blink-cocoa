@@ -1908,6 +1908,7 @@ class ContactListModel(CustomListModel):
         self.outgoing_calls_group = OutgoingCallsBlinkGroup()
         self.incoming_calls_group = IncomingCallsBlinkGroup()
         self.contact_backup_timer = None
+        self.own_contact = None
 
         return self
 
@@ -2668,14 +2669,17 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
+        if contact.id == 'myself':
+            self.own_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
+            return
+
         blink_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
             blink_contact = BlinkPresenceContact(contact)
-            if contact.id != 'myself':
-                self.no_group.contacts.append(blink_contact)
-                self.no_group.sortContacts()
+            self.no_group.contacts.append(blink_contact)
+            self.no_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if contact.presence.policy != 'default':
