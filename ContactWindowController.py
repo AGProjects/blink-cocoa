@@ -1487,6 +1487,8 @@ class ContactWindowController(NSWindowController):
             found_count = {}
             for local_found_contact in local_found_contacts:
                 if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None:
+                    if local_found_contact.contact.id == 'myself':
+                        continue
                     if local_found_contact.contact.id in found_count.keys():
                         continue
                     else:
