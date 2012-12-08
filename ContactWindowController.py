@@ -2151,7 +2151,7 @@ class ContactWindowController(NSWindowController):
         settings.save()
         self.savePresenceActivityToHistory(history_object)
 
-    def _NH_BlinkOwnPresenceHasChaged(self, notification):
+    def _NH_BlinkMyPresenceOnOtherDeviceDidChange(self, notification):
         settings = SIPSimpleSettings()
         note = notification.data.note
         status = notification.data.status
