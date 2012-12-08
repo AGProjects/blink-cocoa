@@ -883,9 +883,6 @@ class ContactWindowController(NSWindowController):
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
 
-    def _NH_BlinkOwnPresenceHasChaged(self, notification):
-        self.setPresenceActivityFromObject_(notification.data)
-
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
 
@@ -2154,10 +2151,20 @@ class ContactWindowController(NSWindowController):
         settings.save()
         self.savePresenceActivityToHistory(history_object)
 
-    def setPresenceActivityFromObject_(self, object):
+    def _NH_BlinkOwnPresenceHasChaged(self, notification):
         settings = SIPSimpleSettings()
-        note = object.note
-        status = object.status
+        note = notification.data.note
+        status = notification.data.status
+
+        try:
+            selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
+        except StopIteration:
+            return
+
+        if self.presencePublisher.idle_mode:
+            self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
+            self.presencePublisher.presenceStateBeforeIdle['note'] = note
+            return
 
         change = False
         if note != settings.presence_state.note:
@@ -2165,10 +2172,6 @@ class ContactWindowController(NSWindowController):
             settings.presence_state.note = note
             change = True
 
-        try:
-            selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
-        except StopIteration:
-            return
 
         title = selected_presence_activity['title']
         if title != settings.presence_state.status:

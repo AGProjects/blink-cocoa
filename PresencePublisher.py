@@ -110,7 +110,7 @@ class PresencePublisher(object):
     last_time_offset = int(pidf.TimeOffset())
     gruu_addresses = {}
     hostname = socket.gethostname().split(".")[0]
-    originalPresenceActivity = None
+    presenceStateBeforeIdle = None
     wakeup_timer = None
     location = None
     xcap_caps_discovered = {}
@@ -307,18 +307,19 @@ class PresencePublisher(object):
                 if activity_object['title'] != "Away":
                     i = self.owner.presenceActivityPopUp.indexOfItemWithTitle_('Away')
                     self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
-                    self.originalPresenceActivity = activity_object
+                    self.presenceStateBeforeIdle = activity_object
+                    self.presenceStateBeforeIdle['note'] = unicode(self.owner.presenceNoteText.stringValue())
                 self.idle_mode = True
                 must_publish = True
         else:
             if self.idle_mode:
-                # TODO, we should swicth to the state set by another device in the mean time if any
                 self.user_input = {'state': 'active', 'last_input': None}
                 if activity_object['title'] == "Away":
-                    if self.originalPresenceActivity:
-                        i = self.owner.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.originalPresenceActivity)
+                    if self.presenceStateBeforeIdle:
+                        i = self.owner.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceStateBeforeIdle)
                         self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
-                        self.originalPresenceActivity = None
+                        self.owner.presenceNoteText.setStringValue_(self.presenceStateBeforeIdle['note'])
+                        self.presenceStateBeforeIdle = None
                 self.idle_mode = False
                 must_publish = True
 

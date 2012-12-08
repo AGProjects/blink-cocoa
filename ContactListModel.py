@@ -757,7 +757,7 @@ class BlinkPresenceContact(BlinkContact):
                             settings = SIPSimpleSettings()
                             own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
 
-                            if own_service_id != service.id and notification.sender.id == uri_text and not presencePublisher.idle_mode:
+                            if own_service_id != service.id and notification.sender.id == uri_text:
                                 try:
                                     last_published_timestamp = presencePublisher.last_service_timestamp[notification.sender.id]
                                 except IndexError:
