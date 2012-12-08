@@ -274,7 +274,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkMuteChangedState")
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
-        nc.add_observer(self, name="BlinkOwnPresenceHasChaged")
+        nc.add_observer(self, name="BlinkMyPresenceOnOtherDeviceDidChange")
         nc.add_observer(self, name="BonjourAccountWillRegister")
         nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")

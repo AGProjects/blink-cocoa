@@ -779,7 +779,7 @@ class BlinkPresenceContact(BlinkContact):
                                         log_line = 'My device %s availability became %s' % (service.device_info.description, device_wining_status)
                                         BlinkLogger().log_info(log_line)
 
-                                        notification.center.post_notification("BlinkOwnPresenceHasChaged", sender=self, data=own_data)
+                                        notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
 
                     else:
                         device_text = '%s' % service.id
