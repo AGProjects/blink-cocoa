@@ -2260,6 +2260,9 @@ class ContactWindowController(NSWindowController):
             self.savePresenceActivityToHistory(history_object)
 
     def savePresenceActivityToHistory(self, history_object):
+        if not history_object['note']:
+            return
+
         if history_object['note'] == on_the_phone_activity['note'] and history_object['title'] == on_the_phone_activity['title']:
             return
         try:
