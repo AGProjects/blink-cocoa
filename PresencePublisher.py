@@ -312,6 +312,7 @@ class PresencePublisher(object):
                 must_publish = True
         else:
             if self.idle_mode:
+                # TODO, we should swicth to the state set by another device in the mean time if any
                 self.user_input = {'state': 'active', 'last_input': None}
                 if activity_object['title'] == "Away":
                     if self.originalPresenceActivity:
