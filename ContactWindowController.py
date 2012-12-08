@@ -2161,33 +2161,31 @@ class ContactWindowController(NSWindowController):
         except StopIteration:
             return
 
-        if self.presencePublisher.idle_mode:
-            self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
-            self.presencePublisher.presenceStateBeforeIdle['note'] = note
-            return
-
         change = False
         if note != settings.presence_state.note:
             self.presenceNoteText.setStringValue_(note)
             settings.presence_state.note = note
             change = True
 
+        if self.presencePublisher.idle_mode:
+            self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
+            self.presencePublisher.presenceStateBeforeIdle['note'] = note
+        else:
+            title = selected_presence_activity['title']
+            if title != settings.presence_state.status:
+                change = True
+                for item in self.presenceMenu.itemArray():
+                    item.setState_(NSOffState)
+                item = self.presenceMenu.itemWithTitle_(title)
+                if item is not None:
+                    item.setState_(NSOnState)
 
-        title = selected_presence_activity['title']
-        if title != settings.presence_state.status:
-            change = True
-            for item in self.presenceMenu.itemArray():
-                item.setState_(NSOffState)
-            item = self.presenceMenu.itemWithTitle_(title)
-            if item is not None:
-                item.setState_(NSOnState)
+                menu = self.presenceActivityPopUp.menu()
+                item = menu.itemWithTitle_(title)
+                self.presenceActivityPopUp.selectItem_(item)
 
-            menu = self.presenceActivityPopUp.menu()
-            item = menu.itemWithTitle_(title)
-            self.presenceActivityPopUp.selectItem_(item)
-
-            settings.presence_state.status = title
-            self.setStatusBarIcon(status)
+                settings.presence_state.status = title
+                self.setStatusBarIcon(status)
 
         if change:
             settings.save()
