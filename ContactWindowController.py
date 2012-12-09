@@ -2167,10 +2167,17 @@ class ContactWindowController(NSWindowController):
             settings.presence_state.note = note
             change = True
 
+        must_change_state = False
         if self.presencePublisher.idle_mode:
-            self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
-            self.presencePublisher.presenceStateBeforeIdle['note'] = note
+            if status == 'offline':
+                must_change_state = True
+            else:
+                self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
+                self.presencePublisher.presenceStateBeforeIdle['note'] = note
         else:
+            must_change_state = True
+
+        if must_change_state:
             title = selected_presence_activity['title']
             if title != settings.presence_state.status:
                 change = True
