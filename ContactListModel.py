@@ -784,10 +784,6 @@ class BlinkPresenceContact(BlinkContact):
                                     if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
                                         own_data = NotificationData()
                                         own_data.status = device_wining_status
-                                        own_data.account = notification.sender.id
-                                        own_data.contact = contact
-                                        own_data.device = str(service.id)[4:]
-                                        own_data.description = service.device_info.description
                                         notes = sorted([unicode(note) for note in service.notes if note])
                                         try:
                                             own_data.note = notes[0]
@@ -820,7 +816,6 @@ class BlinkPresenceContact(BlinkContact):
                                     if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
                                         own_data = NotificationData()
                                         own_data.status = device_wining_status
-                                        own_data.account = notification.sender.id
                                         own_data.note = ''
 
                                         log_line = 'My other device availability became %s' % device_wining_status
