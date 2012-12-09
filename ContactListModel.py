@@ -790,7 +790,7 @@ class BlinkPresenceContact(BlinkContact):
                                         except IndexError:
                                             own_data.note = ''
 
-                                        log_line = 'My device %s availability became %s' % (service.device_info.description, device_wining_status)
+                                        log_line = 'My availability on device %s is %s' % (service.device_info.description, device_wining_status)
                                         BlinkLogger().log_info(log_line)
 
                                         notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
@@ -818,7 +818,7 @@ class BlinkPresenceContact(BlinkContact):
                                         own_data.status = device_wining_status
                                         own_data.note = ''
 
-                                        log_line = 'My other device availability became %s' % device_wining_status
+                                        log_line = 'My availability on other device is %s' % device_wining_status
                                         BlinkLogger().log_info(log_line)
 
                                         notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
