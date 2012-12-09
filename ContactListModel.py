@@ -676,21 +676,36 @@ class BlinkPresenceContact(BlinkContact):
         if pidfs:
 
             for pidf in pidfs:
+                # keep only the latest services and those without a timestamp
+                most_recent_service_timestamp = None
+                most_recent_service = None
+                services_without_timestamp = []
+                for service in pidf.services:
+                    if hasattr(service, 'timestamp') and service.timestamp is not None:
+                        if most_recent_service_timestamp is None:
+                            most_recent_service_timestamp = service.timestamp.value
+                            most_recent_service = service
+                        elif service.timestamp.value > most_recent_service_timestamp:
+                            most_recent_service_timestamp = service.timestamp.value
+                            most_recent_service = service
+                    else:
+                        services_without_timestamp.append(service)
+                if most_recent_service is not None:
+                    services_without_timestamp.append(most_recent_service)
+                services = services_without_timestamp
+        
                 if basic_status is 'closed':
-                    basic_status = 'open' if any(service for service in pidf.services if service.status.basic == 'open') else 'closed'
+                    basic_status = 'open' if any(service for service in services if service.status.basic == 'open') else 'closed'
 
-                _busy = any(service for service in pidf.services if service.status.extended == 'busy')
-
+                _busy = any(service for service in services if service.status.extended == 'busy')
                 if self.presence_state['status']['busy'] is False:
                     self.presence_state['status']['busy'] = _busy
 
-                _available = any(service for service in pidf.services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
-
+                _available = any(service for service in services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
                 if self.presence_state['status']['available'] is False:
                     self.presence_state['status']['available'] = _available
 
-                _away = any(service for service in pidf.services if service.status.extended == 'away')
-
+                _away = any(service for service in services if service.status.extended == 'away')
                 if self.presence_state['status']['away'] is False:
                     self.presence_state['status']['away'] = _away
 
@@ -703,10 +718,10 @@ class BlinkPresenceContact(BlinkContact):
                 else:
                     device_wining_status = 'offline'
 
-                _presence_notes = sorted([unicode(note) for service in pidf.services for note in service.notes if note])
+                _presence_notes = sorted([unicode(note) for service in services for note in service.notes if note])
                 has_notes += len(_presence_notes)
 
-                for service in pidf.services:
+                for service in services:
                     aor = str(urllib.unquote(pidf.entity))
                     if not aor.startswith(('sip:', 'sips:')):
                         aor = 'sip:'+aor
