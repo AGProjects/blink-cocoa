@@ -600,7 +600,8 @@ class BlinkPresenceContact(BlinkContact):
         self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
                                             'away':          False,
-                                            'busy':          False
+                                            'busy':          False,
+                                            'offline':       False
                                           },
                                 'devices': {}
         }
@@ -674,7 +675,6 @@ class BlinkPresenceContact(BlinkContact):
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
         devices = {}
         if pidfs:
-
             for pidf in pidfs:
                 # keep only the latest services and those without a timestamp
                 most_recent_service_timestamp = None
@@ -693,7 +693,7 @@ class BlinkPresenceContact(BlinkContact):
                 if most_recent_service is not None:
                     services_without_timestamp.append(most_recent_service)
                 services = services_without_timestamp
-        
+
                 if basic_status is 'closed':
                     basic_status = 'open' if any(service for service in services if service.status.basic == 'open') else 'closed'
 
@@ -708,6 +708,10 @@ class BlinkPresenceContact(BlinkContact):
                 _away = any(service for service in services if service.status.extended == 'away')
                 if self.presence_state['status']['away'] is False:
                     self.presence_state['status']['away'] = _away
+
+                _offline = any(service for service in services if service.status.extended == 'offline')
+                if self.presence_state['status']['offline'] is False:
+                    self.presence_state['status']['offline'] = _offline
 
                 if _busy:
                     device_wining_status = 'busy'
@@ -775,7 +779,7 @@ class BlinkPresenceContact(BlinkContact):
                             if own_service_id != service.id and notification.sender.id == uri_text:
                                 try:
                                     last_published_timestamp = presencePublisher.last_service_timestamp[notification.sender.id]
-                                except IndexError:
+                                except KeyError:
                                     pass
                                 else:
                                     if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
@@ -802,6 +806,28 @@ class BlinkPresenceContact(BlinkContact):
                         user_agent = None
                         offset_info = None
                         offset_info_text = None
+
+                        if self.contact.id == 'myself' and service.timestamp is not None and self.log_presence_transitions:
+                            presencePublisher = NSApp.delegate().contactsWindowController.presencePublisher
+                            settings = SIPSimpleSettings()
+                            own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
+
+                            if own_service_id != service.id and notification.sender.id == uri_text:
+                                try:
+                                    last_published_timestamp = presencePublisher.last_service_timestamp[notification.sender.id]
+                                except KeyError:
+                                    pass
+                                else:
+                                    if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
+                                        own_data = NotificationData()
+                                        own_data.status = device_wining_status
+                                        own_data.account = notification.sender.id
+                                        own_data.note = ''
+
+                                        log_line = 'My other device availability became %s' % device_wining_status
+                                        BlinkLogger().log_info(log_line)
+
+                                        notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
 
                     devices[service.id] = {
                                                 'id'          : service.id,

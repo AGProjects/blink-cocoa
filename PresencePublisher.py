@@ -75,7 +75,7 @@ PresenceActivityList = (
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':            u"Offline",
+                                           'title':            u"Invisible",
                                            'basic_status':     'closed',
                                            'extended_status':  'offline',
                                            'image':            'offline',
@@ -330,31 +330,39 @@ class PresencePublisher(object):
         if not account.enabled or not account.presence.enabled:
             return None
 
+        selected_item = self.owner.presenceActivityPopUp.selectedItem()
+
+        if selected_item is None:
+            return None
+
+        activity_object = selected_item.representedObject()
+        if activity_object is None:
+            return None
+
+        offline = activity_object['basic_status'] == 'closed' and activity_object['extended_status'] == 'offline'
+
         settings = SIPSimpleSettings()
         instance_id = str(uuid.UUID(settings.instance_id))
 
         pidf_doc = pidf.PIDF(str(account.uri))
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
         person.timestamp = pidf.PersonTimestamp(self.timestamp)
-        if not account.presence.disable_timezone:
+        if not account.presence.disable_timezone and not offline:
             person.time_offset = rpid.TimeOffset()
         pidf_doc.add(person)
 
-        selected_item = self.owner.presenceActivityPopUp.selectedItem()
-        if selected_item is None:
-            return None
-        activity_object = selected_item.representedObject()
-        if activity_object is None:
-            return None
-        if activity_object['basic_status'] == 'closed' and activity_object['extended_status'] == 'offline':
-            return None
         status = pidf.Status(activity_object['basic_status'])
         status.extended = activity_object['extended_status']
 
         person.activities = rpid.Activities()
         person.activities.add(unicode(status.extended))
-
         service = pidf.Service("SID-%s" % instance_id, status=status)
+        service.timestamp = pidf.ServiceTimestamp(self.timestamp)
+
+        if offline:
+            pidf_doc.add(service)
+            return pidf_doc
+
         service.contact = pidf.Contact(str(account.contact.public_gruu or account.uri))
 
         if account.display_name:
@@ -379,7 +387,6 @@ class PresencePublisher(object):
         if account.presence.homepage is not None:
             service.homepage=cipid.Homepage(account.presence.homepage)
 
-        service.timestamp = pidf.ServiceTimestamp(self.timestamp)
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
