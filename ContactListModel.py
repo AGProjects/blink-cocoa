@@ -676,10 +676,10 @@ class BlinkPresenceContact(BlinkContact):
         devices = {}
         if pidfs:
             for pidf in pidfs:
-                # keep only the latest services and those without a timestamp
+                # make a list of latest services
                 most_recent_service_timestamp = None
                 most_recent_service = None
-                services_without_timestamp = []
+                most_recent_services = []
                 for service in pidf.services:
                     if hasattr(service, 'timestamp') and service.timestamp is not None:
                         if most_recent_service_timestamp is None:
@@ -689,27 +689,26 @@ class BlinkPresenceContact(BlinkContact):
                             most_recent_service_timestamp = service.timestamp.value
                             most_recent_service = service
                     else:
-                        services_without_timestamp.append(service)
+                        most_recent_services.append(service)
                 if most_recent_service is not None:
-                    services_without_timestamp.append(most_recent_service)
-                services = services_without_timestamp
+                    most_recent_services.append(most_recent_service)
 
                 if basic_status is 'closed':
-                    basic_status = 'open' if any(service for service in services if service.status.basic == 'open') else 'closed'
+                    basic_status = 'open' if any(service for service in pidf.services if service in most_recent_services and service.status.basic == 'open') else 'closed'
 
-                _busy = any(service for service in services if service.status.extended == 'busy')
+                _busy = any(service for service in pidf.services if service in most_recent_services and service.status.extended == 'busy')
                 if self.presence_state['status']['busy'] is False:
                     self.presence_state['status']['busy'] = _busy
 
-                _available = any(service for service in services if service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
+                _available = any(service for service in pidf.services if service in most_recent_services and service.status.extended == 'available' or (service.status.extended == None and basic_status == 'open'))
                 if self.presence_state['status']['available'] is False:
                     self.presence_state['status']['available'] = _available
 
-                _away = any(service for service in services if service.status.extended == 'away')
+                _away = any(service for service in pidf.services if service in most_recent_services and service.status.extended == 'away')
                 if self.presence_state['status']['away'] is False:
                     self.presence_state['status']['away'] = _away
 
-                _offline = any(service for service in services if service.status.extended == 'offline')
+                _offline = any(service for service in pidf.services if service in most_recent_services and service.status.extended == 'offline')
                 if self.presence_state['status']['offline'] is False:
                     self.presence_state['status']['offline'] = _offline
 
@@ -722,10 +721,10 @@ class BlinkPresenceContact(BlinkContact):
                 else:
                     device_wining_status = 'offline'
 
-                _presence_notes = sorted([unicode(note) for service in services for note in service.notes if note])
+                _presence_notes = sorted([unicode(note) for service in pidf.services if service in most_recent_services for note in service.notes if note])
                 has_notes += len(_presence_notes)
 
-                for service in services:
+                for service in pidf.services:
                     aor = str(urllib.unquote(pidf.entity))
                     if not aor.startswith(('sip:', 'sips:')):
                         aor = 'sip:'+aor
@@ -748,7 +747,7 @@ class BlinkPresenceContact(BlinkContact):
                     if not contact.startswith(('sip:', 'sips:')):
                         contact = 'sip:'+contact
 
-                    if service.icon is not None:
+                    if service in most_recent_services and service.icon is not None:
                         icon = unicode(service.icon)
                     else:
                         icon = None
@@ -771,7 +770,7 @@ class BlinkPresenceContact(BlinkContact):
                         description = service.device_info.description
                         user_agent = service.device_info.user_agent
 
-                        if self.contact.id == 'myself' and service.user_input.value != 'idle' and self.log_presence_transitions:
+                        if self.contact.id == 'myself' and service in most_recent_services and service.user_input.value != 'idle' and self.log_presence_transitions:
                             presencePublisher = NSApp.delegate().contactsWindowController.presencePublisher
                             settings = SIPSimpleSettings()
                             own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
@@ -807,7 +806,7 @@ class BlinkPresenceContact(BlinkContact):
                         offset_info = None
                         offset_info_text = None
 
-                        if self.contact.id == 'myself' and service.timestamp is not None and self.log_presence_transitions:
+                        if self.contact.id == 'myself' and service in most_recent_services and service.timestamp is not None and self.log_presence_transitions:
                             presencePublisher = NSApp.delegate().contactsWindowController.presencePublisher
                             settings = SIPSimpleSettings()
                             own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
@@ -845,7 +844,7 @@ class BlinkPresenceContact(BlinkContact):
                                                 'icon'        : icon
                                         }
 
-                    if self.log_presence_transitions:
+                    if self.log_presence_transitions and service in most_recent_services:
                         something_has_changed = False
                         try:
                             old_device = (device for device in self.old_devices if device['id'] == service.id).next()
@@ -874,17 +873,6 @@ class BlinkPresenceContact(BlinkContact):
                                 id=str(uuid.uuid1())
 
                                 NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-
-            # discard notes from offline devices if others are online
-            if devices:
-                has_on_line_devices = any(device for device in devices.values() if device['status'] != 'offline')
-                if has_on_line_devices:
-                    notes_to_purge = [note for device in devices.values() if device['status'] == 'offline' for note in device['notes']]
-                    for note in notes_to_purge:
-                        try:
-                            device['notes'].remove(note)
-                        except ValueError:
-                            pass
 
             self.presence_state['devices'] = devices
 
