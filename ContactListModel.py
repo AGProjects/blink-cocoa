@@ -683,13 +683,28 @@ class BlinkPresenceContact(BlinkContact):
                 for service in pidf.services:
                     if hasattr(service, 'timestamp') and service.timestamp is not None:
                         if most_recent_service_timestamp is None:
+                            # add service
                             most_recent_service_timestamp = service.timestamp.value
                             most_recent_service = service
-                        elif service.timestamp.value > most_recent_service_timestamp:
-                            most_recent_service_timestamp = service.timestamp.value
-                            most_recent_service = service
+                        elif service.timestamp.value >= most_recent_service_timestamp:
+                            if service.user_input is not None and service.user_input.value == 'idle':
+                                # replace older idle with newer
+                                if most_recent_service.user_input is not None and most_recent_service.user_input.value == 'idle':
+                                    most_recent_service_timestamp = service.timestamp.value
+                                    most_recent_service = service
+                            else:
+                                # replace idle with non-idle
+                                most_recent_service_timestamp = service.timestamp.value
+                                most_recent_service = service
+                        elif service.timestamp.value < most_recent_service_timestamp:
+                            # replace newer idle with older non-idle
+                            if service.user_input is not None and service.user_input.value != 'idle' and most_recent_service.user_input is not None and most_recent_service.user_input.value == 'idle':
+                                most_recent_service_timestamp = service.timestamp.value
+                                most_recent_service = service
                     else:
+                        # services without timestamp will be weighted later
                         most_recent_services.append(service)
+
                 if most_recent_service is not None:
                     most_recent_services.append(most_recent_service)
 
