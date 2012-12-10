@@ -909,7 +909,7 @@ class SessionHistoryReplicator(object):
                         focus = "0"
                         local_uri = str(account.id)
                         try:
-                            remote_uri = call['remoteParty']
+                            remote_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(call['remoteParty'])
                             status = call['status']
                             duration = call['duration']
                             call_id = call['sessionId']
@@ -990,7 +990,7 @@ class SessionHistoryReplicator(object):
                         focus = "0"
                         local_uri = str(account.id)
                         try:
-                            remote_uri = call['remoteParty']
+                            remote_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(call['remoteParty'])
                             status = call['status']
                             duration = call['duration']
                             call_id = call['sessionId']
