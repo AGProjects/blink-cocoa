@@ -3626,7 +3626,7 @@ class ContactWindowController(NSWindowController):
                 if NSApp.delegate().applicationName != 'Blink Lite':
                     if item not in self.model.bonjour_group.contacts:
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer", "viewHistory:", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistory:", "")
                         mitem.setRepresentedObject_((unicode(item.uri),))
                 if not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
