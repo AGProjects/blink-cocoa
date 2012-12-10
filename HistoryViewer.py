@@ -685,8 +685,8 @@ class HistoryViewer(NSWindowController):
                 return
 
             contact_exists = bool(contact.presence_contact is not None)
-            self.contactMenu.itemWithTag_(2).setEnabled_(True)
-            self.contactMenu.itemWithTag_(3).setEnabled_(not contact_exists)
+            self.contactMenu.itemWithTag_(2).setEnabled_(not is_anonymous(contact.uri))
+            self.contactMenu.itemWithTag_(3).setEnabled_(not contact_exists and not is_anonymous(contact.uri))
             self.contactMenu.itemWithTag_(4).setEnabled_(contact_exists)
 
 
