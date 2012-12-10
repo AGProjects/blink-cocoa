@@ -144,6 +144,8 @@ class PresencePublisher(object):
         handler(notification)
 
     def _NH_SIPApplicationDidStart(self, notification):
+        settings = SIPSimpleSettings()
+        self.idle_threshold = settings.gui.idle_threshold
         self.publish()
 
         idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateIdleTimer:", None, True)
@@ -219,6 +221,9 @@ class PresencePublisher(object):
                 self.set_offline_status()
             if 'presence_state.icon' in notification.data.modified:
                 self.set_status_icon()
+            if 'gui.idle_threshold' in notification.data.modified:
+                settings = SIPSimpleSettings()
+                self.idle_threshold = settings.gui.idle_threshold
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
         account = notification.sender.account

@@ -1581,6 +1581,7 @@ SettingDescription = {
                       'contacts.enable_blocked_group': 'Show Blocked Contacts',
                       'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
+                      'idle_threshold': 'Interval After Which My Availability Is Set To Away', 
                       'ldap.hostname': 'Server Address',
                       'ldap.dn': 'Search Base',
                       'logs.trace_msrp': 'Trace MSRP Media',
@@ -1660,6 +1661,7 @@ GeneralSettingsOrder = {
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
                        'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'enable_speech_synthesizer', 'night_volume'],
+                       'gui': ['use_default_web_browser_for_alerts', 'idle_threshold'],
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
