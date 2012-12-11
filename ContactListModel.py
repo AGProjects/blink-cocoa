@@ -1049,7 +1049,7 @@ class BlinkPresenceContact(BlinkContact):
     del _get_preferred_media, _set_preferred_media
 
     def _get_default_uri(self):
-        if self.contact.default_uri is not None:
+        if self.contact is not None and self.contact.default_uri is not None:
             try:
                 return self.contact.uris[self.contact.default_uri]
             except KeyError:
