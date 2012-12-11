@@ -152,7 +152,7 @@ class ChatController(MediaStream):
         self.chatViewController.setAccount_(self.sessionController.account)
         self.chatViewController.resetRenderedMessages()
 
-        self.handler = MessageHandler.alloc().initWithView_(self.chatViewController)
+        self.outgoing_message_handler = OutgoingMessageHandler.alloc().initWithView_(self.chatViewController)
 
         self.screensharing_handler = ConferenceScreenSharingHandler()
         self.screensharing_handler.setDelegate(self)
@@ -340,16 +340,16 @@ class ChatController(MediaStream):
                     identity = CPIMIdentity.parse(recipient)
                 except ValueError:
                     identity = None
-                if not self.handler.send(text, recipient=identity):
+                if not self.outgoing_message_handler.send(text, recipient=identity):
                     textView.setString_(original)
                 else:
                     NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
-                BlinkLogger().log_info(u"Session not established, starting it")
-                if self.handler.messages:
+                self.sessionController.log_info(u"Session not established, starting it")
+                if self.outgoing_message_handler.messages:
                     # save unsend messages and pass them to the newly spawned handler
-                    self.sessionController.pending_chat_messages = self.handler.messages
+                    self.sessionController.pending_chat_messages = self.outgoing_message_handler.messages
                 self.sessionController.startChatSession()
             self.chatViewController.resetTyping()
             return True
@@ -622,14 +622,14 @@ class ChatController(MediaStream):
                 recipient = None
 
             private = True if message.private == "1" else False
-            self.handler.resend(message.msgid, message.body, recipient, private)
+            self.outgoing_message_handler.resend(message.msgid, message.body, recipient, private)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def send_pending_message(self):
         if self.sessionController.pending_chat_messages:
             for message in reversed(self.sessionController.pending_chat_messages.values()):
-                self.handler.resend(message.msgid, message.text, message.recipient, message.private)
+                self.outgoing_message_handler.resend(message.msgid, message.text, message.recipient, message.private)
             self.sessionController.pending_chat_messages = {}
 
     def chatViewDidGetNewMessage_(self, chatView):
@@ -889,7 +889,7 @@ class ChatController(MediaStream):
                         elif self.status in (STREAM_IDLE, STREAM_FAILED):
                             self.sessionController.startChatSession()
                     else:
-                        BlinkLogger().log_info(u"Session has a pending proposal")
+                        self.sessionController.log_info(u"Session has a pending proposal")
 
             elif identifier == 'smileys':
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
@@ -1071,7 +1071,7 @@ class ChatController(MediaStream):
 
             # save to history
             message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text')
-            self.handler.add_to_history(message)
+            self.outgoing_message_handler.add_to_history(message)
 
     def _NH_ChatStreamGotComposingIndication(self, stream, data):
         flag = data.state == "active"
@@ -1182,7 +1182,7 @@ class ChatController(MediaStream):
         self.sessionController.nickname = None
         self.setNickname(nickname)
 
-        self.handler.setConnected(self.stream)
+        self.outgoing_message_handler.setConnected(self.stream)
 
         # needed to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
@@ -1276,8 +1276,8 @@ class ChatController(MediaStream):
         self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
         self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, False)
 
-        if self.handler:
-            self.handler.setDisconnected()
+        if self.outgoing_message_handler:
+            self.outgoing_message_handler.setDisconnected()
 
         if self.screensharing_handler:
             self.screensharing_handler.setDisconnected()
@@ -1297,7 +1297,7 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
-        #BlinkLogger().log_info(u"Disposing %s" % self)
+        #self.sessionController.log_info(u"Disposing %s" % self)
         # remove middleware observers
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
@@ -1315,7 +1315,7 @@ class ChatController(MediaStream):
         self.dealloc_timer = None
 
         # release message handler
-        self.handler.close()
+        self.outgoing_message_handler.close()
 
         # release chat view controller
         self.chatViewController.close()
@@ -1328,7 +1328,7 @@ class ChatController(MediaStream):
 
         # reset variables
         self.stream = None
-        self.handler = None
+        self.outgoing_message_handler = None
         self.chatViewController = None
         self.sessionController = None
         self.screensharing_handler = None
@@ -1352,7 +1352,7 @@ class MessageInfo(object):
         self.pending = pending
 
 
-class MessageHandler(NSObject):
+class OutgoingMessageHandler(NSObject):
     """
         Until the stream is connected, all messages typed will be queued and
         marked internally as queued.  Once the stream is connected, queued
@@ -1372,7 +1372,6 @@ class MessageHandler(NSObject):
 
     implements(IObserver)
 
-    session = None
     stream = None
     connected = False
     delegate = None
@@ -1382,7 +1381,7 @@ class MessageHandler(NSObject):
     local_uri = None
 
     def initWithView_(self, chatView):
-        self = super(MessageHandler, self).init()
+        self = super(OutgoingMessageHandler, self).init()
         if self:
             self.stream = None
             self.connected = None
@@ -1395,12 +1394,13 @@ class MessageHandler(NSObject):
         return self
 
     def dealloc(self):
-        super(MessageHandler, self).dealloc()
+        #self.delegate.delegate.sessionController.log_info('Disposing %s' % self)
+        self.delegate = None
+        super(OutgoingMessageHandler, self).dealloc()
 
     def close(self):
         self.stream = None
         self.connected = None
-        self.delegate = None
         self.history = None
 
     def _send(self, msgid):
