@@ -452,7 +452,7 @@ class SessionControllersManager(object):
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = ''
         duration = 0
@@ -485,7 +485,7 @@ class SessionControllersManager(object):
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = ''
         if session.start_time is None and session.end_time is not None:
@@ -523,7 +523,7 @@ class SessionControllersManager(object):
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = 'Answered elsewhere'
         call_id = data.call_id if data.call_id is not None else ''
@@ -558,7 +558,7 @@ class SessionControllersManager(object):
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
         call_id = data.call_id if data.call_id is not None else ''
@@ -595,7 +595,7 @@ class SessionControllersManager(object):
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = ''
         call_id = data.call_id if data.call_id is not None else ''
@@ -629,7 +629,7 @@ class SessionControllersManager(object):
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
         local_uri = format_identity_to_string(account)
-        remote_uri = format_identity_to_string(controller.target_uri)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         direction = 'incoming'
         status = 'delivered'
