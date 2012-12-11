@@ -282,7 +282,6 @@ class DesktopSharingController(MediaStream):
             self.sessionController.log_info("%s" % data.reason.title())
 
     def dealloc(self):
-        #BlinkLogger().log_info(u"Disposing %s" % self)
         self.stream = None
         self.sessionController = None
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")

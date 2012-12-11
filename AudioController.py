@@ -188,7 +188,6 @@ class AudioController(MediaStream):
         self.transfer_timer = None
 
     def dealloc(self):
-        #BlinkLogger().log_info(u"Disposing %s" % self)
         self.notification_center = None
         self.sessionController = None
         if self.timer is not None and self.timer.isValid():

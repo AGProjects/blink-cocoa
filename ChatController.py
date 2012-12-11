@@ -1297,7 +1297,6 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
-        #self.sessionController.log_info(u"Disposing %s" % self)
         # remove middleware observers
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
@@ -1394,7 +1393,6 @@ class OutgoingMessageHandler(NSObject):
         return self
 
     def dealloc(self):
-        #self.delegate.delegate.sessionController.log_info('Disposing %s' % self)
         self.delegate = None
         super(OutgoingMessageHandler, self).dealloc()
 

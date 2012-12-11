@@ -895,7 +895,6 @@ class SessionController(NSObject):
             self.dealloc_timer = None
 
     def dealloc(self):
-        #self.log_info(u"Disposing %s" % self)
         self.notification_center = None
         super(SessionController, self).dealloc()
 
