@@ -526,6 +526,11 @@ class ContactWindowController(NSWindowController):
         elif sender.tag() == 6: # Help from Service Provider
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(settings.service_provider.help_url)))
 
+    @objc.IBAction
+    def openURL_(self, sender):
+        url = sender.representedObject()
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(url)))
+    
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         style.setLineBreakMode_(NSLineBreakByTruncatingTail)
@@ -3319,7 +3324,11 @@ class ContactWindowController(NSWindowController):
                 # Contact has multiple URIs
                 audio_submenu = NSMenu.alloc().init()
                 audio_submenu.setAutoenablesItems_(False)
+
                 for uri in item.uris:
+                    if uri.type is not None and uri.type.lower() == 'url':
+                        continue
+
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
                     target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                     audio_item.setRepresentedObject_(target_uri)
@@ -3364,6 +3373,9 @@ class ContactWindowController(NSWindowController):
                     chat_submenu.setAutoenablesItems_(False)
 
                     for uri in item.uris:
+                        if uri.type is not None and uri.type.lower() == 'url':
+                            continue
+
                         if is_sip_aor_format(uri.uri):
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
                             target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
@@ -3408,6 +3420,9 @@ class ContactWindowController(NSWindowController):
                     sms_submenu = NSMenu.alloc().init()
                     sms_submenu.setAutoenablesItems_(False)
                     for uri in item.uris:
+                        if uri.type is not None and uri.type.lower() == 'url':
+                            continue
+
                         sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
                         sms_item.setRepresentedObject_(target_uri)
@@ -3555,6 +3570,16 @@ class ContactWindowController(NSWindowController):
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
+
+                urls = list(uri.uri for uri in item.uris if uri.type is not None and uri.type.lower() == 'url')
+                if urls:
+                    urls_submenu = NSMenu.alloc().init()
+                    urls_submenu.setAutoenablesItems_(False)                
+                    for url in urls:
+                        url_item = urls_submenu.addItemWithTitle_action_keyEquivalent_(url, "openURL:", "")
+                        url_item.setRepresentedObject_(url)
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Open URL", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(urls_submenu, mitem)
 
             else:
                 # Contact has a single URI

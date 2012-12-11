@@ -1250,6 +1250,8 @@ class SystemAddressBookBlinkContact(BlinkContact):
                 uri = unicode(value.valueAtIndex_(n))
                 if label == 'sip' or uri.startswith(("sip:", "sips:")):
                     addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
+                elif uri.startswith(("http:", "https:")):
+                    addresses.append(('url', uri))
 
         uris = []
         for address_type, address in addresses:
@@ -1257,7 +1259,9 @@ class SystemAddressBookBlinkContact(BlinkContact):
                 continue
 
             # strip everything that's not numbers from the URIs if they are not SIP URIs
-            if "@" not in address:
+            if address.startswith(("http:", "https:")):
+                contact_uri = address
+            elif "@" not in address:
                 if address.startswith("sip:"):
                     address = address[4:]
                 contact_uri = "+" if address[0] == "+" else ""

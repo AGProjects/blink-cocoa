@@ -4,6 +4,8 @@
 from AppKit import *
 from Foundation import *
 
+import urlparse
+
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
@@ -120,6 +122,12 @@ class AddContactController(NSObject):
 
     def checkURI(self, uri):
         if checkValidPhoneNumber(uri):
+            return True
+
+        if uri.startswith(('https:', 'http:')):
+            url = urlparse.urlparse(uri)
+            if url.scheme not in (u'http', u'https'):
+                return False
             return True
 
         if not uri.startswith(('sip:', 'sips:')):
@@ -327,6 +335,9 @@ class AddContactController(NSObject):
                                     "OK", None, None)
                     return
                 contact_uri.uri = uri
+                if uri.startswith(('https:', 'http:')):
+                    contact_uri.type = 'URL'
+
             elif column == 1:
                 contact_uri.type = str(cell.itemAtIndex_(object).title())
 
