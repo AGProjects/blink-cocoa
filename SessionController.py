@@ -1638,8 +1638,8 @@ class SessionController(NSObject):
                 self.log_info(u"IllegalStateError: %s" % e)
                 return
             else:
-                self.alertPanel.addIncomingStreamProposal(session, streams)
-                self.alertPanel.show()
+                self.sessionControllersManager.alertPanel.addIncomingStreamProposal(session, streams)
+                self.sessionControllersManager.alertPanel.show()
 
             # needed to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self)
