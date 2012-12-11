@@ -134,10 +134,11 @@ class ContactWindowController(NSWindowController):
     collapsedState = False
     originalSize = None
     originalWindowPosition = None
-    alertPanel = None
     accountSettingsPanels = {}
 
     authFailPopupShown = False
+
+    alertPanel = None
 
     presenceActivityBeforeOnThePhone = None
     disbandingConference = False
@@ -776,6 +777,7 @@ class ContactWindowController(NSWindowController):
             self.updateAudioButtons()
 
     def _NH_SIPApplicationWillStart(self, notification):
+        self.alertPanel = AlertPanel.alloc().init()
         settings = SIPSimpleSettings()
         if settings.service_provider.name:
             window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)

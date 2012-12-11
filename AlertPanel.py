@@ -461,7 +461,7 @@ class AlertPanel(NSObject, object):
                 subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
             else:
                 subject = u"Incoming Session request from"
-                BlinkLogger().log_warning(u"Unknown Session content %s" % streams)
+                BlinkLogger().log_info(u"Unknown Session content %s" % streams)
 
         return subject, default_action, alt_action
 
@@ -650,45 +650,53 @@ class AlertPanel(NSObject, object):
             self.decideForSessionRequest(action, session)
 
     def decideForProposalRequest(self, action, session, streams):
+        sessionController = self.sessionControllersManager.sessionControllerForSession(session)
         if action == ACCEPT:
             try:
+                sessionController.log_info(u"Accepting proposal from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptProposedStreams(session)
             except Exception, exc:
-                BlinkLogger().log_warning(u"Error accepting proposal: %s" % exc)
+                sessionController.log_info(u"Error accepting proposal: %s" % exc)
                 self.removeSession(session)
         elif action == REJECT:
             try:
+                sessionController.log_info(u"Rejecting proposal from %s" % format_identity_to_string(session.remote_identity))
                 self.rejectProposal(session)
             except Exception, exc:
-                BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
+                sessionController.log_info(u"Error rejecting proposal: %s" % exc)
                 self.removeSession(session)
 
     def decideForSessionRequest(self, action, session):
+        sessionController = self.sessionControllersManager.sessionControllerForSession(session)
         if action == ACCEPT:
             NSApp.activateIgnoringOtherApps_(True)
             try:
+                sessionController.log_info(u"Accepting session from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptStreams(session)
             except Exception, exc:
-                BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
+                sessionController.log_info(u"Error accepting session: %s" % exc)
                 self.removeSession(session)
         elif action == ACCEPT_CHAT:
             NSApp.activateIgnoringOtherApps_(True)
             try:
+                sessionController.log_info(u"Accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptChatStream(session)
             except Exception, exc:
-                BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
+                sessionController.log_info(u"Error accepting session: %s" % exc)
                 self.removeSession(session)
         elif action == REJECT:
             try:
+                sessionController.log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_to_string(session.remote_identity))
                 self.rejectSession(session, 603, "Busy Everywhere")
             except Exception, exc:
-                BlinkLogger().log_info(u"Error rejecting session: %s" % exc)
+                sessionController.log_info(u"Error rejecting session: %s" % exc)
                 self.removeSession(session)
         elif action == BUSY:
             try:
+                sessionController.log_info(u"Rejecting session from %s with Busy" % format_identity_to_string(session.remote_identity))
                 self.rejectSession(session, 486)
             except Exception, exc:
-                BlinkLogger().log_info(u"Error rejecting session: %s" % exc)
+                sessionController.log_info(u"Error rejecting session: %s" % exc)
                 self.removeSession(session)
 
     def decideForAllSessionRequests(self, action):
@@ -699,59 +707,61 @@ class AlertPanel(NSObject, object):
 
         if action == ACCEPT:
             NSApp.activateIgnoringOtherApps_(True)
-            for s in self.sessions.keys():
-                is_proposal = self.proposals.has_key(s)
+            for session in self.sessions.keys():
+                sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                is_proposal = self.proposals.has_key(session)
                 try:
                     if is_proposal:
-                        BlinkLogger().log_info(u"Accepting all proposed streams from %s" % format_identity_to_string(s.remote_identity))
-                        self.acceptProposedStreams(s)
+                        sessionController.log_info(u"Accepting all proposed streams from %s" % format_identity_to_string(session.remote_identity))
+                        self.acceptProposedStreams(session)
                     else:
-                        BlinkLogger().log_info(u"Accepting session from %s" % format_identity_to_string(s.remote_identity))
-                        self.acceptStreams(s)
+                        sessionController.log_info(u"Accepting session from %s" % format_identity_to_string(session.remote_identity))
+                        self.acceptStreams(session)
                 except Exception, exc:
-                    BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
-                    self.removeSession(s)
+                    sessionController.log_info(u"Error accepting session: %s" % exc)
+                    self.removeSession(session)
         elif action == ACCEPT_CHAT:
             NSApp.activateIgnoringOtherApps_(True)
-            for s in self.sessions.keys():
+            for session in self.sessions.keys():
+                sessionController = self.sessionControllersManager.sessionControllerForSession(session)
                 try:
-                    BlinkLogger().log_info(u"Accepting chat stream to session with %s" % format_identity_to_string(s.remote_identity))
-                    self.acceptChatStream(s)
+                    sessionController.log_info(u"Accepting chat stream to session with %s" % format_identity_to_string(session.remote_identity))
+                    self.acceptChatStream(session)
                 except Exception, exc:
-                    BlinkLogger().log_warning(u"Error accepting session: %s" % exc)
-                    self.removeSession(s)
+                    sessionController.log_info(u"Error accepting session: %s" % exc)
+                    self.removeSession(session)
         elif action == REJECT:
             self.rejectAllSessions()
         elif action == BUSY:
-            for s in self.sessions.keys():
-                is_proposal = self.proposals.has_key(s)
+            for session in self.sessions.keys():
+                sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                is_proposal = self.proposals.has_key(session)
                 try:
                     if is_proposal:
-                        BlinkLogger().log_info(u"Rejecting proposed streams from %s" % format_identity_to_string(s.remote_identity))
+                        sessionController.log_info(u"Rejecting proposed streams from %s" % format_identity_to_string(session.remote_identity))
                         try:
-                            self.rejectProposal(s)
+                            self.rejectProposal(session)
                         except Exception, exc:
-                            BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
+                            sessionController.log_info(u"Error rejecting proposal: %s" % exc)
                             self.removeSession(session)
                     else:
-                        BlinkLogger().log_info(u"Rejecting session from %s with Busy " % format_identity_to_string(s.remote_identity))
-                        self.rejectSession(s, 486)
+                        sessionController.log_info(u"Rejecting session from %s with Busy " % format_identity_to_string(session.remote_identity))
+                        self.rejectSession(session, 486)
                 except Exception, exc:
-                    BlinkLogger().log_warning(u"Error rejecting session: %s" % exc)
-                    self.removeSession(s)
+                    sessionController.log_info(u"Error rejecting session: %s" % exc)
+                    self.removeSession(session)
 
     def acceptStreams(self, session):
         self.sessionControllersManager.startIncomingSession(session, session.blink_supported_streams)
         self.removeSession(session)
 
     def acceptProposedStreams(self, session):
-        try:
-            session_controller = (controller for controller in self.sessionControllersManager.sessionControllers if controller.session == session).next()
-        except StopIteration:
+        sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+        if sessionController is not None:
+            session_controller.acceptIncomingProposal(session.proposed_streams)
+        else:
             BlinkLogger().log_info("Cannot find session controller for session: %s" % session)
             session.reject_proposal()
-        else:
-            session_controller.acceptIncomingProposal(session.proposed_streams)
 
         self.removeSession(session)
 
@@ -769,9 +779,8 @@ class AlertPanel(NSObject, object):
     def acceptAudioStream(self, session):
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
-        try:
-            session_controller = (controller for controller in self.sessionControllersManager.sessionControllers if controller.session == session).next()
-        except StopIteration:
+        sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+        if sessionController is not None:
             session.reject_proposal()
             session.log_info("Cannot find session controller for session: %s" % session)
         else:
@@ -805,22 +814,23 @@ class AlertPanel(NSObject, object):
         self.removeSession(session)
 
     def rejectAllSessions(self):
-        for s in self.sessions.keys():
-            is_proposal = self.proposals.has_key(s)
+        for session in self.sessions.keys():
+            sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+            is_proposal = self.proposals.has_key(session)
             try:
                 if is_proposal:
-                    BlinkLogger().log_info(u"Rejecting %s proposal from %s"%([stream.type for stream in s.proposed_streams], format_identity_to_string(s.remote_identity)))
+                    sessionController.log_info(u"Rejecting %s proposal from %s"%([stream.type for stream in session.proposed_streams], format_identity_to_string(session.remote_identity)))
                     try:
-                        self.rejectProposal(s)
+                        self.rejectProposal(session)
                     except Exception, exc:
-                        BlinkLogger().log_info(u"Error rejecting proposal: %s" % exc)
-                        self.removeSession(s)
+                        sessionController.log_info(u"Error rejecting proposal: %s" % exc)
+                        self.removeSession(session)
                 else:
-                    BlinkLogger().log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_to_string(s.remote_identity))
-                    self.rejectSession(s, 603, "Busy Everywhere")
+                    sessionController.log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_to_string(session.remote_identity))
+                    self.rejectSession(session, 603, "Busy Everywhere")
             except Exception, exc:
-                self.removeSession(s)
-                BlinkLogger().log_warning(u"Error rejecting session: %s" % exc)
+                self.removeSession(session)
+                sessionController.log_info(u"Error rejecting session: %s" % exc)
 
     def windowWillClose_(self, notification):
         self.stopSpeechRecognition()

@@ -100,6 +100,10 @@ class SessionControllersManager(object):
         self.pause_music = True
         self.redial_uri = None
 
+    @property
+    def alertPanel(self):
+        return NSApp.delegate().contactsWindowController.alertPanel
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -255,11 +259,8 @@ class SessionControllersManager(object):
                 self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
             else:
                 sessionController = self.addControllerWithSession_(session)
-
-                if not NSApp.delegate().contactsWindowController.alertPanel:
-                    NSApp.delegate().contactsWindowController.alertPanel = AlertPanel.alloc().init()
-                NSApp.delegate().contactsWindowController.alertPanel.addIncomingSession(session)
-                NSApp.delegate().contactsWindowController.alertPanel.show()
+                self.alertPanel.addIncomingSession(session)
+                self.alertPanel.show()
 
         if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
             self.show_web_alert_page(session)
@@ -358,10 +359,24 @@ class SessionControllersManager(object):
             except Exception, exc:
                 BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
 
-    def startIncomingSession(self, session, streams, answeringMachine=False):
+    def sessionControllerForSession(self, session):
         try:
-            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+            controller = (controller for controller in self.sessionControllers if controller.session == session).next()
         except StopIteration:
+            return None
+        else:
+            return controller
+
+    def startIncomingSession(self, session, streams, answeringMachine=False):
+        session_controller = self.sessionControllerForSession(session)
+        if session.state in ('terminating', 'terminated'):
+            if session_controller is not None:
+                session_controller.log_info('Session was already terminated')
+            else:
+                BlinkLogger().log_info('Session was already terminated')
+            return
+
+        if session_controller is None:
             session_controller = self.addControllerWithSession_(session)
         session_controller.setAnsweringMachineMode_(answeringMachine)
         session_controller.handleIncomingStreams(streams, False)
@@ -1171,7 +1186,7 @@ class SessionController(NSObject):
                     add_streams.append(streamController.stream)
 
             else:
-                self.log_info("Stream already exists: %s"%self.streamHandlers)
+                self.log_info("%s controller already exists: %s"% (stype, self.streamHandlers))
                 if stype == 'chat':
                     streamController = self.streamHandlerOfType('chat')
                     handlerClass = StreamHandlerForType[stype]
@@ -1498,7 +1513,7 @@ class SessionController(NSObject):
             status = u"Session Failed"
             self.failureReason = "failed"
 
-        self.log_info("Session cancelled" if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
+        self.log_info("Session cancelled by %s"%data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
         log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
@@ -1624,10 +1639,8 @@ class SessionController(NSObject):
                 self.log_info(u"IllegalStateError: %s" % e)
                 return
             else:
-                if not NSApp.delegate().contactsWindowController.alertPanel:
-                    NSApp.delegate().contactsWindowController.alertPanel = AlertPanel.alloc().init()
-                NSApp.delegate().contactsWindowController.alertPanel.addIncomingStreamProposal(session, streams)
-                NSApp.delegate().contactsWindowController.alertPanel.show()
+                self.alertPanel.addIncomingStreamProposal(session, streams)
+                self.alertPanel.show()
 
             # needed to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self)
