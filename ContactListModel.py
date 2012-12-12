@@ -603,7 +603,8 @@ class BlinkPresenceContact(BlinkContact):
                                             'busy':          False,
                                             'offline':       False
                                           },
-                                'devices': {}
+                                'devices': {},
+                                'urls': []
         }
 
     def presenceNoteTimer_(self, timer):
@@ -674,6 +675,7 @@ class BlinkPresenceContact(BlinkContact):
 
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
         devices = {}
+        urls = []
         if pidfs:
             for pidf in pidfs:
                 # make a list of latest services
@@ -740,6 +742,8 @@ class BlinkPresenceContact(BlinkContact):
                 has_notes += len(_presence_notes)
 
                 for service in pidf.services:
+                    if service.homepage is not None and service.homepage.value:
+                        urls.append(service.homepage.value)
                     aor = str(urllib.unquote(pidf.entity))
                     if not aor.startswith(('sip:', 'sips:')):
                         aor = 'sip:'+aor
@@ -885,6 +889,7 @@ class BlinkPresenceContact(BlinkContact):
                                 NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
 
             self.presence_state['devices'] = devices
+            self.presence_state['urls'] = urls
 
             if self.log_presence_transitions:
                 self.old_devices = self.presence_state['devices'].values()

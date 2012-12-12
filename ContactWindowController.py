@@ -3572,6 +3572,10 @@ class ContactWindowController(NSWindowController):
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
                 urls = list(uri.uri for uri in item.uris if uri.type is not None and uri.type.lower() == 'url')
+                if isinstance(item, BlinkPresenceContact):
+                    for url in item.presence_state['urls']:
+                        if url not in urls:
+                            urls.append(url)
                 if urls:
                     urls_submenu = NSMenu.alloc().init()
                     urls_submenu.setAutoenablesItems_(False)                
