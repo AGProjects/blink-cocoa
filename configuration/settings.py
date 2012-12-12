@@ -106,6 +106,7 @@ class PresenceStateSettings(SettingsGroup):
     note = Setting(type=unicode, default=None, nillable=True)
     offline_note = Setting(type=unicode, default=None, nillable=True)
     icon = Setting(type=UserIcon, default=None, nillable=True)
+    timestamp = Setting(type=str, default=None, nillable=True)
 
 
 class SIPSimpleSettingsExtension(SettingsObjectExtension):

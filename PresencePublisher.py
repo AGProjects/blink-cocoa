@@ -115,6 +115,7 @@ class PresencePublisher(object):
     location = None
     xcap_caps_discovered = {}
     last_service_timestamp = {}
+    timestamp = None
 
     # Cleanup old base64 encoded icons
     _cleanedup_accounts = set()
@@ -132,10 +133,11 @@ class PresencePublisher(object):
         nc.add_observer(self, name="XCAPManagerDidReloadData")
         nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
 
-        self.refreshTimestamp()
-
     def refreshTimestamp(self):
+        settings = SIPSimpleSettings()
         self.timestamp = datetime.now()
+        settings.presence_state.timestamp = self.timestamp
+        settings.save()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -145,6 +147,11 @@ class PresencePublisher(object):
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
+        if settings.presence_state.timestamp is None:
+            self.refreshTimestamp()
+        else:
+            self.timestamp = settings.presence_state.timestamp
+
         self.idle_threshold = settings.gui.idle_threshold
         self.publish()
 
