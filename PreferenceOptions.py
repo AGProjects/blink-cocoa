@@ -1581,6 +1581,7 @@ SettingDescription = {
                       'contacts.enable_blocked_group': 'Show Blocked Contacts',
                       'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
+                      'gui.sync_with_icloud': 'Sync With iCloud',
                       'ldap.hostname': 'Server Address',
                       'ldap.dn': 'Search Base',
                       'logs.trace_msrp': 'Trace MSRP Media',
