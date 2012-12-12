@@ -136,7 +136,7 @@ class PresencePublisher(object):
     def refreshTimestamp(self):
         settings = SIPSimpleSettings()
         self.timestamp = datetime.now()
-        settings.presence_state.timestamp = self.timestamp
+        settings.presence_state.timestamp = datetime.strftime(self.timestamp, '%Y-%m-%d %H:%M:%S.%f')
         settings.save()
 
     @allocate_autorelease_pool
@@ -150,7 +150,7 @@ class PresencePublisher(object):
         if settings.presence_state.timestamp is None:
             self.refreshTimestamp()
         else:
-            self.timestamp = settings.presence_state.timestamp
+            self.timestamp = datetime.strptime(settings.presence_state.timestamp, '%Y-%m-%d %H:%M:%S.%f')
 
         self.idle_threshold = settings.gui.idle_threshold
         self.publish()
