@@ -780,7 +780,7 @@ class AlertPanel(NSObject, object):
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
         sessionController = self.sessionControllersManager.sessionControllerForSession(session)
-        if sessionController is not None:
+        if sessionController is None:
             session.reject_proposal()
             session.log_info("Cannot find session controller for session: %s" % session)
         else:
