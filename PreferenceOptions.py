@@ -1687,6 +1687,7 @@ UnitOptions = {
                'publish_interval': 'seconds',
                'register_interval': 'seconds',
                'subscribe_interval': 'seconds',
+               'idle_threshold': 'seconds',
                'udp_port': 'set port to 0 for automatic allocation'
                }
 
@@ -1696,7 +1697,7 @@ ToolTips = {
              'auth.username': 'Enter authentication username if different than the SIP Address username',
              'chat.replication_password': 'Enter a password to encrypt the content of your messages on the replication server',
              'gui.account_label': 'Label displayed in account popup up menu instead of the sip address',
-             'idle_threshold': 'Interval After Which My Availability Is Set To Away',
+             'gui.idle_threshold': 'Interval After Which My Availability Is Set To Away',
              'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
              'nat_traversal.msrp_relay': 'If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain',
              'nat_traversal.use_ice': 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays',
