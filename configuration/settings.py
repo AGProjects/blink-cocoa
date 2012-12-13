@@ -10,6 +10,7 @@ __all__ = ['SIPSimpleSettingsExtension']
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, DesktopSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
+from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
 
@@ -106,7 +107,7 @@ class PresenceStateSettings(SettingsGroup):
     note = Setting(type=unicode, default=None, nillable=True)
     offline_note = Setting(type=unicode, default=None, nillable=True)
     icon = Setting(type=UserIcon, default=None, nillable=True)
-    timestamp = Setting(type=str, default=None, nillable=True)
+    timestamp = Setting(type=ISOTimestamp, default=None, nillable=True)
 
 
 class SIPSimpleSettingsExtension(SettingsObjectExtension):

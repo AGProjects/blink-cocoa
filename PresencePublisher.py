@@ -115,7 +115,6 @@ class PresencePublisher(object):
     location = None
     xcap_caps_discovered = {}
     last_service_timestamp = {}
-    timestamp = None
 
     # Cleanup old base64 encoded icons
     _cleanedup_accounts = set()
@@ -133,12 +132,6 @@ class PresencePublisher(object):
         nc.add_observer(self, name="XCAPManagerDidReloadData")
         nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
 
-    def refreshTimestamp(self):
-        settings = SIPSimpleSettings()
-        self.timestamp = datetime.now()
-        settings.presence_state.timestamp = datetime.strftime(self.timestamp, '%Y-%m-%d %H:%M:%S.%f')
-        settings.save()
-
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -148,9 +141,8 @@ class PresencePublisher(object):
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         if settings.presence_state.timestamp is None:
-            self.refreshTimestamp()
-        else:
-            self.timestamp = datetime.strptime(settings.presence_state.timestamp, '%Y-%m-%d %H:%M:%S.%f')
+            settings.presence_state.timestamp = ISOTimestamp.now()
+            settings.save()
 
         self.idle_threshold = settings.gui.idle_threshold
         self.publish()
@@ -358,7 +350,7 @@ class PresencePublisher(object):
 
         pidf_doc = pidf.PIDF(str(account.uri))
         person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
-        person.timestamp = pidf.PersonTimestamp(self.timestamp)
+        person.timestamp = pidf.PersonTimestamp(settings.presence_state.timestamp)
         if not account.presence.disable_timezone and not offline:
             person.time_offset = rpid.TimeOffset()
         pidf_doc.add(person)
@@ -369,7 +361,7 @@ class PresencePublisher(object):
         person.activities = rpid.Activities()
         person.activities.add(unicode(status.extended))
         service = pidf.Service("SID-%s" % instance_id, status=status)
-        service.timestamp = pidf.ServiceTimestamp(self.timestamp)
+        service.timestamp = pidf.ServiceTimestamp(settings.presence_state.timestamp)
 
         if offline:
             pidf_doc.add(service)
@@ -415,7 +407,7 @@ class PresencePublisher(object):
         pidf_doc.add(service)
 
         device = pidf.Device("DID-%s" % instance_id, device_id=pidf.DeviceID(instance_id))
-        device.timestamp = pidf.DeviceTimestamp(self.timestamp)
+        device.timestamp = pidf.DeviceTimestamp(settings.presence_state.timestamp)
         device.notes.add(u'%s at %s' % (settings.user_agent, self.hostname))
         pidf_doc.add(device)
         self.last_service_timestamp[account.id] = service.timestamp

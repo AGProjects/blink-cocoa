@@ -26,6 +26,7 @@ from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
+from sipsimple.util import ISOTimestamp
 from sipsimple.threading import call_in_thread, run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
@@ -2136,8 +2137,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def setPresenceActivityFromHistory_(self, sender):
-        self.presencePublisher.refreshTimestamp()
         settings = SIPSimpleSettings()
+        settings.presence_state.timestamp = ISOTimestamp.now()
+
         item = sender.representedObject()
         history_object = item
 
@@ -2211,11 +2213,12 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
-        self.presencePublisher.refreshTimestamp()
-        presence_note = unicode(self.presenceNoteText.stringValue())
         settings = SIPSimpleSettings()
+        presence_note = unicode(self.presenceNoteText.stringValue())
+
         if settings.presence_state.note != presence_note:
             settings.presence_state.note = presence_note
+            settings.presence_state.timestamp = ISOTimestamp.now()
             settings.save()
 
             if presence_note:
@@ -2231,10 +2234,11 @@ class ContactWindowController(NSWindowController):
                 history_object['note'] = presence_note
                 self.savePresenceActivityToHistory(history_object)
 
+
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
-        self.presencePublisher.refreshTimestamp()
         settings = SIPSimpleSettings()
+        settings.presence_state.timestamp = ISOTimestamp.now()
 
         # update system status bar
         status = sender.title()
@@ -2258,17 +2262,13 @@ class ContactWindowController(NSWindowController):
             # if is the same status, delete existing note
             presence_note = ''
 
-        change = False
         if settings.presence_state.status != status:
             settings.presence_state.status = status
-            change = True
         if settings.presence_state.note != presence_note:
             self.presenceNoteText.setStringValue_(presence_note or '')
             settings.presence_state.note = presence_note
-            change = True
 
-        if change:
-            settings.save()
+        settings.save()
 
         if presence_note:
             history_object = item.representedObject()
