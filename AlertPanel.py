@@ -758,7 +758,7 @@ class AlertPanel(NSObject, object):
     def acceptProposedStreams(self, session):
         sessionController = self.sessionControllersManager.sessionControllerForSession(session)
         if sessionController is not None:
-            session_controller.acceptIncomingProposal(session.proposed_streams)
+            sessionController.acceptIncomingProposal(session.proposed_streams)
         else:
             BlinkLogger().log_info("Cannot find session controller for session: %s" % session)
             session.reject_proposal()
@@ -785,7 +785,7 @@ class AlertPanel(NSObject, object):
             session.log_info("Cannot find session controller for session: %s" % session)
         else:
             if self.proposals.has_key(session):
-                session_controller.acceptIncomingProposal(streams)
+                sessionController.acceptIncomingProposal(streams)
             else:
                 self.sessionControllersManager.startIncomingSession(session, streams)
         self.removeSession(session)
