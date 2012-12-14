@@ -2703,14 +2703,11 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if group == selected_group else NSOffState)
 
     def updateHistoryMenu(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            item = self.historyMenu.itemWithTag_(1)
-            item.setHidden_(True)
-        else:
-            if self.historyMenu.numberOfItems() < 3:
+        if self.historyMenu.numberOfItems() < 3:
+            if NSApp.delegate().applicationName != 'Blink Lite':
                 self.historyMenu.addItem_(self.recordingsSubMenu)
-                self.historyMenu.addItem_(NSMenuItem.separatorItem())
-            self.get_session_history_entries()
+            self.historyMenu.addItem_(NSMenuItem.separatorItem())
+        self.get_session_history_entries(2 if NSApp.delegate().applicationName == 'Blink Lite' else 10)
 
 
     def getAccountWitDialPlan(self, uri):
@@ -2767,8 +2764,6 @@ class ContactWindowController(NSWindowController):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            return
 
         def format_date(dt):
             if not dt:
@@ -2915,11 +2910,9 @@ class ContactWindowController(NSWindowController):
     def renderHistoryEntriesInHistoryMenu(self, entries):
         menu = self.historyMenu
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            return
-
-        while menu.numberOfItems() > 4:
-            menu.removeItemAtIndex_(4)
+        i = 3 if NSApp.delegate().applicationName == 'Blink Lite' else 4
+        while menu.numberOfItems() > i:
+            menu.removeItemAtIndex_(i)
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
         lastItem.setEnabled_(False)
