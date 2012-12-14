@@ -2474,9 +2474,9 @@ class ContactWindowController(NSWindowController):
 
     def showHelp(self, append_url=''):
         if NSApp.delegate().applicationName == 'Blink Lite':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-lite.phtml"+append_url))
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://help-lite.icanblink.com"+append_url))
         else:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/help-pro.phtml"+append_url))
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://help-pro.icanblink.com"+append_url))
 
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
