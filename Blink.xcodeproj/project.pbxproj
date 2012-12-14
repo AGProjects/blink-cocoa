@@ -539,6 +539,9 @@
 		1F9406C014307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C114307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C214307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
+		1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
+		1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
+		1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
 		1FA47A3013B246FF0081F90B /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
 		1FA47A3113B246FF0081F90B /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
 		1FA47A3213B246FF0081F90B /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
@@ -1299,6 +1302,7 @@
 		1F9268F414868A82006F2FD8 /* EMKeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EMKeychainItem.h; path = keychain/EMKeychainItem.h; sourceTree = "<group>"; };
 		1F9268F514868A82006F2FD8 /* EMKeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EMKeychainItem.m; path = keychain/EMKeychainItem.m; sourceTree = "<group>"; };
 		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
+		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin-setup.py"; sourceTree = "<group>"; };
 		1FA4907C1549631A0011EE27 /* AddressBookEmail-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin.py"; sourceTree = "<group>"; };
@@ -1863,6 +1867,7 @@
 			isa = PBXGroup;
 			children = (
 				1FCE2BDE166BABBC00090A86 /* time.png */,
+				1F9BE2E1167B7AC8006DFF3F /* lupa.png */,
 				1FE50E59164D1B6200840B18 /* presence */,
 				1FE59BB8161621BB00CD7B21 /* location.png */,
 				1FD7AB8915D2F18B00ECBAF5 /* blocked.png */,
@@ -2571,6 +2576,7 @@
 				1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */,
 				1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE0166BABBC00090A86 /* time.png in Resources */,
+				1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2807,6 +2813,7 @@
 				1FAA83A016566D8C00C4C212 /* BlockedContact.py in Resources */,
 				1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE1166BABBC00090A86 /* time.png in Resources */,
+				1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3041,6 +3048,7 @@
 				1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */,
 				1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BDF166BABBC00090A86 /* time.png in Resources */,
+				1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

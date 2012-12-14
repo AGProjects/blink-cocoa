@@ -1524,7 +1524,9 @@ class ContactWindowController(NSWindowController):
                                 input_text = '%s%s' % (text, active_account.id.domain)
                             elif "@" not in text:
                                 input_text = '%s@%s' % (text, active_account.id.domain)
-                        input_contact = SearchResultContact(input_text, name=unicode(input_text))
+                        search_icon = NSImage.imageNamed_("lupa")
+                        search_icon.setSize_(NSMakeSize(32, 32))
+                        input_contact = SearchResultContact(input_text, name=unicode(input_text), icon=search_icon)
                         exists = text in (contact.uri for contact in self.local_found_contacts)
 
                         if not exists:
