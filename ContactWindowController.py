@@ -2129,11 +2129,7 @@ class ContactWindowController(NSWindowController):
         self.setLastPresenceActivity()
         NSApp.activateIgnoringOtherApps_(True)
         controller = OfflineNoteController()
-        note = controller.runModal()
-        if note is not None:
-            settings = SIPSimpleSettings()
-            settings.presence_state.offline_note = note
-            settings.save()
+        controller.runModal()
 
     @objc.IBAction
     def setPresenceActivityFromHistory_(self, sender):

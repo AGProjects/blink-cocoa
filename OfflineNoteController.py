@@ -6,6 +6,7 @@ from Foundation import *
 
 import cPickle
 from resources import ApplicationData
+from sipsimple.configuration.settings import SIPSimpleSettings
 
 
 class OfflineNoteController(NSObject):
@@ -18,13 +19,9 @@ class OfflineNoteController(NSObject):
 
     def init(self):
         NSBundle.loadNibNamed_owner_("PresenceOfflineWindow", self)
-        try:
-            with open(ApplicationData.get('presence_offline_note.pickle'), 'r') as f:
-                note = cPickle.load(f)
-                self.nameText.setStringValue_(note)
-        except (IOError, cPickle.UnpicklingError):
-            pass
-
+        settings = SIPSimpleSettings()
+        note = settings.presence_state.offline_note
+        self.nameText.setStringValue_(note or '')
         return self
 
     def runModal(self):
@@ -33,12 +30,9 @@ class OfflineNoteController(NSObject):
         self.window.orderOut_(self)
         if rc == NSOKButton:
             note = unicode(self.nameText.stringValue())
-            storage_path = ApplicationData.get('presence_offline_note.pickle')
-            try:
-                cPickle.dump(note, open(storage_path, "w+"))
-            except (cPickle.PickleError, IOError):
-                pass
-
+            settings = SIPSimpleSettings()
+            settings.presence_state.offline_note = note
+            settings.save()
             return note
         return None
 
