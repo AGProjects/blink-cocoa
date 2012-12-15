@@ -742,7 +742,7 @@ class BlinkPresenceContact(BlinkContact):
                 _presence_closed_notes = sorted([unicode(note) for service in pidf.services if service in most_recent_services and service.status.basic == 'closed' for note in service.notes if note])
 
                 _presence_notes =  _presence_closed_notes if device_wining_status == 'offline' else _presence_open_notes
-            
+
                 has_notes += len(_presence_notes)
 
                 for service in pidf.services:

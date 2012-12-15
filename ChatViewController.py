@@ -431,6 +431,6 @@ class ChatViewController(NSObject):
 
     def dealloc(self):
         if self.typingTimer:
-            self.typingTimer.invalidate()        
+            self.typingTimer.invalidate()
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         super(ChatViewController, self).dealloc()

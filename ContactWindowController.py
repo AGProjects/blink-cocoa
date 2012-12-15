@@ -531,7 +531,7 @@ class ContactWindowController(NSWindowController):
     def openURL_(self, sender):
         url = sender.representedObject()
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(url)))
-    
+
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         style.setLineBreakMode_(NSLineBreakByTruncatingTail)
@@ -3569,7 +3569,7 @@ class ContactWindowController(NSWindowController):
                             urls.append(url)
                 if urls:
                     urls_submenu = NSMenu.alloc().init()
-                    urls_submenu.setAutoenablesItems_(False)                
+                    urls_submenu.setAutoenablesItems_(False)
                     for url in urls:
                         url_item = urls_submenu.addItemWithTitle_action_keyEquivalent_(url, "openURL:", "")
                         url_item.setRepresentedObject_(url)
