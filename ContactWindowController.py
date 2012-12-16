@@ -728,7 +728,7 @@ class ContactWindowController(NSWindowController):
         self.accounts[position].registration_state = 'failed'
         if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
             if notification.data.error.startswith('DNS'):
-                self.accounts[position].failure_reason = 'DNS failure'
+                self.accounts[position].failure_reason = 'DNS Lookup Failed'
             else:
                 self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' else notification.data.error
 
