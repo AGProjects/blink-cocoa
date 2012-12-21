@@ -4,7 +4,7 @@
 <dict>
 	<key>Move</key>
 	<array>
-		<string>${ApplicationSupport}/Blink Lite</string>
+		<string>${ApplicationSupport}/Blink Pro</string>
 	</array>
 </dict>
 </plist>
