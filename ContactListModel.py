@@ -1084,7 +1084,7 @@ class BlinkPresenceContact(BlinkContact):
             return self.default_uri.uri
         try:
             uri = next(iter(self.contact.uris))
-        except StopIteration:
+        except (StopIteration, AttributeError):
             return u''
         else:
             return uri.uri
