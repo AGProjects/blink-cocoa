@@ -65,6 +65,7 @@ class DebugWindow(NSObject):
     xcapInfoLabel = objc.IBOutlet()
     notificationsInfoLabel = objc.IBOutlet()
     pjsipInfoLabel = objc.IBOutlet()
+    filterSipApplication = objc.IBOutlet()
 
     sipInCount = 0
     sipOutCount = 0
@@ -97,6 +98,22 @@ class DebugWindow(NSObject):
 
     _siptrace_start_time = None
     _siptrace_packet_count = 0
+
+    filter_sip_application = 'sessions'
+    filter_sip_methods = {
+                          'PUBLISH': ['subscriptions'],
+                          'NOTIFY': ['subscriptions'],
+                          'SUBSCRIBE': ['subscriptions'],
+                          'REGISTER': ['sessions', 'register'],
+                          'INVITE': ['sessions'],
+                          'BYE': ['sessions'],
+                          'CANCEL': ['sessions'],
+                          'ACK': ['sessions'],
+                          'PRACK': ['sessions'],
+                          'REFER': ['sessions'],
+                          'MESSAGE': ['messages'],
+                          'UPDATE': ['sessions']
+                         }
 
     grayText = NSDictionary.dictionaryWithObject_forKey_(NSColor.grayColor(), NSForegroundColorAttributeName)
     boldTextAttribs = NSDictionary.dictionaryWithObject_forKey_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -215,6 +232,19 @@ class DebugWindow(NSObject):
             NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "MSRPTrace")
         elif sender == self.xcapRadio:
             NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "XCAPTrace")
+
+    @objc.IBAction
+    def filterSipApplicationClicked_(self, sender):
+        tag = sender.selectedItem().tag()
+        self.filter_sip_application = None
+        if tag == 1:
+            self.filter_sip_application = 'sessions'
+        elif tag == 2:
+            self.filter_sip_application = 'subscriptions'
+        elif tag == 3:
+            self.filter_sip_application = 'register'
+        elif tag == 4:
+            self.filter_sip_application = 'messages'
 
     @objc.IBAction
     def clearClicked_(self, sender):
@@ -357,10 +387,34 @@ class DebugWindow(NSObject):
 
         data = event_data.data.strip()
         first, rest = data.split("\n", 1)
+
+        applications = None
+        method = None
+        msg_type = None
+        event = None
+        code = None
+
         if data.startswith("SIP/2.0"):
             try:
                 code = first.split()[1]
                 attribs = self.boldRedTextAttribs if code[0] in ["4", "5", "6"] else self.boldTextAttribs
+                for line in data.split("\n"):
+                    line = line.strip()
+                    if line.startswith("Event:"):
+                        try:
+                            event = line.split(" ", 1)[1]
+                        except IndexError:
+                            pass
+                        continue
+                    if line.startswith("CSeq"):
+                        cseq, _number, _method = line.split(" ", 2)
+                        try:
+                            applications = self.filter_sip_methods[_method.strip()]
+                            method = _method
+                            msg_type = 'response'
+                        except KeyError:
+                            pass
+                        continue
 
                 if self.sipTraceType == "full":
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
@@ -371,16 +425,39 @@ class DebugWindow(NSObject):
             except:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(data+"\n"))
         else:
+            _method = first.split()[0]
+            try:
+                applications = self.filter_sip_methods[_method]
+                method = _method
+                msg_type = 'offer'
+            except KeyError:
+                pass
+
+            for line in data.split("\n"):
+                line = line.strip()
+                if line.startswith("Event:"):
+                    try:
+                        event = line.split(" ", 1)[1]
+                    except IndexError:
+                        pass
+                    continue
+
             if self.sipTraceType == "full":
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
             else:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
 
+        self.sipInfoLabel.setStringValue_("%d SIP messages sent, %d SIP messages received, %sytes" % (self.sipOutCount, self.sipInCount, format_size(self.sipBytes)))
+
+
+        if self.filter_sip_application is not None and applications is not None:
+            if self.filter_sip_application not in applications:
+                return
+
         self.sipTextView.textStorage().appendAttributedString_(text)
         self.sipTextView.textStorage().appendAttributedString_(self.newline)
         self.sipTextView.scrollRangeToVisible_(NSMakeRange(self.sipTextView.textStorage().length()-1, 1))
-        self.sipInfoLabel.setStringValue_("%d SIP messages sent, %d SIP messages received, %sytes" % (self.sipOutCount, self.sipInCount, format_size(self.sipBytes)))
 
     def renderDNS(self, text):
         if self.sipTraceType is not None:
