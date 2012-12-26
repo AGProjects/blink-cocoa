@@ -1490,6 +1490,7 @@ PreferenceOptionTypes = {
 "Path" : PathOption,
 "ContentTypeList" : StringTupleOption,
 "UserDataPath" : PathOption,
+"ISOTimestamp": HiddenOption,
 "ImageDepth" : ImageDepthOption,
 "DomainList" : StringTupleOption,
 "MSRPRelayAddress" : MSRPRelayAddresOption,
