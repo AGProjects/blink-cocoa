@@ -421,6 +421,10 @@ class BlinkContact(NSObject):
         if match((self.username, self.domain), candidate, exact_match):
             return True
 
+        if hasattr(self, 'organization'):
+            if self.organization is not None and uri.lower() in self.organization.lower():
+                return True
+
         return any(match(self.split_uri(item.uri), candidate, exact_match) for item in self.uris if item.uri)
 
 
@@ -1214,13 +1218,12 @@ class SystemAddressBookBlinkContact(BlinkContact):
     def __init__(self, ab_contact):
         self.id = ab_contact.uniqueId()
 
-        name = self.__class__.format_person_name(ab_contact)
-        company = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
+        self.name = self.__class__.format_person_name(ab_contact)
+        self.organization = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
 
-        if not name and company:
-            name = unicode(company)
+        if not self.name and self.organization:
+            self.name = unicode(self.organization)
 
-        self.name = name
         addresses = []
 
         labelNames = {
