@@ -2480,6 +2480,8 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
 
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationNamePrint)
+        self.blinkMenu.itemWithTag_(10).setTitle_('Hide %s' % NSApp.delegate().applicationNamePrint)
+        self.blinkMenu.itemWithTag_(11).setTitle_('Quit %s' % NSApp.delegate().applicationNamePrint)
         find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
         sylkserver_exists = find_sylkserver[2] is not None
 
