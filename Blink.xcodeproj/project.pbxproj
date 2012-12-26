@@ -539,6 +539,306 @@
 		1F9406C014307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C114307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C214307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
+		1F94DD6F168B336300168FBA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		1F94DD70168B336300168FBA /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
+		1F94DD71168B336300168FBA /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
+		1F94DD72168B336300168FBA /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
+		1F94DD73168B336300168FBA /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
+		1F94DD74168B336300168FBA /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
+		1F94DD75168B336300168FBA /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
+		1F94DD76168B336300168FBA /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
+		1F94DD77168B336300168FBA /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
+		1F94DD78168B336300168FBA /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
+		1F94DD79168B336300168FBA /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
+		1F94DD7A168B336300168FBA /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
+		1F94DD7B168B336300168FBA /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
+		1F94DD7C168B336300168FBA /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
+		1F94DD7D168B336300168FBA /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
+		1F94DD7E168B336300168FBA /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
+		1F94DD7F168B336300168FBA /* EnrollmentController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF387D0FE096A00040117A /* EnrollmentController.py */; };
+		1F94DD80168B336300168FBA /* Main.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF39C30FE1B0CF0040117A /* Main.py */; };
+		1F94DD81168B336300168FBA /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
+		1F94DD82168B336300168FBA /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11AA570FF323A1007FC176 /* pause.png */; };
+		1F94DD83168B336300168FBA /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
+		1F94DD84168B336300168FBA /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
+		1F94DD85168B336300168FBA /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
+		1F94DD86168B336300168FBA /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
+		1F94DD87168B336300168FBA /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
+		1F94DD88168B336300168FBA /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
+		1F94DD89168B336300168FBA /* message_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67A0FFDAE1400701821 /* message_received.wav */; };
+		1F94DD8A168B336300168FBA /* message_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67B0FFDAE1400701821 /* message_sent.wav */; };
+		1F94DD8B168B336300168FBA /* ring_inbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67C0FFDAE1400701821 /* ring_inbound.wav */; };
+		1F94DD8C168B336300168FBA /* ring_outbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67D0FFDAE1400701821 /* ring_outbound.wav */; };
+		1F94DD8D168B336300168FBA /* VerticalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE9EA100447D700701821 /* VerticalBoxView.py */; };
+		1F94DD8E168B336300168FBA /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
+		1F94DD8F168B336300168FBA /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
+		1F94DD90168B336300168FBA /* AudioSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B103E361015721E00002158 /* AudioSession.py */; };
+		1F94DD91168B336300168FBA /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
+		1F94DD92168B336300168FBA /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
+		1F94DD93168B336300168FBA /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
+		1F94DD94168B336300168FBA /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
+		1F94DD95168B336300168FBA /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
+		1F94DD96168B336300168FBA /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
+		1F94DD97168B336300168FBA /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
+		1F94DD98168B336300168FBA /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
+		1F94DD99168B336300168FBA /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
+		1F94DD9A168B336300168FBA /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
+		1F94DD9B168B336300168FBA /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
+		1F94DD9C168B336300168FBA /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
+		1F94DD9D168B336300168FBA /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
+		1F94DD9E168B336300168FBA /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
+		1F94DD9F168B336300168FBA /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
+		1F94DDA0168B336300168FBA /* record.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A441040EC0F00BEE04E /* record.png */; };
+		1F94DDA1168B336300168FBA /* recording1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A541040FF0C00BEE04E /* recording1.png */; };
+		1F94DDA2168B336300168FBA /* recording2.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A551040FF0C00BEE04E /* recording2.png */; };
+		1F94DDA3168B336300168FBA /* recording3.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A561040FF0C00BEE04E /* recording3.png */; };
+		1F94DDA4168B336300168FBA /* mic.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F81047809C00F40437 /* mic.png */; };
+		1F94DDA5168B336300168FBA /* speaker.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F91047809C00F40437 /* speaker.png */; };
+		1F94DDA6168B336300168FBA /* bell.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40FF104783D800F40437 /* bell.png */; };
+		1F94DDA7168B336300168FBA /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
+		1F94DDA8168B336300168FBA /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
+		1F94DDA9168B336300168FBA /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
+		1F94DDAA168B336300168FBA /* FileTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */; };
+		1F94DDAB168B336300168FBA /* FileTransferItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */; };
+		1F94DDAC168B336300168FBA /* FileTransferItemView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */; };
+		1F94DDAD168B336300168FBA /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
+		1F94DDAE168B336300168FBA /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
+		1F94DDAF168B336300168FBA /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
+		1F94DDB0168B336300168FBA /* AnsweringMachine.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08A781063B3570069AB9A /* AnsweringMachine.py */; };
+		1F94DDB1168B336300168FBA /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
+		1F94DDB2168B336300168FBA /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BE7632910732DC000A1DF24 /* About.xib */; };
+		1F94DDB3168B336300168FBA /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
+		1F94DDB4168B336300168FBA /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
+		1F94DDB5168B336300168FBA /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
+		1F94DDB6168B336300168FBA /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
+		1F94DDB7168B336300168FBA /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
+		1F94DDB8168B336300168FBA /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
+		1F94DDB9168B336300168FBA /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
+		1F94DDBA168B336300168FBA /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
+		1F94DDBB168B336300168FBA /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
+		1F94DDBC168B336300168FBA /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
+		1F94DDBD168B336300168FBA /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
+		1F94DDBE168B336300168FBA /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
+		1F94DDBF168B336300168FBA /* dtmf_2_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1071095BFF500284E18 /* dtmf_2_tone.wav */; };
+		1F94DDC0168B336300168FBA /* dtmf_3_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1081095BFF500284E18 /* dtmf_3_tone.wav */; };
+		1F94DDC1168B336300168FBA /* dtmf_4_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1091095BFF500284E18 /* dtmf_4_tone.wav */; };
+		1F94DDC2168B336300168FBA /* dtmf_5_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10A1095BFF500284E18 /* dtmf_5_tone.wav */; };
+		1F94DDC3168B336300168FBA /* dtmf_6_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10B1095BFF500284E18 /* dtmf_6_tone.wav */; };
+		1F94DDC4168B336300168FBA /* dtmf_7_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10C1095BFF500284E18 /* dtmf_7_tone.wav */; };
+		1F94DDC5168B336300168FBA /* dtmf_8_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10D1095BFF500284E18 /* dtmf_8_tone.wav */; };
+		1F94DDC6168B336300168FBA /* dtmf_9_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10E1095BFF500284E18 /* dtmf_9_tone.wav */; };
+		1F94DDC7168B336300168FBA /* dtmf_A_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10F1095BFF500284E18 /* dtmf_A_tone.wav */; };
+		1F94DDC8168B336300168FBA /* dtmf_B_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1101095BFF500284E18 /* dtmf_B_tone.wav */; };
+		1F94DDC9168B336300168FBA /* dtmf_C_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1111095BFF500284E18 /* dtmf_C_tone.wav */; };
+		1F94DDCA168B336300168FBA /* dtmf_D_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1121095BFF500284E18 /* dtmf_D_tone.wav */; };
+		1F94DDCB168B336300168FBA /* dtmf_pound_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1131095BFF500284E18 /* dtmf_pound_tone.wav */; };
+		1F94DDCC168B336300168FBA /* dtmf_star_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1141095BFF500284E18 /* dtmf_star_tone.wav */; };
+		1F94DDCD168B336300168FBA /* hangup_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1151095BFF500284E18 /* hangup_tone.wav */; };
+		1F94DDCE168B336300168FBA /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
+		1F94DDCF168B336300168FBA /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
+		1F94DDD0168B336300168FBA /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
+		1F94DDD1168B336300168FBA /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
+		1F94DDD2168B336300168FBA /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
+		1F94DDD3168B336300168FBA /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
+		1F94DDD4168B336300168FBA /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
+		1F94DDD5168B336300168FBA /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
+		1F94DDD6168B336300168FBA /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
+		1F94DDD7168B336300168FBA /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
+		1F94DDD8168B336300168FBA /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
+		1F94DDD9168B336300168FBA /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
+		1F94DDDA168B336300168FBA /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
+		1F94DDDB168B336300168FBA /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
+		1F94DDDC168B336300168FBA /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
+		1F94DDDD168B336300168FBA /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
+		1F94DDDE168B336300168FBA /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
+		1F94DDDF168B336300168FBA /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
+		1F94DDE0168B336300168FBA /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
+		1F94DDE1168B336300168FBA /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
+		1F94DDE2168B336300168FBA /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
+		1F94DDE3168B336300168FBA /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
+		1F94DDE4168B336300168FBA /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
+		1F94DDE5168B336300168FBA /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
+		1F94DDE6168B336300168FBA /* 3333@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */; };
+		1F94DDE7168B336300168FBA /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
+		1F94DDE8168B336300168FBA /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
+		1F94DDE9168B336300168FBA /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
+		1F94DDEA168B336300168FBA /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
+		1F94DDEB168B336300168FBA /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
+		1F94DDEC168B336300168FBA /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
+		1F94DDED168B336300168FBA /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
+		1F94DDEE168B336300168FBA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
+		1F94DDEF168B336300168FBA /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
+		1F94DDF0168B336300168FBA /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
+		1F94DDF1168B336300168FBA /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
+		1F94DDF2168B336300168FBA /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
+		1F94DDF3168B336300168FBA /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
+		1F94DDF4168B336300168FBA /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
+		1F94DDF5168B336300168FBA /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
+		1F94DDF6168B336300168FBA /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1F94DDF7168B336300168FBA /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
+		1F94DDF8168B336300168FBA /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
+		1F94DDF9168B336300168FBA /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
+		1F94DDFA168B336300168FBA /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
+		1F94DDFB168B336300168FBA /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
+		1F94DDFC168B336300168FBA /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
+		1F94DDFD168B336300168FBA /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
+		1F94DDFE168B336300168FBA /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
+		1F94DDFF168B336300168FBA /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
+		1F94DE00168B336300168FBA /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
+		1F94DE01168B336300168FBA /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
+		1F94DE02168B336300168FBA /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
+		1F94DE03168B336300168FBA /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
+		1F94DE04168B336300168FBA /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
+		1F94DE05168B336300168FBA /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
+		1F94DE06168B336300168FBA /* FullScreenVideoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */; };
+		1F94DE07168B336300168FBA /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
+		1F94DE08168B336300168FBA /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
+		1F94DE09168B336300168FBA /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
+		1F94DE0A168B336300168FBA /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
+		1F94DE0B168B336300168FBA /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
+		1F94DE0C168B336300168FBA /* VideoMirrowWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */; };
+		1F94DE0D168B336300168FBA /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
+		1F94DE0E168B336300168FBA /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
+		1F94DE0F168B336300168FBA /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
+		1F94DE10168B336300168FBA /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
+		1F94DE11168B336300168FBA /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
+		1F94DE12168B336300168FBA /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
+		1F94DE13168B336300168FBA /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
+		1F94DE14168B336300168FBA /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
+		1F94DE15168B336300168FBA /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
+		1F94DE16168B336300168FBA /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1F94DE17168B336300168FBA /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
+		1F94DE18168B336300168FBA /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */; };
+		1F94DE19168B336300168FBA /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
+		1F94DE1A168B336300168FBA /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
+		1F94DE1B168B336300168FBA /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
+		1F94DE1C168B336300168FBA /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
+		1F94DE1D168B336300168FBA /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
+		1F94DE1E168B336300168FBA /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
+		1F94DE1F168B336300168FBA /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
+		1F94DE20168B336300168FBA /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
+		1F94DE21168B336300168FBA /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
+		1F94DE22168B336300168FBA /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
+		1F94DE23168B336300168FBA /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
+		1F94DE24168B336300168FBA /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
+		1F94DE25168B336300168FBA /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
+		1F94DE26168B336300168FBA /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
+		1F94DE27168B336300168FBA /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
+		1F94DE28168B336300168FBA /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
+		1F94DE29168B336300168FBA /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
+		1F94DE2A168B336300168FBA /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
+		1F94DE2B168B336300168FBA /* BlinkPro.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */; };
+		1F94DE2C168B336300168FBA /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
+		1F94DE2D168B336300168FBA /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
+		1F94DE2E168B336300168FBA /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
+		1F94DE2F168B336300168FBA /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
+		1F94DE30168B336300168FBA /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
+		1F94DE31168B336300168FBA /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
+		1F94DE32168B336300168FBA /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
+		1F94DE33168B336300168FBA /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
+		1F94DE34168B336300168FBA /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
+		1F94DE35168B336300168FBA /* AddressBookEmail-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */; };
+		1F94DE36168B336300168FBA /* AddressBookEmail-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907C1549631A0011EE27 /* AddressBookEmail-plugin.py */; };
+		1F94DE37168B336300168FBA /* AddressBookTel-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907D1549631A0011EE27 /* AddressBookTel-plugin-setup.py */; };
+		1F94DE38168B336300168FBA /* AddressBookTel-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907E1549631A0011EE27 /* AddressBookTel-plugin.py */; };
+		1F94DE39168B336300168FBA /* AddressBookURL-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907F1549631A0011EE27 /* AddressBookURL-plugin-setup.py */; };
+		1F94DE3A168B336300168FBA /* AddressBookURL-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */; };
+		1F94DE3B168B336300168FBA /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
+		1F94DE3C168B336300168FBA /* Nickname.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F54625A158B34D0005628D9 /* Nickname.xib */; };
+		1F94DE3D168B336300168FBA /* NicknameController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F546250158B300A005628D9 /* NicknameController.py */; };
+		1F94DE3E168B336300168FBA /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
+		1F94DE3F168B336300168FBA /* Subject.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AB01591BCE500A0FE51 /* Subject.xib */; };
+		1F94DE40168B336300168FBA /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
+		1F94DE41168B336300168FBA /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
+		1F94DE42168B336300168FBA /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
+		1F94DE43168B336300168FBA /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
+		1F94DE44168B336300168FBA /* PresencePublisher.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F88639815D6F62B00373743 /* PresencePublisher.py */; };
+		1F94DE45168B336300168FBA /* OfflineNoteController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247E015D99AEB00703D24 /* OfflineNoteController.py */; };
+		1F94DE46168B336300168FBA /* PresenceInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */; };
+		1F94DE47168B336300168FBA /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
+		1F94DE48168B336300168FBA /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
+		1F94DE49168B336300168FBA /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
+		1F94DE4A168B336300168FBA /* available.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5A164D1B6200840B18 /* available.tiff */; };
+		1F94DE4B168B336300168FBA /* away.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5B164D1B6200840B18 /* away.tiff */; };
+		1F94DE4C168B336300168FBA /* busy.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5D164D1B6200840B18 /* busy.tiff */; };
+		1F94DE4D168B336300168FBA /* offline.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5E164D1B6200840B18 /* offline.tiff */; };
+		1F94DE4E168B336300168FBA /* blink-status-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */; };
+		1F94DE4F168B336300168FBA /* blink-status-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */; };
+		1F94DE50168B336300168FBA /* blink-status-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F872164D7B3A008F56E8 /* blink-status-green.png */; };
+		1F94DE51168B336300168FBA /* blink-status-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F873164D7B3A008F56E8 /* blink-status-red.png */; };
+		1F94DE52168B336300168FBA /* blink-status-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */; };
+		1F94DE53168B336300168FBA /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
+		1F94DE54168B336300168FBA /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
+		1F94DE55168B336300168FBA /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
+		1F94DE56168B336300168FBA /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
+		1F94DE58168B336300168FBA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		1F94DE59168B336300168FBA /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
+		1F94DE5B168B336300168FBA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		1F94DE5C168B336300168FBA /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
+		1F94DE5D168B336300168FBA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
+		1F94DE5E168B336300168FBA /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
+		1F94DE5F168B336300168FBA /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
+		1F94DE61168B336300168FBA /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
+		1F94DE62168B336300168FBA /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
+		1F94DE63168B336300168FBA /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
+		1F94DE64168B336300168FBA /* beer.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF648105DC53A00F267F9 /* beer.png */; };
+		1F94DE65168B336300168FBA /* camera.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF649105DC53A00F267F9 /* camera.png */; };
+		1F94DE66168B336300168FBA /* cigarette.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64A105DC53A00F267F9 /* cigarette.png */; };
+		1F94DE67168B336300168FBA /* coffee.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64B105DC53A00F267F9 /* coffee.png */; };
+		1F94DE68168B336300168FBA /* monkey.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF714105DDF1200F267F9 /* monkey.png */; };
+		1F94DE69168B336300168FBA /* confused.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64C105DC53A00F267F9 /* confused.png */; };
+		1F94DE6A168B336300168FBA /* console.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64D105DC53A00F267F9 /* console.png */; };
+		1F94DE6B168B336300168FBA /* cool.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64E105DC53A00F267F9 /* cool.png */; };
+		1F94DE6C168B336300168FBA /* cross.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64F105DC53A00F267F9 /* cross.png */; };
+		1F94DE6D168B336300168FBA /* crying.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF650105DC53A00F267F9 /* crying.png */; };
+		1F94DE6E168B336300168FBA /* devil.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF651105DC53A00F267F9 /* devil.png */; };
+		1F94DE6F168B336300168FBA /* dont-know.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF652105DC53A00F267F9 /* dont-know.png */; };
+		1F94DE70168B336300168FBA /* grin.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF653105DC53A00F267F9 /* grin.png */; };
+		1F94DE71168B336300168FBA /* hug-left.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF654105DC53A00F267F9 /* hug-left.png */; };
+		1F94DE72168B336300168FBA /* hug-right.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF655105DC53A00F267F9 /* hug-right.png */; };
+		1F94DE73168B336300168FBA /* kiss.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF656105DC53A00F267F9 /* kiss.png */; };
+		1F94DE74168B336300168FBA /* love.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF657105DC53A00F267F9 /* love.png */; };
+		1F94DE75168B336300168FBA /* meeting.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF658105DC53A00F267F9 /* meeting.png */; };
+		1F94DE76168B336300168FBA /* musical-note.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF659105DC53A00F267F9 /* musical-note.png */; };
+		1F94DE77168B336300168FBA /* nerdy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65A105DC53A00F267F9 /* nerdy.png */; };
+		1F94DE78168B336300168FBA /* neutral.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65B105DC53A00F267F9 /* neutral.png */; };
+		1F94DE79168B336300168FBA /* party.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65C105DC53A00F267F9 /* party.png */; };
+		1F94DE7A168B336300168FBA /* phone.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65D105DC53A00F267F9 /* phone.png */; };
+		1F94DE7B168B336300168FBA /* plate.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65E105DC53A00F267F9 /* plate.png */; };
+		1F94DE7C168B336300168FBA /* question.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65F105DC53A00F267F9 /* question.png */; };
+		1F94DE7D168B336300168FBA /* sad.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF661105DC53A00F267F9 /* sad.png */; };
+		1F94DE7E168B336300168FBA /* shame.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF662105DC53A00F267F9 /* shame.png */; };
+		1F94DE7F168B336300168FBA /* shock.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF663105DC53A00F267F9 /* shock.png */; };
+		1F94DE80168B336300168FBA /* sick.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF664105DC53A00F267F9 /* sick.png */; };
+		1F94DE81168B336300168FBA /* silent.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF665105DC53A00F267F9 /* silent.png */; };
+		1F94DE82168B336300168FBA /* sleepy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF666105DC53A00F267F9 /* sleepy.png */; };
+		1F94DE83168B336300168FBA /* smile-big.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF668105DC53A00F267F9 /* smile-big.png */; };
+		1F94DE84168B336300168FBA /* smile.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF669105DC53A00F267F9 /* smile.png */; };
+		1F94DE85168B336300168FBA /* theme in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66A105DC53A00F267F9 /* theme */; };
+		1F94DE86168B336300168FBA /* thinking.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66B105DC53A00F267F9 /* thinking.png */; };
+		1F94DE87168B336300168FBA /* tongue.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66C105DC53A00F267F9 /* tongue.png */; };
+		1F94DE88168B336300168FBA /* tv.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66D105DC53A00F267F9 /* tv.png */; };
+		1F94DE89168B336300168FBA /* uhm-yeah.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66E105DC53A00F267F9 /* uhm-yeah.png */; };
+		1F94DE8A168B336300168FBA /* wink.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66F105DC53A00F267F9 /* wink.png */; };
+		1F94DE8B168B336300168FBA /* yawn.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF670105DC53A00F267F9 /* yawn.png */; };
+		1F94DE8D168B336300168FBA /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
+		1F94DE8E168B336300168FBA /* account.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550410F643350083D346 /* account.py */; };
+		1F94DE8F168B336300168FBA /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1F94DE90168B336300168FBA /* datatypes.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550510F643350083D346 /* datatypes.py */; };
+		1F94DE91168B336300168FBA /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
+		1F94DE93168B336300168FBA /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
+		1F94DE94168B336300168FBA /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
+		1F94DE95168B336300168FBA /* EMKeychainItem.m in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
+		1F94DE96168B336300168FBA /* EMKeychainItem.h in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F414868A82006F2FD8 /* EMKeychainItem.h */; };
+		1F94DE98168B336300168FBA /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1F94DE9A168B336300168FBA /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
+		1F94DE9B168B336300168FBA /* libgnutls-extra.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
+		1F94DE9C168B336300168FBA /* libgnutls.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722712B554000010A8B2 /* libgnutls.26.dylib */; };
+		1F94DE9D168B336300168FBA /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
+		1F94DE9E168B336300168FBA /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
+		1F94DE9F168B336300168FBA /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
+		1F94DEA7168B74CA00168FBA /* Clearcom.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */; };
+		1F94DEA9168B758D00168FBA /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
 		1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
 		1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
 		1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
@@ -1112,6 +1412,115 @@
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1F94DE60168B336300168FBA /* Copy Smiley Files (default) */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = smileys/default;
+			dstSubfolderSpec = 7;
+			files = (
+				1F94DE61168B336300168FBA /* victory.png in Copy Smiley Files (default) */,
+				1F94DE62168B336300168FBA /* angel.png in Copy Smiley Files (default) */,
+				1F94DE63168B336300168FBA /* angry.png in Copy Smiley Files (default) */,
+				1F94DE64168B336300168FBA /* beer.png in Copy Smiley Files (default) */,
+				1F94DE65168B336300168FBA /* camera.png in Copy Smiley Files (default) */,
+				1F94DE66168B336300168FBA /* cigarette.png in Copy Smiley Files (default) */,
+				1F94DE67168B336300168FBA /* coffee.png in Copy Smiley Files (default) */,
+				1F94DE68168B336300168FBA /* monkey.png in Copy Smiley Files (default) */,
+				1F94DE69168B336300168FBA /* confused.png in Copy Smiley Files (default) */,
+				1F94DE6A168B336300168FBA /* console.png in Copy Smiley Files (default) */,
+				1F94DE6B168B336300168FBA /* cool.png in Copy Smiley Files (default) */,
+				1F94DE6C168B336300168FBA /* cross.png in Copy Smiley Files (default) */,
+				1F94DE6D168B336300168FBA /* crying.png in Copy Smiley Files (default) */,
+				1F94DE6E168B336300168FBA /* devil.png in Copy Smiley Files (default) */,
+				1F94DE6F168B336300168FBA /* dont-know.png in Copy Smiley Files (default) */,
+				1F94DE70168B336300168FBA /* grin.png in Copy Smiley Files (default) */,
+				1F94DE71168B336300168FBA /* hug-left.png in Copy Smiley Files (default) */,
+				1F94DE72168B336300168FBA /* hug-right.png in Copy Smiley Files (default) */,
+				1F94DE73168B336300168FBA /* kiss.png in Copy Smiley Files (default) */,
+				1F94DE74168B336300168FBA /* love.png in Copy Smiley Files (default) */,
+				1F94DE75168B336300168FBA /* meeting.png in Copy Smiley Files (default) */,
+				1F94DE76168B336300168FBA /* musical-note.png in Copy Smiley Files (default) */,
+				1F94DE77168B336300168FBA /* nerdy.png in Copy Smiley Files (default) */,
+				1F94DE78168B336300168FBA /* neutral.png in Copy Smiley Files (default) */,
+				1F94DE79168B336300168FBA /* party.png in Copy Smiley Files (default) */,
+				1F94DE7A168B336300168FBA /* phone.png in Copy Smiley Files (default) */,
+				1F94DE7B168B336300168FBA /* plate.png in Copy Smiley Files (default) */,
+				1F94DE7C168B336300168FBA /* question.png in Copy Smiley Files (default) */,
+				1F94DE7D168B336300168FBA /* sad.png in Copy Smiley Files (default) */,
+				1F94DE7E168B336300168FBA /* shame.png in Copy Smiley Files (default) */,
+				1F94DE7F168B336300168FBA /* shock.png in Copy Smiley Files (default) */,
+				1F94DE80168B336300168FBA /* sick.png in Copy Smiley Files (default) */,
+				1F94DE81168B336300168FBA /* silent.png in Copy Smiley Files (default) */,
+				1F94DE82168B336300168FBA /* sleepy.png in Copy Smiley Files (default) */,
+				1F94DE83168B336300168FBA /* smile-big.png in Copy Smiley Files (default) */,
+				1F94DE84168B336300168FBA /* smile.png in Copy Smiley Files (default) */,
+				1F94DE85168B336300168FBA /* theme in Copy Smiley Files (default) */,
+				1F94DE86168B336300168FBA /* thinking.png in Copy Smiley Files (default) */,
+				1F94DE87168B336300168FBA /* tongue.png in Copy Smiley Files (default) */,
+				1F94DE88168B336300168FBA /* tv.png in Copy Smiley Files (default) */,
+				1F94DE89168B336300168FBA /* uhm-yeah.png in Copy Smiley Files (default) */,
+				1F94DE8A168B336300168FBA /* wink.png in Copy Smiley Files (default) */,
+				1F94DE8B168B336300168FBA /* yawn.png in Copy Smiley Files (default) */,
+			);
+			name = "Copy Smiley Files (default)";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F94DE8C168B336300168FBA /* Copy Configuration Package */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = configuration;
+			dstSubfolderSpec = 7;
+			files = (
+				1F94DE8D168B336300168FBA /* __init__.py in Copy Configuration Package */,
+				1F94DE8E168B336300168FBA /* account.py in Copy Configuration Package */,
+				1F94DE8F168B336300168FBA /* contact.py in Copy Configuration Package */,
+				1F94DE90168B336300168FBA /* datatypes.py in Copy Configuration Package */,
+				1F94DE91168B336300168FBA /* settings.py in Copy Configuration Package */,
+			);
+			name = "Copy Configuration Package";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F94DE92168B336300168FBA /* Copy Interfaces Package */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = interfaces;
+			dstSubfolderSpec = 7;
+			files = (
+				1F94DE93168B336300168FBA /* __init__.py in Copy Interfaces Package */,
+				1F94DE94168B336300168FBA /* itunes.py in Copy Interfaces Package */,
+				1F94DE95168B336300168FBA /* EMKeychainItem.m in Copy Interfaces Package */,
+				1F94DE96168B336300168FBA /* EMKeychainItem.h in Copy Interfaces Package */,
+			);
+			name = "Copy Interfaces Package";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F94DE97168B336300168FBA /* Copy Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				1F94DE98168B336300168FBA /* lib in Copy Libraries */,
+			);
+			name = "Copy Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F94DE99168B336300168FBA /* Copy Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1F94DE9A168B336300168FBA /* libgcrypt.11.dylib in Copy Frameworks */,
+				1F94DE9B168B336300168FBA /* libgnutls-extra.26.dylib in Copy Frameworks */,
+				1F94DE9C168B336300168FBA /* libgnutls.26.dylib in Copy Frameworks */,
+				1F94DE9D168B336300168FBA /* libgpg-error.0.dylib in Copy Frameworks */,
+				1F94DE9E168B336300168FBA /* liblzo.1.dylib in Copy Frameworks */,
+				1F94DE9F168B336300168FBA /* libtasn1.3.dylib in Copy Frameworks */,
+			);
+			name = "Copy Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2B0C1E8B10781A62008266C7 /* Copy Libraries */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1302,6 +1711,9 @@
 		1F9268F414868A82006F2FD8 /* EMKeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EMKeychainItem.h; path = keychain/EMKeychainItem.h; sourceTree = "<group>"; };
 		1F9268F514868A82006F2FD8 /* EMKeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EMKeychainItem.m; path = keychain/EMKeychainItem.m; sourceTree = "<group>"; };
 		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
+		1F94DEA3168B336300168FBA /* Clearcom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clearcom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Clearcom.entitlements; sourceTree = "<group>"; };
+		1F94DEA8168B758D00168FBA /* blink-gold.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-gold.icns"; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin-setup.py"; sourceTree = "<group>"; };
@@ -1568,6 +1980,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1F94DE5A168B336300168FBA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F94DE5B168B336300168FBA /* Cocoa.framework in Frameworks */,
+				1F94DE5C168B336300168FBA /* Python.framework in Frameworks */,
+				1F94DE5D168B336300168FBA /* Security.framework in Frameworks */,
+				1F94DE5E168B336300168FBA /* Carbon.framework in Frameworks */,
+				1F94DE5F168B336300168FBA /* QTKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1624,6 +2048,7 @@
 				8D1107320486CEB800E47090 /* Blink.app */,
 				1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */,
 				1F8DC412135084FA0034815C /* Blink Lite.app */,
+				1F94DEA3168B336300168FBA /* Clearcom.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1737,6 +2162,7 @@
 			isa = PBXGroup;
 			children = (
 				1F2FBFFC1462A444008B3D52 /* container-migration.plist */,
+				1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */,
 				1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */,
 				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
 			);
@@ -1866,6 +2292,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F94DEA8168B758D00168FBA /* blink-gold.icns */,
 				1FCE2BDE166BABBC00090A86 /* time.png */,
 				1F9BE2E1167B7AC8006DFF3F /* lupa.png */,
 				1FE50E59164D1B6200840B18 /* presence */,
@@ -2287,6 +2714,29 @@
 			productReference = 1F8DC412135084FA0034815C /* Blink Lite.app */;
 			productType = "com.apple.product-type.application";
 		};
+		1F94DD6D168B336300168FBA /* Clearcom */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1F94DEA0168B336300168FBA /* Build configuration list for PBXNativeTarget "Clearcom" */;
+			buildPhases = (
+				1F94DD6E168B336300168FBA /* Resources */,
+				1F94DE57168B336300168FBA /* Sources */,
+				1F94DE5A168B336300168FBA /* Frameworks */,
+				1F94DE60168B336300168FBA /* Copy Smiley Files (default) */,
+				1F94DE8C168B336300168FBA /* Copy Configuration Package */,
+				1F94DE92168B336300168FBA /* Copy Interfaces Package */,
+				1F94DE97168B336300168FBA /* Copy Libraries */,
+				1F94DE99168B336300168FBA /* Copy Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Clearcom;
+			productInstallPath = "$(HOME)/Applications";
+			productName = MacSip;
+			productReference = 1F94DEA3168B336300168FBA /* Clearcom.app */;
+			productType = "com.apple.product-type.application";
+		};
 		8D1107260486CEB800E47090 /* Blink */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Blink" */;
@@ -2336,6 +2786,7 @@
 				8D1107260486CEB800E47090 /* Blink */,
 				1F22729312B554F50010A8B2 /* Blink Pro */,
 				1F8DC324135084FA0034815C /* Blink Lite */,
+				1F94DD6D168B336300168FBA /* Clearcom */,
 			);
 		};
 /* End PBXProject section */
@@ -2817,6 +3268,247 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1F94DD6E168B336300168FBA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F94DD6F168B336300168FBA /* InfoPlist.strings in Resources */,
+				1F94DD70168B336300168FBA /* ContactWindowController.py in Resources */,
+				1F94DD71168B336300168FBA /* ContactCell.py in Resources */,
+				1F94DD72168B336300168FBA /* ContactListModel.py in Resources */,
+				1F94DD73168B336300168FBA /* reconnect.png in Resources */,
+				1F94DD74168B336300168FBA /* SessionController.py in Resources */,
+				1F94DD75168B336300168FBA /* HorizontalBoxView.py in Resources */,
+				1F94DD76168B336300168FBA /* Contact.xib in Resources */,
+				1F94DD77168B336300168FBA /* EnrollmentWindow.xib in Resources */,
+				1F94DD78168B336300168FBA /* MainWindow.xib in Resources */,
+				1F94DD79168B336300168FBA /* PreferencesWindow.xib in Resources */,
+				1F94DD7A168B336300168FBA /* ChatWindow.xib in Resources */,
+				1F94DD7B168B336300168FBA /* ChatView.xib in Resources */,
+				1F94DD7C168B336300168FBA /* BlinkAppDelegate.py in Resources */,
+				1F94DD7D168B336300168FBA /* ScreensharingPreviewPanel.py in Resources */,
+				1F94DD7E168B336300168FBA /* SIPManager.py in Resources */,
+				1F94DD7F168B336300168FBA /* EnrollmentController.py in Resources */,
+				1F94DD80168B336300168FBA /* Main.py in Resources */,
+				1F94DD81168B336300168FBA /* ChatController.py in Resources */,
+				1F94DD82168B336300168FBA /* pause.png in Resources */,
+				1F94DD83168B336300168FBA /* BlinkLogger.py in Resources */,
+				1F94DD84168B336300168FBA /* mute.png in Resources */,
+				1F94DD85168B336300168FBA /* paused.png in Resources */,
+				1F94DD86168B336300168FBA /* PreferencesController.py in Resources */,
+				1F94DD87168B336300168FBA /* file_received.wav in Resources */,
+				1F94DD88168B336300168FBA /* file_sent.wav in Resources */,
+				1F94DD89168B336300168FBA /* message_received.wav in Resources */,
+				1F94DD8A168B336300168FBA /* message_sent.wav in Resources */,
+				1F94DD8B168B336300168FBA /* ring_inbound.wav in Resources */,
+				1F94DD8C168B336300168FBA /* ring_outbound.wav in Resources */,
+				1F94DD8D168B336300168FBA /* VerticalBoxView.py in Resources */,
+				1F94DD8E168B336300168FBA /* PreferenceOptions.py in Resources */,
+				1F94DD8F168B336300168FBA /* TableView.py in Resources */,
+				1F94DD90168B336300168FBA /* AudioSession.py in Resources */,
+				1F94DD91168B336300168FBA /* muted.png in Resources */,
+				1F94DD92168B336300168FBA /* srtp.png in Resources */,
+				1F94DD93168B336300168FBA /* AlertPanel.py in Resources */,
+				1F94DD94168B336300168FBA /* AlertPanelView.xib in Resources */,
+				1F94DD95168B336300168FBA /* AlertPanel.xib in Resources */,
+				1F94DD96168B336300168FBA /* blink.icns in Resources */,
+				1F94DD97168B336300168FBA /* util.py in Resources */,
+				1F94DD98168B336300168FBA /* SessionRinger.py in Resources */,
+				1F94DD99168B336300168FBA /* DebugWindow.py in Resources */,
+				1F94DD9A168B336300168FBA /* DebugWindow.xib in Resources */,
+				1F94DD9B168B336300168FBA /* PhotoPicker.xib in Resources */,
+				1F94DD9C168B336300168FBA /* PhotoPicker.py in Resources */,
+				1F94DD9D168B336300168FBA /* SoundSetting.xib in Resources */,
+				1F94DD9E168B336300168FBA /* audio.png in Resources */,
+				1F94DD9F168B336300168FBA /* display.png in Resources */,
+				1F94DDA0168B336300168FBA /* record.png in Resources */,
+				1F94DDA1168B336300168FBA /* recording1.png in Resources */,
+				1F94DDA2168B336300168FBA /* recording2.png in Resources */,
+				1F94DDA3168B336300168FBA /* recording3.png in Resources */,
+				1F94DDA4168B336300168FBA /* mic.png in Resources */,
+				1F94DDA5168B336300168FBA /* speaker.png in Resources */,
+				1F94DDA6168B336300168FBA /* bell.png in Resources */,
+				1F94DDA7168B336300168FBA /* bluelock.png in Resources */,
+				1F94DDA8168B336300168FBA /* greenlock.png in Resources */,
+				1F94DDA9168B336300168FBA /* ContactOutlineView.py in Resources */,
+				1F94DDAA168B336300168FBA /* FileTransferWindow.xib in Resources */,
+				1F94DDAB168B336300168FBA /* FileTransferItemView.xib in Resources */,
+				1F94DDAC168B336300168FBA /* FileTransferItemView.py in Resources */,
+				1F94DDAD168B336300168FBA /* ListView.py in Resources */,
+				1F94DDAE168B336300168FBA /* FileTransferWindowController.py in Resources */,
+				1F94DDAF168B336300168FBA /* SmileyManager.py in Resources */,
+				1F94DDB0168B336300168FBA /* AnsweringMachine.py in Resources */,
+				1F94DDB1168B336300168FBA /* FileTransferSession.py in Resources */,
+				1F94DDB2168B336300168FBA /* About.xib in Resources */,
+				1F94DDB3168B336300168FBA /* incoming_file.png in Resources */,
+				1F94DDB4168B336300168FBA /* upfile.png in Resources */,
+				1F94DDB5168B336300168FBA /* hangup.png in Resources */,
+				1F94DDB6168B336300168FBA /* belloff.png in Resources */,
+				1F94DDB7168B336300168FBA /* bellon.png in Resources */,
+				1F94DDB8168B336300168FBA /* AudioController.py in Resources */,
+				1F94DDB9168B336300168FBA /* MediaStream.py in Resources */,
+				1F94DDBA168B336300168FBA /* AccountSettings.py in Resources */,
+				1F94DDBB168B336300168FBA /* AccountSettings.xib in Resources */,
+				1F94DDBC168B336300168FBA /* answering_machine_tone.wav in Resources */,
+				1F94DDBD168B336300168FBA /* dtmf_0_tone.wav in Resources */,
+				1F94DDBE168B336300168FBA /* dtmf_1_tone.wav in Resources */,
+				1F94DDBF168B336300168FBA /* dtmf_2_tone.wav in Resources */,
+				1F94DDC0168B336300168FBA /* dtmf_3_tone.wav in Resources */,
+				1F94DDC1168B336300168FBA /* dtmf_4_tone.wav in Resources */,
+				1F94DDC2168B336300168FBA /* dtmf_5_tone.wav in Resources */,
+				1F94DDC3168B336300168FBA /* dtmf_6_tone.wav in Resources */,
+				1F94DDC4168B336300168FBA /* dtmf_7_tone.wav in Resources */,
+				1F94DDC5168B336300168FBA /* dtmf_8_tone.wav in Resources */,
+				1F94DDC6168B336300168FBA /* dtmf_9_tone.wav in Resources */,
+				1F94DDC7168B336300168FBA /* dtmf_A_tone.wav in Resources */,
+				1F94DDC8168B336300168FBA /* dtmf_B_tone.wav in Resources */,
+				1F94DDC9168B336300168FBA /* dtmf_C_tone.wav in Resources */,
+				1F94DDCA168B336300168FBA /* dtmf_D_tone.wav in Resources */,
+				1F94DDCB168B336300168FBA /* dtmf_pound_tone.wav in Resources */,
+				1F94DDCC168B336300168FBA /* dtmf_star_tone.wav in Resources */,
+				1F94DDCD168B336300168FBA /* hangup_tone.wav in Resources */,
+				1F94DDCE168B336300168FBA /* hold_tone.wav in Resources */,
+				1F94DDCF168B336300168FBA /* ring_outbound2.wav in Resources */,
+				1F94DDD0168B336300168FBA /* ring_tone.wav in Resources */,
+				1F94DDD1168B336300168FBA /* FancyTabSwitcher.py in Resources */,
+				1F94DDD2168B336300168FBA /* Group.xib in Resources */,
+				1F94DDD3168B336300168FBA /* GroupController.py in Resources */,
+				1F94DDD4168B336300168FBA /* pencil.png in Resources */,
+				1F94DDD5168B336300168FBA /* DesktopServerWindow.xib in Resources */,
+				1F94DDD6168B336300168FBA /* DesktopSharingController.py in Resources */,
+				1F94DDD7168B336300168FBA /* SMSSession.xib in Resources */,
+				1F94DDD8168B336300168FBA /* SMSView.xib in Resources */,
+				1F94DDD9168B336300168FBA /* ChatViewController.py in Resources */,
+				1F94DDDA168B336300168FBA /* ChatView.html in Resources */,
+				1F94DDDB168B336300168FBA /* smiley_off.png in Resources */,
+				1F94DDDC168B336300168FBA /* smiley_on.png in Resources */,
+				1F94DDDD168B336300168FBA /* growl.py in Resources */,
+				1F94DDDE168B336300168FBA /* SMSWindowManager.py in Resources */,
+				1F94DDDF168B336300168FBA /* HistoryViewer.py in Resources */,
+				1F94DDE0168B336300168FBA /* HistoryViewer.xib in Resources */,
+				1F94DDE1168B336300168FBA /* SoundRecorder.xib in Resources */,
+				1F94DDE2168B336300168FBA /* unavailable_message.wav in Resources */,
+				1F94DDE3168B336300168FBA /* AnsweringMachineSetting.xib in Resources */,
+				1F94DDE4168B336300168FBA /* audio_small.png in Resources */,
+				1F94DDE5168B336300168FBA /* SMSViewController.py in Resources */,
+				1F94DDE6168B336300168FBA /* 3333@sip2sip.info.tiff in Resources */,
+				1F94DDE7168B336300168FBA /* PresenceOfflineWindow.xib in Resources */,
+				1F94DDE8168B336300168FBA /* 4444@sip2sip.info.tiff in Resources */,
+				1F94DDE9168B336300168FBA /* 200901@login.zipdx.com.tiff in Resources */,
+				1F94DDEA168B336300168FBA /* blink-full-72dpi.tif in Resources */,
+				1F94DDEB168B336300168FBA /* ConferenceController.py in Resources */,
+				1F94DDEC168B336300168FBA /* test@conference.sip2sip.info.tiff in Resources */,
+				1F94DDED168B336300168FBA /* ChatWindowController.py in Resources */,
+				1F94DDEE168B336300168FBA /* AddParticipantsWindow.xib in Resources */,
+				1F94DDEF168B336300168FBA /* FileTransferController.py in Resources */,
+				1F94DDF0168B336300168FBA /* ParticipantsTableView.py in Resources */,
+				1F94DDF1168B336300168FBA /* hangup_small.png in Resources */,
+				1F94DDF2168B336300168FBA /* audio_16.png in Resources */,
+				1F94DDF3168B336300168FBA /* video.png in Resources */,
+				1F94DDF4168B336300168FBA /* VideoController.py in Resources */,
+				1F94DDF5168B336300168FBA /* video-hangup.png in Resources */,
+				1F94DDF6168B336300168FBA /* ChatPrivateMessage.xib in Resources */,
+				1F94DDF7168B336300168FBA /* ChatPrivateMessageController.py in Resources */,
+				1F94DDF8168B336300168FBA /* HistoryManager.py in Resources */,
+				1F94DDF9168B336300168FBA /* trash.png in Resources */,
+				1F94DDFA168B336300168FBA /* outgoing_file.png in Resources */,
+				1F94DDFB168B336300168FBA /* end_arrow.png in Resources */,
+				1F94DDFC168B336300168FBA /* begin_arrow.png in Resources */,
+				1F94DDFD168B336300168FBA /* transfer.png in Resources */,
+				1F94DDFE168B336300168FBA /* paused_16.png in Resources */,
+				1F94DDFF168B336300168FBA /* ConferenceConfigurationPanel.xib in Resources */,
+				1F94DE00168B336300168FBA /* ConferenceConfigurationPanel.py in Resources */,
+				1F94DE01168B336300168FBA /* Info-lite.plist in Resources */,
+				1F94DE02168B336300168FBA /* resources.py in Resources */,
+				1F94DE03168B336300168FBA /* silence.wav in Resources */,
+				1F94DE04168B336300168FBA /* ConferenceFileCell.py in Resources */,
+				1F94DE05168B336300168FBA /* editor.png in Resources */,
+				1F94DE06168B336300168FBA /* FullScreenVideoPanel.xib in Resources */,
+				1F94DE07168B336300168FBA /* fullscreen.png in Resources */,
+				1F94DE08168B336300168FBA /* restore.png in Resources */,
+				1F94DE09168B336300168FBA /* VideoView.py in Resources */,
+				1F94DE0A168B336300168FBA /* mirror.png in Resources */,
+				1F94DE0B168B336300168FBA /* mute-white.png in Resources */,
+				1F94DE0C168B336300168FBA /* VideoMirrowWindow.xib in Resources */,
+				1F94DE0D168B336300168FBA /* VideoMirrorWindowController.py in Resources */,
+				1F94DE0E168B336300168FBA /* chat.png in Resources */,
+				1F94DE0F168B336300168FBA /* alerts.png in Resources */,
+				1F94DE10168B336300168FBA /* logs.png in Resources */,
+				1F94DE11168B336300168FBA /* audio-preferences.png in Resources */,
+				1F94DE12168B336300168FBA /* answering_machine.png in Resources */,
+				1F94DE13168B336300168FBA /* editor-changed.png in Resources */,
+				1F94DE14168B336300168FBA /* MigrationPanel.xib in Resources */,
+				1F94DE15168B336300168FBA /* default.crt in Resources */,
+				1F94DE16168B336300168FBA /* contact.py in Resources */,
+				1F94DE17168B336300168FBA /* contacts.png in Resources */,
+				1F94DE18168B336300168FBA /* CallTransferWindow.xib in Resources */,
+				1F94DE19168B336300168FBA /* AudioSession.xib in Resources */,
+				1F94DE1A168B336300168FBA /* zrtp-securemode.wav in Resources */,
+				1F94DE1B168B336300168FBA /* zrtp-security-failed.wav in Resources */,
+				1F94DE1C168B336300168FBA /* SessionInfoPanel.xib in Resources */,
+				1F94DE1D168B336300168FBA /* SessionInfoController.py in Resources */,
+				1F94DE1E168B336300168FBA /* lock-zrtp.png in Resources */,
+				1F94DE1F168B336300168FBA /* panel-info.png in Resources */,
+				1F94DE20168B336300168FBA /* screenshot.png in Resources */,
+				1F94DE21168B336300168FBA /* help.png in Resources */,
+				1F94DE22168B336300168FBA /* start_chat.png in Resources */,
+				1F94DE23168B336300168FBA /* stop_chat.png in Resources */,
+				1F94DE24168B336300168FBA /* display_16.png in Resources */,
+				1F94DE25168B336300168FBA /* display_red.png in Resources */,
+				1F94DE26168B336300168FBA /* display_red_16.png in Resources */,
+				1F94DE27168B336300168FBA /* shrinktofit.png in Resources */,
+				1F94DE28168B336300168FBA /* shrinktofit-pressed.png in Resources */,
+				1F94DE29168B336300168FBA /* ConferenceScreenSharing.py in Resources */,
+				1F94DE2A168B336300168FBA /* ConferenceScreenSharing.xib in Resources */,
+				1F94DE2B168B336300168FBA /* BlinkPro.entitlements in Resources */,
+				1F94DE2C168B336300168FBA /* container-migration.plist in Resources */,
+				1F94DE2D168B336300168FBA /* JoinConferenceWindow.xib in Resources */,
+				1F94DE2E168B336300168FBA /* mime.types in Resources */,
+				1F94DE2F168B336300168FBA /* ldap.png in Resources */,
+				1F94DE30168B336300168FBA /* NightVolumeSetting.xib in Resources */,
+				1F94DE31168B336300168FBA /* ScreensharingPreviewPanel.xib in Resources */,
+				1F94DE32168B336300168FBA /* iCloudManager.py in Resources */,
+				1F94DE33168B336300168FBA /* BlinkLite.entitlements in Resources */,
+				1F94DE34168B336300168FBA /* ca.crt in Resources */,
+				1F94DE35168B336300168FBA /* AddressBookEmail-plugin-setup.py in Resources */,
+				1F94DE36168B336300168FBA /* AddressBookEmail-plugin.py in Resources */,
+				1F94DE37168B336300168FBA /* AddressBookTel-plugin-setup.py in Resources */,
+				1F94DE38168B336300168FBA /* AddressBookTel-plugin.py in Resources */,
+				1F94DE39168B336300168FBA /* AddressBookURL-plugin-setup.py in Resources */,
+				1F94DE3A168B336300168FBA /* AddressBookURL-plugin.py in Resources */,
+				1F94DE3B168B336300168FBA /* EncryptionWrappers.py in Resources */,
+				1F94DE3C168B336300168FBA /* Nickname.xib in Resources */,
+				1F94DE3D168B336300168FBA /* NicknameController.py in Resources */,
+				1F94DE3E168B336300168FBA /* SubjectController.py in Resources */,
+				1F94DE3F168B336300168FBA /* Subject.xib in Resources */,
+				1F94DE40168B336300168FBA /* ContactController.py in Resources */,
+				1F94DE41168B336300168FBA /* VirtualGroups.py in Resources */,
+				1F94DE42168B336300168FBA /* pending_watcher.tiff in Resources */,
+				1F94DE43168B336300168FBA /* blocked.png in Resources */,
+				1F94DE44168B336300168FBA /* PresencePublisher.py in Resources */,
+				1F94DE45168B336300168FBA /* OfflineNoteController.py in Resources */,
+				1F94DE46168B336300168FBA /* PresenceInfoPanel.xib in Resources */,
+				1F94DE47168B336300168FBA /* PresenceInfoController.py in Resources */,
+				1F94DE48168B336300168FBA /* WorldMapView.py in Resources */,
+				1F94DE49168B336300168FBA /* location.png in Resources */,
+				1F94DE4A168B336300168FBA /* available.tiff in Resources */,
+				1F94DE4B168B336300168FBA /* away.tiff in Resources */,
+				1F94DE4C168B336300168FBA /* busy.tiff in Resources */,
+				1F94DE4D168B336300168FBA /* offline.tiff in Resources */,
+				1F94DE4E168B336300168FBA /* blink-status-blue.png in Resources */,
+				1F94DE4F168B336300168FBA /* blink-status-gray.png in Resources */,
+				1F94DE50168B336300168FBA /* blink-status-green.png in Resources */,
+				1F94DE51168B336300168FBA /* blink-status-red.png in Resources */,
+				1F94DE52168B336300168FBA /* blink-status-yellow.png in Resources */,
+				1F94DE53168B336300168FBA /* BlockedContact.py in Resources */,
+				1F94DE54168B336300168FBA /* BlockedContact.xib in Resources */,
+				1F94DE55168B336300168FBA /* time.png in Resources */,
+				1F94DE56168B336300168FBA /* lupa.png in Resources */,
+				1F94DEA7168B74CA00168FBA /* Clearcom.entitlements in Resources */,
+				1F94DEA9168B758D00168FBA /* blink-gold.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1107290486CEB800E47090 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -3070,6 +3762,15 @@
 			files = (
 				1F8DC3BF135084FA0034815C /* main.m in Sources */,
 				1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F94DE57168B336300168FBA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F94DE58168B336300168FBA /* main.m in Sources */,
+				1F94DE59168B336300168FBA /* EMKeychainItem.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3519,6 +4220,75 @@
 			};
 			name = Release;
 		};
+		1F94DEA1168B336300168FBA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CODE_SIGN_ENTITLEMENTS = Clearcom.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				COPY_PHASE_STRIP = NO;
+				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"/System/Library/Frameworks\"",
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Blink_Prefix.pch;
+				INFOPLIST_FILE = "Info-clearcom.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				PRODUCT_NAME = Clearcom;
+				PROVISIONING_PROFILE = "F927A197-D9B2-4F8F-95E2-4EA5C4323ACA";
+				SDKROOT = macosx10.6;
+				VALID_ARCHS = "i386 x86_64";
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		1F94DEA2168B336300168FBA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = i386;
+				CODE_SIGN_ENTITLEMENTS = Clearcom.entitlements;
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"/System/Library/Frameworks\"",
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+				);
+				GCC_MODEL_TUNING = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Blink_Prefix.pch;
+				INFOPLIST_FILE = "Info-clearcom.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = Clearcom;
+				PROVISIONING_PROFILE = "42FEA8EA-98F1-49EF-866F-269D2F589283";
+				SDKROOT = macosx10.6;
+				VALID_ARCHS = "i386 x86_64";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3619,6 +4389,15 @@
 			buildConfigurations = (
 				1F8DC410135084FA0034815C /* Debug */,
 				1F8DC411135084FA0034815C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1F94DEA0168B336300168FBA /* Build configuration list for PBXNativeTarget "Clearcom" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1F94DEA1168B336300168FBA /* Debug */,
+				1F94DEA2168B336300168FBA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
