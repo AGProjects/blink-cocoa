@@ -422,7 +422,7 @@ class BlinkContact(NSObject):
             return True
 
         if hasattr(self, 'organization'):
-            if self.organization is not None and uri.lower() in self.organization.lower():
+            if self.organization is not None and unicode(uri).lower() in self.organization.lower():
                 return True
 
         return any(match(self.split_uri(item.uri), candidate, exact_match) for item in self.uris if item.uri)
