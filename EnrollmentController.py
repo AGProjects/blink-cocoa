@@ -33,8 +33,7 @@ class EnrollmentController(NSObject):
 
     window = objc.IBOutlet()
 
-    loginView = objc.IBOutlet()
-    createView = objc.IBOutlet()
+    tabView = objc.IBOutlet()
 
     radioMatrix = objc.IBOutlet()
     signinRadio = objc.IBOutlet()
@@ -98,16 +97,17 @@ class EnrollmentController(NSObject):
     @objc.IBAction
     def selectRadio_(self, sender):
         frame = self.window.frame()
+        tabview_frame = self.tabView.frame()
         if sender.selectedCell().tag() == 1:
-            self.loginView.setHidden_(False)
-            self.createView.setHidden_(True)
-
+            self.tabView.selectTabViewItemWithIdentifier_("existing_account")
+            tabview_frame.size.height = 138
+            self.tabView.setFrame_(tabview_frame)
             frame.origin.y -= (self.window.minSize().height - frame.size.height)
             frame.size = self.window.minSize()
         else:
-            self.loginView.setHidden_(True)
-            self.createView.setHidden_(False)
-
+            self.tabView.selectTabViewItemWithIdentifier_("create_account")
+            tabview_frame.size.height = 235
+            self.tabView.setFrame_(tabview_frame)
             frame.origin.y += (frame.size.height - self.window.maxSize().height)
             frame.size = self.window.maxSize()
 
