@@ -259,10 +259,6 @@ class ContactWindowController(NSWindowController):
         f = self.notFoundText.frame()
         self.notFoundTextOffset = NSHeight(self.notFoundText.superview().frame()) - NSMinY(f)
 
-        selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
-        self.mainTabView.selectTabViewItemWithIdentifier_(selected_tab if selected_tab else "contacts")
-        self.toggleDialPadClicked_(None)
-
         self.audioSessionsListView.setSpacing_(0)
 
         self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
@@ -316,6 +312,9 @@ class ContactWindowController(NSWindowController):
 
         self.refreshContactsList()
         self.updateStartSessionButtons()
+
+        selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
+        self.setMainTabView(selected_tab if selected_tab else "contacts")
 
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
@@ -3135,15 +3134,18 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def toggleDialPadClicked_(self, sender):
-        self.mainTabView.selectTabViewItemWithIdentifier_("dialpad" if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else "contacts")
-        NSUserDefaults.standardUserDefaults().setObject_forKey_(self.mainTabView.selectedTabViewItem().identifier(), "MainWindowSelectedTabView")
+        identifier = "dialpad" if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else "contacts"
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(identifier, "MainWindowSelectedTabView")
+        self.setMainTabView(identifier)
+        self.window().makeKeyWindow()
+
+    def setMainTabView(self, identifier):
+        self.mainTabView.selectTabViewItemWithIdentifier_(identifier)
 
         frame = self.window().frame()
         frame.size.width = 274
 
-        self.window().makeKeyWindow()
-
-        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+        if identifier == "dialpad":
             if not isinstance(self.window().firstResponder(), AudioSession):
                 self.focusSearchTextField()
 
@@ -3170,7 +3172,6 @@ class ContactWindowController(NSWindowController):
             self.window().setContentMinSize_(frame.size)
             self.window().setContentMaxSize_(frame.size)
             self.window().setFrame_display_animate_(frame, True, True)
-
 
         else:
             self.searchBox.cell().setPlaceholderString_("Search Contacts or Enter Address")
