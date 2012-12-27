@@ -259,7 +259,9 @@ class ContactWindowController(NSWindowController):
         f = self.notFoundText.frame()
         self.notFoundTextOffset = NSHeight(self.notFoundText.superview().frame()) - NSMinY(f)
 
-        self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
+        selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
+        self.mainTabView.selectTabViewItemWithIdentifier_(selected_tab if selected_tab else "contacts")
+        self.toggleDialPadClicked_(None)
 
         self.audioSessionsListView.setSpacing_(0)
 
@@ -3134,9 +3136,9 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def toggleDialPadClicked_(self, sender):
         self.mainTabView.selectTabViewItemWithIdentifier_("dialpad" if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else "contacts")
+        NSUserDefaults.standardUserDefaults().setObject_forKey_(self.mainTabView.selectedTabViewItem().identifier(), "MainWindowSelectedTabView")
 
         frame = self.window().frame()
-        old_top_left  = frame.origin.y + frame.size.height
         frame.size.width = 274
 
         self.window().makeKeyWindow()
@@ -3160,9 +3162,15 @@ class ContactWindowController(NSWindowController):
             self.originalWindowPosition = self.window().frame()
 
             frame.size.height = 480
+            change_y = self.originalWindowPosition.size.height - frame.size.height
+
+            if change_y:
+                frame.origin.y += change_y
+
             self.window().setContentMinSize_(frame.size)
             self.window().setContentMaxSize_(frame.size)
-            self.window().setContentSize_(frame.size)
+            self.window().setFrame_display_animate_(frame, True, True)
+
 
         else:
             self.searchBox.cell().setPlaceholderString_("Search Contacts or Enter Address")
