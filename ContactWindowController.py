@@ -313,9 +313,6 @@ class ContactWindowController(NSWindowController):
         self.refreshContactsList()
         self.updateStartSessionButtons()
 
-        selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
-        self.setMainTabView(selected_tab if selected_tab else "contacts")
-
         # never show debug window when application launches
         NSUserDefaults.standardUserDefaults().setInteger_forKey_(0, "ShowDebugWindow")
 
@@ -466,6 +463,9 @@ class ContactWindowController(NSWindowController):
         self.contactOutline.reloadData()
 
         self.accountSelectionChanged_(self.accountPopUp)
+
+        #selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
+        #self.setMainTabView(selected_tab if selected_tab else "contacts")
 
     def __del__(self):
         NSNotificationCenter.defaultCenter().removeObserver_(self)
@@ -3146,6 +3146,7 @@ class ContactWindowController(NSWindowController):
         frame.size.width = 274
 
         if identifier == "dialpad":
+            self.addContactButtonDialPad.setHidden_(True)
             if not isinstance(self.window().firstResponder(), AudioSession):
                 self.focusSearchTextField()
 
@@ -3174,6 +3175,7 @@ class ContactWindowController(NSWindowController):
             self.window().setFrame_display_animate_(frame, True, True)
 
         else:
+            self.addContactButtonDialPad.setHidden_(False)
             self.searchBox.cell().setPlaceholderString_("Search Contacts or Enter Address")
             self.searchBox.setToolTip_(u'You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number')
 
