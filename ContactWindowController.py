@@ -1596,7 +1596,7 @@ class ContactWindowController(NSWindowController):
                 target = uri
             else:
                 target = contact.uri
-                if hasattr(contact, 'uri_type') and contact.uri_type.lower() == 'xmpp':
+                if hasattr(contact, 'uri_type') and contact.uri_type is not None and contact.uri_type.lower() == 'xmpp':
                     target += ';xmpp'
 
         account = self.getAccountWitDialPlan(target)
@@ -3334,7 +3334,7 @@ class ContactWindowController(NSWindowController):
                         continue
 
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
-                    target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                    target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
                         image = presence_status_for_contact(item, uri.uri)
@@ -3382,7 +3382,7 @@ class ContactWindowController(NSWindowController):
 
                         if is_sip_aor_format(uri.uri):
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
-                            target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                            target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                             chat_item.setRepresentedObject_(target_uri)
                             if isinstance(item, BlinkPresenceContact):
                                 image = presence_status_for_contact(item, uri.uri)
@@ -3428,7 +3428,7 @@ class ContactWindowController(NSWindowController):
                             continue
 
                         sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
-                        target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                        target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
                             image = presence_status_for_contact(item, uri.uri)
@@ -3446,7 +3446,7 @@ class ContactWindowController(NSWindowController):
                         for uri in item.uris:
                             if is_sip_aor_format(uri.uri):
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
-                                target_uri = uri.uri+';xmpp' if uri.type.lower() == 'xmpp' else uri.uri
+                                target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                                 ft_item.setRepresentedObject_(target_uri)
                                 if isinstance(item, BlinkPresenceContact):
                                     image = presence_status_for_contact(item, uri.uri)
