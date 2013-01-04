@@ -3407,9 +3407,9 @@ class ContactWindowController(NSWindowController):
                             chat_item.setRepresentedObject_(device['contact'])
                             status = device['status']
                             try:
-                                image = presence_status_icons[status]
-                                image.setScalesWhenResized_(True)
-                                image.setSize_(NSMakeSize(15,15))
+                                icon = presence_status_icons[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
                                 chat_item.setImage_(icon)
                             except KeyError:
                                 pass
@@ -3472,10 +3472,10 @@ class ContactWindowController(NSWindowController):
                                 ft_item.setRepresentedObject_(device['contact'])
                                 status = device['status']
                                 try:
-                                    image = presence_status_icons[status]
-                                    image.setScalesWhenResized_(True)
-                                    image.setSize_(NSMakeSize(15,15))
-                                    ft_item.setImage_(image)
+                                    icon = presence_status_icons[status]
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(15,15))
+                                    ft_item.setImage_(icon)
                                 except KeyError:
                                     pass
                                 ft_item.setIndentationLevel_(1)
@@ -3517,10 +3517,10 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setRepresentedObject_(device['contact'])
                                 status = device['status']
                                 try:
-                                    image = presence_status_icons[status]
-                                    image.setScalesWhenResized_(True)
-                                    image.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(image)
+                                    icon = presence_status_icons[status]
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(15,15))
+                                    ds_item.setImage_(icon)
                                 except KeyError:
                                     pass
                                 ds_item.setIndentationLevel_(1)
@@ -3562,10 +3562,10 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setRepresentedObject_(device['contact'])
                                 status = device['status']
                                 try:
-                                    image = presence_status_icons[status]
-                                    image.setScalesWhenResized_(True)
-                                    image.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(image)
+                                    icon = presence_status_icons[status]
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(15,15))
+                                    ds_item.setImage_(icon)
                                 except KeyError:
                                     pass
                                 ds_item.setTag_(2)
