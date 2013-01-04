@@ -592,22 +592,15 @@ class BlinkPresenceContact(BlinkContact):
         self.contact = contact
         self.old_devices = []
         self.avatar = PresenceContactAvatar.from_contact(contact)
-        uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
-        self.detail = '%s (%s)' % (uri, self.uri_type)
+        # TODO: how to handle xmmp: uris?
+        #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
+        self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
         self.presence_note = None
         self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
         NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
-
-        must_save = False
-        for uri in self.contact.uris:
-            if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
-                uri.uri = uri.uri + ';xmpp'
-                must_save = True
-        if must_save:
-            self.contact.save()
 
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
@@ -1155,8 +1148,9 @@ class BlinkPresenceContact(BlinkContact):
         elif local_times:
             detail = '%s %s' % (self.uri, ",".join(local_times))
         else:
-            uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
-            detail_uri = '%s (%s)' % (uri, self.uri_type)
+            # TODO: how to handle xmmp: uris?
+            #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
+            detail_uri = '%s (%s)' % (self.uri, self.uri_type)
             detail = detail_uri
             detail_pending = 'Pending authorization'
             if self.presence_state['pending_authorizations']:

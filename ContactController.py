@@ -109,9 +109,10 @@ class AddContactController(NSObject):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
-            for uri in self.uris:
-                if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
-                    uri.uri = uri.uri + ';xmpp'
+            # TODO: how to handle xmmp: uris?
+            #for uri in self.uris:
+            #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
+            #        uri.uri = uri.uri + ';xmpp'
             contact = {'default_uri'     : self.default_uri,
                        'uris'            : self.uris,
                        'name'            : unicode(self.nameText.stringValue()),
@@ -402,9 +403,10 @@ class EditContactController(AddContactController):
         self.addButton.setEnabled_(True if blink_contact.contact.uris else False)
         self.default_uri = blink_contact.default_uri
         self.uris = list(blink_contact.contact.uris)
-        for uri in self.uris:
-            if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' in uri.uri:
-                uri.uri = uri.uri.replace(';xmpp', '')
+        # TODO: how to handle xmmp: uris?
+        #for uri in self.uris:
+            #if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' in uri.uri:
+                    #    uri.uri = uri.uri.replace(';xmpp', '')
 
         self.update_default_uri()
         self.addressTable.reloadData()
@@ -423,9 +425,10 @@ class EditContactController(AddContactController):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
-            for uri in self.uris:
-                if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
-                    uri.uri = uri.uri + ';xmpp'
+            # TODO: how to handle xmmp: uris?
+            #for uri in self.uris:
+            #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
+            #        uri.uri = uri.uri + ';xmpp'
             contact = {
                     'default_uri'     : self.default_uri,
                     'uris'            : self.uris,
