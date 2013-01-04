@@ -601,6 +601,14 @@ class BlinkPresenceContact(BlinkContact):
         self.timer = None
         NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
 
+        must_save = False
+        for uri in self.contact.uris:
+            if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
+                uri.uri = uri.uri + ';xmpp'
+                must_save = True
+        if must_save:
+            self.contact.save()
+
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
