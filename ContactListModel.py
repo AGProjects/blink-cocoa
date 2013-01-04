@@ -592,7 +592,8 @@ class BlinkPresenceContact(BlinkContact):
         self.contact = contact
         self.old_devices = []
         self.avatar = PresenceContactAvatar.from_contact(contact)
-        self.detail = '%s (%s)' % (self.uri, self.uri_type)
+        uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
+        self.detail = '%s (%s)' % (uri, self.uri_type)
         self._set_username_and_domain()
         self.presence_note = None
         self.pidfs_map = {}
@@ -1146,7 +1147,8 @@ class BlinkPresenceContact(BlinkContact):
         elif local_times:
             detail = '%s %s' % (self.uri, ",".join(local_times))
         else:
-            detail_uri = '%s (%s)' % (self.uri, self.uri_type)
+            uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
+            detail_uri = '%s (%s)' % (uri, self.uri_type)
             detail = detail_uri
             detail_pending = 'Pending authorization'
             if self.presence_state['pending_authorizations']:
