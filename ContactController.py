@@ -424,7 +424,7 @@ class EditContactController(AddContactController):
         self.window.orderOut_(self)
         if rc == NSOKButton:
             for uri in self.uris:
-                if uri.type is not None and uri.type.lower() == 'xmpp' and not uri.uri.endswith(';xmpp'):
+                if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
                     uri.uri = uri.uri + ';xmpp'
             contact = {
                     'default_uri'     : self.default_uri,
