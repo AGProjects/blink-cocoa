@@ -253,9 +253,7 @@ class PresencePublisher(object):
         if status_icon:
             # TODO: convert icon to PNG before saving it
             self.owner.saveUserIcon(status_icon.data)
-        elif settings.presence_state.icon:
-            settings.presence_state.icon = None
-            save = True
+
         if save:
             settings.save()
 
