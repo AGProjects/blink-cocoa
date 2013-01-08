@@ -2348,6 +2348,10 @@ class ContactListModel(CustomListModel):
         self.renderPendingWatchersGroupIfNecessary()
 
     def _NH_SIPApplicationWillStart(self, notification):
+        # Load virtual groups
+        vgm = VirtualGroupsManager()
+        vgm.load()
+
         # Backup contacts before migration, just in case
         addressbook_manager = AddressbookManager()
         if hasattr(addressbook_manager, '_AddressbookManager__old_data'):
@@ -2391,9 +2395,6 @@ class ContactListModel(CustomListModel):
                     cPickle.dump(backup_data, open(storage_path, "w+"))
                 except (IOError, cPickle.PicklingError):
                     pass
-        # Load virtual groups
-        vgm = VirtualGroupsManager()
-        vgm.load()
 
     def _NH_SIPAccountGotPresenceWinfo(self, notification):
         watcher_list = notification.data.watcher_list
