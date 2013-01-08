@@ -2361,15 +2361,15 @@ class ContactListModel(CustomListModel):
             old_contacts = old_data['contacts'].values()
             old_groups = old_data['groups']
             for group_id in old_groups.keys():
-                if 'type' in old_groups[group_id]:
-                    del old_groups[group_id]
-                else:
+                if not old_groups[group_id].get('type')
                     backup_group = {
                         'id'      : group_id,
                         'name'    : old_groups[group_id].get('name', ''),
                         'contacts': []
                     }
                     backup_groups[group_id] = backup_group
+                else:
+                    del old_groups[group_id]
             for item in old_contacts:
                 for group_id, contacts in item.iteritems():
                     for contact_id, contact_data in contacts.iteritems():
@@ -2385,7 +2385,6 @@ class ContactListModel(CustomListModel):
                         }
                         backup_contacts.append(backup_contact)
                         backup_groups[group_id]['contacts'].append(backup_contact['id'])
-
             if backup_contacts or backup_groups:
                 backup_data = {"contacts": backup_contacts, "groups": backup_groups.values(), "version": 2}
                 filename = "contacts_backup/%s.pickle" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
