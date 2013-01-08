@@ -1017,7 +1017,8 @@ class AudioController(MediaStream):
         self.sessionController.log_info(u'ICE negotiation failed: %s' % data.reason)
         self.updateAudioStatusWithSessionState(u"ICE Negotiation Failed")
         self.ice_negotiation_status = data.reason
-        self.end()
+        # TODO: remove stream if the reason is that all candidates failed probing
+        #self.end()
 
     @run_in_gui_thread
     def _NH_AudioStreamDidReallyTimeout(self, sender, data):
