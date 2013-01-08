@@ -1014,6 +1014,8 @@ class AudioController(MediaStream):
         handler(notification.sender, notification.data)
 
     def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
+        self.sessionController.log_info(u'ICE negotiation failed: %s' % data.reason)
+        self.updateAudioStatusWithSessionState(u"ICE Negotiation Failed")
         self.ice_negotiation_status = data.reason
 
     @run_in_gui_thread
