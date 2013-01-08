@@ -2361,7 +2361,7 @@ class ContactListModel(CustomListModel):
             old_contacts = old_data['contacts'].values()
             old_groups = old_data['groups']
             for group_id in old_groups.keys():
-                if not old_groups[group_id].get('type')
+                if not old_groups[group_id].get('type'):
                     backup_group = {
                         'id'      : group_id,
                         'name'    : old_groups[group_id].get('name', ''),
