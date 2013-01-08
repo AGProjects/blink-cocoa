@@ -476,14 +476,12 @@ class PresencePublisher(object):
         try:
             data = urllib2.urlopen(req).read()
         except Exception:
-            pass
-        else:
-            try:
-                response = cjson.decode(data.replace('\\/', '/'))
-            except TypeError:
-                pass
-            else:
-                if response and self.location != response:
-                    self.location = response
-                    self.publish()
+            return
+        try:
+            response = cjson.decode(data.replace('\\/', '/'))
+        except TypeError:
+            return
+        if response and self.location != response:
+            self.location = response
+            self.publish()
 
