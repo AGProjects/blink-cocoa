@@ -1452,9 +1452,9 @@ class ContactWindowController(NSWindowController):
 
             if text != u"" and event.type() == NSKeyDown and event.keyCode() in (36, 76):
                 try:
-                    text = unicode(text)
+                    text = str(text)
                 except:
-                    NSRunAlertPanel(u"Invalid Address", u"The address contains invalid characters", u"OK", None, None)
+                    NSRunAlertPanel(u"Invalid Address", u"The address you typed is invalid, only ASCII characters are allowed.", u"OK", None, None)
                     return
                 else:
                     _split = text.split(';')
