@@ -104,16 +104,14 @@ class PresencePublisher(object):
     implements(IObserver)
 
     user_input = {'state': 'active', 'last_input': None}
-    idle_threshold = 600
     idle_mode = False
     last_input = ISOTimestamp.now()
     last_time_offset = int(pidf.TimeOffset())
-    gruu_addresses = {}
     hostname = socket.gethostname().split(".")[0]
     presenceStateBeforeIdle = None
     wakeup_timer = None
     location = None
-    xcap_caps_discovered = {}
+    xcap_caps_discovered = set()
     last_service_timestamp = {}
 
     # Cleanup old base64 encoded icons
@@ -121,16 +119,7 @@ class PresencePublisher(object):
 
     def __init__(self, owner):
         self.owner = owner
-
-        nc = NotificationCenter()
-        nc.add_observer(self, name="CFGSettingsObjectDidChange")
-        nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
-        nc.add_observer(self, name="SIPAccountDidDiscoverXCAPSupport")
-        nc.add_observer(self, name="SIPApplicationDidStart")
-        nc.add_observer(self, name="SystemDidWakeUpFromSleep")
-        nc.add_observer(self, name="SystemWillSleep")
-        nc.add_observer(self, name="XCAPManagerDidReloadData")
-        nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+        NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -139,33 +128,25 @@ class PresencePublisher(object):
         handler(notification)
 
     def _NH_SIPApplicationDidStart(self, notification):
+        nc = NotificationCenter()
+        nc.add_observer(self, name="CFGSettingsObjectDidChange")
+        nc.add_observer(self, name="SIPAccountDidDiscoverXCAPSupport")
+        nc.add_observer(self, name="SystemDidWakeUpFromSleep")
+        nc.add_observer(self, name="SystemWillSleep")
+        nc.add_observer(self, name="XCAPManagerDidReloadData")
+        nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+
         settings = SIPSimpleSettings()
         if settings.presence_state.timestamp is None:
             settings.presence_state.timestamp = ISOTimestamp.now()
             settings.save()
 
-        self.idle_threshold = settings.gui.idle_threshold
+        self.get_location([account for account in AccountManager().iter_accounts() if account is not BonjourAccount()])
         self.publish()
 
         idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateIdleTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(idle_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(idle_timer, NSEventTrackingRunLoopMode)
-
-    def _NH_SIPAccountRegistrationDidSucceed(self, notification):
-        account = notification.sender
-        if account.enabled and account.presence.enabled:
-            old_gruu = self.gruu_addresses.get(account.id)
-            new_gruu = str(account.contact.public_gruu) if account.contact.public_gruu is not None else None
-
-            if new_gruu is not None:
-                self.gruu_addresses[account.id] = new_gruu
-            else:
-                self.gruu_addresses.pop(account.id, None)
-
-            if old_gruu != new_gruu:
-                account.presence_state = self.build_pidf(account)
-
-        self.get_location(account)
 
     def _NH_SIPAccountDidDiscoverXCAPSupport(self, notification):
         account = notification.sender
@@ -180,6 +161,7 @@ class PresencePublisher(object):
         if self.wakeup_timer is None:
             @run_in_gui_thread
             def wakeup_action():
+                self.get_location([account for account in AccountManager().iter_accounts() if account is not BonjourAccount()])
                 self.publish()
                 self.wakeup_timer = None
             self.wakeup_timer = reactor.callLater(5, wakeup_action) # wait for system to stabilize
@@ -191,27 +173,25 @@ class PresencePublisher(object):
         if isinstance(notification.sender, Account):
             account = notification.sender
 
-            if set(['display_name', 'presence.disable_location', 'disable_timezone', 'presence.homepage']).intersection(notification.data.modified):
+            if set(['display_name', 'presence.disable_location', 'presence.disable_timezone', 'presence.homepage']).intersection(notification.data.modified):
                 if account.enabled and account.presence.enabled:
                     account.presence_state = self.build_pidf(account)
+                    if 'presence.disable_location' in notification.data.modified and not account.presence.disable_location:
+                        self.get_location([account])
 
             if set(['xcap.enabled', 'xcap.xcap_root']).intersection(notification.data.modified):
                 if not account.xcap.enabled:
-                    try:
-                        del self.xcap_caps_discovered[account]
-                    except KeyError:
-                        pass
+                    # TODO: if we ever allow changing the account id in Blink this needs to be fixed -Saul
+                    self.xcap_caps_discovered.discard(account.id)
 
                 if account.xcap.enabled and account.xcap.discovered:
-                    offline_pidf = self.build_offline_pidf(account)
-                    offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                     if account.xcap_manager is not None:
+                        offline_pidf = self.build_offline_pidf(account)
+                        offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                         account.xcap_manager.set_offline_status(offline_status)
-                    status_icon = self.build_status_icon()
-                    icon = Icon(status_icon, 'image/png') if status_icon is not None else None
-                    if account.xcap_manager is not None:
+                        status_icon = self.build_status_icon()
+                        icon = Icon(status_icon, 'image/png') if status_icon is not None else None
                         account.xcap_manager.set_status_icon(icon)
-
 
         if notification.sender is SIPSimpleSettings():
             if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
@@ -220,13 +200,10 @@ class PresencePublisher(object):
                 self.set_offline_status()
             if 'presence_state.icon' in notification.data.modified:
                 self.set_status_icon()
-            if 'gui.idle_threshold' in notification.data.modified:
-                settings = SIPSimpleSettings()
-                self.idle_threshold = settings.gui.idle_threshold
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
         account = notification.sender.account
-        self.xcap_caps_discovered[account] = True
+        self.xcap_caps_discovered.add(account.id)
         if account.enabled and account.presence.enabled:
             account.presence_state = self.build_pidf(account)
 
@@ -303,7 +280,8 @@ class PresencePublisher(object):
                 self.publish()
             return
 
-        if last_idle_counter > self.idle_threshold:
+        settings = SIPSimpleSettings()
+        if last_idle_counter > settings.gui.idle_threshold:
             if not self.idle_mode:
                 self.user_input = {'state': 'idle', 'last_input': self.last_input}
                 if activity_object['title'] != "Away":
@@ -373,26 +351,22 @@ class PresencePublisher(object):
         if self.location and not account.presence.disable_location:
             if self.location['city']:
                 location = '%s/%s' % (self.location['country'], self.location['city'])
-                service.map=cipid.Map(location)
+                service.map = cipid.Map(location)
             elif self.location['country']:
-                service.map=cipid.Map(self.location['country'])
+                service.map = cipid.Map(self.location['country'])
 
-        try:
-            xcap_caps_discovered = self.xcap_caps_discovered[account]
-        except KeyError:
-            pass
-        else:
-            if account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None:
-                icon = account.xcap_manager.status_icon
-                service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
+        if (account.id in self.xcap_caps_discovered and account.xcap_manager is not None and
+                account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
+            icon = account.xcap_manager.status_icon
+            service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
 
         if account.presence.homepage is not None:
-            service.homepage=cipid.Homepage(account.presence.homepage)
+            service.homepage = cipid.Homepage(account.presence.homepage)
 
         service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
-            service.device_info.time_offset=pidf.TimeOffset()
+            service.device_info.time_offset = pidf.TimeOffset()
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
         service.capabilities.message = not settings.chat.disabled
         service.capabilities.file_transfer = not settings.file_transfer.disabled
@@ -400,7 +374,7 @@ class PresencePublisher(object):
         service.user_input = rpid.UserInput()
         service.user_input.value = self.user_input['state']
         service.user_input.last_input = self.user_input['last_input']
-        service.user_input.idle_threshold = self.idle_threshold
+        service.user_input.idle_threshold = settings.gui.idle_threshold
         service.add(pidf.DeviceID(instance_id))
         pidf_doc.add(service)
 
@@ -451,9 +425,9 @@ class PresencePublisher(object):
 
     def set_offline_status(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
-            offline_pidf = self.build_offline_pidf(account)
-            offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
             if account.xcap_manager is not None:
+                offline_pidf = self.build_offline_pidf(account)
+                offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                 account.xcap_manager.set_offline_status(offline_status)
 
     def set_status_icon(self):
@@ -464,22 +438,23 @@ class PresencePublisher(object):
                 account.xcap_manager.set_status_icon(icon)
 
     @run_in_green_thread
-    def get_location(self, account):
-        if not account.server.settings_url or account.presence.disable_location:
-            return
-
-        query_string = "action=get_location"
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        req = urllib2.Request(url)
-        try:
-            data = urllib2.urlopen(req).read()
-        except Exception:
-            return
-        try:
-            response = cjson.decode(data.replace('\\/', '/'))
-        except TypeError:
-            return
-        if response and self.location != response:
-            self.location = response
-            self.publish()
+    def get_location(self, accounts):
+        for account in accounts:
+            if not account.server.settings_url or account.presence.disable_location:
+                continue
+            query_string = "action=get_location"
+            url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+            req = urllib2.Request(url)
+            try:
+                data = urllib2.urlopen(req).read()
+            except Exception:
+                continue
+            try:
+                response = cjson.decode(data.replace('\\/', '/'))
+            except TypeError:
+                continue
+            if response and self.location != response:
+                self.location = response
+                self.publish()
+                break
 
