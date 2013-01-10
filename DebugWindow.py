@@ -582,9 +582,8 @@ class DebugWindow(NSObject):
 
     def _NH_AudioStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
-        session = stream._session       # TODO: we should probably change this to stream.session in the middleware
 
-        text = '\n%s: Audio RTP parameters changed\n' % session.remote_identity
+        text = '\n%s: Audio RTP parameters changed\n' % stream.session.remote_identity
         if stream.local_rtp_address and stream.local_rtp_port and stream.remote_rtp_address and stream.remote_rtp_port:
             text += 'Audio RTP endpoints %s:%d <-> %s:%d\n' % (stream.local_rtp_address, stream.local_rtp_port, stream.remote_rtp_address, stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
