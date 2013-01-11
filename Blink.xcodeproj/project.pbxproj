@@ -303,6 +303,14 @@
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
+		1F72E53A16A027F600837311 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
+		1F72E53B16A027F600837311 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
+		1F72E53C16A027F600837311 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
+		1F72E53D16A027F600837311 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
+		1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
+		1F72E53F16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
+		1F72E54016A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
+		1F72E54116A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
 		1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
@@ -1697,6 +1705,8 @@
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
+		1F72E53916A027F600837311 /* MergeContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MergeContactController.py; sourceTree = "<group>"; };
+		1F72E54216A02B3600837311 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
@@ -2446,6 +2456,8 @@
 				1FAA839D16566D8C00C4C212 /* BlockedContact.py */,
 				1FAA83A91656745500C4C212 /* BlockedContact.xib */,
 				2B4CA92D10AA5F2F00D5F19E /* Group.xib */,
+				1F72E53916A027F600837311 /* MergeContactController.py */,
+				1F72E54316A02B3600837311 /* MergeContacts.xib */,
 				DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */,
 			);
 			name = Contacts;
@@ -3028,6 +3040,8 @@
 				1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE0166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */,
+				1F72E53F16A02B3600837311 /* MergeContacts.xib in Resources */,
+				1F72E53B16A027F600837311 /* MergeContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3265,6 +3279,8 @@
 				1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE1166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */,
+				1F72E54016A02B3600837311 /* MergeContacts.xib in Resources */,
+				1F72E53C16A027F600837311 /* MergeContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3506,6 +3522,8 @@
 				1F94DE56168B336300168FBA /* lupa.png in Resources */,
 				1F94DEA7168B74CA00168FBA /* Clearcom.entitlements in Resources */,
 				1F94DEA9168B758D00168FBA /* blink-gold.icns in Resources */,
+				1F72E54116A02B3600837311 /* MergeContacts.xib in Resources */,
+				1F72E53D16A027F600837311 /* MergeContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3741,6 +3759,8 @@
 				1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BDF166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */,
+				1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */,
+				1F72E53A16A027F600837311 /* MergeContactController.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3872,6 +3892,14 @@
 				1F6EE8F912BF73A2000C47DA /* English */,
 			);
 			name = AddParticipantsWindow.xib;
+			sourceTree = "<group>";
+		};
+		1F72E54316A02B3600837311 /* MergeContacts.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F72E54216A02B3600837311 /* English */,
+			);
+			name = MergeContacts.xib;
 			sourceTree = "<group>";
 		};
 		1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */ = {

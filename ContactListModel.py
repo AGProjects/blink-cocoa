@@ -68,6 +68,7 @@ from GroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
+from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 
 from resources import ApplicationData, Resources
@@ -1876,12 +1877,13 @@ class CustomListModel(NSObject):
                     targetContact = targetGroup.contacts[self.drop_on_contact_index]
 
                     if (sourceContact.name == targetContact.name):
-                        message = "Would you like to consolidate the two contacts into %s?" % targetContact.name
+                        message = u"Would you like to consolidate the two contacts into %s?" % targetContact.name
                     else:
                         message = u"Would you like to merge %s and %s contacts into %s?" % (sourceContact.name, targetContact.name, targetContact.name)
 
-                    ret = NSRunAlertPanel(u"Merge Contacts", message, u"Merge", u"Cancel", None)
-                    if ret != NSAlertDefaultReturn:
+                    merge_controller = MergeContactController(message)
+                    ret = merge_controller.runModal_(message)
+                    if ret == False:
                         return False
 
                     target_changed = False
