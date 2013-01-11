@@ -12,7 +12,6 @@ from Quartz import CoreVideo
 
 from application.system import makedirs
 from resources import ApplicationData
-from util import osx_version
 
 
 class IconViewBox(NSBox):
@@ -96,12 +95,6 @@ class EditImageView(NSImageView):
 
             NSColor.blackColor().colorWithAlphaComponent_(0.6).set()
             NSBezierPath.bezierPathWithRect_(rect).fill()
-
-    def _convertPointFromBacking(self, *args, **kw):
-        if osx_version == '10.6':
-            return self.convertPointFromBase_(*args, **kw)
-        else:
-            return self.convertPointFromBacking_(*args, **kw)
 
 
 class PhotoPicker(NSObject):
