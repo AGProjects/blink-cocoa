@@ -2404,6 +2404,7 @@ class ContactListModel(CustomListModel):
             self.active_watchers_map[notification.sender.id] = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
             all_pending_watchers = {}
             [all_pending_watchers.update(d) for d in self.pending_watchers_map.values()]
+            growl_sent = False
             for watcher in all_pending_watchers.itervalues():
                 if not self.presencePolicyExistsForURI_(watcher.sipuri):
                     uri = sip_prefix_pattern.sub('', watcher.sipuri)
@@ -2411,10 +2412,12 @@ class ContactListModel(CustomListModel):
                     gui_watcher = BlinkPendingWatcher(watcher)
                     self.pending_watchers_group.contacts.append(gui_watcher)
 
-                    growl_data = NotificationData()
-                    growl_data.timestamp = notification.datetime
-                    growl_data.watcher = gui_watcher.name
-                    self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
+                    if not growl_sent:
+                        growl_data = NotificationData()
+                        growl_data.timestamp = notification.datetime
+                        growl_data.watcher = gui_watcher.name
+                        self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
+                        growl_sent = True
 
             all_active_watchers = {}
             [all_active_watchers.update(d) for d in self.active_watchers_map.values()]
@@ -2424,6 +2427,7 @@ class ContactListModel(CustomListModel):
 
         elif notification.data.state == 'partial':
             tmp_pending_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
+            growl_sent = False
             for watcher in tmp_pending_watchers.itervalues():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
                 try:
@@ -2435,10 +2439,12 @@ class ContactListModel(CustomListModel):
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
-                        growl_data = NotificationData()
-                        growl_data.timestamp = notification.datetime
-                        growl_data.watcher = gui_watcher.name
-                        self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
+                        if not growl_sent:
+                            growl_data = NotificationData()
+                            growl_data.timestamp = notification.datetime
+                            growl_data.watcher = gui_watcher.name
+                            self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
+                            growl_sent = True
                 else:
                     # TODO: set displayname if it didn't have one?
                     pass
