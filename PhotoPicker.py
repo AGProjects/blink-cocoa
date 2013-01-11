@@ -179,6 +179,8 @@ class PhotoPicker(NSObject):
             knownFiles.add(unicode(item.objectForKey_("path")))
 
         for f in files:
+            if not f.startswith('user_icon'):
+                continue
             p = os.path.normpath(path+"/"+f)
             if p not in knownFiles:
                 image = NSImage.alloc().initWithContentsOfFile_(p)
