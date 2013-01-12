@@ -3961,7 +3961,7 @@ class ContactWindowController(NSWindowController):
                 tiff_data = image.TIFFRepresentation()
             bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
             png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-            self.saveUserIcon(str(png_data.bytes()))
+            self.saveUserIcon(str(png_data.bytes()), old_path=path)
 
     def loadUserIcon(self):
         # Call this in the GUI thread
@@ -3974,19 +3974,20 @@ class ContactWindowController(NSWindowController):
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     @run_in_thread('file-io')
-    def saveUserIcon(self, data):
+    def saveUserIcon(self, data, old_path=None):
         settings = SIPSimpleSettings()
         data_h = hashlib.sha512(data).hexdigest()
         if settings.presence_state.icon and settings.presence_state.icon.hash == data_h:
             return
-        if settings.presence_state.icon:
-            unlink(settings.presence_state.icon.path)
         filename = '%s.png' % unique_id(prefix='user_icon')
         path = ApplicationData.get(os.path.join('photos', filename))
         with open(path, 'w') as f:
             f.write(data)
         settings.presence_state.icon = path
         settings.save()
+
+        if old_path is not None:
+            unlink(old_path)
 
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()

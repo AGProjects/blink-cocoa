@@ -31,7 +31,7 @@ class MyCollectionView(NSCollectionView):
         if selection.count() > 0:
             obj = selection.lastObject()
             path = obj.objectForKey_("path")
-            if path == unicode(own_icon_path):
+            if own_icon_path is not None and path == unicode(own_icon_path):
                 return
 
             if path.endswith("default_user_icon.tiff"):
@@ -178,6 +178,9 @@ class PhotoPicker(NSObject):
         return self
 
     def refreshLibrary(self):
+        settings = SIPSimpleSettings()
+        own_icon_path = settings.presence_state.icon
+        selected_icon = None
         def md5sum(filename):
             md5 = hashlib.md5()
             with open(filename,'rb') as f: 
@@ -197,8 +200,9 @@ class PhotoPicker(NSObject):
             knownFiles.add(unicode(item.objectForKey_("path")))
 
         seen_md5sum = {}
+        i = 0
         for f in files:
-            if not f.startswith('user_icon') and f != 'default_user_icon.tiff':
+            if not f.startswith('user_icon') and not f.startswith('photo') and f != 'default_user_icon.tiff':
                 continue
             p = os.path.normpath(path+"/"+f)
             if p not in knownFiles:
@@ -214,9 +218,14 @@ class PhotoPicker(NSObject):
                         continue
                     item = NSDictionary.dictionaryWithObjectsAndKeys_(image, "picture", p, "path")
                     array.addObject_(item)
+                    if own_icon_path is not None and filename == unicode(own_icon_path):
+                        selected_icon = i
+                    i += 1                       
 
         if array.count() > 0:
             self.contentArrayController.addObjects_(array)
+            if selected_icon is not None:
+                self.libraryCollectionView.setSelectionIndexes_(NSIndexSet.indexSetWithIndex_(selected_icon))
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if item.identifier() == "recent":
