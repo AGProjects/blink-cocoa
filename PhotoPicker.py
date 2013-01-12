@@ -180,7 +180,7 @@ class PhotoPicker(NSObject):
             knownFiles.add(unicode(item.objectForKey_("path")))
 
         for f in files:
-            if not f.startswith('user_icon'):
+            if not f.startswith('user_icon') and f != 'default_user_icon.tiff':
                 continue
             p = os.path.normpath(path+"/"+f)
             if p not in knownFiles:
