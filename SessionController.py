@@ -236,10 +236,6 @@ class SessionControllersManager(object):
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
-            elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                BlinkLogger().log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
-                self.startIncomingSession(session, streams)
-                return
         elif session.account is BonjourAccount() and stream_type_list == ['chat']:
             BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
             self.startIncomingSession(session, streams)

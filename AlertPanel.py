@@ -4,7 +4,9 @@
 from Foundation import *
 from AppKit import *
 
+import random
 import time
+
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
@@ -239,7 +241,7 @@ class AlertPanel(NSObject, object):
                 if session.account.audio.auto_accept:
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
-                        self.enableAutoAnswer(view, session)
+                        self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
                 elif SIPSimpleSettings().answering_machine.enabled:
                     self.enableAnsweringMachine(view, session)
 
@@ -268,6 +270,9 @@ class AlertPanel(NSObject, object):
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
             fileIcon.setFrame_(frame)
             fileIcon.setHidden_(False)
+            if settings.file_transfer.auto_accept:
+                BlinkLogger().log_info(u"Auto answer enabled for file transfers from known contacts")
+                self.enableAutoAnswer(view, session, random.uniform(10, 20))
 
         self.sessionsListView.addSubview_(view)
         frame = self.sessionsListView.frame()
@@ -321,7 +326,7 @@ class AlertPanel(NSObject, object):
 
             if caller_contact.auto_answer:
                 BlinkLogger().log_info(u"Auto answer enabled for this contact")
-                self.enableAutoAnswer(view, session)
+                self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
         fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
         fromT.sizeToFit()
@@ -542,10 +547,10 @@ class AlertPanel(NSObject, object):
             timer.invalidate()
             del self.autoAnswerTimers[session]
 
-    def enableAutoAnswer(self, view, session):
+    def enableAutoAnswer(self, view, session, delay=30):
         if session not in self.autoAnswerTimers:
             label = view.viewWithTag_(15)
-            info = dict(delay = session.account.audio.answer_delay, session = session, label = label, time = time.time())
+            info = dict(delay = delay, session = session, label = label, time = time.time())
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTickAutoAnswer:", info, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
