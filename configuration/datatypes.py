@@ -354,3 +354,5 @@ class UserIcon(object):
     path = property(_get_path, _set_path)
     del _get_path, _set_path
 
+    def __unicode__(self):
+        return unicode(self.path)

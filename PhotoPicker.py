@@ -14,6 +14,7 @@ from Quartz import CoreVideo
 
 from application.system import makedirs
 from resources import ApplicationData
+from sipsimple.configuration.settings import SIPSimpleSettings
 
 
 class IconViewBox(NSBox):
@@ -24,13 +25,20 @@ class IconViewBox(NSBox):
 class MyCollectionView(NSCollectionView):
     arrayController = objc.IBOutlet()
     def deleteBackward_(self, sender):
+        settings = SIPSimpleSettings()
+        own_icon_path = settings.presence_state.icon
         selection = self.arrayController.selectedObjects()
         if selection.count() > 0:
             obj = selection.lastObject()
             path = obj.objectForKey_("path")
-            if not path.endswith("default_user_icon.tiff"):
-                os.remove(path)
-                self.arrayController.removeObject_(obj)
+            if path == unicode(own_icon_path):
+                return
+
+            if path.endswith("default_user_icon.tiff"):
+                return
+
+            os.remove(path)
+            self.arrayController.removeObject_(obj)
 
 
 class EditImageView(NSImageView):
