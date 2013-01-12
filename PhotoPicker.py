@@ -230,6 +230,7 @@ class PhotoPicker(NSObject):
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if item.identifier() == "recent":
             self.cameraButtonClicked_(self.cancelButton)
+            self.captureSession.stopRunning()
         else:
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
@@ -409,6 +410,7 @@ class PhotoPicker(NSObject):
         #    device.close()
         if hasattr(self, 'captureDecompressedVideoOutput'):
             self.captureDecompressedVideoOutput.setDelegate_(None)
+        self.captureSession.stopRunning()
         NSApp.stopModalWithCode_(0)
 
     def runModal(self):
