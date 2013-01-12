@@ -2251,17 +2251,17 @@ class ContactWindowController(NSWindowController):
         item = menu.itemWithTitle_(status)
         self.presenceActivityPopUp.selectItem_(item)
 
-        # set the note coresponding to this activity
-        if settings.presence_state.status != status:
-            selected_presence_activity = item.representedObject()
-            presence_note = selected_presence_activity['note']
-        else:
+        presence_note = None
+        if settings.presence_state.status == status:
             # if is the same status, delete existing note
+            presence_note = ''
+        if settings.presence_state.status == 'Invisible':
             presence_note = ''
 
         if settings.presence_state.status != status:
             settings.presence_state.status = status
-        if settings.presence_state.note != presence_note:
+
+        if presence_note is not None and settings.presence_state.note != presence_note:
             self.presenceNoteText.setStringValue_(presence_note or '')
             settings.presence_state.note = presence_note
 
