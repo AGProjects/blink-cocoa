@@ -3979,14 +3979,19 @@ class ContactWindowController(NSWindowController):
         data_h = hashlib.sha512(data).hexdigest()
         if settings.presence_state.icon and settings.presence_state.icon.hash == data_h:
             return
-        filename = '%s.png' % unique_id(prefix='user_icon')
-        path = ApplicationData.get(os.path.join('photos', filename))
-        with open(path, 'w') as f:
-            f.write(data)
-        settings.presence_state.icon = path
+
+        if old_path is not None and old_path.endswith("default_user_icon.tiff"):
+            settings.presence_state.icon = None
+        else:
+            filename = '%s.png' % unique_id(prefix='user_icon')
+            path = ApplicationData.get(os.path.join('photos', filename))
+            with open(path, 'w') as f:
+                f.write(data)
+            settings.presence_state.icon = path
+
         settings.save()
 
-        if old_path is not None:
+        if old_path is not None and not old_path.endswith("default_user_icon.tiff"):
             unlink(old_path)
 
     def getSelectedParticipant(self):
