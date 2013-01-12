@@ -3,6 +3,8 @@
 
 import os
 import datetime
+import hashlib
+import unicodedata
 
 import Quartz
 from Foundation import *
@@ -168,8 +170,15 @@ class PhotoPicker(NSObject):
         return self
 
     def refreshLibrary(self):
+        def md5sum(filename):
+            md5 = hashlib.md5()
+            with open(filename,'rb') as f: 
+                for chunk in iter(lambda: f.read(128*md5.block_size), b''): 
+                    md5.update(chunk)
+            return md5.hexdigest()
+        
         path = ApplicationData.get('photos')
-
+        
         if os.path.exists(path):
           files = os.listdir(path)
         else:
@@ -179,16 +188,24 @@ class PhotoPicker(NSObject):
         for item in self.contentArrayController.arrangedObjects():
             knownFiles.add(unicode(item.objectForKey_("path")))
 
+        seen_md5sum = {}
         for f in files:
             if not f.startswith('user_icon') and f != 'default_user_icon.tiff':
                 continue
             p = os.path.normpath(path+"/"+f)
             if p not in knownFiles:
-                image = NSImage.alloc().initWithContentsOfFile_(p)
-                if not image:
-                    continue
-                item = NSDictionary.dictionaryWithObjectsAndKeys_(image, "picture", p, "path")
-                array.addObject_(item)
+                photos_folder = unicodedata.normalize('NFC', path)
+                filename = os.path.join(photos_folder, f)
+                checksum = md5sum(filename)
+                try:
+                    _seen_file = seen_md5sum[filename]
+                except KeyError:
+                    seen_md5sum[filename] = checksum
+                    image = NSImage.alloc().initWithContentsOfFile_(p)
+                    if not image:
+                        continue
+                    item = NSDictionary.dictionaryWithObjectsAndKeys_(image, "picture", p, "path")
+                    array.addObject_(item)
 
         if array.count() > 0:
             self.contentArrayController.addObjects_(array)
