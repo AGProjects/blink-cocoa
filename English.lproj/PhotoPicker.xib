@@ -71,12 +71,12 @@
 							<string key="NSFrame">{{13, 40}, {331, 266}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="653468545"/>
+							<reference key="NSNextKeyView" ref="928645203"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="767916711">
 									<string key="NSIdentifier">recent</string>
 									<object class="NSView" key="NSView" id="928645203">
-										<nil key="NSNextResponder"/>
+										<reference key="NSNextResponder" ref="556202494"/>
 										<int key="NSvFlags">256</int>
 										<array class="NSMutableArray" key="NSSubviews">
 											<object class="NSButton" id="863529926">
@@ -84,7 +84,8 @@
 												<int key="NSvFlags">293</int>
 												<string key="NSFrame">{{54, 1}, {203, 32}}</string>
 												<reference key="NSSuperview" ref="928645203"/>
-												<reference key="NSNextKeyView" ref="765683548"/>
+												<reference key="NSWindow"/>
+												<reference key="NSNextKeyView" ref="556202494"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="978923102">
 													<int key="NSCellFlags">67239424</int>
@@ -117,6 +118,7 @@
 																<int key="NSvFlags">274</int>
 																<string key="NSFrameSize">{315, 174}</string>
 																<reference key="NSSuperview" ref="979260278"/>
+																<reference key="NSWindow"/>
 																<reference key="NSNextKeyView" ref="395312194"/>
 																<string key="NSMinGridSize">{0, 0}</string>
 																<string key="NSMaxGridSize">{0, 0}</string>
@@ -135,6 +137,7 @@
 														</array>
 														<string key="NSFrame">{{1, 1}, {315, 174}}</string>
 														<reference key="NSSuperview" ref="240639756"/>
+														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="172786420"/>
 														<reference key="NSDocView" ref="172786420"/>
 														<object class="NSColor" key="NSBGColor" id="688034297">
@@ -153,6 +156,7 @@
 														<int key="NSvFlags">-2147483392</int>
 														<string key="NSFrame">{{200, 1}, {15, 200}}</string>
 														<reference key="NSSuperview" ref="240639756"/>
+														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="863529926"/>
 														<reference key="NSTarget" ref="240639756"/>
 														<string key="NSAction">_doScroller:</string>
@@ -164,6 +168,7 @@
 														<int key="NSvFlags">-2147483392</int>
 														<string key="NSFrame">{{-100, -100}, {199, 15}}</string>
 														<reference key="NSSuperview" ref="240639756"/>
+														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="979260278"/>
 														<int key="NSsFlags">1</int>
 														<reference key="NSTarget" ref="240639756"/>
@@ -173,6 +178,7 @@
 												</array>
 												<string key="NSFrame">{{-3, 41}, {317, 176}}</string>
 												<reference key="NSSuperview" ref="928645203"/>
+												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="534503274"/>
 												<int key="NSsFlags">133650</int>
 												<reference key="NSVScroller" ref="395312194"/>
@@ -181,6 +187,8 @@
 											</object>
 										</array>
 										<string key="NSFrame">{{10, 33}, {311, 220}}</string>
+										<reference key="NSSuperview" ref="556202494"/>
+										<reference key="NSWindow"/>
 										<reference key="NSNextKeyView" ref="240639756"/>
 									</object>
 									<string key="NSLabel">Recent Pictures</string>
@@ -190,7 +198,7 @@
 								<object class="NSTabViewItem" id="540982908">
 									<string key="NSIdentifier">capture</string>
 									<object class="NSView" key="NSView" id="653468545">
-										<reference key="NSNextResponder" ref="556202494"/>
+										<nil key="NSNextResponder"/>
 										<int key="NSvFlags">256</int>
 										<array class="NSMutableArray" key="NSSubviews">
 											<object class="QTCaptureView" id="744201514">
@@ -198,7 +206,6 @@
 												<int key="NSvFlags">271</int>
 												<string key="NSFrame">{{-3, 41}, {317, 176}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="174073116"/>
 												<object class="NSColor" key="kQTCaptureViewCoderFillColor" id="788709994">
 													<int key="NSColorSpace">3</int>
@@ -211,7 +218,6 @@
 												<int key="NSvFlags">293</int>
 												<string key="NSFrame">{{108, 1}, {95, 32}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="632476273"/>
 												<int key="NSTag">5</int>
 												<bool key="NSEnabled">YES</bool>
@@ -234,7 +240,6 @@
 												<int key="NSvFlags">-2147483379</int>
 												<string key="NSFrame">{{107, 1}, {96, 32}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="714675759"/>
 												<int key="NSTag">7</int>
 												<bool key="NSEnabled">YES</bool>
@@ -257,8 +262,7 @@
 												<int key="NSvFlags">-2147483379</int>
 												<string key="NSFrame">{{203, 1}, {96, 32}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="765683548"/>
+												<reference key="NSNextKeyView"/>
 												<int key="NSTag">6</int>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="1069303883">
@@ -288,7 +292,6 @@
 												</set>
 												<string key="NSFrame">{{-3, 38}, {317, 182}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="744201514"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSImageCell" key="NSCell" id="952988499">
@@ -303,8 +306,6 @@
 											</object>
 										</array>
 										<string key="NSFrame">{{10, 33}, {311, 220}}</string>
-										<reference key="NSSuperview" ref="556202494"/>
-										<reference key="NSWindow"/>
 										<reference key="NSNextKeyView" ref="717512754"/>
 									</object>
 									<string key="NSLabel">Camera Capture</string>
@@ -312,13 +313,13 @@
 									<reference key="NSTabView" ref="556202494"/>
 								</object>
 							</array>
-							<reference key="NSSelectedTabViewItem" ref="540982908"/>
+							<reference key="NSSelectedTabViewItem" ref="767916711"/>
 							<reference key="NSFont" ref="459386322"/>
 							<int key="NSTvFlags">0</int>
 							<bool key="NSAllowTruncatedLabels">YES</bool>
 							<bool key="NSDrawsBackground">YES</bool>
 							<array class="NSMutableArray" key="NSSubviews">
-								<reference ref="653468545"/>
+								<reference ref="928645203"/>
 							</array>
 						</object>
 						<object class="NSButton" id="818006350">
