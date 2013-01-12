@@ -26,8 +26,9 @@ class MyCollectionView(NSCollectionView):
         if selection.count() > 0:
             obj = selection.lastObject()
             path = obj.objectForKey_("path")
-            os.remove(path)
-            self.arrayController.removeObject_(obj)
+            if not path.endswith("default_user_icon.tiff"):
+                os.remove(path)
+                self.arrayController.removeObject_(obj)
 
 
 class EditImageView(NSImageView):
