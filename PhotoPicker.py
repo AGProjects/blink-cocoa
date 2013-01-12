@@ -183,13 +183,13 @@ class PhotoPicker(NSObject):
         selected_icon = None
         def md5sum(filename):
             md5 = hashlib.md5()
-            with open(filename,'rb') as f: 
-                for chunk in iter(lambda: f.read(128*md5.block_size), b''): 
+            with open(filename,'rb') as f:
+                for chunk in iter(lambda: f.read(128*md5.block_size), b''):
                     md5.update(chunk)
             return md5.hexdigest()
-        
+
         path = ApplicationData.get('photos')
-        
+
         if os.path.exists(path):
           files = os.listdir(path)
         else:
@@ -220,7 +220,7 @@ class PhotoPicker(NSObject):
                     array.addObject_(item)
                     if own_icon_path is not None and filename == unicode(own_icon_path):
                         selected_icon = i
-                    i += 1                       
+                    i += 1
 
         if array.count() > 0:
             self.contentArrayController.addObjects_(array)
