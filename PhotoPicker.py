@@ -230,7 +230,15 @@ class PhotoPicker(NSObject):
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if item.identifier() == "recent":
             self.cameraButtonClicked_(self.cancelButton)
-
+        else:
+            self.photoView.setHidden_(True)
+            self.captureView.setHidden_(False)
+            self.captureSession.startRunning()
+            self.previewButton.setHidden_(True)
+            self.captureButton.setHidden_(False)
+            self.cancelButton.setHidden_(TRUE)
+            self.setButton.setEnabled_(False)
+    
     def captureOutput_didOutputVideoFrame_withSampleBuffer_fromConnection_(self, captureOutput, videoFrame, sampleBuffer, connection):
         self.latestImageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(videoFrame))
 
@@ -242,7 +250,7 @@ class PhotoPicker(NSObject):
             self.captureSession.startRunning()
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(False)
-            self.cancelButton.setHidden_(False)
+            self.cancelButton.setHidden_(TRUE)
             self.setButton.setEnabled_(False)
         elif sender.tag() == 6: # Cancel
             self.photoView.setHidden_(False)
