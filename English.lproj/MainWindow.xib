@@ -1348,12 +1348,12 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 32}, {274, 350}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
-							<reference key="NSNextKeyView" ref="384228997"/>
+							<reference key="NSNextKeyView" ref="977201501"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="954578565">
 									<string key="NSIdentifier">contacts</string>
 									<object class="NSView" key="NSView" id="384228997">
-										<reference key="NSNextResponder" ref="1053838733"/>
+										<nil key="NSNextResponder"/>
 										<int key="NSvFlags">274</int>
 										<array class="NSMutableArray" key="NSSubviews">
 											<object class="NSScrollView" id="787736654">
@@ -1509,7 +1509,6 @@
 											</object>
 										</array>
 										<string key="NSFrameSize">{274, 350}</string>
-										<reference key="NSSuperview" ref="1053838733"/>
 										<reference key="NSNextKeyView" ref="787736654"/>
 										<int key="NSViewLayerContentsRedrawPolicy">2</int>
 									</object>
@@ -1707,7 +1706,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<object class="NSTabViewItem" id="857008963">
 									<string key="NSIdentifier">dialpad</string>
 									<object class="NSView" key="NSView" id="977201501">
-										<nil key="NSNextResponder"/>
+										<reference key="NSNextResponder" ref="1053838733"/>
 										<int key="NSvFlags">274</int>
 										<array class="NSMutableArray" key="NSSubviews">
 											<object class="NSCustomView" id="1069066581">
@@ -2047,6 +2046,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 														<int key="NSvFlags">268</int>
 														<string key="NSFrame">{{174, 6}, {70, 70}}</string>
 														<reference key="NSSuperview" ref="1069066581"/>
+														<reference key="NSNextKeyView" ref="954251869"/>
 														<int key="NSViewLayerContentsRedrawPolicy">2</int>
 														<int key="NSTag">11</int>
 														<bool key="NSEnabled">YES</bool>
@@ -2073,6 +2073,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 											</object>
 										</array>
 										<string key="NSFrameSize">{274, 350}</string>
+										<reference key="NSSuperview" ref="1053838733"/>
 										<reference key="NSNextKeyView" ref="1069066581"/>
 									</object>
 									<string key="NSLabel">Dialpad</string>
@@ -2080,13 +2081,13 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 									<reference key="NSTabView" ref="1053838733"/>
 								</object>
 							</array>
-							<reference key="NSSelectedTabViewItem" ref="954578565"/>
+							<reference key="NSSelectedTabViewItem" ref="857008963"/>
 							<reference key="NSFont" ref="357332417"/>
 							<int key="NSTvFlags">6</int>
 							<bool key="NSAllowTruncatedLabels">YES</bool>
 							<bool key="NSDrawsBackground">YES</bool>
 							<array class="NSMutableArray" key="NSSubviews">
-								<reference ref="384228997"/>
+								<reference ref="977201501"/>
 							</array>
 						</object>
 						<object class="NSButton" id="954251869">
@@ -7301,12 +7302,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="264699322"/>
-						<string key="accessibilityValue">User Icon</string>
+						<string key="accessibilityValue">User Avatar</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="264699322"/>
-						<string key="toolTip">Change My Icon</string>
+						<string key="toolTip">Click to change my avatar visible to people who subscribed for my availability</string>
 					</object>
 				</dictionary>
 				<string key="656.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
