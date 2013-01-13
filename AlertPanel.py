@@ -531,11 +531,11 @@ class AlertPanel(NSObject, object):
             amLabel = view.viewWithTag_(15)
             delay = 0 if run_now else settings.answering_machine.answer_delay
             info = dict(delay = delay, session = session, label = amLabel, time = time.time())
-            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTick:", info, True)
+            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "timerTickAnsweringMachine:", info, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
             self.answeringMachineTimers[session] = timer
-            self.timerTick_(timer)
+            self.timerTickAnsweringMachine_(timer)
             amLabel.setHidden_(False)
 
     def disableAutoAnswer(self, view, session):
@@ -558,7 +558,7 @@ class AlertPanel(NSObject, object):
             self.timerTickAutoAnswer_(timer)
             label.setHidden_(False)
 
-    def timerTick_(self, timer):
+    def timerTickAnsweringMachine_(self, timer):
         info = timer.userInfo()
         if time.time() - info["time"] >= info["delay"]:
             self.acceptAudioStreamAnsweringMachine(info["session"])
