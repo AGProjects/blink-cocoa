@@ -97,6 +97,7 @@ class FileTransferWindowController(NSObject, object):
 
         self.listView.relayout()
         self.listView.display()
+        self.listView.setNeedsDisplay_(True)
 
         self.get_previous_transfers(active_items)
 
