@@ -41,7 +41,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{497, 181}, {345, 223}}</string>
 				<int key="NSWTFlags">-469762048</int>
-				<string key="NSWindowTitle">About Blink</string>
+				<string key="NSWindowTitle"/>
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
@@ -55,6 +55,7 @@
 							<string key="NSFrame">{{51, 20}, {243, 28}}</string>
 							<reference key="NSSuperview" ref="661994322"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="712685643">
 								<int key="NSCellFlags">68288064</int>
