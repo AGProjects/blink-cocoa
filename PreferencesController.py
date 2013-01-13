@@ -73,12 +73,15 @@ class PreferencesController(NSWindowController, object):
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidEnd")
             notification_center.add_observer(self, name="SIPAccountChangedByICloud")
             notification_center.add_observer(self, sender=AccountManager())
+
             return self
 
     def showWindow_(self, sender):
         if not self.window():
             NSBundle.loadNibNamed_owner_("PreferencesWindow", self)
             self.buttonClicked_(self.advancedToggle)
+            self.window().setTitle_(u'Accounts')
+
         self.accountTable.reloadData()
 
         default_account = AccountManager().default_account
@@ -186,38 +189,48 @@ class PreferencesController(NSWindowController, object):
 
         if section == 'accounts':
             self.mainTabView.selectTabViewItemWithIdentifier_("accounts")
+            self.window().setTitle_(u'Accounts')
         elif section == 'audio':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
             self.sectionDescription.setStringValue_(u'Audio Settings')
+            self.window().setTitle_(u'Audio')
         elif section == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
             self.sectionDescription.setStringValue_(u'Answering Machine Settings')
+            self.window().setTitle_(u'Answering Machine')
         elif section == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
             self.sectionDescription.setStringValue_(u'Chat Settings')
+            self.window().setTitle_(u'Chat')
         elif section == 'file-transfer':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("file_transfer")
             self.sectionDescription.setStringValue_(u'File Transfer Settings')
+            self.window().setTitle_(u'File Transfer')
         elif section == 'desktop-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("desktop_sharing")
             self.sectionDescription.setStringValue_(u'Screen Sharing Settings')
+            self.window().setTitle_(u'Screen Sharing')
         elif section == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
             self.sectionDescription.setStringValue_(u'Sound Alerts')
+            self.window().setTitle_(u'Alerts')
         elif section == 'contacts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("contacts")
             self.sectionDescription.setStringValue_(u'Contacts Settings')
+            self.window().setTitle_(u'Contacts')
         elif section == 'advanced':
             self.sectionDescription.setStringValue_(u'Advanced Settings')
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
+            self.window().setTitle_(u'Advanced')
         elif section == 'help':
+            self.window().setTitle_(u'Help')
             NSApp.delegate().contactsWindowController.showHelp('#preferences')
 
     def createGeneralOptionsUI(self, type='basic'):
