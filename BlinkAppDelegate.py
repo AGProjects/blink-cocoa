@@ -270,7 +270,6 @@ class BlinkAppDelegate(NSObject):
             version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
             build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-            self.aboutPanel.setTitle_('About %s' % self.applicationNamePrint)
 
             if self.applicationName == 'Blink Pro':
                 target = "Pro"
