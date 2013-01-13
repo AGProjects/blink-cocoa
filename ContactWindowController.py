@@ -3716,9 +3716,11 @@ class ContactWindowController(NSWindowController):
                 mitem.setRepresentedObject_(item)
 
         elif isinstance(item, BlinkGroup):
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename", "renameGroup:", "")
+            if item.add_contact_allowed:
+                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add Contact...", "addContact:", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename...", "renameGroup:", "")
             lastItem.setRepresentedObject_(item)
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteItem:", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete...", "deleteItem:", "")
             lastItem.setEnabled_(item.deletable)
             lastItem.setRepresentedObject_(item)
 
