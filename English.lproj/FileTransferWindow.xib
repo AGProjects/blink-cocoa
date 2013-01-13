@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">10K549</string>
-		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1038.36</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<int key="IBDocument.SystemTarget">1070</int>
+		<string key="IBDocument.SystemVersion">11G63</string>
+		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
+		<string key="IBDocument.AppKitVersion">1138.51</string>
+		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">1938</string>
+			<string key="NS.object.0">2182</string>
 		</object>
 		<array key="IBDocument.IntegratedClassDependencies">
 			<string>NSView</string>
@@ -44,9 +44,10 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{196, 233}, {433, 277}}</string>
 				<int key="NSWTFlags">1677721600</int>
-				<string key="NSWindowTitle">Blink File Transfers</string>
+				<string key="NSWindowTitle">File Transfers</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
+				<nil key="NSUserInterfaceItemIdentifier"/>
 				<string key="NSWindowContentMinSize">{433, 277}</string>
 				<object class="NSView" key="NSWindowView" id="301192701">
 					<reference key="NSNextResponder"/>
@@ -65,11 +66,14 @@
 											<int key="NSvFlags">266</int>
 											<string key="NSFrameSize">{433, 244}</string>
 											<reference key="NSSuperview" ref="929797222"/>
+											<reference key="NSWindow"/>
+											<reference key="NSNextKeyView" ref="489609344"/>
 											<string key="NSClassName">ListView</string>
 										</object>
 									</array>
 									<string key="NSFrame">{{1, 1}, {433, 245}}</string>
 									<reference key="NSSuperview" ref="331659932"/>
+									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView" ref="258697979"/>
 									<reference key="NSDocView" ref="258697979"/>
 									<object class="NSColor" key="NSBGColor" id="921234450">
@@ -83,6 +87,8 @@
 									<int key="NSvFlags">-2147483392</int>
 									<string key="NSFrame">{{419, 1}, {15, 245}}</string>
 									<reference key="NSSuperview" ref="331659932"/>
+									<reference key="NSWindow"/>
+									<reference key="NSNextKeyView" ref="602094194"/>
 									<reference key="NSTarget" ref="331659932"/>
 									<string key="NSAction">_doScroller:</string>
 									<double key="NSPercent">0.99590163934426235</double>
@@ -92,6 +98,8 @@
 									<int key="NSvFlags">-2147483392</int>
 									<string key="NSFrame">{{-100, -100}, {433, 15}}</string>
 									<reference key="NSSuperview" ref="331659932"/>
+									<reference key="NSWindow"/>
+									<reference key="NSNextKeyView" ref="929797222"/>
 									<int key="NSsFlags">1</int>
 									<reference key="NSTarget" ref="331659932"/>
 									<string key="NSAction">_doScroller:</string>
@@ -100,8 +108,9 @@
 							</array>
 							<string key="NSFrame">{{-1, 31}, {435, 247}}</string>
 							<reference key="NSSuperview" ref="301192701"/>
-							<reference key="NSNextKeyView" ref="929797222"/>
-							<int key="NSsFlags">530</int>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="252737382"/>
+							<int key="NSsFlags">133650</int>
 							<reference key="NSVScroller" ref="489609344"/>
 							<reference key="NSHScroller" ref="252737382"/>
 							<reference key="NSContentView" ref="929797222"/>
@@ -111,6 +120,8 @@
 							<int key="NSvFlags">292</int>
 							<string key="NSFrame">{{8, 4}, {47, 25}}</string>
 							<reference key="NSSuperview" ref="301192701"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="27202450"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="136439841">
 								<int key="NSCellFlags">-2080244224</int>
@@ -135,6 +146,8 @@
 							<int key="NSvFlags">294</int>
 							<string key="NSFrame">{{60, 10}, {62, 14}}</string>
 							<reference key="NSSuperview" ref="301192701"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="863880312"/>
 							<bool key="NSViewIsLayerTreeHost">YES</bool>
 							<object class="NSShadow" key="NSViewShadow">
 								<double key="NSShadowHoriz">1</double>
@@ -174,6 +187,8 @@
 							<int key="NSvFlags">289</int>
 							<string key="NSFrame">{{221, 9}, {195, 14}}</string>
 							<reference key="NSSuperview" ref="301192701"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSViewIsLayerTreeHost">YES</bool>
 							<object class="NSShadow" key="NSViewShadow">
 								<double key="NSShadowHoriz">1</double>
@@ -195,11 +210,14 @@
 					</array>
 					<string key="NSFrameSize">{433, 277}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
+					<reference key="NSNextKeyView" ref="331659932"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
 				<string key="NSMinSize">{433, 299}</string>
-				<string key="NSMaxSize">{1e+13, 1e+13}</string>
+				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">FileTransferWindow</string>
+				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
 		</array>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
@@ -406,7 +424,77 @@
 			<nil key="sourceID"/>
 			<int key="maxID">29</int>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes"/>
+		<object class="IBClassDescriber" key="IBDocument.Classes">
+			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<object class="IBPartialClassDescription">
+					<string key="className">FileTransferWindowController</string>
+					<string key="superclassName">NSObject</string>
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="clearList:">id</string>
+						<string key="close:">id</string>
+						<string key="showWindow:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="clearList:">
+							<string key="name">clearList:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="close:">
+							<string key="name">close:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="showWindow:">
+							<string key="name">showWindow:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="bottomLabel">id</string>
+						<string key="listView">id</string>
+						<string key="transferSpeed">id</string>
+						<string key="window">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="bottomLabel">
+							<string key="name">bottomLabel</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="listView">
+							<string key="name">listView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="transferSpeed">
+							<string key="name">transferSpeed</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="window">
+							<string key="name">window</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/FileTransferWindowController.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">ListView</string>
+					<string key="superclassName">VerticalBoxView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ListView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">VerticalBoxView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/VerticalBoxView.h</string>
+					</object>
+				</object>
+			</array>
+		</object>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>
