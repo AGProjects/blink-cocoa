@@ -33,6 +33,7 @@ class AudioSettingsExtension(SettingsGroup):
     call_waiting = Setting(type=bool, default=True)
     do_not_disturb = Setting(type=bool, default=False)
     reject_anonymous = Setting(type=bool, default=False)
+    reject_unauthorized_contacts = Setting(type=bool, default=False)
 
 
 class ChatSettingsExtension(SettingsGroup):

@@ -1673,7 +1673,7 @@ AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'ldap')
 
 AccountSettingsOrder = {
-                       'audio': ['do_not_disturb', 'call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'auto_accept', 'answer_delay'],
+                       'audio': ['do_not_disturb', 'call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'reject_unauthorized_contacts', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'prefix'],

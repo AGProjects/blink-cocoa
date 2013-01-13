@@ -39,6 +39,7 @@ from AlertPanel import AlertPanel
 from AudioController import AudioController
 from AccountSettings import AccountSettings
 from BlinkLogger import BlinkLogger
+from ContactListModel import BlinkPresenceContact
 from ChatController import ChatController
 from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
 from FileTransferController import FileTransferController
@@ -208,15 +209,29 @@ class SessionControllersManager(object):
             session.reject(486, 'Busy Here')
             return
 
-        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.do_not_disturb:
-            BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity_to_string(session.remote_identity))
-            session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
-            return
+        if 'audio' in stream_type_list and session.account is not BonjourAccount():
+            if session.account.audio.do_not_disturb:
+                BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity_to_string(session.remote_identity))
+                session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+                return
 
-        if 'audio' in stream_type_list and session.account is not BonjourAccount() and session.account.audio.reject_anonymous and session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
-            BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
-            session.reject(403, 'Anonymous Not Acceptable')
-            return
+            if session.account.audio.reject_anonymous:
+                if session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
+                    BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
+                    session.reject(603, 'Anonymous Not Acceptable')
+                    return
+
+            if session.account.audio.reject_unauthorized_contacts:
+                match_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(session.remote_identity.uri, exact_match=True)
+                if match_contact is not None and isinstance(match_contact, BlinkPresenceContact):
+                    if match_contact.contact.presence.policy != 'allow':
+                        BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                        session.reject(603, 'Not Acceptable Here')
+                        return
+                else:
+                    BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                    session.reject(603, 'Not Acceptable Here')
+                    return
 
         # at this stage call is allowed and will alert the user
         self.incomingSessions.add(session)
