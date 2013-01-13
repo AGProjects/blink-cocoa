@@ -1381,6 +1381,20 @@ class ContactWindowController(NSWindowController):
         self.searchContacts()
 
     @objc.IBAction
+    def moveGroupToIndex_(self, sender):
+        group = sender.representedObject()['group']
+        index = sender.representedObject()['index']
+        try:
+            from_index = self.model.groupsList.index(group)
+            after_group = self.model.groupsList[index]
+        except ValueError, IndexError:
+            return
+
+        del self.model.groupsList[from_index]
+        self.model.groupsList.insert(index, group)
+        self.model.saveGroupPosition()
+
+    @objc.IBAction
     def silentClicked_(self, sender):
         self.backend.silent(not self.backend.is_silent())
 
@@ -3707,6 +3721,19 @@ class ContactWindowController(NSWindowController):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteItem:", "")
             lastItem.setEnabled_(item.deletable)
             lastItem.setRepresentedObject_(item)
+
+            grp_submenu = NSMenu.alloc().init()
+            grp_submenu.setAutoenablesItems_(False)
+            grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(u'To First Position', "moveGroupToIndex:", "")
+            grp_item.setRepresentedObject_({'group': item, 'index': 0})
+            for group in self.model.groupsList:
+                if group == item:
+                    continue
+                grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(u'After %s' % group.name, "moveGroupToIndex:", "")
+                index = self.model.groupsList.index(group)
+                grp_item.setRepresentedObject_({'group': item, 'index': index+1})
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Move Group", "", "")
+            self.contactContextMenu.setSubmenu_forItem_(grp_submenu, mitem)
 
     def menuWillOpen_(self, menu):
         def setupAudioDeviceMenu(menu, tag, devices, option_name, selector):
