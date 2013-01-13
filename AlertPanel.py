@@ -570,10 +570,10 @@ class AlertPanel(NSObject, object):
     def timerTickAutoAnswer_(self, timer):
         info = timer.userInfo()
         if time.time() - info["time"] >= info["delay"]:
-            self.acceptAudioStream(info["session"])
+            self.acceptStreams(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Automatically answering call in %i seconds..." % remaining
+        text = "Automatically answering session in %i seconds..." % remaining
         info["label"].setStringValue_(text)
 
     @run_in_gui_thread
