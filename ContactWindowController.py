@@ -3710,7 +3710,7 @@ class ContactWindowController(NSWindowController):
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide My Availability to %s" % item.name , "setPresencePolicy:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block my Availability to %s" % item.name , "setPresencePolicy:", "")
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
