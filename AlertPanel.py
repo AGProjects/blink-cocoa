@@ -242,7 +242,7 @@ class AlertPanel(NSObject, object):
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
                         self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
-                elif SIPSimpleSettings().answering_machine.enabled:
+                elif settings.answering_machine.enabled:
                     self.enableAnsweringMachine(view, session)
 
         if 'chat' in stream_types:
@@ -333,8 +333,8 @@ class AlertPanel(NSObject, object):
 
         has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
         if has_audio_streams:
-            outdev = SIPSimpleSettings().audio.output_device
-            indev = SIPSimpleSettings().audio.input_device
+            outdev = settings.audio.output_device
+            indev = settings.audio.input_device
 
             outdev = outdev.strip() if outdev is not None else 'None'
             indev = indev.strip() if indev is not None else 'None'
