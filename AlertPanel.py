@@ -335,14 +335,19 @@ class AlertPanel(NSObject, object):
         if has_audio_streams:
             outdev = SIPSimpleSettings().audio.output_device
             indev = SIPSimpleSettings().audio.input_device
+
+            outdev = outdev.strip() if outdev is not None else 'None'
+            indev = indev.strip() if indev is not None else 'None'
+
             if outdev == u"system_default":
                 outdev = u"System Default"
             if indev == u"system_default":
                 indev = u"System Default"
+
             if outdev != indev:
-                self.deviceLabel.setStringValue_(u"Selected Output Device is %s, Input is %s" % (outdev.strip(), indev.strip()))
+                self.deviceLabel.setStringValue_(u"Selected Output Device is %s, Input is %s" % (outdev, indev))
             else:
-                self.deviceLabel.setStringValue_(u"Selected Audio Device is %s" % outdev.strip())
+                self.deviceLabel.setStringValue_(u"Selected Audio Device is %s" % outdev)
 
             BlinkLogger().log_info(u"Selected audio input/output devices: %s/%s" % (indev, outdev))
 
