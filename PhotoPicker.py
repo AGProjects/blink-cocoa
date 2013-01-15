@@ -130,6 +130,11 @@ class PhotoPicker(NSObject):
     libraryCollectionView = objc.IBOutlet()
     contentArrayController = objc.IBOutlet()
 
+    captureDecompressedVideoOutput = None
+    captureSession = None
+    captureDeviceInput = None
+    capture_session_initialized = False
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -137,45 +142,51 @@ class PhotoPicker(NSObject):
         self = super(PhotoPicker, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("PhotoPicker", self)
-            self.captureSession = QTKit.QTCaptureSession.alloc().init()
-
-            # Find a video device
-            device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
-            if not device:
-                tab_id = self.tabView.indexOfTabViewItemWithIdentifier_("capture")
-                if tab_id:
-                    item = self.tabView.tabViewItemAtIndex_(tab_id)
-                    self.tabView.removeTabViewItem_(item)
-                return self
-            success, error = device.open_(None)
-            if not success:
-                NSAlert.alertWithError_(error).runModal()
-                return self
-
-            # Add a device input for that device to the capture session
-            self.captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
-            success, error = self.captureSession.addInput_error_(self.captureDeviceInput, None)
-            if not success:
-                NSAlert.alertWithError_(error).runModal()
-                return self
-
-            # Add a decompressed video output that returns raw frames to the session
-            self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
-            self.captureDecompressedVideoOutput.setDelegate_(self)
-            success, error = self.captureSession.addOutput_error_(self.captureDecompressedVideoOutput, None)
-            if not success:
-                NSAlert.alertWithError_(error).runModal()
-                return self
-
-            # Preview the video from the session in the document window
-            self.captureView.setCaptureSession_(self.captureSession)
-
             self.lock = NSLock.alloc().init()
             self.captureButton.setHidden_(True)
             self.previewButton.setHidden_(False)
             self.cancelButton.setHidden_(True)
 
         return self
+
+    def initAquisition(self):
+        if self.capture_session_initialized:
+            return
+
+        if self.captureSession is None:
+            self.captureSession = QTKit.QTCaptureSession.alloc().init()
+    
+        # Find a video device
+        device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
+        if not device:
+            NSAlert.alertWithError_('No video device detected').runModal()
+            return
+        
+        success, error = device.open_(None)
+        if not success:
+            NSAlert.alertWithError_(error).runModal()
+            return
+        
+        # Add a device input for that device to the capture session
+        if self.captureDeviceInput is None:
+            self.captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
+            success, error = self.captureSession.addInput_error_(self.captureDeviceInput, None)
+            if not success:
+                NSAlert.alertWithError_(error).runModal()
+                return
+        
+        # Add a decompressed video output that returns raw frames to the session
+        if self.captureDecompressedVideoOutput is None:
+            self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
+            self.captureDecompressedVideoOutput.setDelegate_(self)
+            success, error = self.captureSession.addOutput_error_(self.captureDecompressedVideoOutput, None)
+            if not success:
+                NSAlert.alertWithError_(error).runModal()
+                return
+        
+        # Preview the video from the session in the document window
+        self.captureView.setCaptureSession_(self.captureSession)
+        self.capture_session_initialized = True
 
     def refreshLibrary(self):
         settings = SIPSimpleSettings()
@@ -232,6 +243,7 @@ class PhotoPicker(NSObject):
             self.cameraButtonClicked_(self.cancelButton)
             self.captureSession.stopRunning()
         else:
+            self.initAquisition()
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
             self.captureSession.startRunning()
@@ -400,17 +412,20 @@ class PhotoPicker(NSObject):
             NSApp.stopModalWithCode_(0)
 
     def windowWillClose_(self, notification):
-        # The commented code below was present in a duplicate definition of this function
-        # that was present above this one (thus ignored) and was older than this one.
-        # Copied here for reference -Dan
-        #
-        #self.captureSession.stopRunning()
-        #device = self.captureDeviceInput.device()
-        #if device.isOpen():
-        #    device.close()
-        if hasattr(self, 'captureDecompressedVideoOutput'):
+        if self.captureDecompressedVideoOutput != None:
             self.captureDecompressedVideoOutput.setDelegate_(None)
-        self.captureSession.stopRunning()
+            self.captureDecompressedVideoOutput = None
+
+        if self.captureSession:
+            self.captureSession.stopRunning()
+            self.captureSession = None
+
+        if self.captureDeviceInput:
+            device = self.captureDeviceInput.device()
+            if device.isOpen():
+                device.close()
+            self.captureDeviceInput = None
+
         NSApp.stopModalWithCode_(0)
 
     def runModal(self):
