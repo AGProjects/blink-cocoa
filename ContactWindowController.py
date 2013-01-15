@@ -1386,13 +1386,16 @@ class ContactWindowController(NSWindowController):
         index = sender.representedObject()['index']
         try:
             from_index = self.model.groupsList.index(group)
-            after_group = self.model.groupsList[index]
-        except ValueError, IndexError:
+        except IndexError:
             return
-
-        del self.model.groupsList[from_index]
-        self.model.groupsList.insert(index, group)
-        self.model.saveGroupPosition()
+        else:
+            del self.model.groupsList[from_index]
+            try:
+                self.model.groupsList.insert(index, group)
+            except IndexError:
+                return
+            else:
+                self.model.saveGroupPosition()
 
     @objc.IBAction
     def silentClicked_(self, sender):
