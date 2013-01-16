@@ -3713,6 +3713,7 @@ class ContactWindowController(NSWindowController):
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block %s" % item.name , "setPresencePolicy:", "")
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
