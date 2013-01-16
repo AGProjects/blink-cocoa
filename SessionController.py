@@ -195,11 +195,17 @@ class SessionControllersManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
+        match_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(session.remote_identity.uri, exact_match=True)
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
         stream_type_list = list(set(stream.type for stream in streams))
         if not streams:
             BlinkLogger().log_info(u"Rejecting session for unsupported media type")
             session.reject(488, 'Incompatible media')
+            return
+
+        if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
+            BlinkLogger().log_info(u"Blocked contact rejected")
+            session.reject(603, 'Not Acceptable Here')
             return
 
         # if call waiting is disabled and we have audio calls reject with busy
@@ -222,7 +228,6 @@ class SessionControllersManager(object):
                     return
 
             if session.account.audio.reject_unauthorized_contacts:
-                match_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(session.remote_identity.uri, exact_match=True)
                 if match_contact is not None and isinstance(match_contact, BlinkPresenceContact):
                     if match_contact.contact.presence.policy != 'allow':
                         BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
