@@ -32,7 +32,7 @@ from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
 from zope.interface import implements
 
-from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
+#from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
 
 import ContactOutlineView
 import ListView
@@ -2500,8 +2500,9 @@ class ContactWindowController(NSWindowController):
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationNamePrint)
         self.blinkMenu.itemWithTag_(10).setTitle_('Hide %s' % NSApp.delegate().applicationNamePrint)
         self.blinkMenu.itemWithTag_(11).setTitle_('Quit %s' % NSApp.delegate().applicationNamePrint)
-        find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
-        sylkserver_exists = find_sylkserver[2] is not None
+        #find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
+        #sylkserver_exists = find_sylkserver[2] is not None
+        sylkserver_exists = True
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             self.blinkMenu.itemWithTag_(2).setHidden_(True)
