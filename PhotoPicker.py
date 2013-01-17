@@ -159,29 +159,37 @@ class PhotoPicker(NSObject):
         # Find a video device
         device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
         if not device:
-            NSAlert.alertWithError_('No video device detected').runModal()
+            NSRunAlertPanel("Camera Capture Error", "Camera device cannot be started", "OK", "", "")
+            self.captureSession = None
             return
         
         success, error = device.open_(None)
         if not success:
-            NSAlert.alertWithError_(error).runModal()
+            NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
+            self.captureSession = None
             return
         
         # Add a device input for that device to the capture session
         if self.captureDeviceInput is None:
             self.captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
             success, error = self.captureSession.addInput_error_(self.captureDeviceInput, None)
+
             if not success:
-                NSAlert.alertWithError_(error).runModal()
+                NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
+                self.captureSession = None
+                self.captureDeviceInput = None
                 return
         
         # Add a decompressed video output that returns raw frames to the session
-        if self.captureDecompressedVideoOutput is None:
+        if self.captureDecompressedVideoOutput iyps None:
             self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
             self.captureDecompressedVideoOutput.setDelegate_(self)
             success, error = self.captureSession.addOutput_error_(self.captureDecompressedVideoOutput, None)
             if not success:
-                NSAlert.alertWithError_(error).runModal()
+                NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
+                self.captureSession = None
+                self.captureDeviceInput = None
+                self.captureDecompressedVideoOutput = None
                 return
         
         # Preview the video from the session in the document window
@@ -241,12 +249,15 @@ class PhotoPicker(NSObject):
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if item.identifier() == "recent":
             self.cameraButtonClicked_(self.cancelButton)
-            self.captureSession.stopRunning()
+            if self.captureSession is not None:
+                self.captureSession.stopRunning()
         else:
             self.initAquisition()
+            if self.captureSession is not None:
+                self.captureSession.startRunning()
+
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
-            self.captureSession.startRunning()
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(False)
             self.cancelButton.setHidden_(TRUE)
@@ -260,7 +271,8 @@ class PhotoPicker(NSObject):
         if sender.tag() == 5: # Preview
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
-            self.captureSession.startRunning()
+            if self.captureSession is not None:
+                self.captureSession.startRunning()
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(False)
             self.cancelButton.setHidden_(TRUE)
@@ -268,7 +280,8 @@ class PhotoPicker(NSObject):
         elif sender.tag() == 6: # Cancel
             self.photoView.setHidden_(False)
             self.captureView.setHidden_(True)
-            self.captureSession.stopRunning()
+            if self.captureSession is not None:
+                self.captureSession.stopRunning()
             self.previewButton.setHidden_(False)
             self.captureButton.setHidden_(True)
             self.cancelButton.setHidden_(True)
@@ -280,8 +293,9 @@ class PhotoPicker(NSObject):
             self.captureButton.setHidden_(True)
             self.cancelButton.setHidden_(True)
             self.setButton.setEnabled_(True)
-            self.captureImage()
-            self.captureSession.stopRunning()
+            if self.captureSession is not None:
+                self.captureImage()
+                self.captureSession.stopRunning()
 
     @objc.IBAction
     def cropWindowButtonClicked_(self, sender):
@@ -416,7 +430,7 @@ class PhotoPicker(NSObject):
             self.captureDecompressedVideoOutput.setDelegate_(None)
             self.captureDecompressedVideoOutput = None
 
-        if self.captureSession:
+        if self.captureSession is not None:
             self.captureSession.stopRunning()
             self.captureSession = None
 
