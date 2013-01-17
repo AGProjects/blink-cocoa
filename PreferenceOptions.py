@@ -1593,7 +1593,7 @@ SettingDescription = {
                       'message_summary.voicemail_uri': 'Mailbox URI',
                       'nat_traversal.stun_server_list': 'STUN Servers',
                       'presence.use_rls': 'Use Resource List Server',
-                      'presence.enabled': 'Publish My Availability',
+                      'presence.enabled': 'Enabled',
                       'presence.disable_timezone': 'Hide My Timezone',
                       'presence.disable_location': 'Hide My Location',
                       'pstn.idd_prefix': 'Replace Starting +',
@@ -1646,10 +1646,10 @@ SectionNames = {
                        'nat_traversal': 'NAT Traversal',
                        'pstn': 'Phone Numbers',
                        'rtp': 'RTP Media',
-                       'presence': 'Availability',
+                       'presence': 'Presence Status',
                        'sip': 'SIP Signaling',
                        'sounds': 'Sound Alerts',
-                       'server': 'Server Settings',
+                       'server': 'Server Website',
                        'tls': 'TLS Settings',
                        'xcap': 'XCAP Storage',
                        'ldap': 'LDAP Directory'
@@ -1666,7 +1666,7 @@ GeneralSettingsOrder = {
                        'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'xcap', 'presence', 'nat_traversal','server', 'ldap', 'gui')
+AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal', 'presence', 'xcap', 'server', 'ldap', 'gui')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
