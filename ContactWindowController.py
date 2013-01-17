@@ -3704,10 +3704,10 @@ class ContactWindowController(NSWindowController):
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                if item.pidfs_map:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Availability Information...", "showPresenceInfo:", "")
-                    mitem.setEnabled_(True)
-                    mitem.setRepresentedObject_(item)
+                has_pidfs = any(item.pidfs_map[uri] for uri in item.pidfs_map.keys())
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Availability Information...", "showPresenceInfo:", "")
+                mitem.setEnabled_(has_pidfs)
+                mitem.setRepresentedObject_(item)
 
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Subscribe to %s's Availability" % item.name, "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
