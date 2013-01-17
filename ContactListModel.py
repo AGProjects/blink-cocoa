@@ -88,25 +88,25 @@ def presence_status_for_contact(contact, uri=None):
     status = None
     if uri is None:
         if isinstance(contact, BlinkPresenceContact):
-            if contact.contact.presence.policy == 'block':
-                return 'blocked'
             if contact.presence_state['status']['busy']:
                 status = 'busy'
             elif contact.presence_state['status']['available']:
                 status = 'available'
             elif contact.presence_state['status']['away']:
                 status = 'away'
+            elif contact.contact.presence.policy == 'block':
+                return 'blocked'
             elif contact.contact.presence.subscribe:
                 status = 'offline'
         elif isinstance(contact, BlinkConferenceContact) and contact.presence_contact is not None:
-            if contact.presence_contact.contact.presence.policy == 'block':
-                return 'blocked'
-            elif contact.presence_state['status']['busy']:
+            if contact.presence_state['status']['busy']:
                 status = 'busy'
             elif contact.presence_state['status']['available']:
                 status = 'available'
             elif contact.presence_state['status']['away']:
                 status = 'away'
+            elif contact.presence_contact.contact.presence.policy == 'block':
+                status = 'blocked'
             elif contact.presence_contact.contact.presence.subscribe:
                 status = 'offline'
         return status
