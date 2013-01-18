@@ -2693,7 +2693,13 @@ class ContactWindowController(NSWindowController):
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "startChatToSelected:", "")
-            item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
+            if isinstance(contact, BonjourBlinkContact):
+                item.setEnabled_(True)               
+            elif isinstance(contact, BlinkPresenceContact):
+                aor_supports_chat = any(device for device in contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % contact.uri and 'chat' in device['caps'])
+                item.setEnabled_(aor_supports_chat)
+            else:
+                item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
@@ -3908,16 +3914,20 @@ class ContactWindowController(NSWindowController):
             except IndexError:
                 pass
             else:
+                if isinstance(contact, BlinkPresenceContact):
+                    aor_supports_screen_sharing_server = any(device for device in contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % contact.uri and 'screen-sharing' in device['caps'])
+                    aor_supports_screen_sharing_client = any(device for device in contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % contact.uri and 'screen-sharing-client' in device['caps'])
+                elif isinstance(contact, BonjourBlinkContact):
+                    aor_supports_screen_sharing_client = True
+                    aor_supports_screen_sharing_server = True
+                
                 item = self.desktopShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Screen from %s" % contact.name)
-                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'))
+                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
                 item = self.desktopShareMenu.itemWithTag_(2)
-                if not self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-                    item.setHidden_(True)
-                else:
-                    item.setHidden_(False)
-                    item.setTitle_("Share My Screen with %s" % contact.name)
+                item.setTitle_("Share My Screen with %s" % contact.name)
+                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
         elif menu == self.contactsMenu:
             settings = SIPSimpleSettings()
