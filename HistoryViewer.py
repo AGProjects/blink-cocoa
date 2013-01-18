@@ -87,7 +87,7 @@ class HistoryViewer(NSWindowController):
 
     def format_media_type(self, media_type):
         if media_type == 'sms':
-            return 'Messages'
+            return 'Instant Messages'
         elif media_type == 'chat':
             return 'Chat Sessions'
         elif media_type == 'audio':
