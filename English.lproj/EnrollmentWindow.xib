@@ -133,7 +133,7 @@
 								<object class="NSButtonCell" id="722339746">
 									<int key="NSCellFlags">67239424</int>
 									<int key="NSCellFlags2">0</int>
-									<string key="NSContents">Create a Free SIP Account</string>
+									<string key="NSContents">Create a free SIP Account</string>
 									<reference key="NSSupport" ref="205924054"/>
 									<reference key="NSControlView" ref="1013930702"/>
 									<int key="NSTag">2</int>
@@ -306,6 +306,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<string key="NSFrame">{{328, 22}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<int key="NSTag">111</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="913356028">
@@ -497,7 +498,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 													<object class="NSTextField" id="5995612">
 														<reference key="NSNextResponder" ref="148832488"/>
 														<int key="NSvFlags">268</int>
-														<string key="NSFrame">{{146, 109}, {243, 28}}</string>
+														<string key="NSFrame">{{152, 109}, {243, 28}}</string>
 														<reference key="NSSuperview" ref="148832488"/>
 														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="519703276"/>
@@ -565,7 +566,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 													<object class="NSTextField" id="983770806">
 														<reference key="NSNextResponder" ref="148832488"/>
 														<int key="NSvFlags">268</int>
-														<string key="NSFrame">{{66, 178}, {81, 17}}</string>
+														<string key="NSFrame">{{65, 178}, {82, 17}}</string>
 														<reference key="NSSuperview" ref="148832488"/>
 														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="447061810"/>
@@ -574,7 +575,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 														<object class="NSTextFieldCell" key="NSCell" id="31773266">
 															<int key="NSCellFlags">605158976</int>
 															<int key="NSCellFlags2">71304192</int>
-															<string key="NSContents">Address:</string>
+															<string key="NSContents">SIP Address:</string>
 															<reference key="NSSupport" ref="205924054"/>
 															<reference key="NSControlView" ref="983770806"/>
 															<reference key="NSBackgroundColor" ref="169502143"/>
@@ -685,7 +686,6 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 														<int key="NSvFlags">-2147483359</int>
 														<string key="NSFrame">{{286, 8}, {113, 14}}</string>
 														<reference key="NSSuperview" ref="68490699"/>
-														<reference key="NSNextKeyView" ref="519703276"/>
 														<bool key="NSEnabled">YES</bool>
 														<object class="NSTextFieldCell" key="NSCell" id="111088991">
 															<int key="NSCellFlags">68288064</int>
@@ -931,7 +931,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="451790729"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
 				<string key="NSMinSize">{463, 392}</string>
 				<string key="NSMaxSize">{463, 492}</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
@@ -1763,7 +1763,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<object class="IBToolTipAttribute" key="NS.object.0">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="178839545"/>
-						<string key="toolTip">Synchronize this account to all my computers using my iCloud account</string>
+						<string key="toolTip">Synchronize this SIP account to all my other computers where I use Blink</string>
 					</object>
 				</object>
 				<string key="159.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
