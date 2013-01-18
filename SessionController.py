@@ -66,7 +66,7 @@ StreamHandlerForType = {
     "file-transfer" : FileTransferController,
     "desktop-sharing" : DesktopSharingController,
     "screen-sharing-server" : DesktopSharingServerController,
-    "desktop-viewer" : DesktopSharingViewerController
+    "screen-sharing-client" : DesktopSharingViewerController
 }
 
 
@@ -1317,7 +1317,7 @@ class SessionController(NSObject):
 
     def addRemoteDesktopToSession(self):
         if not self.hasStreamOfType("desktop-sharing"):
-            self.startSessionWithStreamOfType("desktop-viewer")
+            self.startSessionWithStreamOfType("screen-sharing-client")
 
     def removeDesktopFromSession(self):
         if self.hasStreamOfType("desktop-sharing"):

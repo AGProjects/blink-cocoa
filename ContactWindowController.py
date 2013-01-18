@@ -1811,7 +1811,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         tag = sender.tag()
         if tag == 1:
-            self.startSessionToSelectedContact(("desktop-viewer", "audio"), uri)
+            self.startSessionToSelectedContact(("screen-sharing-client", "audio"), uri)
         elif tag == 2:
             self.startSessionToSelectedContact(("screen-sharing-server", "audio"), uri)
 
