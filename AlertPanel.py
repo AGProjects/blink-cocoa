@@ -187,7 +187,7 @@ class AlertPanel(NSObject, object):
         stream_type_list = list(set(stream.type for stream in streams))
 
         if len(self.sessions) == 1:
-            if "desktop-sharing" in stream_type_list:
+            if "screen-sharing" in stream_type_list:
                 base_text = u"Screen Sharing from %s"
             elif "audio" in stream_type_list:
                 base_text = u"Audio call from %s"
@@ -253,7 +253,7 @@ class AlertPanel(NSObject, object):
             chatIcon.setFrame_(frame)
             chatIcon.setHidden_(False)
 
-        if 'desktop-sharing' in stream_types:
+        if 'screen-sharing' in stream_types:
             desktopIcon = view.viewWithTag_(34)
             frame = desktopIcon.frame()
             typeCount+= 1
@@ -403,7 +403,7 @@ class AlertPanel(NSObject, object):
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
             if "Desktop sharing" in type_names:
-                ds = [s for s in streams if s.type == "desktop-sharing"]
+                ds = [s for s in streams if s.type == "screen-sharing"]
                 if ds:
                     type_names.remove("Desktop sharing")
                     if ds[0].handler.type == "active":
@@ -451,7 +451,7 @@ class AlertPanel(NSObject, object):
         else:
             if len(streams) != 1:
                 if "Desktop sharing" in type_names:
-                    ds = [s for s in streams if s.type == "desktop-sharing"]
+                    ds = [s for s in streams if s.type == "screen-sharing"]
                     if ds:
                         type_names.remove("Desktop sharing")
                         if ds[0].handler.type == "active":

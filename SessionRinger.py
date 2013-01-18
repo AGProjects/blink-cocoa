@@ -116,7 +116,7 @@ class Ringer(object):
             # proposal for adding new streams to an ongoing session
             proposed_stream_types = [stream.type for stream in chain(*(session.proposed_streams or [] for session in self.ringing_sessions))]
             has_chat_proposed = 'chat' in proposed_stream_types
-            has_ds_proposed = 'desktop-sharing' in proposed_stream_types
+            has_ds_proposed = 'screen-sharing' in proposed_stream_types
             has_file_proposed = 'file-transfer' in proposed_stream_types
             has_audio_ongoing = 'audio' in (stream.type for stream in chain(*(session.streams for session in self.ringing_sessions if session.streams)))
             should_play_chat_secondary_ringtone = (has_chat_proposed or has_file_proposed or has_ds_proposed) and not has_audio_ongoing
@@ -336,7 +336,7 @@ class Ringer(object):
                     self.incoming_audio_sessions[session] = data.streams
             elif 'chat' in stream_types:
                 self.chat_sessions[session] = data.streams
-            elif 'desktop-sharing' in stream_types:
+            elif 'screen-sharing' in stream_types:
                 self.ds_sessions[session] = data.streams
             elif 'file-transfer' in stream_types:
                 self.filerecv_sessions[session] = data.streams

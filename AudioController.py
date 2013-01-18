@@ -817,7 +817,7 @@ class AudioController(MediaStream):
             item.setHidden_(not(self.sessionControllersManager.isMediaTypeSupported('video')))
 
             title = self.sessionController.getTitleShort()
-            have_screensharing = self.sessionController.hasStreamOfType("desktop-sharing")
+            have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote desktop
             item.setTitle_("Request Screen from %s" % title)
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'))
@@ -828,8 +828,8 @@ class AudioController(MediaStream):
 
             item = menu.itemWithTag_(13) # cancel
             item.setEnabled_(False)
-            if self.sessionController.hasStreamOfType("desktop-sharing"):
-                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+            if self.sessionController.hasStreamOfType("screen-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     item.setEnabled_(True)
                     item.setTitle_("Cancel Screen Sharing Proposal")
@@ -871,8 +871,8 @@ class AudioController(MediaStream):
         elif tag == 12: # share local screen
             self.sessionController.addMyDesktopToSession()
         elif tag == 13: # cancel screen sharing proposal
-            if self.sessionController.hasStreamOfType("desktop-sharing"):
-                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+            if self.sessionController.hasStreamOfType("screen-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     self.sessionController.cancelProposal(desktop_sharing_stream)
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:

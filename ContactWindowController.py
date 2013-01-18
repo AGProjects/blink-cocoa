@@ -1904,7 +1904,7 @@ class ContactWindowController(NSWindowController):
             if session.hasStreamOfType("audio"):
                 if len(session.streamHandlers) == 1:
                     session.end()
-                elif session.hasStreamOfType("desktop-sharing") and len(session.streamHandlers) == 2:
+                elif session.hasStreamOfType("screen-sharing") and len(session.streamHandlers) == 2:
                     session.end()
                 else:
                     stream = session.streamHandlerOfType("audio")

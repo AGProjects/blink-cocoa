@@ -915,9 +915,9 @@ class ChatWindowController(NSWindowController):
             selectedSession = self.selectedSessionController()
             if selectedSession:
                 title = selectedSession.getTitleShort()
-                if selectedSession.hasStreamOfType("desktop-sharing"):
+                if selectedSession.hasStreamOfType("screen-sharing"):
                     menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red"))
-                    desktop_sharing_stream = selectedSession.streamHandlerOfType("desktop-sharing")
+                    desktop_sharing_stream = selectedSession.streamHandlerOfType("screen-sharing")
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setEnabled_(True)
 

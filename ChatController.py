@@ -789,7 +789,7 @@ class ChatController(MediaStream):
                     return self.status == STREAM_CONNECTED
                 else:
                     self.chatWindowController.screenSharingPopUpButton.setMenu_(self.chatWindowController.desktopShareMenu)
-                    self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("desktop-sharing") else "display"))
+                    self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("screen-sharing") else "display"))
                     return True
             elif identifier == 'screenshot':
                 return self.status == STREAM_CONNECTED
@@ -946,18 +946,18 @@ class ChatController(MediaStream):
     def userClickedScreenSharingMenu_(self, sender):
         if sender.tag() == TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL and self.status == STREAM_CONNECTED:
             if not self.sessionController.remote_focus:
-                if not self.sessionController.hasStreamOfType("desktop-sharing"):
+                if not self.sessionController.hasStreamOfType("screen-sharing"):
                     self.sessionController.addMyDesktopToSession()
                     sender.setEnabled_(False)
             else:
                 self.toggleScreensharingWithConferenceParticipants()
         elif sender.tag() == TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE and self.status == STREAM_CONNECTED:
-            if not self.sessionController.hasStreamOfType("desktop-sharing"):
+            if not self.sessionController.hasStreamOfType("screen-sharing"):
                 self.sessionController.addRemoteDesktopToSession()
                 sender.setEnabled_(False)
         elif sender.tag() == TOOLBAR_SCREENSHARING_MENU_CANCEL and self.status == STREAM_CONNECTED:
-            if self.sessionController.hasStreamOfType("desktop-sharing"):
-                desktop_sharing_stream = self.sessionController.streamHandlerOfType("desktop-sharing")
+            if self.sessionController.hasStreamOfType("screen-sharing"):
+                desktop_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
                 if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
                     self.sessionController.cancelProposal(desktop_sharing_stream)
                 elif desktop_sharing_stream.status == STREAM_CONNECTED:
@@ -982,7 +982,7 @@ class ChatController(MediaStream):
         else:
             menu = self.chatWindowController.desktopShareMenu
             self.chatWindowController.screenSharingPopUpButton.setMenu_(menu)
-            self.chatWindowController.desktopShareMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("desktop-sharing") else "display"))
+            self.chatWindowController.desktopShareMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("screen-sharing") else "display"))
 
         menu = self.chatWindowController.conferenceScreenSharingMenu
         menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")

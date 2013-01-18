@@ -64,7 +64,7 @@ StreamHandlerForType = {
 #    "video" : VideoController,
     "video" : ChatController,
     "file-transfer" : FileTransferController,
-    "desktop-sharing" : DesktopSharingController,
+    "screen-sharing" : DesktopSharingController,
     "screen-sharing-server" : DesktopSharingServerController,
     "screen-sharing-client" : DesktopSharingViewerController
 }
@@ -412,8 +412,8 @@ class SessionControllersManager(object):
 
         stream_type_list = list(set(stream.type for stream in streams))
 
-        if 'desktop-sharing' in stream_type_list:
-            ds = [s for s in streams if s.type == "desktop-sharing"]
+        if 'screen-sharing' in stream_type_list:
+            ds = [s for s in streams if s.type == "screen-sharing"]
             if ds and ds[0].handler.type != "active":
                 if settings.desktop_sharing.disabled:
                     BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
@@ -1009,8 +1009,8 @@ class SessionController(NSObject):
 
     def endStream(self, streamHandler):
         if self.session is not None:
-            if streamHandler.stream.type=="audio" and self.hasStreamOfType("desktop-sharing") and len(self.streamHandlers)==2:
-                # if session is desktop-sharing end it
+            if streamHandler.stream.type=="audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers)==2:
+                # if session is screen-sharing end it
                 self.end()
                 return True
             elif self.session.streams is not None and self.streamHandlers == [streamHandler]:
@@ -1312,16 +1312,16 @@ class SessionController(NSObject):
             self.endStream(videoStream)
 
     def addMyDesktopToSession(self):
-        if not self.hasStreamOfType("desktop-sharing"):
+        if not self.hasStreamOfType("screen-sharing"):
             self.startSessionWithStreamOfType("screen-sharing-server")
 
     def addRemoteDesktopToSession(self):
-        if not self.hasStreamOfType("desktop-sharing"):
+        if not self.hasStreamOfType("screen-sharing"):
             self.startSessionWithStreamOfType("screen-sharing-client")
 
     def removeDesktopFromSession(self):
-        if self.hasStreamOfType("desktop-sharing"):
-            desktopStream = self.streamHandlerOfType("desktop-sharing")
+        if self.hasStreamOfType("screen-sharing"):
+            desktopStream = self.streamHandlerOfType("screen-sharing")
             self.endStream(desktopStream)
 
     def getTitle(self):
@@ -1682,7 +1682,7 @@ class SessionController(NSObject):
                     handler = self.streamHandlerForStream(stream)
                     if handler:
                         handler.changeStatus(STREAM_FAILED, data.reason)
-                elif stream.type == "desktop-sharing":
+                elif stream.type == "screen-sharing":
                     self.log_info("Removing desktop sharing stream")
                     handler = self.streamHandlerForStream(stream)
                     if handler:
