@@ -45,11 +45,11 @@ class SMSWindowController(NSWindowController):
         if session:
             sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
             if display_name and display_name != sip_address:
-                title = u"Messages for %s <%s>" % (display_name, format_identity_to_string(session.target_uri))
+                title = u"Instant Messages with %s <%s>" % (display_name, format_identity_to_string(session.target_uri))
             else:
-                title = u"Messages for %s" %  format_identity_to_string(session.target_uri)
+                title = u"Instant Messages with %s" %  format_identity_to_string(session.target_uri)
         else:
-            title = u"SMS"
+            title = u"Instant Messages"
         self.window().setTitle_(title)
 
     def noteNewMessageForSession_(self, session):
