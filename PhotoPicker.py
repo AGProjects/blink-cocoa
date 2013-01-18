@@ -181,7 +181,7 @@ class PhotoPicker(NSObject):
                 return
         
         # Add a decompressed video output that returns raw frames to the session
-        if self.captureDecompressedVideoOutput iyps None:
+        if self.captureDecompressedVideoOutput is None:
             self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
             self.captureDecompressedVideoOutput.setDelegate_(self)
             success, error = self.captureSession.addOutput_error_(self.captureDecompressedVideoOutput, None)
