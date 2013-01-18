@@ -2692,10 +2692,10 @@ class ContactWindowController(NSWindowController):
         else:
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "startChatToSelected:", "")
             item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
 
     def updateGroupMenu(self):
@@ -3387,7 +3387,7 @@ class ContactWindowController(NSWindowController):
                         if device['caps'] is not None and 'audio' not in device['caps']:
                             audio_item.setEnabled_(False)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
@@ -3436,7 +3436,7 @@ class ContactWindowController(NSWindowController):
                                 chat_item.setEnabled_(False)
 
                     if chat_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "", "")
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
 
                     sms_submenu = NSMenu.alloc().init()
@@ -3455,7 +3455,7 @@ class ContactWindowController(NSWindowController):
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
                                 sms_item.setImage_(icon)
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
@@ -3610,17 +3610,17 @@ class ContactWindowController(NSWindowController):
             else:
                 # Contact has a single URI
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
-                    self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioToSelected:", "")
+                    self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_fully_qualified_sip_uri:
-                            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatToSelected:", "")
+                            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "startChatToSelected:", "")
                         if item not in self.model.bonjour_group.contacts:
-                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Message...", "sendSMSToSelected:", "")
+                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "sendSMSToSelected:", "")
                             sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
 
                     if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                         if self.sessionControllersManager.isMediaTypeSupported('video'):
-                            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Session", "startVideoToSelected:", "")
+                            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Call", "startVideoToSelected:", "")
 
                         if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                             if has_fully_qualified_sip_uri:
