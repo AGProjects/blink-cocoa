@@ -692,7 +692,7 @@ class MapView(NSView):
             else:
                 item.setEnabled_(False)
 
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('desktop-client'):
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
             item = menu.addItemWithTitle_action_keyEquivalent_("Request Screen", "startScreenSharing:", "")
             item.setTarget_(NSApp.delegate().contactsWindowController)
             item.setTag_(1)
@@ -702,7 +702,7 @@ class MapView(NSView):
             else:
                 item.setEnabled_(False)
 
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('desktop-server'):
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
             item = menu.addItemWithTitle_action_keyEquivalent_("Share My Screen", "startScreenSharing:", "")
             item.setTarget_(NSApp.delegate().contactsWindowController)
             item.setTag_(2)

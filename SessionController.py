@@ -65,7 +65,7 @@ StreamHandlerForType = {
     "video" : ChatController,
     "file-transfer" : FileTransferController,
     "desktop-sharing" : DesktopSharingController,
-    "desktop-server" : DesktopSharingServerController,
+    "screen-sharing-server" : DesktopSharingServerController,
     "desktop-viewer" : DesktopSharingViewerController
 }
 
@@ -439,7 +439,7 @@ class SessionControllersManager(object):
     def isMediaTypeSupported(self, type):
         settings = SIPSimpleSettings()
 
-        if type == 'desktop-server':
+        if type == 'screen-sharing-server':
             if settings.desktop_sharing.disabled:
                 return False
             if not self.isScreenSharingEnabled():
@@ -1313,7 +1313,7 @@ class SessionController(NSObject):
 
     def addMyDesktopToSession(self):
         if not self.hasStreamOfType("desktop-sharing"):
-            self.startSessionWithStreamOfType("desktop-server")
+            self.startSessionWithStreamOfType("screen-sharing-server")
 
     def addRemoteDesktopToSession(self):
         if not self.hasStreamOfType("desktop-sharing"):

@@ -371,6 +371,7 @@ class PresencePublisher(object):
         service.capabilities.message = not settings.chat.disabled
         service.capabilities.file_transfer = not settings.file_transfer.disabled
         service.capabilities.screen_sharing = not settings.desktop_sharing.disabled
+        service.capabilities.screen_sharing_client = True
         service.user_input = rpid.UserInput()
         service.user_input.value = self.user_input['state']
         service.user_input.last_input = self.user_input['last_input']
