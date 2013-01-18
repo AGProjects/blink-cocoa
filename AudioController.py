@@ -28,6 +28,7 @@ import AudioSession
 
 from AnsweringMachine import AnsweringMachine
 from BlinkLogger import BlinkLogger
+from ContactListModel import BonjourBlinkContact, BlinkPresenceContact
 from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
@@ -118,9 +119,10 @@ class AudioController(MediaStream):
         NSBundle.loadNibNamed_owner_("AudioSession", self)
         # TODO: hide zrtp area until implemented -adi
         self.setNormalViewHeight(self.view.frame())
+        self.contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.sessionController.target_uri, exact_match=True)
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
-        item.setEnabled_(not NSApp.delegate().contactsWindowController.hasContactMatchingURI(self.sessionController.target_uri))
+        item.setEnabled_(not self.contact)
         item.setTitle_("Add %s to Contacts" % format_identity_to_string(self.sessionController.remotePartyObject))
 
         self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity_to_string(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
@@ -792,7 +794,7 @@ class AudioController(MediaStream):
                 item.setTarget_(self)
                 item.setRepresentedObject_(session_controller)
 
-            item = menu.addItemWithTitle_action_keyEquivalent_(u'A Contact by Dragging this Session over it', "", "")
+            item = menu.addItemWithTitle_action_keyEquivalent_(u'A contact by dragging this audio call over it', "", "")
             item.setIndentationLevel_(1)
             item.setEnabled_(False)
 
@@ -806,11 +808,25 @@ class AudioController(MediaStream):
                     item.setTarget_(self)
                     item.setRepresentedObject_(parsed_target)
         else:
+            aor_supports_chat = False
+            aor_supports_screen_sharing_server = False
+            aor_supports_screen_sharing_client = False
+            if self.contact is not None:
+                if isinstance(self.contact, BlinkPresenceContact):
+                    aor_supports_chat = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'chat' in device['caps'])
+                    aor_supports_screen_sharing_server = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'screen-sharing' in device['caps'])
+                    aor_supports_screen_sharing_client = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'screen-sharing-client' in device['caps'])
+                elif isinstance(self.contact, BonjourBlinkContact):
+                    aor_supports_chat = True
+                    aor_supports_screen_sharing_client = True
+                    aor_supports_screen_sharing_server = True
+
             can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             item = menu.itemWithTag_(10) # add Chat
-            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat'))
+                        
+            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
 
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
@@ -820,11 +836,11 @@ class AudioController(MediaStream):
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote desktop
             item.setTitle_("Request Screen from %s" % title)
-            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'))
+            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
             item = menu.itemWithTag_(12) # share local desktop
             item.setTitle_("Share My Screen with %s" % title)
-            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'))
+            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
             item = menu.itemWithTag_(13) # cancel
             item.setEnabled_(False)
@@ -839,7 +855,7 @@ class AudioController(MediaStream):
             else:
                 item.setTitle_("Cancel Screen Sharing Proposal")
             item = menu.itemWithTag_(20) # add to contacts
-            item.setEnabled_(not NSApp.delegate().contactsWindowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
+            item.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
             item = menu.itemWithTag_(30)
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
             item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
@@ -883,7 +899,7 @@ class AudioController(MediaStream):
             else:
                 display_name = None
             NSApp.delegate().contactsWindowController.addContact(self.sessionController.target_uri, display_name)
-            sender.setEnabled_(not NSApp.delegate().contactsWindowController.hasContactMatchingURI(self.sessionController.target_uri) and self.sessionController.account is not BonjourAccount())
+            sender.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
         elif tag == 30: #
             if self.sessionController.info_panel is not None:
                 self.sessionController.info_panel.toggle()
