@@ -203,7 +203,7 @@ class ContactWindowController(NSWindowController):
     useSpeechSynthesisMenuItem = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
-    desktopShareMenu = objc.IBOutlet()
+    screenShareMenu = objc.IBOutlet()
 
     historyViewer = None
     chatWindowController = None
@@ -1080,7 +1080,7 @@ class ContactWindowController(NSWindowController):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
         audioOk = False
         chatOk = False
-        desktopOk = False
+        screenOk = False
         account = self.activeAccount()
         contacts = self.getSelectedContacts()
         if account is not None:
@@ -1092,20 +1092,20 @@ class ContactWindowController(NSWindowController):
                     else:
                         chatOk = audioOk
                     if contacts and not is_sip_aor_format(contacts[0].uri):
-                        desktopOk = False
+                        screenOk = False
                     else:
-                        desktopOk = audioOk
+                        screenOk = audioOk
             elif tabItem == "search":
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = audioOk
-                desktopOk = audioOk
+                screenOk = audioOk
             elif tabItem == "dialpad":
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = False
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(chatOk and self.sessionControllersManager.isMediaTypeSupported('chat'), 1)
-        self.actionButtons.setEnabled_forSegment_(desktopOk, 2)
+        self.actionButtons.setEnabled_forSegment_(screenOk, 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
@@ -1884,7 +1884,7 @@ class ContactWindowController(NSWindowController):
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                 sender.window().graphicsContext(), 0, 1, 0)
-                NSMenu.popUpContextMenu_withEvent_forView_(self.desktopShareMenu, event, sender)
+                NSMenu.popUpContextMenu_withEvent_forView_(self.screenShareMenu, event, sender)
                 return
 
             self.startSessionToSelectedContact(media_type)
@@ -3528,7 +3528,7 @@ class ContactWindowController(NSWindowController):
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(1)
-                            aor_supports_ds = any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % uri.uri and 'screen-sharing' in device['caps'])
+                            aor_supports_ds = any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % uri.uri and 'screen-sharing-server' in device['caps'])
                             ds_item.setEnabled_(aor_supports_ds)
                             
                             if isinstance(item, BlinkPresenceContact):
@@ -3561,7 +3561,7 @@ class ContactWindowController(NSWindowController):
                                 except KeyError:
                                     pass
                                 ds_item.setIndentationLevel_(1)
-                                if device['caps'] is not None and 'screen-sharing' not in device['caps']:
+                                if device['caps'] is not None and 'screen-sharing-server' not in device['caps']:
                                     ds_item.setEnabled_(False)
 
                         if ds_submenu.itemArray():
@@ -3660,7 +3660,7 @@ class ContactWindowController(NSWindowController):
                             mitem.setTag_(1)
                             mitem.setEnabled_(has_fully_qualified_sip_uri and has_pidfs)
                             mitem.setRepresentedObject_(item.uri)
-                            aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % item.uri and 'screen-sharing' in device['caps'])
+                            aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % item.uri and 'screen-sharing-server' in device['caps'])
                             mitem.setEnabled_(aor_supports_ds)
                         if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startScreenSharing:", "")
@@ -3908,24 +3908,24 @@ class ContactWindowController(NSWindowController):
             self.updateWindowMenu()
         elif menu == self.restoreContactsMenu:
             self.updateRestoreContactsMenu()
-        elif menu == self.desktopShareMenu:
+        elif menu == self.screenShareMenu:
             try:
                 contact = self.getSelectedContacts()[0]
             except IndexError:
                 pass
             else:
                 if isinstance(contact, BlinkPresenceContact):
-                    aor_supports_screen_sharing_server = any(device for device in contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % contact.uri and 'screen-sharing' in device['caps'])
+                    aor_supports_screen_sharing_server = any(device for device in contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % contact.uri and 'screen-sharing-server' in device['caps'])
                     aor_supports_screen_sharing_client = any(device for device in contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % contact.uri and 'screen-sharing-client' in device['caps'])
                 elif isinstance(contact, BonjourBlinkContact):
                     aor_supports_screen_sharing_client = True
                     aor_supports_screen_sharing_server = True
                 
-                item = self.desktopShareMenu.itemWithTag_(1)
+                item = self.screenShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Screen from %s" % contact.name)
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
-                item = self.desktopShareMenu.itemWithTag_(2)
+                item = self.screenShareMenu.itemWithTag_(2)
                 item.setTitle_("Share My Screen with %s" % contact.name)
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 

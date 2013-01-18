@@ -372,10 +372,6 @@
 									<reference key="NSControlView" ref="350284562"/>
 									<int key="NSButtonFlags">-2046803713</int>
 									<int key="NSButtonFlags2">160</int>
-									<object class="NSCustomResource" key="NSNormalImage" id="216199301">
-										<string key="NSClassName">NSImage</string>
-										<string key="NSResourceName">screenshot</string>
-									</object>
 									<string key="NSAlternateContents"/>
 									<string key="NSKeyEquivalent"/>
 									<int key="NSPeriodicDelay">400</int>
@@ -388,7 +384,10 @@
 										<int key="NSKeyEquivModMask">1048576</int>
 										<int key="NSMnemonicLoc">2147483647</int>
 										<int key="NSState">1</int>
-										<reference key="NSImage" ref="216199301"/>
+										<object class="NSCustomResource" key="NSImage" id="373535400">
+											<string key="NSClassName">NSImage</string>
+											<string key="NSResourceName">screenshot</string>
+										</object>
 										<reference key="NSOnImage" ref="86182742"/>
 										<reference key="NSMixedImage" ref="634438666"/>
 										<string key="NSAction">_popUpItemAction:</string>
@@ -457,7 +456,7 @@
 									<int key="NSArrowPosition">2</int>
 								</object>
 							</object>
-							<reference key="NSToolbarItemImage" ref="216199301"/>
+							<reference key="NSToolbarItemImage" ref="373535400"/>
 							<nil key="NSToolbarItemTarget"/>
 							<nil key="NSToolbarItemAction"/>
 							<string key="NSToolbarItemMinSize">{32, 32}</string>
@@ -659,7 +658,6 @@
 							<string key="NSFrame">{{0, -1}, {650, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -1330,7 +1328,7 @@
 					</object>
 					<object class="NSMenuItem" id="337362766">
 						<reference key="NSMenu" ref="755021066"/>
-						<string key="NSTitle">Request Desktop from Contact</string>
+						<string key="NSTitle">Request Screen from Contact</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="86182742"/>
@@ -1339,7 +1337,7 @@
 					</object>
 					<object class="NSMenuItem" id="392736716">
 						<reference key="NSMenu" ref="755021066"/>
-						<string key="NSTitle">Share My Desktop with Contact</string>
+						<string key="NSTitle">Share My Screen with Contact</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="86182742"/>
@@ -1470,7 +1468,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">desktopShareMenu</string>
+						<string key="label">screenShareMenu</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="755021066"/>
 					</object>
@@ -2981,7 +2979,6 @@
 						<string key="conferenceFilesTableView">id</string>
 						<string key="conferenceFilesView">id</string>
 						<string key="conferenceScreenSharingMenu">id</string>
-						<string key="desktopShareMenu">id</string>
 						<string key="drawer">id</string>
 						<string key="drawerScrollView">id</string>
 						<string key="drawerSplitView">id</string>
@@ -2991,6 +2988,7 @@
 						<string key="participantsTableView">id</string>
 						<string key="participantsView">id</string>
 						<string key="recordButton">id</string>
+						<string key="screenShareMenu">id</string>
 						<string key="screenSharingPopUpButton">id</string>
 						<string key="sharedFileMenu">id</string>
 						<string key="tabSwitcher">id</string>
@@ -3016,10 +3014,6 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="conferenceScreenSharingMenu">
 							<string key="name">conferenceScreenSharingMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="desktopShareMenu">
-							<string key="name">desktopShareMenu</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="drawer">
@@ -3056,6 +3050,10 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="recordButton">
 							<string key="name">recordButton</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="screenShareMenu">
+							<string key="name">screenShareMenu</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="screenSharingPopUpButton">

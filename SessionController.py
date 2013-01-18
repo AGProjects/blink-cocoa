@@ -41,7 +41,7 @@ from AccountSettings import AccountSettings
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkPresenceContact
 from ChatController import ChatController
-from DesktopSharingController import DesktopSharingController, DesktopSharingServerController, DesktopSharingViewerController
+from ScreenSharingController import ScreenSharingController, ScreenSharingServerController, ScreenSharingViewerController
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
@@ -64,9 +64,9 @@ StreamHandlerForType = {
 #    "video" : VideoController,
     "video" : ChatController,
     "file-transfer" : FileTransferController,
-    "screen-sharing" : DesktopSharingController,
-    "screen-sharing-server" : DesktopSharingServerController,
-    "screen-sharing-client" : DesktopSharingViewerController
+    "screen-sharing" : ScreenSharingController,
+    "screen-sharing-server" : ScreenSharingServerController,
+    "screen-sharing-client" : ScreenSharingViewerController
 }
 
 
@@ -415,7 +415,7 @@ class SessionControllersManager(object):
         if 'screen-sharing' in stream_type_list:
             ds = [s for s in streams if s.type == "screen-sharing"]
             if ds and ds[0].handler.type != "active":
-                if settings.desktop_sharing.disabled:
+                if settings.screen_sharing_server.disabled:
                     BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
                     return False
                 if not self.isScreenSharingEnabled():
@@ -440,7 +440,7 @@ class SessionControllersManager(object):
         settings = SIPSimpleSettings()
 
         if type == 'screen-sharing-server':
-            if settings.desktop_sharing.disabled:
+            if settings.screen_sharing_server.disabled:
                 return False
             if not self.isScreenSharingEnabled():
                 return False
@@ -1311,18 +1311,18 @@ class SessionController(NSObject):
             videoStream = self.streamHandlerOfType("video")
             self.endStream(videoStream)
 
-    def addMyDesktopToSession(self):
+    def addMyScreenToSession(self):
         if not self.hasStreamOfType("screen-sharing"):
             self.startSessionWithStreamOfType("screen-sharing-server")
 
-    def addRemoteDesktopToSession(self):
+    def addRemoteScreenToSession(self):
         if not self.hasStreamOfType("screen-sharing"):
             self.startSessionWithStreamOfType("screen-sharing-client")
 
-    def removeDesktopFromSession(self):
+    def removeScreenFromSession(self):
         if self.hasStreamOfType("screen-sharing"):
-            desktopStream = self.streamHandlerOfType("screen-sharing")
-            self.endStream(desktopStream)
+            screenSharingStream = self.streamHandlerOfType("screen-sharing")
+            self.endStream(screenSharingStream)
 
     def getTitle(self):
         return format_identity_to_string(self.remotePartyObject, format='full')
@@ -1683,7 +1683,7 @@ class SessionController(NSObject):
                     if handler:
                         handler.changeStatus(STREAM_FAILED, data.reason)
                 elif stream.type == "screen-sharing":
-                    self.log_info("Removing desktop sharing stream")
+                    self.log_info("Removing screen sharing stream")
                     handler = self.streamHandlerForStream(stream)
                     if handler:
                         handler.changeStatus(STREAM_FAILED, data.reason)

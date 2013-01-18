@@ -302,8 +302,10 @@ class PresenceInfoController(NSObject):
                 caps.append("Chat")
             if service.capabilities.file_transfer:
                 caps.append("File Transfer")
-            if service.capabilities.screen_sharing:
-                caps.append("Screen Sharing")
+            if service.capabilities.screen_sharing_server:
+                caps.append("Screen Sharing Server")
+            if service.capabilities.screen_sharing_client:
+                caps.append("Screen Sharing Client")
             buf.append(u"      Media capabilities: %s" % ", ".join(caps))
         # display device ID
         if service.device_info is not None:

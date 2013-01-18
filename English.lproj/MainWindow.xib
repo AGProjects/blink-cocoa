@@ -3039,7 +3039,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<array class="NSMutableArray" key="NSMenuItems">
 					<object class="NSMenuItem" id="840161826">
 						<reference key="NSMenu" ref="1276"/>
-						<string key="NSTitle">Ask to Share Remote Desktop</string>
+						<string key="NSTitle">Ask to Share Remote Screen</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3048,7 +3048,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					</object>
 					<object class="NSMenuItem" id="753192124">
 						<reference key="NSMenu" ref="1276"/>
-						<string key="NSTitle">Share My Desktop</string>
+						<string key="NSTitle">Share My Screen</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3811,7 +3811,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">desktopShareMenu</string>
+						<string key="label">screenShareMenu</string>
 						<reference key="source" ref="900429702"/>
 						<reference key="destination" ref="1276"/>
 					</object>
@@ -5808,7 +5808,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="753192124"/>
 						</array>
 						<reference key="parent" ref="0"/>
-						<string key="objectName">Desktop Sharing Button Menu</string>
+						<string key="objectName">Screen Sharing Button Menu</string>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">929</int>
@@ -7988,7 +7988,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="contactOutline">id</string>
 						<string key="contactsMenu">id</string>
 						<string key="contactsScrollView">id</string>
-						<string key="desktopShareMenu">id</string>
+						<string key="screenShareMenu">id</string>
 						<string key="devicesMenu">id</string>
 						<string key="dialPadView">id</string>
 						<string key="drawer">id</string>
@@ -8091,8 +8091,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">contactsScrollView</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBToOneOutletInfo" key="desktopShareMenu">
-							<string key="name">desktopShareMenu</string>
+						<object class="IBToOneOutletInfo" key="screenShareMenu">
+							<string key="name">screenShareMenu</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="devicesMenu">

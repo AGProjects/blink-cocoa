@@ -18,7 +18,7 @@ class FancyTabItem(NSView):
     trackingArea = None
     cachedDragImage = None
     composing = False
-    screen_sharing = False
+    screen_sharing_active = False
     closeIcon = NSImage.imageNamed_("NSStopProgressFreestandingTemplate").copy()
     composeIcon = NSImage.imageNamed_("pencil")
     screenIcon = NSImage.imageNamed_("display_red_16")
@@ -140,7 +140,7 @@ class FancyTabItem(NSView):
             rect.size = self.composeIcon.size()
             self.composeIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(1, 3), rect, NSCompositeSourceOver, 1)
 
-        if not self.busyIndicator and self.screen_sharing:
+        if not self.busyIndicator and self.screen_sharing_active:
             rect = NSZeroRect.copy()
             rect.size = self.screenIcon.size()
             self.screenIcon.drawAtPoint_fromRect_operation_fraction_(NSMakePoint(17, 3), rect, NSCompositeSourceOver, 1)
@@ -162,9 +162,9 @@ class FancyTabItem(NSView):
             rect = self.bounds()
             rect.origin.y -= 3
             rect.origin.x += 20
-            rect.origin.x = rect.origin.x + 12 if self.screen_sharing else rect.origin.x
+            rect.origin.x = rect.origin.x + 12 if self.screen_sharing_active else rect.origin.x
             rect.size.width -= 46
-            rect.size.width = rect.size.width - 12 if self.screen_sharing else rect.size.width
+            rect.size.width = rect.size.width - 12 if self.screen_sharing_active else rect.size.width
             self.label.drawInRect_withAttributes_(rect, attribs)
 
     def mouseEntered_(self, event):
@@ -214,7 +214,7 @@ class FancyTabItem(NSView):
         self.setNeedsDisplay_(True)
 
     def setScreenSharing_(self, flag):
-        self.screen_sharing = flag
+        self.screen_sharing_active = flag
         self.setNeedsDisplay_(True)
 
     def setBusy_(self, flag):

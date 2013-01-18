@@ -212,7 +212,7 @@ class PreferencesController(NSWindowController, object):
             self.window().setTitle_(u'File Transfer')
         elif section == 'screen-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
-            self.generalTabView.selectTabViewItemWithIdentifier_("desktop_sharing")
+            self.generalTabView.selectTabViewItemWithIdentifier_("screen_sharing_server")
             self.sectionDescription.setStringValue_(u'Screen Sharing Settings')
             self.window().setTitle_(u'Screen Sharing')
         elif section == 'alerts':

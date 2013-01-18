@@ -132,8 +132,8 @@
 		1F2272FF12B554F50010A8B2 /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
 		1F22730012B554F50010A8B2 /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		1F22730112B554F50010A8B2 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
-		1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
-		1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
+		1F22730212B554F50010A8B2 /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
+		1F22730412B554F50010A8B2 /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
 		1F22730512B554F50010A8B2 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		1F22730612B554F50010A8B2 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
 		1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
@@ -434,8 +434,8 @@
 		1F8DC38B135084FA0034815C /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
 		1F8DC38C135084FA0034815C /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		1F8DC38D135084FA0034815C /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
-		1F8DC38E135084FA0034815C /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
-		1F8DC38F135084FA0034815C /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
+		1F8DC38E135084FA0034815C /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
+		1F8DC38F135084FA0034815C /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
 		1F8DC390135084FA0034815C /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		1F8DC391135084FA0034815C /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
 		1F8DC392135084FA0034815C /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
@@ -649,8 +649,8 @@
 		1F94DDD2168B336300168FBA /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
 		1F94DDD3168B336300168FBA /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		1F94DDD4168B336300168FBA /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
-		1F94DDD5168B336300168FBA /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
-		1F94DDD6168B336300168FBA /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
+		1F94DDD5168B336300168FBA /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
+		1F94DDD6168B336300168FBA /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
 		1F94DDD7168B336300168FBA /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		1F94DDD8168B336300168FBA /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
 		1F94DDD9168B336300168FBA /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
@@ -1137,8 +1137,8 @@
 		2B6328850FE422AE00446655 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
 		2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		2B7B9C661008D67500BFDAF7 /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
-		2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */; };
-		2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */; };
+		2B8752A010B5C29B002FD271 /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
+		2B8752A510B5C5AF002FD271 /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
 		2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
 		2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		2BAF381A0FE088C70040117A /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
@@ -1910,8 +1910,8 @@
 		2B6328840FE422AE00446655 /* ChatController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatController.py; sourceTree = "<group>"; };
 		2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactWindowController.py; sourceTree = "<group>"; };
 		2B7B9C651008D67500BFDAF7 /* TableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = TableView.py; sourceTree = "<group>"; };
-		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DesktopServerWindow.xib; sourceTree = "<group>"; };
-		2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DesktopSharingController.py; sourceTree = "<group>"; };
+		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
+		2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
 		2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryViewer.py; sourceTree = "<group>"; };
 		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Contact.xib; sourceTree = "<group>"; };
@@ -2559,13 +2559,13 @@
 			name = Enrollment;
 			sourceTree = "<group>";
 		};
-		2BC09104106884CE0069AB9A /* DesktopSharing */ = {
+		2BC09104106884CE0069AB9A /* ScreenSharing */ = {
 			isa = PBXGroup;
 			children = (
-				2B8752A410B5C5AF002FD271 /* DesktopSharingController.py */,
-				2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */,
+				2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */,
+				2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */,
 			);
-			name = DesktopSharing;
+			name = ScreenSharing;
 			sourceTree = "<group>";
 		};
 		2BEFC19E0FD1C2B500447EFB /* Sessions */ = {
@@ -2582,7 +2582,7 @@
 				1FAF8D2E12DA1F5F0029857C /* Video */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* SMS */,
-				2BC09104106884CE0069AB9A /* DesktopSharing */,
+				2BC09104106884CE0069AB9A /* ScreenSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
 			);
 			name = Sessions;
@@ -2910,8 +2910,8 @@
 				1F2272FF12B554F50010A8B2 /* Group.xib in Resources */,
 				1F22730012B554F50010A8B2 /* GroupController.py in Resources */,
 				1F22730112B554F50010A8B2 /* pencil.png in Resources */,
-				1F22730212B554F50010A8B2 /* DesktopServerWindow.xib in Resources */,
-				1F22730412B554F50010A8B2 /* DesktopSharingController.py in Resources */,
+				1F22730212B554F50010A8B2 /* ScreenServerWindow.xib in Resources */,
+				1F22730412B554F50010A8B2 /* ScreenSharingController.py in Resources */,
 				1F22730512B554F50010A8B2 /* SMSSession.xib in Resources */,
 				1F22730612B554F50010A8B2 /* SMSView.xib in Resources */,
 				1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */,
@@ -3151,8 +3151,8 @@
 				1F8DC38B135084FA0034815C /* Group.xib in Resources */,
 				1F8DC38C135084FA0034815C /* GroupController.py in Resources */,
 				1F8DC38D135084FA0034815C /* pencil.png in Resources */,
-				1F8DC38E135084FA0034815C /* DesktopServerWindow.xib in Resources */,
-				1F8DC38F135084FA0034815C /* DesktopSharingController.py in Resources */,
+				1F8DC38E135084FA0034815C /* ScreenServerWindow.xib in Resources */,
+				1F8DC38F135084FA0034815C /* ScreenSharingController.py in Resources */,
 				1F8DC390135084FA0034815C /* SMSSession.xib in Resources */,
 				1F8DC391135084FA0034815C /* SMSView.xib in Resources */,
 				1F8DC392135084FA0034815C /* ChatViewController.py in Resources */,
@@ -3390,8 +3390,8 @@
 				1F94DDD2168B336300168FBA /* Group.xib in Resources */,
 				1F94DDD3168B336300168FBA /* GroupController.py in Resources */,
 				1F94DDD4168B336300168FBA /* pencil.png in Resources */,
-				1F94DDD5168B336300168FBA /* DesktopServerWindow.xib in Resources */,
-				1F94DDD6168B336300168FBA /* DesktopSharingController.py in Resources */,
+				1F94DDD5168B336300168FBA /* ScreenServerWindow.xib in Resources */,
+				1F94DDD6168B336300168FBA /* ScreenSharingController.py in Resources */,
 				1F94DDD7168B336300168FBA /* SMSSession.xib in Resources */,
 				1F94DDD8168B336300168FBA /* SMSView.xib in Resources */,
 				1F94DDD9168B336300168FBA /* ChatViewController.py in Resources */,
@@ -3633,8 +3633,8 @@
 				2B4CA92F10AA5F2F00D5F19E /* Group.xib in Resources */,
 				2B4CA93210AA5FAE00D5F19E /* GroupController.py in Resources */,
 				2B1FC09D10B104F8004C7355 /* pencil.png in Resources */,
-				2B8752A010B5C29B002FD271 /* DesktopServerWindow.xib in Resources */,
-				2B8752A510B5C5AF002FD271 /* DesktopSharingController.py in Resources */,
+				2B8752A010B5C29B002FD271 /* ScreenServerWindow.xib in Resources */,
+				2B8752A510B5C5AF002FD271 /* ScreenSharingController.py in Resources */,
 				2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */,
 				2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */,
 				2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */,
@@ -4030,12 +4030,12 @@
 			name = Group.xib;
 			sourceTree = "<group>";
 		};
-		2B87529E10B5C29B002FD271 /* DesktopServerWindow.xib */ = {
+		2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				2B87529F10B5C29B002FD271 /* English */,
 			);
-			name = DesktopServerWindow.xib;
+			name = ScreenServerWindow.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38080FE088C70040117A /* Contact.xib */ = {

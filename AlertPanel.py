@@ -12,7 +12,7 @@ from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import SessionManager
-from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, DesktopSharingStream
+from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, ScreenSharingStream
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
@@ -254,12 +254,12 @@ class AlertPanel(NSObject, object):
             chatIcon.setHidden_(False)
 
         if 'screen-sharing' in stream_types:
-            desktopIcon = view.viewWithTag_(34)
-            frame = desktopIcon.frame()
+            screenIcon = view.viewWithTag_(34)
+            frame = screenIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
-            desktopIcon.setFrame_(frame)
-            desktopIcon.setHidden_(False)
+            screenIcon.setFrame_(frame)
+            screenIcon.setHidden_(False)
 
         is_file_transfer = False
         if 'file-transfer' in stream_types:
@@ -402,10 +402,10 @@ class AlertPanel(NSObject, object):
 
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
-            if "Desktop sharing" in type_names:
+            if "Screen sharing" in type_names:
                 ds = [s for s in streams if s.type == "screen-sharing"]
                 if ds:
-                    type_names.remove("Desktop sharing")
+                    type_names.remove("Screen sharing")
                     if ds[0].handler.type == "active":
                         type_names.append("Remote Screen offered by")
                     else:
@@ -424,7 +424,7 @@ class AlertPanel(NSObject, object):
         elif type(streams[0]) is FileTransferStream:
             subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024))
             alt_action = None
-        elif type(streams[0]) is DesktopSharingStream:
+        elif type(streams[0]) is ScreenSharingStream:
             if streams[0].handler.type == "active":
                 subject = u"Remote Screen offered by"
             else:
@@ -450,10 +450,10 @@ class AlertPanel(NSObject, object):
             subject = session.subject
         else:
             if len(streams) != 1:
-                if "Desktop sharing" in type_names:
+                if "Screen sharing" in type_names:
                     ds = [s for s in streams if s.type == "screen-sharing"]
                     if ds:
-                        type_names.remove("Desktop sharing")
+                        type_names.remove("Screen sharing")
                         if ds[0].handler.type == "active":
                             type_names.append("Remote Screen offered by")
                         else:
@@ -465,7 +465,7 @@ class AlertPanel(NSObject, object):
                 subject = u"Audio Session requested by"
             elif type(streams[0]) is ChatStream:
                 subject = u"Chat Session requested by"
-            elif type(streams[0]) is DesktopSharingStream:
+            elif type(streams[0]) is ScreenSharingStream:
                 subject = u"Remote Screen offered by" if streams[0].handler.type == "active" else u"My Screen requested by"
             elif type(streams[0]) is FileTransferStream:
                 subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))

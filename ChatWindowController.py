@@ -69,7 +69,7 @@ class ChatWindowController(NSWindowController):
     tabView = objc.IBOutlet()
     toolbar = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
-    desktopShareMenu = objc.IBOutlet()
+    screenShareMenu = objc.IBOutlet()
     conferenceScreenSharingMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
@@ -911,24 +911,24 @@ class ChatWindowController(NSWindowController):
                 item.setState_(NSOffState)
                 item.setEnabled_(False)
 
-        elif menu == self.desktopShareMenu:
+        elif menu == self.screenShareMenu:
             selectedSession = self.selectedSessionController()
             if selectedSession:
                 title = selectedSession.getTitleShort()
                 if selectedSession.hasStreamOfType("screen-sharing"):
                     menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red"))
-                    desktop_sharing_stream = selectedSession.streamHandlerOfType("screen-sharing")
+                    screen_sharing_stream = selectedSession.streamHandlerOfType("screen-sharing")
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
                     mitem.setEnabled_(True)
 
-                    if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                    if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
                         mitem.setTitle_("Cancel Screen Sharing Request")
-                    elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                    elif screen_sharing_stream.status == STREAM_CONNECTED:
                         mitem.setTitle_("Stop Screen Sharing")
 
-                    if desktop_sharing_stream.direction == 'active':
+                    if screen_sharing_stream.direction == 'active':
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                        if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                        if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
                             mitem.setTitle_("Requesting Screen from %s..." % title)
                         else:
                             mitem.setTitle_("%s is Sharing Her Screen" % title)
@@ -945,7 +945,7 @@ class ChatWindowController(NSWindowController):
                         mitem.setEnabled_(False)
 
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                        if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                        if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
                             mitem.setTitle_("Sharing My Screen with %s..." % title)
                         else:
                             mitem.setTitle_("My Screen is Shared with %s" % title)
@@ -998,8 +998,8 @@ class ChatWindowController(NSWindowController):
                 if chat_stream and chat_stream.screensharing_handler:
                         selected_window = chat_stream.screensharing_handler.window_id
 
-            item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_('Entire Desktop', "selectConferenceScreenSharingWindow:", "")
-            obj = {'application': 'entire desktop', 'id': 0, 'name': 'Desktop'}
+            item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_('Entire Screen', "selectConferenceScreenSharingWindow:", "")
+            obj = {'application': 'entire screen', 'id': 0, 'name': 'Entire Screen'}
             item.setRepresentedObject_(obj)
             item.setIndentationLevel_(2)
             item.setState_(NSOnState if selected_window == 0 else NSOffState)

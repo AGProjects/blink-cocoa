@@ -33,7 +33,7 @@ from SmileyManager import SmileyManager
 from EnrollmentController import EnrollmentController
 
 import PreferencesController
-from DesktopSharingController import DesktopSharingController
+from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread, external_url_pattern
 
@@ -101,7 +101,7 @@ class BlinkAppDelegate(NSObject):
 
             userdef = NSUserDefaults.standardUserDefaults()
             self.debug = userdef.boolForKey_("debug")
-            DesktopSharingController.vncServerPort = 5900
+            ScreenSharingController.vncServerPort = 5900
 
         return self
 

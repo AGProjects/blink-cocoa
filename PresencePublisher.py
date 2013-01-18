@@ -194,7 +194,7 @@ class PresencePublisher(object):
                         account.xcap_manager.set_status_icon(icon)
 
         if notification.sender is SIPSimpleSettings():
-            if set(['chat.disabled', 'desktop_sharing.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
+            if set(['chat.disabled', 'screen_sharing_server.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
                 self.publish()
             if 'presence_state.offline_note' in notification.data.modified:
                 self.set_offline_status()
@@ -370,7 +370,7 @@ class PresencePublisher(object):
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
         service.capabilities.message = not settings.chat.disabled
         service.capabilities.file_transfer = not settings.file_transfer.disabled
-        service.capabilities.screen_sharing = not settings.desktop_sharing.disabled
+        service.capabilities.screen_sharing_server = not settings.screen_sharing_server.disabled
         service.capabilities.screen_sharing_client = True
         service.user_input = rpid.UserInput()
         service.user_input.value = self.user_input['state']

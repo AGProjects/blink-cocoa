@@ -814,7 +814,7 @@ class AudioController(MediaStream):
             if self.contact is not None:
                 if isinstance(self.contact, BlinkPresenceContact):
                     aor_supports_chat = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'chat' in device['caps'])
-                    aor_supports_screen_sharing_server = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'screen-sharing' in device['caps'])
+                    aor_supports_screen_sharing_server = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'screen-sharing-server' in device['caps'])
                     aor_supports_screen_sharing_client = any(device for device in self.contact.presence_state['devices'].values() if device['aor'] == 'sip:%s' % self.contact.uri and 'screen-sharing-client' in device['caps'])
                 elif isinstance(self.contact, BonjourBlinkContact):
                     aor_supports_chat = True
@@ -834,22 +834,22 @@ class AudioController(MediaStream):
 
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
-            item = menu.itemWithTag_(11) # request remote desktop
+            item = menu.itemWithTag_(11) # request remote screen
             item.setTitle_("Request Screen from %s" % title)
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
-            item = menu.itemWithTag_(12) # share local desktop
+            item = menu.itemWithTag_(12) # share local screen
             item.setTitle_("Share My Screen with %s" % title)
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
             item = menu.itemWithTag_(13) # cancel
             item.setEnabled_(False)
             if self.sessionController.hasStreamOfType("screen-sharing"):
-                desktop_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
-                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
+                screen_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
+                if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
                     item.setEnabled_(True)
                     item.setTitle_("Cancel Screen Sharing Proposal")
-                elif desktop_sharing_stream.status == STREAM_CONNECTED:
+                elif screen_sharing_stream.status == STREAM_CONNECTED:
                     item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
                     item.setTitle_("Stop Screen Sharing")
             else:
@@ -883,16 +883,16 @@ class AudioController(MediaStream):
             NSApp.delegate().contactsWindowController.drawer.close()
             self.sessionController.addVideoToSession()
         elif tag == 11: # share remote screen
-            self.sessionController.addRemoteDesktopToSession()
+            self.sessionController.addRemoteScreenToSession()
         elif tag == 12: # share local screen
-            self.sessionController.addMyDesktopToSession()
+            self.sessionController.addMyScreenToSession()
         elif tag == 13: # cancel screen sharing proposal
             if self.sessionController.hasStreamOfType("screen-sharing"):
-                desktop_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
-                if desktop_sharing_stream.status == STREAM_PROPOSING or desktop_sharing_stream.status == STREAM_RINGING:
-                    self.sessionController.cancelProposal(desktop_sharing_stream)
-                elif desktop_sharing_stream.status == STREAM_CONNECTED:
-                    self.sessionController.removeDesktopFromSession()
+                screen_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
+                if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
+                    self.sessionController.cancelProposal(screen_sharing_stream)
+                elif screen_sharing_stream.status == STREAM_CONNECTED:
+                    self.sessionController.removeScreenFromSession()
         elif tag == 20: # add to contacts
             if hasattr(self.sessionController.remotePartyObject, "display_name"):
                 display_name = self.sessionController.remotePartyObject.display_name

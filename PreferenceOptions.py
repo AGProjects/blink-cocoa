@@ -1560,7 +1560,7 @@ if osx_version == '10.6':
 DisabledPreferenceSections = ['service_provider', 'server']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'desktop_sharing', 'sounds', 'answering_machine', 'contacts']
+StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
                       'audio.auto_accept': 'Automatic Answer',
@@ -1580,7 +1580,7 @@ SettingDescription = {
                       'contacts.enable_missed_calls_group': 'Show Missed Calls',
                       'contacts.enable_outgoing_calls_group': 'Show Outgoing Calls',
                       'contacts.enable_blocked_group': 'Show Blocked Contacts',
-                      'desktop_sharing.disabled': 'Deny Requests for Sharing My Screen',
+                      'screen_sharing_server.disabled': 'Deny Requests for Sharing My Screen',
                       'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
                       'gui.sync_with_icloud': 'Sync With iCloud',
                       'ldap.hostname': 'Server Address',

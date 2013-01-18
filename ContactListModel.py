@@ -768,8 +768,8 @@ class BlinkPresenceContact(BlinkContact):
                             caps.append("chat")
                         if service.capabilities.file_transfer:
                             caps.append("file-transfer")
-                        if service.capabilities.screen_sharing:
-                            caps.append("screen-sharing")
+                        if service.capabilities.screen_sharing_server:
+                            caps.append("screen-sharing-server")
                         if service.capabilities.screen_sharing_client:
                             caps.append("screen-sharing-client")
                     else:

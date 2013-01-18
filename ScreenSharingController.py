@@ -8,7 +8,7 @@ from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.streams.msrp import DesktopSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
+from sipsimple.streams.msrp import ScreenSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
 from BlinkLogger import BlinkLogger
 from MediaStream import *
@@ -69,7 +69,7 @@ class StatusItem(NSObject):
                     mitem.setEnabled_(False)
 
 
-class DesktopSharingController(MediaStream):
+class ScreenSharingController(MediaStream):
     implements(IObserver)
 
     viewer = None
@@ -84,7 +84,7 @@ class DesktopSharingController(MediaStream):
     stopButton = objc.IBOutlet()
 
     def initWithOwner_stream_(self, scontroller, stream):
-        self = super(DesktopSharingController, self).initWithOwner_stream_(scontroller, stream)
+        self = super(ScreenSharingController, self).initWithOwner_stream_(scontroller, stream)
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.stream = stream
         self.direction = stream.handler.type
@@ -100,7 +100,7 @@ class DesktopSharingController(MediaStream):
         else:
             self.sessionController.log_info("Sharing local screen...")
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
-            NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
+            NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_("Screen Sharing with %s" % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
@@ -114,7 +114,7 @@ class DesktopSharingController(MediaStream):
             self.sessionController.log_info("Requesting access to remote screen")
         else:
             self.sessionController.log_info("Sharing local screen...")
-            NSBundle.loadNibNamed_owner_("DesktopServerWindow", self)
+            NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_("Screen Sharing with %s" % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
@@ -137,7 +137,7 @@ class DesktopSharingController(MediaStream):
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
         elif self.status in (STREAM_CONNECTED, STREAM_INCOMING):
-            self.sessionController.log_info("Removing Desktop Stream from Session")
+            self.sessionController.log_info("Removing Screen Stream from Session")
             self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
         else:
@@ -277,7 +277,7 @@ class DesktopSharingController(MediaStream):
                     self.stopButton.setTitle_('Stop Screen Sharing')
                 NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
 
-    def _NH_DesktopSharingHandlerDidFail(self, sender, data):
+    def _NH_ScreenSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
             self.sessionController.log_info("%s" % data.reason.title())
 
@@ -285,16 +285,16 @@ class DesktopSharingController(MediaStream):
         self.stream = None
         self.sessionController = None
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
-        super(DesktopSharingController, self).dealloc()
+        super(ScreenSharingController, self).dealloc()
 
-class DesktopSharingViewerController(DesktopSharingController):
+class ScreenSharingViewerController(ScreenSharingController):
     @classmethod
     def createStream(cls):
-        return DesktopSharingStream(ExternalVNCViewerHandler())
+        return ScreenSharingStream(ExternalVNCViewerHandler())
 
 
-class DesktopSharingServerController(DesktopSharingController):
+class ScreenSharingServerController(ScreenSharingController):
     @classmethod
     def createStream(cls):
-        return DesktopSharingStream(ExternalVNCServerHandler(("localhost", cls.vncServerPort)))
+        return ScreenSharingStream(ExternalVNCServerHandler(("localhost", cls.vncServerPort)))
 
