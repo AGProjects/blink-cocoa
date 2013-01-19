@@ -855,8 +855,9 @@ class BlinkPresenceContact(BlinkContact):
 
                                         notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
 
-                    devices[service.id] = {
-                                                'id'          : service.id,
+                    did = '%s_%s' % (uri_text, service.id) 
+                    devices[did] = {
+                                                'id'          : did,
                                                 'description' : description,
                                                 'user_agent'  : user_agent,
                                                 'aor'         : aor,
