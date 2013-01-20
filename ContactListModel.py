@@ -760,20 +760,18 @@ class BlinkPresenceContact(BlinkContact):
                         aor = 'sip:'+aor
                     uri_text = sip_prefix_pattern.sub('', aor)
 
+                    caps = set()
                     if service.capabilities is not None:
-                        caps = []
                         if service.capabilities.audio:
-                            caps.append("audio")
+                            caps.add("audio")
                         if service.capabilities.message:
-                            caps.append("chat")
+                            caps.add("chat")
                         if service.capabilities.file_transfer:
-                            caps.append("file-transfer")
+                            caps.add("file-transfer")
                         if service.capabilities.screen_sharing_server:
-                            caps.append("screen-sharing-server")
+                            caps.add("screen-sharing-server")
                         if service.capabilities.screen_sharing_client:
-                            caps.append("screen-sharing-client")
-                    else:
-                        caps = None
+                            caps.add("screen-sharing-client")
 
                     contact = urllib.unquote(service.contact.value) if service.contact is not None else aor
                     if not contact.startswith(('sip:', 'sips:')):
