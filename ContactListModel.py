@@ -1803,12 +1803,13 @@ class CustomListModel(NSObject):
                 titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(u'Send File To Address', "", "")
                 titem.setEnabled_(False)
                 for uri in item.uris:
-                    if '@' not in str(uri.uri):
-                        continue
+                    aor_supports_ft = False
+                    aor_supports_ft = any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % uri.uri and 'file-transfer' in device['caps'])
                     titem = send_file_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
                     titem.setIndentationLevel_(1)
                     titem.setTarget_(self)
                     titem.setRepresentedObject_({'account': account, 'uri': str(uri.uri), 'filenames':filenames})
+                    titem.setEnabled_(aor_supports_ft)
                 
                 NSMenu.popUpContextMenu_withEvent_forView_(send_file_menu, event, table)
                 return True
