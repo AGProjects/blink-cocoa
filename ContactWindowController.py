@@ -3572,20 +3572,19 @@ class ContactWindowController(NSWindowController):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
                         for uri in item.uris:
-                            if is_sip_aor_format(uri.uri):
-                                ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
-                                ds_item.setRepresentedObject_(uri.uri)
-                                ds_item.setTag_(2)
-                                aor_supports_ds = any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % uri.uri and 'screen-sharing-client' in device['caps'])
-                                ds_item.setEnabled_(aor_supports_ds)
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
+                            ds_item.setRepresentedObject_(uri.uri)
+                            ds_item.setTag_(2)
+                            aor_supports_ds = any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % uri.uri and 'screen-sharing-client' in device['caps'])
+                            ds_item.setEnabled_(aor_supports_ds)
 
-                                if isinstance(item, BlinkPresenceContact):
-                                    image = presence_status_for_contact(item, uri.uri)
-                                    if image:
-                                        icon = NSImage.imageNamed_(image)
-                                        icon.setScalesWhenResized_(True)
-                                        icon.setSize_(NSMakeSize(15,15))
-                                        ds_item.setImage_(icon)
+                            if isinstance(item, BlinkPresenceContact):
+                                image = presence_status_for_contact(item, uri.uri)
+                                if image:
+                                    icon = NSImage.imageNamed_(image)
+                                    icon.setScalesWhenResized_(True)
+                                    icon.setSize_(NSMakeSize(15,15))
+                                    ds_item.setImage_(icon)
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
