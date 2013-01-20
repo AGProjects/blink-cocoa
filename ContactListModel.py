@@ -1793,10 +1793,30 @@ class CustomListModel(NSObject):
                 return False
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
-            if filenames and account and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+            if not filenames or not account or not self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                return False
+                
+            if len(item.uris) > 1:
+                point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
+                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                                                          NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
+                                                                                                                                          table.window().graphicsContext(), 0, 1, 0)
+                send_file_menu = NSMenu.alloc().init()
+                titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(u'Send File To Address', "", "")
+                titem.setEnabled_(False)
+                for uri in item.uris:
+                    if '@' not in str(uri.uri):
+                        continue
+                    titem = send_file_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
+                    titem.setIndentationLevel_(1)
+                    titem.setTarget_(self)
+                    titem.setRepresentedObject_({'account': account, 'uri': str(uri.uri), 'filenames':filenames})
+                
+                NSMenu.popUpContextMenu_withEvent_forView_(send_file_menu, event, table)
+                return True
+            else:
                 self.sessionControllersManager.send_files_to_contact(account, item.uri, filenames)
                 return True
-            return False
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
             source = info.draggingSource()
             if index != NSOutlineViewDropOnItemIndex or not isinstance(item, BlinkContact) or not isinstance(source, AudioSession):
@@ -1965,6 +1985,11 @@ class CustomListModel(NSObject):
                     pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
                     pboard.setString_forType_(items[0].uri, "x-blink-sip-uri")
                 return True
+
+    @objc.IBAction
+    def userDropedFileOnContact_(self, sender):
+        object = sender.representedObject()
+        self.sessionControllersManager.send_files_to_contact(object['account'], object['uri'], object['filenames'])
 
     def userClickedBlindTransferMenuItem_(self, sender):
         source = sender.representedObject()['source']
