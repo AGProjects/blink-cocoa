@@ -257,9 +257,40 @@ class AudioSession(NSView):
                 info.draggingSource().draggedOut = False
                 info.draggingSource().setNeedsDisplay_(True)
                 return self.delegate.sessionBoxDidAddConferencePeer(self, source.delegate)
+           
+            elif pboard.availableTypeFromArray_(["dragged-contact"]):
+                group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
+                if blink_contact is not None:
+                    sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
+                    sourceContact = sourceGroup.contacts[blink_contact]
+                    
+                    if len(sourceContact.uris) > 1:
+                        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
+                        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                                                                  NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
+                                                                                                                                                  self.window().graphicsContext(), 0, 1, 0)
+                        invite_menu = NSMenu.alloc().init()
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                        titem.setEnabled_(False)
+                        for uri in sourceContact.uris:
+                            titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedInviteToConference:", "")
+                            titem.setIndentationLevel_(1)
+                            titem.setTarget_(self)
+                            titem.setRepresentedObject_(str(uri.uri))
+                        
+                        NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, self)
+                    elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+                        uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                        return self.delegate.sessionBoxDidAddConferencePeer(self, uri)
+            
             elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                 uri = str(pboard.stringForType_("x-blink-sip-uri"))
                 return self.delegate.sessionBoxDidAddConferencePeer(self, uri)
+
+    @objc.IBAction
+    def userClickedInviteToConference_(self, sender):
+        uri = sender.representedObject()
+        self.delegate.sessionBoxDidAddConferencePeer(self, uri)
 
     def setConferencing_(self, flag):
         self.conferencing = flag
