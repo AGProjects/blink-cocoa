@@ -852,23 +852,24 @@ class BlinkPresenceContact(BlinkContact):
                                         BlinkLogger().log_info(log_line)
 
                                         notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
-
-                    did = '%s_%s' % (uri_text, service.id) 
-                    devices[did] = {
-                                                'id'          : did,
-                                                'description' : description,
-                                                'user_agent'  : user_agent,
-                                                'aor'         : aor,
-                                                'contact'     : contact,
-                                                'location'    : service.map.value if service.map is not None else None,
-                                                'local_time'  : offset_info_text,
-                                                'time_offset' : offset_info,
-                                                'notes'       : _presence_notes,
-                                                'status'      : device_wining_status,
-                                                'account'     : notification.sender.id,
-                                                'caps'        : caps,
-                                                'icon'        : icon
-                                        }
+                    try:
+                        device = devices[service.id]
+                    except KeyError:
+                        devices[service.id] = {
+                                                    'description' : description,
+                                                    'user_agent'  : user_agent,
+                                                    'aor'         : [aor],
+                                                    'contact'     : contact,
+                                                    'location'    : service.map.value if service.map is not None else None,
+                                                    'local_time'  : offset_info_text,
+                                                    'time_offset' : offset_info,
+                                                    'notes'       : _presence_notes,
+                                                    'status'      : device_wining_status,
+                                                    'caps'        : caps,
+                                                    'icon'        : icon
+                                            }
+                    else:
+                        device['aor'].append(aor)
 
                     if self.log_presence_transitions and service in most_recent_services:
                         something_has_changed = False
@@ -1804,7 +1805,7 @@ class CustomListModel(NSObject):
                 titem.setEnabled_(False)
                 for uri in item.uris:
                     aor_supports_ft = False
-                    aor_supports_ft = any(device for device in item.presence_state['devices'].values() if device['aor'] == 'sip:%s' % uri.uri and 'file-transfer' in device['caps'])
+                    aor_supports_ft = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'file-transfer' in device['caps'])
                     titem = send_file_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
                     titem.setIndentationLevel_(1)
                     titem.setTarget_(self)
