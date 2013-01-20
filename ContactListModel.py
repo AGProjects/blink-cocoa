@@ -856,6 +856,7 @@ class BlinkPresenceContact(BlinkContact):
                         device = devices[service.id]
                     except KeyError:
                         devices[service.id] = {
+                                                    'id'          : service.id,
                                                     'description' : description,
                                                     'user_agent'  : user_agent,
                                                     'aor'         : [aor],
