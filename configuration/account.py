@@ -87,7 +87,9 @@ class SIPSettingsExtension(SIPSettings):
     always_use_my_proxy = Setting(type=bool, default=True)
     register = Setting(type=bool, default=True)
     do_not_disturb_code = Setting(type=NonNegativeInteger, default=486, nillable=False)
-    register_interval = Setting(type=NonNegativeInteger, default=600)
+    register_interval = Setting(type=NonNegativeInteger, default=300)
+    subscribe_interval = Setting(type=NonNegativeInteger, default=300)
+    publish_interval = Setting(type=NonNegativeInteger, default=300)
 
 
 class ServerSettings(SettingsGroup):
