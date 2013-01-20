@@ -1682,7 +1682,7 @@ class CustomListModel(NSObject):
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_item, index):
         self.drop_on_contact_index = None
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
-            if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, (BlinkPresenceContact, BonjourBlinkContact)):
+            if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, (BlinkPresenceContact, BonjourBlinkContact, SearchResultContact)):
                 return NSDragOperationNone
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
             if not all(os.path.isfile(f) for f in fnames):
