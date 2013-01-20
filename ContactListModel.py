@@ -1727,7 +1727,14 @@ class CustomListModel(NSObject):
             else:
                 # Dragging a contact
                 sourceGroup = self.groupsList[group]
-                sourceContact = sourceGroup.contacts[blink_contact]
+                
+                if isinstance(sourceGroup, LdapSearchResultContact):
+                    return NSDragOperationNone
+
+                if isinstance(sourceGroup, BlinkGroup):
+                    sourceContact = sourceGroup.contacts[blink_contact]
+                else:
+                    sourceContact = None
 
                 if isinstance(sourceGroup, BonjourBlinkGroup):
                     return NSDragOperationNone
