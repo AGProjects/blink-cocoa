@@ -9,7 +9,7 @@ __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
-from sipsimple.configuration.settings import AudioSettings, ChatSettings, ScreenSharingServerSettings, FileTransferSettings, LogsSettings, TLSSettings
+from sipsimple.configuration.settings import AudioSettings, ChatSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
@@ -39,7 +39,7 @@ class ChatSettingsExtension(ChatSettings):
     disable_collaboration_editor = Setting(type=bool, default=False)
 
 
-class ScreenSharingSettingsExtension(ScreenSharingServerSettings):
+class ScreenSharingSettingsExtension(ScreenSharingSettings):
     disabled = Setting(type=bool, default=False)
 
 
