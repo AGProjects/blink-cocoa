@@ -859,7 +859,6 @@ class BlinkPresenceContact(BlinkContact):
                                                     'id'          : service.id,
                                                     'description' : description,
                                                     'user_agent'  : user_agent,
-                                                    'aor'         : [aor],
                                                     'contact'     : contact,
                                                     'location'    : service.map.value if service.map is not None else None,
                                                     'local_time'  : offset_info_text,
@@ -867,10 +866,13 @@ class BlinkPresenceContact(BlinkContact):
                                                     'notes'       : _presence_notes,
                                                     'status'      : device_wining_status,
                                                     'caps'        : caps,
-                                                    'icon'        : icon
+                                                    'icon'        : icon,
+                                                    'aor'         : [aor],
+                                                    'accounts'    : [notification.sender.id]
                                             }
                     else:
                         device['aor'].append(aor)
+                        device['accounts'].append(notification.sender.id)
 
                     if self.log_presence_transitions and service in most_recent_services:
                         something_has_changed = False

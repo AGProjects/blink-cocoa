@@ -1600,15 +1600,27 @@ class ContactWindowController(NSWindowController):
 
     def startSessionToSelectedContact(self, media_type, uri=None):
         selected_contact = None
+        account = None
         try:
             contact = self.getSelectedContacts()[0]
+            BlinkLogger().log_error(u"Starting %s session to selected contact %s" % (media_type, contact.name))
         except IndexError:
             target = unicode(self.searchBox.stringValue()).strip()
             if not target:
                 return
+            BlinkLogger().log_error(u"Starting %s session to entered address %s" % (media_type, target))
             display_name = ''
         else:
             selected_contact = contact
+            local_aors = set()
+            if isinstance(selected_contact, BlinkPresenceContact):
+                for device in contact.presence_state['devices'].values():
+                    for device_account in device['accounts']:
+                        local_aors.add(device_account)
+                if local_aors and AccountManager().default_account.id not in local_aors:
+                    random_local_aor = local_aors.pop()
+                    account = AccountManager().get_account(random_local_aor)
+                    BlinkLogger().log_error('Use account %s for which we are authorized instead of default selected account' % account.id)
             if uri:
                 target = uri
             else:
@@ -1616,7 +1628,8 @@ class ContactWindowController(NSWindowController):
                 if hasattr(contact, 'uri_type') and contact.uri_type is not None and contact.uri_type.lower() == 'xmpp':
                     target += ';xmpp'
 
-        account = self.getAccountWitDialPlan(target)
+        if account is None:
+            account = self.getAccountWitDialPlan(target)
         local_uri = account.id if account is not None else None
         self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
 
@@ -1664,6 +1677,7 @@ class ContactWindowController(NSWindowController):
             media_type = ("video", "audio")
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
+        session_controller.log_info('Using local account %s' % account.id)
         session_controller.selected_contact = selected_contact
 
         if type(media_type) is not tuple:
