@@ -68,7 +68,7 @@ class ServerSettings(SettingsGroup):
 class GUISettings(SettingsGroup):
     use_default_web_browser_for_alerts = Setting(type=bool, default=False)
     idle_threshold = Setting(type=NonNegativeInteger, default=600)
-    use_availability_for_sessions = Setting(type=bool, default=True)
+    use_availability_for_sessions = Setting(type=bool, default=False)
 
 
 class ServiceProviderSettings(SettingsGroup):
