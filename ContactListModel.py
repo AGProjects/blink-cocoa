@@ -2451,11 +2451,13 @@ class ContactListModel(CustomListModel):
 
     def _NH_SIPAccountGotPresenceWinfo(self, notification):
         watcher_list = notification.data.watcher_list
+        tmp_pending_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
+        tmp_active_watchers  = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
         if notification.data.state == 'full':
             # TODO: don't remove all of them, just the ones that match?
             self.pending_watchers_group.contacts = []
-            self.pending_watchers_map[notification.sender.id] = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
-            self.active_watchers_map[notification.sender.id] = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
+            self.pending_watchers_map[notification.sender.id] = tmp_pending_watchers
+            self.active_watchers_map[notification.sender.id] = tmp_active_watchers
             all_pending_watchers = {}
             [all_pending_watchers.update(d) for d in self.pending_watchers_map.values()]
             growl_sent = False
@@ -2473,14 +2475,11 @@ class ContactListModel(CustomListModel):
                         self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
                         growl_sent = True
 
-            all_active_watchers = {}
-            [all_active_watchers.update(d) for d in self.active_watchers_map.values()]
-            for watcher in all_active_watchers.keys():
+            for watcher in tmp_active_watchers.iterkeys():
                 uri = sip_prefix_pattern.sub('', watcher)
                 BlinkLogger().log_info(u"%s is subscribed to my availability for %s" % (uri, notification.sender.id))
 
         elif notification.data.state == 'partial':
-            tmp_pending_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
             growl_sent = False
             for watcher in tmp_pending_watchers.itervalues():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
