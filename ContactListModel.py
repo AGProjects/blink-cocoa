@@ -1806,9 +1806,11 @@ class CustomListModel(NSObject):
                 send_file_menu = NSMenu.alloc().init()
                 titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(u'Send File To Address', "", "")
                 titem.setEnabled_(False)
+                settings = SIPSimpleSettings()
+
                 for uri in item.uris:
                     aor_supports_ft = False
-                    aor_supports_ft = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'file-transfer' in device['caps'])
+                    aor_supports_ft = not settings.gui.use_availability_for_sessions or  any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'file-transfer' in device['caps'])
                     titem = send_file_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
                     titem.setIndentationLevel_(1)
                     titem.setTarget_(self)

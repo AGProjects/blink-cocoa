@@ -813,9 +813,10 @@ class AudioController(MediaStream):
             aor_supports_screen_sharing_client = False
             if self.contact is not None:
                 if isinstance(self.contact, BlinkPresenceContact):
-                    aor_supports_chat = any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'chat' in device['caps'])
-                    aor_supports_screen_sharing_server = any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
-                    aor_supports_screen_sharing_client = any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and self.contact.uri and 'screen-sharing-client' in device['caps'])
+                    settings = SIPSimpleSettings()
+                    aor_supports_chat = not settings.gui.use_availability_for_sessions or any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'chat' in device['caps'])
+                    aor_supports_screen_sharing_server = not settings.gui.use_availability_for_sessions or any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
+                    aor_supports_screen_sharing_client = not settings.gui.use_availability_for_sessions or any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and self.contact.uri and 'screen-sharing-client' in device['caps'])
                 elif isinstance(self.contact, BonjourBlinkContact):
                     aor_supports_chat = True
                     aor_supports_screen_sharing_client = True
