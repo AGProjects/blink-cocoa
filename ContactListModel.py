@@ -671,9 +671,9 @@ class BlinkPresenceContact(BlinkContact):
             if self.log_presence_transitions:
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][resource.uri] = True
-                    BlinkLogger().log_info(u"Subscription for availability of %s is pending" % uri_text)
+                    BlinkLogger().log_info(u"Subscription from %s for availability of %s is pending" % (notification.sender.id, uri_text))
                 if resource.state == 'terminated':
-                    BlinkLogger().log_info(u"Subscription for availability of %s is terminated" % uri_text)
+                    BlinkLogger().log_info(u"Subscription from %s for availability of %s is terminated" % (notification.sender.id, uri_text))
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
