@@ -24,6 +24,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.session import IllegalStateError
 from sipsimple.session import SessionManager
 from sipsimple.util import ISOTimestamp
@@ -4185,28 +4186,37 @@ class ContactWindowController(NSWindowController):
         pboard = info.draggingPasteboard()
         session = self.getSelectedAudioSession()
 
-        if not session:
+        if not session or not session.remote_focus:
             return False
 
-        if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
-            uri = str(pboard.stringForType_("x-blink-sip-uri"))
-            if uri:
-                uri = sip_prefix_pattern.sub("", str(uri))
-                if "@" not in uri:
-                    uri = '%s@%s' % (uri, session.account.id.domain)
+        if not pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+            return False
 
-            if session.remote_focus:
-                contact = self.getContactMatchingURI(uri)
-                if contact:
-                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
-                else:
-                    contact = BlinkConferenceContact(uri, name=uri)
-                contact.detail = 'Invitation sent...'
-                session.invited_participants.append(contact)
-                session.participants_log.add(uri)
-                session.log_info(u"Invite %s to conference" % uri)
-                session.session.conference.add_participant(uri)
-            return True
+        uri = str(pboard.stringForType_("x-blink-sip-uri"))
+        if uri:
+            uri = sip_prefix_pattern.sub("", str(uri))
+            if "@" not in uri:
+                uri = '%s@%s' % (uri, session.account.id.domain)
+
+        try:
+            sip_uri = 'sip:%s' % uri if not uri.startswith("sip:") else uri
+            sip_uri = SIPURI.parse(sip_uri)
+        except SIPCoreError:
+            session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
+            return False
+
+        contact = self.getContactMatchingURI(uri)
+        if contact:
+            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
+        else:
+            contact = BlinkConferenceContact(uri, name=uri)
+
+        contact.detail = 'Invitation sent...'
+        session.invited_participants.append(contact)
+        session.participants_log.add(uri)
+        session.log_info(u"Invite %s to conference" % uri)
+        session.session.conference.add_participant(uri)
+        return True
 
     def getSelectedAudioSession(self):
         session = None
@@ -4420,6 +4430,14 @@ class ContactWindowController(NSWindowController):
                     for uri in participants:
                         if uri and "@" not in uri:
                             uri='%s@%s' % (uri, session.account.id.domain)
+
+                        try:
+                            sip_uri = 'sip:%s' % uri if not uri.startswith("sip:") else uri
+                            sip_uri = SIPURI.parse(sip_uri)
+                        except SIPCoreError:
+                            session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
+                            continue
+
                         contact = self.getContactMatchingURI(uri)
                         if contact:
                             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)

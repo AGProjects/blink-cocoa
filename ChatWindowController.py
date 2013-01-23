@@ -789,6 +789,14 @@ class ChatWindowController(NSWindowController):
                     for uri in participants:
                         if uri and "@" not in uri:
                             uri='%s@%s' % (uri, session.account.id.domain)
+
+                        try:
+                            sip_uri = 'sip:%s' % uri if not uri.startswith("sip:") else uri
+                            sip_uri = SIPURI.parse(sip_uri)
+                        except SIPCoreError:
+                            session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
+                            continue
+
                         contact = getContactMatchingURI(uri)
                         if contact:
                             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
@@ -1588,8 +1596,16 @@ class ChatWindowController(NSWindowController):
     def inviteContactToConferenceSessionWithUri(self, session, uri, contact=None):
         if uri:
             uri = sip_prefix_pattern.sub("", str(uri))
+
         if "@" not in uri:
             uri = '%s@%s' % (uri, session.account.id.domain)
+
+        try:
+            sip_uri = 'sip:%s' % uri if not uri.startswith("sip:") else uri
+            sip_uri = SIPURI.parse(sip_uri)
+        except SIPCoreError:
+            session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
+            return False
 
         # do not invite remote party itself
         remote_uri = format_identity_to_string(session.remotePartyObject)
