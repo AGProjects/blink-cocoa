@@ -574,8 +574,14 @@ class BlinkPresenceContactAttribute(object):
     def __get__(self, obj, objtype=None):
         if obj is None:
             return None
+        if obj.contact is None:
+            return None
         return getattr(obj.contact, self.name)
     def __set__(self, obj, value):
+        if obj is None:
+            return None
+        if obj.contact is None:
+            return None
         setattr(obj.contact, self.name, value)
         obj.contact.save()
 
