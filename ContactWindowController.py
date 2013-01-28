@@ -1604,12 +1604,12 @@ class ContactWindowController(NSWindowController):
         account = None
         try:
             contact = self.getSelectedContacts()[0]
-            BlinkLogger().log_error(u"Starting %s session to selected contact %s" % (media_type, contact.name))
+            BlinkLogger().log_info(u"Starting %s session to selected contact %s" % (media_type, contact.name))
         except IndexError:
             target = unicode(self.searchBox.stringValue()).strip()
             if not target:
                 return
-            BlinkLogger().log_error(u"Starting %s session to entered address %s" % (media_type, target))
+            BlinkLogger().log_info(u"Starting %s session to entered address %s" % (media_type, target))
             display_name = ''
         else:
             selected_contact = contact
