@@ -3329,16 +3329,25 @@ class ContactWindowController(NSWindowController):
             self.contactContextMenu.removeItemAtIndex_(0)
 
         if isinstance(item, BlinkPendingWatcher):
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("%s Subscribed To My Availability"%item.uri, "", "")
+            lastItem.setEnabled_(False)
             if not self.hasContactMatchingURI(item.uri, exact_match=True):
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request and Create Contact...", "addContactWithUri:", "")
+                lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(item)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block", "blockPresenceForURI:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Drag Request To An Existing Contact To Accept It", "", "")
+                lastItem.setIndentationLevel_(1)
+                lastItem.setEnabled_(False)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block Request", "blockPresenceForURI:", "")
                 lastItem.setRepresentedObject_(item)
+                lastItem.setIndentationLevel_(1)
             else:
                 all_contacts_with_uri = self.model.getBlinkContactsForURI(item.uri, exact_match=True)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request", "allowPresenceForContacts:", "")
+                lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block", "blockPresenceForContacts:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block Request", "blockPresenceForContacts:", "")
+                lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
 
             blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
