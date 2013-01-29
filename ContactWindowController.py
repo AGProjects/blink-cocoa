@@ -3332,13 +3332,13 @@ class ContactWindowController(NSWindowController):
             if not self.hasContactMatchingURI(item.uri, exact_match=True):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForURI:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block", "blockPresenceForURI:", "")
                 lastItem.setRepresentedObject_(item)
             else:
                 all_contacts_with_uri = self.model.getBlinkContactsForURI(item.uri, exact_match=True)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request to Show My Presence Information", "allowPresenceForContacts:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request", "allowPresenceForContacts:", "")
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Ignore Request and Hide My Presence Information", "blockPresenceForContacts:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block", "blockPresenceForContacts:", "")
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
 
             blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)

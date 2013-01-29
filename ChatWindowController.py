@@ -528,7 +528,15 @@ class ChatWindowController(NSWindowController):
             super(ChatWindowController, self).keyDown_(event)
 
     def close_(self, sender):
-        self.window().performClose_(None)
+        chat_sessions = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
+        if chat_sessions > 1:
+            selectedSession = self.selectedSessionController()
+            if selectedSession:
+                chat_stream = selectedSession.streamHandlerOfType("chat")
+                if chat_stream:
+                    chat_stream.closeTab()
+        else:
+            self.window().performClose_(None)
 
     def windowWillClose_(self, sender):
         self.removeTimer()
