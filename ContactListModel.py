@@ -571,19 +571,14 @@ class BlinkBlockedPresenceContact(BlinkContact):
 class BlinkPresenceContactAttribute(object):
     def __init__(self, name):
         self.name = name
-    def __get__(self, obj, objtype=None):
+    def __get__(self, obj, objtype):
         if obj is None:
-            return None
-        if obj.contact is None:
-            return None
-        return getattr(obj.contact, self.name)
+            return self
+        return getattr(obj.contact, self.name, None)
     def __set__(self, obj, value):
-        if obj is None:
-            return None
-        if obj.contact is None:
-            return None
-        setattr(obj.contact, self.name, value)
-        obj.contact.save()
+        if obj.contact is not None:
+            setattr(obj.contact, self.name, value)
+            obj.contact.save()
 
 
 class BlinkPresenceContact(BlinkContact):
@@ -1335,9 +1330,9 @@ class SystemAddressBookBlinkContact(BlinkContact):
 class BlinkGroupAttribute(object):
     def __init__(self, name):
         self.name = name
-    def __get__(self, obj, objtype=None):
+    def __get__(self, obj, objtype):
         if obj is None:
-            return None
+            return self
         if obj.group is None:
             return obj.__dict__.get(self.name, None)
         else:
