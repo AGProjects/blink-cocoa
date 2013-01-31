@@ -1027,12 +1027,16 @@ class ChatController(MediaStream):
     def _NH_ChatStreamGotMessage(self, stream, data):
         message = data.message
         if message.content_type == 'application/blink-icon':
-            try:
-                self.remoteIcon = decode_icon(message.body)
-            except Exception:
-                pass
+            if not self.session.remote_focus:
+                try:
+                    self.remoteIcon = decode_icon(message.body)
+                except Exception:
+                    pass
+                else:
+                    self.chatWindowController.refreshDrawer()
             else:
-                self.chatWindowController.refreshDrawer()
+                pass
+                # TODO: update icons for the contacts in the drawer
             return
 
         if not message.content_type.startswith("text/"):
