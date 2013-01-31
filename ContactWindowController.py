@@ -1621,7 +1621,7 @@ class ContactWindowController(NSWindowController):
                 if local_aors and AccountManager().default_account.id not in local_aors:
                     random_local_aor = local_aors.pop()
                     account = AccountManager().get_account(random_local_aor)
-                    BlinkLogger().log_error('Use account %s for which we are authorized instead of default selected account' % account.id)
+                    BlinkLogger().log_info('Use account %s for which we are authorized instead of default selected account' % account.id)
             if uri:
                 target = uri
             else:
