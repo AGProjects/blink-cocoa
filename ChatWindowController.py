@@ -1296,7 +1296,13 @@ class ChatWindowController(NSWindowController):
                 if chat_stream.remoteIcon:
                     icon = chat_stream.remoteIcon
                 if contact:
-                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+                    if isinstance(contact, BlinkPresenceContact):
+                        # Find the contact from the all contacts group
+                        model = NSApp.delegate().contactsWindowController.model
+                        presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == contact.contact)
+                    else:
+                        presence_contact = None
+                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon, presence_contact=presence_contact)
                 else:
                     uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()
