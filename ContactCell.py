@@ -5,8 +5,7 @@ from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
 
-from ContactListModel import presence_status_for_contact, presence_status_icons
-
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact
 
 class ContactCell(NSTextFieldCell):
     contact = None
@@ -111,10 +110,12 @@ class ContactCell(NSTextFieldCell):
             icon.setSize_(NSMakeSize(12,12))
             self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
 
-        try:
-            has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
-        except KeyError:
-            return
+        has_locations = None
+        if not isinstance(self.contact, BonjourBlinkContact):
+            try:
+                has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
+            except KeyError:
+                return
 
         if has_locations:
             frame = self.frame

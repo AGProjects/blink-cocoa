@@ -16,6 +16,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from datetime import datetime
 from sipsimple.account import AccountManager, Account, BonjourAccount
+from sipsimple.account.bonjour import BonjourAccountPresenceState
 from sipsimple.account.xcap import Icon, OfflineStatus
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import pidf, rpid, cipid, caps, IterateItems
@@ -419,6 +420,24 @@ class PresencePublisher(object):
     def publish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = self.build_pidf(account)
+
+        self.updateBonjourPresenceState()
+     
+    def updateBonjourPresenceState(self):
+        bonjour_account = BonjourAccount()
+        if not bonjour_account.enabled:
+            return
+
+        status = None
+        note = self.owner.presenceNoteText.stringValue()
+        selected_item = self.owner.presenceActivityPopUp.selectedItem()
+        if selected_item is not None:
+            activity_object = selected_item.representedObject()
+            if activity_object is not None:
+                status = activity_object['extended_status']
+                status = status if status != 'offline' else 'available'
+        
+        bonjour_account.presence_state = BonjourAccountPresenceState(status or 'available', note)
 
     def unpublish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
