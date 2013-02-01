@@ -1810,7 +1810,7 @@ class SessionController(NSObject):
             self.failed_to_join_participants[uri]=time.time()
             if data.code >= 400 or data.code == 0:
                 contact.detail = 'Invite Failed: %s (%s)' % (data.reason, data.code)
-                self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+            self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = sip_prefix_pattern.sub("", str(data.participant))
