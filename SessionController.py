@@ -1804,12 +1804,21 @@ class SessionController(NSObject):
         try:
             contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
         except StopIteration:
-            pass
+            self.log_info(u"Cannot find %s in the invited list" % uri)
         else:
             contact.detail = '%s (%s)' % (data.reason, data.code)
             self.failed_to_join_participants[uri]=time.time()
+            self.log_info(u"Adding %s to failed list" % uri)
             if data.code >= 400 or data.code == 0:
-                contact.detail = 'Invite Failed: %s (%s)' % (data.reason, data.code)
+                if data.code == 487:
+                    contact.detail = 'Nobody answered'
+                elif data.code == 486:
+                    contact.detail = 'Busy'
+                elif data.code == 603:
+                    contact.detail = 'Busy Everywhere'
+                else:
+                    reason = '%s (%s)' % (data.reason, data.code) if data.code else data.reason
+                    contact.detail = 'Invite Failed: %s' % reason
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):

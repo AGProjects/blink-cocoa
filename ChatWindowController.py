@@ -189,6 +189,7 @@ class ChatWindowController(NSWindowController):
                     try:
                         uri_time = session.failed_to_join_participants[uri]
                         if uri == contact.uri and (time.time() - uri_time > 5):
+                            session.log_info('Removing %s from list of invited partipants' % uri)
                             session.invited_participants.remove(contact)
                             contact.destroy()
                             del session.failed_to_join_participants[uri]
@@ -811,6 +812,7 @@ class ChatWindowController(NSWindowController):
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
                         contact.detail = 'Invitation sent...'
+                        session.log_info('Adding %s to list of invited partipants' % uri)
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
                         session.log_info(u"Invite %s to conference" % uri)
@@ -1567,7 +1569,10 @@ class ChatWindowController(NSWindowController):
             group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
             if blink_contact is not None:
                 sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
-                sourceContact = sourceGroup.contacts[blink_contact]
+                try:
+                    sourceContact = sourceGroup.contacts[blink_contact]
+                except IndexError:
+                    return False
 
                 if len(sourceContact.uris) > 1:
                     point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
