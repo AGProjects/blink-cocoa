@@ -53,6 +53,10 @@ class MSRPSettingsExtension(MSRPSettings):
     connection_model = Setting(type=MSRPConnectionModel, default='relay')
 
 
+class BonjourPresenceSettingsExtension(PresenceSettings):
+    enabled = Setting(type=bool, default=True)
+
+
 class PresenceSettingsExtension(PresenceSettings):
     enabled = Setting(type=bool, default=True)
     disable_location = Setting(type=bool, default=False)
@@ -165,6 +169,7 @@ class BonjourAccountExtension(SettingsObjectExtension):
     ldap = LDAPSettingsExtension
     conference = ConferenceSettings
     msrp = BonjourMSRPSettingsExtension
+    presence = BonjourPresenceSettingsExtension
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
     tls = TLSSettingsExtension
