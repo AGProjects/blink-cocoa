@@ -82,11 +82,10 @@ class BlinkAppDelegate(NSObject):
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
-            ns_nc = NSNotificationCenter.defaultCenter()
-            ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
-
             nc = NotificationCenter()
+            nc.add_observer(self, name="SIPApplicationDidStart")
             nc.add_observer(self, name="SIPApplicationDidEnd")
+            nc.add_observer(self, name="CFGSettingsObjectDidChange")
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
             self.applicationNamePrint = 'Blink' if self.applicationName == 'Blink Pro' else self.applicationName
 
@@ -99,14 +98,10 @@ class BlinkAppDelegate(NSObject):
                         pass
             call_in_thread('file-io', purge_screenshots)
 
-            userdef = NSUserDefaults.standardUserDefaults()
-            self.debug = userdef.boolForKey_("debug")
             ScreenSharingController.vncServerPort = 5900
 
         return self
 
-    def userDefaultsDidChange_(self, notification):
-        self.debug = NSUserDefaults.standardUserDefaults().boolForKey_("debug")
 
     # Needed by run_in_gui_thread and call_in_gui_thread
     def callObject_(self, callable):
@@ -239,6 +234,15 @@ class BlinkAppDelegate(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        if 'gui.extended_debug' in notification.data.modified:
+            settings = SIPSimpleSettings()
+            self.debug = settings.gui.extended_debug
+
+    def _NH_SIPApplicationDidStart(self, notification):
+        settings = SIPSimpleSettings()
+        self.debug = settings.gui.extended_debug
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
