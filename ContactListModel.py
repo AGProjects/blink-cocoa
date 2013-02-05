@@ -87,7 +87,9 @@ presence_status_icons = {'away': NSImage.imageNamed_("away"),
 def presence_status_for_contact(contact, uri=None):
     status = None
     if uri is None:
-        if isinstance(contact, BlinkPresenceContact):
+        if isinstance(contact, BonjourBlinkContact):
+            status = contact.presence_state
+        elif isinstance(contact, BlinkPresenceContact):
             if contact.presence_state['status']['busy']:
                 status = 'busy'
             elif contact.presence_state['status']['available']:
@@ -1194,6 +1196,7 @@ class BonjourBlinkContact(BlinkContact):
         self.update_uri(uri)
         self.name = name or self.uri
         self.detail = self.uri
+        self.presence_state = None
         if 'isfocus' in uri.parameters:
             self.avatar = DefaultMultiUserAvatar()
         else:
@@ -2670,10 +2673,14 @@ class ContactListModel(CustomListModel):
         display_name = notification.data.display_name
         host = notification.data.host
         uri = notification.data.uri
+        note = notification.data.presence_state.note if notification.data.presence_state is not None else None 
+
         BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
 
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.not_filtered_contacts):
             blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+            blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
+            blink_contact.detail = note if note else blink_contact.uri
             self.bonjour_group.not_filtered_contacts.append(blink_contact)
 
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
@@ -2681,9 +2688,13 @@ class ContactListModel(CustomListModel):
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
                 if not tls_neighbours:
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+                    blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
+                    blink_contact.detail = note if note else blink_contact.uri
                     self.bonjour_group.contacts.append(blink_contact)
             else:
                 blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+                blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
+                blink_contact.detail = note if note else blink_contact.uri
                 self.bonjour_group.contacts.append(blink_contact)
             non_tls_neighbours = [n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport != 'tls']
 
@@ -2700,12 +2711,15 @@ class ContactListModel(CustomListModel):
         host = notification.data.host
         uri = notification.data.uri
         name = '%s (%s)' % (display_name or 'Unknown', host)
+        note = notification.data.presence_state.note if notification.data.presence_state is not None else None 
 
         BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
         try:
             blink_contact = (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==neighbour).next()
         except StopIteration:
             blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
+            blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
+            blink_contact.detail = note if note else blink_contact.uri
             self.bonjour_group.not_filtered_contacts.append(blink_contact)
             if uri.transport != 'tls':
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
@@ -2716,7 +2730,8 @@ class ContactListModel(CustomListModel):
         else:
             blink_contact.name = name
             blink_contact.update_uri(uri)
-            blink_contact.detail = blink_contact.uri
+            blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
+            blink_contact.detail = note if note else blink_contact.uri
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
