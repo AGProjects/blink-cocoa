@@ -434,9 +434,10 @@ class PresencePublisher(object):
             activity_object = selected_item.representedObject()
             if activity_object is not None:
                 status = activity_object['extended_status']
-                status = status if status != 'offline' else 'available'
-
-        bonjour_account.presence_state = BonjourPresenceState(status or 'available', note)
+        if status in (None, 'offline'):
+            bonjour_account.presence_state = None
+        else:
+            bonjour_account.presence_state = BonjourPresenceState(status, note)
 
     def unpublish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
