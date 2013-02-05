@@ -47,7 +47,7 @@ class AccountSettings(NSObject):
     def showSettingsForAccount_(self, account):
         if account.server.settings_url is None:
             return
-        query_string = "realm=%s&tab=settings&user_agent=blink" % account.id
+        query_string = "realm=%s&tab=settings&user_agent=blink" % account.id.domain
         if account.server.settings_url.query:
             query_string = "%s&%s" % (account.server.settings_url.query, query_string)
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
@@ -153,13 +153,13 @@ class AccountSettings(NSObject):
     def webView_resource_didReceiveAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         self._authRequestCount += 1
         if self._authRequestCount > 2:
-            BlinkLogger().log_info(u"Could not load Blink Server Tools page: authentication failure")
+            BlinkLogger().log_debug(u"Could not load Blink Server Tools page: authentication failure")
             self.errorText.setHidden_(False)
             self.errorText.setStringValue_("Could not load Blink Server Tools page: authentication failure")
             self.spinWheel.stopAnimation_(None)
             self.loadingText.setHidden_(True)
         else:
-            credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id, self._account.server.web_password or self._account.auth.password, NSURLCredentialPersistenceNone)
+            credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id.username, self._account.server.web_password or self._account.auth.password, NSURLCredentialPersistenceForSession)
             challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
     def webView_decidePolicyForNewWindowAction_request_newFrameName_decisionListener_(self, webView, info, request, frame, listener):

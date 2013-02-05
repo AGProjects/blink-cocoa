@@ -797,7 +797,7 @@ class SessionHistoryReplicator(object):
     def get_last_calls(self, account):
         if not account.server.settings_url:
             return
-        query_string = "action=get_history"
+        query_string = "action=get_history&realm=%s" % account.id.domain
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         nsurl = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
@@ -1064,7 +1064,7 @@ class SessionHistoryReplicator(object):
                     self.last_calls_connections[key]['authRequestCount'] = 1
 
                 if self.last_calls_connections[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
 
@@ -1348,7 +1348,7 @@ class ChatHistoryReplicator(object):
                         except (TypeError, cjson.EncodeError), e:
                             BlinkLogger().log_debug(u"Failed to encode chat journal entries for %s: %s" % (account, e))
                         else:
-                            query_string = "action=put_journal_entries"
+                            query_string = "action=put_journal_entries&realm=%s" % account.id.domain
                             url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
                             nsurl = NSURL.URLWithString_(url)
                             settings = SIPSimpleSettings()
@@ -1388,7 +1388,7 @@ class ChatHistoryReplicator(object):
     @run_in_gui_thread
     def startConnectionForIncomingReplication(self, account, after_timestamp):
         settings = SIPSimpleSettings()
-        query_string_variables = {'action': 'get_journal_entries', 'except_uuid': settings.instance_id, 'after_timestamp': after_timestamp}
+        query_string_variables = {'realm': account.id.domain, 'action': 'get_journal_entries', 'except_uuid': settings.instance_id, 'after_timestamp': after_timestamp}
         query_string = "&".join(("%s=%s" % (key, value) for key, value in query_string_variables.items()))
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         BlinkLogger().log_debug(u"Retrieving chat history replication for %s from %s" % (account.id, url))
@@ -1516,7 +1516,7 @@ class ChatHistoryReplicator(object):
                     self.connections_for_outgoing_replication[key]['authRequestCount'] = 1
 
                 if self.connections_for_outgoing_replication[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
         try:
@@ -1535,6 +1535,6 @@ class ChatHistoryReplicator(object):
                     self.connections_for_incoming_replication[key]['authRequestCount'] = 1
 
                 if self.connections_for_incoming_replication[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
