@@ -2673,7 +2673,9 @@ class ContactListModel(CustomListModel):
         display_name = notification.data.display_name
         host = notification.data.host
         uri = notification.data.uri
-        note = notification.data.presence_state.note if notification.data.presence_state is not None else None 
+        note = notification.data.presence_state.note if notification.data.presence_state is not None else None
+        if not note and notification.data.presence_state is not None and notification.data.presence_state.status is not None:
+            note = notification.data.presence_state.status.title()
 
         BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
 
@@ -2712,6 +2714,8 @@ class ContactListModel(CustomListModel):
         uri = notification.data.uri
         name = '%s (%s)' % (display_name or 'Unknown', host)
         note = notification.data.presence_state.note if notification.data.presence_state is not None else None 
+        if not note and notification.data.presence_state is not None and notification.data.presence_state.status is not None:
+            note = notification.data.presence_state.status.title()
 
         BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
         try:
