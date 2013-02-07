@@ -1194,16 +1194,16 @@ class ChatHistoryReplicator(object):
         try:
             success = journal['success']
         except KeyError:
-            BlinkLogger().log_debug(u"Invalid answer from history replication server")
+            BlinkLogger().log_debug(u"Invalid answer from history server")
             self.disableReplication(account)
             return
 
         if not success:
             try:
                 error_message = journal['error_message']
-                BlinkLogger().log_debug(u"Error from replication server of %s: %s" % (account, journal['error_message']))
+                BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
-                BlinkLogger().log_debug(u"Unknown error from replication server of %s" % account)
+                BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
             self.disableReplication(account)
             return
 
@@ -1211,7 +1211,7 @@ class ChatHistoryReplicator(object):
             results = journal['results']
         except KeyError:
             if self.debug:
-                BlinkLogger().log_debug(u"No results set returned by replication server of %s" % account)
+                BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
             self.disableReplication(account)
             return
 
@@ -1220,7 +1220,7 @@ class ChatHistoryReplicator(object):
                 msgid          = entry['id']
                 journal_id     = str(entry['journal_id'])
             except KeyError:
-                BlinkLogger().log_debug(u"Failed to update journal id from history replication server of %s" % account)
+                BlinkLogger().log_debug(u"Failed to update journal id from history server of %s" % account)
             else:
                 BlinkLogger().log_debug(u"Update local chat history message %s with remote journal id %s" % (msgid, journal_id))
                 ChatHistory().update_from_journal_put_results(msgid, journal_id)
@@ -1231,23 +1231,23 @@ class ChatHistoryReplicator(object):
         try:
             success = journal['success']
         except KeyError:
-            BlinkLogger().log_debug(u"Invalid answer from history replication server of %s" % account)
+            BlinkLogger().log_debug(u"Invalid answer from history server of %s" % account)
             self.disableReplication(account)
             return
 
         if not success:
             try:
                 error_message = journal['error_message']
-                BlinkLogger().log_debug(u"Error from replication server of %s: %s" % (account, journal['error_message']))
+                BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
-                BlinkLogger().log_debug(u"Unknown error from replication server of %s" % account)
+                BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
             self.disableReplication(account)
             return
 
         try:
             results = journal['results']
         except KeyError:
-            BlinkLogger().log_debug(u"No results set returned by replication server of %s" % account)
+            BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
             self.disableReplication(account)
             return
 
@@ -1277,7 +1277,7 @@ class ChatHistoryReplicator(object):
                         self.last_journal_timestamp[account] = {'timestamp': timestamp, 'msgid_list': []}
 
             except KeyError:
-                BlinkLogger().log_debug(u"Failed to parse server replication results for %s" % account)
+                BlinkLogger().log_debug(u"Failed to parse history server results for %s" % account)
                 self.disableReplication(account)
                 return
 
@@ -1292,7 +1292,7 @@ class ChatHistoryReplicator(object):
             try:
                 data = cjson.decode(data)
             except (TypeError, cjson.DecodeError), e:
-                BlinkLogger().log_debug(u"Failed to decode replication journal for %s: %s" % (account, e))
+                BlinkLogger().log_debug(u"Failed to decode server journal for %s: %s" % (account, e))
                 continue
 
             if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
@@ -1317,12 +1317,12 @@ class ChatHistoryReplicator(object):
                         BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
 
                 except KeyError:
-                    BlinkLogger().log_debug(u"Failed to apply journal to local history database for %s" % account)
+                    BlinkLogger().log_debug(u"Failed to apply server journal to local history database for %s" % account)
                     return
 
         if notify_data:
             for key in notify_data.keys():
-                log_text = '%d new chat messages for %s retrieved from chat replication server' % (notify_data[key], key)
+                log_text = '%d new chat messages for %s retrieved from history server' % (notify_data[key], key)
                 # notify growl
                 BlinkLogger().log_info(log_text)
 
@@ -1391,7 +1391,7 @@ class ChatHistoryReplicator(object):
         query_string_variables = {'realm': account.id.domain, 'action': 'get_journal_entries', 'except_uuid': settings.instance_id, 'after_timestamp': after_timestamp}
         query_string = "&".join(("%s=%s" % (key, value) for key, value in query_string_variables.items()))
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        BlinkLogger().log_debug(u"Retrieving chat history replication for %s from %s" % (account.id, url))
+        BlinkLogger().log_debug(u"Retrieving chat history for %s from %s" % (account.id, url))
         nsurl = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
