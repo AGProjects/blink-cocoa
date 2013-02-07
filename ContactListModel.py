@@ -2689,6 +2689,7 @@ class ContactListModel(CustomListModel):
             if uri.transport != 'tls':
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
                 if not tls_neighbours:
+                    BlinkLogger().log_debug(u"Bonjour neighbour does not have a TLS contact, adding %s %s" % (display_name, uri))
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
                     blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
                     blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
@@ -2697,15 +2698,18 @@ class ContactListModel(CustomListModel):
                 blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
                 blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
                 blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                BlinkLogger().log_debug(u"Bonjour neighbour does not exist, adding %s %s" % (display_name, uri))
                 self.bonjour_group.contacts.append(blink_contact)
-            non_tls_neighbours = [n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport != 'tls']
+    
+                non_tls_neighbours = [n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport != 'tls']
 
-            if uri.transport == 'tls':
-                for n in non_tls_neighbours:
-                    self.bonjour_group.contacts.remove(n)
+                for non_tls_neighbour in non_tls_neighbours:
+                    BlinkLogger().log_debug(u"Bonjour neighbour already has a TLS contact, removing %s %s" % (display_name, uri))
+                    self.bonjour_group.contacts.remove(non_tls_neighbour)
 
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_debug('Total Bonjour contacts %d' % len(self.bonjour_group.not_filtered_contacts))
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -2724,23 +2728,35 @@ class ContactListModel(CustomListModel):
             blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
             blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
             blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
-            self.bonjour_group.not_filtered_contacts.append(blink_contact)
+            try:
+                _blink_contact = (_blink_contact for _blink_contact in self.bonjour_group.not_filtered_contacts if _blink_contact.bonjour_neighbour == notification.data.neighbour).next()
+            except StopIteration:
+                self.bonjour_group.not_filtered_contacts.append(blink_contact)
+
             if uri.transport != 'tls':
                 tls_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
                 if not tls_neighbours:
+                    BlinkLogger().log_debug(u"Bonjour neighbour does not exist, adding %s %s" % (display_name, uri))
                     self.bonjour_group.contacts.append(blink_contact)
+                else:
+                    BlinkLogger().log_debug(u"Bonjour neighbour not updated as we have a TLS contact for %s" % display_name)
             else:
+                BlinkLogger().log_debug(u"Bonjour neighbour does not exist, adding %s %s" % (display_name, uri))
                 self.bonjour_group.contacts.append(blink_contact)
+
         else:
+            BlinkLogger().log_debug(u"Bonjour neighbour exists, updating %s %s" % (display_name, uri))
             blink_contact.name = name
             blink_contact.update_uri(uri)
             blink_contact.presence_state = notification.data.presence_state.status if notification.data.presence_state is not None else None
             blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        BlinkLogger().log_debug('Total Bonjour contacts %d' % len(self.bonjour_group.not_filtered_contacts))
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
-        BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % notification.data.neighbour.name)
+        name = notification.data.neighbour.name
+
         try:
             blink_contact = (blink_contact for blink_contact in self.bonjour_group.not_filtered_contacts if blink_contact.bonjour_neighbour==notification.data.neighbour).next()
         except StopIteration:
@@ -2753,6 +2769,7 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             pass
         else:
+            BlinkLogger().log_info(u"Bonjour neighbour removed: %s" % name)
             self.bonjour_group.contacts.remove(blink_contact)
             if blink_contact.aor.transport == 'tls':
                 non_tls_neighbours = [n for n in self.bonjour_group.not_filtered_contacts if n.aor.user == blink_contact.aor.user and n.aor.host == blink_contact.aor.host and n.aor.transport != 'tls']
@@ -2761,6 +2778,8 @@ class ContactListModel(CustomListModel):
 
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+        BlinkLogger().log_debug('Total Bonjour contacts %d' % len(self.bonjour_group.not_filtered_contacts))
 
     def _NH_AddressbookPolicyWasActivated(self, notification):
         policy = notification.sender
