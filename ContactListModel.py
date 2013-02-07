@@ -1733,7 +1733,7 @@ class CustomListModel(NSObject):
             else:
                 # Dragging a contact
                 sourceGroup = self.groupsList[group]
-                
+
                 if isinstance(sourceGroup, LdapSearchResultContact):
                     return NSDragOperationNone
 
@@ -1801,7 +1801,7 @@ class CustomListModel(NSObject):
             account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
             if not filenames or not account or not self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                 return False
-                
+
             if len(item.uris) > 1:
                 point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -1820,7 +1820,7 @@ class CustomListModel(NSObject):
                     titem.setTarget_(self)
                     titem.setRepresentedObject_({'account': account, 'uri': str(uri.uri), 'filenames':filenames})
                     titem.setEnabled_(aor_supports_ft)
-                
+
                 NSMenu.popUpContextMenu_withEvent_forView_(send_file_menu, event, table)
                 return True
             else:
@@ -2700,7 +2700,7 @@ class ContactListModel(CustomListModel):
                 blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
                 BlinkLogger().log_debug(u"Bonjour neighbour does not exist, adding %s %s" % (display_name, uri))
                 self.bonjour_group.contacts.append(blink_contact)
-    
+
                 non_tls_neighbours = [n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport != 'tls']
 
                 for non_tls_neighbour in non_tls_neighbours:
@@ -2717,7 +2717,7 @@ class ContactListModel(CustomListModel):
         host = notification.data.host
         uri = notification.data.uri
         name = '%s (%s)' % (display_name or 'Unknown', host)
-        note = notification.data.presence_state.note if notification.data.presence_state is not None else None 
+        note = notification.data.presence_state.note if notification.data.presence_state is not None else None
         if not note and notification.data.presence_state is not None and notification.data.presence_state.status is not None:
             note = notification.data.presence_state.status.title()
 

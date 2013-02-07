@@ -257,13 +257,13 @@ class AudioSession(NSView):
                 info.draggingSource().draggedOut = False
                 info.draggingSource().setNeedsDisplay_(True)
                 return self.delegate.sessionBoxDidAddConferencePeer(self, source.delegate)
-           
+
             elif pboard.availableTypeFromArray_(["dragged-contact"]):
                 group, blink_contact = eval(pboard.stringForType_("dragged-contact"))
                 if blink_contact is not None:
                     sourceGroup = NSApp.delegate().contactsWindowController.model.groupsList[group]
                     sourceContact = sourceGroup.contacts[blink_contact]
-                    
+
                     if len(sourceContact.uris) > 1:
                         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -277,12 +277,12 @@ class AudioSession(NSView):
                             titem.setIndentationLevel_(1)
                             titem.setTarget_(self)
                             titem.setRepresentedObject_(str(uri.uri))
-                        
+
                         NSMenu.popUpContextMenu_withEvent_forView_(invite_menu, event, self)
                     elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                         uri = str(pboard.stringForType_("x-blink-sip-uri"))
                         return self.delegate.sessionBoxDidAddConferencePeer(self, uri)
-            
+
             elif pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                 uri = str(pboard.stringForType_("x-blink-sip-uri"))
                 return self.delegate.sessionBoxDidAddConferencePeer(self, uri)

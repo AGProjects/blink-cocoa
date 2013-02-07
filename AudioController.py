@@ -826,7 +826,7 @@ class AudioController(MediaStream):
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             item = menu.itemWithTag_(10) # add Chat
-                        
+
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
 
             item = menu.itemWithTag_(14) # add Video

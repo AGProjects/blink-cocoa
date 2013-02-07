@@ -2709,7 +2709,7 @@ class ContactWindowController(NSWindowController):
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "startChatToSelected:", "")
             if isinstance(contact, BonjourBlinkContact):
-                item.setEnabled_(True)               
+                item.setEnabled_(True)
             elif isinstance(contact, BlinkPresenceContact):
                 settings = SIPSimpleSettings()
                 aor_supports_chat = not settings.gui.use_availability_for_sessions or any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'chat' in device['caps'])
@@ -3367,7 +3367,7 @@ class ContactWindowController(NSWindowController):
         if isinstance(item, BlinkPresenceContact):
             has_pidfs = any(item.pidfs_map[uri] for uri in item.pidfs_map.keys())
         else:
-            has_pidfs = None   
+            has_pidfs = None
 
         if isinstance(item, BlinkContact):
             settings = SIPSimpleSettings()
@@ -3433,7 +3433,7 @@ class ContactWindowController(NSWindowController):
                 for uri in item.uris:
                     if uri.type is not None and uri.type.lower() == 'url':
                         continue
-                    
+
                     sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     sms_item.setRepresentedObject_(target_uri)
@@ -3446,7 +3446,7 @@ class ContactWindowController(NSWindowController):
                             sms_item.setImage_(icon)
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "", "")
                 self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
-                
+
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
                     chat_submenu = NSMenu.alloc().init()
                     chat_submenu.setAutoenablesItems_(False)
@@ -3557,7 +3557,7 @@ class ContactWindowController(NSWindowController):
                             ds_item.setTag_(1)
                             aor_supports_ds = not settings.gui.use_availability_for_sessions or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
                             ds_item.setEnabled_(aor_supports_ds)
-                            
+
                             if isinstance(item, BlinkPresenceContact):
                                 image = presence_status_for_contact(item, uri.uri)
                                 if image:
@@ -3946,7 +3946,7 @@ class ContactWindowController(NSWindowController):
                 elif isinstance(contact, BonjourBlinkContact):
                     aor_supports_screen_sharing_client = True
                     aor_supports_screen_sharing_server = True
-                
+
                 item = self.screenShareMenu.itemWithTag_(1)
                 item.setTitle_("Request Screen from %s" % contact.name)
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)

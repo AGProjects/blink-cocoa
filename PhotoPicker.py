@@ -155,20 +155,20 @@ class PhotoPicker(NSObject):
 
         if self.captureSession is None:
             self.captureSession = QTKit.QTCaptureSession.alloc().init()
-    
+
         # Find a video device
         device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
         if not device:
             NSRunAlertPanel("Camera Capture Error", "Camera device cannot be started", "OK", "", "")
             self.captureSession = None
             return
-        
+
         success, error = device.open_(None)
         if not success:
             NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
             self.captureSession = None
             return
-        
+
         # Add a device input for that device to the capture session
         if self.captureDeviceInput is None:
             self.captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
@@ -179,7 +179,7 @@ class PhotoPicker(NSObject):
                 self.captureSession = None
                 self.captureDeviceInput = None
                 return
-        
+
         # Add a decompressed video output that returns raw frames to the session
         if self.captureDecompressedVideoOutput is None:
             self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
@@ -191,7 +191,7 @@ class PhotoPicker(NSObject):
                 self.captureDeviceInput = None
                 self.captureDecompressedVideoOutput = None
                 return
-        
+
         # Preview the video from the session in the document window
         self.captureView.setCaptureSession_(self.captureSession)
         self.capture_session_initialized = True
@@ -262,7 +262,7 @@ class PhotoPicker(NSObject):
             self.captureButton.setHidden_(False)
             self.cancelButton.setHidden_(TRUE)
             self.setButton.setEnabled_(False)
-    
+
     def captureOutput_didOutputVideoFrame_withSampleBuffer_fromConnection_(self, captureOutput, videoFrame, sampleBuffer, connection):
         self.latestImageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(videoFrame))
 

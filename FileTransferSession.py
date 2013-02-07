@@ -455,7 +455,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         except IOError:
             notification_center.post_notification('BlinkFileTransferDidNotComputeHash', sender=self, data=NotificationData(reason='Cannot open file'))
             return
-        
+
         self.ft_info.file_size = self.file_size
         # compute the file hash first
         self.ft_info.status = "preparing"
