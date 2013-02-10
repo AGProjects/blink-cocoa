@@ -1812,6 +1812,8 @@ class SessionController(NSObject):
             if data.code >= 400 or data.code == 0:
                 if data.code == 487:
                     contact.detail = 'Nobody answered'
+                elif data.code == 408:
+                    contact.detail = 'Unreachable'
                 elif data.code == 486:
                     contact.detail = 'Busy'
                 elif data.code == 603:
