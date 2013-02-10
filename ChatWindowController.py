@@ -16,6 +16,7 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
+import urllib
 
 from MediaStream import *
 from ConferenceScreenSharing import ConferenceScreenSharing
@@ -46,6 +47,7 @@ CONFERENCE_ROOM_MENU_NICKNAME = 316
 CONFERENCE_ROOM_MENU_SUBJECT = 317
 CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD = 318
 CONFERENCE_ROOM_MENU_COPY_PARTICIPANT_TO_CLIPBOARD = 319
+CONFERENCE_ROOM_MENU_SEND_EMAIL = 325
 CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE = 312
 CONFERENCE_ROOM_MENU_GOTO_CONFERENCE_WEBSITE = 313
 CONFERENCE_ROOM_MENU_START_AUDIO_SESSION = 320
@@ -627,6 +629,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_NICKNAME).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SUBJECT).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD).setEnabled_(False)
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_PARTICIPANT_TO_CLIPBOARD).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_AUDIO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_CHAT_SESSION).setEnabled_(False)
@@ -917,12 +920,23 @@ class ChatWindowController(NSWindowController):
         if menu == self.participantMenu:
             session = self.selectedSessionController()
             if session:
+                item = self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL)
+                object = {
+                    'subject' : 'Invitation to Conference',
+                    'body'    : 'Hello,\n\n' +
+                                'You can use a SIP or XMPP client to connect to the room at the following address:\n\n' +
+                                'sip:%s\n' % session.remoteSIPAddress +
+                                'xmpp:%s\n' % session.remoteSIPAddress
+                    }
+                item.setRepresentedObject_(object)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session is not None and session.session.state is not None else False)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_('Hide Session Information' if session.info_panel is not None and session.info_panel.window.isVisible() else 'Show Session Information')
             else:
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(False)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_('Show Session Information')
 
+
+                        
             item = menu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN)
             row = self.participantsTableView.selectedRow()
             try:
@@ -1115,6 +1129,11 @@ class ChatWindowController(NSWindowController):
                 self.setNickname()
             elif tag == CONFERENCE_ROOM_MENU_SUBJECT:
                 self.setSubject()
+            elif tag == CONFERENCE_ROOM_MENU_SEND_EMAIL:
+                object = sender.representedObject()
+                mailtoLink = NSString.stringWithString_('mailto:?subject=%s&body=%s' % (object['subject'], object['body']))
+                url_string = CFURLCreateStringByAddingPercentEscapes(None, mailtoLink, None, None, kCFStringEncodingUTF8). autorelease();
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url_string))
             elif tag == CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD:
                 remote_uri = format_identity_to_string(session.remotePartyObject)
                 pb = NSPasteboard.generalPasteboard()
@@ -1416,6 +1435,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_NICKNAME).setEnabled_(self.canSetNickname())
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SUBJECT).setEnabled_(self.canSetSubject())
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD).setEnabled_(True)
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL).setEnabled_(True)
                     
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
