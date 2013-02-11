@@ -1605,9 +1605,9 @@ class ConferenceScreenSharingHandler(object):
     window_id = None
     compression = 0.5 # jpeg compression
     quality = 'medium'
-    quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'framerate': 1},
-        'medium': {'compression': 0.5, 'width': 1024, 'framerate': 1},
-        'high':   {'compression': 0.7, 'width': None, 'framerate': 1}
+    quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'max_width': None, 'framerate': 1},
+                        'medium': {'compression': 0.5, 'width': 1024, 'max_width': None, 'framerate': 1},
+                        'high':   {'compression': 0.7, 'width': None, 'max_width': 1680,'framerate': 1}
     }
 
     def setDelegate(self, delegate):
@@ -1621,6 +1621,7 @@ class ConferenceScreenSharingHandler(object):
         BlinkLogger().log_info('Set screen sharing quality to %s' % self.quality)
         self.compression = self.quality_settings[self.quality]['compression']
         self.width = self.quality_settings[self.quality]['width']
+        self.max_width = self.quality_settings[self.quality]['max_width']
         self.framerate = self.quality_settings[self.quality]['framerate']
         self.log_first_frame = True
         NSUserDefaults.standardUserDefaults().setValue_forKey_(self.quality, "ScreensharingQuality")
@@ -1727,17 +1728,28 @@ class ConferenceScreenSharingHandler(object):
                 scaled_image.unlockFocus()
                 image = scaled_image
 
+            if self.width is None and self.max_width is not None and originalSize.width > self.max_width:
+                resizeWidth = self.max_width
+                resizeHeight = self.max_width * originalSize.height/originalSize.width
+                scaled_image = NSImage.alloc().initWithSize_(NSMakeSize(resizeWidth, resizeHeight))
+                scaled_image.lockFocus()
+                image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, resizeWidth, resizeHeight), NSMakeRect(0, 0, originalSize.width, originalSize.height), NSCompositeSourceOver, 1.0)
+                scaled_image.unlockFocus()
+                image = scaled_image
+
             if self.show_preview:
                 ScreensharingPreviewPanel(image)
                 self.show_preview = False
 
+            
             jpeg = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
             # this also works and produces the same result, but it's not documented anywhere
             #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
 
             if self.log_first_frame:
-                BlinkLogger().log_info('Sending %s bytes %s width screen' % (len(jpeg), image.size().width))
+                BlinkLogger().log_info('Sending %s bytes %s screen width' % (format_size(len(jpeg)), image.size().width))
                 self.log_first_frame = False
+            BlinkLogger().log_debug('Sending %s bytes %s screen width ' % (format_size(len(jpeg)), image.size().width))
             self.may_send = False
             if self.stream:
                 self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=ISOTimestamp.now())
