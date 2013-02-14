@@ -464,7 +464,6 @@ class SessionControllersManager(object):
         if account is BonjourAccount():
             return
 
-        id=str(uuid.uuid1())
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
@@ -476,7 +475,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_type, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -488,7 +487,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_ended(self, controller, data):
@@ -497,7 +496,6 @@ class SessionControllersManager(object):
         if account is BonjourAccount():
             return
 
-        id=str(uuid.uuid1())
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
@@ -513,7 +511,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_type, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -527,7 +525,7 @@ class SessionControllersManager(object):
         cpim_to = format_identity_to_string(account)
         timestamp = str(ISOTimestamp.now())
 
-        self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
@@ -535,7 +533,6 @@ class SessionControllersManager(object):
         if account is BonjourAccount():
             return
 
-        id=str(uuid.uuid1())
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         local_uri = format_identity_to_string(account)
@@ -546,7 +543,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_type, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
@@ -561,7 +558,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_failed(self, controller, data):
@@ -569,7 +566,6 @@ class SessionControllersManager(object):
         if account is BonjourAccount():
             return
 
-        id=str(uuid.uuid1())
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
@@ -581,7 +577,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_type, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
@@ -596,7 +592,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_cancelled(self, controller, data):
@@ -606,7 +602,6 @@ class SessionControllersManager(object):
 
         self.redial_uri = controller.target_uri
 
-        id=str(uuid.uuid1())
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
@@ -618,7 +613,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(id, media_type, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
@@ -630,7 +625,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def log_outgoing_session_ended(self, controller, data):
@@ -640,7 +635,6 @@ class SessionControllersManager(object):
         if account is BonjourAccount():
             return
 
-        id=str(uuid.uuid1())
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
@@ -660,7 +654,7 @@ class SessionControllersManager(object):
 
         duration = session.end_time - session.start_time
 
-        self.add_to_history(id, media_type, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -672,7 +666,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
 
     def get_printed_duration(self, start_time, end_time):
@@ -795,8 +789,10 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
+        
 
         # used for accounting
+        self.history_id = str(uuid.uuid1())
         self.streams_log = []
         self.participants_log = set()
         self.remote_focus_log = False
@@ -839,6 +835,7 @@ class SessionController(NSObject):
         self.initInfoPanel()
 
         # used for accounting
+        self.history_id = str(uuid.uuid1())
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
         self.participants_log = set()
         self.remote_focus_log = False
@@ -881,6 +878,7 @@ class SessionController(NSObject):
         self.initInfoPanel()
 
         # used for accounting
+        self.history_id = str(uuid.uuid1())
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
         self.participants_log = set()
         self.remote_focus_log = False
