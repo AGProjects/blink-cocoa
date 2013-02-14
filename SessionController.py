@@ -1593,7 +1593,7 @@ class SessionController(NSObject):
         self.conference_info = None
         self.log_info("Session ended")
         self.changeSessionState(STATE_FINISHED, data.originator)
-        log_data = NotificationData(target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
+        log_data = NotificationData(timestamp=datetime.now(), target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
