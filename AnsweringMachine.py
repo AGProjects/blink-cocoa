@@ -1,6 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from AppKit import NSApp
+
 import datetime
 import os
 import uuid
@@ -20,7 +22,6 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
 from resources import Resources
 from util import *
-
 
 class AnsweringMachine(object):
     implements(IObserver)
@@ -146,6 +147,13 @@ class AnsweringMachine(object):
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     @run_in_green_thread
-    def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
+    def add_to_history(self, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
+        try:
+            controller = (controller for controller in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers if controller.session == self.session).next()
+        except StopIteration:
+            history_id = str(uuid.uuid1())
+        else:
+            history_id = controller.history_id
+
+        ChatHistory().add_message(history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
