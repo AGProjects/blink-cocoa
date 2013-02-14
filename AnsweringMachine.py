@@ -130,7 +130,7 @@ class AnsweringMachine(object):
         BlinkLogger().log_info(u"Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
         self.addAnsweringMachineRecordingToHistory(notification.data.filename, self.duration)
 
-    def addAnsweringMachineRecordingToHistory(self, filename, duration):  
+    def addAnsweringMachineRecordingToHistory(self, filename, duration):
         message = "<h3>Answering Machine Recording</h3>"
         message += "<p>%s" % filename
         message += "<br>Duration: %s seconds" % duration

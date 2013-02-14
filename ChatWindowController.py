@@ -660,7 +660,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_PARTICIPANT_TO_CLIPBOARD).setEnabled_(True)
-                
+
     def sharedFileSelectionChanged_(self, notification):
         session = self.selectedSessionController()
         if not session:
@@ -936,7 +936,7 @@ class ChatWindowController(NSWindowController):
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_('Show Session Information')
 
 
-                        
+
             item = menu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN)
             row = self.participantsTableView.selectedRow()
             try:
@@ -1436,7 +1436,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SUBJECT).setEnabled_(self.canSetSubject())
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD).setEnabled_(True)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL).setEnabled_(True)
-                    
+
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE).setEnabled_(False if isinstance(session.account, BonjourAccount) else True)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 

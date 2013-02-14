@@ -792,7 +792,7 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
-        
+
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
