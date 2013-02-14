@@ -207,6 +207,7 @@ class AudioController(MediaStream):
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
         if is_answering_machine:
+            self.sessionController.accounting_for_answering_machine = True
             self.sessionController.log_info("Sending session to answering machine")
             self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.audioSegmented.setEnabled_forSegment_(False, 1)
@@ -295,6 +296,7 @@ class AudioController(MediaStream):
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.updateAudioStatusWithCodecInformation()
         self.answeringMachine.stop()
+        self.sessionController.accounting_for_answering_machine = False
         self.answeringMachine = None
 
     def hold(self):

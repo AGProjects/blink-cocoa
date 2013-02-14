@@ -305,7 +305,10 @@ class SessionControllersManager(object):
     @run_in_gui_thread
     def _NH_BlinkSessionDidEnd(self, session_controller, data):
         if session_controller.session.direction == "incoming":
-            self.log_incoming_session_ended(session_controller, data)
+            if session_controller.accounting_for_answering_machine:
+                self.log_incoming_session_missed(session_controller, data)
+            else:
+                self.log_incoming_session_ended(session_controller, data)
         else:
             self.log_outgoing_session_ended(session_controller, data)
 
@@ -793,6 +796,7 @@ class SessionController(NSObject):
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
+        self.accounting_for_answering_machine = False
         self.streams_log = []
         self.participants_log = set()
         self.remote_focus_log = False
@@ -836,6 +840,7 @@ class SessionController(NSObject):
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
+        self.accounting_for_answering_machine = False
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
         self.participants_log = set()
         self.remote_focus_log = False
@@ -879,6 +884,7 @@ class SessionController(NSObject):
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
+        self.accounting_for_answering_machine = False
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
         self.participants_log = set()
         self.remote_focus_log = False
