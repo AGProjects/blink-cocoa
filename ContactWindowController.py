@@ -2675,6 +2675,37 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_(f)
             item.setAttributedTitle_(format_item(name,dt))
 
+    def updateRecordingsMenu(self):
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+        
+        def format_item(name, when):
+            a = NSMutableAttributedString.alloc().init()
+            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal)
+            a.appendAttributedString_(n)
+            mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+                                                                   NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
+            t = NSAttributedString.alloc().initWithString_attributes_(when, mini_blue)
+            a.appendAttributedString_(t)
+            return a
+        
+        while not self.recordingsMenu.itemAtIndex_(0).isSeparatorItem():
+            self.recordingsMenu.removeItemAtIndex_(0)
+        self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_audio_recordings_directory())
+        
+        recordings = self.backend.get_audio_recordings()[-10:]
+        if not recordings:
+            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
+            item.setEnabled_(False)
+        
+        for dt, name, f in recordings:
+            title = name + "  " + dt
+            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
+            item.setTarget_(self)
+            item.setRepresentedObject_(f)
+            item.setAttributedTitle_(format_item(name,dt))
+
     def updateRestoreContactsMenu(self):
         while not self.restoreContactsMenu.itemAtIndex_(0).isSeparatorItem():
             self.restoreContactsMenu.removeItemAtIndex_(0)
@@ -3704,6 +3735,17 @@ class ContactWindowController(NSWindowController):
                     history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Show History...', "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)
                     history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
+                
+                    recordings = self.backend.get_audio_recordings(all_uris)[-10:]
+                    if recordings:
+                        audio_recordings_submenu = NSMenu.alloc().init()
+                        for dt, name, f in recordings:
+                            item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                            item.setTarget_(self)
+                            item.setRepresentedObject_(f)
+                        
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -3742,6 +3784,17 @@ class ContactWindowController(NSWindowController):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
                     lastItem.setRepresentedObject_(item)
+
+                recordings = self.backend.get_audio_recordings([item.uris[0].uri])[-10:]
+                if recordings:
+                    audio_recordings_submenu = NSMenu.alloc().init()
+                    for dt, name, f in recordings:
+                        item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                        item.setTarget_(self)
+                        item.setRepresentedObject_(f)
+                    
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:

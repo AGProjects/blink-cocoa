@@ -329,7 +329,7 @@ class SIPManager(object):
         makedirs(path)
         return path
 
-    def get_audio_recordings(self):
+    def get_audio_recordings(self, filter_uris=[]):
         result = []
         historydir = self.get_audio_recordings_directory()
 
@@ -367,6 +367,8 @@ class SIPManager(object):
                         timestamp = datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
 
                     stat = os.stat(file)
+                    if filter_uris and remote_party not in filter_uris:
+                        continue
                     result.append((timestamp, remote_party, file))
                 except:
                     import traceback
