@@ -139,8 +139,8 @@ class BlinkAppDelegate(NSObject):
 
     def noteMissedCall(self):
         self.missedCalls += 1
-        NSApp.requestUserAttention_(NSCriticalRequest)
         self.updateDockTile()
+        NSApp.requestUserAttention_(NSInformationalRequest)
 
     def applicationShouldHandleReopen_hasVisibleWindows_(self, sender, flag):
         if not flag:
