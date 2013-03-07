@@ -341,6 +341,9 @@ class PresencePublisher(object):
         service.timestamp = pidf.ServiceTimestamp(settings.presence_state.timestamp)
 
         if offline:
+            note = settings.presence_state.offline_note
+            if note:
+                service.notes.add(unicode(note))
             pidf_doc.add(service)
             return pidf_doc
 
