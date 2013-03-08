@@ -149,27 +149,26 @@ class AudioSession(NSView):
             self.window().makeFirstResponder_(self)
 
     def setSelected_(self, flag):
-        if self.selected != flag:
-            self.selected = flag
-            self.setNeedsDisplay_(True)
-            if flag:
-                if self.superview():
-                    for view in self.superview().subviews():
-                        if view != self and isinstance(view, AudioSession):
-                            if self.conferencing and view.conferencing:
-                                if not view.selected:
-                                    view.selected = True
-                                    view.setNeedsDisplay_(True)
-                                    if view.delegate and getattr(view.delegate, "sessionBoxDidActivate"):
-                                        view.delegate.sessionBoxDidActivate(self)
-                            elif view.selected:
-                                view.setSelected_(False)
-                    self.window().makeFirstResponder_(self)
-                if self.delegate and getattr(self.delegate, "sessionBoxDidActivate"):
-                    self.delegate.sessionBoxDidActivate(self)
-            else:
-                if self.delegate and getattr(self.delegate, "sessionBoxDidDeactivate"):
-                    self.delegate.sessionBoxDidDeactivate(self)
+        self.selected = flag
+        self.setNeedsDisplay_(True)
+        if flag:
+            if self.superview():
+                for view in self.superview().subviews():
+                    if view != self and isinstance(view, AudioSession):
+                        if self.conferencing and view.conferencing:
+                            if not view.selected:
+                                view.selected = True
+                                view.setNeedsDisplay_(True)
+                                if view.delegate and getattr(view.delegate, "sessionBoxDidActivate"):
+                                    view.delegate.sessionBoxDidActivate(self)
+                        elif view.selected:
+                            view.setSelected_(False)
+                self.window().makeFirstResponder_(self)
+            if self.delegate and getattr(self.delegate, "sessionBoxDidActivate"):
+                self.delegate.sessionBoxDidActivate(self)
+        else:
+            if self.delegate and getattr(self.delegate, "sessionBoxDidDeactivate"):
+                self.delegate.sessionBoxDidDeactivate(self)
 
     def draggedImage_endedAt_operation_(self, image, point, operation):
         if self.delegate is None:

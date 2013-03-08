@@ -931,10 +931,15 @@ class ContactWindowController(NSWindowController):
 
         self.menuWillOpen_(self.devicesMenu)
 
-    def showAudioSession(self, streamController):
+    def showAudioSession(self, streamController, add_to_conference=False):
         self.audioSessionsListView.addItemView_(streamController.view)
         self.updateAudioButtons()
-        streamController.view.setSelected_(True)
+        print self.sessionControllersManager.sessionControllers
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers if streamController not in sess.streamHandlers)
+        go_to_background = bool(hasAudio and (streamController.sessionController.answeringMachineMode or add_to_conference))
+        streamController.view.setSelected_(not go_to_background)
+        if add_to_conference:
+            streamController.addToConference()
 
         if not streamController.sessionController.hasStreamOfType("chat") and not streamController.sessionController.hasStreamOfType("video"):
             self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)

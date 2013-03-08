@@ -48,6 +48,14 @@ class AnsweringMachine(object):
 
         self.stream.device.input_muted = True
 
+    def mute_output(self):
+        BlinkLogger().log_info(u"Mute output of Answering Machine")
+        self.stream.device.output_muted = True
+
+    def unmute_output(self):
+        BlinkLogger().log_info(u"Unmute output of Answering Machine")
+        self.stream.device.output_muted = False
+
     def start(self):
         if self.unavailable_message:
             self.unavailable_message.start()

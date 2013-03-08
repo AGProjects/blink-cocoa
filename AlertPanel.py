@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2013 AG Projects. See LICENSE for details.
 #
 
 from Foundation import *
@@ -24,6 +24,8 @@ ACCEPT = 0
 ACCEPT_CHAT = 1
 REJECT = 2
 BUSY = 3
+ANSWERING_MACHINE = 4
+ADD_TO_CONFERENCE = 5
 
 class AlertPanel(NSObject, object):
     implements(IObserver)
@@ -40,6 +42,10 @@ class AlertPanel(NSObject, object):
     speech_recognizer = None
     speech_synthesizer = None
     muted_by_synthesizer = False
+
+    @property
+    def isConferencing(self):
+        return any(session for session in self.sessionControllersManager.sessionControllers if session.hasStreamOfType("audio") and session.streamHandlerOfType("audio").isConferencing)
 
     @property
     def sessionControllersManager(self):
@@ -308,6 +314,10 @@ class AlertPanel(NSObject, object):
 
         panelRejectB = self.panel.contentView().viewWithTag_(12)
         panelBusyB = self.panel.contentView().viewWithTag_(13)
+
+        panelVmB = self.panel.contentView().viewWithTag_(14)
+        panelConfB = self.panel.contentView().viewWithTag_(15)
+
         if is_update_proposal:
             subject, accept, other = self.format_subject_for_incoming_reinvite(session, streams)
             other = ""
@@ -332,6 +342,7 @@ class AlertPanel(NSObject, object):
         fromT.sizeToFit()
 
         has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
+
         if has_audio_streams:
             outdev = settings.audio.output_device
             indev = settings.audio.input_device
@@ -380,11 +391,14 @@ class AlertPanel(NSObject, object):
             panelRejectB.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
             panelBusyB.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
             panelOtherB.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
+            panelVmB.cell().setRepresentedObject_(NSNumber.numberWithInt_(4))
+            panelConfB.cell().setRepresentedObject_(NSNumber.numberWithInt_(5))
 
             panelBusyB.setHidden_(is_update_proposal or is_file_transfer)
 
             for i in (5, 6, 7, 8):
                 view.viewWithTag_(i).setHidden_(True)
+
         else:
             panelAcceptB.setHidden_(False)
             panelAcceptB.setTitle_("Accept All")
@@ -396,6 +410,19 @@ class AlertPanel(NSObject, object):
                 for i in (5, 6, 7, 8):
                     btn = v.viewWithTag_(i)
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
+
+        if not settings.answering_machine.enabled:
+            panelVmB.setHidden_(True)
+        else:
+            if not has_audio_streams:
+                panelVmB.setHidden_(True)
+            else:
+                panelVmB.setHidden_(False)
+
+        if not self.isConferencing:
+            panelConfB.setHidden_(True)
+        else:
+            panelConfB.setHidden_(False)
 
     def format_subject_for_incoming_reinvite(self, session, streams):
         default_action = u"Accept"
@@ -412,7 +439,7 @@ class AlertPanel(NSObject, object):
                         type_names.append("My Screen requested by")
                 subject = u"Addition of %s" % " and ".join(type_names)
             else:
-                subject = u"Addition of %s to Session requested by" % " and ".join(type_names)
+                subject = u"Addition of %s to existing session requested by" % " and ".join(type_names)
 
             alt_action = u"Chat Only"
         elif type(streams[0]) is AudioStream:
@@ -531,7 +558,9 @@ class AlertPanel(NSObject, object):
 
     @run_in_gui_thread
     def enableAnsweringMachine(self, view, session, run_now=False):
-        if session not in self.answeringMachineTimers:
+        try:
+            timer = self.answeringMachineTimers[session]
+        except KeyError:
             settings = SIPSimpleSettings()
             amLabel = view.viewWithTag_(15)
             delay = 0 if run_now else settings.answering_machine.answer_delay
@@ -542,6 +571,9 @@ class AlertPanel(NSObject, object):
             self.answeringMachineTimers[session] = timer
             self.timerTickAnsweringMachine_(timer)
             amLabel.setHidden_(False)
+        else:
+            if run_now:
+                self.acceptAudioStreamAnsweringMachine(session)
 
     def disableAutoAnswer(self, view, session):
         if session in self.autoAnswerTimers:
@@ -742,6 +774,21 @@ class AlertPanel(NSObject, object):
                     self.removeSession(session)
         elif action == REJECT:
             self.rejectAllSessions()
+        elif action == ADD_TO_CONFERENCE:
+            NSApp.activateIgnoringOtherApps_(True)
+            for session in self.sessions.keys():
+                sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                try:
+                    sessionController.log_info(u"Accepting session from %s" % format_identity_to_string(session.remote_identity))
+                    self.acceptStreams(session, add_to_conference=True)
+                except Exception, exc:
+                    sessionController.log_info(u"Error accepting session: %s" % exc)
+                    self.removeSession(session)
+
+        elif action == ANSWERING_MACHINE:
+            for session, view in self.sessions.items():
+                if session.account is not BonjourAccount():
+                    self.enableAnsweringMachine(view, session, True)
         elif action == BUSY:
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
@@ -761,8 +808,8 @@ class AlertPanel(NSObject, object):
                     sessionController.log_info(u"Error rejecting session: %s" % exc)
                     self.removeSession(session)
 
-    def acceptStreams(self, session):
-        self.sessionControllersManager.startIncomingSession(session, session.blink_supported_streams)
+    def acceptStreams(self, session, add_to_conference=False):
+        self.sessionControllersManager.startIncomingSession(session, session.blink_supported_streams, add_to_conference=add_to_conference)
         self.removeSession(session)
 
     def acceptProposedStreams(self, session):

@@ -177,7 +177,6 @@ class AudioController(MediaStream):
             self.audioSegmented.setHidden_(False)
 
         self.sessionInfoButton.setEnabled_(True)
-
         return self
 
     def invalidateTimers(self):
@@ -199,13 +198,8 @@ class AudioController(MediaStream):
         self.view.release()
         super(AudioController, self).dealloc()
 
-    def startIncoming(self, is_update, is_answering_machine=False):
+    def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
-        self.updateTLSIcon()
-        NSApp.delegate().contactsWindowController.showAudioSession(self)
-        self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
         if is_answering_machine:
             self.sessionController.accounting_for_answering_machine = True
             self.sessionController.log_info("Sending session to answering machine")
@@ -218,6 +212,12 @@ class AudioController(MediaStream):
             self.transferSegmented.cell().setToolTip_forSegment_("Take over the call", 0)
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
+
+        self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
+        self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
+        self.updateTLSIcon()
+        NSApp.delegate().contactsWindowController.showAudioSession(self, add_to_conference=add_to_conference)
+        self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -360,18 +360,21 @@ class AudioController(MediaStream):
         if self.isConferencing:
             NSApp.delegate().contactsWindowController.unholdConference()
             self.updateLabelColor()
+        elif self.answeringMachine:
+            self.answeringMachine.unmute_output()
         else:
             NSApp.delegate().contactsWindowController.holdConference()
             self.unhold()
 
         self.notification_center.post_notification("ActiveAudioSessionChanged", sender=self)
 
-
     def sessionBoxDidDeactivate(self, sender):
         if self.isConferencing:
             if not sender.conferencing: # only hold if the sender is a non-conference session
                 NSApp.delegate().contactsWindowController.holdConference()
             self.updateLabelColor()
+        elif self.answeringMachine:
+            self.answeringMachine.mute_output()
         else:
             self.hold()
 
@@ -1104,7 +1107,8 @@ class AudioController(MediaStream):
         self.updateTileStatistics()
 
         self.changeStatus(STREAM_CONNECTED)
-        if not self.isActive:
+        if not self.isActive and not self.answeringMachine:
+
             self.session.hold()
 
         if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:

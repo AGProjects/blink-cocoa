@@ -386,7 +386,7 @@ class SessionControllersManager(object):
         else:
             return controller
 
-    def startIncomingSession(self, session, streams, answeringMachine=False):
+    def startIncomingSession(self, session, streams, answeringMachine=False, add_to_conference=False):
         session_controller = self.sessionControllerForSession(session)
         if session.state in ('terminating', 'terminated'):
             if session_controller is not None:
@@ -398,7 +398,7 @@ class SessionControllersManager(object):
         if session_controller is None:
             session_controller = self.addControllerWithSession_(session)
         session_controller.setAnsweringMachineMode_(answeringMachine)
-        session_controller.handleIncomingStreams(streams, False)
+        session_controller.handleIncomingStreams(streams, is_update=False, add_to_conference=add_to_conference)
 
     def isScreenSharingEnabled(self):
         try:
@@ -942,7 +942,7 @@ class SessionController(NSObject):
         if self.session is not None:
             self.session.accept_proposal(streams)
 
-    def handleIncomingStreams(self, streams, is_update=False):
+    def handleIncomingStreams(self, streams, is_update=False, add_to_conference=False):
         try:
             # give priority to chat stream so that we do not open audio drawer for composite streams
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream.type=='chat' else 1)
@@ -964,8 +964,8 @@ class SessionController(NSObject):
                     else:
                         controller.stream = stream
 
-                    if self.answeringMachineMode and stream.type == "audio":
-                        controller.startIncoming(is_update=is_update, is_answering_machine=True)
+                    if stream.type == "audio":
+                        controller.startIncoming(is_update=is_update, is_answering_machine=self.answeringMachineMode, add_to_conference=add_to_conference)
                     else:
                         controller.startIncoming(is_update=is_update)
                 else:
