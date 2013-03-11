@@ -1013,7 +1013,7 @@ class SessionController(NSObject):
 
     def endStream(self, streamHandler):
         if self.session is not None:
-            if streamHandler.stream.type=="audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers)==2:
+            if streamHandler.stream.type == "audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers)==2:
                 # if session is screen-sharing end it
                 self.end()
                 return True
@@ -1030,10 +1030,13 @@ class SessionController(NSObject):
                     try:
                         self.session.remove_stream(streamHandler.stream)
                         self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
-                        return True
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
-                        return False
+                        if streamHandler.stream.type == "audio":
+                            # end the whole session otherwise we keep hearing each other after audio tile is gone
+                            self.log_info("Ending session with %s stream"% streamHandler.stream.type)
+                            self.end()
+                    return True
                 else:
                     self.log_info("Media Stream proposal is already in progress")
                     return False
