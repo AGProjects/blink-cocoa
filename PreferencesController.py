@@ -338,17 +338,27 @@ class PreferencesController(NSWindowController, object):
             if section_name == 'auth' and option_name == 'password':
                 continue
             option = getattr(section, option_name, None)
+            if option is None:
+                continue
+
             controlFactory = PreferenceOptionTypes.get(section_name+"."+option_name, None)
             if not controlFactory:
+                controlFactory = None
                 if forAccount:
-                    controlFactory = PreferenceOptionTypes.get(option.type.__name__+":account", None)
-                else:
-                    controlFactory = None
+                    try:
+                        controlFactory = PreferenceOptionTypes.get(option.type.__name__+":account", None)
+                    except AttributeError:
+                        pass
             if not controlFactory:
-                controlFactory = PreferenceOptionTypes.get(option.type.__name__, None)
+                try:
+                    controlFactory = PreferenceOptionTypes.get(option.type.__name__, None)
+                except AttributeError:
+                    pass
+
             if not controlFactory:
-                print "Error: Option type %s is not supported (while reading %s)" % (option.type, option_name)
+                print "Error: Option %s is not supported (while reading %s)" % (option, option_name)
                 controlFactory = PreferenceOptionTypes[str.__name__]
+
             if controlFactory is HiddenOption:
                 continue
 
