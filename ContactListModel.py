@@ -2709,7 +2709,6 @@ class ContactListModel(CustomListModel):
 
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-        BlinkLogger().log_debug('Total Bonjour contacts %d' % len(self.bonjour_group.not_filtered_contacts))
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -2752,7 +2751,6 @@ class ContactListModel(CustomListModel):
             blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-        BlinkLogger().log_debug('Total Bonjour contacts %d' % len(self.bonjour_group.not_filtered_contacts))
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         name = notification.data.neighbour.name
@@ -2778,8 +2776,6 @@ class ContactListModel(CustomListModel):
 
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
-        BlinkLogger().log_debug('Total Bonjour contacts %d' % len(self.bonjour_group.not_filtered_contacts))
 
     def _NH_AddressbookPolicyWasActivated(self, notification):
         policy = notification.sender
