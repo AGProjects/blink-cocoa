@@ -55,12 +55,14 @@ class MSRPSettingsExtension(MSRPSettings):
 
 class BonjourPresenceSettingsExtension(PresenceSettings):
     enabled = Setting(type=bool, default=True)
+    enable_on_the_phone = Setting(type=bool, default=True)
 
 
 class PresenceSettingsExtension(PresenceSettings):
     enabled = Setting(type=bool, default=True)
     disable_location = Setting(type=bool, default=False)
     disable_timezone = Setting(type=bool, default=False)
+    enable_on_the_phone = Setting(type=bool, default=True)
     homepage = Setting(type=HTTPURL, default=None, nillable=True)
 
 

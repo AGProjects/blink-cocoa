@@ -1678,7 +1678,7 @@ AccountSettingsOrder = {
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'prefix'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
-                       'presence': ['enabled','disable_location', 'disable_timezone']
+                       'presence': ['enabled', 'enable_on_the_phone', 'disable_location', 'disable_timezone']
                        }
 
 UnitOptions = {

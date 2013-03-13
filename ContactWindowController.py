@@ -2332,7 +2332,7 @@ class ContactWindowController(NSWindowController):
 
     def toggleOnThePhonePresenceActivity(self):
         # check if there are any active voice sessions
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers if sess.account.presence.enable_on_the_phone)
         selected_item = self.presenceActivityPopUp.selectedItem()
         if selected_item is None:
             return
