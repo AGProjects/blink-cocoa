@@ -3745,9 +3745,9 @@ class ContactWindowController(NSWindowController):
                     if recordings:
                         audio_recordings_submenu = NSMenu.alloc().init()
                         for dt, name, f in recordings:
-                            item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
-                            item.setTarget_(self)
-                            item.setRepresentedObject_(f)
+                            r_item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                            r_item.setTarget_(self)
+                            r_item.setRepresentedObject_(f)
 
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
                         self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
