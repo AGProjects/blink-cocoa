@@ -308,7 +308,7 @@ class PresencePublisher(object):
             self.publish()
 
     def build_pidf(self, account):
-        if not account.enabled or not account.presence.enabled:
+        if account is None or account.enabled or not account.presence.enabled:
             return None
 
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
