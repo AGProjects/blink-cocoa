@@ -601,7 +601,7 @@ class AlertPanel(NSObject, object):
             self.acceptAudioStreamAnsweringMachine(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Answering Machine will auto-answer in %i seconds..." % remaining
+        text = "Call answer by voicemail in %i s" % remaining
         info["label"].setStringValue_(text)
 
     def timerTickAutoAnswer_(self, timer):
@@ -610,7 +610,7 @@ class AlertPanel(NSObject, object):
             self.acceptStreams(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Automatically answering session in %i seconds..." % remaining
+        text = "Automaticaly accepting in %i s" % remaining
         info["label"].setStringValue_(text)
 
     @run_in_gui_thread
