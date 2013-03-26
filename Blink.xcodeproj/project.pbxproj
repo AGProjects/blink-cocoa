@@ -4221,7 +4221,7 @@
 			buildSettings = {
 				ARCHS = i386;
 				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4241,7 +4241,7 @@
 					"$(inherited)",
 				);
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "768B0492-873A-4DB7-8306-A314F8BEDB37";
+				PROVISIONING_PROFILE = "36BAB936-273A-4713-BEE9-72CA8E2A40BA";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
