@@ -411,13 +411,10 @@ class AlertPanel(NSObject, object):
                     btn = v.viewWithTag_(i)
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
 
-        if not settings.answering_machine.enabled:
+        if not has_audio_streams:
             panelVmB.setHidden_(True)
         else:
-            if not has_audio_streams:
-                panelVmB.setHidden_(True)
-            else:
-                panelVmB.setHidden_(False)
+            panelVmB.setHidden_(False)
 
         if not self.isConferencing:
             panelConfB.setHidden_(True)
