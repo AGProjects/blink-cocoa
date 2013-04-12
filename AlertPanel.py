@@ -748,6 +748,8 @@ class AlertPanel(NSObject, object):
             NSApp.activateIgnoringOtherApps_(True)
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                if sessionController is None:
+                    continue
                 is_proposal = self.proposals.has_key(session)
                 try:
                     if is_proposal:
@@ -763,6 +765,8 @@ class AlertPanel(NSObject, object):
             NSApp.activateIgnoringOtherApps_(True)
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                if sessionController is None:
+                    continue
                 try:
                     sessionController.log_info(u"Accepting chat stream to session with %s" % format_identity_to_string(session.remote_identity))
                     self.acceptChatStream(session)
@@ -775,6 +779,8 @@ class AlertPanel(NSObject, object):
             NSApp.activateIgnoringOtherApps_(True)
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                if sessionController is None:
+                    continue
                 try:
                     sessionController.log_info(u"Accepting session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptStreams(session, add_to_conference=True)
@@ -789,6 +795,8 @@ class AlertPanel(NSObject, object):
         elif action == BUSY:
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                if sessionController is None:
+                    continue
                 is_proposal = self.proposals.has_key(session)
                 try:
                     if is_proposal:
