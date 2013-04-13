@@ -475,6 +475,10 @@ class ContactWindowController(NSWindowController):
         super(ContactWindowController, self).showWindow_(sender)
 
     @objc.IBAction
+    def showPendingRequests_(self, sender):
+        self.model.renderPendingWatchersGroupIfNecessary(bring_in_focus=True)
+
+    @objc.IBAction
     def showPresenceInfo_(self, sender):
         if sender.tag() == 50: # main menu selected
             row = self.contactOutline.selectedRow()
@@ -4038,6 +4042,8 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(True)
             item.setRepresentedObject_(selected if has_presence_info else None)
             item.setEnabled_(bool(has_presence_info))
+            item = self.contactsMenu.itemWithTag_(51) # Pending Requests
+            item.setEnabled_(bool(self.model.pending_watchers_group.contacts))
             item = self.contactsMenu.itemWithTag_(33) # Add Group
             item.setEnabled_(True)
             item = self.contactsMenu.itemWithTag_(34) # Edit Group

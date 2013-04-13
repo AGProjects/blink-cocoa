@@ -2381,11 +2381,24 @@ class ContactListModel(CustomListModel):
                             pass
         unlink(path)
 
-    def renderPendingWatchersGroupIfNecessary(self):
+    def renderPendingWatchersGroupIfNecessary(self, bring_in_focus=False):
         if self.pending_watchers_group.contacts:
             if self.pending_watchers_group not in self.groupsList:
                 self.groupsList.insert(0, self.pending_watchers_group)
                 self.saveGroupPosition()
+
+            if bring_in_focus:
+                index = self.groupsList.index(self.pending_watchers_group)
+                if index:
+                    self.groupsList.remove(self.pending_watchers_group)
+                    self.groupsList.insert(0, self.pending_watchers_group)
+                    self.saveGroupPosition()
+
+                if not self.pending_watchers_group.group.expanded:
+                    self.pending_watchers_group.group.expanded = True
+                    self.pending_watchers_group.group.save()
+                self.contactOutline.scrollRowToVisible_(0)
+
             self.pending_watchers_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         elif self.pending_watchers_group in self.groupsList:

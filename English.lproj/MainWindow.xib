@@ -410,6 +410,15 @@
 									<reference key="NSMixedImage" ref="600792618"/>
 									<int key="NSTag">50</int>
 								</object>
+								<object class="NSMenuItem" id="981054530">
+									<reference key="NSMenu" ref="728662662"/>
+									<string key="NSTitle">Show Pending Requests</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="660791971"/>
+									<reference key="NSMixedImage" ref="600792618"/>
+									<int key="NSTag">51</int>
+								</object>
 								<object class="NSMenuItem" id="473755635">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
@@ -2069,7 +2078,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 														<string key="NSFrame">{{174, 6}, {70, 70}}</string>
 														<reference key="NSSuperview" ref="1069066581"/>
 														<reference key="NSWindow"/>
-														<reference key="NSNextKeyView"/>
 														<int key="NSViewLayerContentsRedrawPolicy">2</int>
 														<int key="NSTag">11</int>
 														<bool key="NSEnabled">YES</bool>
@@ -2221,7 +2229,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="NSFrame">{{232, 6}, {29, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="722602892">
 								<int key="NSCellFlags">67239424</int>
@@ -2267,7 +2274,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="NSFrame">{{180, 0}, {28, 25}}</string>
 						<reference key="NSSuperview" ref="396422209"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="336037291">
 							<int key="NSCellFlags">67239424</int>
@@ -4634,6 +4640,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 					<int key="connectionID">1809</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showPendingRequests:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="981054530"/>
+					</object>
+					<int key="connectionID">1815</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
 						<string key="label">link</string>
 						<reference key="source" ref="954251869"/>
@@ -5761,6 +5775,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<reference ref="16377066"/>
 							<reference ref="726866533"/>
 							<reference ref="273435786"/>
+							<reference ref="981054530"/>
 						</array>
 						<reference key="parent" ref="556337794"/>
 					</object>
@@ -6888,6 +6903,11 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="object" ref="279816284"/>
 						<reference key="parent" ref="789758025"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">1813</int>
+						<reference key="object" ref="981054530"/>
+						<reference key="parent" ref="728662662"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -7095,6 +7115,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<string key="1804.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1807.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="1810.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="1813.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="19.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="197.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="198.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7452,7 +7473,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1812</int>
+			<int key="maxID">1815</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7634,6 +7655,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="showHistoryViewer:">id</string>
 						<string key="showInFavoritesGroup:">id</string>
 						<string key="showPSTNAccess:">id</string>
+						<string key="showPendingRequests:">id</string>
 						<string key="showPresenceInfo:">id</string>
 						<string key="showServiceProvider:">id</string>
 						<string key="showSylkServer:">id</string>
@@ -7898,6 +7920,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">showPSTNAccess:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="showPendingRequests:">
+							<string key="name">showPendingRequests:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="showPresenceInfo:">
 							<string key="name">showPresenceInfo:</string>
 							<string key="candidateClassName">id</string>
@@ -7988,7 +8014,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="contactOutline">id</string>
 						<string key="contactsMenu">id</string>
 						<string key="contactsScrollView">id</string>
-						<string key="screenShareMenu">id</string>
 						<string key="devicesMenu">id</string>
 						<string key="dialPadView">id</string>
 						<string key="drawer">id</string>
@@ -8014,6 +8039,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="recordingsMenu">id</string>
 						<string key="recordingsSubMenu">id</string>
 						<string key="restoreContactsMenu">id</string>
+						<string key="screenShareMenu">id</string>
 						<string key="searchBox">id</string>
 						<string key="searchOutline">id</string>
 						<string key="searchResultsModel">id</string>
@@ -8089,10 +8115,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="contactsScrollView">
 							<string key="name">contactsScrollView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="screenShareMenu">
-							<string key="name">screenShareMenu</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="devicesMenu">
@@ -8195,6 +8217,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">restoreContactsMenu</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBToOneOutletInfo" key="screenShareMenu">
+							<string key="name">screenShareMenu</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBToOneOutletInfo" key="searchBox">
 							<string key="name">searchBox</string>
 							<string key="candidateClassName">id</string>
@@ -8248,6 +8274,17 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 				<object class="IBPartialClassDescription">
 					<string key="className">CustomListModel</string>
 					<string key="superclassName">NSObject</string>
+					<object class="NSMutableDictionary" key="actions">
+						<string key="NS.key.0">userDropedFileOnContact:</string>
+						<string key="NS.object.0">id</string>
+					</object>
+					<object class="NSMutableDictionary" key="actionInfosByName">
+						<string key="NS.key.0">userDropedFileOnContact:</string>
+						<object class="IBActionInfo" key="NS.object.0">
+							<string key="name">userDropedFileOnContact:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</object>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/CustomListModel.h</string>
