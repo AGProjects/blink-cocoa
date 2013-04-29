@@ -1785,9 +1785,12 @@ class CustomListModel(NSObject):
                     return NSDragOperationMove
                 else:
                     # Dragged a contact on another contact
+                    if not isinstance(proposed_item, BlinkPresenceContact):
+                        return NSDragOperationNone
+                    
                     targetGroup = table.parentForItem_(proposed_item)
 
-                    if not isinstance(proposed_item, BlinkPresenceContact):
+                    if targetGroup is None:
                         return NSDragOperationNone
 
                     self.drop_on_contact_index = targetGroup.contacts.index(proposed_item)
