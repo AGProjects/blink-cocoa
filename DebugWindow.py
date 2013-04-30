@@ -296,9 +296,11 @@ class DebugWindow(NSObject):
         # Observers added in init
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         notification_center = NotificationCenter()
-        notification_center.add_observer(self, name="SIPSessionDidStart")
-        notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
-        notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
+        notification_center.discard_observer(self, name="SIPSessionDidStart")
+        notification_center.discard_observer(self, name="SIPSessionDidRenegotiateStreams")
+        notification_center.discard_observer(self, name="AudioSessionHasQualityIssues")
+        notification_center.discard_observer(self, name="AudioStreamICENegotiationDidSucceed")
+        notification_center.discard_observer(self, name="AudioStreamICENegotiationDidFail")
 
         # Observers added when settings change
         notification_center.discard_observer(self, name="SIPEngineSIPTrace")
