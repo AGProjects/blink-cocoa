@@ -140,6 +140,8 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="SIPSessionDidStart")
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
+        notification_center.add_observer(self, name="AudioStreamICENegotiationDidSucceed")
+        notification_center.add_observer(self, name="AudioStreamICENegotiationDidFail")
 
         userdef = NSUserDefaults.standardUserDefaults()
         self.sipRadio.selectCellWithTag_(userdef.integerForKey_("SIPTrace") or Disabled)
@@ -591,22 +593,24 @@ class DebugWindow(NSObject):
     def _NH_AudioStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
 
-        text = '\n%s: Audio RTP parameters changed\n' % stream.session.remote_identity
+        text = '%s Audio session to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
         if stream.local_rtp_address and stream.local_rtp_port and stream.remote_rtp_address and stream.remote_rtp_port:
-            text += 'Audio RTP endpoints %s:%d <-> %s:%d\n' % (stream.local_rtp_address, stream.local_rtp_port, stream.remote_rtp_address, stream.remote_rtp_port)
+            text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime, stream.local_rtp_address, stream.local_rtp_port, stream.remote_rtp_address, stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
-            text += 'Audio session established using "%s" codec at %sHz\n' % (stream.codec, stream.sample_rate)
+            text += '%s Audio session established using "%s" codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
         if stream.srtp_active:
-            text += 'RTP audio stream is encrypted\n'
+            text += '%s RTP audio stream is encrypted\n' % notification.datetime
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
-
-        text = '\nICE negotiation succeeded in %s\n' % data.duration
-        text += 'Local ICE candidates:\n'
+        stream = notification.sender
+        
+        text = '%s Audio session %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        text += u'%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime, stream.local_rtp_address, stream.local_rtp_port, stream.local_rtp_candidate_type, stream.remote_rtp_address, stream.remote_rtp_port, stream.remote_rtp_candidate_type)
+        text += '\nLocal ICE candidates:\n'
         for candidate in data.local_candidates:
             text += '(%s)\t %-25s\t type %s\n' % ('RTP' if candidate[1]=='1' else 'RTCP', candidate[2], candidate[3])
         text += '\nRemote ICE candidates:\n'
@@ -622,7 +626,7 @@ class DebugWindow(NSObject):
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
         data = notification.data
 
-        text = '\nICE negotiation failed: %s\n' % data.reason
+        text = '%s ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
