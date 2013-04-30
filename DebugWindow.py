@@ -139,6 +139,7 @@ class DebugWindow(NSObject):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="SIPSessionDidStart")
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
+        notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
 
         userdef = NSUserDefaults.standardUserDefaults()
         self.sipRadio.selectCellWithTag_(userdef.integerForKey_("SIPTrace") or Disabled)
@@ -295,6 +296,7 @@ class DebugWindow(NSObject):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="SIPSessionDidStart")
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
+        notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
 
         # Observers added when settings change
         notification_center.discard_observer(self, name="SIPEngineSIPTrace")
@@ -338,18 +340,18 @@ class DebugWindow(NSObject):
         except StopIteration:
             return
 
-        text = '\nNew Audio session %s\n'%session.remote_identity
+        text = '\n%s New Audio session %s\n' % (session.start_time, session.remote_identity)
         if audio_stream.local_rtp_address and audio_stream.local_rtp_port and audio_stream.remote_rtp_address and audio_stream.remote_rtp_port:
             if audio_stream.ice_active:
-                text += 'Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (audio_stream.local_rtp_address, audio_stream.local_rtp_port, audio_stream.local_rtp_candidate_type, audio_stream.remote_rtp_address, audio_stream.remote_rtp_port, audio_stream.remote_rtp_candidate_type)
+                text += '%s Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time, audio_stream.local_rtp_address, audio_stream.local_rtp_port, audio_stream.local_rtp_candidate_type, audio_stream.remote_rtp_address, audio_stream.remote_rtp_port, audio_stream.remote_rtp_candidate_type)
             else:
-                text += 'Audio RTP endpoints %s:%d <-> %s:%d\n' % (audio_stream.local_rtp_address, audio_stream.local_rtp_port, audio_stream.remote_rtp_address, audio_stream.remote_rtp_port)
+                text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (session.start_time, audio_stream.local_rtp_address, audio_stream.local_rtp_port, audio_stream.remote_rtp_address, audio_stream.remote_rtp_port)
         if audio_stream.codec and audio_stream.sample_rate:
-            text += 'Audio session established using "%s" codec at %sHz\n' % (audio_stream.codec, audio_stream.sample_rate)
+            text += '%s Audio session established using "%s" codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.srtp_active:
-            text += 'RTP audio stream is encrypted\n'
+            text += '%s RTP audio stream is encrypted\n' % session.start_time
         if session.remote_user_agent is not None:
-            text += 'Remote SIP User Agent is "%s"\n' % session.remote_user_agent
+            text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
@@ -519,6 +521,12 @@ class DebugWindow(NSObject):
     def _NH_SIPSessionDidRenegotiateStreams(self, notification):
         if notification.data.action == 'add':
             self.renderRTP(notification.sender)
+
+    def _NH_AudioSessionHasQualityIssues(self, notification):
+        text = '%s Audio session to %s has quality issues: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)           
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.rtpTextView.textStorage().appendAttributedString_(astring)
+        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_MSRPTransportTrace(self, notification):
         if self.msrpTraceType is None:

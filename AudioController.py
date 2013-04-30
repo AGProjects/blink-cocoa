@@ -776,15 +776,31 @@ class AudioController(MediaStream):
             if self.loss_history is not None:
                 self.loss_history.append(loss)
 
-            text = []
+            text = ""
+            qos_data = NotificationData()
+            qos_data.latency = '0ms'
+            qos_data.packet_loss = '0%'
+            send_qos_notify = False
             if rtt > 1000:
                 latency = '%.1f' % (float(rtt)/1000.0)
-                text.append('Latency %ss' % latency)
+                text += 'Latency %ss' % latency
+                send_qos_notify = True
+                qos_data.latency = '%ss' % latency
             elif rtt > 100:
-                text.append('Latency %dms' % rtt)
+                text += 'Latency %dms' % rtt
+                send_qos_notify = True
+                qos_data.latency = '%sms' % rtt
 
             if loss > 3:
-                text.append('Packet Loss %d%%' % loss)
+                text += ' Packet Loss %d%%' % loss
+                qos_data.packet_loss = '%d%%' % loss
+                send_qos_notify = True
+    
+            if send_qos_notify:
+                self.notification_center.post_notification("AudioSessionHasQualityIssues", sender=self, data=qos_data)
+                self.info.setStringValue_(text)
+            else: 
+                self.info.setStringValue_("")
 
         else:
             self.info.setStringValue_("")
