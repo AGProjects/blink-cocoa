@@ -1066,7 +1066,7 @@ class AudioController(MediaStream):
             self.end()
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
-        self.sessionController.log_info(u'ICE negotiation suceeded')
+        self.sessionController.log_info(u'ICE negotiation succeeded')
         self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.local_rtp_candidate_type, self.stream.remote_rtp_address, self.stream.remote_rtp_port, self.stream.remote_rtp_candidate_type))
 
         self.ice_negotiation_status = 'Success'
