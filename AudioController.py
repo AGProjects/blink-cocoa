@@ -795,11 +795,11 @@ class AudioController(MediaStream):
                 text += ' Packet Loss %d%%' % loss
                 qos_data.packet_loss = '%d%%' % loss
                 send_qos_notify = True
-    
+
             if send_qos_notify:
                 self.notification_center.post_notification("AudioSessionHasQualityIssues", sender=self, data=qos_data)
                 self.info.setStringValue_(text)
-            else: 
+            else:
                 self.info.setStringValue_("")
 
         else:

@@ -1787,7 +1787,7 @@ class CustomListModel(NSObject):
                     # Dragged a contact on another contact
                     if not isinstance(proposed_item, BlinkPresenceContact):
                         return NSDragOperationNone
-                    
+
                     targetGroup = table.parentForItem_(proposed_item)
 
                     if targetGroup is None:

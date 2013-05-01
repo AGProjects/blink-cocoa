@@ -527,7 +527,7 @@ class DebugWindow(NSObject):
             self.renderRTP(notification.sender)
 
     def _NH_AudioSessionHasQualityIssues(self, notification):
-        text = '%s Audio session to %s has quality issues: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)           
+        text = '%s Audio session to %s has quality issues: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -609,7 +609,7 @@ class DebugWindow(NSObject):
     def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
         stream = notification.sender
-        
+
         text = '%s Audio session %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
         text += u'%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime, stream.local_rtp_address, stream.local_rtp_port, stream.local_rtp_candidate_type, stream.remote_rtp_address, stream.remote_rtp_port, stream.remote_rtp_candidate_type)
         text += '\nLocal ICE candidates:\n'

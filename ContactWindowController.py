@@ -901,10 +901,10 @@ class ContactWindowController(NSWindowController):
     def _NH_ChatReplicationJournalEntryReceived(self, notification):
         if self.chatWindowController is None:
             self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
-        
+
         data = notification.data.chat_message
         hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteSIPAddress == data['remote_uri'])
-       
+
         if not hasChat:
             self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
 
