@@ -1545,6 +1545,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 name = 'Anonymous' if is_anonymous(target_uri) else name
                 blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=name)
                 blink_contact.detail = u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time))
+                blink_contact.contact = contact
                 contacts.append(blink_contact)
 
             if len(seen) >= count:
