@@ -1,7 +1,6 @@
 Main tasks
 ----------
 
-+ Presence
 - Video
 - RTP timeout
 - AGC
