@@ -1227,6 +1227,9 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_FAILED, data.reason)
 
     def _NH_ChatReplicationJournalEntryReceived(self, sender, data):
+        if self.status == STREAM_CONNECTED:
+            return
+
         data = data.chat_message
         if self.local_uri != data['local_uri'] or self.remote_uri != data['remote_uri']:
             return
