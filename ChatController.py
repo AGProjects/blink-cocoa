@@ -144,6 +144,7 @@ class ChatController(MediaStream):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+        self.notification_center.add_observer(self, name='ChatReplicationJournalEntryReceived')
 
         NSBundle.loadNibNamed_owner_("ChatView", self)
 
@@ -1225,6 +1226,15 @@ class ChatController(MediaStream):
         self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
 
+    def _NH_ChatReplicationJournalEntryReceived(self, sender, data):
+        data = data.chat_message
+        if self.local_uri != data['local_uri'] or self.remote_uri != data['remote_uri']:
+            return
+
+        icon = NSApp.delegate().contactsWindowController.iconPathForURI(data['cpim_to'])
+        timestamp = ISOTimestamp(data['cpim_timestamp'])
+        self.chatViewController.showMessage(data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True)
+
     def resetIsComposingTimer(self, refresh):
         if self.remoteTypingTimer:
             # if we don't get any indications in the request refresh, then we assume remote to be idle
@@ -1305,6 +1315,7 @@ class ChatController(MediaStream):
         # remove middleware observers
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
+        self.notification_center.remove_observer(self, name='ChatReplicationJournalEntryReceived')
         self.notification_center = None
 
         # remove GUI observers

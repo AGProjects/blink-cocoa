@@ -1100,7 +1100,7 @@ class ChatHistoryReplicator(object):
         except (IOError, cPickle.UnpicklingError):
             pass
 
-        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(180.0, self, "updateTimer:", None, True)
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(45.0, self, "updateTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
@@ -1190,7 +1190,7 @@ class ChatHistoryReplicator(object):
 
         return last_journal_timestamp
 
-    def updateLocalHistoryWithRemoteJournalPutREsults(self, journal, account):
+    def updateLocalHistoryWithRemoteJournalId(self, journal, account):
         try:
             success = journal['success']
         except KeyError:
@@ -1227,7 +1227,7 @@ class ChatHistoryReplicator(object):
 
     @run_in_green_thread
     @allocate_autorelease_pool
-    def updateLocalHistoryWithRemoteJournalEntries(self, journal, account):
+    def addLocalHistoryFromRemoteJournalEntries(self, journal, account):
         try:
             success = journal['success']
         except KeyError:
@@ -1316,6 +1316,10 @@ class ChatHistoryReplicator(object):
                     else:
                         BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
 
+                    notification_data = NotificationData()
+                    notification_data.chat_message = data
+                    NotificationCenter().post_notification('ChatReplicationJournalEntryReceived', sender=self, data=notification_data)
+
                 except KeyError:
                     BlinkLogger().log_debug(u"Failed to apply server journal to local history database for %s" % account)
                     return
@@ -1323,8 +1327,9 @@ class ChatHistoryReplicator(object):
         if notify_data:
             for key in notify_data.keys():
                 log_text = '%d new chat messages for %s retrieved from history server' % (notify_data[key], key)
-                # notify growl
                 BlinkLogger().log_info(log_text)
+        else:
+            BlinkLogger().log_info('Local history is already in sync with server history for %s' % account)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1434,7 +1439,7 @@ class ChatHistoryReplicator(object):
                 except (TypeError, cjson.DecodeError):
                     BlinkLogger().log_debug(u"Failed to parse journal for %s from %s" % (key, self.connections_for_outgoing_replication[key]['url']))
                 else:
-                    self.updateLocalHistoryWithRemoteJournalPutREsults(data, key)
+                    self.updateLocalHistoryWithRemoteJournalId(data, key)
 
                 try:
                     for key in self.connections_for_outgoing_replication[key]['postData'].keys():
@@ -1469,7 +1474,7 @@ class ChatHistoryReplicator(object):
                 except (TypeError, cjson.DecodeError):
                     BlinkLogger().log_debug(u"Failed to parse journal for %s from %s" % (key, self.connections_for_incoming_replication[key]['url']))
                 else:
-                    self.updateLocalHistoryWithRemoteJournalEntries(data, key)
+                    self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
 
     def connection_didFailWithError_(self, connection, error):
@@ -1498,6 +1503,7 @@ class ChatHistoryReplicator(object):
             else:
                 BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], error))
                 self.connections_for_incoming_replication[key]['connection'] = None
+                del self.connections_for_incoming_replication[key]
 
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:

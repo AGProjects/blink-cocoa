@@ -281,6 +281,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
         nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
+        nc.add_observer(self, name="ChatReplicationJournalEntryReceived")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
         nc.add_observer(self, name="SIPApplicationWillStart")
@@ -896,6 +897,16 @@ class ContactWindowController(NSWindowController):
             if self.ldap_found_contacts:
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
+
+    def _NH_ChatReplicationJournalEntryReceived(self, notification):
+        if self.chatWindowController is None:
+            self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
+        
+        data = notification.data.chat_message
+        hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteSIPAddress == data['remote_uri'])
+       
+        if not hasChat:
+            self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
 
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
