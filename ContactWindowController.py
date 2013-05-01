@@ -949,7 +949,6 @@ class ContactWindowController(NSWindowController):
     def showAudioSession(self, streamController, add_to_conference=False):
         self.audioSessionsListView.addItemView_(streamController.view)
         self.updateAudioButtons()
-        print self.sessionControllersManager.sessionControllers
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers if streamController not in sess.streamHandlers)
         go_to_background = bool(hasAudio and (streamController.sessionController.answeringMachineMode or add_to_conference))
         streamController.view.setSelected_(not go_to_background)
