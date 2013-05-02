@@ -4234,14 +4234,18 @@ class ContactWindowController(NSWindowController):
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
-        dev = sender.representedObject()
-        settings.audio.input_device = unicode(dev)
+        dev = unicode(sender.representedObject())
+        if dev == u'None':
+            dev = None
+        settings.audio.input_device = dev
         settings.save()
 
     def selectOutputDevice_(self, sender):
         settings = SIPSimpleSettings()
-        dev = sender.representedObject()
-        settings.audio.output_device = unicode(dev)
+        dev = unicode(sender.representedObject())
+        if dev == u'None':
+            dev = None
+        settings.audio.output_device = dev
         settings.save()
 
     def selectInputOutputDevice_(self, sender):
