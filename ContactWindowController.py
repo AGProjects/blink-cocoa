@@ -909,6 +909,7 @@ class ContactWindowController(NSWindowController):
         if not hasChat:
             self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
 
+    @run_in_gui_thread
     def _NH_SIPSessionLoggedToHistory(self, notification):
         self.updateHistoryMenu()
 
