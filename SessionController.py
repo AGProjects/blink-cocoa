@@ -688,6 +688,7 @@ class SessionControllersManager(object):
     @run_in_green_thread
     def add_to_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
         SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
+        NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     @run_in_green_thread
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
