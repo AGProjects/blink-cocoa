@@ -88,6 +88,7 @@ class ChatWindowController(NSWindowController):
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
+    micLevelIndicator = objc.IBOutlet()
 
     conferenceFilesView = objc.IBOutlet()
     participantsView = objc.IBOutlet()

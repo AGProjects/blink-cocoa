@@ -4,6 +4,7 @@
 from Foundation import *
 from AppKit import *
 import objc
+import QTKit
 
 import cPickle
 import hashlib
@@ -202,6 +203,7 @@ class ContactWindowController(NSWindowController):
     alwaysOnTopMenuItem = objc.IBOutlet()
     useSpeechRecognitionMenuItem = objc.IBOutlet()
     useSpeechSynthesisMenuItem = objc.IBOutlet()
+    micLevelIndicator = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     screenShareMenu = objc.IBOutlet()
@@ -285,6 +287,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
         nc.add_observer(self, name="SIPApplicationWillStart")
+        nc.add_observer(self, name="SIPApplicationWillEnd")
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SIPAccountDidActivate")
         nc.add_observer(self, name="SIPAccountDidDeactivate")
@@ -368,8 +371,101 @@ class ContactWindowController(NSWindowController):
         self.statusBarItem.setToolTip_(NSApp.delegate().applicationName)
         self.statusBarItem.setMenu_(self.statusBarMenu)
 
+        self.audioLevelTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "updateAudioLevels:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.audioLevelTimer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.audioLevelTimer, NSDefaultRunLoopMode)
+        self.audioInputSessionForLevelMeter = QTKit.QTCaptureSession.alloc().init()
+        self.audioDeviceInputForLevelMeter = None
+        self.audioPreviewOutputForLevelMeter = QTKit.QTCaptureAudioPreviewOutput.alloc().init()
+        self.audioPreviewOutputForLevelMeter.setVolume_(0.0)
+        self.audioInputSessionForLevelMeter.addOutput_error_(self.audioPreviewOutputForLevelMeter, None)
+
         self.loaded = True
 
+    @property
+    def has_audio(self):
+        has_audio = False
+        for v in self.audioSessionsListView.subviews():
+            if v.delegate is not None and v.delegate.sessionController is not None and v.delegate.sessionController.session is not None and v.delegate.sessionController.session.state in ('terminating', 'terminated'):
+                continue
+            else:
+                has_audio = True
+                break
+        return has_audio
+
+    def closeAudioInputDeviceForLevelMeter(self):
+        if self.audioDeviceInputForLevelMeter:
+            self.audioInputSessionForLevelMeter.removeInput_(self.audioDeviceInputForLevelMeter)
+            self.audioDeviceInputForLevelMeter.device().close()
+            self.audioDeviceInputForLevelMeter = None
+                
+    @run_in_gui_thread
+    def setSelectedInputAudioDeviceForLevelMeter(self):
+        if self.audioInputSessionForLevelMeter.isRunning():
+            self.audioInputSessionForLevelMeter.stopRunning()
+
+        self.closeAudioInputDeviceForLevelMeter()
+
+        audioDevices = NSArray.alloc().initWithArray_(QTKit.QTCaptureDevice.inputDevicesWithMediaType_(QTKit.QTMediaTypeSound))
+        settings = SIPSimpleSettings()
+        if settings.audio.input_device == 'system_default':
+            selectedAudioDevice = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeSound)
+        else:
+            try:
+                selectedAudioDevice = (device for device in audioDevices if unicode(device) == settings.audio.input_device).next()
+            except StopIteration:
+                selectedAudioDevice = None
+
+        if selectedAudioDevice is None:
+            return
+            
+        success, error = selectedAudioDevice.open_(None)
+        if not success:
+            return
+            
+        self.audioDeviceInputForLevelMeter = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(selectedAudioDevice)
+        success, error = self.audioInputSessionForLevelMeter.addInput_error_(self.audioDeviceInputForLevelMeter, None)
+        if not success:
+            self.audioDeviceInputForLevelMeter = None
+            selectedAudioDevice.close()
+            return
+
+    def updateAudioLevels_(self, timer):
+        if self.audioDeviceInputForLevelMeter is None:
+            return
+
+        if self.has_audio:
+            if not self.audioInputSessionForLevelMeter.isRunning():
+                self.audioInputSessionForLevelMeter.startRunning()
+        else:
+            if self.audioInputSessionForLevelMeter.isRunning():
+                self.audioInputSessionForLevelMeter.stopRunning()
+
+        totalDecibels = 0.0
+        numberOfPowerLevels = 0
+	    
+        connection = self.audioPreviewOutputForLevelMeter.connections()[0]
+        powerLevels = connection.attributeForKey_(QTKit.QTCaptureConnectionAudioAveragePowerLevelsAttribute)
+        powerLevelCount = powerLevels.count()
+
+        j = 0
+        while j < powerLevels.count():
+            decibels = powerLevels.objectAtIndex_(j)
+            totalDecibels += decibels.floatValue()
+            numberOfPowerLevels += 1
+            j += 1
+
+        if numberOfPowerLevels > 0:
+            self.micLevelIndicator.setFloatValue_(pow(10.0, 0.05 * (totalDecibels / numberOfPowerLevels)) * 20.0)
+            if self.chatWindowController is not None:
+                self.chatWindowController.micLevelIndicator.setFloatValue_(pow(10.0, 0.05 * (totalDecibels / numberOfPowerLevels)) * 20.0)
+                
+        else:
+            self.micLevelIndicator.setFloatValue_(0)
+            if self.chatWindowController is not None:
+                self.chatWindowController.micLevelIndicator.setFloatValue_(0)
+
+    
     def fillPresenceMenu(self, presenceMenu):
         if presenceMenu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -779,8 +875,11 @@ class ContactWindowController(NSWindowController):
         else:
             self.menuWillOpen_(self.devicesMenu)
 
+        self.setSelectedInputAudioDeviceForLevelMeter()
+
     def _NH_DefaultAudioDeviceDidChange(self, notification):
         self.menuWillOpen_(self.devicesMenu)
+        self.setSelectedInputAudioDeviceForLevelMeter()
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
@@ -789,6 +888,15 @@ class ContactWindowController(NSWindowController):
     def _NH_MediaStreamDidEnd(self, notification):
         if notification.sender.type == "audio":
             self.updateAudioButtons()
+
+    def _NH_SIPApplicationWillEnd(self, notification):
+        self.closeAudioInputDeviceForLevelMeter()
+        self.audioInputSessionForLevelMeter.removeOutput_(self.audioPreviewOutputForLevelMeter)
+        self.audioPreviewOutputForLevelMeter = None
+
+        if self.audioInputSessionForLevelMeter.isRunning():
+            self.audioInputSessionForLevelMeter.stopRunning()
+            self.audioInputSessionForLevelMeter = None 
 
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
@@ -808,6 +916,7 @@ class ContactWindowController(NSWindowController):
         self.callPendingURIs()
         self.refreshLdapDirectory()
         self.updateHistoryMenu()
+        self.setSelectedInputAudioDeviceForLevelMeter()
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
@@ -884,6 +993,9 @@ class ContactWindowController(NSWindowController):
 
         if 'presence_state.icon' in notification.data.modified:
             self.loadUserIcon()
+
+        if notification.data.modified.has_key("audio.input_device"):
+            self.setSelectedInputAudioDeviceForLevelMeter()
 
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         if notification.sender == self.ldap_search:
@@ -966,15 +1078,7 @@ class ContactWindowController(NSWindowController):
             self.showAudioDrawer()
 
     def showAudioDrawer(self):
-        has_audio = False
-        for v in self.audioSessionsListView.subviews():
-            if v.delegate is not None and v.delegate.sessionController is not None and v.delegate.sessionController.session is not None and v.delegate.sessionController.session.state in ('terminating', 'terminated'):
-                continue
-            else:
-                has_audio = True
-                break
-
-        if not self.drawer.isOpen() and has_audio:
+        if not self.drawer.isOpen() and self.has_audio:
             #self.drawer.setContentSize_(self.window().frame().size)
             self.drawer.open()
 
