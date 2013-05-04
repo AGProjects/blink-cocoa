@@ -204,6 +204,7 @@ class ContactWindowController(NSWindowController):
     useSpeechRecognitionMenuItem = objc.IBOutlet()
     useSpeechSynthesisMenuItem = objc.IBOutlet()
     micLevelIndicator = objc.IBOutlet()
+    selectedAudioDeviceLabel = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     screenShareMenu = objc.IBOutlet()
@@ -683,6 +684,28 @@ class ContactWindowController(NSWindowController):
             self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)
         else:
             self.nameText.setStringValue_(u'')
+            
+    @run_in_gui_thread
+    def updateAudioDeviceLabel(self):
+        settings = SIPSimpleSettings()
+        outdev = settings.audio.output_device
+        indev = settings.audio.input_device
+        
+        outdev = outdev.strip() if outdev is not None else 'None'
+        indev = indev.strip() if indev is not None else 'None'
+        
+        if outdev == u"system_default":
+            outdev = u"System Default Audio Device"
+        if indev == u"system_default":
+            indev = u"System Default Audio Device"
+        
+        if outdev != indev:
+            if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
+                self.selectedAudioDeviceLabel.setStringValue_(u'Built-in Microphone and Output')
+            else:
+                self.selectedAudioDeviceLabel.setStringValue_(u"Out %s, Mic %s" % (outdev, indev))
+        else:
+          self.selectedAudioDeviceLabel.setStringValue_(outdev)
 
     def activeAccount(self):
         return self.accountPopUp.selectedItem().representedObject()
@@ -917,6 +940,7 @@ class ContactWindowController(NSWindowController):
         self.refreshLdapDirectory()
         self.updateHistoryMenu()
         self.setSelectedInputAudioDeviceForLevelMeter()
+        self.updateAudioDeviceLabel()
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
@@ -996,6 +1020,7 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.modified.has_key("audio.input_device"):
             self.setSelectedInputAudioDeviceForLevelMeter()
+            self.updateAudioDeviceLabel()
 
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         if notification.sender == self.ldap_search:
