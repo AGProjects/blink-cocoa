@@ -661,6 +661,7 @@
 							<string key="NSFrame">{{0, -2}, {650, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -681,7 +682,7 @@
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="31287118"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{650, 599}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">chat_window</string>
@@ -695,9 +696,10 @@
 					<object class="NSLevelIndicator" id="470469439">
 						<reference key="NSNextResponder" ref="1030100440"/>
 						<int key="NSvFlags">289</int>
-						<string key="NSFrame">{{186, 7}, {27.5, 16}}</string>
+						<string key="NSFrame">{{186, 9}, {27.5, 12}}</string>
 						<reference key="NSSuperview" ref="1030100440"/>
 						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView" ref="626477764"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSLevelIndicatorCell" key="NSCell" id="920319085">
@@ -713,7 +715,6 @@
 							<double key="NSMaxValue">10</double>
 							<double key="NSWarningValue">2</double>
 							<double key="NSCriticalValue">8</double>
-							<int key="NSIndicatorStyle">1</int>
 						</object>
 					</object>
 					<object class="NSSplitView" id="70791746">
@@ -734,7 +735,7 @@
 												<string key="NSFrameSize">{258, 427}</string>
 												<reference key="NSSuperview" ref="494475043"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="863626173"/>
+												<reference key="NSNextKeyView" ref="354479057"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSTableHeaderView" key="NSHeaderView" id="162515304">
 													<reference key="NSNextResponder" ref="473046543"/>
@@ -884,7 +885,7 @@
 								<string key="NSFrameSize">{260, 445}</string>
 								<reference key="NSSuperview" ref="70791746"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="494475043"/>
+								<reference key="NSNextKeyView" ref="863626173"/>
 								<int key="NSsFlags">133650</int>
 								<reference key="NSVScroller" ref="354479057"/>
 								<reference key="NSHScroller" ref="863626173"/>
@@ -906,7 +907,7 @@
 												<string key="NSFrameSize">{258, 98}</string>
 												<reference key="NSSuperview" ref="774967061"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="774070588"/>
+												<reference key="NSNextKeyView" ref="251762497"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSTableHeaderView" key="NSHeaderView" id="233955019">
 													<reference key="NSNextResponder" ref="315290466"/>
@@ -1019,7 +1020,7 @@
 								<string key="NSFrame">{{0, 454}, {260, 116}}</string>
 								<reference key="NSSuperview" ref="70791746"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="774967061"/>
+								<reference key="NSNextKeyView" ref="774070588"/>
 								<int key="NSsFlags">133650</int>
 								<reference key="NSVScroller" ref="251762497"/>
 								<reference key="NSHScroller" ref="774070588"/>
@@ -1040,7 +1041,7 @@
 						<string key="NSFrame">{{44, 8}, {136, 14}}</string>
 						<reference key="NSSuperview" ref="1030100440"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="626477764"/>
+						<reference key="NSNextKeyView" ref="470469439"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="435529629">
 							<int key="NSCellFlags">68288064</int>
@@ -1069,6 +1070,7 @@
 						<string key="NSFrame">{{221, 2}, {28, 25}}</string>
 						<reference key="NSSuperview" ref="1030100440"/>
 						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="350383199">
 							<int key="NSCellFlags">67239424</int>
@@ -2022,9 +2024,9 @@
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">micLevelIndicator</string>
 						<reference key="source" ref="1001"/>
-						<reference key="destination" ref="920319085"/>
+						<reference key="destination" ref="470469439"/>
 					</object>
-					<int key="connectionID">588</int>
+					<int key="connectionID">589</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -3053,7 +3055,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">588</int>
+			<int key="maxID">589</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -3249,6 +3251,14 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
+					<string key="className">ContactCell</string>
+					<string key="superclassName">NSTextFieldCell</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ContactCell.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
 					<string key="className">FirstResponder</string>
 					<object class="NSMutableDictionary" key="actions">
 						<string key="NS.key.0">userClickedToolbarButton:</string>
@@ -3264,6 +3274,14 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBUserSource</string>
 						<string key="minorKey"/>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">ParticipantsTableView</string>
+					<string key="superclassName">NSTableView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ParticipantsTableView.h</string>
 					</object>
 				</object>
 			</array>
