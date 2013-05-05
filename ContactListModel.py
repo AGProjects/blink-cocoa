@@ -2569,6 +2569,7 @@ class ContactListModel(CustomListModel):
             self.contact_backup_timer.invalidate()
         self.contact_backup_timer = None
 
+    @run_in_gui_thread
     def _NH_AudioCallLoggedToHistory(self, notification):
         if NSApp.delegate().applicationName != 'Blink Lite':
             settings = SIPSimpleSettings()
