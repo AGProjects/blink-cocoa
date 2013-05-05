@@ -569,6 +569,8 @@ class ChatController(MediaStream):
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self):
+        if not self:
+            return
         if self.sessionController.account is not BonjourAccount():
             results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
 
