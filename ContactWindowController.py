@@ -1036,6 +1036,7 @@ class ContactWindowController(NSWindowController):
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
 
+    @run_in_gui_thread
     def _NH_ChatReplicationJournalEntryReceived(self, notification):
         if self.chatWindowController is None:
             self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
