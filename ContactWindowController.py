@@ -2151,6 +2151,9 @@ class ContactWindowController(NSWindowController):
         if self.loaded:
             self.collapsedState = flag
             self.updateParticipantsView()
+        if flag:
+            self.contactOutline.deselectAll_(None)
+        self.selectedAudioDeviceLabel.setHidden_(flag)
 
     def windowWillUseStandardFrame_defaultFrame_(self, window, nframe):
         if self.originalSize:
@@ -2165,7 +2168,6 @@ class ContactWindowController(NSWindowController):
             nframe = window.frame()
             nframe.origin.y += nframe.size.height - 154
             nframe.size.height = 154
-            self.contactOutline.deselectAll_(None)
         return nframe
 
     def windowWillResize_toSize_(self, sender, size):
@@ -2173,12 +2175,12 @@ class ContactWindowController(NSWindowController):
             size.height = 154
         return size
 
-    def windowDidResize(self, notification):
+    def windowDidResize_(self, notification):
         if NSHeight(self.window().frame()) > 154:
             self.originalSize = None
             self.setCollapsed(False)
         else:
-            self.contactOutline.deselectAll_(None)
+            self.setCollapsed(True)
 
         # make sure some controls are in their correct position after a resize of the window
         if self.notFoundTextOffset is not None:
