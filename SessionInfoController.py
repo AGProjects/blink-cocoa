@@ -346,7 +346,7 @@ class SessionInfoController(NSObject):
 
             if self.sessionController.session.start_time and now >= self.sessionController.session.start_time:
                 elapsed = now - self.sessionController.session.start_time
-                h = elapsed.seconds / (60*60)
+                h = elapsed.days * 24 + elapsed.seconds / (60*60)
                 m = (elapsed.seconds / 60) % 60
                 s = elapsed.seconds % 60
                 text = u"%02i:%02i:%02i"%(h,m,s)

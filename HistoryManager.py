@@ -960,7 +960,7 @@ class SessionHistoryReplicator(object):
                         if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
                             now = datetime(*time.localtime()[:6])
                             elapsed = now - start_time
-                            elapsed_hours = elapsed.seconds / (60*60)
+                            elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                             if elapsed_hours < 48:
                                 growl_data = NotificationData()
                                 try:
@@ -1302,7 +1302,7 @@ class ChatHistoryReplicator(object):
                     now = datetime(*time.localtime()[:6])
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
                     elapsed = now - start_time
-                    elapsed_hours = elapsed.seconds / (60*60)
+                    elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                     if elapsed_hours < 72:
                         try:
                             log = notify_data[data['remote_uri']]
