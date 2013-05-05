@@ -1329,7 +1329,7 @@ class ChatHistoryReplicator(object):
                 log_text = '%d new chat messages for %s retrieved from history server' % (notify_data[key], key)
                 BlinkLogger().log_info(log_text)
         else:
-            BlinkLogger().log_info('Local history is already in sync with server history for %s' % account)
+            BlinkLogger().log_debug('Local history is already in sync with server history for %s' % account)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
