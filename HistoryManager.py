@@ -1311,14 +1311,14 @@ class ChatHistoryReplicator(object):
                         else:
                             notify_data[data['remote_uri']] += 1
 
+                        notification_data = NotificationData()
+                        notification_data.chat_message = data
+                        NotificationCenter().post_notification('ChatReplicationJournalEntryReceived', sender=self, data=notification_data)
+
                     if data['direction'] == 'incoming':
                         BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, data['remote_uri'], account, uuid))
                     else:
                         BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
-
-                    notification_data = NotificationData()
-                    notification_data.chat_message = data
-                    NotificationCenter().post_notification('ChatReplicationJournalEntryReceived', sender=self, data=notification_data)
 
                 except KeyError:
                     BlinkLogger().log_debug(u"Failed to apply server journal to local history database for %s" % account)
