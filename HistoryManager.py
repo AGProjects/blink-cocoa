@@ -1303,7 +1303,7 @@ class ChatHistoryReplicator(object):
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
                     elapsed = now - start_time
                     elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
-                    if elapsed_hours < 72:
+                    if elapsed_hours < 36:
                         try:
                             log = notify_data[data['remote_uri']]
                         except KeyError:
