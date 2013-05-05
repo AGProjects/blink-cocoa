@@ -407,13 +407,16 @@ class ContactWindowController(NSWindowController):
 
         self.closeAudioInputDeviceForLevelMeter()
 
-        audioDevices = NSArray.alloc().initWithArray_(QTKit.QTCaptureDevice.inputDevicesWithMediaType_(QTKit.QTMediaTypeSound))
         settings = SIPSimpleSettings()
+        if settings.audio.input_device is None:
+            return
+
+        audioDevices = NSArray.alloc().initWithArray_(QTKit.QTCaptureDevice.inputDevicesWithMediaType_(QTKit.QTMediaTypeSound))
         if settings.audio.input_device == 'system_default':
             selectedAudioDevice = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeSound)
         else:
             try:
-                selectedAudioDevice = (device for device in audioDevices if unicode(device) == settings.audio.input_device).next()
+                selectedAudioDevice = (device for device in audioDevices if unicode(device).startswith(settings.audio.input_device)).next()
             except StopIteration:
                 selectedAudioDevice = None
 
@@ -694,16 +697,20 @@ class ContactWindowController(NSWindowController):
         outdev = outdev.strip() if outdev is not None else 'None'
         indev = indev.strip() if indev is not None else 'None'
         
+        if indev and indev.startswith('Built-in Microp'):
+            indev = 'Built-in Microphone'
+
         if outdev == u"system_default":
-            outdev = u"System Default Audio Device"
+            outdev = unicode('System Default')
         if indev == u"system_default":
-            indev = u"System Default Audio Device"
+            selectedAudioDevice = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeSound)
+            indev = unicode(selectedAudioDevice)
         
         if outdev != indev:
             if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
                 self.selectedAudioDeviceLabel.setStringValue_(u'Built-in Microphone and Output')
             else:
-                self.selectedAudioDeviceLabel.setStringValue_(u"Out %s, Mic %s" % (outdev, indev))
+                self.selectedAudioDeviceLabel.setStringValue_(u"%s/%s" % (outdev, indev))
         else:
           self.selectedAudioDeviceLabel.setStringValue_(outdev)
 
@@ -1019,6 +1026,10 @@ class ContactWindowController(NSWindowController):
             self.loadUserIcon()
 
         if notification.data.modified.has_key("audio.input_device"):
+            self.setSelectedInputAudioDeviceForLevelMeter()
+            self.updateAudioDeviceLabel()
+
+        if notification.data.modified.has_key("audio.output_device"):
             self.setSelectedInputAudioDeviceForLevelMeter()
             self.updateAudioDeviceLabel()
 
@@ -4038,10 +4049,11 @@ class ContactWindowController(NSWindowController):
 
             i = 2
             for dev in devices:
-                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
+                dev_title = 'Built-in Microphone' if dev.startswith('Built-in Microp') else dev
+                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev_title, selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)
-                item.setTag_(tag*100+i)
+                item.setTag_(tag * 100 + i)
                 item.setIndentationLevel_(2)
                 i += 1
                 item.setState_(NSOnState if value == dev else NSOffState)
