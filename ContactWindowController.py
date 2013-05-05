@@ -1060,6 +1060,8 @@ class ContactWindowController(NSWindowController):
 
     @run_in_gui_thread
     def _NH_SIPSessionLoggedToHistory(self, notification):
+        # TODO: refresh history menu only if session time is within menu time boundries
+        return
         self.updateHistoryMenu()
 
     def newAudioDeviceTimeout_(self, timer):
