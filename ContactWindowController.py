@@ -701,10 +701,9 @@ class ContactWindowController(NSWindowController):
             indev = 'Built-in Microphone'
 
         if outdev == u"system_default":
-            outdev = unicode('System Default')
+            outdev = self.backend._app.engine.default_output_device
         if indev == u"system_default":
-            selectedAudioDevice = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeSound)
-            indev = unicode(selectedAudioDevice)
+            indev = self.backend._app.engine.default_input_device
         
         if outdev != indev:
             if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
@@ -4043,14 +4042,16 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if value in (None, "None") else NSOffState)
             index += 1
 
-            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("System Default", selector, "", index)
+            default_device = self.backend._app.engine.default_output_device if tag in (401, 403) else self.backend._app.engine.default_input_device
+
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("System Default (%s)" % default_device , selector, "", index)
             item.setRepresentedObject_("system_default")
             item.setTarget_(self)
             item.setTag_(tag*100+1)
             item.setIndentationLevel_(2)
             item.setState_(NSOnState if value in ("default", "system_default") else NSOffState)
             index += 1
-
+            
             i = 2
             for dev in devices:
                 dev_title = 'Built-in Microphone' if dev.startswith('Built-in Microp') else dev
