@@ -399,7 +399,7 @@ class ContactWindowController(NSWindowController):
             self.audioInputSessionForLevelMeter.removeInput_(self.audioDeviceInputForLevelMeter)
             self.audioDeviceInputForLevelMeter.device().close()
             self.audioDeviceInputForLevelMeter = None
-                
+
     @run_in_gui_thread
     def setSelectedInputAudioDeviceForLevelMeter(self):
         if self.audioInputSessionForLevelMeter.isRunning():
@@ -422,11 +422,11 @@ class ContactWindowController(NSWindowController):
 
         if selectedAudioDevice is None:
             return
-            
+
         success, error = selectedAudioDevice.open_(None)
         if not success:
             return
-            
+
         self.audioDeviceInputForLevelMeter = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(selectedAudioDevice)
         success, error = self.audioInputSessionForLevelMeter.addInput_error_(self.audioDeviceInputForLevelMeter, None)
         if not success:
@@ -447,7 +447,7 @@ class ContactWindowController(NSWindowController):
 
         totalDecibels = 0.0
         numberOfPowerLevels = 0
-	    
+
         connection = self.audioPreviewOutputForLevelMeter.connections()[0]
         powerLevels = connection.attributeForKey_(QTKit.QTCaptureConnectionAudioAveragePowerLevelsAttribute)
         powerLevelCount = powerLevels.count()
@@ -463,13 +463,13 @@ class ContactWindowController(NSWindowController):
             self.micLevelIndicator.setFloatValue_(pow(10.0, 0.05 * (totalDecibels / numberOfPowerLevels)) * 20.0)
             if self.chatWindowController is not None:
                 self.chatWindowController.micLevelIndicator.setFloatValue_(pow(10.0, 0.05 * (totalDecibels / numberOfPowerLevels)) * 20.0)
-                
+
         else:
             self.micLevelIndicator.setFloatValue_(0)
             if self.chatWindowController is not None:
                 self.chatWindowController.micLevelIndicator.setFloatValue_(0)
 
-    
+
     def fillPresenceMenu(self, presenceMenu):
         if presenceMenu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -687,16 +687,16 @@ class ContactWindowController(NSWindowController):
             self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)
         else:
             self.nameText.setStringValue_(u'')
-            
+
     @run_in_gui_thread
     def updateAudioDeviceLabel(self):
         settings = SIPSimpleSettings()
         outdev = settings.audio.output_device
         indev = settings.audio.input_device
-        
+
         outdev = outdev.strip() if outdev is not None else 'None'
         indev = indev.strip() if indev is not None else 'None'
-        
+
         if indev and indev.startswith('Built-in Microp'):
             indev = 'Built-in Microphone'
 
@@ -704,7 +704,7 @@ class ContactWindowController(NSWindowController):
             outdev = self.backend._app.engine.default_output_device
         if indev == u"system_default":
             indev = self.backend._app.engine.default_input_device
-        
+
         if outdev != indev:
             if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
                 self.selectedAudioDeviceLabel.setStringValue_(u'Built-in Microphone and Output')
@@ -925,7 +925,7 @@ class ContactWindowController(NSWindowController):
 
         if self.audioInputSessionForLevelMeter.isRunning():
             self.audioInputSessionForLevelMeter.stopRunning()
-            self.audioInputSessionForLevelMeter = None 
+            self.audioInputSessionForLevelMeter = None
 
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
@@ -4051,7 +4051,7 @@ class ContactWindowController(NSWindowController):
             item.setIndentationLevel_(2)
             item.setState_(NSOnState if value in ("default", "system_default") else NSOffState)
             index += 1
-            
+
             i = 2
             for dev in devices:
                 dev_title = 'Built-in Microphone' if dev.startswith('Built-in Microp') else dev
