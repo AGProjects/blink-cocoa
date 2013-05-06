@@ -347,20 +347,23 @@ class AlertPanel(NSObject, object):
             outdev = settings.audio.output_device
             indev = settings.audio.input_device
 
+            if outdev == u"system_default":
+                outdev = SIPManager()._app.engine.default_output_device
+            if indev == u"system_default":
+                indev = SIPManager()._app.engine.default_input_device
+
             outdev = outdev.strip() if outdev is not None else 'None'
             indev = indev.strip() if indev is not None else 'None'
 
-            if outdev == u"system_default":
-                outdev = u"System Default"
-            if indev == u"system_default":
-                indev = u"System Default"
-
             if outdev != indev:
-                self.deviceLabel.setStringValue_(u"Selected Output Device is %s, Input is %s" % (outdev, indev))
+                if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
+                    self.deviceLabel.setStringValue_(u"Using Built-in Microphone and Output")
+                else:
+                    self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev, indev))
             else:
-                self.deviceLabel.setStringValue_(u"Selected Audio Device is %s" % outdev)
+                self.deviceLabel.setStringValue_(u"Using audio device %s" % outdev)
 
-            BlinkLogger().log_info(u"Selected audio input/output devices: %s/%s" % (indev, outdev))
+            BlinkLogger().log_info(u"Using input/output audio devices: %s/%s" % (indev, outdev))
 
             self.deviceLabel.sizeToFit()
             self.deviceLabel.setHidden_(False)
