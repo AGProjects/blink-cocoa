@@ -2,6 +2,8 @@
 #
 
 import os
+import re
+import time
 import unicodedata
 
 from AppKit import *
@@ -11,6 +13,7 @@ from VerticalBoxView import VerticalBoxView
 from SIPManager import SIPManager
 
 from util import format_identity_to_string
+from sipsimple.threading import call_in_thread
 
 
 class AudioSession(NSView):
@@ -41,6 +44,22 @@ class AudioSession(NSView):
         copy_text = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=True, format='full')
         pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)
         pb.setString_forType_(copy_text, NSStringPboardType)
+
+    def paste_(self, sender):
+        pasteboard = NSPasteboard.generalPasteboard()
+        digits = pasteboard.stringForType_("public.utf8-plain-text")
+        dtmf_match_regexp = re.compile("^([0-9]#*)+$")
+        if digits and dtmf_match_regexp.match(digits):
+            call_in_thread('dtmf-io', self.send_dtmf, digits)
+
+    def send_dtmf(self, digits):
+        for digit in digits:
+            time.sleep(0.5)
+            if digit == ',':
+                time.sleep(1)
+            else:
+                if self.delegate is not None:
+                    self.delegate.send_dtmf(digit)
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-audio-session", "x-blink-sip-uri", NSFilenamesPboardType))
