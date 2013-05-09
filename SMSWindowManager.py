@@ -280,7 +280,7 @@ class SMSWindowManagerClass(NSObject):
         is_html = content_type == 'text/html'
 
         if content_type in ('text/plain', 'text/html'):
-            BlinkLogger().log_info(u"Got SMS from %s" % format_identity_to_string(sender_identity))
+            BlinkLogger().log_info(u"Got SMS %s from %s" % (call_id, format_identity_to_string(sender_identity)))
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
             body = cpim_message.body if is_cpim else data.body
@@ -295,7 +295,7 @@ class SMSWindowManagerClass(NSObject):
                 viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         else:
-            BlinkLogger().log_warning(u"SMS from %s has unknown content-type %s" % (format_identity_to_string(data.from_header), data.content_type))
+            BlinkLogger().log_warning(u"SMS %s from %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), data.content_type))
             return
 
         # display the message

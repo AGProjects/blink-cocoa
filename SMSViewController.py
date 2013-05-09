@@ -238,12 +238,10 @@ class SMSViewController(NSObject):
             self.setRoutesResolved(routes)
 
     def _NH_SIPMessageDidSucceed(self, sender, data):
-        BlinkLogger().log_info(u"SMS message delivery suceeded")
-
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
-
         if message.content_type != "application/im-iscomposing+xml":
+            BlinkLogger().log_info(u"SMS to %s delivered" % self.remote_uri)
             if data.code == 202:
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_DEFERRED)
                 message.status='deferred'
@@ -255,8 +253,6 @@ class SMSViewController(NSObject):
         self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
-        BlinkLogger().log_info(u"SMS message delivery failed: %s" % data.reason)
-
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
 
@@ -264,6 +260,7 @@ class SMSViewController(NSObject):
             self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
             message.status='failed'
             self.add_to_history(message)
+            BlinkLogger().log_info(u"SMS to %s delivery failed: %s" % (self.remote_uri, data.reason))
 
         self.notification_center.remove_observer(self, sender=sender)
 
