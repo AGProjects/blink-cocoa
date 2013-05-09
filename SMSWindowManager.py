@@ -249,7 +249,7 @@ class SMSWindowManagerClass(NSObject):
     def _NH_SIPEngineGotMessage(self, sender, data):
         account = AccountManager().find_account(data.request_uri)
         if not account:
-            BlinkLogger().log_warning(u"Could not find recipient account for message to %s, using default" % data.request_uri)
+            BlinkLogger().log_warning(u"Could not find local account for incoming SMS to %s, using default" % data.request_uri)
             account = AccountManager().default_account
 
         call_id = data.headers.get('Call-ID', Null).body
@@ -269,7 +269,7 @@ class SMSWindowManagerClass(NSObject):
             try:
                 cpim_message = CPIMMessage.parse(data.body)
             except CPIMParserError:
-                BlinkLogger().log_warning(u"SMS from %s has invalid CPIM content" % format_identity_to_string(data.from_header))
+                BlinkLogger().log_warning(u"Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
                 return
             else:
                 is_cpim = True
@@ -290,7 +290,7 @@ class SMSWindowManagerClass(NSObject):
         is_html = content_type == 'text/html'
 
         if content_type in ('text/plain', 'text/html'):
-            BlinkLogger().log_info(u"Got SMS %s from %s" % (call_id, format_identity_to_string(sender_identity)))
+            BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
             body = cpim_message.body if is_cpim else data.body
@@ -305,7 +305,7 @@ class SMSWindowManagerClass(NSObject):
                 viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         else:
-            BlinkLogger().log_warning(u"SMS %s from %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), data.content_type))
+            BlinkLogger().log_warning(u"Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, data.content_type))
             return
 
         # display the message
