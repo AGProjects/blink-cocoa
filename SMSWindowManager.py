@@ -183,6 +183,7 @@ class SMSWindowManagerClass(NSObject):
     #__metaclass__ = Singleton
 
     windows = []
+    received_call_ids = set()
 
     def init(self):
         self = super(SMSWindowManagerClass, self).init()
@@ -250,6 +251,15 @@ class SMSWindowManagerClass(NSObject):
         if not account:
             BlinkLogger().log_warning(u"Could not find recipient account for message to %s, using default" % data.request_uri)
             account = AccountManager().default_account
+
+        call_id = data.headers.get('Call-ID', Null).body
+        try:
+            self.received_call_ids.remove(call_id)
+        except KeyError:
+            self.received_call_ids.add(call_id)
+        else:
+            # drop duplicate message received
+            return
 
         is_cpim = False
         cpim_message = None
