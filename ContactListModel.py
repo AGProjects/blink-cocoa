@@ -803,31 +803,6 @@ class BlinkPresenceContact(BlinkContact):
                         description = service.device_info.description
                         user_agent = service.device_info.user_agent
 
-                        if self.contact.id == 'myself' and service in most_recent_services and service.user_input.value != 'idle' and self.log_presence_transitions:
-                            presencePublisher = NSApp.delegate().contactsWindowController.presencePublisher
-                            settings = SIPSimpleSettings()
-                            own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
-
-                            if own_service_id != service.id and notification.sender.id == uri_text:
-                                try:
-                                    last_published_timestamp = presencePublisher.last_service_timestamp[notification.sender.id]
-                                except KeyError:
-                                    pass
-                                else:
-                                    if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
-                                        own_data = NotificationData()
-                                        own_data.status = device_wining_status
-                                        notes = sorted([unicode(note) for note in service.notes if note])
-                                        try:
-                                            own_data.note = notes[0]
-                                        except IndexError:
-                                            own_data.note = ''
-
-                                        log_line = 'My availability on device %s is %s' % (service.device_info.description, device_wining_status)
-                                        BlinkLogger().log_info(log_line)
-
-                                        notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
-
                     else:
                         device_text = '%s' % service.id
                         description = None
@@ -835,26 +810,6 @@ class BlinkPresenceContact(BlinkContact):
                         offset_info = None
                         offset_info_text = None
 
-                        if self.contact.id == 'myself' and service in most_recent_services and service.timestamp is not None and self.log_presence_transitions:
-                            presencePublisher = NSApp.delegate().contactsWindowController.presencePublisher
-                            settings = SIPSimpleSettings()
-                            own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
-
-                            if own_service_id != service.id and notification.sender.id == uri_text:
-                                try:
-                                    last_published_timestamp = presencePublisher.last_service_timestamp[notification.sender.id]
-                                except KeyError:
-                                    pass
-                                else:
-                                    if last_published_timestamp is None or last_published_timestamp.value < service.timestamp.value:
-                                        own_data = NotificationData()
-                                        own_data.status = device_wining_status
-                                        own_data.note = ''
-
-                                        log_line = 'My availability on other device is %s' % device_wining_status
-                                        BlinkLogger().log_info(log_line)
-
-                                        notification.center.post_notification("BlinkMyPresenceOnOtherDeviceDidChange", sender=self, data=own_data)
                     try:
                         device = devices[service.id]
                     except KeyError:
@@ -892,29 +847,25 @@ class BlinkPresenceContact(BlinkContact):
                             prefix = 'My device' if notification.sender.id == uri_text else 'Device'
                             log_line = u"%s %s of %s is %s" % (prefix, device_text, uri_text, device_wining_status)
                             BlinkLogger().log_info(log_line)
-                            if self.contact.id != 'myself':
-                                message= '<h3>Availability Information</h3>'
-                                message += '<p>%s' % log_line
-                                media_type = 'availability'
-                                local_uri = str(notification.sender.id)
-                                remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
-                                direction = 'incoming'
-                                status = 'delivered'
-                                cpim_from = remote_uri
-                                cpim_to = local_uri
-                                timestamp = str(ISOTimestamp.now())
-                                id=str(uuid.uuid1())
+                            message= '<h3>Availability Information</h3>'
+                            message += '<p>%s' % log_line
+                            media_type = 'availability'
+                            local_uri = str(notification.sender.id)
+                            remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
+                            direction = 'incoming'
+                            status = 'delivered'
+                            cpim_from = remote_uri
+                            cpim_to = local_uri
+                            timestamp = str(ISOTimestamp.now())
+                            id=str(uuid.uuid1())
 
-                                NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+                            NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
 
             self.presence_state['devices'] = devices
             self.presence_state['urls'] = urls
 
             if self.log_presence_transitions:
                 self.old_devices = self.presence_state['devices'].values()
-
-        if self.contact.id == 'myself':
-            return
 
         self.setPresenceNote()
         has_notes = has_notes > 1 or self.presence_state['pending_authorizations']
@@ -1009,8 +960,6 @@ class BlinkPresenceContact(BlinkContact):
         contact.updating_remote_icon = False
 
     def addToOrRemoveFromOnlineGroup(self):
-        if self.contact.id == 'myself':
-            return
         status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
         try:
@@ -2035,7 +1984,6 @@ class ContactListModel(CustomListModel):
         self.outgoing_calls_group = OutgoingCallsBlinkGroup()
         self.incoming_calls_group = IncomingCallsBlinkGroup()
         self.contact_backup_timer = None
-        self.own_contact = None
 
         return self
 
@@ -2846,9 +2794,6 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
-        if contact.id == 'myself':
-            self.own_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
-            return
 
         blink_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
         self.all_contacts_group.contacts.append(blink_contact)

@@ -13,6 +13,7 @@ import re
 import random
 import string
 import ldap
+import uuid
 from collections import deque
 from datetime import datetime
 
@@ -278,7 +279,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkMuteChangedState")
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
-        nc.add_observer(self, name="BlinkMyPresenceOnOtherDeviceDidChange")
+        nc.add_observer(self, name="SIPAccountGotSelfPresenceState")
         nc.add_observer(self, name="BonjourAccountWillRegister")
         nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
@@ -793,8 +794,6 @@ class ContactWindowController(NSWindowController):
         del self.accounts[position]
         self.refreshAccountList()
         account = notification.data.account
-        if account is not BonjourAccount():
-            self.removePresenceContactForOurselves(account)
 
     def _NH_SIPAccountDidActivate(self, notification):
         account = notification.sender
@@ -802,8 +801,6 @@ class ContactWindowController(NSWindowController):
             account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
             account.save()
         self.refreshAccountList()
-        if account is not BonjourAccount():
-            self.addPresenceContactForOurselves(account)
 
     def _NH_BonjourGroupWasActivated(self, notification):
         self.updateGroupMenu()
@@ -947,6 +944,7 @@ class ContactWindowController(NSWindowController):
         self.updateHistoryMenu()
         self.setSelectedInputAudioDeviceForLevelMeter()
         self.updateAudioDeviceLabel()
+        self.removePresenceContactForOurselves()
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
@@ -2248,38 +2246,15 @@ class ContactWindowController(NSWindowController):
         self.activeAccount().save()
         sender.resignFirstResponder()
 
-    def addPresenceContactForOurselves(self, account):
-        addressbook_manager = AddressbookManager()
-        try:
-            contact = addressbook_manager.get_contact('myself')
-        except KeyError:
-            contact = Contact('myself')
-            contact.name = 'Myself'
-            contact.presence.subscribe = True
-            contact.presence.policy = 'allow'
-            contact.uris = [ContactURI(uri=account.id, type='SIP')]
-            contact.save()
-        else:
-           try:
-               has_uri = (uri.uri for uri in contact.uris if uri.uri == account.id).next()
-           except StopIteration:
-               contact.uris.add(ContactURI(uri=account.id, type='SIP'))
-               contact.save()
-
-    def removePresenceContactForOurselves(self, account):
+    def removePresenceContactForOurselves(self):
+       # mysel contact was used in the past to replicate our own presence
        addressbook_manager = AddressbookManager()
        try:
            contact = addressbook_manager.get_contact('myself')
        except KeyError:
            pass
        else:
-           try:
-               uri = (uri for uri in contact.uris if uri.uri == account.id).next()
-           except StopIteration:
-               pass
-           else:
-               contact.uris.remove(uri)
-               contact.save()
+           contact.delete()
 
     def loadPresenceStateAtStart(self):
         settings = SIPSimpleSettings()
@@ -2359,54 +2334,75 @@ class ContactWindowController(NSWindowController):
         settings.save()
         self.savePresenceActivityToHistory(history_object)
 
-    def _NH_BlinkMyPresenceOnOtherDeviceDidChange(self, notification):
+    def _NH_SIPAccountGotSelfPresenceState(self, notification):
         settings = SIPSimpleSettings()
-        note = notification.data.note
-        status = notification.data.status
+        own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))
+        pidf = notification.data.pidf
+        for service in pidf.services:
+            if own_service_id == service.id:
+                continue
 
-        try:
-            selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
-        except StopIteration:
-            return
+            if service.user_input is not None and service.user_input.value == 'idle':
+                continue
 
-        change = False
-        if note != settings.presence_state.note:
-            self.presenceNoteText.setStringValue_(note)
-            settings.presence_state.note = note
-            change = True
+            status = str(service.status.extended)
+            notes = sorted([unicode(note) for note in service.notes if note])
+            try:
+                note = notes[0]
+            except IndexError:
+                note = ''
 
-        must_change_state = False
-        if self.presencePublisher.idle_mode:
-            if status == 'offline':
-                must_change_state = True
+            try:
+                last_published_timestamp = self.presencePublisher.last_service_timestamp[notification.sender.id]
+            except KeyError:
+                return
             else:
-                self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
-                self.presencePublisher.presenceStateBeforeIdle['note'] = note
-        else:
-            must_change_state = True
+                if last_published_timestamp.value >= service.timestamp.value:
+                    return
 
-        if must_change_state:
-            title = selected_presence_activity['title']
-            if title != settings.presence_state.status:
+            try:
+                selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
+            except StopIteration:
+                return
+
+            change = False
+            if note != settings.presence_state.note:
+                self.presenceNoteText.setStringValue_(note)
+                settings.presence_state.note = note
                 change = True
-                for item in self.presenceMenu.itemArray():
-                    item.setState_(NSOffState)
-                item = self.presenceMenu.itemWithTitle_(title)
-                if item is not None:
-                    item.setState_(NSOnState)
 
-                menu = self.presenceActivityPopUp.menu()
-                item = menu.itemWithTitle_(title)
-                self.presenceActivityPopUp.selectItem_(item)
+            must_change_state = False
+            if self.presencePublisher.idle_mode:
+                if status == 'offline':
+                    must_change_state = True
+                else:
+                    self.presencePublisher.presenceStateBeforeIdle = selected_presence_activity
+                    self.presencePublisher.presenceStateBeforeIdle['note'] = note
+            else:
+                must_change_state = True
 
-                settings.presence_state.status = title
-                self.setStatusBarIcon(status)
+            if must_change_state:
+                title = selected_presence_activity['title']
+                if title != settings.presence_state.status:
+                    change = True
+                    for item in self.presenceMenu.itemArray():
+                        item.setState_(NSOffState)
+                    item = self.presenceMenu.itemWithTitle_(title)
+                    if item is not None:
+                        item.setState_(NSOnState)
 
-        if change:
-            settings.save()
-            history_object = dict(selected_presence_activity)
-            history_object['note'] = note
-            self.savePresenceActivityToHistory(history_object)
+                    menu = self.presenceActivityPopUp.menu()
+                    item = menu.itemWithTitle_(title)
+                    self.presenceActivityPopUp.selectItem_(item)
+
+                    settings.presence_state.status = title
+                    self.setStatusBarIcon(status)
+
+            if change:
+                settings.save()
+                history_object = dict(selected_presence_activity)
+                history_object['note'] = note
+                self.savePresenceActivityToHistory(history_object)
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
