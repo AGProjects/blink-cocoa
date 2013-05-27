@@ -651,6 +651,8 @@
 		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
 		1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
+		1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
+		1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
 		1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
@@ -1191,6 +1193,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F27973A15D24F8800FB33D9 /* libgnutls-extra.26.dylib in Copy Frameworks */,
 				1F27973B15D24F8B00FB33D9 /* libgnutls.26.dylib in Copy Frameworks */,
@@ -1587,6 +1590,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
 				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
@@ -3585,7 +3589,9 @@
 					"$(inherited)",
 					/usr/local/lib,
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -3614,7 +3620,9 @@
 					"$(inherited)",
 					/usr/local/lib,
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
