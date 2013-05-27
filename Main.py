@@ -1,19 +1,15 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+import os
+import sys
+
 import Foundation
 assert Foundation.NSThread.isMultiThreaded()
 
-import os
-import sys
-import mimetypes
-
-
-# Add our python module directories to the python path
-resource_path = unicode(Foundation.NSBundle.mainBundle().resourcePath())
-sys.path.insert(0, os.path.join(resource_path, "lib"))
-
 # Make mimetypes use our copy of the file in order to work with sandboxing
+import mimetypes
+resource_path = unicode(Foundation.NSBundle.mainBundle().resourcePath())
 mimetypes.init(os.path.join(resource_path, "mime.types"))
 
 
