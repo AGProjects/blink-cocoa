@@ -157,7 +157,6 @@
 		1F22731D12B554F50010A8B2 /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
 		1F22732212B554F50010A8B2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		1F22732512B554F50010A8B2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
 		1F22732912B554F50010A8B2 /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
 		1F22732A12B554F50010A8B2 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
 		1F22732B12B554F50010A8B2 /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
@@ -480,7 +479,6 @@
 		1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F8DC3BF135084FA0034815C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
 		1F8DC3CD135084FA0034815C /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
 		1F8DC3CE135084FA0034815C /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
 		1F8DC3CF135084FA0034815C /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
@@ -782,7 +780,6 @@
 		1F94DE58168B336300168FBA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		1F94DE59168B336300168FBA /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F94DE5B168B336300168FBA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		1F94DE5C168B336300168FBA /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
 		1F94DE5D168B336300168FBA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1F94DE5E168B336300168FBA /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
 		1F94DE5F168B336300168FBA /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
@@ -1176,7 +1173,6 @@
 		2BFB34B510178AB7002D79FB /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
 		2BFB34B810178B34002D79FB /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		2BFB35541017E363002D79FB /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
-		77631A270C06C501005415CB /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77631A260C06C501005415CB /* Python.framework */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
 		85E8550710F643350083D346 /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
@@ -1192,6 +1188,8 @@
 		DE3A673013A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673113A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673213A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
+		DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
+		DE4E6F12174F9DBC00E1D5F9 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
 		DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
 		DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
 		DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
@@ -1303,6 +1301,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F22737112B5558A0010A8B2 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F22737212B5558A0010A8B2 /* libgnutls-extra.26.dylib in Copy Frameworks */,
 				1F22737312B5558A0010A8B2 /* libgnutls.26.dylib in Copy Frameworks */,
@@ -1949,7 +1948,6 @@
 		2BFB34B410178AB7002D79FB /* AlertPanelView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanelView.xib; path = English.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
 		2BFB34B710178B34002D79FB /* AlertPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanel.xib; path = English.lproj/AlertPanel.xib; sourceTree = "<group>"; };
 		2BFB35531017E363002D79FB /* blink.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = blink.icns; sourceTree = "<group>"; };
-		77631A260C06C501005415CB /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = /System/Library/Frameworks/Python.framework; sourceTree = "<absolute>"; };
 		8547A6C6114EB6E200AD84BF /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		8547A6C7114EB6E200AD84BF /* itunes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = itunes.py; sourceTree = "<group>"; };
 		85E8550310F643350083D346 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -1960,6 +1958,9 @@
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = CallTransferWindow.xib; path = English.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
+		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
+		DE4E6F0F174F9C0900E1D5F9 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
+		DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = Distribution/Frameworks/Python.framework/Versions/2.7/lib/libpython2.7.dylib; sourceTree = "<group>"; };
 		DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceFileCell.py; sourceTree = "<group>"; };
 		DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VirtualGroups.py; sourceTree = "<group>"; };
 		DEFD8C5E135DD6CD00456E86 /* resources.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = resources.py; sourceTree = "<group>"; };
@@ -1970,8 +1971,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE4E6F12174F9DBC00E1D5F9 /* libpython2.7.dylib in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
-				1F22732512B554F50010A8B2 /* Python.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 				1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */,
@@ -1983,7 +1984,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
-				1F8DC3CB135084FA0034815C /* Python.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
 				1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
@@ -1995,7 +1995,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F94DE5B168B336300168FBA /* Cocoa.framework in Frameworks */,
-				1F94DE5C168B336300168FBA /* Python.framework in Frameworks */,
 				1F94DE5D168B336300168FBA /* Security.framework in Frameworks */,
 				1F94DE5E168B336300168FBA /* Carbon.framework in Frameworks */,
 				1F94DE5F168B336300168FBA /* QTKit.framework in Frameworks */,
@@ -2010,7 +2009,6 @@
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				77631A270C06C501005415CB /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2039,13 +2037,13 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DE3AC1CA174F7F57009A6CE3 /* Python.framework */,
 				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
 				1F27973115D24E2C00FB33D9 /* Security.framework */,
 				1F27973315D24E3500FB33D9 /* Carbon.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
 				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
 				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
-				77631A260C06C501005415CB /* Python.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
 			);
@@ -2223,6 +2221,8 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
+				DE4E6F0F174F9C0900E1D5F9 /* Python.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -4137,9 +4137,10 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
-					/usr/local/lib,
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "010C3AE3-8FF5-4498-A418-BCDB705B5B00";
 				SDKROOT = macosx10.6;
@@ -4171,6 +4172,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
