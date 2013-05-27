@@ -950,6 +950,8 @@
 		1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
+		1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
+		1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
 		1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
@@ -1409,6 +1411,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
 				1F8DC406135084FA0034815C /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in Copy Frameworks */,
 				1F8DC408135084FA0034815C /* libgnutls.26.dylib in Copy Frameworks */,
@@ -1983,6 +1986,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
 				1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */,
@@ -2112,6 +2116,8 @@
 		1F2271F012B551AC0010A8B2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DE4E6F0F174F9C0900E1D5F9 /* Python.framework */,
+				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
 				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
 				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
 				1F22722712B554000010A8B2 /* libgnutls.26.dylib */,
@@ -2221,8 +2227,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
-				DE4E6F0F174F9C0900E1D5F9 /* Python.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -4176,6 +4180,8 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
+				"OTHER_CFLAGS[arch=*]" = "";
+				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "42FEA8EA-98F1-49EF-866F-269D2F589283";
 				SDKROOT = macosx10.6;
@@ -4208,7 +4214,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "768B0492-873A-4DB7-8306-A314F8BEDB37";
 				SDKROOT = macosx10.6;
@@ -4241,7 +4249,9 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "36BAB936-273A-4713-BEE9-72CA8E2A40BA";
 				SDKROOT = macosx10.6;
