@@ -577,6 +577,9 @@ class ContactWindowController(NSWindowController):
     def showWindow_(self, sender):
         super(ContactWindowController, self).showWindow_(sender)
 
+    def copyToSearchBar_(self, sender):
+        self.searchBox.setStringValue_(sender.representedObject())
+
     @objc.IBAction
     def showPendingRequests_(self, sender):
         self.model.renderPendingWatchersGroupIfNecessary(bring_in_focus=True)
@@ -3854,6 +3857,11 @@ class ContactWindowController(NSWindowController):
 
             else:
                 # Contact has a single URI
+                if isinstance(item, HistoryBlinkContact):
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.uri), "", "")
+                    mitem.setEnabled_(False)
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
@@ -3944,6 +3952,9 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistory:", "")
                         mitem.setRepresentedObject_((unicode(item.uri),))
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
+                    mitem.setRepresentedObject_(unicode(item.uri))
+
                 if not self.hasContactMatchingURI(item.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
