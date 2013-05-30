@@ -306,8 +306,8 @@ class SessionInfoController(NSObject):
                 self.audio_ice_remote_candidate.setStringValue_(candidate)
 
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
-                if ice_status:
-                    if self.audio_stream.stream.local_rtp_candidate.type != 'relay' and self.audio_stream.stream.remote_rtp_candidate.type != 'relay':
+                if self.audio_stream.stream.ice_active:
+                    if self.audio_stream.stream.local_rtp_candidate.type.lower() != 'relay' and self.audio_stream.stream.remote_rtp_candidate.type.lower() != 'relay':
                         ice_status += ' (Peer to Peer)'
                     else:
                         ice_status += ' (Server Relayed)'
