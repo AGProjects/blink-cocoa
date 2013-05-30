@@ -214,13 +214,13 @@ class FileLogger(object):
         settings = SIPSimpleSettings()
         if not settings.logs.trace_pjsip:
             return
-        message = "(%(level)d) %(sender)14s: %(message)s" % notification.data.__dict__
+        message = "(%(level)d) %(message)s" % notification.data.__dict__
         try:
             self._init_log_file('pjsiptrace')
         except Exception:
             pass
         else:
-            self._pjsiptrace_file.write('%s [%s %d] %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
+            self._pjsiptrace_file.write('[%s %d] %s\n' % (os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._pjsiptrace_file.flush()
 
     def _LH_DNSLookupTrace(self, notification):

@@ -1067,7 +1067,13 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'ICE negotiation succeeded')
-        self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.local_rtp_candidate_type, self.stream.remote_rtp_address, self.stream.remote_rtp_port, self.stream.remote_rtp_candidate_type))
+        
+        self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
+                                                                                             self.stream.local_rtp_port,
+                                                                                             self.stream.local_rtp_candidate.type.lower(),
+                                                                                             self.stream.remote_rtp_address,
+                                                                                             self.stream.remote_rtp_port,
+                                                                                             self.stream.remote_rtp_candidate.type.lower()))
 
         self.ice_negotiation_status = 'Success'
 
@@ -1134,9 +1140,17 @@ class AudioController(MediaStream):
 
         if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:
             if self.stream.ice_active:
-                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d (ICE type %s)\nRemote: %s:%d (ICE type %s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.local_rtp_candidate_type, self.stream.remote_rtp_address, self.stream.remote_rtp_port, self.stream.remote_rtp_candidate_type))
+                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d (ICE type %s)\nRemote: %s:%d (ICE type %s)' % (self.stream.local_rtp_address,
+                                                                                                                                self.stream.local_rtp_port,
+                                                                                                                                self.stream.local_rtp_candidate.type.lower(),
+                                                                                                                                self.stream.remote_rtp_address,
+                                                                                                                                self.stream.remote_rtp_port,
+                                                                                                                                self.stream.remote_rtp_candidate.type.lower()))
             else:
-                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address, self.stream.local_rtp_port, self.stream.remote_rtp_address, self.stream.remote_rtp_port))
+                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address,
+                                                                                                     self.stream.local_rtp_port,
+                                                                                                     self.stream.remote_rtp_address,
+                                                                                                     self.stream.remote_rtp_port))
 
         self.sessionInfoButton.setEnabled_(True)
         if self.sessionController.postdial_string is not None:
@@ -1195,13 +1209,19 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
-        if data.state == 'ICE Candidates Gathering':
+        if data.state == 'GATHERING':
             self.updateAudioStatusWithSessionState("Gathering ICE Candidates...")
-        elif data.state == 'ICE Session Initialized':
+        elif data.state == 'NEGOTIATION_START':
             self.updateAudioStatusWithSessionState("Connecting...")
-        elif data.state == 'ICE Negotiation In Progress':
+        elif data.state == 'NEGOTIATING':
             self.updateAudioStatusWithSessionState("Negotiating ICE...")
-
+        elif data.state == 'GATHERING_COMPLETE':
+            self.updateAudioStatusWithSessionState("Gathering Complete")
+        elif data.state == 'RUNNING':
+            self.updateAudioStatusWithSessionState("ICE Negotiation Succeeded")
+        elif data.state == 'FAILED':
+            self.updateAudioStatusWithSessionState("ICE Negotiation Failed")
+    
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         if data.failure_reason == 'DNS Lookup Failed':

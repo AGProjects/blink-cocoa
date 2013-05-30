@@ -344,12 +344,22 @@ class DebugWindow(NSObject):
         except StopIteration:
             return
 
-        text = '\n%s New Audio session %s\n' % (session.start_time, session.remote_identity)
+        text = u'\n%s New Audio session %s\n' % (session.start_time, session.remote_identity)
         if audio_stream.local_rtp_address and audio_stream.local_rtp_port and audio_stream.remote_rtp_address and audio_stream.remote_rtp_port:
             if audio_stream.ice_active:
-                text += '%s Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time, audio_stream.local_rtp_address, audio_stream.local_rtp_port, audio_stream.local_rtp_candidate_type, audio_stream.remote_rtp_address, audio_stream.remote_rtp_port, audio_stream.remote_rtp_candidate_type)
+                text += '%s Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time,
+                                                                                                  audio_stream.local_rtp_address,
+                                                                                                  audio_stream.local_rtp_port,
+                                                                                                  audio_stream.local_rtp_candidate.type.lower(),
+                                                                                                  audio_stream.remote_rtp_address,
+                                                                                                  audio_stream.remote_rtp_port,
+                                                                                                  audio_stream.remote_rtp_candidate.type.lower())
             else:
-                text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (session.start_time, audio_stream.local_rtp_address, audio_stream.local_rtp_port, audio_stream.remote_rtp_address, audio_stream.remote_rtp_port)
+                text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (session.start_time,
+                                                                      audio_stream.local_rtp_address,
+                                                                      audio_stream.local_rtp_port,
+                                                                      audio_stream.remote_rtp_address,
+                                                                      audio_stream.remote_rtp_port)
         if audio_stream.codec and audio_stream.sample_rate:
             text += '%s Audio session established using "%s" codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.srtp_active:
@@ -595,9 +605,13 @@ class DebugWindow(NSObject):
     def _NH_AudioStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
 
-        text = '%s Audio session to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
+        text = u'%s Audio session to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
         if stream.local_rtp_address and stream.local_rtp_port and stream.remote_rtp_address and stream.remote_rtp_port:
-            text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime, stream.local_rtp_address, stream.local_rtp_port, stream.remote_rtp_address, stream.remote_rtp_port)
+            text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime,
+                                                                  stream.local_rtp_address,
+                                                                  stream.local_rtp_port,
+                                                                  stream.remote_rtp_address,
+                                                                  stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
             text += '%s Audio session established using "%s" codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
         if stream.srtp_active:
@@ -610,17 +624,23 @@ class DebugWindow(NSObject):
         data = notification.data
         stream = notification.sender
 
-        text = '%s Audio session %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
-        text += u'%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime, stream.local_rtp_address, stream.local_rtp_port, stream.local_rtp_candidate_type, stream.remote_rtp_address, stream.remote_rtp_port, stream.remote_rtp_candidate_type)
+        text = u'%s Audio session %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        text += '%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
+                                                                                         stream.local_rtp_address,
+                                                                                         stream.local_rtp_port,
+                                                                                         stream.local_rtp_candidate.type.lower(),
+                                                                                         stream.remote_rtp_address,
+                                                                                         stream.remote_rtp_port,
+                                                                                         stream.remote_rtp_candidate.type.lower())
         text += '\nLocal ICE candidates:\n'
         for candidate in data.local_candidates:
-            text += '(%s)\t %-25s\t type %s\n' % ('RTP' if candidate[1]=='1' else 'RTCP', candidate[2], candidate[3])
+            text += '\t%s\n' % candidate
         text += '\nRemote ICE candidates:\n'
         for candidate in data.remote_candidates:
-            text += '(%s)\t %-25s\t type %s\n' % ('RTP' if candidate[1]=='1' else 'RTCP', candidate[2], candidate[3])
+            text += '\t%s\n' % candidate
         text += '\nICE connectivity checks results:\n'
-        for check in data.connectivity_checks_results:
-            text += '(%s)\t %s <--> %s \t%s\n' % ('RTP' if check[1]=='1' else 'RTCP', check[2], check[3], check[5])
+        for check in data.valid_list:
+            text += '\t%s\n' % check
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -635,8 +655,8 @@ class DebugWindow(NSObject):
 
     def _NH_SIPEngineLog(self, notification):
         if self.pjsipCheckBox.state() == NSOnState:
-            self.renderPJSIP("%s (%d) %14s: %s" % (notification.datetime, notification.data.level, notification.data.sender, notification.data.message))
-
+            self.renderPJSIP("(%d) %s" % (notification.data.level, notification.data.message))
+    
     def _NH_SIPEngineSIPTrace(self, notification):
         self.renderSIP(notification)
 

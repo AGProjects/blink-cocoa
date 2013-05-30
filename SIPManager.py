@@ -433,9 +433,10 @@ class SIPManager(object):
         self.cleanupIcons()
 
         # Set audio settings compatible with AEC and Noise Supressor
-        settings.audio.sample_rate = 16000
+        settings.audio.sample_rate = 32000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
         settings.save()
+        BlinkLogger().log_info(u"Audio engine is sampling at 32KHz covering up to 16KHz audio spectrum")
         BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
 
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
