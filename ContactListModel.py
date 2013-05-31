@@ -1905,8 +1905,9 @@ class CustomListModel(NSObject):
                     with addressbook_manager.transaction():
                         if target_changed:
                             targetContact.contact.save()
-                        if not isinstance(sourceContact, BlinkPendingWatcher):
-                            sourceContact.contact.delete()
+                        if isinstance(sourceContact, BlinkPresenceContact):
+                            sourceContact.contact.contact.delete()
+
                     return True
 
     def outlineView_writeItems_toPasteboard_(self, table, items, pboard):
