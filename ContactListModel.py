@@ -1869,9 +1869,9 @@ class CustomListModel(NSObject):
                     targetContact = targetGroup.contacts[self.drop_on_contact_index]
 
                     if (sourceContact.name == targetContact.name):
-                        message = u"Would you like to consolidate the two contacts into %s?" % targetContact.name
+                        message = u"Would you like to consolidate the two contacts into %s (%s)?" % (targetContact.name, targetContact.uri)
                     else:
-                        message = u"Would you like to merge %s and %s contacts into %s?" % (sourceContact.name, targetContact.name, targetContact.name)
+                        message = u"Would you like to merge %s and %s contacts into %s (%s)?" % (sourceContact.name, targetContact.name, targetContact.name, targetContact.uri)
 
                     merge_controller = MergeContactController(message)
                     ret = merge_controller.runModal_(message)
