@@ -1888,12 +1888,13 @@ class CustomListModel(NSObject):
                             targetContact.contact.presence.subscribe = True
                             target_changed = True
                     else:
-                        for new_uri in sourceContact.contact.uris:
-                            try:
-                                uri = next(uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri)
-                            except StopIteration:
-                                targetContact.contact.uris.add(new_uri)
-                                target_changed = True
+                        if sourceContact.contact is not None:
+                            for new_uri in sourceContact.contact.uris:
+                                try:
+                                    uri = next(uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri)
+                                except StopIteration:
+                                    targetContact.contact.uris.add(new_uri)
+                                    target_changed = True
 
                         if targetContact.avatar is DefaultUserAvatar() and sourceContact.avatar is not DefaultUserAvatar():
                             avatar = PresenceContactAvatar(sourceContact.avatar.icon)
