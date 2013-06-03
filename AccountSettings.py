@@ -157,6 +157,7 @@ class AccountSettings(NSObject):
             self.errorText.setHidden_(False)
             self.errorText.setStringValue_("Could not load Blink Server Tools page: authentication failure")
             self.spinWheel.stopAnimation_(None)
+            self.spinWheel2.stopAnimation_(None)
             self.loadingText.setHidden_(True)
         else:
             credential = NSURLCredential.credentialWithUser_password_persistence_(self._account.id.username, self._account.server.web_password or self._account.auth.password, NSURLCredentialPersistenceForSession)
