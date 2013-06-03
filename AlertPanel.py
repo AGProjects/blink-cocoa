@@ -414,7 +414,7 @@ class AlertPanel(NSObject, object):
                     btn = v.viewWithTag_(i)
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
 
-        if not has_audio_streams:
+        if not has_audio_streams or is_update_proposal:
             panelVmB.setHidden_(True)
         else:
             panelVmB.setHidden_(False)
