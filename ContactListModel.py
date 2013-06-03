@@ -159,7 +159,7 @@ def encode_icon(icon):
     except Exception:
         return None
     else:
-        return base64.b64encode(png_data)
+        return base64.b64encode(png_data.bytes().tobytes())
 
 
 def decode_icon(data):
@@ -2212,7 +2212,7 @@ class ContactListModel(CustomListModel):
                             contact.dialog.subscribe = dialog['subscribe']
                             contact.save()
 
-                            icon = backup_contact['icon']
+                            icon = decode_icon(backup_contact['icon'])
                             if icon:
                                 avatar = PresenceContactAvatar(icon)
                                 avatar.path = os.path.join(avatar.base_path, '%s.tiff' % contact.id)

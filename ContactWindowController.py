@@ -4292,7 +4292,7 @@ class ContactWindowController(NSWindowController):
                 tiff_data = image.TIFFRepresentation()
             bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
             png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-            self.saveUserIcon(str(png_data.bytes()), old_path=path)
+            self.saveUserIcon(png_data.bytes().tobytes(), old_path=path)
 
     def loadUserIcon(self):
         # Call this in the GUI thread
