@@ -2446,6 +2446,11 @@ class ContactListModel(CustomListModel):
                         self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
                         growl_sent = True
 
+                        nc_title = 'New Contact Request'
+                        nc_subtitle = u'From %s' % gui_watcher.name
+                        nc_body = 'This contact wishes to see your availability'
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
             for watcher in tmp_active_watchers.iterkeys():
                 uri = sip_prefix_pattern.sub('', watcher)
                 BlinkLogger().log_info(u"%s is subscribed to my availability for %s" % (uri, notification.sender.id))
@@ -2469,6 +2474,12 @@ class ContactListModel(CustomListModel):
                             growl_data.watcher = gui_watcher.name
                             self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
                             growl_sent = True
+
+                            nc_title = 'New Contact Request'
+                            nc_subtitle = u'From %s' % gui_watcher.name
+                            nc_body = 'This contact wishes to see your availability'
+                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
                 else:
                     # TODO: set displayname if it didn't have one?
                     pass

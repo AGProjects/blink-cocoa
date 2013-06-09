@@ -342,6 +342,11 @@ class SessionControllersManager(object):
                 growl_data.account = session.account.id.username + '@' + session.account.id.domain
                 self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
 
+                nc_title = 'Missed Call (' + ",".join(data.streams)  + ')'
+                nc_subtitle = 'From %s' % format_identity_to_string(session.remote_identity, check_contact=True, format='full')
+                nc_body = 'Missed call at %s' % data.timestamp.strftime("%Y-%m-%d %H:%M")
+                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
     def addControllerWithSession_(self, session):
         sessionController = SessionController.alloc().initWithSession_(session)
         self.sessionControllers.append(sessionController)

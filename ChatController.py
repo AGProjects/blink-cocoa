@@ -1075,6 +1075,11 @@ class ChatController(MediaStream):
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
                 NSApp.requestUserAttention_(NSInformationalRequest)
 
+                nc_title = 'Chat Message Received'
+                nc_subtitle = format_identity_to_string(sender, format='full')
+                nc_body = html2txt(message.body[0:400]) if message.content_type == 'text/html' else message.body[0:400]
+                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
             NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # save to history

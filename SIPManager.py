@@ -546,11 +546,21 @@ class SIPManager(object):
             return
         voice_messages = summary.summaries['voice-message']
         growl_data = NotificationData()
-        growl_data.new_messages = int(voice_messages['new_messages'])
-        growl_data.old_messages = int(voice_messages['old_messages'])
+        new_messages = int(voice_messages['new_messages'])
+        old_messages = int(voice_messages['old_messages'])
+        growl_data.new_messages = new_messages
+        growl_data.old_messages = old_messages
         MWIData.store(account, summary)
         if summary.messages_waiting and growl_data.new_messages > 0:
             self.notification_center.post_notification("GrowlGotMWI", sender=self, data=growl_data)
+
+            nc_title = 'New Voicemail Message' if new_messages == 1 else 'New Voicemail Messages'
+            nc_subtitle = 'On Voicemail Server'
+            if old_messages > 0:
+                nc_body = 'You have %d new and %d old voicemail messages' % (new_messages, old_messages)
+            else:
+                nc_body = 'You have %d new voicemail %s' % (new_messages, 'message' if new_messages == 1 else 'messages')
+            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):

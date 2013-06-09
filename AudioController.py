@@ -1096,6 +1096,11 @@ class AudioController(MediaStream):
         growl_data.timestamp = ISOTimestamp.now()
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
+        nc_title = 'Audio Session Recorded'
+        nc_subtitle = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='full')
+        nc_body = 'This audio session has been recorded'
+        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
     @run_in_gui_thread
     def _NH_AudioStreamDidChangeHoldState(self, sender, data):
         self.sessionController.log_info(u"%s requested %s"%(data.originator.title(),(data.on_hold and "hold" or "unhold")))

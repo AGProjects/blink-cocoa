@@ -974,6 +974,12 @@ class SessionHistoryReplicator(object):
                                     growl_data.account = str(account.id)
                                     self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                                     growl_notifications[remote_uri] = True
+
+                                    nc_title = 'Missed Call (' + media_type  + ')'
+                                    nc_subtitle = 'From %s' % format_identity_to_string(uri, check_contact=True, format='full')
+                                    nc_body = 'Missed call at %s' % start_time.strftime("%Y-%m-%d %H:%M")
+                                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
         except (KeyError, ValueError):
             pass
         except Exception, e:

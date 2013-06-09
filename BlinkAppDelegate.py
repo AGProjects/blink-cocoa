@@ -64,6 +64,7 @@ class BlinkAppDelegate(NSObject):
     aboutSlogan = objc.IBOutlet()
     aboutCopyright = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
+    ui_notification_center = None
 
     debug = False
 
@@ -102,6 +103,28 @@ class BlinkAppDelegate(NSObject):
 
         return self
 
+    def gui_notify(self, title, body, subtitle=None):
+        major, minor = platform.mac_ver()[0].split('.')[0:2]
+        if (int(major) == 10 and int(minor) >= 8) or int(major) > 10:
+            if self.ui_notification_center is None:
+                self.ui_notification_center = NSUserNotificationCenter.defaultUserNotificationCenter()
+                self.ui_notification_center.setDelegate_(self)
+
+            notification = NSUserNotification.alloc().init()
+            notification.setTitle_(title)
+            if subtitle is not None:
+                notification.setSubtitle_(subtitle)
+            notification.setInformativeText_(body)
+            self.ui_notification_center.scheduleNotification_(notification)
+
+    def userNotificationCenter_didDeliverNotification_(self, center, notification):
+        pass
+
+    def userNotificationCenter_didActivateNotification_(self, center, notification):
+        pass
+
+    def userNotificationCenter_shouldPresentNotification_(self, center, notification):
+        return True
 
     # Needed by run_in_gui_thread and call_in_gui_thread
     def callObject_(self, callable):

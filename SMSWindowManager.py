@@ -337,12 +337,17 @@ class SMSWindowManagerClass(NSObject):
 
         if not self.windowForViewer(viewer).window().isKeyWindow():
             # notify growl
-            growl_data = NotificationData()
             if is_html:
-                growl_data.content = html2txt(body)
+                nc_body = html2txt(body)
             else:
-                growl_data.content = body
+                nc_body = body
+
+            growl_data = NotificationData()
+            growl_data.content = nc_body
             growl_data.sender = format_identity_to_string(sender_identity, format='compact')
             self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
 
+            nc_title = 'SMS Message Received'
+            nc_subtitle = format_identity_to_string(sender_identity, format='full')
+            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
