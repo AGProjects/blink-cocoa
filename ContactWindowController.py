@@ -2347,6 +2347,9 @@ class ContactWindowController(NSWindowController):
 
             if service.user_input is not None and service.user_input.value == 'idle':
                 continue
+        
+            if service.timestamp is None:
+                continue
 
             status = str(service.status.extended)
             notes = sorted([unicode(note) for note in service.notes if note])
