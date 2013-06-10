@@ -1547,7 +1547,6 @@ PreferenceOptionTypes = {
 #"tls.ca_list": TLSCAListPathOption,
 "tls.ca_list": HiddenOption,
 "tls.certificate": TLSCertificatePathOption,
-"tls.protocol" : HiddenOption,
 "tls.timeout" : HiddenOption,
 "xcap.discovered": HiddenOption,
 "UserIcon": HiddenOption
