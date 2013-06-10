@@ -1335,7 +1335,10 @@ class ChatWindowController(NSWindowController):
                     if isinstance(contact, BlinkPresenceContact):
                         # Find the contact from the all contacts group
                         model = NSApp.delegate().contactsWindowController.model
-                        presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == contact.contact)
+                        try:
+                            presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == contact.contact)
+                        except StopIteration:
+                            presence_contact = None
                     else:
                         presence_contact = None
                     contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon, presence_contact=presence_contact)
