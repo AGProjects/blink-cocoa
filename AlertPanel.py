@@ -872,7 +872,7 @@ class AlertPanel(NSObject, object):
 
         view = self.sessions[session]
         captionT = view.viewWithTag_(1)
-        captionT.setStringValue_(reason)
+        captionT.setStringValue_(reason or u'')
         captionT.sizeToFit()
         for i in (5, 6, 7, 8):
             view.viewWithTag_(i).setEnabled_(False)
