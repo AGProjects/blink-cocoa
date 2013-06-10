@@ -1538,8 +1538,8 @@ class SessionController(NSObject):
             status = u"Connection refused"
             self.failureReason = data.failure_reason
         elif data.failure_reason != 'user request':
-            status = u"%s" % data.failure_reason
-            self.failureReason = data.failure_reason
+            status = u"%s" % data.failure_reason.decode('utf-8')
+            self.failureReason = status
         elif data.reason:
             status = u"%s" % data.reason
             self.failureReason = data.reason
