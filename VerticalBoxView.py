@@ -11,7 +11,7 @@ class VerticalBoxView(NSView):
     def initWithFrame_(self, frame):
         self = super(VerticalBoxView, self).initWithFrame_(frame)
         if self:
-            self.backgroundColor = None
+            super(VerticalBoxView, self).setBackgroundColor_(None)
             self.spacing = 0
             self.border = 0
         return self
@@ -35,7 +35,7 @@ class VerticalBoxView(NSView):
         return True
 
     def setBackgroundColor_(self, color):
-        self.backgroundColor = color
+        super(VerticalBoxView, self).setBackgroundColor_(color)
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
