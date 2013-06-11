@@ -4175,6 +4175,7 @@ class ContactWindowController(NSWindowController):
                 pass
             else:
                 if isinstance(contact, BlinkPresenceContact):
+                    settings = SIPSimpleSettings()
                     aor_supports_screen_sharing_server = not settings.gui.use_availability_for_sessions or any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
                     aor_supports_screen_sharing_client = not settings.gui.use_availability_for_sessions or  any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
                 elif isinstance(contact, BonjourBlinkContact):
