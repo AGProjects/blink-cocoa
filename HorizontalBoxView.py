@@ -8,7 +8,7 @@ class HorizontalBoxView(NSView):
     def initWithFrame_(self, frame):
         self = super(HorizontalBoxView, self).initWithFrame_(frame)
         if self:
-            self.backgroundColor = None
+            self.background_color = None
             self.spacing = 0
             self.border = 0
             self.expandingViews = set()
@@ -44,12 +44,12 @@ class HorizontalBoxView(NSView):
         return True
 
     def setBackgroundColor_(self, color):
-        self.backgroundColor = color
+        self.background_color = color
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
-        if self.backgroundColor:
-            self.backgroundColor.set()
+        if self.background_color:
+            self.background_color.set()
             NSRectFill(rect)
         #NSColor.redColor().set()
         #NSFrameRect(rect)

@@ -468,7 +468,7 @@ class MapView(NSView):
     def initWithFrame_(self, frame):
         self = super(MapView, self).initWithFrame_(frame)
         if self:
-            self.backgroundColor = NSColor.colorWithDeviceRed_green_blue_alpha_(234.0/255.0, 247.0/255.0, 254.0/255.0, 1.0)
+            self.background_color = NSColor.colorWithDeviceRed_green_blue_alpha_(234.0/255.0, 247.0/255.0, 254.0/255.0, 1.0)
             self.color = NSColor.whiteColor()
             self.selectedColor = NSColor.redColor()
             self.textColor = NSColor.blackColor()
@@ -524,7 +524,7 @@ class MapView(NSView):
 
     @allocate_autorelease_pool
     def drawRect_(self, rect):
-        self.backgroundColor.set()
+        self.background_color.set()
         NSRectFill(rect)
         ratioX = rect.size.width / 9635
         ratioY = rect.size.height / 5800
@@ -715,7 +715,7 @@ class MapView(NSView):
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, sender)
 
     def dealloc(self):
-        self.backgroundColor.release()
+        self.background_color.release()
         self.color.release()
         self.selectedColor.release()
         self.selectedCountries = {}
