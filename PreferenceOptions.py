@@ -491,7 +491,7 @@ class MultipleSelectionOption(Option):
 
 class AudioCodecListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
-        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 105))
+        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 125))
 
     def __init__(self, object, name, option, description=None):
         MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=100, description=description)
