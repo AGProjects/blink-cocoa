@@ -9,7 +9,7 @@ __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
-from sipsimple.configuration.settings import AudioSettings, ChatSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, TLSSettings
+from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
@@ -74,6 +74,10 @@ class GUISettings(SettingsGroup):
     extended_debug = Setting(type=bool, default=False)
 
 
+class RTPSettingsExtension(RTPSettings):
+    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'speex', 'G722', 'PCMU', 'PCMA')))
+
+            
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
     about_url = Setting(type=HTTPURL, default=None, nillable=True)
@@ -125,6 +129,7 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     service_provider = ServiceProviderSettings
     sounds = SoundsSettings
     tls = TLSSettingsExtension
+    rtp = RTPSettingsExtension
     contacts = ContactsSettings
     gui = GUISettings
     presence_state = PresenceStateSettings
