@@ -433,7 +433,7 @@ class SIPManager(object):
         self.cleanupIcons()
 
         # Set audio settings compatible with AEC and Noise Supressor
-        settings.audio.sample_rate = 32000
+        settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
         settings.save()
         BlinkLogger().log_info(u"Audio engine is sampling at 32KHz covering up to 16KHz audio spectrum")
@@ -572,6 +572,7 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
+            settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
             settings.save()
 
     @run_in_green_thread
