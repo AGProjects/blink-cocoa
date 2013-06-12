@@ -519,10 +519,12 @@ class AudioController(MediaStream):
             if self.answeringMachine:
                 self.audioStatus.setStringValue_(u"Answering machine active")
             elif self.stream.sample_rate and self.stream.codec:
-                if self.stream.sample_rate > 8000:
-                    hd_label = 'HD Audio'
+                if self.stream.sample_rate >= 32000:
+                    hd_label = 'UWB Audio'
+                elif self.stream.sample_rate >= 16000:
+                    hd_label = 'WB Audio'
                 else:
-                    hd_label = 'Audio'
+                    hd_label = 'NB Audio'
                 self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, self.stream.codec, self.stream.sample_rate/1000))
 
         self.audioStatus.sizeToFit()
