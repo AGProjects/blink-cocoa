@@ -538,8 +538,6 @@
 		1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
-		1F9268FD1486C3B5006F2FD8 /* EMKeychainItem.h in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F414868A82006F2FD8 /* EMKeychainItem.h */; };
-		1F9268FE1486C3BB006F2FD8 /* EMKeychainItem.m in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9406C014307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C114307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
 		1F9406C214307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
@@ -981,8 +979,6 @@
 			files = (
 				1F22735E12B554F50010A8B2 /* __init__.py in Copy Interfaces Package */,
 				1F22735F12B554F50010A8B2 /* itunes.py in Copy Interfaces Package */,
-				1F9268FE1486C3BB006F2FD8 /* EMKeychainItem.m in Copy Interfaces Package */,
-				1F9268FD1486C3B5006F2FD8 /* EMKeychainItem.h in Copy Interfaces Package */,
 			);
 			name = "Copy Interfaces Package";
 			runOnlyForDeploymentPostprocessing = 0;
