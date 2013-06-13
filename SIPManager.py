@@ -436,7 +436,7 @@ class SIPManager(object):
         settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
         settings.save()
-        BlinkLogger().log_info(u"Audio engine is sampling at 32KHz covering up to 16KHz audio spectrum")
+        BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
         BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
 
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
@@ -574,6 +574,8 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
             settings.audio.sample_rate = 32000 if settings.audio.enable_aec and settings.audio.sample_rate not in ('16000', '32000') else 48000
+            BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
+            BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.save()
                                 
     @run_in_green_thread
@@ -588,7 +590,7 @@ class SIPManager(object):
     def _NH_SystemDidWakeUpFromSleep(self, sender, data):
         bonjour_account = BonjourAccount()
         if not bonjour_account.enabled and self.bonjour_disabled_on_sleep:
-            BlinkLogger().log_info(u"Enabling Bonjour discovery after wake")
+            BlinkLogger().log_info(u"Enabling Bonjour discovery after wakeup from sleep")
             bonjour_account.enabled=True
             self.bonjour_disabled_on_sleep=False
 

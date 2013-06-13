@@ -268,7 +268,8 @@ class SessionInfoController(NSObject):
             self.audio_jitter.setStringValue_('%.1f ms' % self.audio_stream.statistics['jitter'])
 
             if self.audio_stream.stream.codec and self.audio_stream.stream.sample_rate:
-                self.audio_codec.setStringValue_(self.audio_stream.stream.codec)
+                codec = beautify_audio_codec(self.audio_stream.stream.codec)
+                self.audio_codec.setStringValue_(codec)
                 try:
                     self.audio_sample_rate.setStringValue_("%0.fkHz" % (self.audio_stream.stream.sample_rate/1000))
                 except TypeError:
@@ -287,7 +288,7 @@ class SessionInfoController(NSObject):
             if self.audio_stream.stream.ice_active:
                 if self.audio_stream.stream.local_rtp_candidate is not None:
                     try:
-                        candidate = ice_candidates[self.audio_stream.stream.local_rtp_candidate.type]
+                        candidate = ice_candidates[self.audio_stream.stream.local_rtp_candidate.type.lower()]
                     except KeyError:
                         candidate = self.audio_stream.stream.local_rtp_candidate.type.capitalize()
                 else:
@@ -297,7 +298,7 @@ class SessionInfoController(NSObject):
 
                 if self.audio_stream.stream.remote_rtp_candidate is not None:
                     try:
-                        candidate = ice_candidates[self.audio_stream.stream.remote_rtp_candidate.type]
+                        candidate = ice_candidates[self.audio_stream.stream.remote_rtp_candidate.type.lower()]
                     except KeyError:
                         candidate = self.audio_stream.stream.remote_rtp_candidate.type.capitalize()
                 else:

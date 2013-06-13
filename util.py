@@ -1,7 +1,7 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-__all__ = ['allocate_autorelease_pool', 'call_in_gui_thread', 'run_in_gui_thread',
+__all__ = ['allocate_autorelease_pool', 'beautify_audio_codec', 'call_in_gui_thread', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'BLINK_URL_TOKEN',
@@ -379,6 +379,19 @@ def translate_alpha2digit(key):
         letter_map = dict((letter, digit) for digit, letter_group in digit_map.iteritems() for letter in letter_group)
         translate_alpha2digit.letter_map = letter_map
     return letter_map.get(key.upper(), key)
+
+
+def beautify_audio_codec(codec):
+    if codec.startswith('PCM'):
+        codec = 'G.711'
+    elif codec == 'G722':
+        codec = 'G.722'
+    elif codec == 'opus':
+        codec = 'OPUS'
+    elif codec == 'speex':
+        codec = 'Speex'
+
+    return codec
 
 
 class AccountInfo(object):
