@@ -568,13 +568,14 @@ class SIPManager(object):
             if 'message_summary.enabled' in data.modified:
                 if not account.message_summary.enabled:
                     MWIData.remove(account)
+
         if 'audio.enable_aec' in data.modified:
             settings = SIPSimpleSettings()
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
-            settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
+            settings.audio.sample_rate = 32000 if settings.audio.enable_aec and settings.audio.sample_rate not in ('16000', '32000') else 48000
             settings.save()
-
+                                
     @run_in_green_thread
     def _NH_SystemWillSleep(self, sender, data):
         bonjour_account = BonjourAccount()
