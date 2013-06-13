@@ -1080,6 +1080,11 @@ class BlinkPresenceContact(BlinkContact):
             if wining_status == 'busy' and device['status'] != 'busy':
                 # only show busy notes
                 continue
+
+            if wining_status != 'offline' and device['status'] == 'offline':
+                # skip notes from offline devices if winning status is not offline
+                continue
+
             for note in device['notes']:
                 presence_notes.append('%s %s' % (note, device['local_time']) if device['local_time'] is not None else note)
 
