@@ -1780,15 +1780,17 @@ class ContactWindowController(NSWindowController):
             display_name = ''
         else:
             selected_contact = contact
-            local_aors = set()
-            if isinstance(selected_contact, BlinkPresenceContact):
-                for device in contact.presence_state['devices'].values():
-                    for device_account in device['accounts']:
-                        local_aors.add(device_account)
-                if local_aors and AccountManager().default_account.id not in local_aors:
-                    random_local_aor = local_aors.pop()
-                    account = AccountManager().get_account(random_local_aor)
-                    BlinkLogger().log_info('Use account %s for which we are authorized instead of default selected account' % account.id)
+            settings = SIPSimpleSettings()
+            if settings.gui.use_availability_for_sessions:
+                local_aors = set()
+                if isinstance(selected_contact, BlinkPresenceContact):
+                    for device in contact.presence_state['devices'].values():
+                        for device_account in device['accounts']:
+                            local_aors.add(device_account)
+                    if local_aors and AccountManager().default_account.id not in local_aors:
+                        random_local_aor = local_aors.pop()
+                        account = AccountManager().get_account(random_local_aor)
+                        BlinkLogger().log_info('Use account %s for which we are authorized instead of default selected account' % account.id)
             if uri:
                 target = uri
             else:
