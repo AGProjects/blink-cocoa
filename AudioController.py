@@ -515,17 +515,29 @@ class AudioController(MediaStream):
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
             self.audioStatus.setStringValue_(u"Hold by Remote")
         else:
-            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
             if self.answeringMachine:
                 self.audioStatus.setStringValue_(u"Answering machine active")
             elif self.stream.sample_rate and self.stream.codec:
+                codec = self.stream.codec
+                if self.stream.codec.startswith('PCM'):
+                    codec = 'G.711'
+                elif self.stream.codec == 'G722':
+                    codec = 'G.722'
+                elif self.stream.codec == 'opus':
+                    codec = 'OPUS'
+                elif self.stream.codec == 'speex':
+                    codec = 'Speex'
+                
                 if self.stream.sample_rate >= 32000:
+                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     hd_label = 'UWB Audio'
                 elif self.stream.sample_rate >= 16000:
+                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
                     hd_label = 'WB Audio'
                 else:
+                    self.audioStatus.setTextColor_(NSColor.blackColor())
                     hd_label = 'NB Audio'
-                self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, self.stream.codec, self.stream.sample_rate/1000))
+                self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, self.stream.sample_rate/1000))
 
         self.audioStatus.sizeToFit()
 
