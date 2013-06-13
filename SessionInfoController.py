@@ -13,11 +13,13 @@ from application.python import Null
 from zope.interface import implements
 from util import *
 
+from sipsimple.configuration.settings import SIPSimpleSettings
+
 from MediaStream import *
 
 ice_candidates= {'srflx': 'Server Reflexive',
                  'prflx': 'Peer Reflexive',
-                 'host': 'Host',
+                 'host':  'Host',
                  'relay': 'Server Relay'
                  }
 
@@ -271,7 +273,11 @@ class SessionInfoController(NSObject):
                 codec = beautify_audio_codec(self.audio_stream.stream.codec)
                 self.audio_codec.setStringValue_(codec)
                 try:
-                    self.audio_sample_rate.setStringValue_("%0.fkHz" % (self.audio_stream.stream.sample_rate/1000))
+                    settings = SIPSimpleSettings()
+                    sample_rate = self.audio_stream.stream.sample_rate/1000
+                    if self.audio_stream.stream.codec == 'opus' and settings.audio.enable_aec:
+                        sample_rate =  32
+                    self.audio_sample_rate.setStringValue_("%0.fkHz" % sample_rate)
                 except TypeError:
                     pass
                 self.audio_srtp_active.setStringValue_('Enabled' if self.audio_stream.stream.srtp_active else 'Disabled')
