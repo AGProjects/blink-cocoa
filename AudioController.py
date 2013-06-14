@@ -1064,8 +1064,7 @@ class AudioController(MediaStream):
         #self.end()
 
     @run_in_gui_thread
-    def _NH_AudioStreamDidReallyTimeout(self, sender, data):
-        # TODO: fix middleware to not reset statistics -adi
+    def _NH_AudioStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
             self.sessionController.log_info(u'Audio stream timeout, ending audio stream')
             self.end()
