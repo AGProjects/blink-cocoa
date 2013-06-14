@@ -674,9 +674,9 @@ class BlinkPresenceContact(BlinkContact):
             if self.log_presence_transitions:
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][resource.uri] = True
-                    BlinkLogger().log_info(u"Subscription from %s for availability of %s is pending" % (notification.sender.id, uri_text))
+                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (notification.sender.id, uri_text))
                 if resource.state == 'terminated':
-                    BlinkLogger().log_info(u"Subscription from %s for availability of %s is terminated" % (notification.sender.id, uri_text))
+                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (notification.sender.id, uri_text))
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -846,7 +846,7 @@ class BlinkPresenceContact(BlinkContact):
                         if something_has_changed and service.id:
                             prefix = 'My device' if notification.sender.id == uri_text else 'Device'
                             log_line = u"%s %s of %s is %s" % (prefix, device_text, uri_text, device_wining_status)
-                            BlinkLogger().log_info(log_line)
+                            BlinkLogger().log_debug(log_line)
                             message= '<h3>Availability Information</h3>'
                             message += '<p>%s' % log_line
                             media_type = 'availability'
@@ -2440,7 +2440,7 @@ class ContactListModel(CustomListModel):
             for watcher in all_pending_watchers.itervalues():
                 if not self.presencePolicyExistsForURI_(watcher.sipuri):
                     uri = sip_prefix_pattern.sub('', watcher.sipuri)
-                    BlinkLogger().log_info(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
+                    BlinkLogger().log_debug(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
                     gui_watcher = BlinkPendingWatcher(watcher)
                     self.pending_watchers_group.contacts.append(gui_watcher)
 
@@ -2458,7 +2458,7 @@ class ContactListModel(CustomListModel):
 
             for watcher in tmp_active_watchers.iterkeys():
                 uri = sip_prefix_pattern.sub('', watcher)
-                BlinkLogger().log_info(u"%s is subscribed to my availability for %s" % (uri, notification.sender.id))
+                BlinkLogger().log_debug(u"%s is subscribed to my availability for %s" % (uri, notification.sender.id))
 
         elif notification.data.state == 'partial':
             growl_sent = False
@@ -2469,7 +2469,7 @@ class ContactListModel(CustomListModel):
                 except StopIteration:
                     uri = sip_prefix_pattern.sub('', watcher.sipuri)
                     if not self.presencePolicyExistsForURI_(watcher.sipuri):
-                        BlinkLogger().log_info(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
+                        BlinkLogger().log_debug(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
@@ -2492,7 +2492,7 @@ class ContactListModel(CustomListModel):
             terminated_watchers = set([watcher.sipuri for watcher in watcher_list.terminated])
             for sipuri in terminated_watchers:
                 uri = sip_prefix_pattern.sub('', sipuri)
-                BlinkLogger().log_info(u"Subscription to my availability for %s from %s is terminated" % (notification.sender.id, uri))
+                BlinkLogger().log_debug(u"Subscription to my availability for %s from %s is terminated" % (notification.sender.id, uri))
                 try:
                     gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
                 except StopIteration:
