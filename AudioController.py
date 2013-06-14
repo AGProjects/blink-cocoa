@@ -532,7 +532,7 @@ class AudioController(MediaStream):
                     hd_label = 'WB Audio'
                 else:
                     self.audioStatus.setTextColor_(NSColor.blackColor())
-                    hd_label = 'NB Audio'
+                    hd_label = 'PSTN Audio'
                 self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
 
         self.audioStatus.sizeToFit()
