@@ -95,6 +95,7 @@ class AudioController(MediaStream):
     status = STREAM_IDLE
     normal_height = 59
     zrtp_height = 118
+    hangup_reason = None
 
 
     @classmethod
@@ -195,6 +196,7 @@ class AudioController(MediaStream):
         if self.timer is not None and self.timer.isValid():
             self.timer.invalidate()
         self.timer = None
+        self.hangup_reason = None
         self.view.removeFromSuperview()
         self.view.release()
         super(AudioController, self).dealloc()
@@ -640,7 +642,8 @@ class AudioController(MediaStream):
                 if fail_reason == "remote":
                     self.updateAudioStatusWithSessionState(u"Session Ended by Remote")
                 elif fail_reason == "local":
-                    self.updateAudioStatusWithSessionState(u"Session Ended")
+                    print_status = self.hangup_reason if self.hangup_reason else u"Session Ended"
+                    self.updateAudioStatusWithSessionState(print_status)
                 else:
                     self.updateAudioStatusWithSessionState(fail_reason)
             self.audioStatus.sizeToFit()
@@ -1066,7 +1069,8 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_AudioStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
-            self.sessionController.log_info(u'Audio stream timeout, ending audio stream')
+            self.sessionController.log_info(u'Audio stream has timeout, ending audio stream')
+            self.hangup_reason = u"Audio Timeout"
             self.end()
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
