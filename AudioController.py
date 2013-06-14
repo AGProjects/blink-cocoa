@@ -76,6 +76,7 @@ class AudioController(MediaStream):
     audioEndTime = None
     timer = None
     statistics_timer = None
+    last_stats = None
     transfer_timer = None
     hangedUp = False
     transferred = False
@@ -727,25 +728,19 @@ class AudioController(MediaStream):
         self.view.setFrame_(frame)
 
     def updateStatisticsTimer_(self, timer):
-        self.getStatistics()
-
-    def getStatistics(self):
         if not self.stream:
             return
-
         stats = self.stream.statistics
-        if stats is not None:
-            jitter = float(stats['rx']['jitter']['avg']) / 1000 + float(stats['tx']['jitter']['avg']) / 1000
-            rtt = stats['rtt']['avg'] / 1000
-            loss = 100.0 * stats['rx']['packets_lost'] / stats['rx']['packets'] if stats['rx']['packets'] else 0
-            if loss > 100:
-                loss = 100.0
-
-            self.statistics['loss']=loss
-            if jitter:
-                self.statistics['jitter']=jitter
-            if rtt:
-                self.statistics['rtt']=rtt
+        if stats is not None and self.last_stats is not None:
+            jitter = stats['rx']['jitter']['last'] / 1000.0 + stats['tx']['jitter']['last'] / 1000.0
+            rtt = stats['rtt']['last'] / 1000
+            rx_packets = stats['rx']['packets'] - self.last_stats['rx']['packets']
+            rx_lost_packets = stats['rx']['packets_lost'] - self.last_stats['rx']['packets_lost']
+            loss = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
+            self.statistics['loss'] = loss
+            self.statistics['jitter'] = jitter
+            self.statistics['rtt'] = rtt
+        self.last_stats = stats
 
     def updateDuration(self):
         if not self.session:
