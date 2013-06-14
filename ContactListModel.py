@@ -1453,22 +1453,6 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.timer.invalidate()
             self.timer = None
 
-    def format_date(self, dt):
-        if not dt:
-            return "unknown"
-        now = datetime.datetime.now()
-        delta = now - dt
-        if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
-            return dt.strftime("at %H:%M")
-        elif delta.days <= 1:
-            return "Yesterday at %s" % dt.strftime("%H:%M")
-        elif delta.days < 7:
-            return dt.strftime("on %A")
-        elif delta.days < 300:
-            return dt.strftime("on %B %d")
-        else:
-            return dt.strftime("on %Y-%m-%d")
-
     @run_in_green_thread
     def load_history(self):
         results = self.get_history_entries()
@@ -1498,7 +1482,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                     icon = None
                 name = 'Anonymous' if is_anonymous(target_uri) else name
                 blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=name)
-                blink_contact.detail = u'%s call %s' % (self.type.capitalize(), self.format_date(result.start_time))
+                blink_contact.detail = u'%s call %s' % (self.type.capitalize(), format_date(result.start_time))
                 blink_contact.contact = contact
                 contacts.append(blink_contact)
 

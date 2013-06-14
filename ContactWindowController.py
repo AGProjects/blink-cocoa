@@ -382,6 +382,9 @@ class ContactWindowController(NSWindowController):
         self.audioPreviewOutputForLevelMeter.setVolume_(0.0)
         self.audioInputSessionForLevelMeter.addOutput_error_(self.audioPreviewOutputForLevelMeter, None)
 
+        self.missed_calls_submenu = NSMenu.alloc().init()
+        self.missed_calls_submenu.setAutoenablesItems_(False)
+
         self.loaded = True
 
     @property
@@ -3007,24 +3010,25 @@ class ContactWindowController(NSWindowController):
 
     @run_in_green_thread
     @allocate_autorelease_pool
+    def get_missed_calls_entries_for_contact(self, contact):
+        session_history = SessionHistory()
+        if contact.uris:
+            remote_uris = list(uri.uri for uri in contact.uris)
+            results = session_history.get_entries(direction='incoming', status='missed', count=10, remote_focus="0", remote_uris=remote_uris)        
+            self.renderMissedCallsEntriesForContact(results)
+
+    @run_in_gui_thread
+    def renderMissedCallsEntriesForContact(self, results):
+        while self.missed_calls_submenu.numberOfItems() > 0:
+            self.missed_calls_submenu.removeItemAtIndex_(0)
+
+        for result in results:
+            r_item = self.missed_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_('From %s %s' % (result.remote_uri, format_date(result.start_time)), "", "", 0)
+
+
+    @run_in_green_thread
+    @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
-
-        def format_date(dt):
-            if not dt:
-                return "unknown"
-            now = datetime.now()
-            delta = now - dt
-            if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
-                return dt.strftime("at %H:%M")
-            elif delta.days <= 1:
-                return "Yesterday at %s" % dt.strftime("%H:%M")
-            elif delta.days < 7:
-                return dt.strftime("on %A")
-            elif delta.days < 300:
-                return dt.strftime("on %B %d")
-            else:
-                return dt.strftime("on %Y-%m-%d")
-
         entries = {'incoming': [], 'outgoing': [], 'missed': [], 'conferences': []}
 
         session_history = SessionHistory()
@@ -3923,6 +3927,10 @@ class ContactWindowController(NSWindowController):
 
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
                         self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
+
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Missed Calls", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(self.missed_calls_submenu, mitem)
+                    self.get_missed_calls_entries_for_contact(item)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

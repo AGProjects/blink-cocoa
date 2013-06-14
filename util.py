@@ -2,7 +2,7 @@
 #
 
 __all__ = ['allocate_autorelease_pool', 'beautify_audio_codec', 'call_in_gui_thread', 'run_in_gui_thread',
-           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
+           'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'BLINK_URL_TOKEN',
            'AccountInfo', 'DictDiffer']
@@ -10,6 +10,7 @@ __all__ = ['allocate_autorelease_pool', 'beautify_audio_codec', 'call_in_gui_thr
 import platform
 import re
 import shlex
+from datetime import datetime
 
 from application.python.decorator import decorator, preserve_signature
 
@@ -18,7 +19,6 @@ from Foundation import NSAutoreleasePool, NSThread
 
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import SIPURI, FrozenSIPURI, SIPCoreError
-
 
 osx_version = re.match("(?P<major>\d+.\d+)(?P<minor>.\d+)?", platform.mac_ver()[0]).groupdict()['major']
 
@@ -392,6 +392,23 @@ def beautify_audio_codec(codec):
         codec = 'Speex'
 
     return codec
+
+
+def format_date(dt):
+    if not dt:
+        return "unknown"
+    now = datetime.now()
+    delta = now - dt
+    if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
+        return dt.strftime("at %H:%M")
+    elif delta.days <= 1:
+        return "Yesterday at %s" % dt.strftime("%H:%M")
+    elif delta.days < 7:
+        return dt.strftime("on %A")
+    elif delta.days < 300:
+        return dt.strftime("on %B %d")
+    else:
+        return dt.strftime("on %Y-%m-%d")
 
 
 class AccountInfo(object):

@@ -204,7 +204,7 @@ class SessionHistory(object):
             return False
 
     @run_in_db_thread
-    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag):
+    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris):
         query='1=1'
         if call_id:
             query += " and sip_callid = %s" % SessionHistoryEntry.sqlrepr(call_id)
@@ -218,6 +218,14 @@ class SessionHistory(object):
             query += " and status = %s" % SessionHistoryEntry.sqlrepr(status)
         if remote_focus:
             query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
+    
+        if remote_uris:
+            remote_uris_sql = ''
+            for uri in remote_uris:
+                remote_uris_sql += "%s," % SessionHistoryEntry.sqlrepr(unicode(uri))
+            remote_uris_sql = remote_uris_sql.rstrip(",")
+            query += " and remote_uri in (%s)" % remote_uris_sql
+                
         query += " order by start_time desc limit %d" % count
         try:
             return list(SessionHistoryEntry.select(query))
@@ -225,8 +233,8 @@ class SessionHistory(object):
             BlinkLogger().log_error(u"Error getting entries from sessions history table: %s" % e)
             return []
 
-    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None):
-        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag))
+    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None):
+        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris))
 
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
