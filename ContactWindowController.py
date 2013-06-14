@@ -3022,9 +3022,9 @@ class ContactWindowController(NSWindowController):
         while self.missed_calls_submenu.numberOfItems() > 0:
             self.missed_calls_submenu.removeItemAtIndex_(0)
 
-        for result in results:
-            r_item = self.missed_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_('From %s %s' % (result.remote_uri, format_date(result.start_time)), "", "", 0)
-
+        if results:
+            for result in reversed(list(results)):
+                r_item = self.missed_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_('From %s %s' % (result.remote_uri, format_date(result.start_time)), "", "", 0)
 
     @run_in_green_thread
     @allocate_autorelease_pool
