@@ -3573,6 +3573,10 @@ class ContactWindowController(NSWindowController):
             has_pidfs = None
 
         if isinstance(item, BlinkContact):
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")
+            mitem.setEnabled_(False)
+            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
             settings = SIPSimpleSettings()
 
             has_fully_qualified_sip_uri = is_sip_aor_format(item.uri)
@@ -3795,7 +3799,7 @@ class ContactWindowController(NSWindowController):
                                     ds_item.setEnabled_(False)
 
                         if ds_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % item.name, "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen Sharing", "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
@@ -3843,7 +3847,7 @@ class ContactWindowController(NSWindowController):
                                     ds_item.setEnabled_(False)
 
                         if ds_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % item.name, "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen", "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
                 urls = list(uri.uri for uri in item.uris if uri.type is not None and uri.type.lower() == 'url')
@@ -3862,10 +3866,6 @@ class ContactWindowController(NSWindowController):
 
             else:
                 # Contact has a single URI
-                if isinstance(item, HistoryBlinkContact):
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.uri), "", "")
-                    mitem.setEnabled_(False)
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "startAudioToSelected:", "")
@@ -3890,14 +3890,14 @@ class ContactWindowController(NSWindowController):
 
                         if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
                             contact = item.name
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen from %s" % contact, "startScreenSharing:", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen Sharing", "startScreenSharing:", "")
                             mitem.setTag_(1)
                             mitem.setEnabled_(has_fully_qualified_sip_uri and has_pidfs)
                             mitem.setRepresentedObject_(item.uri)
                             aor_supports_ds = not settings.gui.use_availability_for_sessions or isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
                             mitem.setEnabled_(aor_supports_ds)
                         if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen with %s" % contact, "startScreenSharing:", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen", "startScreenSharing:", "")
                             mitem.setTag_(2)
                             mitem.setRepresentedObject_(item.uri)
                             aor_supports_ds = not settings.gui.use_availability_for_sessions or isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
@@ -4185,7 +4185,7 @@ class ContactWindowController(NSWindowController):
                     aor_supports_screen_sharing_server = True
 
                 item = self.screenShareMenu.itemWithTag_(1)
-                item.setTitle_("Request Screen from %s" % contact.name)
+                item.setTitle_("Request Screen Sharing from %s" % contact.name)
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
                 item = self.screenShareMenu.itemWithTag_(2)
