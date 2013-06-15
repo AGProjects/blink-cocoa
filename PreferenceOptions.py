@@ -502,24 +502,24 @@ class AudioCodecListOption(MultipleSelectionOption):
         self.sideView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 170, NSHeight(self.frame())))
         self.addSubview_(self.sideView)
 
-        #self.moveUp = NSButton.alloc().initWithFrame_(NSMakeRect(0, 24, 100, 24))
-        #self.sideView.addSubview_(self.moveUp)
-        #self.moveUp.setBezelStyle_(NSRoundedBezelStyle)
-        #self.moveUp.setTitle_("Move Up")
-        #self.moveUp.setTarget_(self)
-        #self.moveUp.setAction_("moveItem:")
-        #self.moveUp.cell().setControlSize_(NSSmallControlSize)
-        #self.moveUp.cell().setFont_(NSFont.systemFontOfSize_(10))
-        #self.moveDown = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 24))
-        #self.sideView.addSubview_(self.moveDown)
-        #self.moveDown.setTitle_("Move Down")
-        #self.moveDown.setTarget_(self)
-        #self.moveDown.setAction_("moveItem:")
-        #self.moveDown.cell().setFont_(NSFont.systemFontOfSize_(10))
-        #self.moveDown.cell().setControlSize_(NSSmallControlSize)
-        #self.moveDown.setBezelStyle_(NSRoundedBezelStyle)
+        self.moveUp = NSButton.alloc().initWithFrame_(NSMakeRect(0, 24, 90, 24))
+        self.sideView.addSubview_(self.moveUp)
+        self.moveUp.setBezelStyle_(NSRoundedBezelStyle)
+        self.moveUp.setTitle_("Move Up")
+        self.moveUp.setTarget_(self)
+        self.moveUp.setAction_("moveItem:")
+        self.moveUp.cell().setControlSize_(NSSmallControlSize)
+        self.moveUp.cell().setFont_(NSFont.systemFontOfSize_(10))
+        self.moveDown = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 90, 24))
+        self.sideView.addSubview_(self.moveDown)
+        self.moveDown.setTitle_("Move Down")
+        self.moveDown.setTarget_(self)
+        self.moveDown.setAction_("moveItem:")
+        self.moveDown.cell().setFont_(NSFont.systemFontOfSize_(10))
+        self.moveDown.cell().setControlSize_(NSSmallControlSize)
+        self.moveDown.setBezelStyle_(NSRoundedBezelStyle)
 
-        #self.tableViewSelectionDidChange_(None)
+        self.tableViewSelectionDidChange_(None)
 
 
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
@@ -529,26 +529,26 @@ class AudioCodecListOption(MultipleSelectionOption):
             MultipleSelectionOption.tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row)
 
 
-    #def tableViewSelectionDidChange_(self, notification):
-    #    if self.table.selectedRow() < 0:
-    #        self.moveUp.setEnabled_(False)
-    #        self.moveDown.setEnabled_(False)
-    #    else:
-    #        self.moveUp.setEnabled_(self.table.selectedRow() > 0)
-    #        self.moveDown.setEnabled_(self.table.selectedRow() < len(self.options)-1)
+    def tableViewSelectionDidChange_(self, notification):
+        if self.table.selectedRow() < 0:
+            self.moveUp.setEnabled_(False)
+            self.moveDown.setEnabled_(False)
+        else:
+            self.moveUp.setEnabled_(self.table.selectedRow() > 0)
+            self.moveDown.setEnabled_(self.table.selectedRow() < len(self.options)-1)
 
-    #def moveItem_(self, sender):
-    #    row = self.table.selectedRow()
-    #    item = self.options[row]
-    #    del self.options[row]
-    #    if sender == self.moveUp:
-    #        self.options.insert(row-1, item)
-    #        self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row-1), False)
-    #    else:
-    #        self.options.insert(row+1, item)
-    #        self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row+1), False)
-    #    self.table.reloadData()
-    #    self.store()
+    def moveItem_(self, sender):
+        row = self.table.selectedRow()
+        item = self.options[row]
+        del self.options[row]
+        if sender == self.moveUp:
+            self.options.insert(row-1, item)
+            self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row-1), False)
+        else:
+            self.options.insert(row+1, item)
+            self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row+1), False)
+        self.table.reloadData()
+        self.store()
 
     def _store(self):
         value = []
@@ -585,7 +585,6 @@ class SIPTransportListOption(MultipleSelectionOption):
                 value.append(opt)
         self.set(tuple(value))
 
-
     def restore(self):
         value = self.get()
         if not value:
@@ -603,9 +602,9 @@ class AccountAudioCodecListOption(AudioCodecListOption):
     def __init__(self, object, name, option, description=None):
         AudioCodecListOption.__init__(self, object, name, option, description)
 
-        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 20))
+        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 100, 20))
         self.check.setTitle_("Customize")
-        self.check.setToolTip_("Enable this if you want to use custom CODEC settings for this account instead of using the global settings.")
+        self.check.setToolTip_("Check if you want to customize the codec list for this account instead of using the global settings")
         self.check.setButtonType_(NSSwitchButton)
         self.check.setTarget_(self)
         self.check.setAction_("customizeCodecs:")
@@ -619,7 +618,6 @@ class AccountAudioCodecListOption(AudioCodecListOption):
             if opt not in options:
                 options.append(opt)
         self.options = options
-
 
     def customizeCodecs_(self, sender):
         if sender.state() == NSOffState:
@@ -641,7 +639,6 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         else:
             self.check.setState_(NSOnState)
             AudioCodecListOption.restore(self)
-
 
     def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
         if self.check.state() == NSOffState:
