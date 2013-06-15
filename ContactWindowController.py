@@ -3015,7 +3015,8 @@ class ContactWindowController(NSWindowController):
 
         if results:
             for result in reversed(list(results)):
-                r_item = self.missed_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_('From %s %s' % (result.remote_uri, format_date(result.start_time)), "", "", 0)
+                r_item = self.missed_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(u'From %s %s' % (result.remote_uri, format_date(result.start_time)), "", "", 0)
+                r_item.setEnabled_(False)
 
     @run_in_green_thread
     @allocate_autorelease_pool
