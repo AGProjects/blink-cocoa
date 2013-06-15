@@ -76,11 +76,14 @@ PARTICIPANTS_MENU_START_CHAT_SESSION = 321
 PARTICIPANTS_MENU_START_VIDEO_SESSION = 322
 PARTICIPANTS_MENU_SEND_FILES = 323
 
+normal_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+
 gray_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
                                                       NSColor.grayColor(), NSForegroundColorAttributeName)
 red_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
                                                       NSColor.redColor(), NSForegroundColorAttributeName)
-
+mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
+                                                           NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
 
 class PhotoView(NSImageView):
     entered = False
@@ -2786,8 +2789,7 @@ class ContactWindowController(NSWindowController):
         # voicemail
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
             a = NSMutableAttributedString.alloc().init()
-            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal)
+            n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal_font_color)
             a.appendAttributedString_(n)
             if mwi_data.get('messages_waiting') and mwi_data.get('new_messages') != 0:
                 text = "%d new messages" % mwi_data['new_messages']
@@ -2797,11 +2799,6 @@ class ContactWindowController(NSWindowController):
                 t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_nonew)
             a.appendAttributedString_(t)
             return a
-
-        mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-                                                               NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
-        red_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-                                                              NSColor.redColor(), NSForegroundColorAttributeName)
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail", "", "")
@@ -2825,11 +2822,8 @@ class ContactWindowController(NSWindowController):
 
         def format_item(name, when):
             a = NSMutableAttributedString.alloc().init()
-            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal)
+            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal_font_color)
             a.appendAttributedString_(n)
-            mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-                                                                   NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
             t = NSAttributedString.alloc().initWithString_attributes_(when, mini_blue)
             a.appendAttributedString_(t)
             return a
@@ -2856,11 +2850,8 @@ class ContactWindowController(NSWindowController):
 
         def format_item(name, when):
             a = NSMutableAttributedString.alloc().init()
-            normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal)
+            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal_font_color)
             a.appendAttributedString_(n)
-            mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
-                                                                   NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
             t = NSAttributedString.alloc().initWithString_attributes_(when, mini_blue)
             a.appendAttributedString_(t)
             return a
@@ -3211,8 +3202,7 @@ class ContactWindowController(NSWindowController):
 
     def format_history_menu_item(self, item):
         a = NSMutableAttributedString.alloc().init()
-        normal = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
-        n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  "%item, normal)
+        n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  "%item, normal_font_color)
         a.appendAttributedString_(n)
         text = "%(start_time)s"%item
         if (item["duration"].seconds > 0):
