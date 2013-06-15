@@ -1697,6 +1697,7 @@ UnitOptions = {
 ToolTips = {
              'audio.auto_transfer' : 'Automatically accept transfer requests from remote party',
              'audio.call_waiting' : 'If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress',
+             'audio.enable_aec': 'If disabled, acoustic echo cancelation and automatic gain control are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.',
              'auth.username': 'Enter authentication username if different than the SIP Address username',
              'chat.replication_password': 'Enter a password to encrypt the content of your messages on the replication server',
              'gui.account_label': 'Label displayed in account popup up menu instead of the sip address',
@@ -1711,6 +1712,7 @@ ToolTips = {
              'pstn.dtmf_delimiter': 'Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *',
              'web_alert.alert_url': 'Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username',
              'conference.server_address': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
+             'rtp.timeout': 'If RTP is not received in this interval, audio calls will be hangup when Hangup on Timeout option in the RTP advanced section of the account is enabled',
              'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below',
              'server.web_password': 'Password for authentication requested by web server, if not set the SIP account password will be used',
              'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
