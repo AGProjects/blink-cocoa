@@ -385,8 +385,8 @@ class ContactWindowController(NSWindowController):
         self.audioPreviewOutputForLevelMeter.setVolume_(0.0)
         self.audioInputSessionForLevelMeter.addOutput_error_(self.audioPreviewOutputForLevelMeter, None)
 
-        self.missed_calls_submenu = NSMenu.alloc().init()
-        self.missed_calls_submenu.setAutoenablesItems_(False)
+        self.last_calls_submenu = NSMenu.alloc().init()
+        self.last_calls_submenu.setAutoenablesItems_(False)
 
         self.loaded = True
 
@@ -3001,22 +3001,34 @@ class ContactWindowController(NSWindowController):
 
     @run_in_green_thread
     @allocate_autorelease_pool
-    def get_missed_calls_entries_for_contact(self, contact):
+    def get_last_calls_entries_for_contact(self, contact):
         session_history = SessionHistory()
         if contact.uris:
             remote_uris = list(uri.uri for uri in contact.uris)
-            results = session_history.get_entries(direction='incoming', status='missed', count=10, remote_focus="0", remote_uris=remote_uris)        
-            self.renderMissedCallsEntriesForContact(results)
+            results = session_history.get_entries(count=10, remote_focus="0", remote_uris=remote_uris)        
+            self.renderLastCallsEntriesForContact(results)
 
     @run_in_gui_thread
-    def renderMissedCallsEntriesForContact(self, results):
-        while self.missed_calls_submenu.numberOfItems() > 0:
-            self.missed_calls_submenu.removeItemAtIndex_(0)
+    def renderLastCallsEntriesForContact(self, results):
+        while self.last_calls_submenu.numberOfItems() > 0:
+            self.last_calls_submenu.removeItemAtIndex_(0)
 
         if results:
             for result in reversed(list(results)):
-                r_item = self.missed_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(u'From %s %s' % (result.remote_uri, format_date(result.start_time)), "", "", 0)
-                r_item.setEnabled_(False)
+                label = result.media_types.title()
+                label += ' from ' if result.direction == 'incoming' else ' to '
+                label += result.remote_uri
+                duration = result.end_time - result.start_time
+                if result.duration == 0:
+                    status = result.status
+                else:
+                    status = ''
+                    if duration.days > 0 or duration.seconds > 60 * 60:
+                        status = "%i hours, " % (duration.days * 60 * 60 * 24 + int(duration.seconds/(60 * 60)))
+                    s = duration.seconds % (60 * 60)
+                    status += "%02i:%02i" % (int(s/60), s%60)
+                title = u'%s %s (%s)' % (label, format_date(result.start_time), status)
+                r_item = self.last_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "", "", 0)
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -3926,9 +3938,9 @@ class ContactWindowController(NSWindowController):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
                         self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Missed Calls", "", "")
-                    self.contactContextMenu.setSubmenu_forItem_(self.missed_calls_submenu, mitem)
-                    self.get_missed_calls_entries_for_contact(item)
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
+                    self.get_last_calls_entries_for_contact(item)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
