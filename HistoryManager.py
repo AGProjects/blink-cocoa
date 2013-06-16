@@ -35,6 +35,7 @@ from util import *
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.threading import run_in_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implements
 
@@ -770,15 +771,14 @@ class SessionHistoryReplicator(object):
     def sessionControllersManager(self):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
-    @run_in_gui_thread
     def __init__(self):
         if NSApp.delegate().applicationName != 'Blink Lite':
             NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
             NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
             NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
 
+    @run_in_thread('file-io')
     @allocate_autorelease_pool
-    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -801,7 +801,7 @@ class SessionHistoryReplicator(object):
                     self.close_last_call_connection(account)
                     self.get_last_calls(account)
 
-    @run_in_gui_thread
+    @run_in_thread('file-io')
     def get_last_calls(self, account):
         if not account.server.settings_url:
             return
@@ -821,7 +821,7 @@ class SessionHistoryReplicator(object):
         }
         self.updateGetCallsTimer_(None)
 
-    @run_in_gui_thread
+    @run_in_thread('file-io')
     def close_last_call_connection(self, account):
         try:
             connection = self.last_calls_connections[account.id]['connection']
@@ -839,6 +839,7 @@ class SessionHistoryReplicator(object):
         except KeyError:
             pass
 
+    @run_in_thread('file-io')
     def updateGetCallsTimer_(self, timer):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['timer'] == timer).next()
@@ -860,6 +861,7 @@ class SessionHistoryReplicator(object):
                 self.last_calls_connections[key]['connection'] = connection
 
     # NSURLConnection delegate method
+    @run_in_thread('file-io')
     def connection_didReceiveData_(self, connection, data):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
@@ -873,6 +875,7 @@ class SessionHistoryReplicator(object):
             else:
                 self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + str(data)
 
+    @run_in_thread('file-io')
     def connectionDidFinishLoading_(self, connection):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
@@ -892,6 +895,7 @@ class SessionHistoryReplicator(object):
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
 
+    @run_in_thread('file-io')
     # NSURLConnection delegate method
     def connection_didFailWithError_(self, connection, error):
         try:
@@ -1061,6 +1065,7 @@ class SessionHistoryReplicator(object):
             BlinkLogger().log_info(u"Error: %s" % e)
 
     # NSURLConnection delegate method
+    @run_in_thread('file-io')
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
@@ -1118,6 +1123,7 @@ class ChatHistoryReplicator(object):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
+    @run_in_thread('file-io')
     def save_journal_on_disk(self):
         storage_path = ApplicationData.get('chat_replication_journal.pickle')
         try:
@@ -1125,6 +1131,7 @@ class ChatHistoryReplicator(object):
         except (cPickle.PickleError, IOError):
             pass
 
+    @run_in_thread('file-io')
     def save_journal_timestamp_on_disk(self):
         storage_path = ApplicationData.get('chat_replication_timestamp.pickle')
         try:
@@ -1147,6 +1154,7 @@ class ChatHistoryReplicator(object):
     def _NH_SIPAccountManagerDidStart(self, sender, data):
         self.updateTimer_(None)
 
+    @run_in_thread('file-io')
     def _NH_ChatReplicationJournalEntryAdded(self, sender, data):
         try:
             account = data.entry['local_uri']
@@ -1204,6 +1212,7 @@ class ChatHistoryReplicator(object):
 
         return last_journal_timestamp
 
+    @run_in_thread('file-io')
     def updateLocalHistoryWithRemoteJournalId(self, journal, account):
         try:
             success = journal['success']
@@ -1345,8 +1354,8 @@ class ChatHistoryReplicator(object):
         else:
             BlinkLogger().log_debug('Local history is already in sync with server history for %s' % account)
 
+    @run_in_thread('file-io')
     @allocate_autorelease_pool
-    @run_in_gui_thread
     def updateTimer_(self, timer):
         if self.paused:
             return
@@ -1403,8 +1412,8 @@ class ChatHistoryReplicator(object):
 
         self.startConnectionForIncomingReplication(account, timestamp)
 
+    @run_in_thread('file-io')
     @allocate_autorelease_pool
-    @run_in_gui_thread
     def startConnectionForIncomingReplication(self, account, after_timestamp):
         settings = SIPSimpleSettings()
         query_string_variables = {'realm': account.id.domain, 'action': 'get_journal_entries', 'except_uuid': settings.instance_id, 'after_timestamp': after_timestamp}
@@ -1417,6 +1426,7 @@ class ChatHistoryReplicator(object):
         self.connections_for_incoming_replication[account.id] = {'responseData': '','authRequestCount': 0, 'connection':connection, 'url': url}
 
     # NSURLConnection delegate methods
+    @run_in_thread('file-io')
     def connection_didReceiveData_(self, connection, data):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1432,6 +1442,7 @@ class ChatHistoryReplicator(object):
         else:
             self.connections_for_incoming_replication[key]['responseData'] = self.connections_for_incoming_replication[key]['responseData'] + str(data)
 
+    @run_in_thread('file-io')
     def connectionDidFinishLoading_(self, connection):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1491,6 +1502,7 @@ class ChatHistoryReplicator(object):
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
 
+    @run_in_thread('file-io')
     def connection_didFailWithError_(self, connection, error):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1519,6 +1531,7 @@ class ChatHistoryReplicator(object):
                 self.connections_for_incoming_replication[key]['connection'] = None
                 del self.connections_for_incoming_replication[key]
 
+    @run_in_thread('file-io')
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
