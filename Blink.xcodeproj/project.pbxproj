@@ -314,6 +314,9 @@
 		1F7CC99614730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F7CC99714730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F7CC99814730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
+		1F7E0485176DC43D0006FF31 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
+		1F7E0486176DC43D0006FF31 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
+		1F7E0487176DC43D0006FF31 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
@@ -1300,6 +1303,7 @@
 		1F72E54216A02B3600837311 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
+		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F87B6EE1477D57000BDF25A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
@@ -1796,6 +1800,7 @@
 				1FE50E5B164D1B6200840B18 /* away.tiff */,
 				1FE50E5D164D1B6200840B18 /* busy.tiff */,
 				1FE50E5E164D1B6200840B18 /* offline.tiff */,
+				1F7E0484176DC43D0006FF31 /* hangup_16.png */,
 			);
 			name = presence;
 			path = icons/presence;
@@ -2599,6 +2604,7 @@
 				1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */,
 				1F72E53F16A02B3600837311 /* MergeContacts.xib in Resources */,
 				1F72E53B16A027F600837311 /* MergeContactController.py in Resources */,
+				1F7E0486176DC43D0006FF31 /* hangup_16.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2838,6 +2844,7 @@
 				1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */,
 				1F72E54016A02B3600837311 /* MergeContacts.xib in Resources */,
 				1F72E53C16A027F600837311 /* MergeContactController.py in Resources */,
+				1F7E0487176DC43D0006FF31 /* hangup_16.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3075,6 +3082,7 @@
 				1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */,
 				1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */,
 				1F72E53A16A027F600837311 /* MergeContactController.py in Resources */,
+				1F7E0485176DC43D0006FF31 /* hangup_16.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

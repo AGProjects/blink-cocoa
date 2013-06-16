@@ -3029,6 +3029,21 @@ class ContactWindowController(NSWindowController):
                     status += "%02i:%02i" % (int(s/60), s%60)
                 title = u'%s %s (%s)' % (label, format_date(result.start_time), status)
                 r_item = self.last_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "", "", 0)
+                image = None
+                if 'screen' in result.media_types:
+                    image = 'display_16'
+                elif 'audio' in result.media_types:
+                    image = 'hangup_16' if result.status == 'missed' else 'audio_16'
+                elif result.media_types == 'chat':
+                    image = 'pencil'
+                elif result.media_types == 'file-transfer':
+                    image = 'outgoing_file' if result.direction == 'outgoing' else 'incoming_file'
+
+                if image:
+                    icon = NSImage.imageNamed_(image)
+                    icon.setScalesWhenResized_(True)
+                    icon.setSize_(NSMakeSize(14,14))
+                    r_item.setImage_(icon)
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -3161,6 +3176,17 @@ class ContactWindowController(NSWindowController):
     @run_in_gui_thread
     def renderHistoryEntriesInHistoryMenu(self, entries):
         menu = self.historyMenu
+        def get_icon_history_result(media_types, direction, status):
+            image = None
+            if 'screen' in media_types:
+                image = 'display_16'
+            elif 'audio' in media_types:
+                image = 'audio_16' if status == 'completed' else 'hangup_16'
+            elif 'chat' in media_types:
+                image = 'pencil'
+            elif 'file-transfer' in media_types:
+                image = 'outgoing_file' if direction == 'outgoing' else 'incoming_file'                
+            return image
 
         i = 3 if NSApp.delegate().applicationName == 'Blink Lite' else 4
         while menu.numberOfItems() > i:
@@ -3174,6 +3200,12 @@ class ContactWindowController(NSWindowController):
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
+            image = get_icon_history_result(item['streams'], 'incoming', item['status'])
+            if image:
+                icon = NSImage.imageNamed_(image)
+                icon.setScalesWhenResized_(True)
+                icon.setSize_(NSMakeSize(14,14))
+                lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming", "", "")
@@ -3184,6 +3216,12 @@ class ContactWindowController(NSWindowController):
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
+            image = get_icon_history_result(item['streams'], 'incoming', item['status'])
+            if image:
+                icon = NSImage.imageNamed_(image)
+                icon.setScalesWhenResized_(True)
+                icon.setSize_(NSMakeSize(14,14))
+                lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing", "", "")
@@ -3194,6 +3232,12 @@ class ContactWindowController(NSWindowController):
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(item)
+            image = get_icon_history_result(item['streams'], 'outgoing', item['status'])
+            if image:
+                icon = NSImage.imageNamed_(image)
+                icon.setScalesWhenResized_(True)
+                icon.setSize_(NSMakeSize(14,14))
+                lastItem.setImage_(icon)
 
         if entries['conferences']:
             menu.addItem_(NSMenuItem.separatorItem())
@@ -3206,6 +3250,12 @@ class ContactWindowController(NSWindowController):
                 lastItem.setIndentationLevel_(1)
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(item)
+                image = get_icon_history_result(item['streams'], '', item['status'])
+                if image:
+                    icon = NSImage.imageNamed_(image)
+                    icon.setScalesWhenResized_(True)
+                    icon.setSize_(NSMakeSize(14,14))
+                    lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
