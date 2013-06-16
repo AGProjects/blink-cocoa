@@ -3702,10 +3702,13 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
+
                     if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                         ft_submenu = NSMenu.alloc().init()
                         ft_submenu.setAutoenablesItems_(False)
                         for uri in item.uris:
+                            if uri.type is not None and uri.type.lower() == 'url':
+                                continue
                             ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
                             target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                             ft_item.setRepresentedObject_(target_uri)
@@ -3754,6 +3757,8 @@ class ContactWindowController(NSWindowController):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
                         for uri in item.uris:
+                            if uri.type is not None and uri.type.lower() == 'url':
+                                continue
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(1)
@@ -3801,6 +3806,8 @@ class ContactWindowController(NSWindowController):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
                         for uri in item.uris:
+                            if uri.type is not None and uri.type.lower() == 'url':
+                                continue
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(2)
