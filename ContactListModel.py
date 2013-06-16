@@ -86,10 +86,12 @@ presence_status_icons = {'away': NSImage.imageNamed_("away"),
 
 def presence_status_for_contact(contact, uri=None):
     status = None
+    if contact is None:
+        return status
     if uri is None:
         if isinstance(contact, BonjourBlinkContact):
             status = contact.presence_state
-        elif isinstance(contact, BlinkPresenceContact):
+        elif isinstance(contact, BlinkPresenceContact) and contact.contact is not None:
             if contact.presence_state['status']['busy']:
                 status = 'busy'
             elif contact.presence_state['status']['available']:
