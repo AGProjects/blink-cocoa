@@ -1061,7 +1061,7 @@ class BlinkPresenceContact(BlinkContact):
             return self.default_uri.type or 'SIP'
         try:
             uri = next(iter(self.contact.uris))
-        except StopIteration:
+        except (StopIteration, AttributeError):
             return u'SIP'
         else:
             return uri.type or 'SIP'
