@@ -519,13 +519,13 @@ class SIPManager(object):
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
-        BlinkLogger().log_info(message)
+        BlinkLogger().log_debug(message)
         if account.contact.public_gruu is not None:
             message = u'%s public GRUU %s' % (account, account.contact.public_gruu)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
         if account.contact.temporary_gruu is not None:
             message = u'%s temporary GRUU %s' % (account, account.contact.temporary_gruu)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info(u"%s was unregistered" % account)
