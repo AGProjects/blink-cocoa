@@ -180,6 +180,9 @@ class BlinkAppDelegate(NSObject):
 
     def applicationDidFinishLaunching_(self, sender):
         self.blinkMenu.setTitle_(self.applicationNamePrint)
+        build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
+        date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
+        BlinkLogger().log_info(u"Starting %s build %s from %s" % (self.applicationNamePrint, build, date))
 
         config_file = ApplicationData.get('config')
         self.icloud_manager = iCloudManager()

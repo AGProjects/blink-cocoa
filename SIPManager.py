@@ -58,6 +58,9 @@ class SIPManager(object):
 
     def __init__(self):
 
+        BlinkLogger().log_info(u"Loading SIP SIMPLE Client SDK %s" % sdk_version)
+        BlinkLogger().log_info(u"Starting core version %s" % core_version)
+        
         self._app = SIPApplication()
         self._delegate = None
         self._selected_account = None
@@ -424,10 +427,8 @@ class SIPManager(object):
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
-        BlinkLogger().log_info(u"Initializing SIP SIMPLE Client SDK %s, core version %s" % (sdk_version, core_version))
-        build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
-        date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-        BlinkLogger().log_info(u"Build %s from %s" % (build, date))
+        BlinkLogger().log_info(u"SIP User Agent: %s" % settings.user_agent)
+        BlinkLogger().log_info(u"SIP device ID: %s" % settings.instance_id)
 
         self.migratePasswordsToKeychain()
         self.cleanupIcons()
@@ -474,8 +475,8 @@ class SIPManager(object):
 
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info(u"SIP User Agent %s" % settings.user_agent)
-        BlinkLogger().log_info(u"SIP Device ID %s" % settings.instance_id)
+        BlinkLogger().log_info(u"Core started")
+        BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(settings.rtp.audio_codec_list))
 
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
