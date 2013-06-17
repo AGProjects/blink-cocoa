@@ -1897,7 +1897,7 @@ class CustomListModel(NSObject):
                         if target_changed:
                             targetContact.contact.save()
                         if isinstance(sourceContact, BlinkPresenceContact):
-                            sourceContact.contact.contact.delete()
+                            sourceContact.contact.delete()
 
                     return True
 
