@@ -1600,6 +1600,10 @@ class OutgoingMessageHandler(NSObject):
     @allocate_autorelease_pool
     @run_in_green_thread
     def add_to_history(self, message):
+        settings = SIPSimpleSettings()
+        if settings.chat.disable_history:
+            return
+
         # writes the record to the sql database
         cpim_to = "%s <%s@%s>" % (message.recipient.display_name, message.recipient.uri.user, message.recipient.uri.host) if message.recipient else ''
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''

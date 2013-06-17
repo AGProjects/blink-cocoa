@@ -591,6 +591,12 @@ class ContactWindowController(NSWindowController):
         self.model.renderPendingWatchersGroupIfNecessary(bring_in_focus=True)
 
     @objc.IBAction
+    def toggleChatPrivacy_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.chat.disable_history = not settings.chat.disable_history
+        settings.save()
+
+    @objc.IBAction
     def showPresenceInfo_(self, sender):
         if sender.tag() == 50: # main menu selected
             row = self.contactOutline.selectedRow()
@@ -2941,12 +2947,15 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if group == selected_group else NSOffState)
 
     def updateHistoryMenu(self):
-        if self.historyMenu.numberOfItems() < 3:
+        if self.historyMenu.numberOfItems() < 6:
             if NSApp.delegate().applicationName != 'Blink Lite':
                 self.historyMenu.addItem_(self.recordingsSubMenu)
             self.historyMenu.addItem_(NSMenuItem.separatorItem())
-        self.get_session_history_entries(2 if NSApp.delegate().applicationName == 'Blink Lite' else 10)
 
+        settings = SIPSimpleSettings()
+        chat_privacy = self.historyMenu.itemWithTag_(101)
+        chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
+        self.get_session_history_entries(2 if NSApp.delegate().applicationName == 'Blink Lite' else 8)
 
     def getAccountWitDialPlan(self, uri):
         try:
@@ -3188,7 +3197,7 @@ class ContactWindowController(NSWindowController):
                 image = 'outgoing_file' if direction == 'outgoing' else 'incoming_file'                
             return image
 
-        i = 3 if NSApp.delegate().applicationName == 'Blink Lite' else 4
+        i = 6 if NSApp.delegate().applicationName == 'Blink Lite' else 7
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
 

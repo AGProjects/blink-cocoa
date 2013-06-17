@@ -39,6 +39,7 @@ class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
     disabled = Setting(type=bool, default=False)
     disable_collaboration_editor = Setting(type=bool, default=False)
+    disable_history = Setting(type=bool, default=False)
 
 
 class ScreenSharingSettingsExtension(ScreenSharingSettings):
