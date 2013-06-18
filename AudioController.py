@@ -32,6 +32,7 @@ from ContactListModel import BonjourBlinkContact, BlinkPresenceContact
 from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
+from SessionInfoController import ice_candidates
 
 from resources import Resources
 from util import *
@@ -1078,11 +1079,16 @@ class AudioController(MediaStream):
         
         self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
                                                                                              self.stream.local_rtp_port,
-                                                                                             self.stream.local_rtp_candidate.type.lower(),
+                                                                                             ice_candidates[self.stream.local_rtp_candidate.type.lower()],
                                                                                              self.stream.remote_rtp_address,
                                                                                              self.stream.remote_rtp_port,
-                                                                                             self.stream.remote_rtp_candidate.type.lower()))
+                                                                                             ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
 
+        if self.stream.local_rtp_candidate.type.lower() != 'relay' and self.stream.remote_rtp_candidate.type.lower() != 'relay':
+            self.sessionController.log_info(u'Audio stream is peer to peer')
+        else:
+            self.sessionController.log_info(u'Audio stream is relayed by server')
+    
         self.ice_negotiation_status = 'Success'
 
     def _NH_BlinkAudioStreamUnholdRequested(self, sender, data):
