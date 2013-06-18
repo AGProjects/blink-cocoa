@@ -838,25 +838,20 @@ class AudioController(MediaStream):
                     item.setTarget_(self)
                     item.setRepresentedObject_(parsed_target)
         else:
-            aor_supports_chat = False
-            aor_supports_screen_sharing_server = False
-            aor_supports_screen_sharing_client = False
-            if self.contact is not None:
-                if isinstance(self.contact, BlinkPresenceContact):
-                    settings = SIPSimpleSettings()
-                    aor_supports_chat = not settings.gui.use_availability_for_sessions or any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'chat' in device['caps'])
-                    aor_supports_screen_sharing_server = not settings.gui.use_availability_for_sessions or any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
-                    aor_supports_screen_sharing_client = not settings.gui.use_availability_for_sessions or any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and self.contact.uri and 'screen-sharing-client' in device['caps'])
-                elif isinstance(self.contact, BonjourBlinkContact):
-                    aor_supports_chat = True
-                    aor_supports_screen_sharing_client = True
-                    aor_supports_screen_sharing_server = True
+            aor_supports_chat = True
+            aor_supports_screen_sharing_server = True
+            aor_supports_screen_sharing_client = True
+            if self.contact is not None and isinstance(self.contact, BlinkPresenceContact):
+                settings = SIPSimpleSettings()
+                if settings.gui.use_availability_for_sessions:
+                    aor_supports_chat = any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'chat' in device['caps'])
+                    aor_supports_screen_sharing_server = any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
+                    aor_supports_screen_sharing_client = any(device for device in self.contact.presence_state['devices'].values() if 'sip:%s' % self.contact.uri in device['aor'] and self.contact.uri and 'screen-sharing-client' in device['caps'])
 
             can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             item = menu.itemWithTag_(10) # add Chat
-
             item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
 
             item = menu.itemWithTag_(14) # add Video
