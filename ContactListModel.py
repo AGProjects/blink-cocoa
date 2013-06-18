@@ -2690,7 +2690,7 @@ class ContactListModel(CustomListModel):
         if not note and notification.data.presence_state is not None and notification.data.presence_state.status is not None:
             note = notification.data.presence_state.status.title()
 
-        BlinkLogger().log_info(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
+        BlinkLogger().log_debug(u"Bonjour neighbour did change: %s %s" % (display_name, uri))
         try:
             blink_contact = (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==neighbour).next()
         except StopIteration:
