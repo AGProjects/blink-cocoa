@@ -1511,6 +1511,10 @@ class SessionController(NSObject):
         hash.update(id)
         self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
+        if self.hasStreamOfType("audio"):
+            audioStream = self.streamHandlerOfType("audio")
+            audioStream.stream.mixer.reset_ec()
+
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
     def _NH_SIPSessionWillEnd(self, sender, data):
