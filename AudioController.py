@@ -1140,7 +1140,14 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
-        self.sessionController.log_info("Audio stream started")
+        sample_rate = self.stream.sample_rate/1000
+        codec = beautify_audio_codec(self.stream.codec)
+        if self.stream.codec == 'opus':
+            settings = SIPSimpleSettings()
+            if settings.audio.enable_aec:
+                sample_rate =  32
+        
+        self.sessionController.log_info("Audio stream started using %s %0.fkHz codec" % (codec, sample_rate))
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
@@ -1149,17 +1156,16 @@ class AudioController(MediaStream):
 
         self.changeStatus(STREAM_CONNECTED)
         if not self.isActive and not self.answeringMachine:
-
             self.session.hold()
 
         if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:
             if self.stream.ice_active:
-                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d (ICE type %s)\nRemote: %s:%d (ICE type %s)' % (self.stream.local_rtp_address,
+                self.audioStatus.setToolTip_('Audio RTP ICE endpoints \nLocal: %s:%d (%s)\nRemote: %s:%d (%s)' % (self.stream.local_rtp_address,
                                                                                                                                 self.stream.local_rtp_port,
-                                                                                                                                self.stream.local_rtp_candidate.type.lower(),
+                                                                                                                                ice_candidates[self.stream.local_rtp_candidate.type.lower()],
                                                                                                                                 self.stream.remote_rtp_address,
                                                                                                                                 self.stream.remote_rtp_port,
-                                                                                                                                self.stream.remote_rtp_candidate.type.lower()))
+                                                                                                                                ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
             else:
                 self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address,
                                                                                                      self.stream.local_rtp_port,
@@ -1172,6 +1178,7 @@ class AudioController(MediaStream):
 
         if NSApp.delegate().applicationName != 'Blink Lite' and self.sessionController.account.audio.auto_recording:
             self.startAudioRecording()
+
 
     def send_postdial_string_as_dtmf(self):
         time.sleep(2)
