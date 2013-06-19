@@ -23,7 +23,7 @@ from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
-from util import allocate_autorelease_pool, osx_version
+from util import audio_codecs, allocate_autorelease_pool, osx_version
 
 
 def makeLabel(label):
@@ -489,6 +489,34 @@ class MultipleSelectionOption(Option):
         return True
 
 
+class SIPTransportListOption(MultipleSelectionOption):
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 15*len(SIPTransportList.available_values)+8))
+    
+    def __init__(self, object, name, option, description=None):
+        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=False, tableWidth=80, description=description)
+        
+        self.options = SIPTransportList.available_values
+    
+    def _store(self):
+        value = []
+        for opt in self.options:
+            if opt in self.selection:
+                value.append(opt)
+        self.set(tuple(value))
+    
+    def restore(self):
+        value = self.get()
+        if not value:
+            value = []
+        self.selection = set(value)
+        options = list(value)
+        for opt in self.options:
+            if opt not in options:
+                options.append(opt)
+        self.options = options
+
+
 class AudioCodecListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 125))
@@ -497,7 +525,14 @@ class AudioCodecListOption(MultipleSelectionOption):
         MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=100, description=description)
 
         self.selection = set()
-        self.options = list(AudioCodecList.available_values)
+        self.options = []
+        for option in list(AudioCodecList.available_values):
+            try:
+                codec_option = audio_codecs[option]
+            except KeyError:
+                codec_option = option
+    
+            self.options.append(codec_option)
 
         self.sideView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 170, NSHeight(self.frame())))
         self.addSubview_(self.sideView)
@@ -554,48 +589,30 @@ class AudioCodecListOption(MultipleSelectionOption):
         value = []
         for opt in self.options:
             if opt in self.selection:
+                try:
+                    opt = (k for k, v in audio_codecs.iteritems() if opt == v).next()
+                except StopIteration:
+                    pass
                 value.append(opt)
+
         self.set(tuple(value))
 
     def restore(self):
-        value = self.get()
-        if not value:
-            value = []
-        self.selection = set(value)
-        options = list(value)
+        value = self.get() or []
+        options = []
+        for val in list(value):
+            try:
+                v = (v for k, v in audio_codecs.iteritems() if val == k).next()
+            except StopIteration:
+                options.append(val)
+            else:
+                options.append(v)
+
+        self.selection = set(options)
         for opt in self.options:
             if opt not in options:
                 options.append(opt)
         self.options = options
-
-
-class SIPTransportListOption(MultipleSelectionOption):
-    def __new__(cls, *args, **kwargs):
-        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 15*len(SIPTransportList.available_values)+8))
-
-    def __init__(self, object, name, option, description=None):
-        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=False, tableWidth=80, description=description)
-
-        self.options = SIPTransportList.available_values
-
-    def _store(self):
-        value = []
-        for opt in self.options:
-            if opt in self.selection:
-                value.append(opt)
-        self.set(tuple(value))
-
-    def restore(self):
-        value = self.get()
-        if not value:
-            value = []
-        self.selection = set(value)
-        options = list(value)
-        for opt in self.options:
-            if opt not in options:
-                options.append(opt)
-        self.options = options
-
 
 
 class AccountAudioCodecListOption(AudioCodecListOption):
@@ -612,8 +629,16 @@ class AccountAudioCodecListOption(AudioCodecListOption):
 
     def loadGlobalSettings(self):
         value = SIPSimpleSettings().rtp.audio_codec_list or []
-        self.selection = set(value)
-        options = list(value)
+        options = []
+        for val in list(value):
+            try:
+                v = (v for k, v in audio_codecs.iteritems() if val == k).next()
+            except StopIteration:
+                options.append(val)
+            else:
+                options.append(v)
+        
+        self.selection = set(options)
         for opt in self.options:
             if opt not in options:
                 options.append(opt)
