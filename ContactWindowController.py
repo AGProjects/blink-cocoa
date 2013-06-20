@@ -388,6 +388,21 @@ class ContactWindowController(NSWindowController):
         self.last_calls_submenu = NSMenu.alloc().init()
         self.last_calls_submenu.setAutoenablesItems_(False)
 
+        dotPath = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(NSMakeRect(0, 1, 5, 12), 2.0, 2.0)
+        dotPath.setLineWidth_(0.08)
+        dotPath.fill()
+        NSColor.blackColor().set()
+        dotPath.stroke()
+
+        self.presence_dots = {}
+        for i, color in [("available", NSColor.greenColor()), ("away", NSColor.yellowColor()), ("busy", NSColor.redColor()), ("invisible", NSColor.grayColor())]:
+            dot = NSImage.alloc().initWithSize_(NSMakeSize(14,14))
+            dot.lockFocus()
+            color.set()
+            dotPath.fill()
+            dot.unlockFocus()
+            self.presence_dots[i] = dot
+
         self.loaded = True
 
     @property
@@ -502,7 +517,8 @@ class ContactWindowController(NSWindowController):
                 try:
                     try:
                         status = item['represented_object']['extended_status']
-                        image = presence_status_icons[status]
+                        image = self.presence_dots[status]
+                        #image = self.presence_dots[status]
                         image.setScalesWhenResized_(True)
                         image.setSize_(NSMakeSize(15,15))
                         lastItem.setImage_(image)
@@ -2644,7 +2660,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setAttributedTitle_(title)
                 lastItem.setRepresentedObject_(item)
                 try:
-                    image = presence_status_icons[status]
+                    image = self.presence_dots[status]
                     image.setScalesWhenResized_(True)
                     image.setSize_(NSMakeSize(15,15))
                     lastItem.setImage_(image)
@@ -3688,7 +3704,7 @@ class ContactWindowController(NSWindowController):
                         audio_item.setRepresentedObject_(device['contact'])
                         status = device['status']
                         try:
-                            image = presence_status_icons[status]
+                            image = self.presence_dots[status]
                             image.setScalesWhenResized_(True)
                             image.setSize_(NSMakeSize(15,15))
                             audio_item.setImage_(image)
@@ -3758,7 +3774,7 @@ class ContactWindowController(NSWindowController):
                             chat_item.setRepresentedObject_(device['contact'])
                             status = device['status']
                             try:
-                                icon = presence_status_icons[status]
+                                icon = self.presence_dots[status]
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
                                 chat_item.setImage_(icon)
@@ -3810,7 +3826,7 @@ class ContactWindowController(NSWindowController):
                                 ft_item.setRepresentedObject_(device['contact'])
                                 status = device['status']
                                 try:
-                                    icon = presence_status_icons[status]
+                                    icon = self.presence_dots[status]
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ft_item.setImage_(icon)
@@ -3859,7 +3875,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setRepresentedObject_(device['contact'])
                                 status = device['status']
                                 try:
-                                    icon = presence_status_icons[status]
+                                    icon = self.presence_dots[status]
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
@@ -3908,7 +3924,7 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setRepresentedObject_(device['contact'])
                                 status = device['status']
                                 try:
-                                    icon = presence_status_icons[status]
+                                    icon = self.presence_dots[status]
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
