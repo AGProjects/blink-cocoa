@@ -106,9 +106,10 @@ class ContactCell(NSTextFieldCell):
         except KeyError:
             pass
         else:
-            icon.setScalesWhenResized_(True)
-            icon.setSize_(NSMakeSize(12,12))
-            self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
+            pass
+            #icon.setScalesWhenResized_(True)
+            #icon.setSize_(NSMakeSize(12,12))
+            #self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
 
         has_locations = None
         if not isinstance(self.contact, BonjourBlinkContact):
@@ -117,11 +118,33 @@ class ContactCell(NSTextFieldCell):
             except KeyError:
                 return
 
+        frame = self.frame
+        frame.origin.y -= 17
         if has_locations:
-            frame = self.frame
-            frame.origin.y -= 17
-            left = self.view.frame().size.width - 20
+            left = self.view.frame().size.width - 22
             self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
+
+        # presence bar
+        indicator_width = 7
+        frame.size.width = indicator_width
+        frame.origin.x = self.view.frame().size.width - indicator_width - 2
+
+        rect = NSInsetRect(frame, 0, 0)
+
+        if status == 'available':
+            NSColor.greenColor().set()
+        elif status == 'away':
+            NSColor.yellowColor().set()
+        elif status == 'busy':
+            NSColor.redColor().set()
+        else:
+            NSColor.whiteColor().set()
+
+        border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 2.0, 2.0)
+        border.setLineWidth_(0.08)
+        border.fill()
+        NSColor.blackColor().set()
+        border.stroke()
 
     @allocate_autorelease_pool
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
