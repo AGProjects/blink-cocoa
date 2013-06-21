@@ -389,11 +389,6 @@ class ContactWindowController(NSWindowController):
         self.last_calls_submenu.setAutoenablesItems_(False)
 
         dotPath = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(NSMakeRect(0, 1, 5, 12), 2.0, 2.0)
-        dotPath.setLineWidth_(0.08)
-        dotPath.fill()
-        NSColor.blackColor().set()
-        dotPath.stroke()
-
         self.presence_dots = {}
         for i, color in [("available", NSColor.greenColor()),
                          ("away", NSColor.yellowColor()),
