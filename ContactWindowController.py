@@ -2589,9 +2589,9 @@ class ContactWindowController(NSWindowController):
                     continue
                 contact = self.getContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
-                items[title] = {'image': 'offline', 'contact' : None}
+                items[title] = {'status': 'offline', 'contact' : None}
                 if isinstance(contact, BlinkPresenceContact):
-                    items[title]['image'] = presence_status_for_contact(contact)
+                    items[title]['status'] = presence_status_for_contact(contact)
                     items[title]['contact'] = contact
 
             keys = items.keys()
@@ -2605,8 +2605,8 @@ class ContactWindowController(NSWindowController):
                 else:
                     lastItem.setRepresentedObject_(None)
                 lastItem.setIndentationLevel_(1)
-                if item['image']:
-                    icon = NSImage.imageNamed_(item['image'])
+                if item['status']:
+                    icon = self.presence_dots[item['status']]
                     icon.setScalesWhenResized_(True)
                     icon.setSize_(NSMakeSize(15,15))
                     lastItem.setImage_(icon)
