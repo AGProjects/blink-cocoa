@@ -296,6 +296,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPApplicationDidStart")
         nc.add_observer(self, name="SIPAccountDidActivate")
         nc.add_observer(self, name="SIPAccountDidDeactivate")
+        nc.add_observer(self, name="SIPAccountGotPresenceState")
         nc.add_observer(self, name="SIPAccountWillRegister")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
@@ -800,6 +801,26 @@ class ContactWindowController(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_SIPAccountGotPresenceState(self, notification):
+        resource_map = notification.data.resource_map
+        BlinkLogger().log_info('Got availability %s for %d SIP addresses for account %s' % ('full state' if notification.data.full_state else 'update', len(resource_map.keys()), notification.sender.id))
+
+        blink_contacts = set()
+        for key, value in resource_map.iteritems():
+            m = self.model.getPresenceContactsMatchingURI(key, exact_match=True)
+            if m is None:
+                continue
+            for b in m:
+                blink_contacts.add(b)
+
+        for blink_contact in blink_contacts:
+            if blink_contact.contact is None:
+                continue
+            contact_uris = list(uri.uri for uri in iter(blink_contact.contact.uris))
+            resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
+            if resources:
+                blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state)
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()

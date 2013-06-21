@@ -606,7 +606,6 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
-        NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
 
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
@@ -641,7 +640,6 @@ class BlinkPresenceContact(BlinkContact):
 
     @allocate_autorelease_pool
     def destroy(self):
-        NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
         self.contact = None
         if self.timer:
             self.timer.invalidate()
@@ -649,36 +647,21 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = None
         super(BlinkPresenceContact, self).destroy()
 
-    @allocate_autorelease_pool
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
-
-    def _NH_SIPAccountGotPresenceState(self, notification):
+    def handle_presence_resources(self, resources, account, full_state=False):
         if not self.contact:
             return
 
-        if notification.data.full_state:
+        if full_state:
             self.pidfs_map = {}
-
-        resource_map = notification.data.resource_map
-        try:
-            resources = dict((key, value) for key, value in resource_map.iteritems() if self.matchesURI(key, exact_match=True))
-        except Exception:
-            return
-
-        if not resources:
-            return
 
         for uri, resource in resources.iteritems():
             uri_text = sip_prefix_pattern.sub('', uri)
             if self.log_presence_transitions:
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][resource.uri] = True
-                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (notification.sender.id, uri_text))
+                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (account, uri_text))
                 if resource.state == 'terminated':
-                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (notification.sender.id, uri_text))
+                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (account, uri_text))
             self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
@@ -816,23 +799,23 @@ class BlinkPresenceContact(BlinkContact):
                         device = devices[service.id]
                     except KeyError:
                         devices[service.id] = {
-                                                    'id'          : service.id,
-                                                    'description' : description,
-                                                    'user_agent'  : user_agent,
-                                                    'contact'     : contact,
-                                                    'location'    : service.map.value if service.map is not None else None,
-                                                    'local_time'  : offset_info_text,
-                                                    'time_offset' : offset_info,
-                                                    'notes'       : _presence_notes,
-                                                    'status'      : device_wining_status,
-                                                    'caps'        : caps,
-                                                    'icon'        : icon,
-                                                    'aor'         : [aor],
-                                                    'accounts'    : [notification.sender.id]
-                                            }
+                            'id'          : service.id,
+                            'description' : description,
+                            'user_agent'  : user_agent,
+                            'contact'     : contact,
+                            'location'    : service.map.value if service.map is not None else None,
+                            'local_time'  : offset_info_text,
+                            'time_offset' : offset_info,
+                            'notes'       : _presence_notes,
+                            'status'      : device_wining_status,
+                            'caps'        : caps,
+                            'icon'        : icon,
+                            'aor'         : [aor],
+                            'accounts'    : [account]
+                            }
                     else:
                         device['aor'].append(aor)
-                        device['accounts'].append(notification.sender.id)
+                        device['accounts'].append(account)
 
                     if self.log_presence_transitions and service in most_recent_services:
                         something_has_changed = False
@@ -846,13 +829,13 @@ class BlinkPresenceContact(BlinkContact):
                                 something_has_changed = True
 
                         if something_has_changed and service.id:
-                            prefix = 'My device' if notification.sender.id == uri_text else 'Device'
+                            prefix = 'My device' if account == uri_text else 'Device'
                             log_line = u"%s %s of %s is %s" % (prefix, device_text, uri_text, device_wining_status)
                             BlinkLogger().log_debug(log_line)
                             message= '<h3>Availability Information</h3>'
                             message += '<p>%s' % log_line
                             media_type = 'availability'
-                            local_uri = str(notification.sender.id)
+                            local_uri = str(account)
                             remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
                             direction = 'incoming'
                             status = 'delivered'
@@ -896,7 +879,7 @@ class BlinkPresenceContact(BlinkContact):
             self._process_icon(wining_icon)
 
         self.addToOrRemoveFromOnlineGroup()
-        notification.center.post_notification("BlinkContactPresenceHasChaged", sender=self)
+        NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
 
     @allocate_autorelease_pool
     @run_in_green_thread
@@ -2046,6 +2029,12 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             return None
 
+    def getPresenceContactsMatchingURI(self, uri, exact_match=False):
+        try:
+            return list(blink_contact for group in self.groupsList for blink_contact in group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.matchesURI(uri, exact_match))
+        except StopIteration:
+            return None
+
     def presencePolicyExistsForURI_(self, uri):
         uri = sip_prefix_pattern.sub('', uri)
         for policy in AddressbookManager().get_policies():
@@ -2415,7 +2404,9 @@ class ContactListModel(CustomListModel):
         watcher_list = notification.data.watcher_list
         tmp_pending_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
         tmp_active_watchers  = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
+
         if notification.data.state == 'full':
+            BlinkLogger().log_info('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
             # TODO: don't remove all of them, just the ones that match?
             self.pending_watchers_group.contacts = []
             self.pending_watchers_map[notification.sender.id] = tmp_pending_watchers
@@ -2447,6 +2438,7 @@ class ContactListModel(CustomListModel):
                 BlinkLogger().log_debug(u"%s is subscribed to my availability for %s" % (uri, notification.sender.id))
 
         elif notification.data.state == 'partial':
+            BlinkLogger().log_debug('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
             growl_sent = False
             for watcher in tmp_pending_watchers.itervalues():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
