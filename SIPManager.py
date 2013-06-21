@@ -587,15 +587,17 @@ class SIPManager(object):
     def _NH_SystemWillSleep(self, sender, data):
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
-            BlinkLogger().log_info(u"Disabling Bonjour discovery during sleep")
+            BlinkLogger().log_info(u"Computer will go to sleep")
+            BlinkLogger().log_debug(u"Disabling Bonjour discovery during sleep")
             bonjour_account.enabled=False
             self.bonjour_disabled_on_sleep=True
 
     @run_in_green_thread
     def _NH_SystemDidWakeUpFromSleep(self, sender, data):
+        BlinkLogger().log_info(u"Computer wake up from sleep")
         bonjour_account = BonjourAccount()
         if not bonjour_account.enabled and self.bonjour_disabled_on_sleep:
-            BlinkLogger().log_info(u"Enabling Bonjour discovery after wakeup from sleep")
+            BlinkLogger().log_debug(u"Enabling Bonjour discovery after wakeup from sleep")
             bonjour_account.enabled=True
             self.bonjour_disabled_on_sleep=False
 
