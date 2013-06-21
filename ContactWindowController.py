@@ -3837,7 +3837,7 @@ class ContactWindowController(NSWindowController):
                                     ft_item.setEnabled_(False)
 
                         if ft_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Files...", "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
 
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
@@ -3973,7 +3973,7 @@ class ContactWindowController(NSWindowController):
 
                         if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                             if has_fully_qualified_sip_uri:
-                                ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send File(s)...", "sendFile:", "")
+                                ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Files...", "sendFile:", "")
                                 aor_supports_ft = not settings.gui.use_availability_for_sessions or isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
                                 ft_item.setEnabled_(aor_supports_ft)
 
