@@ -223,13 +223,13 @@ class ChatWindowController(NSWindowController):
         return False
 
     def _findInactiveSessionCompatibleWith_(self, session):
-        getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
-        session_contact = getContactMatchingURI(session.remoteSIPAddress)
+        getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
+        session_contact = getFirstContactMatchingURI(session.remoteSIPAddress)
         for k, s in self.sessions.iteritems():
             if s == session or s.identifier == session.identifier:
                 return k, s
             if not s.isActive():
-                contact = getContactMatchingURI(s.remoteSIPAddress)
+                contact = getFirstContactMatchingURI(s.remoteSIPAddress)
                 if s.remoteSIPAddress==session.remoteSIPAddress or session_contact==contact!=None:
                     return k, s
         else:
@@ -799,7 +799,7 @@ class ChatWindowController(NSWindowController):
             if session.remote_focus:
                 participants = NSApp.delegate().contactsWindowController.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
                 if participants is not None:
-                    getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
+                    getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
                     remote_uri = format_identity_to_string(session.remotePartyObject)
                     # prevent loops
                     if remote_uri in participants:
@@ -815,7 +815,7 @@ class ChatWindowController(NSWindowController):
                             session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
                             continue
 
-                        contact = getContactMatchingURI(uri)
+                        contact = getFirstContactMatchingURI(uri)
                         if contact:
                             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                         else:
@@ -1182,9 +1182,9 @@ class ChatWindowController(NSWindowController):
                 pass
             else:
                 uri = sip_prefix_pattern.sub("", user.entity)
-                getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
+                getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
 
-                contact = getContactMatchingURI(uri)
+                contact = getFirstContactMatchingURI(uri)
                 if contact:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
                 else:
@@ -1252,7 +1252,7 @@ class ChatWindowController(NSWindowController):
             self.toolbar.validateVisibleItems()
 
     def refreshDrawer(self):
-        getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
+        getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
 
         session = self.selectedSessionController()
 
@@ -1293,7 +1293,7 @@ class ChatWindowController(NSWindowController):
             self.participants.append(contact)
 
             # Add remote party
-            contact = session.selected_contact or getContactMatchingURI(session.remoteSIPAddress)
+            contact = session.selected_contact or getFirstContactMatchingURI(session.remoteSIPAddress)
             if contact:
                 contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon)
             else:
@@ -1327,7 +1327,7 @@ class ChatWindowController(NSWindowController):
                 self.participants.append(contact)
 
                 # Add remote party
-                contact = session.selected_contact or getContactMatchingURI(session.remoteSIPAddress)
+                contact = session.selected_contact or getFirstContactMatchingURI(session.remoteSIPAddress)
                 icon = None
                 if chat_stream.remoteIcon:
                     icon = chat_stream.remoteIcon
@@ -1377,7 +1377,7 @@ class ChatWindowController(NSWindowController):
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else session.account.display_name
                         contact = BlinkConferenceContact(own_uri, name=display_name, icon=self.own_icon)
                     else:
-                        contact = getContactMatchingURI(uri)
+                        contact = getFirstContactMatchingURI(uri)
                         if contact:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
                             contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)

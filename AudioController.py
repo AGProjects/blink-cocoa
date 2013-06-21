@@ -122,7 +122,7 @@ class AudioController(MediaStream):
         NSBundle.loadNibNamed_owner_("AudioSession", self)
         # TODO: hide zrtp area until implemented -adi
         self.setNormalViewHeight(self.view.frame())
-        self.contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.sessionController.target_uri, exact_match=True)
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.sessionController.target_uri, exact_match=True)
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)

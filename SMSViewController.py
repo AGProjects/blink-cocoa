@@ -161,8 +161,8 @@ class SMSViewController(NSObject):
         self.chatViewController.appendAttributedString_(smiley)
 
     def matchesTargetAccount(self, target, account):
-        that_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(target)
-        this_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.target_uri)
+        that_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(target)
+        this_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
     def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
@@ -280,7 +280,7 @@ class SMSViewController(NSObject):
         if isinstance(self.account, Account):
             settings = SIPSimpleSettings()
             if not self.account.sms.disable_replication:
-                contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(self.target_uri)
+                contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
                 msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.name if contact else None)])
                 self.sendReplicationMessage(response_code, str(msg), content_type='message/cpim')
 

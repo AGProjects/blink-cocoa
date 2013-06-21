@@ -182,13 +182,13 @@ class HistoryViewer(NSWindowController):
         for item in self.contacts:
             item.destroy()
 
-        getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
+        getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
 
         self.contacts = [self.all_contacts, self.bonjour_contact]
 
         if self.search_uris:
             for uri in self.search_uris:
-                found_contact = getContactMatchingURI(uri, exact_match=True)
+                found_contact = getFirstContactMatchingURI(uri, exact_match=True)
                 if found_contact:
                     contact_exist = False
                     for contact_uri in found_contact.uris:
@@ -216,7 +216,7 @@ class HistoryViewer(NSWindowController):
 
         if results:
             for row in results:
-                found_contact = getContactMatchingURI(row[0], exact_match=True)
+                found_contact = getFirstContactMatchingURI(row[0], exact_match=True)
                 if found_contact:
                     contact_exist = False
                     for contact_uri in found_contact.uris:
@@ -267,10 +267,10 @@ class HistoryViewer(NSWindowController):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def renderDailyEntries(self, results):
-        getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
+        getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
         self.dayly_entries = NSMutableArray.array()
         for result in results:
-            contact = getContactMatchingURI(result[2], exact_match=True)
+            contact = getFirstContactMatchingURI(result[2], exact_match=True)
             if contact:
                 remote_uri = '%s <%s>' % (contact.name, result[2])
             else:

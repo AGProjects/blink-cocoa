@@ -329,7 +329,7 @@ class AlertPanel(NSObject, object):
         frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
         captionT.setFrame_(frame)
 
-        caller_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(session.remote_identity.uri)
+        caller_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri)
         if caller_contact:
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)

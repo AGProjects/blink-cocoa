@@ -1311,8 +1311,8 @@ class ContactWindowController(NSWindowController):
     def isAddParticipantsWindowOpen(self):
         return any(window for window in NSApp().windows() if window.title() == 'Add Participants' and window.isVisible())
 
-    def getContactMatchingURI(self, uri, exact_match=False):
-        return self.model.getContactMatchingURI(uri, exact_match)
+    def getFirstContactMatchingURI(self, uri, exact_match=False):
+        return self.model.getFirstContactMatchingURI(uri, exact_match)
 
     def hasContactMatchingURI(self, uri, exact_match=False):
         return self.model.hasContactMatchingURI(uri, exact_match)
@@ -1320,7 +1320,7 @@ class ContactWindowController(NSWindowController):
     def iconPathForURI(self, uri, is_focus=False):
         if AccountManager().has_account(uri):
             return self.iconPathForSelf()
-        contact = self.getContactMatchingURI(uri)
+        contact = self.getFirstContactMatchingURI(uri)
         if contact:
             path = contact.avatar.path
             if path is not None and os.path.isfile(path):
@@ -1854,7 +1854,7 @@ class ContactWindowController(NSWindowController):
             if selected_contact:
                 display_name = selected_contact.name
             else:
-                contact = self.getContactMatchingURI(target)
+                contact = self.getFirstContactMatchingURI(target)
                 display_name = contact.name if contact else ''
         else:
             account = BonjourAccount()
@@ -1915,7 +1915,7 @@ class ContactWindowController(NSWindowController):
             # Add invited participants to the drawer
             session_controller.mustShowDrawer = True
             for uri in participants:
-                contact = self.getContactMatchingURI(uri)
+                contact = self.getFirstContactMatchingURI(uri)
                 if contact:
                     contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                 else:
@@ -2582,7 +2582,7 @@ class ContactWindowController(NSWindowController):
                 else:
                     # skip ourselves
                     continue
-                contact = self.getContactMatchingURI(uri, exact_match=True)
+                contact = self.getFirstContactMatchingURI(uri, exact_match=True)
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
                 items[title] = {'status': 'offline', 'contact' : None}
                 if isinstance(contact, BlinkPresenceContact):
@@ -3079,7 +3079,7 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            contact = self.getContactMatchingURI(target_uri)
+            contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != contact.uri:
                 display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -3104,7 +3104,7 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            contact = self.getContactMatchingURI(target_uri)
+            contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -3129,7 +3129,7 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            contact = self.getContactMatchingURI(target_uri)
+            contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -3154,7 +3154,7 @@ class ContactWindowController(NSWindowController):
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            contact = self.getContactMatchingURI(target_uri)
+            contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
                 fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -4549,7 +4549,7 @@ class ContactWindowController(NSWindowController):
             session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
             return False
 
-        contact = self.getContactMatchingURI(uri)
+        contact = self.getFirstContactMatchingURI(uri)
         if contact:
             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
         else:
@@ -4609,7 +4609,7 @@ class ContactWindowController(NSWindowController):
                 elif audio_endpoints and user_on_hold:
                     active_media.append('audio-onhold')
 
-                contact = self.getContactMatchingURI(uri)
+                contact = self.getFirstContactMatchingURI(uri)
                 if contact:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
                     contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
@@ -4782,7 +4782,7 @@ class ContactWindowController(NSWindowController):
                             session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
                             continue
 
-                        contact = self.getContactMatchingURI(uri)
+                        contact = self.getFirstContactMatchingURI(uri)
                         if contact:
                             contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
                         else:

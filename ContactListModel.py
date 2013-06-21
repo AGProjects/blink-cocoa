@@ -1475,8 +1475,8 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 seen[target_uri] += 1
             else:
                 seen[target_uri] = 1
-                getContactMatchingURI = NSApp.delegate().contactsWindowController.getContactMatchingURI
-                contact = getContactMatchingURI(target_uri)
+                getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
+                contact = getFirstContactMatchingURI(target_uri)
                 if contact:
                     name = contact.name
                     icon = contact.avatar.icon
@@ -2040,7 +2040,7 @@ class ContactListModel(CustomListModel):
     def hasContactMatchingURI(self, uri, exact_match=False):
         return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
 
-    def getContactMatchingURI(self, uri, exact_match=False):
+    def getFirstContactMatchingURI(self, uri, exact_match=False):
         try:
             return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
         except StopIteration:

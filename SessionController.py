@@ -195,7 +195,7 @@ class SessionControllersManager(object):
 
     @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
-        match_contact = NSApp.delegate().contactsWindowController.getContactMatchingURI(session.remote_identity.uri, exact_match=True)
+        match_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri, exact_match=True)
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
         stream_type_list = list(set(stream.type for stream in streams))
         if not streams:
