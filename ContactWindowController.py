@@ -395,7 +395,11 @@ class ContactWindowController(NSWindowController):
         dotPath.stroke()
 
         self.presence_dots = {}
-        for i, color in [("available", NSColor.greenColor()), ("away", NSColor.yellowColor()), ("busy", NSColor.redColor()), ("invisible", NSColor.grayColor())]:
+        for i, color in [("available", NSColor.greenColor()),
+                         ("away", NSColor.yellowColor()),
+                         ("busy", NSColor.redColor()),
+                         ("invisible", NSColor.grayColor()),
+                         ("offline", NSColor.whiteColor())]:
             dot = NSImage.alloc().initWithSize_(NSMakeSize(14,14))
             dot.lockFocus()
             color.set()
@@ -518,7 +522,7 @@ class ContactWindowController(NSWindowController):
                     try:
                         status = item['represented_object']['extended_status']
                         image = self.presence_dots[status]
-                        #image = self.presence_dots[status]
+                        #image = presence_status_icons[status]
                         image.setScalesWhenResized_(True)
                         image.setSize_(NSMakeSize(15,15))
                         lastItem.setImage_(image)
@@ -3682,16 +3686,16 @@ class ContactWindowController(NSWindowController):
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
-                        image = presence_status_for_contact(item, uri.uri)
-                        if image:
-                            icon = NSImage.imageNamed_(image)
+                        status = presence_status_for_contact(item, uri.uri)
+                        if status:
+                            icon = self.presence_dots[status]
                             icon.setScalesWhenResized_(True)
                             icon.setSize_(NSMakeSize(15,15))
                             audio_item.setImage_(icon)
 
                 if gruu_devices:
                     audio_submenu.addItem_(NSMenuItem.separatorItem())
-                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
+                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
                     audio_item.setEnabled_(False)
 
                     for device in gruu_devices:
@@ -3727,9 +3731,9 @@ class ContactWindowController(NSWindowController):
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     sms_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
-                        image = presence_status_for_contact(item, uri.uri)
-                        if image:
-                            icon = NSImage.imageNamed_(image)
+                        status = presence_status_for_contact(item, uri.uri)
+                        if status:
+                            icon = self.presence_dots[status]
                             icon.setScalesWhenResized_(True)
                             icon.setSize_(NSMakeSize(15,15))
                             sms_item.setImage_(icon)
@@ -3752,16 +3756,16 @@ class ContactWindowController(NSWindowController):
                         chat_item.setEnabled_(aor_supports_chat)
 
                         if isinstance(item, BlinkPresenceContact):
-                            image = presence_status_for_contact(item, uri.uri)
-                            if image:
-                                icon = NSImage.imageNamed_(image)
+                            status = presence_status_for_contact(item, uri.uri)
+                            if status:
+                                icon = self.presence_dots[status]
                                 icon.setScalesWhenResized_(True)
                                 icon.setSize_(NSMakeSize(15,15))
                                 chat_item.setImage_(icon)
 
                     if gruu_devices:
                         chat_submenu.addItem_(NSMenuItem.separatorItem())
-                        chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
+                        chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
                         chat_item.setEnabled_(False)
 
                         for device in gruu_devices:
@@ -3803,9 +3807,9 @@ class ContactWindowController(NSWindowController):
                             ft_item.setEnabled_(aor_supports_ft)
 
                             if isinstance(item, BlinkPresenceContact):
-                                image = presence_status_for_contact(item, uri.uri)
-                                if image:
-                                    icon = NSImage.imageNamed_(image)
+                                status = presence_status_for_contact(item, uri.uri)
+                                if status:
+                                    icon = self.presence_dots[status]
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ft_item.setImage_(icon)
@@ -3813,7 +3817,7 @@ class ContactWindowController(NSWindowController):
                         if gruu_devices:
                             ft_submenu.addItem_(NSMenuItem.separatorItem())
                             ft_submenu.setAutoenablesItems_(False)
-                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
+                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
                             ft_item.setEnabled_(False)
 
                             for device in gruu_devices:
@@ -3853,16 +3857,16 @@ class ContactWindowController(NSWindowController):
                             ds_item.setEnabled_(aor_supports_ds)
 
                             if isinstance(item, BlinkPresenceContact):
-                                image = presence_status_for_contact(item, uri.uri)
-                                if image:
-                                    icon = NSImage.imageNamed_(image)
+                                status = presence_status_for_contact(item, uri.uri)
+                                if status:
+                                    icon = self.presence_dots[status]
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
                             ds_item.setEnabled_(False)
 
                             for device in gruu_devices:
@@ -3902,16 +3906,16 @@ class ContactWindowController(NSWindowController):
                             ds_item.setEnabled_(aor_supports_ds)
 
                             if isinstance(item, BlinkPresenceContact):
-                                image = presence_status_for_contact(item, uri.uri)
-                                if image:
-                                    icon = NSImage.imageNamed_(image)
+                                status = presence_status_for_contact(item, uri.uri)
+                                if status:
+                                    icon = self.presence_dots[status]
                                     icon.setScalesWhenResized_(True)
                                     icon.setSize_(NSMakeSize(15,15))
                                     ds_item.setImage_(icon)
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Devices", "", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
                             ds_item.setEnabled_(False)
 
                             for device in gruu_devices:
