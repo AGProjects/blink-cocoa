@@ -426,11 +426,11 @@ class PresencePublisher(object):
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
         if selected_item is None:
             return None
-        
+
         activity_object = selected_item.representedObject()
         if activity_object is None:
             return None
-        
+
         if self.last_logged_status != activity_object['extended_status']:
             BlinkLogger().log_info(u"My availability changed to %s" % activity_object['extended_status'])
             self.last_logged_status = activity_object['extended_status']

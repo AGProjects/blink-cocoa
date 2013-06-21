@@ -492,19 +492,19 @@ class MultipleSelectionOption(Option):
 class SIPTransportListOption(MultipleSelectionOption):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 15*len(SIPTransportList.available_values)+8))
-    
+
     def __init__(self, object, name, option, description=None):
         MultipleSelectionOption.__init__(self, object, name, option, allowReorder=False, tableWidth=80, description=description)
-        
+
         self.options = SIPTransportList.available_values
-    
+
     def _store(self):
         value = []
         for opt in self.options:
             if opt in self.selection:
                 value.append(opt)
         self.set(tuple(value))
-    
+
     def restore(self):
         value = self.get()
         if not value:
@@ -531,7 +531,7 @@ class AudioCodecListOption(MultipleSelectionOption):
                 codec_option = audio_codecs[option]
             except KeyError:
                 codec_option = option
-    
+
             self.options.append(codec_option)
 
         self.sideView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 170, NSHeight(self.frame())))
@@ -637,7 +637,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
                 options.append(val)
             else:
                 options.append(v)
-        
+
         self.selection = set(options)
         for opt in self.options:
             if opt not in options:

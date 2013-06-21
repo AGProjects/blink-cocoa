@@ -1071,7 +1071,7 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'ICE negotiation succeeded')
-        
+
         self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
                                                                                              self.stream.local_rtp_port,
                                                                                              ice_candidates[self.stream.local_rtp_candidate.type.lower()],
@@ -1083,7 +1083,7 @@ class AudioController(MediaStream):
             self.sessionController.log_info(u'Audio stream is peer to peer')
         else:
             self.sessionController.log_info(u'Audio stream is relayed by server')
-    
+
         self.ice_negotiation_status = 'Success'
 
     def _NH_BlinkAudioStreamUnholdRequested(self, sender, data):
@@ -1236,7 +1236,7 @@ class AudioController(MediaStream):
             self.updateAudioStatusWithSessionState("ICE Negotiation Succeeded")
         elif data.state == 'FAILED':
             self.updateAudioStatusWithSessionState("ICE Negotiation Failed")
-    
+
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         if data.failure_reason == 'DNS Lookup Failed':

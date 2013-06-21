@@ -656,7 +656,7 @@ class DebugWindow(NSObject):
     def _NH_SIPEngineLog(self, notification):
         if self.pjsipCheckBox.state() == NSOnState:
             self.renderPJSIP("(%d) %s" % (notification.data.level, notification.data.message))
-    
+
     def _NH_SIPEngineSIPTrace(self, notification):
         self.renderSIP(notification)
 

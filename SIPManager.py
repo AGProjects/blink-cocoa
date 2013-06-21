@@ -60,7 +60,7 @@ class SIPManager(object):
 
         BlinkLogger().log_info(u"Loading SIP SIMPLE Client SDK %s" % sdk_version)
         BlinkLogger().log_info(u"Starting core version %s" % core_version)
-        
+
         self._app = SIPApplication()
         self._delegate = None
         self._selected_account = None
@@ -580,9 +580,9 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             if spectrum >=20:
                 BlinkLogger().log_info(u"For best quality please disable 'Use ambient noise reduction' option in System Sound Input Preferences")
-            
+
             settings.save()
-                                
+
     @run_in_green_thread
     def _NH_SystemWillSleep(self, sender, data):
         bonjour_account = BonjourAccount()

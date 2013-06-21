@@ -219,14 +219,14 @@ class SessionHistory(object):
             query += " and status = %s" % SessionHistoryEntry.sqlrepr(status)
         if remote_focus:
             query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
-    
+
         if remote_uris:
             remote_uris_sql = ''
             for uri in remote_uris:
                 remote_uris_sql += "%s," % SessionHistoryEntry.sqlrepr(unicode(uri))
             remote_uris_sql = remote_uris_sql.rstrip(",")
             query += " and remote_uri in (%s)" % remote_uris_sql
-                
+
         query += " order by start_time desc limit %d" % count
         try:
             return list(SessionHistoryEntry.select(query))

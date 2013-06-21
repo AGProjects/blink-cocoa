@@ -2377,7 +2377,7 @@ class ContactWindowController(NSWindowController):
 
             if service.user_input is not None and service.user_input.value == 'idle':
                 continue
-        
+
             if service.timestamp is None:
                 continue
 
@@ -3030,7 +3030,7 @@ class ContactWindowController(NSWindowController):
         session_history = SessionHistory()
         if contact.uris:
             remote_uris = list(uri.uri for uri in contact.uris)
-            results = session_history.get_entries(count=10, remote_focus="0", remote_uris=remote_uris)        
+            results = session_history.get_entries(count=10, remote_focus="0", remote_uris=remote_uris)
             self.renderLastCallsEntriesForContact(results)
 
     @run_in_gui_thread
@@ -3210,7 +3210,7 @@ class ContactWindowController(NSWindowController):
             elif 'chat' in media_types:
                 image = 'pencil'
             elif 'file-transfer' in media_types:
-                image = 'outgoing_file' if direction == 'outgoing' else 'incoming_file'                
+                image = 'outgoing_file' if direction == 'outgoing' else 'incoming_file'
             return image
 
         i = 6 if NSApp.delegate().applicationName == 'Blink Lite' else 7
