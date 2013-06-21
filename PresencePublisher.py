@@ -28,6 +28,7 @@ from twisted.internet import reactor
 from zope.interface import implements
 from util import *
 
+from BlinkLogger import BlinkLogger
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
@@ -114,6 +115,7 @@ class PresencePublisher(object):
     location = None
     xcap_caps_discovered = set()
     last_service_timestamp = {}
+    last_logged_status = None
 
     # Cleanup old base64 encoded icons
     _cleanedup_accounts = set()
@@ -421,8 +423,21 @@ class PresencePublisher(object):
             return None
 
     def publish(self):
+        selected_item = self.owner.presenceActivityPopUp.selectedItem()
+        if selected_item is None:
+            return None
+        
+        activity_object = selected_item.representedObject()
+        if activity_object is None:
+            return None
+        
+        if self.last_logged_status != activity_object['extended_status']:
+            BlinkLogger().log_info(u"My availability changed to %s" % activity_object['extended_status'])
+            self.last_logged_status = activity_object['extended_status']
+
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = self.build_pidf(account)
+
         self.updateBonjourPresenceState()
 
     def updateBonjourPresenceState(self):
