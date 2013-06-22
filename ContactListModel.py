@@ -1538,6 +1538,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
         super(AddressBookBlinkGroup, self).__init__(name)
 
     def loadAddressBook(self):
+        BlinkLogger().log_info('Loading Contacts from System Address Book')
         self.contacts = []
         book = AddressBook.ABAddressBook.sharedAddressBook()
         if book is None:
@@ -1547,6 +1548,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
             if blink_contact.uris:
                 self.contacts.append(blink_contact)
         self.sortContacts()
+        BlinkLogger().log_info('System Address Book Contacts loaded')
 
 
 class CustomListModel(NSObject):
@@ -2417,7 +2419,7 @@ class ContactListModel(CustomListModel):
         tmp_active_watchers  = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
 
         if notification.data.state == 'full':
-            BlinkLogger().log_info('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
+            BlinkLogger().log_debug('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
             # TODO: don't remove all of them, just the ones that match?
             self.pending_watchers_group.contacts = []
             self.pending_watchers_map[notification.sender.id] = tmp_pending_watchers

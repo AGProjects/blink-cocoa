@@ -804,7 +804,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map
-        BlinkLogger().log_info('Got availability %s for %d SIP addresses for account %s' % ('full state' if notification.data.full_state else 'update', len(resource_map.keys()), notification.sender.id))
+        BlinkLogger().log_debug('Got availability %s for %d SIP addresses for account %s' % ('full state' if notification.data.full_state else 'update', len(resource_map.keys()), notification.sender.id))
 
         blink_contacts = set()
         for key, value in resource_map.iteritems():
