@@ -50,6 +50,7 @@ from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
+from HistoryManager import SessionHistoryReplicator
 
 from interfaces.itunes import MusicApplications
 
@@ -100,6 +101,8 @@ class SessionControllersManager(object):
         self.activeAudioStreams = set()
         self.pause_music = True
         self.redial_uri = None
+
+        SessionHistoryReplicator()
 
     @property
     def alertPanel(self):

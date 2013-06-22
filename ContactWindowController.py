@@ -47,7 +47,7 @@ from AlertPanel import AlertPanel
 from AudioSession import AudioSession
 from BlockedContact import BlockedContact
 from BlinkLogger import BlinkLogger
-from HistoryManager import SessionHistory, SessionHistoryReplicator, ChatHistoryReplicator
+from HistoryManager import SessionHistory, ChatHistoryReplicator
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
@@ -359,7 +359,7 @@ class ContactWindowController(NSWindowController):
         self.setAlwaysOnTop()
         self.setSpeechRecognition()
         self.chat_journal_replicator = ChatHistoryReplicator()
-        SessionHistoryReplicator()
+        
         try:
             with open(ApplicationData.get('presence_notes_history.pickle'), 'r') as f:
                 self.presence_notes_history.extend(cPickle.load(f))
