@@ -18,7 +18,7 @@ from application.python import Null
 from application.python.decorator import decorator, preserve_signature
 from application.python.types import Singleton
 from application.system import makedirs
-from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex
+from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex, DESC
 from sqlobject import connectionForURI
 from sqlobject import dberrors
 
@@ -740,15 +740,15 @@ class FileTransferHistory(object):
         return False
 
     @run_in_db_thread
-    def _get_transfers(self):
+    def _get_transfers(self, limit):
         try:
-            return list(FileTransfer.selectBy())
+            return list(FileTransfer.select(orderBy=DESC(FileTransfer.q.id), limit=limit))
         except Exception, e:
             BlinkLogger().log_error(u"Error getting transfers from history table: %s" % e)
             return []
 
-    def get_transfers(self):
-        return block_on(self._get_transfers())
+    def get_transfers(self, limit=100):
+        return block_on(self._get_transfers(limit))
 
     @run_in_db_thread
     def delete_transfers(self):

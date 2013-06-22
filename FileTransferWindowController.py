@@ -42,6 +42,7 @@ class FileTransferWindowController(NSObject, object):
     bottomLabel = objc.IBOutlet()
     transferSpeed = objc.IBOutlet()
     history = []
+    loaded = False
 
     def init(self):
         NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
@@ -49,7 +50,6 @@ class FileTransferWindowController(NSObject, object):
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
         NotificationCenter().add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
-        NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
 
         NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
 
@@ -59,7 +59,7 @@ class FileTransferWindowController(NSObject, object):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_previous_transfers(self, active_items=[]):
-        results = FileTransferHistory().get_transfers()
+        results = FileTransferHistory().get_transfers(20)
         transfers = [transfer for transfer in reversed(results) if transfer.transfer_id not in active_items]
         self.render_previous_transfers(transfers)
 
@@ -69,14 +69,15 @@ class FileTransferWindowController(NSObject, object):
 
         for transfer in transfers:
             item = FileTransferItemView.alloc().initWithFrame_oldTransfer_(NSMakeRect(0, 0, 100, 100), transfer)
-
             if last_displayed_item:
                 self.listView.insertItemView_before_(item, last_displayed_item)
             else:
                 self.listView.addItemView_(item)
 
-        self.listView.relayout()
-        self.listView.display()
+            self.listView.relayout()
+            self.listView.display()
+            h = self.listView.minimumHeight()
+            self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
         count = len(self.listView.subviews())
         if count == 1:
@@ -84,10 +85,9 @@ class FileTransferWindowController(NSObject, object):
         else:
             self.bottomLabel.setStringValue_(u"%i items"%count if count else u"")
 
-        h = self.listView.minimumHeight()
-        self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
+        self.loaded = True
 
-    def refresh(self):
+    def load_transfers_from_history(self):
         active_items = []
         for item in self.listView.subviews().copy():
             if item.done:
@@ -138,6 +138,8 @@ class FileTransferWindowController(NSObject, object):
     @objc.IBAction
     def showWindow_(self, sender):
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+            if not self.loaded:
+                self.load_transfers_from_history()
             self.window.makeKeyAndOrderFront_(None)
 
     @run_in_green_thread
@@ -147,10 +149,7 @@ class FileTransferWindowController(NSObject, object):
     @objc.IBAction
     def clearList_(self, sender):
         self.delete_history_transfers()
-        self.refresh()
-
-    def _NH_SIPApplicationDidStart(self, sender, data):
-        self.refresh()
+        self.load_transfers_from_history()
 
     def _NH_BlinkFileTransferRestarting(self, sender, data):
         self.listView.relayout()
