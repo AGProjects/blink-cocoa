@@ -651,6 +651,7 @@ class BonjourConferenceServices(object):
     implements(IObserver)
 
     def __init__(self):
+        BlinkLogger().log_info('Starting Bonjour Conference Services')
         self._stopped = True
         self._files = []
         self._servers = {}
@@ -875,6 +876,7 @@ class BonjourConferenceServices(object):
 
 class IPAddressMonitor(object):
     def __init__(self):
+        BlinkLogger().log_info('Starting IP Address Monitor')
         self.greenlet = None
 
     @run_in_green_thread

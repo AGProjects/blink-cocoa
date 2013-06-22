@@ -18,6 +18,7 @@ from sipsimple.application import SIPApplication
 from resources import Resources
 from util import allocate_autorelease_pool
 
+from BlinkLogger import BlinkLogger
 
 
 HANGUP_TONE_THROTLE_DELAY = 2.0
@@ -65,8 +66,12 @@ class Ringer(object):
     chat_beep_time = 0
 
     def __init__(self, owner):
+        BlinkLogger().log_info('Starting Ringtone Manager')
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, name="SIPApplicationDidStart")
         self.owner = owner
         self.started = False
+    
 
     def start(self):
         notification_center = NotificationCenter()

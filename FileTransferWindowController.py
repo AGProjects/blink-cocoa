@@ -44,8 +44,6 @@ class FileTransferWindowController(NSObject, object):
     history = []
 
     def init(self):
-        BlinkLogger().log_info('Starting File Transfer Controller')
-
         NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
         NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")

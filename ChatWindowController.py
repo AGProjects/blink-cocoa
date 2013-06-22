@@ -6,6 +6,11 @@ from AppKit import *
 from WebKit import *
 from Quartz import *
 
+import os
+import re
+import time
+import urllib
+
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -16,29 +21,23 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
-import urllib
+from util import *
+
+import FancyTabSwitcher
+import ParticipantsTableView
 
 from BlinkLogger import BlinkLogger
-from MediaStream import *
+from ChatPrivateMessageController import ChatPrivateMessageController
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
-import ParticipantsTableView
-from ChatPrivateMessageController import ChatPrivateMessageController
-from SIPManager import SIPManager
+from MediaStream import *
 from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
-
-import FancyTabSwitcher
-from util import *
-
-import os
-import re
-import time
 
 
 CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT = 314
