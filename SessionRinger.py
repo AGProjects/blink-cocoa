@@ -8,6 +8,7 @@ from itertools import chain
 
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver
+from application.python import Null
 
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import AccountManager
@@ -19,7 +20,6 @@ from resources import Resources
 from util import allocate_autorelease_pool
 
 from BlinkLogger import BlinkLogger
-
 
 HANGUP_TONE_THROTLE_DELAY = 2.0
 CHAT_TONE_THROTLE_DELAY = 3.0
@@ -71,7 +71,7 @@ class Ringer(object):
         notification_center.add_observer(self, name="SIPApplicationDidStart")
         self.owner = owner
         self.started = False
-    
+
 
     def start(self):
         notification_center = NotificationCenter()
@@ -308,100 +308,151 @@ class Ringer(object):
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
         session = notification.sender
-        name = notification.name
-        data = notification.data
-        settings = SIPSimpleSettings()
-
-        if name == "SIPApplicationDidStart":
-            self.start()
-            self.update_ringtones()
-        elif name == "SIPSessionWillStart":
-            self.active_sessions.add(session)
-            self.stop_ringing(session)
-        elif name in ("SIPSessionWillEnd", "SIPSessionDidEnd", "SIPSessionDidFail"):
-            streams = session.streams or session.proposed_streams
-            if not streams:
-                # not connected
-                has_audio = session in self.incoming_audio_sessions
-            else:
-                stream_types = [s.type for s in streams]
-                has_audio = 'audio' in stream_types
-            # play hangup tone
-            if has_audio:
-                self.play_hangup()
-            NotificationCenter().remove_observer(self, sender=session)
-            self.active_sessions.discard(session)
-            self.stop_ringing(session)
-        elif name in ("SIPSessionGotAcceptProposal", "SIPSessionGotRejectProposal", "SIPSessionHadProposalFailure", "BlinkWillCancelProposal"):
-            self.stop_ringing(session)
-        elif name == "SIPSessionGotProposal":
-            stream_types = [stream.type for stream in data.streams]
-            if 'audio' in stream_types:
-                if data.originator == "local":
-                    self.ringing_sessions.add(session)
-                else:
-                    self.incoming_audio_sessions[session] = data.streams
-            elif 'chat' in stream_types:
-                self.chat_sessions[session] = data.streams
-            elif 'screen-sharing' in stream_types:
-                self.ds_sessions[session] = data.streams
-            elif 'file-transfer' in stream_types:
-                self.filerecv_sessions[session] = data.streams
-            self.update_playing_ringtones(session.account)
-        elif name == "SIPSessionDidRenegotiateStreams":
-            if data.action == "remove":
-                for stream in (s for s in data.streams if s.type=='audio'):
-                    self.play_hangup()
-        elif name == "SIPSessionGotRingIndication":
-            self.ringing_sessions.add(session)
-            self.update_playing_ringtones()
-        elif name == "AudioStreamDidChangeHoldState":
-            if not settings.audio.silent:
-                if data.on_hold:
-                    self.on_hold_session_count += 1
-                else:
-                    self.on_hold_session_count -= 1
-                if self.secondary_hold_tone:
-                    if self.on_hold_session_count == 1:
-                        self.secondary_hold_tone.start()
-                    elif self.on_hold_session_count == 0:
-                        self.secondary_hold_tone.stop()
-                if data.on_hold and data.originator == 'remote' and self.initial_hold_tone and not self.initial_hold_tone.is_active:
-                    self.initial_hold_tone.start()
-        elif name == "ConferenceHasAddedAudio":
-            # TODO: play-resume iTunes after adding audio to conference tone has been played -adi
-            self.initial_hold_tone.start()
-        elif name == "ChatViewControllerDidDisplayMessage":
-            if not settings.audio.silent:
-                now = time.time()
-                if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
-                    if data.direction == 'outgoing' and self.chat_message_outgoing_sound:
-                        self.chat_message_outgoing_sound.stop()
-                        self.chat_message_outgoing_sound.start()
-                    elif self.chat_message_incoming_sound:
-                        self.chat_message_incoming_sound.stop()
-                        self.chat_message_incoming_sound.start()
-                    self.chat_beep_time = now
-        elif name == "BlinkFileTransferDidEnd":
-            if not settings.audio.silent:
-                if data == "send":
-                    if self.file_transfer_outgoing_sound:
-                        self.file_transfer_outgoing_sound.start()
-                else:
-                    if self.file_transfer_incoming_sound:
-                        self.file_transfer_incoming_sound.start()
-        elif name == "CFGSettingsObjectDidChange":
-            sound_attributes = ['audio.silent', 'audio.alert_device', 'audio.output_device', 'sounds.audio_inbound', 'sounds.message_sent', 'sounds.message_received', 'sounds.file_sent', 'sounds.file_received']
-            if set(sound_attributes).intersection(data.modified):
-                self.update_ringtones()
-            if 'audio.silent' in data.modified:
-                self.update_playing_ringtones()
-        elif name == "WavePlayerDidEnd":
-            NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
-
         on_hold_streams = [stream for stream in chain(*(session.streams for session in self.active_sessions if session.streams)) if stream.on_hold]
         if not on_hold_streams and self.secondary_hold_tone is not None and self.secondary_hold_tone.is_active:
             self.secondary_hold_tone.stop()
 
+    def _NH_SIPApplicationDidStart(self, notification):
+        self.start()
+        self.update_ringtones()
+
+    def _NH_SIPSessionWillStart(self, notification):
+        session = notification.sender
+        self.active_sessions.add(session)
+        self.stop_ringing(session)
+
+    def _NH_SIPSessionGotAcceptProposal(self, notification):
+        session = notification.sender
+        self.stop_ringing(session)
+
+    def _NH_SIPSessionGotRejectProposal(self, notification):
+        session = notification.sender
+        self.stop_ringing(session)
+
+    def _NH_SIPSessionHadProposalFailure(self, notification):
+        session = notification.sender
+        self.stop_ringing(session)
+
+    def _NH_BlinkWillCancelProposal(self, notification):
+        session = notification.sender
+        self.stop_ringing(session)
+
+    def _NH_SIPSessionWillEnd(self, notification):
+        self.handle_session_end(notification.sender)
+
+    def _NH_SIPSessionDidEnd(self, notification):
+        self.handle_session_end(notification.sender)
+
+    def _NH_SIPSessionDidFail(self, notification):
+        self.handle_session_end(notification.sender)
+
+    def handle_session_end(self, session):
+        streams = session.streams or session.proposed_streams
+        if not streams:
+            # not connected
+            has_audio = session in self.incoming_audio_sessions
+        else:
+            stream_types = [s.type for s in streams]
+            has_audio = 'audio' in stream_types
+        # play hangup tone
+        if has_audio:
+            self.play_hangup()
+        NotificationCenter().remove_observer(self, sender=session)
+        self.active_sessions.discard(session)
+        self.stop_ringing(session)
+
+    def _NH_SIPSessionGotProposal(self, notification):
+        session = notification.sender
+        data = notification.data
+        stream_types = [stream.type for stream in data.streams]
+        if 'audio' in stream_types:
+            if data.originator == "local":
+                self.ringing_sessions.add(session)
+            else:
+                self.incoming_audio_sessions[session] = data.streams
+        elif 'chat' in stream_types:
+            self.chat_sessions[session] = data.streams
+        elif 'screen-sharing' in stream_types:
+            self.ds_sessions[session] = data.streams
+        elif 'file-transfer' in stream_types:
+            self.filerecv_sessions[session] = data.streams
+        self.update_playing_ringtones(session.account)
+
+    def _NH_SIPSessionDidRenegotiateStreams(self, notification):
+        data = notification.data
+        if data.action == "remove":
+            for stream in (s for s in data.streams if s.type=='audio'):
+                self.play_hangup()
+
+    def _NH_SIPSessionGotRingIndication(self, notification):
+        session = notification.sender
+        self.ringing_sessions.add(session)
+        self.update_playing_ringtones()
+
+    def _NH_AudioStreamDidChangeHoldState(self, notification):
+        data = notification.data
+        settings = SIPSimpleSettings()
+        if not settings.audio.silent:
+            if data.on_hold:
+                self.on_hold_session_count += 1
+            else:
+                self.on_hold_session_count -= 1
+            if self.secondary_hold_tone:
+                if self.on_hold_session_count == 1:
+                    self.secondary_hold_tone.start()
+                elif self.on_hold_session_count == 0:
+                    self.secondary_hold_tone.stop()
+            if data.on_hold and data.originator == 'remote' and self.initial_hold_tone and not self.initial_hold_tone.is_active:
+                self.initial_hold_tone.start()
+
+    def _NH_ConferenceHasAddedAudio(self, notification):
+        # TODO: play-resume iTunes after adding audio to conference tone has been played -adi
+        self.initial_hold_tone.start()
+
+    def _NH_ChatViewControllerDidDisplayMessage(self, notification):
+        data = notification.data
+        settings = SIPSimpleSettings()
+        if not settings.audio.silent:
+            now = time.time()
+            if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
+                if data.direction == 'outgoing' and self.chat_message_outgoing_sound:
+                    self.chat_message_outgoing_sound.stop()
+                    self.chat_message_outgoing_sound.start()
+                elif self.chat_message_incoming_sound:
+                    self.chat_message_incoming_sound.stop()
+                    self.chat_message_incoming_sound.start()
+                self.chat_beep_time = now
+
+    def _NH_BlinkFileTransferDidEnd(self, notification):
+        data = notification.data
+        settings = SIPSimpleSettings()
+        if not settings.audio.silent:
+            if data == "send":
+                if self.file_transfer_outgoing_sound:
+                    self.file_transfer_outgoing_sound.start()
+            else:
+                if self.file_transfer_incoming_sound:
+                    self.file_transfer_incoming_sound.start()
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        data = notification.data
+        sound_attributes = ['audio.silent',
+                            'audio.alert_device',
+                            'audio.output_device',
+                            'sounds.audio_inbound',
+                            'sounds.message_sent',
+                            'sounds.message_received',
+                            'sounds.file_sent',
+                            'sounds.file_received']
+        if set(sound_attributes).intersection(data.modified):
+            self.update_ringtones()
+        if 'audio.silent' in data.modified:
+            self.update_playing_ringtones()
+
+    def _NH_WavePlayerDidEnd(self, notification):
+        NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
 
