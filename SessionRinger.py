@@ -308,7 +308,10 @@ class Ringer(object):
         data = notification.data
         settings = SIPSimpleSettings()
 
-        if name == "SIPSessionWillStart":
+        if name == "SIPApplicationDidStart":
+            self.start()
+            self.update_ringtones()
+        elif name == "SIPSessionWillStart":
             self.active_sessions.add(session)
             self.stop_ringing(session)
         elif name in ("SIPSessionWillEnd", "SIPSessionDidEnd", "SIPSessionDidFail"):

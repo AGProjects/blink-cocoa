@@ -118,8 +118,6 @@ class SessionControllersManager(object):
         handler(notification.sender, notification.data)
 
     def _NH_SIPApplicationDidStart(self, sender, data):
-        self.ringer.start()
-        self.ringer.update_ringtones()
         self.get_redial_uri_from_history()
 
     @run_in_green_thread
