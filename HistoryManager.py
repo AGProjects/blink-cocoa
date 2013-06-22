@@ -1097,6 +1097,7 @@ class ChatHistoryReplicator(object):
 
     def __init__(self):
         notification_center = NotificationCenter()
+        notification_center.add_observer(self, name='BlinkWillTerminate')
         notification_center.add_observer(self, name='ChatReplicationJournalEntryAdded')
         notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         notification_center.add_observer(self, name='SIPAccountManagerDidStart')
@@ -1136,6 +1137,10 @@ class ChatHistoryReplicator(object):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
+
+    def _NH_BlinkWillTerminate(self, sender, data):
+        self.save_journal_on_disk()
+        self.save_journal_timestamp_on_disk()
 
     def _NH_SystemWillSleep(self, sender, data):
         self.paused = True

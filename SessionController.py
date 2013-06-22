@@ -50,7 +50,7 @@ from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
-from HistoryManager import SessionHistoryReplicator
+from HistoryManager import SessionHistoryReplicator, ChatHistoryReplicator
 
 from interfaces.itunes import MusicApplications
 
@@ -81,6 +81,7 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
         self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
         self.notification_center.add_observer(self, name='BlinkSessionDidFail')
+        self.notification_center.add_observer(self, name='BlinkWillTerminate')
         self.notification_center.add_observer(self, name='SIPApplicationDidStart')
         self.notification_center.add_observer(self, name='SIPApplicationWillEnd')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
@@ -103,6 +104,7 @@ class SessionControllersManager(object):
         self.redial_uri = None
 
         SessionHistoryReplicator()
+        ChatHistoryReplicator()
 
     @property
     def alertPanel(self):
@@ -130,6 +132,9 @@ class SessionControllersManager(object):
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
             self.redial_uri = fancy_uri
 
+    def _NH_BlinkWillTerminate(self, sender, data):
+        self.closeAllSessions()
+    
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ringer.stop()
 
@@ -707,6 +712,10 @@ class SessionControllersManager(object):
     @run_in_green_thread
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
+
+    def closeAllSessions(self):
+        for session in self.sessionControllers[:]:
+            session.end()
 
     @run_in_gui_thread
     def show_web_alert_page(self, session):
