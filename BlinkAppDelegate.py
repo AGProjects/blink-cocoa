@@ -33,7 +33,6 @@ from SmileyManager import SmileyManager
 from EnrollmentController import EnrollmentController
 
 import PreferencesController
-from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread, external_url_pattern
 
@@ -97,9 +96,8 @@ class BlinkAppDelegate(NSObject):
                         shutil.rmtree(screenshots_folder)
                     except EnvironmentError:
                         pass
-            call_in_thread('file-io', purge_screenshots)
 
-            ScreenSharingController.vncServerPort = 5900
+            call_in_thread('file-io', purge_screenshots)
 
         return self
 

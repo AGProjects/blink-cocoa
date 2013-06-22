@@ -73,7 +73,7 @@ class ScreenSharingController(MediaStream):
     implements(IObserver)
 
     viewer = None
-    vncServerPort = None
+    vncServerPort = 5900
     exhanged_bytes = 0
 
     #statusItem = StatusItem.alloc().init()
