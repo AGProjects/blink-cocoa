@@ -611,10 +611,6 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
         BlinkLogger().log_debug(u"XCAP server capabilities: %s" % ", ".join(data.auids))
 
-    def _NH_SIPEngineDetectedNATType(self, engine, data):
-        if data.succeeded:
-            BlinkLogger().log_info(u"Detected NAT Type: %s" % data.nat_type)
-
     def validateAddAccountAction(self):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) <= 2
