@@ -476,7 +476,10 @@ class SIPManager(object):
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
         BlinkLogger().log_info(u"Core started")
-        BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(settings.rtp.audio_codec_list))
+        codecs_print = []
+        for codec in settings.rtp.audio_codec_list:
+            codecs_print.append(beautify_audio_codec(codec))
+        BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
 
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:

@@ -133,7 +133,7 @@ class SessionControllersManager(object):
 
     def _NH_BlinkWillTerminate(self, sender, data):
         self.closeAllSessions()
-    
+
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ringer.stop()
 

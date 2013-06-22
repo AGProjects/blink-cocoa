@@ -359,7 +359,7 @@ class ContactWindowController(NSWindowController):
 
         self.setAlwaysOnTop()
         self.setSpeechRecognition()
-        
+
         try:
             with open(ApplicationData.get('presence_notes_history.pickle'), 'r') as f:
                 self.presence_notes_history.extend(cPickle.load(f))
