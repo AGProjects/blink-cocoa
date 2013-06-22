@@ -29,7 +29,6 @@ from zope.interface import implements
 from SIPManager import SIPManager
 from iCloudManager import iCloudManager
 from BlinkLogger import BlinkLogger
-from SmileyManager import SmileyManager
 from EnrollmentController import EnrollmentController
 
 import PreferencesController
@@ -220,14 +219,11 @@ class BlinkAppDelegate(NSObject):
                 NSApp.terminate_(None)
                 return
 
-
         # window should be shown only after enrollment check
         self.contactsWindowController.showWindow_(None)
 
         self.contactsWindowController.setupFinished()
 
-        smileys = SmileyManager()
-        smileys.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
 
     def killSelfAfterTimeout_(self, arg):
         # wait 4 seconds then kill self
