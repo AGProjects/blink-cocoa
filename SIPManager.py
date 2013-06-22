@@ -499,50 +499,50 @@ class SIPManager(object):
         NSRunAlertPanel("Fatal Error Encountered", "There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.",
                         "Shut Down", None, None)
         import signal
-        BlinkLogger().log_info(u"Forcing termination of Blink, fatal error occurred")
+        BlinkLogger().log_info(u"A fatal error occurred, forcing termination of Blink")
         os.kill(os.getpid(), signal.SIGTERM)
 
     def _NH_SIPAccountDidActivate(self, account, data):
-        BlinkLogger().log_info(u"%s activated" % account)
+        BlinkLogger().log_info(u"Account %s activated" % account.id)
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
             self.bonjour_conference_services.start()
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
-        BlinkLogger().log_info(u"%s deactivated" % account)
+        BlinkLogger().log_info(u"Account %s deactivated" % account.id)
         MWIData.remove(account)
         # Deactivate BonjourConferenceServer discovery
         if account is BonjourAccount():
             self.bonjour_conference_services.stop()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = u'%s registered contact "%s" at %s:%d;transport=%s for %d seconds' % (account, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+        message = u'Account %s registered contact "%s" at %s:%d;transport=%s for %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         BlinkLogger().log_debug(message)
         if account.contact.public_gruu is not None:
-            message = u'%s public GRUU %s' % (account, account.contact.public_gruu)
+            message = u'Account %s public GRUU %s' % (account.id, account.contact.public_gruu)
             BlinkLogger().log_debug(message)
         if account.contact.temporary_gruu is not None:
-            message = u'%s temporary GRUU %s' % (account, account.contact.temporary_gruu)
+            message = u'Account %s temporary GRUU %s' % (account.id, account.contact.temporary_gruu)
             BlinkLogger().log_debug(message)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
-        BlinkLogger().log_info(u"%s was unregistered" % account)
+        BlinkLogger().log_info(u"Account %s was unregistered" % account.id)
 
     def _NH_SIPAccountRegistrationGotAnswer(self, account, data):
         if data.code > 200:
             reason = 'Connection Failed' if data.reason == 'Unknown error 61' else data.reason
-            BlinkLogger().log_info(u"%s failed to register at %s: %s (%s)" % (account, data.registrar, reason, data.code))
+            BlinkLogger().log_info(u"Account %s failed to register at %s: %s (%s)" % (account.id, data.registrar, reason, data.code))
 
     def _NH_SIPAccountRegistrationDidFail(self, account, data):
         reason = 'Connection Failed' if data.error == 'Unknown error 61' else data.error
-        BlinkLogger().log_info(u"%s failed to register: %s (retrying in %.2f seconds)" % (account, reason, data.retry_after))
+        BlinkLogger().log_info(u"Account %s failed to register: %s (retrying in %.2f seconds)" % (account.id, reason, data.retry_after))
 
     @run_in_gui_thread
     def _NH_SIPAccountGotMessageSummary(self, account, data):
-        BlinkLogger().log_info(u"Received NOTIFY for MWI of account %s" % account.id)
+        BlinkLogger().log_info(u"Received voicemail notification for account %s" % account.id)
         summary = data.message_summary
         if summary.summaries.get('voice-message') is None:
             return
@@ -609,8 +609,7 @@ class SIPManager(object):
             # thread from which it was posted
             return
         BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
-
-        BlinkLogger().log_info(u"XCAP server capabilities: %s" % ", ".join(data.auids))
+        BlinkLogger().log_debug(u"XCAP server capabilities: %s" % ", ".join(data.auids))
 
     def _NH_SIPEngineDetectedNATType(self, engine, data):
         if data.succeeded:

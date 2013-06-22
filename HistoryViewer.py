@@ -12,6 +12,7 @@ from sipsimple.util import ISOTimestamp
 from util import *
 from zope.interface import implements
 
+from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
 
@@ -102,7 +103,7 @@ class HistoryViewer(NSWindowController):
 
     def __init__(self):
         if self:
-
+            BlinkLogger().log_info('Starting History Viewer')
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.all_contacts = BlinkConferenceContact('Any Address', name=u'All Contacts')

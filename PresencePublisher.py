@@ -122,6 +122,7 @@ class PresencePublisher(object):
 
     def __init__(self, owner):
         self.owner = owner
+        BlinkLogger().log_info('Starting Presence Publisher')
         NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
 
     @allocate_autorelease_pool

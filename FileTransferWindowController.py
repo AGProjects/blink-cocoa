@@ -12,6 +12,7 @@ from sipsimple.threading.green import run_in_green_thread
 from zope.interface import implements
 
 import ListView
+from BlinkLogger import BlinkLogger
 from HistoryManager import FileTransferHistory
 from FileTransferItemView import FileTransferItemView
 from util import allocate_autorelease_pool, run_in_gui_thread
@@ -43,6 +44,8 @@ class FileTransferWindowController(NSObject, object):
     history = []
 
     def init(self):
+        BlinkLogger().log_info('Starting File Transfer Controller')
+
         NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
         NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")

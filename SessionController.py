@@ -77,6 +77,7 @@ class SessionControllersManager(object):
     implements(IObserver)
 
     def __init__(self):
+        BlinkLogger().log_info('Starting Sessions Manager')
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
         self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
@@ -714,6 +715,8 @@ class SessionControllersManager(object):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
 
     def closeAllSessions(self):
+        BlinkLogger().log_info('Ending all sessions')
+
         for session in self.sessionControllers[:]:
             session.end()
 

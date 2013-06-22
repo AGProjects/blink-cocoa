@@ -18,6 +18,7 @@ from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
 import urllib
 
+from BlinkLogger import BlinkLogger
 from MediaStream import *
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
@@ -98,6 +99,7 @@ class ChatWindowController(NSWindowController):
     def init(self):
         self = super(ChatWindowController, self).init()
         if self:
+            BlinkLogger().log_info('Starting Chat Window Controller')
             self.closing = False
             self.participants = []
             self.conference_shared_files = []

@@ -76,18 +76,22 @@ class BlinkAppDelegate(NSObject):
     def init(self):
         self = super(BlinkAppDelegate, self).init()
         if self:
+            self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
+            self.applicationNamePrint = 'Blink' if self.applicationName == 'Blink Pro' else self.applicationName
+            build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
+            date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
+
+            BlinkLogger().log_info(u"Starting %s build %s from %s" % (self.applicationNamePrint, build, date))
+
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerWillSleep:", NSWorkspaceWillSleepNotification, None)
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
-            nc = NotificationCenter()
-            nc.add_observer(self, name="SIPApplicationDidStart")
-            nc.add_observer(self, name="SIPApplicationDidEnd")
-            nc.add_observer(self, name="CFGSettingsObjectDidChange")
-            self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
-            self.applicationNamePrint = 'Blink' if self.applicationName == 'Blink Pro' else self.applicationName
+            NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
+            NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
+            NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
 
             def purge_screenshots():
                 screenshots_folder = ApplicationData.get('.tmp_screenshots')
@@ -177,10 +181,9 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
+        BlinkLogger().log_info(u"Starting GUI")
+
         self.blinkMenu.setTitle_(self.applicationNamePrint)
-        build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
-        date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-        BlinkLogger().log_info(u"Starting %s build %s from %s" % (self.applicationNamePrint, build, date))
 
         config_file = ApplicationData.get('config')
         self.icloud_manager = iCloudManager()
@@ -236,6 +239,7 @@ class BlinkAppDelegate(NSObject):
         os.kill(os.getpid(), signal.SIGTERM)
 
     def applicationShouldTerminate_(self, sender):
+        BlinkLogger().log_info('Application will terminate')
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
         NotificationCenter().post_notification("BlinkWillTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
