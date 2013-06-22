@@ -648,8 +648,9 @@ class BlinkPresenceContact(BlinkContact):
         super(BlinkPresenceContact, self).destroy()
 
     def handle_presence_resources(self, resources, account, full_state=False):
+        changes = False
         if not self.contact:
-            return
+            return changes
 
         if full_state:
             self.pidfs_map = {}
@@ -662,7 +663,17 @@ class BlinkPresenceContact(BlinkContact):
                     BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (account, uri_text))
                 if resource.state == 'terminated':
                     BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (account, uri_text))
-            self.pidfs_map[uri] = resource.pidf_list
+            try:
+                old_pidf_list = self.pidfs_map[uri]
+            except KeyError:
+                self.pidfs_map[uri] = resource.pidf_list
+                changes = True
+            else:
+                if old_pidf_list != resource.pidf_list:
+                    changes = True
+
+        if not changes:
+            return changes
 
         basic_status = 'closed'
         self.init_presence_state()
@@ -880,6 +891,7 @@ class BlinkPresenceContact(BlinkContact):
 
         self.addToOrRemoveFromOnlineGroup()
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+        return changes
 
     @allocate_autorelease_pool
     @run_in_green_thread
@@ -1113,7 +1125,6 @@ class BlinkPresenceContact(BlinkContact):
         if detail != self.detail:
             self.detail = detail
             NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
-
 
 class BlinkOnlineContact(BlinkPresenceContact):
     pass
