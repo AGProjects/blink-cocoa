@@ -56,10 +56,10 @@ class iCloudManager(NSObject):
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
 
     def start(self):
-        BlinkLogger().log_info(u"Starting iCloud Manager")
+        BlinkLogger().log_debug(u"Starting iCloud Manager")
         self.cloud_storage = NSUbiquitousKeyValueStore.defaultStore()
         self.cloud_storage.synchronize()
-        BlinkLogger().log_info(u"%.1f out of 64.0 KB of iCloud storage space used" % (self.storage_size/1024))
+        BlinkLogger().log_debug(u"%.1f out of 64.0 KB of iCloud storage space used" % (self.storage_size/1024))
 
         self.notification_center.add_observer(self, name='SIPAccountManagerDidAddAccount')
         self.notification_center.add_observer(self, name='SIPAccountManagerDidRemoveAccount')
@@ -207,7 +207,7 @@ class iCloudManager(NSObject):
             self.first_sync_completed = True
             BlinkLogger().log_info(u"First time synchronization with iCloud completed")
         elif not changes:
-            BlinkLogger().log_info(u"iCloud is already synchronized")
+            BlinkLogger().log_info(u"iCloud is synchronized")
         else:
             BlinkLogger().log_info(u"Synchronization with iCloud completed")
         self.sync_active = False
@@ -318,7 +318,7 @@ class iCloudManager(NSObject):
 
     def hasDifference(self, account, local_json, remote_json, icloud=False):
         changed_keys = set()
-        BlinkLogger().log_info(u"Computing differences from iCloud for %s" % account.id)
+        BlinkLogger().log_debug(u"Computing differences from iCloud for %s" % account.id)
         try:
             local_data = cjson.decode(local_json)
         except TypeError:
@@ -335,7 +335,7 @@ class iCloudManager(NSObject):
         for e in differences.changed():
             if e in self.skip_settings:
                 continue
-            BlinkLogger().log_info('Setting %s has changed' % e)
+            BlinkLogger().log_debug('Setting %s has changed' % e)
             changed_keys.add(e)
             diffs += 1
 
@@ -343,12 +343,12 @@ class iCloudManager(NSObject):
             if e in self.skip_settings:
                 continue
 
-            BlinkLogger().log_info('Setting %s has been added' % e)
+            BlinkLogger().log_debug('Setting %s has been added' % e)
 
             if not local_data.has_key(e):
-                BlinkLogger().log_info('Remote added')
+                BlinkLogger().log_debug('Remote added')
             elif not remote_data.has_key(e):
-                BlinkLogger().log_info('Local added')
+                BlinkLogger().log_debug('Local added')
 
             changed_keys.add(e)
             diffs += 1
@@ -357,13 +357,13 @@ class iCloudManager(NSObject):
             if e in self.skip_settings:
                 continue
 
-            BlinkLogger().log_info('Setting %s has been removed' % e)
+            BlinkLogger().log_debug('Setting %s has been removed' % e)
 
             if not local_data.has_key(e):
-                BlinkLogger().log_info('Local removed')
+                BlinkLogger().log_debug('Local removed')
 
             if not remote_data.has_key(e):
-                BlinkLogger().log_info('Remote removed')
+                BlinkLogger().log_debug('Remote removed')
 
             changed_keys.add(e)
             diffs += 1

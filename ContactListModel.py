@@ -1538,7 +1538,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
         super(AddressBookBlinkGroup, self).__init__(name)
 
     def loadAddressBook(self):
-        BlinkLogger().log_info('Loading Contacts from System Address Book')
+        BlinkLogger().log_debug('Loading Contacts from System Address Book')
         self.contacts = []
         book = AddressBook.ABAddressBook.sharedAddressBook()
         if book is None:
@@ -1548,7 +1548,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
             if blink_contact.uris:
                 self.contacts.append(blink_contact)
         self.sortContacts()
-        BlinkLogger().log_info('System Address Book Contacts loaded')
+        BlinkLogger().log_debug('System Address Book Contacts loaded')
 
 
 class CustomListModel(NSObject):

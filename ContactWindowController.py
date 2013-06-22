@@ -240,7 +240,7 @@ class ContactWindowController(NSWindowController):
     statusBarMenu = objc.IBOutlet()
 
     def awakeFromNib(self):
-        BlinkLogger().log_info('Starting Contact Manager')
+        BlinkLogger().log_debug('Starting Contact Manager')
 
         # check how much space there is left for the search Outline, so we can restore it after
         # minimizing

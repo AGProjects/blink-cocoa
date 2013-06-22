@@ -611,7 +611,7 @@ class SIPManager(object):
             # The XCAP manager might be stopped because this notification is processed in a different
             # thread from which it was posted
             return
-        BlinkLogger().log_info(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
+        BlinkLogger().log_debug(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
         BlinkLogger().log_debug(u"XCAP server capabilities: %s" % ", ".join(data.auids))
 
     def validateAddAccountAction(self):
@@ -654,7 +654,7 @@ class BonjourConferenceServices(object):
     implements(IObserver)
 
     def __init__(self):
-        BlinkLogger().log_info('Starting Bonjour Conference Services')
+        BlinkLogger().log_debug('Starting Bonjour Conference Services')
         self._stopped = True
         self._files = []
         self._servers = {}
@@ -879,7 +879,7 @@ class BonjourConferenceServices(object):
 
 class IPAddressMonitor(object):
     def __init__(self):
-        BlinkLogger().log_info('Starting IP Address Monitor')
+        BlinkLogger().log_debug('Starting IP Address Monitor')
         self.greenlet = None
 
     @run_in_green_thread

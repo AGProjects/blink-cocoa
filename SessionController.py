@@ -77,7 +77,7 @@ class SessionControllersManager(object):
     implements(IObserver)
 
     def __init__(self):
-        BlinkLogger().log_info('Starting Sessions Manager')
+        BlinkLogger().log_debug('Starting Sessions Manager')
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
         self.notification_center.add_observer(self, name='BlinkSessionDidEnd')

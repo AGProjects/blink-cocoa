@@ -103,7 +103,7 @@ class HistoryViewer(NSWindowController):
 
     def __init__(self):
         if self:
-            BlinkLogger().log_info('Starting History Viewer')
+            BlinkLogger().log_debug('Starting History Viewer')
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.all_contacts = BlinkConferenceContact('Any Address', name=u'All Contacts')

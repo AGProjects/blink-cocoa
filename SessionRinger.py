@@ -66,7 +66,7 @@ class Ringer(object):
     chat_beep_time = 0
 
     def __init__(self, owner):
-        BlinkLogger().log_info('Starting Ringtone Manager')
+        BlinkLogger().log_debug('Starting Ringtone Manager')
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="SIPApplicationDidStart")
         self.owner = owner

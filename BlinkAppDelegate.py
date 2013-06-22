@@ -180,7 +180,7 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
-        BlinkLogger().log_info(u"Starting GUI")
+        BlinkLogger().log_debug(u"Starting User Interface")
 
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 
@@ -235,7 +235,7 @@ class BlinkAppDelegate(NSObject):
         os.kill(os.getpid(), signal.SIGTERM)
 
     def applicationShouldTerminate_(self, sender):
-        BlinkLogger().log_info('Application will terminate')
+        BlinkLogger().log_debug('Application will terminate')
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
         NotificationCenter().post_notification("BlinkWillTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")

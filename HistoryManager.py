@@ -773,7 +773,7 @@ class SessionHistoryReplicator(object):
     @run_in_gui_thread
     def __init__(self):
         if NSApp.delegate().applicationName != 'Blink Lite':
-            BlinkLogger().log_info('Starting Sessions History Replicator')
+            BlinkLogger().log_debug('Starting Sessions History Replicator')
             NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
             NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
             NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
@@ -1097,7 +1097,7 @@ class ChatHistoryReplicator(object):
     debug = False
 
     def __init__(self):
-        BlinkLogger().log_info('Starting Chat History Replicator')
+        BlinkLogger().log_debug('Starting Chat History Replicator')
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name='BlinkWillTerminate')
         notification_center.add_observer(self, name='ChatReplicationJournalEntryAdded')
