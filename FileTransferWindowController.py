@@ -162,6 +162,8 @@ class FileTransferWindowController(NSObject, object):
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
         if not (isinstance(sender, IncomingFileTransferHandler) and sender.file_name.startswith('xscreencapture')):
+            if not self.loaded:
+                self.load_transfers_from_history()
             self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
