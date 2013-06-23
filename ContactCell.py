@@ -116,7 +116,7 @@ class ContactCell(NSTextFieldCell):
             try:
                 has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             except KeyError:
-                return
+                pass
 
         frame = self.frame
         frame.origin.y -= 17
