@@ -666,14 +666,17 @@ class BlinkPresenceContact(BlinkContact):
             try:
                 old_pidf_list = self.pidfs_map[uri]
             except KeyError:
-                self.pidfs_map[uri] = resource.pidf_list
-                changes = True
+                if resource.pidf_list:
+                    changes = True
             else:
                 if old_pidf_list != resource.pidf_list:
                     changes = True
 
+
         if not changes:
             return changes
+
+        self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
         self.init_presence_state()
