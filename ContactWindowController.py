@@ -2608,7 +2608,7 @@ class ContactWindowController(NSWindowController):
                 title = '%s <%s>' % (contact.name, uri) if contact else uri
                 items[title] = {'status': 'offline', 'contact' : None}
                 if isinstance(contact, BlinkPresenceContact):
-                    items[title]['status'] = presence_status_for_contact(contact)
+                    items[title]['status'] = presence_status_for_contact(contact) or 'offline'
                     items[title]['contact'] = contact
 
             keys = items.keys()
@@ -3703,12 +3703,11 @@ class ContactWindowController(NSWindowController):
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
-                        status = presence_status_for_contact(item, uri.uri)
-                        if status:
-                            icon = self.presence_dots[status]
-                            icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(15,15))
-                            audio_item.setImage_(icon)
+                        status = presence_status_for_contact(item, uri.uri) or 'offline'
+                        icon = self.presence_dots[status]
+                        icon.setScalesWhenResized_(True)
+                        icon.setSize_(NSMakeSize(15,15))
+                        audio_item.setImage_(icon)
 
                 if gruu_devices:
                     audio_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3723,14 +3722,13 @@ class ContactWindowController(NSWindowController):
                         title += ' in %s' % unicode(device['location']) if device['location'] else ''
                         audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_(title, "startAudioSessionWithSIPURI:", "")
                         audio_item.setRepresentedObject_(device['contact'])
-                        status = device['status']
-                        try:
-                            image = self.presence_dots[status]
-                            image.setScalesWhenResized_(True)
-                            image.setSize_(NSMakeSize(15,15))
-                            audio_item.setImage_(image)
-                        except KeyError:
-                            pass
+
+                        status = device['status'] or 'offline'
+                        image = self.presence_dots[status]
+                        image.setScalesWhenResized_(True)
+                        image.setSize_(NSMakeSize(15,15))
+                        audio_item.setImage_(image)
+
                         audio_item.setIndentationLevel_(1)
                         if device['caps'] is not None and 'audio' not in device['caps']:
                             audio_item.setEnabled_(False)
@@ -3748,12 +3746,11 @@ class ContactWindowController(NSWindowController):
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     sms_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
-                        status = presence_status_for_contact(item, uri.uri)
-                        if status:
-                            icon = self.presence_dots[status]
-                            icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(15,15))
-                            sms_item.setImage_(icon)
+                        status = presence_status_for_contact(item, uri.uri) or 'offline'
+                        icon = self.presence_dots[status]
+                        icon.setScalesWhenResized_(True)
+                        icon.setSize_(NSMakeSize(15,15))
+                        sms_item.setImage_(icon)
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "", "")
                 self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
@@ -3773,12 +3770,11 @@ class ContactWindowController(NSWindowController):
                         chat_item.setEnabled_(aor_supports_chat)
 
                         if isinstance(item, BlinkPresenceContact):
-                            status = presence_status_for_contact(item, uri.uri)
-                            if status:
-                                icon = self.presence_dots[status]
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15,15))
-                                chat_item.setImage_(icon)
+                            status = presence_status_for_contact(item, uri.uri) or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            chat_item.setImage_(icon)
 
                     if gruu_devices:
                         chat_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3793,14 +3789,13 @@ class ContactWindowController(NSWindowController):
                             title += ' in %s' % unicode(device['location']) if device['location'] else ''
                             chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_(title, "startChatSessionWithSIPURI:", "")
                             chat_item.setRepresentedObject_(device['contact'])
-                            status = device['status']
-                            try:
-                                icon = self.presence_dots[status]
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15,15))
-                                chat_item.setImage_(icon)
-                            except KeyError:
-                                pass
+
+                            status = device['status'] or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            chat_item.setImage_(icon)
+
                             chat_item.setIndentationLevel_(1)
                             if device['caps'] is not None and 'chat' not in device['caps']:
                                 chat_item.setEnabled_(False)
@@ -3824,12 +3819,11 @@ class ContactWindowController(NSWindowController):
                             ft_item.setEnabled_(aor_supports_ft)
 
                             if isinstance(item, BlinkPresenceContact):
-                                status = presence_status_for_contact(item, uri.uri)
-                                if status:
-                                    icon = self.presence_dots[status]
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ft_item.setImage_(icon)
+                                status = presence_status_for_contact(item, uri.uri) or 'offline'
+                                icon = self.presence_dots[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                ft_item.setImage_(icon)
 
                         if gruu_devices:
                             ft_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3845,14 +3839,13 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_(title, "sendFile:", "")
                                 ft_item.setRepresentedObject_(device['contact'])
-                                status = device['status']
-                                try:
-                                    icon = self.presence_dots[status]
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ft_item.setImage_(icon)
-                                except KeyError:
-                                    pass
+
+                                status = device['status'] or 'offline'
+                                icon = self.presence_dots[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                ft_item.setImage_(icon)
+
                                 ft_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'file-transfer' not in device['caps']:
                                     ft_item.setEnabled_(False)
@@ -3874,12 +3867,11 @@ class ContactWindowController(NSWindowController):
                             ds_item.setEnabled_(aor_supports_ds)
 
                             if isinstance(item, BlinkPresenceContact):
-                                status = presence_status_for_contact(item, uri.uri)
-                                if status:
-                                    icon = self.presence_dots[status]
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(icon)
+                                status = presence_status_for_contact(item, uri.uri) or 'offline'
+                                icon = self.presence_dots[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                ds_item.setImage_(icon)
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3894,14 +3886,13 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
-                                status = device['status']
-                                try:
-                                    icon = self.presence_dots[status]
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(icon)
-                                except KeyError:
-                                    pass
+
+                                status = device['status'] or 'offline'
+                                icon = self.presence_dots[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                ds_item.setImage_(icon)
+
                                 ds_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'screen-sharing-server' not in device['caps']:
                                     ds_item.setEnabled_(False)
@@ -3923,12 +3914,11 @@ class ContactWindowController(NSWindowController):
                             ds_item.setEnabled_(aor_supports_ds)
 
                             if isinstance(item, BlinkPresenceContact):
-                                status = presence_status_for_contact(item, uri.uri)
-                                if status:
-                                    icon = self.presence_dots[status]
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(icon)
+                                status = presence_status_for_contact(item, uri.uri) or 'offline'
+                                icon = self.presence_dots[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                ds_item.setImage_(icon)
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
@@ -3943,14 +3933,13 @@ class ContactWindowController(NSWindowController):
                                 title += ' in %s' % unicode(device['location']) if device['location'] else ''
                                 ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
                                 ds_item.setRepresentedObject_(device['contact'])
-                                status = device['status']
-                                try:
-                                    icon = self.presence_dots[status]
-                                    icon.setScalesWhenResized_(True)
-                                    icon.setSize_(NSMakeSize(15,15))
-                                    ds_item.setImage_(icon)
-                                except KeyError:
-                                    pass
+                                status = device['status'] or 'offline'
+
+                                icon = self.presence_dots[status]
+                                icon.setScalesWhenResized_(True)
+                                icon.setSize_(NSMakeSize(15,15))
+                                ds_item.setImage_(icon)
+
                                 ds_item.setTag_(2)
                                 ds_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'screen-sharing-client' not in device['caps']:
