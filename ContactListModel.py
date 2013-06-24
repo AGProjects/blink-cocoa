@@ -603,6 +603,8 @@ class BlinkPresenceContact(BlinkContact):
         self.detail = '%s (%s)' % (self.uri, self.uri_type)
         self._set_username_and_domain()
         self.presence_note = None
+        self.old_presence_status = None
+        self.old_presence_note = None
         self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
@@ -917,6 +919,15 @@ class BlinkPresenceContact(BlinkContact):
 
         if log:
             BlinkLogger().log_debug('%s is %s for account %s' % (self.name, status, account))
+
+        if not full_state:
+            if self.old_presence_status != status or self.old_presence_note != self.presence_note:
+                nc_title = "%s's availability" % self.name
+                nc_subtitle = self.presence_note
+                nc_body = '%s is now %s' % (self.name, status)
+                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                self.old_presence_status = status
+                self.old_presence_note = self.presence_note
 
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
         return changes
