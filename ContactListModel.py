@@ -934,8 +934,13 @@ class BlinkPresenceContact(BlinkContact):
 
         if self.old_presence_status is not None:
             if self.old_presence_status != status or self.old_presence_note != self.presence_note:
-                if log:
-                    BlinkLogger().log_debug('Availability of contact %s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
+                if self.old_presence_status == 'offline' and status == 'offline':
+                    pass
+                elif self.old_presence_status == status:
+                    pass
+                else:
+                    if log:
+                        BlinkLogger().log_debug('Availability of contact %s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
 
                     if not full_state:
                         nc_title = "%s's Availability" % self.name
