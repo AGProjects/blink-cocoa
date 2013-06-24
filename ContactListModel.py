@@ -942,11 +942,10 @@ class BlinkPresenceContact(BlinkContact):
                     if log:
                         BlinkLogger().log_debug('Availability of contact %s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
 
-                    if not full_state:
-                        nc_title = "%s's Availability" % self.name
-                        nc_subtitle = self.presence_note
-                        nc_body = '%s is now %s' % (self.name, status)
-                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                    nc_title = "%s's Availability" % self.name
+                    nc_subtitle = self.presence_note
+                    nc_body = '%s is now %s' % (self.name, status)
+                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
