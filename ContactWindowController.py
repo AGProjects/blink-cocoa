@@ -826,7 +826,8 @@ class ContactWindowController(NSWindowController):
                 if changed:
                     changed_blink_contacts += 1
 
-        BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (changed_blink_contacts, len(blink_contacts_set)))
+        if changed_blink_contacts:
+            BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (changed_blink_contacts, len(blink_contacts_set)))
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()
