@@ -863,8 +863,8 @@ class BlinkPresenceContact(BlinkContact):
                                 something_has_changed = True
 
                         if something_has_changed and service.id and log:
-                            prefix = 'My device' if account == uri_text else 'Device'
-                            log_line = u"%s %s of %s (%s) for account %s is %s" % (prefix, device_text, self.name, uri_text, account, device_wining_status)
+                            prefix = 'my device' if account == uri_text else 'device'
+                            log_line = u"Availability of %s %s of %s (%s) for account %s is %s" % (prefix, device_text, self.name, uri_text, account, device_wining_status)
                             BlinkLogger().log_debug(log_line)
                             message= '<h3>Availability Information</h3>'
                             message += '<p>%s' % log_line
@@ -923,15 +923,16 @@ class BlinkPresenceContact(BlinkContact):
         else:
             status = 'offline'
 
-        if self.old_presence_status != status or self.old_presence_note != self.presence_note:
-            if log:
-                BlinkLogger().log_debug('%s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
+        if self.old_presence_status is not None:
+            if self.old_presence_status != status or self.old_presence_note != self.presence_note:
+                if log:
+                    BlinkLogger().log_debug('Availability of contact %s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
 
-            if not full_state:
-                nc_title = "%s's availability" % self.name
-                nc_subtitle = self.presence_note
-                nc_body = '%s is now %s' % (self.name, status)
-                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                if not full_state:
+                    nc_title = "%s's Availability" % self.name
+                    nc_subtitle = self.presence_note
+                    nc_body = '%s is now %s' % (self.name, status)
+                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
