@@ -647,7 +647,7 @@ class BlinkPresenceContact(BlinkContact):
         if self.timer:
             self.timer.invalidate()
         self.timer = None
-        self.pidfs_map = None
+        self.pidfs_map = {}
         super(BlinkPresenceContact, self).destroy()
 
     def handle_presence_resources(self, resources, account, full_state=False, log=False):
@@ -690,9 +690,13 @@ class BlinkPresenceContact(BlinkContact):
         if full_state:
             # purge old uris
             for uri in self.pidfs_map.keys():
-                if uri not in this_state_uris:
+                uri_text = sip_prefix_pattern.sub('', uri)
+                if uri_text not in this_state_uris:
                     changes = True
-                    del self.pidfs_map[uri]
+                    try:
+                        del self.pidfs_map[uri]
+                    except KeyError:
+                        pass
 
         if not changes:
             return changes
@@ -702,6 +706,7 @@ class BlinkPresenceContact(BlinkContact):
         has_notes = 0
 
         pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
+
         devices = {}
         urls = []
         if pidfs:
@@ -931,11 +936,11 @@ class BlinkPresenceContact(BlinkContact):
                 if log:
                     BlinkLogger().log_debug('Availability of contact %s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
 
-                if not full_state:
-                    nc_title = "%s's Availability" % self.name
-                    nc_subtitle = self.presence_note
-                    nc_body = '%s is now %s' % (self.name, status)
-                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                    if not full_state:
+                        nc_title = "%s's Availability" % self.name
+                        nc_subtitle = self.presence_note
+                        nc_body = '%s is now %s' % (self.name, status)
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
