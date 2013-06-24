@@ -664,7 +664,7 @@ class BlinkPresenceContact(BlinkContact):
             this_state_uris.add(uri_text)
             if self.log_presence_transitions and log:
                 if resource.state == 'pending':
-                    self.presence_state['pending_authorizations'][resource.uri] = True
+                    self.presence_state['pending_authorizations'][resource.uri] = account
                     BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (account, uri_text))
                 if resource.state == 'terminated':
                     BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (account, uri_text))

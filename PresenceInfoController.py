@@ -120,7 +120,7 @@ class PresenceInfoController(NSObject):
 
         pending_authorizations = self.contact.presence_state['pending_authorizations']
         for key in pending_authorizations.keys():
-            text += "    Subscription to %s\n" % key.split(':')[1]
+            text += "    Subscription to %s from account %s\n" % (sip_prefix_pattern.sub('', key), pending_authorizations[key])
 
         self.presenceText.textStorage().deleteCharactersInRange_(NSMakeRange(0, self.presenceText.textStorage().length()))
         astring = NSAttributedString.alloc().initWithString_(text)
