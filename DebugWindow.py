@@ -12,7 +12,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from util import allocate_autorelease_pool, run_in_gui_thread, format_size
-
+from SessionInfoController import ice_candidates
 
 # User choices for debug: Disabled, Simplified, Full
 #
@@ -346,14 +346,14 @@ class DebugWindow(NSObject):
 
         text = u'\n%s New Audio session %s\n' % (session.start_time, session.remote_identity)
         if audio_stream.local_rtp_address and audio_stream.local_rtp_port and audio_stream.remote_rtp_address and audio_stream.remote_rtp_port:
-            if audio_stream.ice_active:
+            if audio_stream.ice_active and audio_stream.local_rtp_candidate and audio_stream.remote_rtp_candidate:
                 text += '%s Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time,
                                                                                                   audio_stream.local_rtp_address,
                                                                                                   audio_stream.local_rtp_port,
-                                                                                                  audio_stream.local_rtp_candidate.type.lower(),
+                                                                                                  ice_candidates[audio_stream.local_rtp_candidate.type.lower()],
                                                                                                   audio_stream.remote_rtp_address,
                                                                                                   audio_stream.remote_rtp_port,
-                                                                                                  audio_stream.remote_rtp_candidate.type.lower())
+                                                                                                  ice_candidates[audio_stream.remote_rtp_candidate.type.lower()])
             else:
                 text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (session.start_time,
                                                                       audio_stream.local_rtp_address,
@@ -625,13 +625,15 @@ class DebugWindow(NSObject):
         stream = notification.sender
 
         text = u'%s Audio session %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
-        text += '%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
-                                                                                         stream.local_rtp_address,
-                                                                                         stream.local_rtp_port,
-                                                                                         stream.local_rtp_candidate.type.lower(),
-                                                                                         stream.remote_rtp_address,
-                                                                                         stream.remote_rtp_port,
-                                                                                         stream.remote_rtp_candidate.type.lower())
+        if stream.local_rtp_candidate and stream.remote_rtp_candidate:
+            text += '%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
+                                                                                             stream.local_rtp_address,
+                                                                                             stream.local_rtp_port,
+                                                                                             stream.local_rtp_candidate.type.lower(),
+                                                                                             stream.remote_rtp_address,
+                                                                                             stream.remote_rtp_port,
+                                                                                             stream.remote_rtp_candidate.type.lower())
+
         text += '\nLocal ICE candidates:\n'
         for candidate in data.local_candidates:
             text += '\t%s\n' % candidate
