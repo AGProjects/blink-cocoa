@@ -863,22 +863,25 @@ class BlinkPresenceContact(BlinkContact):
                                 something_has_changed = True
 
                         if something_has_changed and service.id and log:
-                            prefix = 'my device' if account == uri_text else 'device'
-                            log_line = u"Availability of %s %s of %s (%s) for account %s is %s" % (prefix, device_text, self.name, uri_text, account, device_wining_status)
-                            BlinkLogger().log_debug(log_line)
-                            message= '<h3>Availability Information</h3>'
-                            message += '<p>%s' % log_line
-                            media_type = 'availability'
-                            local_uri = str(account)
-                            remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
-                            direction = 'incoming'
-                            status = 'delivered'
-                            cpim_from = remote_uri
-                            cpim_to = local_uri
-                            timestamp = str(ISOTimestamp.now())
-                            id=str(uuid.uuid1())
+                            if self.old_presence_status is None and device_wining_status == 'offline':
+                                pass
+                            else:
+                                prefix = 'my device' if account == uri_text else 'device'
+                                log_line = u"Availability of %s %s of %s (%s) for account %s is %s" % (prefix, device_text, self.name, uri_text, account, device_wining_status)
+                                BlinkLogger().log_debug(log_line)
+                                message= '<h3>Availability Information</h3>'
+                                message += '<p>%s' % log_line
+                                media_type = 'availability'
+                                local_uri = str(account)
+                                remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
+                                direction = 'incoming'
+                                status = 'delivered'
+                                cpim_from = remote_uri
+                                cpim_to = local_uri
+                                timestamp = str(ISOTimestamp.now())
+                                id=str(uuid.uuid1())
 
-                            NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+                                NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
 
             self.presence_state['devices'] = devices
             self.presence_state['urls'] = urls
