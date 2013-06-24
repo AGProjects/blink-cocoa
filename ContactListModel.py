@@ -647,22 +647,28 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = None
         super(BlinkPresenceContact, self).destroy()
 
-    def handle_presence_resources(self, resources, account, full_state=False):
+    def handle_presence_resources(self, resources, account, full_state=False, log=False):
+        # log should be set only for contacts in all contacs groups
         changes = False
         if not self.contact:
             return changes
 
-        if full_state:
-            self.pidfs_map = {}
-
+        this_state_uris = set()
         for uri, resource in resources.iteritems():
             uri_text = sip_prefix_pattern.sub('', uri)
-            if self.log_presence_transitions:
+            try:
+                SIPURI.parse(str('sip:%s' % uri_text))
+            except:
+                continue
+
+            this_state_uris.add(uri_text)
+            if self.log_presence_transitions and log:
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][resource.uri] = True
                     BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (account, uri_text))
                 if resource.state == 'terminated':
                     BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (account, uri_text))
+
             try:
                 old_pidf_list = self.pidfs_map[uri]
             except KeyError:
@@ -672,11 +678,17 @@ class BlinkPresenceContact(BlinkContact):
                 if old_pidf_list != resource.pidf_list:
                     changes = True
 
+            self.pidfs_map[uri] = resource.pidf_list
+
+        if full_state:
+            # purge old uris
+            for uri in self.pidfs_map.keys():
+                if uri not in this_state_uris:
+                    changes = True
+                    del self.pidfs_map[uri]
 
         if not changes:
             return changes
-
-        self.pidfs_map[uri] = resource.pidf_list
 
         basic_status = 'closed'
         self.init_presence_state()
@@ -842,9 +854,9 @@ class BlinkPresenceContact(BlinkContact):
                             if old_device['status'] != device_wining_status or old_device['notes'] != _presence_notes:
                                 something_has_changed = True
 
-                        if something_has_changed and service.id:
+                        if something_has_changed and service.id and log:
                             prefix = 'My device' if account == uri_text else 'Device'
-                            log_line = u"%s %s of %s is %s" % (prefix, device_text, uri_text, device_wining_status)
+                            log_line = u"%s %s of %s (%s) for account %s is %s" % (prefix, device_text, self.name, uri_text, account, device_wining_status)
                             BlinkLogger().log_debug(log_line)
                             message= '<h3>Availability Information</h3>'
                             message += '<p>%s' % log_line
@@ -893,6 +905,19 @@ class BlinkPresenceContact(BlinkContact):
             self._process_icon(wining_icon)
 
         self.addToOrRemoveFromOnlineGroup()
+
+        if self.presence_state['status']['busy']:
+            status = 'busy'
+        elif self.presence_state['status']['available']:
+            status = 'available'
+        elif self.presence_state['status']['away']:
+            status = 'away'
+        else:
+            status = 'offline'
+
+        if log:
+            BlinkLogger().log_debug('%s is %s for account %s' % (self.name, status, account))
+
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
         return changes
 
@@ -2047,7 +2072,7 @@ class ContactListModel(CustomListModel):
 
     def getPresenceContactsMatchingURI(self, uri, exact_match=False):
         try:
-            return list(blink_contact for group in self.groupsList for blink_contact in group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.matchesURI(uri, exact_match))
+            return list((blink_contact, group) for group in self.groupsList for blink_contact in group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.matchesURI(uri, exact_match))
         except StopIteration:
             return None
 

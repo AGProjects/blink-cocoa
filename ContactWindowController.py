@@ -50,7 +50,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
+from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -806,26 +806,27 @@ class ContactWindowController(NSWindowController):
         resource_map = notification.data.resource_map
         BlinkLogger().log_debug('Got availability %s for %d SIP addresses for account %s' % ('full state' if notification.data.full_state else 'update', len(resource_map.keys()), notification.sender.id))
 
-        blink_contacts = set()
+        blink_contacts_set = set()
         for key, value in resource_map.iteritems():
             m = self.model.getPresenceContactsMatchingURI(key, exact_match=True)
             if m is None:
                 continue
+
             for b in m:
-                blink_contacts.add(b)
+                blink_contacts_set.add(b)
 
         changed_blink_contacts = 0
-        for blink_contact in blink_contacts:
+        for blink_contact, group in blink_contacts_set:
             if blink_contact.contact is None:
                 continue
             contact_uris = list(uri.uri for uri in iter(blink_contact.contact.uris))
             resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
             if resources:
-                changed = blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state)
+                changed = blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(group, AllContactsBlinkGroup))
                 if changed:
                     changed_blink_contacts += 1
 
-        BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (changed_blink_contacts, len(blink_contacts)))
+        BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (changed_blink_contacts, len(blink_contacts_set)))
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()
