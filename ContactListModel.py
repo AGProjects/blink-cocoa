@@ -850,6 +850,7 @@ class BlinkPresenceContact(BlinkContact):
                             'caps'        : caps,
                             'icon'        : icon,
                             'aor'         : [aor],
+                            'timestamp'   : service.timestamp if hasattr(service, 'timestamp') and service.timestamp is not None else None,
                             'accounts'    : [account]
                             }
                     else:
