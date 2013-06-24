@@ -719,8 +719,9 @@ class BlinkPresenceContact(BlinkContact):
                                     most_recent_service = service
                             else:
                                 # replace idle with non-idle
-                                most_recent_service_timestamp = service.timestamp.value
-                                most_recent_service = service
+                                if service.status.basic == 'open':
+                                    most_recent_service_timestamp = service.timestamp.value
+                                    most_recent_service = service
                         elif service.timestamp.value < most_recent_service_timestamp:
                             # replace newer idle with older non-idle
                             if service.user_input is not None and service.user_input.value != 'idle' and most_recent_service.user_input is not None and most_recent_service.user_input.value == 'idle':
