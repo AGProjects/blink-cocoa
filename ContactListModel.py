@@ -706,6 +706,9 @@ class BlinkPresenceContact(BlinkContact):
         urls = []
         if pidfs:
             for pidf in pidfs:
+                aor = str(urllib.unquote(pidf.entity))
+                if not aor.startswith(('sip:', 'sips:')):
+                    aor = 'sip:'+aor
                 # make a list of latest services
                 most_recent_service_timestamp = None
                 most_recent_service = None
@@ -777,9 +780,6 @@ class BlinkPresenceContact(BlinkContact):
                 for service in pidf.services:
                     if service.homepage is not None and service.homepage.value:
                         urls.append(service.homepage.value)
-                    aor = str(urllib.unquote(pidf.entity))
-                    if not aor.startswith(('sip:', 'sips:')):
-                        aor = 'sip:'+aor
                     uri_text = sip_prefix_pattern.sub('', aor)
 
                     caps = set()
