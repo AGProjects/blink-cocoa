@@ -605,6 +605,7 @@ class BlinkPresenceContact(BlinkContact):
         self.presence_note = None
         self.old_presence_status = None
         self.old_presence_note = None
+        self.old_resource_state = None
         self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
@@ -667,9 +668,13 @@ class BlinkPresenceContact(BlinkContact):
             if self.log_presence_transitions and log:
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][resource.uri] = account
-                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is pending" % (account, uri_text))
+                    if self.old_resource_state != resource.state:
+                        BlinkLogger().log_debug(u"Availability subscription from %s to %s is pending" % (account, uri_text))
                 if resource.state == 'terminated':
-                    BlinkLogger().log_debug(u"Subscription from %s for availability of %s is terminated" % (account, uri_text))
+                    if self.old_resource_state != resource.state:
+                        BlinkLogger().log_debug(u"Availability subscription from %s to %s is terminated" % (account, uri_text))
+
+            self.old_resource_state = resource.state
 
             try:
                 old_pidf_list = self.pidfs_map[uri]
