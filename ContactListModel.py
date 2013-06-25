@@ -1025,7 +1025,7 @@ class BlinkPresenceContact(BlinkContact):
                     if log:
                         BlinkLogger().log_debug('Availability of contact %s changed from %s to %s' % (self.name, self.old_presence_status, status))
 
-                    if status in ('available','offline'):
+                    if self.old_presence_status == 'offline' or status == 'offline':
                         nc_title = "%s's Availability" % self.name
                         nc_subtitle = self.presence_note
                         nc_body = '%s is now %s' % (self.name, status)
