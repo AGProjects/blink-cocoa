@@ -514,7 +514,7 @@ class BlinkConferenceContact(BlinkContact):
         pidfs = []
         try:
             uri = 'sip:%s' % self.uri
-            pidfs = self.presence_contact.pidfs_map[uri]
+            pidfs = self.presence_contact.pidfs
         except KeyError:
             pass
 
