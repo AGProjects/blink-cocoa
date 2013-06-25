@@ -41,6 +41,7 @@ import cPickle
 import unicodedata
 import urllib
 import uuid
+import time
 
 import AddressBook
 from Foundation import *
@@ -1026,10 +1027,19 @@ class BlinkPresenceContact(BlinkContact):
                         BlinkLogger().log_debug('Availability of contact %s changed from %s to %s' % (self.name, self.old_presence_status, status))
 
                     if self.old_presence_status == 'offline' or status == 'offline':
-                        nc_title = "%s's Availability" % self.name
-                        nc_subtitle = self.presence_note
-                        nc_body = '%s is now %s' % (self.name, status)
-                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                        ui_notify = False
+                        if NSApp.delegate().wake_up_timestamp is not None:
+                            now = int(time.time())
+                            if now - NSApp.delegate().wake_up_timestamp > 30:
+                                ui_notify = True
+                        else:
+                            ui_notify = True
+
+                        if ui_notify:
+                            nc_title = "%s's Availability" % self.name
+                            nc_subtitle = self.presence_note
+                            nc_body = '%s is now %s' % (self.name, status)
+                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
         self.old_presence_status = status
         self.old_presence_note = self.presence_note

@@ -7,6 +7,7 @@ from Foundation import *
 from AppKit import *
 import LaunchServices
 import objc
+import time
 
 from random import randint
 import os
@@ -64,6 +65,7 @@ class BlinkAppDelegate(NSObject):
     aboutzRTPIcon = objc.IBOutlet()
     ui_notification_center = None
     application_will_end = False
+    wake_up_timestamp = None
 
     debug = False
 
@@ -272,6 +274,7 @@ class BlinkAppDelegate(NSObject):
         pass
 
     def computerDidWake_(self, notification):
+        self.wake_up_timestamp = int(time.time())
         NotificationCenter().post_notification("SystemDidWakeUpFromSleep", None)
 
     def computerWillSleep_(self, notification):
