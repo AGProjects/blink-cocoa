@@ -117,7 +117,11 @@ def presence_status_for_contact(contact, uri=None):
     else:
         try:
             uri = 'sip:%s' % uri
-            pidfs = contact.pidfs_map[uri]
+            pidfs = set()
+            for value in contact.pidfs_map[uri].values():
+                for p in value['pidf_list']:
+                    pidfs.add(p)
+
         except KeyError:
             pass
         else:
@@ -609,6 +613,24 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = {}
         self.init_presence_state()
         self.timer = None
+        self.application_will_end = False
+        NotificationCenter().add_observer(self, name="SIPAccountDidDeactivate")
+        NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
+
+    @property
+    def pidfs(self):
+        pidfs = set()
+        for key in self.pidfs_map.keys():
+            for account in self.pidfs_map[key].keys():
+                pidfs_for_account = self.pidfs_map[key][account]['pidf_list']
+                found = False
+                for pidf in pidfs_for_account:
+                    for old_pidf in pidfs:
+                        if old_pidf == pidf:
+                            found = True
+                    if not found:
+                        pidfs.add(pidf)
+        return pidfs
 
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
@@ -643,6 +665,8 @@ class BlinkPresenceContact(BlinkContact):
 
     @allocate_autorelease_pool
     def destroy(self):
+        NotificationCenter().remove_observer(self, name="SIPAccountDidDeactivate")
+        NotificationCenter().remove_observer(self, name="SIPApplicationWillEnd")
         self.contact = None
         if self.timer:
             self.timer.invalidate()
@@ -650,21 +674,57 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = {}
         super(BlinkPresenceContact, self).destroy()
 
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_SIPApplicationWillEnd(self, notification):
+        self.application_will_end = True
+
+    def _NH_SIPAccountDidDeactivate(self, notification):
+        if self.application_will_end:
+            return
+        account = notification.sender.id
+        for key, value in self.pidfs_map.copy().iteritems():
+            for acc in value.keys():
+                if acc == account:
+                    try:
+                        del self.pidfs_map[key][account]
+                    except KeyError:
+                        pass
+
+        for key, value in self.pidfs_map.copy().iteritems():
+            if not value:
+                try:
+                    del self.pidfs_map[key]
+                except KeyError:
+                    pass
+
+        self.handle_pidfs()
+
     def handle_presence_resources(self, resources, account, full_state=False, log=False):
+        if self.application_will_end:
+            return
         # log should be set only for contacts in all contacs groups
         changes = False
+
         if not self.contact:
             return changes
 
-        this_state_uris = set()
+        resources_uris = set()
+        resources_have_pidfs = False
         for uri, resource in resources.iteritems():
+            if resource.pidf_list:
+                resources_have_pidfs = True
             uri_text = sip_prefix_pattern.sub('', uri)
             try:
                 SIPURI.parse(str('sip:%s' % uri_text))
             except:
                 continue
 
-            this_state_uris.add(uri_text)
+            resources_uris.add(uri_text)
             if self.log_presence_transitions and log:
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][resource.uri] = account
@@ -676,8 +736,9 @@ class BlinkPresenceContact(BlinkContact):
 
             self.old_resource_state = resource.state
 
+            old_pidf_list = []
             try:
-                old_pidf_list = self.pidfs_map[uri]
+                old_pidf_list = self.pidfs_map[uri][account]['pidf_list']
             except KeyError:
                 if resource.pidf_list:
                     changes = True
@@ -685,32 +746,56 @@ class BlinkPresenceContact(BlinkContact):
                 if old_pidf_list != resource.pidf_list:
                     changes = True
 
-            self.pidfs_map[uri] = resource.pidf_list
+            if uri not in self.pidfs_map.keys():
+                self.pidfs_map[uri] = {}
+
+            self.pidfs_map[uri][account] = {'pidf_list': resource.pidf_list,
+                                            'timestamp': ISOTimestamp.now()
+                                           }
 
         if full_state:
             # purge old uris
-            for uri in self.pidfs_map.keys():
+            for uri in self.pidfs_map.copy().keys():
                 uri_text = sip_prefix_pattern.sub('', uri)
-                if uri_text not in this_state_uris:
+                if uri_text not in resources_uris:
                     changes = True
                     try:
-                        del self.pidfs_map[uri]
+                        del self.pidfs_map[uri][account]
+                        for key, value in self.pidfs_map.copy().iteritems():
+                            if not value:
+                                try:
+                                    del self.pidfs_map[key]
+                                except KeyError:
+                                    pass
                     except KeyError:
                         pass
 
+        #if resources_uris and not resources_have_pidfs and old_pidf_list:
+        #    if log:
+        #    print '+++ Lost all PIDFs for %s' % self.name
+
         if not changes:
-            return changes
+            return False
+
+        self.handle_pidfs(log)
+        return True
+
+    def handle_pidfs(self, log=False):
+        if self.application_will_end:
+            return
+
+        if not self.contact:
+            # as a result of pidfs changes we may go offline and some GUI contacts are destroyed
+            return
 
         basic_status = 'closed'
         self.init_presence_state()
         has_notes = 0
 
-        pidfs = list(chain(*(item for item in self.pidfs_map.itervalues())))
-
         devices = {}
         urls = []
-        if pidfs:
-            for pidf in pidfs:
+        if self.pidfs:
+            for pidf in self.pidfs:
                 aor = str(urllib.unquote(pidf.entity))
                 if not aor.startswith(('sip:', 'sips:')):
                     aor = 'sip:'+aor
@@ -850,12 +935,10 @@ class BlinkPresenceContact(BlinkContact):
                             'caps'        : caps,
                             'icon'        : icon,
                             'aor'         : [aor],
-                            'timestamp'   : service.timestamp if hasattr(service, 'timestamp') and service.timestamp is not None else None,
-                            'accounts'    : [account]
+                            'timestamp'   : service.timestamp if hasattr(service, 'timestamp') and service.timestamp is not None else None
                             }
                     else:
                         device['aor'].append(aor)
-                        device['accounts'].append(account)
 
                     if self.log_presence_transitions and service in most_recent_services:
                         something_has_changed = False
@@ -872,8 +955,8 @@ class BlinkPresenceContact(BlinkContact):
                             if self.old_presence_status is None and device_wining_status == 'offline':
                                 pass
                             else:
-                                prefix = 'my device' if account == uri_text else 'device'
-                                log_line = u"Availability of %s %s of %s (%s) for account %s is %s" % (prefix, device_text, self.name, uri_text, account, device_wining_status)
+                                log_line = u"Availability of device %s of %s (%s) is %s" % (device_text, self.name, uri_text, device_wining_status)
+                                account = AccountManager().default_account
                                 BlinkLogger().log_debug(log_line)
                                 message= '<h3>Availability Information</h3>'
                                 message += '<p>%s' % log_line
@@ -940,18 +1023,18 @@ class BlinkPresenceContact(BlinkContact):
                     pass
                 else:
                     if log:
-                        BlinkLogger().log_debug('Availability of contact %s changed from %s to %s for account %s' % (self.name, self.old_presence_status, status, account))
+                        BlinkLogger().log_debug('Availability of contact %s changed from %s to %s' % (self.name, self.old_presence_status, status))
 
-                    nc_title = "%s's Availability" % self.name
-                    nc_subtitle = self.presence_note
-                    nc_body = '%s is now %s' % (self.name, status)
-                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                    if status in ('available','offline'):
+                        nc_title = "%s's Availability" % self.name
+                        nc_subtitle = self.presence_note
+                        nc_body = '%s is now %s' % (self.name, status)
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
 
         NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
-        return changes
 
     @allocate_autorelease_pool
     @run_in_green_thread

@@ -63,6 +63,7 @@ class BlinkAppDelegate(NSObject):
     aboutCopyright = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
     ui_notification_center = None
+    application_will_end = False
 
     debug = False
 
@@ -89,8 +90,10 @@ class BlinkAppDelegate(NSObject):
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
             NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
+            NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
+
 
             def purge_screenshots():
                 screenshots_folder = ApplicationData.get('.tmp_screenshots')
@@ -105,6 +108,8 @@ class BlinkAppDelegate(NSObject):
         return self
 
     def gui_notify(self, title, body, subtitle=None):
+        if self.application_will_end:
+            return
         major, minor = platform.mac_ver()[0].split('.')[0:2]
         if (int(major) == 10 and int(minor) >= 8) or int(major) > 10:
             if self.ui_notification_center is None:
@@ -247,6 +252,9 @@ class BlinkAppDelegate(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_SIPApplicationWillEnd(self, notification):
+        self.application_will_end = True
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if 'gui.extended_debug' in notification.data.modified:
