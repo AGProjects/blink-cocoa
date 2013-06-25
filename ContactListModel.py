@@ -1024,7 +1024,7 @@ class BlinkPresenceContact(BlinkContact):
                     pass
                 else:
                     if log:
-                        BlinkLogger().log_debug('Availability of contact %s changed from %s to %s' % (self.name, self.old_presence_status, status))
+                        BlinkLogger().log_info('Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status))
 
                     if self.old_presence_status == 'offline' or status == 'offline':
                         ui_notify = False
