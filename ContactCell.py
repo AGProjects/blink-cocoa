@@ -125,9 +125,11 @@ class ContactCell(NSTextFieldCell):
             self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
 
         # presence bar
-        indicator_width = 5
-        frame.size.width = indicator_width
-        frame.origin.x = self.view.frame().size.width - indicator_width - 3
+        frame.size.width = 5
+        if hasattr(self.contact, "active_media"):
+            frame.size.height = 16
+            frame.origin.y += 14
+        frame.origin.x = self.view.frame().size.width - 6
 
         rect = NSInsetRect(frame, 0, 0)
 
