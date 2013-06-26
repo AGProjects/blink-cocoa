@@ -2998,6 +2998,8 @@ class ContactListModel(CustomListModel):
                     blink_contact._set_username_and_domain()
 
                     for uri in blink_contact.pidfs_map.copy().keys():
+                        if blink_contact is None:
+                            continue
                         has_uri = any(u for u in blink_contact.uris if u.uri == uri)
                         if not has_uri:
                             try:
