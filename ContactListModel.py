@@ -2996,6 +2996,17 @@ class ContactListModel(CustomListModel):
                 if uri_attributes.intersection(notification.data.modified):
                     blink_contact.detail = blink_contact.uri
                     blink_contact._set_username_and_domain()
+
+                    for uri in blink_contact.pidfs_map.copy().keys():
+                        has_uri = any(u for u in blink_contact.uris if u.uri == uri)
+                        if not has_uri:
+                            try:
+                                del blink_contact.pidfs_map[uri]
+                            except KeyError:
+                                pass
+                            else:
+                                blink_contact.handle_pidfs()
+
                 if icon_attributes.intersection(notification.data.modified):
                     blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
             [g.sortContacts() for g in groups]
