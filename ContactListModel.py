@@ -535,10 +535,8 @@ class BlinkConferenceContact(BlinkContact):
             if self.presence_state['status']['away'] is False:
                 self.presence_state['status']['away'] = any(service for service in pidf.services if service.status.extended == 'away')
 
-            for service in pidf.services:
-                for note in service.notes:
-                    if note:
-                        presence_notes.append(note)
+            presence_notes = (note for service in pidf.services for note in service.notes if note)
+
         pidfs = None
 
         notes = list(unicode(note) for note in presence_notes)
@@ -2192,6 +2190,12 @@ class ContactListModel(CustomListModel):
     def getFirstContactMatchingURI(self, uri, exact_match=False):
         try:
             return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
+        except StopIteration:
+            return None
+
+    def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
+        try:
+            return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
         except StopIteration:
             return None
 

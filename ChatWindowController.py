@@ -69,6 +69,7 @@ TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 
 SKIP_SCREENSHARING_FOR_APPS= ('SystemUIServer', 'Dock', 'Window Server')
 
+
 class ChatWindowController(NSWindowController):
     implements(IObserver)
 
@@ -228,13 +229,12 @@ class ChatWindowController(NSWindowController):
         return False
 
     def _findInactiveSessionCompatibleWith_(self, session):
-        getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
-        session_contact = getFirstContactMatchingURI(session.remoteSIPAddress)
+        session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteSIPAddress)
         for k, s in self.sessions.iteritems():
             if s == session or s.identifier == session.identifier:
                 return k, s
             if not s.isActive():
-                contact = getFirstContactMatchingURI(s.remoteSIPAddress)
+                contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(s.remoteSIPAddress)
                 if s.remoteSIPAddress==session.remoteSIPAddress or session_contact==contact!=None:
                     return k, s
         else:
@@ -804,7 +804,6 @@ class ChatWindowController(NSWindowController):
             if session.remote_focus:
                 participants = NSApp.delegate().contactsWindowController.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
                 if participants is not None:
-                    getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
                     remote_uri = format_identity_to_string(session.remotePartyObject)
                     # prevent loops
                     if remote_uri in participants:
@@ -820,11 +819,12 @@ class ChatWindowController(NSWindowController):
                             session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
                             continue
 
-                        contact = getFirstContactMatchingURI(uri)
-                        if contact:
-                            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
+                        presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                        if presence_contact:
+                            contact = BlinkConferenceContact(uri, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
+
                         contact.detail = 'Invitation sent...'
                         session.log_info('Adding %s to list of invited partipants' % uri)
                         session.invited_participants.append(contact)
@@ -1187,9 +1187,7 @@ class ChatWindowController(NSWindowController):
                 pass
             else:
                 uri = sip_prefix_pattern.sub("", user.entity)
-                getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
-
-                contact = getFirstContactMatchingURI(uri)
+                contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
                 if contact:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
                 else:
@@ -1257,8 +1255,6 @@ class ChatWindowController(NSWindowController):
             self.toolbar.validateVisibleItems()
 
     def refreshDrawer(self):
-        getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
-
         session = self.selectedSessionController()
 
         participants, self.participants = self.participants, []
@@ -1298,9 +1294,21 @@ class ChatWindowController(NSWindowController):
             self.participants.append(contact)
 
             # Add remote party
-            contact = session.selected_contact or getFirstContactMatchingURI(session.remoteSIPAddress)
-            if contact:
-                contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon)
+            if isinstance(session.selected_contact, BlinkPresenceContact):
+                # Find the contact from the all contacts group
+                model = NSApp.delegate().contactsWindowController.model
+                try:
+                    presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == session.selected_contact.contact)
+                except StopIteration:
+                    presence_contact = None
+            else:
+                presence_contact = None
+
+            if not presence_contact:
+                presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteSIPAddress)
+
+            if presence_contact:
+                contact = BlinkConferenceContact(session.remoteSIPAddress, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
             else:
                 uri = format_identity_to_string(session.remotePartyObject)
                 display_name = session.getTitleShort()
@@ -1332,21 +1340,24 @@ class ChatWindowController(NSWindowController):
                 self.participants.append(contact)
 
                 # Add remote party
-                contact = session.selected_contact or getFirstContactMatchingURI(session.remoteSIPAddress)
+                if isinstance(session.selected_contact, BlinkPresenceContact):
+                    # Find the contact from the all contacts group
+                    model = NSApp.delegate().contactsWindowController.model
+                    try:
+                        presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == session.selected_contact.contact)
+                    except StopIteration:
+                        presence_contact = None
+                else:
+                    presence_contact = None
+
+                if not presence_contact:
+                    presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteSIPAddress)
+
                 icon = None
                 if chat_stream.remoteIcon:
                     icon = chat_stream.remoteIcon
-                if contact:
-                    if isinstance(contact, BlinkPresenceContact):
-                        # Find the contact from the all contacts group
-                        model = NSApp.delegate().contactsWindowController.model
-                        try:
-                            presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == contact.contact)
-                        except StopIteration:
-                            presence_contact = None
-                    else:
-                        presence_contact = None
-                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=contact.name, icon=contact.icon, presence_contact=presence_contact)
+                if presence_contact:
+                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                 else:
                     uri = format_identity_to_string(session.remotePartyObject)
                     display_name = session.getTitleShort()
@@ -1379,13 +1390,15 @@ class ChatWindowController(NSWindowController):
                 for user in session.conference_info.users:
                     uri = sip_prefix_pattern.sub("", user.entity)
                     if uri == own_uri:
+                        # Add ourselves
                         display_name = user.display_text.value if user.display_text is not None and user.display_text.value else session.account.display_name
                         contact = BlinkConferenceContact(own_uri, name=display_name, icon=self.own_icon)
                     else:
-                        contact = getFirstContactMatchingURI(uri)
-                        if contact:
-                            display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                            contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+                         # Add remote party
+                        presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                        if presence_contact:
+                            display_name = user.display_text.value if user.display_text is not None and user.display_text.value else presence_contact.name
+                            contact = BlinkConferenceContact(uri, name=display_name, icon=presence_contact.icon, presence_contact=presence_contact)
                         else:
                             display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                             contact = BlinkConferenceContact(uri, name=display_name)
@@ -1686,7 +1699,18 @@ class ChatWindowController(NSWindowController):
                     return False
 
         if session.remote_focus:
-            new_contact = BlinkConferenceContact(uri, name=contact.name if contact else None, icon=contact.icon if contact else None, presence_contact=contact if isinstance(contact, BlinkPresenceContact) else None)
+            if isinstance(contact, BlinkPresenceContact):
+                # Find the contact from the all contacts group
+                model = NSApp.delegate().contactsWindowController.model
+                try:
+                    presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == contact.contact)
+                except StopIteration:
+                    presence_contact = None
+            else:
+                presence_contact = None
+
+
+            new_contact = BlinkConferenceContact(uri, name=contact.name if contact else None, icon=contact.icon if contact else None, presence_contact=presence_contact)
             new_contact.detail = 'Invitation sent...'
             session.invited_participants.append(new_contact)
             session.participants_log.add(uri)

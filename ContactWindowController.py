@@ -1342,6 +1342,9 @@ class ContactWindowController(NSWindowController):
     def getFirstContactMatchingURI(self, uri, exact_match=False):
         return self.model.getFirstContactMatchingURI(uri, exact_match)
 
+    def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
+        return self.model.getFirstContactFromAllContactsGroupMatchingURI(uri, exact_match)
+
     def hasContactMatchingURI(self, uri, exact_match=False):
         return self.model.hasContactMatchingURI(uri, exact_match)
 
@@ -1939,9 +1942,9 @@ class ContactWindowController(NSWindowController):
             # Add invited participants to the drawer
             session_controller.mustShowDrawer = True
             for uri in participants:
-                contact = self.getFirstContactMatchingURI(uri)
-                if contact:
-                    contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
+                presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                if presence_contact:
+                    contact = BlinkConferenceContact(uri, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                 else:
                     contact = BlinkConferenceContact(uri=uri, name=uri)
                 contact.detail = 'Invitation sent...'
@@ -4562,11 +4565,11 @@ class ContactWindowController(NSWindowController):
             session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
             return False
 
-        contact = self.getFirstContactMatchingURI(uri)
-        if contact:
-            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
+        presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+        if presence_contact:
+            contact = BlinkConferenceContact(uri, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
         else:
-            contact = BlinkConferenceContact(uri, name=uri)
+            contact = BlinkConferenceContact(uri=uri, name=uri)
 
         contact.detail = 'Invitation sent...'
         session.invited_participants.append(contact)
@@ -4622,10 +4625,10 @@ class ContactWindowController(NSWindowController):
                 elif audio_endpoints and user_on_hold:
                     active_media.append('audio-onhold')
 
-                contact = self.getFirstContactMatchingURI(uri)
-                if contact:
-                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                    contact = BlinkConferenceContact(uri, name=display_name, icon=contact.icon)
+                presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                if presence_contact:
+                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else presence_contact.name
+                    contact = BlinkConferenceContact(uri, name=display_name, icon=presence_contact.icon, presence_contact=presence_contact)
                 else:
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
                     contact = BlinkConferenceContact(uri, name=display_name)
@@ -4795,11 +4798,11 @@ class ContactWindowController(NSWindowController):
                             session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
                             continue
 
-                        contact = self.getFirstContactMatchingURI(uri)
-                        if contact:
-                            contact = BlinkConferenceContact(uri, name=contact.name, icon=contact.icon)
+                        presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                        if presence_contact:
+                            contact = BlinkConferenceContact(uri, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                         else:
-                            contact = BlinkConferenceContact(uri, name=uri)
+                            contact = BlinkConferenceContact(uri=uri, name=uri)
                         contact.detail = 'Invitation sent...'
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
