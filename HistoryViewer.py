@@ -114,7 +114,7 @@ class HistoryViewer(NSWindowController):
             self.notification_center.add_observer(self, name='AudioCallLoggedToHistory')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
             self.notification_center.add_observer(self, name='BlinkTableViewSelectionChaged')
-            self.notification_center.add_observer(self, name='BlinkConferenceContactPresenceHasChaged')
+            self.notification_center.add_observer(self, name='BlinkConferenceContactPresenceHasChanged')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
@@ -652,7 +652,7 @@ class HistoryViewer(NSWindowController):
         self.selectedTableView = notification.sender
         self.toolbar.validateVisibleItems()
 
-    def _NH_BlinkConferenceContactPresenceHasChaged(self, notification):
+    def _NH_BlinkConferenceContactPresenceHasChanged(self, notification):
         try:
             contact = (contact for contact in self.contacts[2:] if contact == notification.sender).next()
         except StopIteration:

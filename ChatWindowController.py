@@ -133,7 +133,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkDidRenegotiateStreams")
             self.notification_center.add_observer(self, name="BlinkVideoEnteredFullScreen")
             self.notification_center.add_observer(self, name="BlinkVideoExitedFullScreen")
-            self.notification_center.add_observer(self, name="BlinkConferenceContactPresenceHasChaged")
+            self.notification_center.add_observer(self, name="BlinkConferenceContactPresenceHasChanged")
 
             ns_nc = NSNotificationCenter.defaultCenter()
             ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
@@ -479,7 +479,7 @@ class ChatWindowController(NSWindowController):
         else:
             return False
 
-    def _NH_BlinkConferenceContactPresenceHasChaged(self, sender, data):
+    def _NH_BlinkConferenceContactPresenceHasChanged(self, sender, data):
         try:
             idx = self.participants.index(sender)
             self.participantsTableView.reloadDataForRowIndexes_columnIndexes_(NSIndexSet.indexSetWithIndex_(idx), NSIndexSet.indexSetWithIndex_(0))

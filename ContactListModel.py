@@ -546,7 +546,7 @@ class BlinkConferenceContact(BlinkContact):
 
         self.setPresenceNote()
 
-        NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChaged", sender=self)
+        NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChanged", sender=self)
 
 
 class BlinkPendingWatcher(BlinkContact):
