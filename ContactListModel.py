@@ -62,6 +62,7 @@ from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.payloads import prescontent
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
+from twisted.internet.error import ConnectionLost
 from zope.interface import implements
 
 from ContactController import AddContactController, EditContactController
@@ -1077,7 +1078,7 @@ class BlinkPresenceContact(BlinkContact):
             info = response.info()
             content_type = info.getheader('content-type')
             etag = info.getheader('etag')
-        except (urllib2.HTTPError, urllib2.URLError):
+        except (ConnectionLost, urllib2.HTTPError, urllib2.URLError):
             contact.updating_remote_icon = False
             return
         else:
