@@ -373,9 +373,7 @@ class SIPManager(object):
                     if filter_uris and remote_party not in filter_uris:
                         continue
                     result.append((timestamp, remote_party, file))
-                except:
-                    import traceback
-                    traceback.print_exc()
+                except Exception:
                     pass
 
         result.sort(lambda a,b: cmp(a[0],b[0]))
@@ -391,14 +389,12 @@ class SIPManager(object):
 
         for file in files:
             try:
+                os.stat(file)
                 date = file.split("/")[-1].split('-')[0]
                 time = file.split("/")[-1].split('-')[1].split('.')[0]
                 timestamp = date[:4]+"/"+date[4:6]+"/"+date[6:8]+" "+time[:2]+":"+time[2:4]
-                stat = os.stat(file)
                 result.append((timestamp, file))
-            except:
-                import traceback
-                traceback.print_exc()
+            except Exception:
                 pass
         result.sort(lambda a,b: cmp(a[0],b[0]))
         return result
