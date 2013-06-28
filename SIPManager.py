@@ -345,6 +345,7 @@ class SIPManager(object):
 
             for file in files:
                 try:
+                    stat = os.stat(file)
                     toks = file.split("/")[-1].split("-", 2)
                     if len(toks) == 3:
                         date, time, rest = toks
@@ -369,7 +370,6 @@ class SIPManager(object):
                             remote_party = file[:-4]
                         timestamp = datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
 
-                    stat = os.stat(file)
                     if filter_uris and remote_party not in filter_uris:
                         continue
                     result.append((timestamp, remote_party, file))
