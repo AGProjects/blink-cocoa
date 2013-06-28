@@ -27,8 +27,6 @@ class AudioSettingsExtension(AudioSettings):
     alert_device = Setting(type=unicode, default=u'system_default', nillable=True)
     input_device = Setting(type=unicode, default=u'system_default', nillable=True)
     output_device = Setting(type=unicode, default=u'system_default', nillable=True)
-    previous_input_device = Setting(type=unicode, default=None, nillable=True)
-    previous_output_device = Setting(type=unicode, default=None, nillable=True)
     sample_rate = Setting(type=SampleRate, default=16000)
     tail_length = Setting(type=NonNegativeInteger, default=20)
     automatic_device_switch = Setting(type=bool, default=True)

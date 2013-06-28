@@ -1542,8 +1542,6 @@ PreferenceOptionTypes = {
 "audio.directory" : HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
-"audio.previous_input_device" : HiddenOption,
-"audio.previous_output_device" : HiddenOption,
 "audio.sample_rate": HiddenOption,
 "audio.tail_length": HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,

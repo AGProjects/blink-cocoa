@@ -1123,8 +1123,6 @@ class ContactWindowController(NSWindowController):
     def switchAudioDevice(self, device):
         def switch_device(device):
             settings = SIPSimpleSettings()
-            settings.audio.previous_input_device = settings.audio.input_device
-            settings.audio.previous_output_device = settings.audio.output_device
             settings.audio.input_device = unicode(device)
             settings.audio.output_device = unicode(device)
             settings.save()
