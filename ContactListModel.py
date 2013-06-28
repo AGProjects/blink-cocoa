@@ -1034,7 +1034,7 @@ class BlinkPresenceContact(BlinkContact):
                         else:
                             ui_notify = True
 
-                        if ui_notify:
+                        if ui_notify and self.name:
                             nc_title = "%s's Availability" % self.name
                             nc_subtitle = self.presence_note
                             nc_body = '%s is now %s' % (self.name, status)
