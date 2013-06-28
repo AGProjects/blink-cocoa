@@ -815,7 +815,7 @@ class ContactWindowController(NSWindowController):
             for b in m:
                 blink_contacts_set.add(b)
 
-        changed_blink_contacts = 0
+        changed_blink_contacts = []
         for blink_contact, group in blink_contacts_set:
             if blink_contact.contact is None:
                 continue
@@ -824,10 +824,17 @@ class ContactWindowController(NSWindowController):
             if resources:
                 changed = blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(group, AllContactsBlinkGroup))
                 if changed:
-                    changed_blink_contacts += 1
+                    BlinkLogger().log_debug('Contact %s in group %s WAS updated' % (blink_contact.name, group.name))
+                    changed_blink_contacts.append((blink_contact,group))
+                else:
+                    BlinkLogger().log_debug('Contact %s in group %s NOT updated' % (blink_contact.name, group.name))
+
+        for blink_contact, group in changed_blink_contacts:
+            if isinstance(group, AllContactsBlinkGroup):
+                blink_contact.addToOrRemoveFromOnlineGroup()
 
         if changed_blink_contacts:
-            BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (changed_blink_contacts, len(blink_contacts_set)))
+            BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (len(changed_blink_contacts), len(blink_contacts_set)))
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()

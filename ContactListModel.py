@@ -1004,7 +1004,7 @@ class BlinkPresenceContact(BlinkContact):
                 wining_icon = wining_dev['icon']
             self._process_icon(wining_icon)
 
-        self.addToOrRemoveFromOnlineGroup()
+        #self.addToOrRemoveFromOnlineGroup()
 
         if self.presence_state['status']['busy']:
             status = 'busy'
