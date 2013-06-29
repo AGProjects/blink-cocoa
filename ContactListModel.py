@@ -637,6 +637,7 @@ class BlinkPresenceContact(BlinkContact):
         self.application_will_end = False
         NotificationCenter().add_observer(self, name="SIPAccountDidDeactivate")
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
+        NotificationCenter().add_observer(self, name="SystemWillSleep")
 
     @property
     def pidfs(self):
@@ -688,6 +689,7 @@ class BlinkPresenceContact(BlinkContact):
     def destroy(self):
         NotificationCenter().remove_observer(self, name="SIPAccountDidDeactivate")
         NotificationCenter().remove_observer(self, name="SIPApplicationWillEnd")
+        NotificationCenter().remove_observer(self, name="SystemWillSleep")
         self.contact = None
         if self.timer:
             self.timer.invalidate()
@@ -702,11 +704,18 @@ class BlinkPresenceContact(BlinkContact):
         handler(notification)
 
     def _NH_SIPApplicationWillEnd(self, notification):
+        self.pidfs_map = {}
+        self.init_presence_state()
         self.application_will_end = True
+
+    def _NH_SystemWillSleep(self, notification):
+        self.pidfs_map = {}
+        self.init_presence_state()
 
     def _NH_SIPAccountDidDeactivate(self, notification):
         if self.application_will_end:
             return
+
         account = notification.sender.id
         for key, value in self.pidfs_map.copy().iteritems():
             for acc in value.keys():
