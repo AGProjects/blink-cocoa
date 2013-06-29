@@ -4129,7 +4129,12 @@ class ContactWindowController(NSWindowController):
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Availability Information...", "showPresenceInfo:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Tell me when %s becomes available" % item.name, "tellMeWhenContactBecomesAvailable:", "")
+                mitem.setEnabled_(item.contact.presence.subscribe and presence_status_for_contact(item) != 'available')
+                mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
+                mitem.setRepresentedObject_(item.contact)
+
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Availability Information...", "showPresenceInfo:", "")
                 mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
                 mitem.setRepresentedObject_(item)
 
@@ -4137,11 +4142,6 @@ class ContactWindowController(NSWindowController):
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
-
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Tell me when %s becomes available" % item.name, "tellMeWhenContactBecomesAvailable:", "")
-                mitem.setEnabled_(presence_status_for_contact(item) != 'available')
-                mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
-                mitem.setRepresentedObject_(item.contact)
 
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block %s" % item.name , "setPresencePolicy:", "")
