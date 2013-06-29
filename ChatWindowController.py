@@ -30,7 +30,7 @@ from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
-from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
+from ContactListModel import BlinkConferenceContact, BlinkPresenceContact, BlinkMyselfConferenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
 from MediaStream import *
@@ -135,6 +135,9 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkVideoEnteredFullScreen")
             self.notification_center.add_observer(self, name="BlinkVideoExitedFullScreen")
             self.notification_center.add_observer(self, name="BlinkConferenceContactPresenceHasChanged")
+            self.notification_center.add_observer(self, name="SIPAccountGotSelfPresenceState")
+            self.notification_center.add_observer(self, name="SIPAccountDidDeactivate")
+            self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
 
             ns_nc = NSNotificationCenter.defaultCenter()
             ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
@@ -384,6 +387,24 @@ class ChatWindowController(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
+
+    def _NH_BonjourAccountPresenceStateDidChange(self, sender, data):
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            if selectedSession.account == sender:
+                self.refreshDrawer()
+
+    def _NH_SIPAccountGotSelfPresenceState(self, sender, data):
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            if selectedSession.account == sender:
+                self.refreshDrawer()
+
+    def _NH_SIPAccountDidDeactivate(self, sender, data):
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            if selectedSession.account == sender:
+                self.refreshDrawer()
 
     def _NH_BlinkStreamHandlerChangedState(self, sender, data):
         session = sender.sessionController
@@ -1290,7 +1311,7 @@ class ChatWindowController(NSWindowController):
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
             # Add ourselves
-            contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
+            contact = BlinkMyselfConferenceContact(session.account)
             self.participants.append(contact)
 
             # Add remote party
@@ -1335,7 +1356,7 @@ class ChatWindowController(NSWindowController):
                     active_media.append('audio' if not audio_stream.holdByLocal else 'audio-onhold')
 
                 # Add ourselves
-                contact = BlinkConferenceContact(own_uri, name=session.account.display_name, icon=self.own_icon)
+                contact = BlinkMyselfConferenceContact(session.account)
                 contact.active_media = active_media
                 self.participants.append(contact)
 
@@ -1391,8 +1412,7 @@ class ChatWindowController(NSWindowController):
                     uri = sip_prefix_pattern.sub("", user.entity)
                     if uri == own_uri:
                         # Add ourselves
-                        display_name = user.display_text.value if user.display_text is not None and user.display_text.value else session.account.display_name
-                        contact = BlinkConferenceContact(own_uri, name=display_name, icon=self.own_icon)
+                        contact = BlinkMyselfConferenceContact(session.account)
                     else:
                          # Add remote party
                         presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)

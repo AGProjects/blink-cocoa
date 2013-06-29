@@ -458,6 +458,8 @@ class PresencePublisher(object):
         else:
             bonjour_account.presence_state = BonjourPresenceState(status, note)
 
+        NotificationCenter().post_notification('BonjourAccountPresenceStateDidChange', sender=bonjour_account)
+
     def unpublish(self):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = None

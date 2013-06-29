@@ -4,8 +4,9 @@
 from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
+from sipsimple.configuration.settings import SIPSimpleSettings
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact
 
 class ContactCell(NSTextFieldCell):
     contact = None
@@ -98,7 +99,19 @@ class ContactCell(NSTextFieldCell):
 
     @allocate_autorelease_pool
     def drawPresenceIcon(self):
-        status = presence_status_for_contact(self.contact)
+        if isinstance(self.contact, BlinkPresenceContact):
+            if not self.contact.contact.presence.subscribe:
+                return
+
+        status = 'offline'
+        if isinstance(self.contact, BlinkMyselfConferenceContact):
+            account = self.contact.account
+            if account.enabled and account.presence.enabled:
+                settings = SIPSimpleSettings()
+                status = settings.presence_state.status.lower()
+        else:
+            status = presence_status_for_contact(self.contact)
+
         if not status:
             return
         try:
@@ -112,7 +125,7 @@ class ContactCell(NSTextFieldCell):
             #self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
 
         has_locations = None
-        if not isinstance(self.contact, BonjourBlinkContact):
+        if isinstance(self.contact, BlinkPresenceContact):
             try:
                 has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             except KeyError:

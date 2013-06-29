@@ -548,6 +548,27 @@ class BlinkConferenceContact(BlinkContact):
         NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChanged", sender=self)
 
 
+class BlinkMyselfConferenceContact(BlinkContact):
+    """Contact representation for conference drawer UI for myself"""
+
+    def __init__(self, account):
+        if account is BonjourAccount():
+            uri = '%s@%s' % (account.uri.user, account.uri.host)
+        else:
+            uri = '%s@%s' % (account.id.username, account.id.domain)
+        self.account = account
+
+        own_icon = None
+        path = NSApp.delegate().contactsWindowController.iconPathForSelf()
+        if path:
+            own_icon = NSImage.alloc().initWithContentsOfFile_(path)
+
+        name = account.display_name or uri
+
+        super(BlinkMyselfConferenceContact, self).__init__(uri, name=name, icon=own_icon)
+        self.active_media = []
+
+
 class BlinkPendingWatcher(BlinkContact):
     """Contact representation for a pending watcher"""
     editable = False
