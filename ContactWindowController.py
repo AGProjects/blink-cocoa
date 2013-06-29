@@ -235,9 +235,13 @@ class ContactWindowController(NSWindowController):
     presencePublisher = None
     white = None
     presenceInfoPanel = None
+    tellMeWhenContactBecomesAvailableList = set()
 
     statusbar = NSStatusBar.systemStatusBar()
     statusBarMenu = objc.IBOutlet()
+    speech_synthesizer = None
+    speech_synthesizer_active = False
+
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -282,6 +286,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkContactsHaveChanged")
         nc.add_observer(self, name="BlinkMuteChangedState")
         nc.add_observer(self, name="BlinkSessionChangedState")
+        nc.add_observer(self, name="BlinkContactBecameAvailable")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
         nc.add_observer(self, name="SIPAccountGotSelfPresenceState")
         nc.add_observer(self, name="BonjourAccountWillRegister")
@@ -801,6 +806,22 @@ class ContactWindowController(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_BlinkContactBecameAvailable(self, notification):
+        contact = notification.sender
+        if contact in self.tellMeWhenContactBecomesAvailableList:
+            self.tellMeWhenContactBecomesAvailableList.discard(contact)
+            settings = SIPSimpleSettings()
+            if not self.speech_synthesizer_active and contact.name and not self.has_audio and not settings.audio.silent:
+                if self.speech_synthesizer is None:
+                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+                    self.speech_synthesizer.setDelegate_(self)
+                self.speech_synthesizer_active = True
+                speak_text = '%s is now available' % contact.name
+                self.speech_synthesizer.startSpeakingString_(speak_text)
+
+    def speechSynthesizer_didFinishSpeaking_(self, sender, success):
+        self.speech_synthesizer_active = False
 
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map
@@ -3444,6 +3465,14 @@ class ContactWindowController(NSWindowController):
             session_controller.startChatSession()
 
     @objc.IBAction
+    def tellMeWhenContactBecomesAvailable_(self, sender):
+        contact = sender.representedObject()
+        if contact in self.tellMeWhenContactBecomesAvailableList:
+            self.tellMeWhenContactBecomesAvailableList.discard(contact)
+        else:
+            self.tellMeWhenContactBecomesAvailableList.add(contact)
+
+    @objc.IBAction
     def sendFile_(self, sender):
         uri = sender.representedObject()
         account = self.activeAccount()
@@ -4108,6 +4137,11 @@ class ContactWindowController(NSWindowController):
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
+
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Tell me when %s becomes available" % item.name, "tellMeWhenContactBecomesAvailable:", "")
+                mitem.setEnabled_(presence_status_for_contact(item) != 'available')
+                mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
+                mitem.setRepresentedObject_(item.contact)
 
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block %s" % item.name , "setPresencePolicy:", "")
