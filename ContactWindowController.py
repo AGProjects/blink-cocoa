@@ -3999,7 +3999,7 @@ class ContactWindowController(NSWindowController):
                             contact = item.name
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen Sharing", "startScreenSharing:", "")
                             mitem.setTag_(1)
-                            mitem.setEnabled_(has_fully_qualified_sip_uri and has_pidfs)
+                            mitem.setEnabled_(has_fully_qualified_sip_uri)
                             mitem.setRepresentedObject_(item.uri)
                             #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
                             mitem.setEnabled_(True)
