@@ -3042,6 +3042,7 @@ class ContactListModel(CustomListModel):
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group, self.online_contacts_group])
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.addPendingWatchers()
+        NSApp.delegate().contactsWindowController.tellMeWhenContactBecomesAvailableList.discard(contact)
 
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
