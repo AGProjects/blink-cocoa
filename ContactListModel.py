@@ -705,14 +705,15 @@ class BlinkPresenceContact(BlinkContact):
         self.handle_pidfs()
 
     def handle_presence_resources(self, resources, account, full_state=False, log=False):
+        # log should be set only for contacts in all contacs group
         if self.application_will_end:
             return
-        # log should be set only for contacts in all contacs groups
         changes = False
 
         if not self.contact:
             return changes
 
+        old_pidfs = self.pidfs
         resources_uris = set()
         resources_have_pidfs = False
         for uri, resource in resources.iteritems():
@@ -736,15 +737,17 @@ class BlinkPresenceContact(BlinkContact):
 
             self.old_resource_state = resource.state
 
-            old_pidf_list = []
+            old_pidf_list_for_uri = []
+
             try:
-                old_pidf_list = self.pidfs_map[uri][account]['pidf_list']
+                old_pidf_list_for_uri = self.pidfs_map[uri][account]['pidf_list']
             except KeyError:
                 if resource.pidf_list:
                     changes = True
             else:
-                if old_pidf_list != resource.pidf_list:
+                if old_pidf_list_for_uri != resource.pidf_list:
                     changes = True
+
 
             if uri not in self.pidfs_map.keys():
                 self.pidfs_map[uri] = {}
@@ -770,12 +773,15 @@ class BlinkPresenceContact(BlinkContact):
                     except KeyError:
                         pass
 
-        #if resources_uris and not resources_have_pidfs and old_pidf_list:
-        #    if log:
-        #    print '+++ Lost all PIDFs for %s' % self.name
-
-        if not changes:
+        if len(old_pidfs) == len(self.pidfs) and len(old_pidfs) == 0:
             return False
+
+        if old_pidfs != self.pidfs:
+            changes = True
+
+        #if not changes:
+            #TODO: somehow the old pidfs are the same as new pids, comparison fail sometimes -adi
+            #return False
 
         self.handle_pidfs(log)
         return True
@@ -1003,8 +1009,6 @@ class BlinkPresenceContact(BlinkContact):
             else:
                 wining_icon = wining_dev['icon']
             self._process_icon(wining_icon)
-
-        #self.addToOrRemoveFromOnlineGroup()
 
         if self.presence_state['status']['busy']:
             status = 'busy'

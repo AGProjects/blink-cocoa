@@ -823,11 +823,9 @@ class ContactWindowController(NSWindowController):
             resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
             if resources:
                 changed = blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(group, AllContactsBlinkGroup))
+
                 if changed:
-                    BlinkLogger().log_debug('Contact %s in group %s WAS updated' % (blink_contact.name, group.name))
                     changed_blink_contacts.append((blink_contact,group))
-                else:
-                    BlinkLogger().log_debug('Contact %s in group %s NOT updated' % (blink_contact.name, group.name))
 
         for blink_contact, group in changed_blink_contacts:
             if isinstance(group, AllContactsBlinkGroup):
