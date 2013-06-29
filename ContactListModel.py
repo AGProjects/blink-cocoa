@@ -817,6 +817,7 @@ class BlinkPresenceContact(BlinkContact):
         return True
 
     def handle_pidfs(self, log=False):
+        # log should be True when updating contacts in all contacts group to avoid duplicates
         if self.application_will_end:
             return
 
