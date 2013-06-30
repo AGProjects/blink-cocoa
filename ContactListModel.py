@@ -738,6 +738,7 @@ class BlinkPresenceContact(BlinkContact):
         # log should be set only for contacts in all contacs group
         if self.application_will_end:
             return
+
         changes = False
 
         if not self.contact:
@@ -809,9 +810,9 @@ class BlinkPresenceContact(BlinkContact):
         if old_pidfs != self.pidfs:
             changes = True
 
-        #if not changes:
-            #TODO: somehow the old pidfs are the same as new pids, comparison fail sometimes -adi
-            #return False
+        if not changes and full_state:
+            BlinkLogger().log_debug('PIDF list for %s has not changed' % self.name)
+            return False
 
         self.handle_pidfs(log)
         return True

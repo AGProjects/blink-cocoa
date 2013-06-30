@@ -846,6 +846,7 @@ class ContactWindowController(NSWindowController):
                 changed = blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(group, AllContactsBlinkGroup))
 
                 if changed:
+                    BlinkLogger().log_debug('Availability for %s in group %s has changed' % (blink_contact.name, group.name))
                     changed_blink_contacts.append((blink_contact,group))
 
         for blink_contact, group in changed_blink_contacts:
