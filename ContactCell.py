@@ -131,11 +131,6 @@ class ContactCell(NSTextFieldCell):
             icon = presence_status_icons[status]
         except KeyError:
             pass
-        else:
-            pass
-            #icon.setScalesWhenResized_(True)
-            #icon.setSize_(NSMakeSize(12,12))
-            #self.drawIcon(icon, 21, self.frame.origin.y + 5, 13, 13)
 
         has_locations = None
         if isinstance(self.contact, BlinkPresenceContact):
