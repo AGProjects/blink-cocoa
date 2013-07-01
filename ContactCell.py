@@ -6,7 +6,7 @@ from AppKit import *
 from util import allocate_autorelease_pool
 from sipsimple.configuration.settings import SIPSimpleSettings
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact, HistoryBlinkContact
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, HistoryBlinkContact
 
 class ContactCell(NSTextFieldCell):
     contact = None
@@ -105,15 +105,25 @@ class ContactCell(NSTextFieldCell):
             if account.enabled and account.presence.enabled:
                 settings = SIPSimpleSettings()
                 status = settings.presence_state.status.lower()
-        elif isinstance(self.contact, HistoryBlinkContact):
-            if isinstance(self.contact.contact, BlinkPresenceContact):
-                if not self.contact.contact.contact.presence.subscribe:
-                    return
-            status = presence_status_for_contact(self.contact.contact)
-        elif isinstance(self.contact, BlinkPresenceContact):
-            if not self.contact.contact.presence.subscribe:
+        elif isinstance(self.contact, BlinkConferenceContact):
+            blink_contact = self.contact.presence_contact
+            if not isinstance(blink_contact, BlinkPresenceContact):
                 return
-            status = presence_status_for_contact(self.contact)
+            if not blink_contact.contact.presence.subscribe:
+                return
+            status = presence_status_for_contact(blink_contact)
+        elif isinstance(self.contact, HistoryBlinkContact):
+            blink_contact = self.contact.contact
+            if not isinstance(blink_contact, BlinkPresenceContact):
+                return
+            if not blink_contact.contact.presence.subscribe:
+                return
+            status = presence_status_for_contact(blink_contact)
+        elif isinstance(self.contact, BlinkPresenceContact):
+            blink_contact = self.contact
+            if not blink_contact.contact.presence.subscribe:
+                return
+            status = presence_status_for_contact(blink_contact)
 
         if not status:
             return
