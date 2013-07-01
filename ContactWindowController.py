@@ -3708,6 +3708,9 @@ class ContactWindowController(NSWindowController):
 
         added_separator = False
 
+        if isinstance(item, HistoryBlinkContact) and isinstance(item.contact, BlinkContact):
+            item = item.contact
+        
         if isinstance(item, BlinkContact):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")
             mitem.setEnabled_(False)

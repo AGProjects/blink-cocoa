@@ -6,7 +6,7 @@ from AppKit import *
 from util import allocate_autorelease_pool
 from sipsimple.configuration.settings import SIPSimpleSettings
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact, HistoryBlinkContact
 
 class ContactCell(NSTextFieldCell):
     contact = None
@@ -99,17 +99,20 @@ class ContactCell(NSTextFieldCell):
 
     @allocate_autorelease_pool
     def drawPresenceIcon(self):
-        if isinstance(self.contact, BlinkPresenceContact):
-            if not self.contact.contact.presence.subscribe:
-                return
-
         status = 'offline'
         if isinstance(self.contact, BlinkMyselfConferenceContact):
             account = self.contact.account
             if account.enabled and account.presence.enabled:
                 settings = SIPSimpleSettings()
                 status = settings.presence_state.status.lower()
-        else:
+        elif isinstance(self.contact, HistoryBlinkContact):
+            if isinstance(self.contact.contact, BlinkPresenceContact):
+                if not self.contact.contact.contact.presence.subscribe:
+                    return
+            status = presence_status_for_contact(self.contact.contact)
+        elif isinstance(self.contact, BlinkPresenceContact):
+            if not self.contact.contact.presence.subscribe:
+                return
             status = presence_status_for_contact(self.contact)
 
         if not status:
