@@ -86,6 +86,7 @@ class JoinConferenceWindowController(NSObject):
         self.notification_center.add_observer(self, name='BonjourConferenceServicesDidUpdateServer')
         self.notification_center.add_observer(self, name='BonjourConferenceServicesDidAddServer')
         self.notification_center.add_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
+        self.startWhenParticipantsAvailable.setEnabled_(False)
 
         self.selected_configuration = None
 
@@ -379,6 +380,7 @@ class JoinConferenceWindowController(NSObject):
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
+                self.startWhenParticipantsAvailable.setEnabled_(True)
                 self.participantsTable.reloadData()
                 self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
                 self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
@@ -430,6 +432,9 @@ class JoinConferenceWindowController(NSObject):
                 participant = self._participants[-1]
             if participant is not None:
                 self._participants.remove(participant)
+                self.startWhenParticipantsAvailable.setEnabled_(bool(len(self._participants)))
+                if len(self._participants) == 0:
+                    self.startWhenParticipantsAvailable.setState_(NSOffState)
                 self.participantsTable.reloadData()
 
         self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
@@ -450,6 +455,7 @@ class JoinConferenceWindowController(NSObject):
 
         if participant not in self._participants:
             self._participants.append(participant)
+            self.startWhenParticipantsAvailable.setEnabled_(bool(len(self._participants)))
             self.participantsTable.reloadData()
             self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
             self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
@@ -624,6 +630,7 @@ class AddParticipantsWindowController(NSObject):
         try:
             if participant not in self._participants:
                 self._participants.append(participant)
+                self.startWhenParticipantsAvailable.setEnabled_(True)
                 self.participantsTable.reloadData()
                 self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
                 self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
@@ -669,6 +676,7 @@ class AddParticipantsWindowController(NSObject):
 
             if participant not in self._participants:
                 self._participants.append(participant)
+                self.startWhenParticipantsAvailable.setEnabled_(True)
                 self.participantsTable.reloadData()
                 self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
                 self.participant.setStringValue_('')
@@ -678,6 +686,9 @@ class AddParticipantsWindowController(NSObject):
                 participant = self._participants[-1]
             if participant is not None:
                 self._participants.remove(participant)
+                self.startWhenParticipantsAvailable.setEnabled_(bool(len(self._participants)))
+                if len(self._participants) == 0:
+                    self.startWhenParticipantsAvailable.setState_(NSOffState)
                 self.participantsTable.reloadData()
 
     def addParticipant(self, participant):
@@ -689,6 +700,7 @@ class AddParticipantsWindowController(NSObject):
             return
 
         if participant not in self._participants:
+            self.startWhenParticipantsAvailable.setEnabled_(True)
             self._participants.append(participant)
             self.participantsTable.reloadData()
             self.participantsTable.scrollRowToVisible_(len(self._participants)-1)
