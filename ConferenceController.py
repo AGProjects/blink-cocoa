@@ -29,11 +29,12 @@ default_conference_server = 'conference.sip2sip.info'
 
 
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_type=None, participants=None, nickname=None):
+    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False):
         self.target = target
         self.media_type = media_type
         self.participants = participants
         self.nickname = nickname
+        self.start_when_participants_available = start_when_participants_available
 
 
 class ConferenceConfiguration(object):
@@ -71,6 +72,7 @@ class JoinConferenceWindowController(NSObject):
     configurationsButton = objc.IBOutlet()
     bonjour_server_combolist = objc.IBOutlet()
     ok_button = objc.IBOutlet()
+    startWhenParticipantsAvailable = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -411,7 +413,7 @@ class JoinConferenceWindowController(NSObject):
             # prevent loops
             if self.target in participants:
                 participants.remove(self.target)
-            return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname)
+            return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname, start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()))
         else:
             return None
 

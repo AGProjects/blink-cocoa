@@ -241,7 +241,7 @@ class ContactWindowController(NSWindowController):
     statusBarMenu = objc.IBOutlet()
     speech_synthesizer = None
     speech_synthesizer_active = False
-
+    scheduled_conferences = set()
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -407,6 +407,10 @@ class ContactWindowController(NSWindowController):
             dotPath.fill()
             dot.unlockFocus()
             self.presence_dots[i] = dot
+
+        self.conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSDefaultRunLoopMode)
 
         self.loaded = True
 
@@ -1474,13 +1478,86 @@ class ContactWindowController(NSWindowController):
         self.refreshContactsList()
         self.searchContacts()
 
+    def startConferenceTimer_(self, timer):
+        for conference in self.scheduled_conferences.copy():
+            start_now = True
+            label = ''
+            i = 1
+            for uri in conference.participants:
+                presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                if i <= len(conference.participants) and i > 1:
+                    if i == len(conference.participants):
+                        label += ' and '
+                    else:
+                        label += ', '
+
+                if presence_contact:
+                    status = presence_status_for_contact(presence_contact)
+                    if status != 'available':
+                        start_now = False
+                    label += presence_contact.name
+                else:
+                    label += uri
+                    start_now = False
+
+                i += 1
+            
+            label=label.rstrip(",")
+            if not start_now:
+                continue
+
+            message = u"%s are now available. Start conference now?" % label
+
+            settings = SIPSimpleSettings()
+            if not self.speech_synthesizer_active and not self.has_audio and not settings.audio.silent:
+                if self.speech_synthesizer is None:
+                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+                    self.speech_synthesizer.setDelegate_(self)
+                self.speech_synthesizer_active = True
+                self.speech_synthesizer.startSpeakingString_(message)
+
+            NSApp.activateIgnoringOtherApps_(True)
+            ret = NSRunAlertPanel(u'Start Scheduled Conference', message, u"Start Now", u"Cancel", None)
+    
+            if ret == NSAlertDefaultReturn:
+                self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
+
+            self.scheduled_conferences.discard(conference)
+
+    def startConferenceIfAppropiate(self, conference, play_initial_announcement=False):
+        start_now = True
+        if conference.start_when_participants_available and conference.participants:
+            for uri in conference.participants:
+                presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                if presence_contact:
+                    status = presence_status_for_contact(presence_contact)
+                    if status != 'available':
+                        start_now = False
+                else:
+                    start_now = False
+
+        if start_now:
+            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
+            return True
+        else:
+            settings = SIPSimpleSettings()
+            if play_initial_announcement and not self.speech_synthesizer_active and not self.has_audio and not settings.audio.silent:
+                if self.speech_synthesizer is None:
+                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+                    self.speech_synthesizer.setDelegate_(self)
+                self.speech_synthesizer_active = True
+                speak_text = 'Conference Scheduled'
+                self.speech_synthesizer.startSpeakingString_(speak_text)
+            self.scheduled_conferences.add(conference)
+
+        return  False
+
     @objc.IBAction
     def joinConferenceClicked_(self, sender):
         account = self.activeAccount()
         conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
-            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
-
+            self.startConferenceIfAppropiate(conference, play_initial_announcement=True)
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
 
