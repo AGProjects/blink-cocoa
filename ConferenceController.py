@@ -232,8 +232,15 @@ class JoinConferenceWindowController(NSObject):
                 self._participants = configuration.participants
                 self.participantsTable.reloadData()
                 self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
-                self.audio.setState_(NSOnState if "audio" in configuration.media_type else NSOffState)
-                self.chat.setState_(NSOnState if "chat" in configuration.media_type else NSOffState)
+                if hasattr(configuration, 'media_type'):
+                    self.audio.setState_(NSOnState if "audio" in configuration.media_type else NSOffState)
+                    self.chat.setState_(NSOnState if "chat" in configuration.media_type else NSOffState)
+                else:
+                    self.audio.setState_(NSOnState)
+                    self.chat.setState_(NSOnState)
+                self.startWhenParticipantsAvailable.setEnabled_(bool(len(self._participants)))
+                if len(self._participants) == 0:
+                    self.startWhenParticipantsAvailable.setState_(NSOffState)
             else:
                 self.setDefaults()
 
@@ -305,6 +312,8 @@ class JoinConferenceWindowController(NSObject):
         self.participantsTable.reloadData()
         self.audio.setState_(NSOnState)
         self.chat.setState_(NSOnState)
+        self.startWhenParticipantsAvailable.setEnabled_(False)
+        self.startWhenParticipantsAvailable.setState_(NSOffState)
 
     def numberOfRowsInTableView_(self, table):
         try:
