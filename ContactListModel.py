@@ -1072,9 +1072,8 @@ class BlinkPresenceContact(BlinkContact):
 
                         if ui_notify and self.name:
                             nc_title = "%s's Availability" % self.name
-                            nc_subtitle = self.presence_note
                             nc_body = '%s is now %s' % (self.name, status)
-                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                            NSApp.delegate().gui_notify(nc_title, nc_body)
 
                     if log and status == 'available':
                         NotificationCenter().post_notification("BlinkContactBecameAvailable", sender=self.contact)
