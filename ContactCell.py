@@ -148,8 +148,8 @@ class ContactCell(NSTextFieldCell):
         # presence bar
         frame.size.width = 5
         if hasattr(self.contact, "active_media"):
-            frame.size.height = 16
-            frame.origin.y += 14
+            frame.size.height = 14
+            frame.origin.y += 15
         frame.origin.x = self.view.frame().size.width - 6
 
         rect = NSInsetRect(frame, 0, 0)
