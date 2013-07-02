@@ -977,6 +977,7 @@ class SessionHistoryReplicator(object):
         if calls is None:
             return
 
+        notification_center = NotificationCenter()
         growl_notifications = {}
         try:
             if calls['received']:
@@ -1035,7 +1036,7 @@ class SessionHistoryReplicator(object):
                                 #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                                 media_type = 'audio'
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                            notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
 
                         if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
                             now = datetime(*time.localtime()[:6])
@@ -1052,7 +1053,7 @@ class SessionHistoryReplicator(object):
                                     growl_data.timestamp = start_time
                                     growl_data.streams = media_type
                                     growl_data.account = str(account.id)
-                                    self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
+                                    notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
                                     growl_notifications[remote_uri] = True
 
                                     nc_title = 'Missed Call (' + media_type  + ')'
