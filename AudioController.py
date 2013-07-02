@@ -53,11 +53,11 @@ from AnsweringMachine import AnsweringMachine
 from BlinkLogger import BlinkLogger
 from ContactListModel import BonjourBlinkContact, BlinkPresenceContact
 from HistoryManager import ChatHistory
-from MediaStream import *
-from SIPManager import SIPManager
-
+from SessionInfoController import ice_candidates
+from MediaStream import MediaStream, STREAM_IDLE, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_FAILED, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_CONNECTED, STREAM_CONNECTING
+from MediaStream import STATE_CONNECTING, STATE_FAILED, STATE_DNS_FAILED, STATE_FINISHED
 from resources import Resources
-from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, translate_alpha2digit, run_in_gui_thread
+from util import allocate_autorelease_pool, beautify_audio_codec, format_identity_to_string, normalize_sip_uri_for_outgoing_session, translate_alpha2digit, run_in_gui_thread
 
 
 RecordingImages = []

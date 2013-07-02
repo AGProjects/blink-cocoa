@@ -1,11 +1,27 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSCompositeSourceOver,
+                    NSFontAttributeName,
+                    NSForegroundColorAttributeName,
+                    NSLineBreakByTruncatingTail,
+                    NSParagraphStyleAttributeName)
+from Foundation import (NSBezierPath,
+                        NSColor,
+                        NSDictionary,
+                        NSFont,
+                        NSImage,
+                        NSInsetRect,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSParagraphStyle,
+                        NSTextFieldCell)
+from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.account import BonjourAccount
+
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
 from util import allocate_autorelease_pool
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact
 
 class ContactCell(NSTextFieldCell):
     contact = None

@@ -45,7 +45,7 @@ from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.contact import BlinkContactExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, format_identity_to_string, run_in_gui_thread
+from util import allocate_autorelease_pool, beautify_audio_codec, format_identity_to_string, run_in_gui_thread
 
 
 class SIPManager(object):

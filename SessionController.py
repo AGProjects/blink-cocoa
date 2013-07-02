@@ -50,13 +50,13 @@ from ScreenSharingController import ScreenSharingController, ScreenSharingServer
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
+from HistoryManager import SessionHistoryReplicator, ChatHistoryReplicator
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
 from MediaStream import STREAM_IDLE, STREAM_FAILED
 from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
-
 from interfaces.itunes import MusicApplications
 from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread
 

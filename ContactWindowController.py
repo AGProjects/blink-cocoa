@@ -61,6 +61,7 @@ from Foundation import (NSArray,
                         NSNotificationCenter,
                         NSParagraphStyle,
                         NSRunLoop,
+                        NSSpeechSynthesizer,
                         NSStatusBar,
                         NSString,
                         NSTimer,
@@ -82,7 +83,6 @@ import string
 import ldap
 import uuid
 from collections import deque
-from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -115,7 +115,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup
+from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -129,6 +129,7 @@ from OfflineNoteController import OfflineNoteController
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import ApplicationData, Resources
 from util import (allocate_autorelease_pool,
+                  format_date,
                   format_identity_to_string,
                   format_uri_type,
                   is_anonymous,
@@ -3909,12 +3910,12 @@ class ContactWindowController(NSWindowController):
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
-        added_separator = False
+        history_contact = None
 
-        if isinstance(item, BlinkPresenceContact):
-            has_pidfs = any(item.pidfs_map[uri] for uri in item.pidfs_map.keys())
-        else:
-            has_pidfs = None
+        if isinstance(item, HistoryBlinkContact):
+            history_contact = item
+            if isinstance(item.contact, BlinkContact):
+                item = item.contact
 
         if isinstance(item, BlinkContact):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")

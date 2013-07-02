@@ -6,7 +6,6 @@ from __future__ import with_statement
 from Foundation import (NSAppleEventManager,
                         NSBundle,
                         NSDistributedNotificationCenter,
-                        NSFileManager,
                         NSImage,
                         NSImageView,
                         NSMakeRect,
@@ -49,8 +48,8 @@ from EnrollmentController import EnrollmentController
 
 import PreferencesController
 from ScreenSharingController import ScreenSharingController
-from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread, external_url_pattern
+from resources import ApplicationData
+from util import allocate_autorelease_pool, call_in_gui_thread, external_url_pattern
 
 
 def fourcharToInt(fourCharCode):

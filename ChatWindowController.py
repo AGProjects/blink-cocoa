@@ -56,8 +56,10 @@ from Quartz import (CGWindowListCopyWindowInfo,
                     kCGWindowOwnerName)
 import objc
 
-from zope.interface import implements
-from application.notification import NotificationCenter, IObserver, NotificationData
+import os
+import time
+
+from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from itertools import chain
 from operator import attrgetter
@@ -66,26 +68,24 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
-import urllib
+from zope.interface import implements
 
-from MediaStream import *
+import FancyTabSwitcher
+import ParticipantsTableView
+from BlinkLogger import BlinkLogger
+from ChatPrivateMessageController import ChatPrivateMessageController
+from MediaStream import STREAM_PROPOSING, STREAM_RINGING, STREAM_CONNECTED
+from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_DNS_LOOKUP
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact, BlinkMyselfConferenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
 from FileTransferWindowController import openFileTransferSelectionDialog
-from MediaStream import *
 from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
-
-import FancyTabSwitcher
-from util import *
-
-import os
-import re
-import time
+from util import allocate_autorelease_pool, format_identity_to_string, format_size_rounded, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
 
 
 CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT = 314

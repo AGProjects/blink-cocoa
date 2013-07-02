@@ -105,7 +105,7 @@ from HistoryManager import SessionHistory
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, BLINK_URL_TOKEN
+from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, BLINK_URL_TOKEN
 
 
 ICON_SIZE = 128

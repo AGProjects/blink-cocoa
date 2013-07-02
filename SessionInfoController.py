@@ -23,12 +23,12 @@ import re
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
+from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from MediaStream import STREAM_CONNECTED
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import allocate_autorelease_pool, beautify_audio_codec, run_in_gui_thread
 
-from MediaStream import *
 
 ice_candidates= {'srflx': 'Server Reflexive',
                  'prflx': 'Peer Reflexive',
