@@ -1275,6 +1275,7 @@ class ChatWindowController(NSWindowController):
 
             self.toolbar.validateVisibleItems()
 
+    @run_in_gui_thread
     def refreshDrawer(self):
         session = self.selectedSessionController()
 
