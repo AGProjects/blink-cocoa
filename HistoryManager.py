@@ -126,11 +126,12 @@ class SessionHistoryEntry(SQLObject):
     session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
     local_idx         = DatabaseIndex('local_uri')
     remote_idx        = DatabaseIndex('remote_uri')
+    hidden            = IntCol(default=0)
 
 
 class SessionHistory(object):
     __metaclass__ = Singleton
-    __version__ = 2
+    __version__ = 3
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -176,6 +177,14 @@ class SessionHistory(object):
                         self.db.queryAll(query)
                     except Exception:
                         BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
+        elif previous_version.version < 3:
+            query = "ALTER TABLE sessions add column 'hidden' INTEGER DEFAULT 0"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
+            except Exception:
+                BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
@@ -204,7 +213,7 @@ class SessionHistory(object):
             return False
 
     @run_in_db_thread
-    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris):
+    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden):
         query='1=1'
         if call_id:
             query += " and sip_callid = %s" % SessionHistoryEntry.sqlrepr(call_id)
@@ -218,6 +227,8 @@ class SessionHistory(object):
             query += " and status = %s" % SessionHistoryEntry.sqlrepr(status)
         if remote_focus:
             query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
+        if hidden is not None:
+            query += " and hidden = %s" % SessionHistoryEntry.sqlrepr(hidden)
 
         if remote_uris:
             remote_uris_sql = ''
@@ -233,8 +244,57 @@ class SessionHistory(object):
             BlinkLogger().log_error(u"Error getting entries from sessions history table: %s" % e)
             return []
 
-    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None):
-        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris))
+    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None, hidden=None):
+        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden))
+
+    def hide_entries(self, session_ids):
+        return block_on(self._hide_entries(session_ids))
+
+    @run_in_db_thread
+    def _hide_entries(self, session_ids):
+        query = "update sessions set hidden = 1 where "
+        session_ids_sql = ''
+        for id in session_ids:
+            session_ids_sql += "%s," % SessionHistoryEntry.sqlrepr(id)
+        session_ids_sql = session_ids_sql.rstrip(",")
+        query += "id in (%s)" % session_ids_sql
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+
+    def unhide_missed_entries(self):
+        return block_on(self._unhide_missed_entries())
+
+    @run_in_db_thread
+    def _unhide_missed_entries(self):
+        query = "update sessions set hidden = 0 where status = 'missed'"
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+
+    def unhide_incoming_entries(self):
+        return block_on(self._unhide_incoming_entries())
+        
+    @run_in_db_thread
+    def _unhide_incoming_entries(self):
+        query = "update sessions set hidden = 0 where direction = 'incoming' and status != 'missed'"
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+
+    def unhide_outgoing_entries(self):
+        return block_on(self._unhide_outgoing_entries())
+
+    @run_in_db_thread
+    def _unhide_outgoing_entries(self):
+        query = "update sessions set hidden = 0 where direction = 'outgoing'"
+        try:
+            return self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error hiding session: %s" % e)
 
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):

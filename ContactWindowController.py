@@ -50,7 +50,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE
+from ContactListModel import presence_status_for_contact, presence_status_icons, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -610,6 +610,23 @@ class ContactWindowController(NSWindowController):
 
     def copyToSearchBar_(self, sender):
         self.searchBox.setStringValue_(sender.representedObject())
+
+    @run_in_green_thread
+    def hideHistoryEntryInMenu_(self, sender):
+        session_ids = sender.representedObject()
+        SessionHistory().hide_entries(session_ids)
+        self.model.reload_history_groups()
+
+    @run_in_green_thread
+    def showHiddenEntries_(self, sender):
+        group = sender.representedObject()
+        if isinstance(group, MissedCallsBlinkGroup):
+            SessionHistory().unhide_missed_entries()
+        elif isinstance(group, IncomingCallsBlinkGroup):
+            SessionHistory().unhide_incoming_entries()
+        elif isinstance(group, OutgoingCallsBlinkGroup):
+            SessionHistory().unhide_outgoing_entries()
+        self.model.reload_history_groups()
 
     @objc.IBAction
     def showPendingRequests_(self, sender):
@@ -1501,7 +1518,7 @@ class ContactWindowController(NSWindowController):
                     start_now = False
 
                 i += 1
-            
+
             label=label.rstrip(",")
             if not start_now:
                 continue
@@ -1518,7 +1535,7 @@ class ContactWindowController(NSWindowController):
 
             NSApp.activateIgnoringOtherApps_(True)
             ret = NSRunAlertPanel(u'Start Scheduled Conference', message, u"Start Now", u"Cancel", None)
-    
+
             if ret == NSAlertDefaultReturn:
                 self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
 
@@ -3785,9 +3802,12 @@ class ContactWindowController(NSWindowController):
 
         added_separator = False
 
-        if isinstance(item, HistoryBlinkContact) and isinstance(item.contact, BlinkContact):
-            item = item.contact
-        
+        history_contact = None
+        if isinstance(item, HistoryBlinkContact):
+            history_contact = item
+            if isinstance(item.contact, BlinkContact):
+                item = item.contact
+
         if isinstance(item, BlinkContact):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")
             mitem.setEnabled_(False)
@@ -4121,7 +4141,7 @@ class ContactWindowController(NSWindowController):
                     all_uris = []
                     for uri in item.uris:
                         all_uris.append(unicode(uri.uri))
-                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Show History...', "viewHistory:", "")
+                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Show in History Viewer...', "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)
                     history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
@@ -4139,6 +4159,44 @@ class ContactWindowController(NSWindowController):
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
                     self.get_last_calls_entries_for_contact(item)
+
+                if history_contact is not None:
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
+                    mitem.setRepresentedObject_(unicode(history_contact.uri))
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntryInMenu:", "")
+                    mitem.setRepresentedObject_(history_contact.session_ids)
+
+            elif history_contact is not None and not is_anonymous(history_contact.uris[0].uri):
+                if NSApp.delegate().applicationName != 'Blink Lite':
+                    if history_contact not in self.model.bonjour_group.contacts:
+                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistory:", "")
+                        mitem.setRepresentedObject_((unicode(item.uri),))
+
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
+                    self.get_last_calls_entries_for_contact(history_contact)
+
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
+                    mitem.setRepresentedObject_(unicode(history_contact.uri))
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntryInMenu:", "")
+                    mitem.setRepresentedObject_(history_contact.session_ids)
+
+                if not self.hasContactMatchingURI(history_contact.uri):
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                    lastItem.setRepresentedObject_(history_contact)
+
+                recordings = self.backend.get_audio_recordings([history_contact.uris[0].uri])[-10:]
+                if recordings:
+                    audio_recordings_submenu = NSMenu.alloc().init()
+                    for dt, name, f in recordings:
+                        aitem = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                        aitem.setTarget_(self)
+                        aitem.setRepresentedObject_(f)
+
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -4167,30 +4225,6 @@ class ContactWindowController(NSWindowController):
                     if name_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
-            elif isinstance(item, HistoryBlinkContact) and not is_anonymous(item.uris[0].uri):
-                if NSApp.delegate().applicationName != 'Blink Lite':
-                    if item not in self.model.bonjour_group.contacts:
-                        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistory:", "")
-                        mitem.setRepresentedObject_((unicode(item.uri),))
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
-                    mitem.setRepresentedObject_(unicode(item.uri))
-
-                if not self.hasContactMatchingURI(item.uri):
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
-                    lastItem.setRepresentedObject_(item)
-
-                recordings = self.backend.get_audio_recordings([item.uris[0].uri])[-10:]
-                if recordings:
-                    audio_recordings_submenu = NSMenu.alloc().init()
-                    for dt, name, f in recordings:
-                        item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
-                        item.setTarget_(self)
-                        item.setRepresentedObject_(f)
-
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
-                    self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:
@@ -4238,7 +4272,7 @@ class ContactWindowController(NSWindowController):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete...", "deleteItem:", "")
             lastItem.setEnabled_(item.deletable)
             lastItem.setRepresentedObject_(item)
-
+            
             grp_submenu = NSMenu.alloc().init()
             grp_submenu.setAutoenablesItems_(False)
             grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(u'To First Position', "moveGroupToIndex:", "")
@@ -4251,6 +4285,12 @@ class ContactWindowController(NSWindowController):
                 grp_item.setRepresentedObject_({'group': item, 'index': index+1})
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Move Group", "", "")
             self.contactContextMenu.setSubmenu_forItem_(grp_submenu, mitem)
+                
+            if isinstance(item, HistoryBlinkGroup):
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Hidden Entries", "showHiddenEntries:", "")
+                lastItem.setEnabled_(item)
+                lastItem.setRepresentedObject_(item)
 
     def menuWillOpen_(self, menu):
         def setupAudioDeviceMenu(menu, tag, devices, option_name, selector):

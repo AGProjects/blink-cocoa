@@ -1324,6 +1324,7 @@ class HistoryBlinkContact(BlinkContact):
     """Contact representation for history drawer"""
     editable = False
     deletable = False
+    session_ids = None
 
 
 class BonjourBlinkContact(BlinkContact):
@@ -1653,10 +1654,12 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         settings = SIPSimpleSettings()
         count = settings.contacts.maximum_calls
         skip_target = set()
+        session_ids = {}
         for result in results:
             target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
             contact = getFirstContactMatchingURI(target_uri)
+            k = contact if contact is not None else target_uri
 
             if isinstance(self, MissedCallsBlinkGroup):
                 # skip missed calls that happened before any successful call
@@ -1683,10 +1686,17 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 if target_uri in skip_target:
                     continue
 
-            if seen.has_key(target_uri):
-                seen[target_uri] += 1
+                try:
+                    current_session_ids = session_ids[k]
+                except KeyError:
+                    session_ids[k]=[result.id]
+                else:
+                    current_session_ids.append(result.id)
+
+            if seen.has_key(k):
+                seen[k] += 1
             else:
-                seen[target_uri] = 1
+                seen[k] = 1
                 if contact:
                     name = contact.name
                     icon = contact.avatar.icon
@@ -1702,8 +1712,13 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 break
 
         for blink_contact in contacts:
-            if seen[blink_contact.uri] > 1:
-                new_detail = blink_contact.detail + u' and %d other time%s' % (seen[blink_contact.uri] - 1, 's' if seen[blink_contact.uri] > 2 else '')
+            k = blink_contact.contact if blink_contact.contact is not None else blink_contact.uri
+            try:
+                blink_contact.session_ids = session_ids[k]
+            except KeyError:
+                pass
+            if seen[k] > 1:
+                new_detail = blink_contact.detail + u' and %d other time%s' % (seen[k] - 1, 's' if seen[k] > 2 else '')
                 blink_contact.detail = new_detail
             self.contacts.append(blink_contact)
 
@@ -1717,7 +1732,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
         super(MissedCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(count=200, remote_focus="0")
+        return SessionHistory().get_entries(count=200, remote_focus="0", hidden=0)
 
 
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
@@ -1727,7 +1742,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
         super(OutgoingCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='outgoing', count=100, remote_focus="0")
+        return SessionHistory().get_entries(direction='outgoing', count=100, remote_focus="0", hidden=0)
 
 
 class IncomingCallsBlinkGroup(HistoryBlinkGroup):
@@ -1737,7 +1752,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
         super(IncomingCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='incoming', status='completed', count=100, remote_focus="0")
+        return SessionHistory().get_entries(direction='incoming', status='completed', count=100, remote_focus="0", hidden=0)
 
 
 class AddressBookBlinkGroup(VirtualBlinkGroup):
@@ -2749,18 +2764,20 @@ class ContactListModel(CustomListModel):
         self.contact_backup_timer = None
 
     @run_in_gui_thread
-    def _NH_AudioCallLoggedToHistory(self, notification):
+    def reload_history_groups(self):
         if NSApp.delegate().applicationName != 'Blink Lite':
             settings = SIPSimpleSettings()
+        if settings.contacts.enable_missed_calls_group:
+            self.missed_calls_group.load_history()
 
-            if settings.contacts.enable_missed_calls_group:
-                self.missed_calls_group.load_history()
+        if settings.contacts.enable_outgoing_calls_group:
+            self.outgoing_calls_group.load_history()
 
-            if settings.contacts.enable_outgoing_calls_group:
-                self.outgoing_calls_group.load_history()
+        if settings.contacts.enable_incoming_calls_group:
+            self.incoming_calls_group.load_history()
 
-            if settings.contacts.enable_incoming_calls_group:
-                self.incoming_calls_group.load_history()
+    def _NH_AudioCallLoggedToHistory(self, notification):
+        self.reload_history_groups()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
