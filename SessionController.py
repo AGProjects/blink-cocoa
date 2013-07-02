@@ -205,14 +205,22 @@ class SessionControllersManager(object):
         match_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri, exact_match=True)
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
         stream_type_list = list(set(stream.type for stream in streams))
+        caller_name = match_contact.name if match_contact else format_identity_to_string(session.remote_identity)
+
         if not streams:
             BlinkLogger().log_info(u"Rejecting session for unsupported media type")
+            nc_title = 'Incompatible Media'
+            nc_body = 'Call from %s refused' % match_contact.name
+            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
             session.reject(488, 'Incompatible media')
             return
 
         if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
             BlinkLogger().log_info(u"Blocked contact rejected")
             session.reject(603, 'Not Acceptable Here')
+            nc_title = 'Blocked Contact Rejected'
+            nc_body = 'Call from %s refused' % caller_name
+            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
             return
 
         # if call waiting is disabled and we have audio calls reject with busy
@@ -224,12 +232,18 @@ class SessionControllersManager(object):
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount():
             if session.account.audio.do_not_disturb:
-                BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % format_identity_to_string(session.remote_identity))
+                nc_title = 'Do Not Disturb'
+                nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
+                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+                BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % caller_name)
                 session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
                 return
 
             if session.account.audio.reject_anonymous:
                 if session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
+                    nc_title = 'Anonymous Call Rejected'
+                    nc_body = 'Call refused'
+                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=None)
                     BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
                     session.reject(603, 'Anonymous Not Acceptable')
                     return
@@ -237,11 +251,17 @@ class SessionControllersManager(object):
             if session.account.audio.reject_unauthorized_contacts:
                 if match_contact is not None and isinstance(match_contact, BlinkPresenceContact):
                     if match_contact.contact.presence.policy != 'allow':
+                        nc_title = 'Unauthorized Caller Rejected'
+                        nc_body = 'Call from %s refused' % caller_name
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
                         BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
                         session.reject(603, 'Not Acceptable Here')
                         return
                 else:
                     BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                    nc_title = 'Unauthorized Caller Rejected'
+                    nc_body = 'Call refused from blocked contact'
+                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
                     session.reject(603, 'Not Acceptable Here')
                     return
 
