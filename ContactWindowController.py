@@ -3145,7 +3145,6 @@ class ContactWindowController(NSWindowController):
             if isinstance(contact, BonjourBlinkContact):
                 item.setEnabled_(True)
             elif isinstance(contact, BlinkPresenceContact):
-                settings = SIPSimpleSettings()
                 aor_supports_chat = any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'chat' in device['caps'])
                 item.setEnabled_(aor_supports_chat)
             else:
@@ -3921,8 +3920,6 @@ class ContactWindowController(NSWindowController):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")
             mitem.setEnabled_(False)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-
-            settings = SIPSimpleSettings()
 
             has_fully_qualified_sip_uri = is_sip_aor_format(item.uri)
 

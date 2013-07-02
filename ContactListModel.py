@@ -546,7 +546,6 @@ class BlinkConferenceContact(BlinkContact):
             return
         pidfs = []
         try:
-            uri = 'sip:%s' % self.uri
             pidfs = self.presence_contact.pidfs
         except KeyError:
             pass
@@ -778,14 +777,11 @@ class BlinkPresenceContact(BlinkContact):
 
         old_pidfs = self.pidfs
         resources_uris = set()
-        resources_have_pidfs = False
         for uri, resource in resources.iteritems():
-            if resource.pidf_list:
-                resources_have_pidfs = True
             uri_text = sip_prefix_pattern.sub('', uri)
             try:
                 SIPURI.parse(str('sip:%s' % uri_text))
-            except:
+            except SIPCoreError:
                 continue
 
             resources_uris.add(uri_text)
@@ -2013,7 +2009,6 @@ class CustomListModel(NSObject):
                 send_file_menu = NSMenu.alloc().init()
                 titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(u'Send File To Address', "", "")
                 titem.setEnabled_(False)
-                settings = SIPSimpleSettings()
 
                 for uri in item.uris:
                     aor_supports_ft = False

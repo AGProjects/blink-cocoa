@@ -51,7 +51,7 @@ from sipsimple.util import ISOTimestamp
 import AudioSession
 from AnsweringMachine import AnsweringMachine
 from BlinkLogger import BlinkLogger
-from ContactListModel import BonjourBlinkContact, BlinkPresenceContact
+from ContactListModel import BlinkPresenceContact
 from HistoryManager import ChatHistory
 from SessionInfoController import ice_candidates
 from MediaStream import MediaStream, STREAM_IDLE, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_FAILED, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_CONNECTED, STREAM_CONNECTING
