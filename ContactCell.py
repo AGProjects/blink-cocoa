@@ -5,6 +5,7 @@ from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.account import BonjourAccount
 
 from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
 
@@ -123,6 +124,12 @@ class ContactCell(NSTextFieldCell):
             blink_contact = self.contact
             if not blink_contact.contact.presence.subscribe:
                 return
+            status = presence_status_for_contact(blink_contact)
+        elif isinstance(self.contact, BonjourBlinkContact):
+            account = BonjourAccount()
+            if not account.presence.enabled:
+                return
+            blink_contact = self.contact
             status = presence_status_for_contact(blink_contact)
         elif isinstance(self.contact, SystemAddressBookBlinkContact):
             return
