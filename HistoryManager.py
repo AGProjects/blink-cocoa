@@ -289,7 +289,7 @@ class SessionHistory(object):
 
     def unhide_incoming_entries(self):
         return block_on(self._unhide_incoming_entries())
-        
+
     @run_in_db_thread
     def _unhide_incoming_entries(self):
         query = "update sessions set hidden = 0 where direction = 'incoming' and status != 'missed'"

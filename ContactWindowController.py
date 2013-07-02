@@ -3081,34 +3081,6 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_(f)
             item.setAttributedTitle_(format_item(name,dt))
 
-    def updateRecordingsMenu(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            return
-
-        def format_item(name, when):
-            a = NSMutableAttributedString.alloc().init()
-            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal_font_color)
-            a.appendAttributedString_(n)
-            t = NSAttributedString.alloc().initWithString_attributes_(when, mini_blue)
-            a.appendAttributedString_(t)
-            return a
-
-        while not self.recordingsMenu.itemAtIndex_(0).isSeparatorItem():
-            self.recordingsMenu.removeItemAtIndex_(0)
-        self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_audio_recordings_directory())
-
-        recordings = self.backend.get_audio_recordings()[-10:]
-        if not recordings:
-            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
-            item.setEnabled_(False)
-
-        for dt, name, f in recordings:
-            title = name + "  " + dt
-            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
-            item.setTarget_(self)
-            item.setRepresentedObject_(f)
-            item.setAttributedTitle_(format_item(name,dt))
-
     def updateRestoreContactsMenu(self):
         while not self.restoreContactsMenu.itemAtIndex_(0).isSeparatorItem():
             self.restoreContactsMenu.removeItemAtIndex_(0)

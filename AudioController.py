@@ -247,7 +247,6 @@ class AudioController(MediaStream):
 
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.sessionController)
-        display_name = self.sessionController.contactDisplayName if self.sessionController.contactDisplayName and not self.sessionController.contactDisplayName.startswith('sip:') and not self.sessionController.contactDisplayName.startswith('sips:') else None
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         NSApp.delegate().contactsWindowController.showAudioSession(self)
@@ -863,8 +862,6 @@ class AudioController(MediaStream):
             aor_supports_chat = True
             aor_supports_screen_sharing_server = True
             aor_supports_screen_sharing_client = True
-            if self.contact is not None and isinstance(self.contact, BlinkPresenceContact):
-                settings = SIPSimpleSettings()
 
             can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
