@@ -258,7 +258,6 @@ class AudioSession(NSView):
         pboard = info.draggingPasteboard()
 
         if pboard.types().containsObject_(NSFilenamesPboardType):
-            ws = NSWorkspace.sharedWorkspace()
             filenames = [unicodedata.normalize('NFC', file) for file in pboard.propertyListForType_(NSFilenamesPboardType) if os.path.isfile(file)]
             if filenames:
                 self.sessionControllersManager.send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)

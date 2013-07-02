@@ -137,7 +137,7 @@ class AddContactController(NSObject):
         if not uri.startswith(('sip:', 'sips:')):
             uri = "sip:%s" % uri
         try:
-            sip_uri = SIPURI.parse(str(uri))
+            SIPURI.parse(str(uri))
         except SIPCoreError:
             return False
 

@@ -301,7 +301,7 @@ class SessionControllersManager(object):
             if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
                 self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
             else:
-                sessionController = self.addControllerWithSession_(session)
+                self.addControllerWithSession_(session)
                 self.alertPanel.addIncomingSession(session)
                 self.alertPanel.show()
 
@@ -436,11 +436,11 @@ class SessionControllersManager(object):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('127.0.0.1', 5900))
-            s.close()
             return True
-        except socket.error, msg:
-            s.close()
+        except socket.error:
             return False
+        finally:
+            s.close()
 
     def isProposedMediaTypeSupported(self, streams):
         settings = SIPSimpleSettings()
@@ -1155,9 +1155,9 @@ class SessionController(NSObject):
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
         self.destroyInfoPanel()
-        call_id = None
-        from_tag = None
-        to_tag = None
+        self.call_id = None
+        self.from_tag = None
+        self.to_tag = None
         for item in self.invited_participants:
             item.destroy()
         self.invited_participants = []
@@ -1910,7 +1910,6 @@ class SessionController(NSObject):
             self.transfer_window.show()
 
     def _NH_SIPSessionTransferNewOutgoing(self, sender, data):
-        target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
         self.notification_center.post_notification("BlinkSessionTransferNewOutgoing", sender=self, data=data)
 
     def _NH_SIPSessionTransferDidStart(self, sender, data):

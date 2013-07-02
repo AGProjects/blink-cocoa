@@ -481,7 +481,6 @@ class ContactWindowController(NSWindowController):
 
         connection = self.audioPreviewOutputForLevelMeter.connections()[0]
         powerLevels = connection.attributeForKey_(QTKit.QTCaptureConnectionAudioAveragePowerLevelsAttribute)
-        powerLevelCount = powerLevels.count()
 
         j = 0
         while j < powerLevels.count():
@@ -666,8 +665,6 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChangelog_(self, sender):
-        settings = SIPSimpleSettings()
-
         if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
         else:
@@ -899,7 +896,6 @@ class ContactWindowController(NSWindowController):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
         self.refreshAccountList()
-        account = notification.data.account
 
     def _NH_SIPAccountDidActivate(self, notification):
         account = notification.sender
@@ -1257,8 +1253,6 @@ class ContactWindowController(NSWindowController):
         self.conference.add(stream.stream)
 
         stream.view.setConferencing_(True)
-        subviews = self.audioSessionsListView.subviews()
-        selected = subviews.count() > 0 and subviews.objectAtIndex_(0).selected
         self.shuffleUpAudioSession(stream.view)
         self.conferenceButton.setState_(NSOnState)
         stream.view.setSelected_(True)
@@ -1950,7 +1944,6 @@ class ContactWindowController(NSWindowController):
             if not target:
                 return
             BlinkLogger().log_info(u"Starting %s session to entered address %s" % (media_type, target))
-            display_name = ''
         else:
             selected_contact = contact
             settings = SIPSimpleSettings()
@@ -2369,13 +2362,13 @@ class ContactWindowController(NSWindowController):
                 self.searchOutline.enclosingScrollView().setFrame_(frame)
 
     def drawerDidOpen_(self, notification):
-        windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
+        self.windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
         if self.collapsedState:
             self.window().zoom_(None)
             self.setCollapsed(True)
 
     def drawerDidClose_(self, notification):
-        windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
+        self.windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
         if self.collapsedState:
             self.window().zoom_(None)
             self.setCollapsed(True)
@@ -2722,7 +2715,7 @@ class ContactWindowController(NSWindowController):
             for watcher in active_watchers.keys():
                 uri = sip_prefix_pattern.sub("",watcher)
                 try:
-                    is_myself = AccountManager().get_account(uri)
+                    AccountManager().get_account(uri)
                 except KeyError:
                     pass
                 else:
@@ -3056,7 +3049,7 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_((file, timestamp))
 
     def updateWindowMenu(self):
-        item = self.windowMenu.itemWithTag_(5)
+        self.windowMenu.itemWithTag_(5)
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -3842,11 +3835,10 @@ class ContactWindowController(NSWindowController):
 
         added_separator = False
 
-        history_contact = None
-        if isinstance(item, HistoryBlinkContact):
-            history_contact = item
-            if isinstance(item.contact, BlinkContact):
-                item = item.contact
+        if isinstance(item, BlinkPresenceContact):
+            has_pidfs = any(item.pidfs_map[uri] for uri in item.pidfs_map.keys())
+        else:
+            has_pidfs = None
 
         if isinstance(item, BlinkContact):
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")

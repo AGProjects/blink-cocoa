@@ -139,7 +139,6 @@ class ChatInputTextView(NSTextView):
     def performDragOperation_(self, sender):
         pboard = sender.draggingPasteboard()
         if hasattr(self.owner.delegate, "sendFiles") and pboard.types().containsObject_(NSFilenamesPboardType):
-            ws = NSWorkspace.sharedWorkspace()
             filenames = pboard.propertyListForType_(NSFilenamesPboardType)
             return self.owner.delegate.sendFiles(filenames)
         return False
@@ -173,7 +172,6 @@ class ChatWebView(WebView):
         if hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
             pboard = sender.draggingPasteboard()
             if pboard.types().containsObject_(NSFilenamesPboardType):
-                ws = NSWorkspace.sharedWorkspace()
                 filenames = pboard.propertyListForType_(NSFilenamesPboardType)
                 return self.frameLoadDelegate().delegate.sendFiles(filenames)
         return False

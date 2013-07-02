@@ -5,11 +5,11 @@
 Blink contact extensions
 """
 
-__all__ = ['BlinkContactExtension', 'BlinkContactGroupExtension']
+__all__ = ['BlinkContactExtension', 'BlinkGroupExtension']
 
 from application.configuration.datatypes import Boolean
 
-from sipsimple.addressbook import ContactURI, ContactExtension, GroupExtension, SharedSetting
+from sipsimple.addressbook import ContactExtension, GroupExtension, SharedSetting
 from sipsimple.configuration import Setting, SettingsGroup
 
 SharedSetting.set_namespace('ag-projects:blink')

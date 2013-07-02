@@ -581,7 +581,6 @@ class MapView(NSView):
                 i += 1
 
         size = NSMakeSize(12,12)
-        icon_rect = NSMakeRect(0, 0, size.width, size.height)
         shift_y = 0
         for key in country_start_points.keys():
             shift_x = 0

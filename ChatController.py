@@ -281,7 +281,6 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def sendFiles(self, fnames):
-        ws = NSWorkspace.sharedWorkspace()
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file)]
         if filenames:
             self.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
@@ -1253,8 +1252,6 @@ class ChatController(MediaStream):
             self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
     def endStream(self):
-        streamController = self.sessionController.streamHandlerOfType('chat')
-
         if self.status != STREAM_DISCONNECTING:
             self.sessionControllersManager.ringer.stop_ringing(self.sessionController.session)
 
@@ -1435,7 +1432,7 @@ class OutgoingMessageHandler(NSObject):
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
                 BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
                 message.status='failed'
                 self.add_to_history(message)
                 return False
@@ -1445,7 +1442,7 @@ class OutgoingMessageHandler(NSObject):
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
                 BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.markMessage(msgid, MSG_STATE_FAILED, private)
+                self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
                 message.status='failed'
                 self.add_to_history(message)
                 return False

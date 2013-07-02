@@ -216,7 +216,6 @@ class IncomingFileTransferHandler(FileTransfer):
 
     def start(self):
         notification_center = NotificationCenter()
-        settings = SIPSimpleSettings()
 
         download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
 

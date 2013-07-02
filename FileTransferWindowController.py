@@ -111,7 +111,7 @@ class FileTransferWindowController(NSObject, object):
                     incoming_transfer_rate += item.transfer.transfer_rate
                 elif isinstance(item.transfer, OutgoingPushFileTransferHandler):
                     outgoing_transfer_rate += item.transfer.transfer_rate
-                elif isinstance(item.transfer, OutgoingPushFileTransferHandler):
+                elif isinstance(item.transfer, OutgoingPullFileTransferHandler):
                     incoming_transfer_rate += item.transfer.transfer_rate
 
         if incoming_transfer_rate or outgoing_transfer_rate:

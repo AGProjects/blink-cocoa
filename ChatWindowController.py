@@ -486,7 +486,6 @@ class ChatWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkColaborativeEditorContentHasChanged(self, sender, data):
-        session = self.selectedSessionController()
         if not sender.editorStatus:
             self.noteSession_isComposing_(sender.delegate.sessionController, True)
         self.revalidateToolbar()
@@ -531,7 +530,6 @@ class ChatWindowController(NSWindowController):
             if chat_stream and chat_stream.screensharing_allowed:
                 wob = sender.representedObject()
                 id = wob['id']
-                name = wob['name']
                 application = wob['application']
                 if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected:
                     if id != chat_stream.screensharing_handler.window_id:
@@ -939,7 +937,7 @@ class ChatWindowController(NSWindowController):
         uri = participant.uri
         if uri not in self.remote_screens_closed_by_user:
             try:
-                remoteScreen = self.remoteScreens[uri]
+                self.remoteScreens[uri]
             except KeyError:
                 self.viewSharedScreen(uri, participant.name, participant.screensharing_url)
 
@@ -1215,7 +1213,7 @@ class ChatWindowController(NSWindowController):
                     display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
 
                 try:
-                    remoteScreen = self.remoteScreens[uri]
+                    self.remoteScreens[uri]
                 except KeyError:
                     self.viewSharedScreen(uri, display_name, url)
                     return True
@@ -1678,7 +1676,6 @@ class ChatWindowController(NSWindowController):
             self.inviteContactToConferenceSessionWithUri(session, uri)
         elif pboard.types().containsObject_(NSFilenamesPboardType):
             chat_controller = session.streamHandlerOfType("chat")
-            ws = NSWorkspace.sharedWorkspace()
             fnames = pboard.propertyListForType_(NSFilenamesPboardType)
             return chat_controller.sendFiles(fnames)
 

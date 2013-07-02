@@ -1287,12 +1287,12 @@ class BlinkPresenceContact(BlinkContact):
             else:
                 try:
                     index = presence_notes.index(self.presence_note)
-                except ValueError, e:
+                except ValueError:
                     self.presence_note = presence_notes[0]
                 else:
                     try:
                         self.presence_note = presence_notes[index+1]
-                    except IndexError, e:
+                    except IndexError:
                         self.presence_note = presence_notes[0]
             detail = self.presence_note if self.presence_note else '%s (%s)' % (self.uri, self.uri_type)
         elif local_times:
@@ -2365,6 +2365,7 @@ class ContactListModel(CustomListModel):
         restored_contacts = 0
         restored_groups = 0
         restored_contact_objs = {}
+        contacts_for_group = {}
         filename = backup[0]
 
         try:
@@ -2377,7 +2378,6 @@ class ContactListModel(CustomListModel):
             version = data['version']
         except KeyError:
             version = 1
-            contacts_for_group = {}
 
         try:
             contacts = data['contacts']
@@ -3132,7 +3132,6 @@ class ContactListModel(CustomListModel):
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
-        settings = SIPSimpleSettings()
 
         positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
         positions.sort()
@@ -3314,7 +3313,7 @@ class ContactListModel(CustomListModel):
     def _NH_VirtualGroupDidChange(self, notification):
         group = notification.sender
         try:
-            blink_group = next(grp for grp in self.groupsList if grp.group == group)
+            next(grp for grp in self.groupsList if grp.group == group)
         except StopIteration:
             return
 

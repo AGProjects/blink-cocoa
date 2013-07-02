@@ -278,7 +278,6 @@ class SMSViewController(NSObject):
 
     def composeReplicationMessage(self, sent_message, response_code):
         if isinstance(self.account, Account):
-            settings = SIPSimpleSettings()
             if not self.account.sms.disable_replication:
                 contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
                 msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.name if contact else None)])

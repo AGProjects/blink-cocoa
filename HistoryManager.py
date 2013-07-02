@@ -165,7 +165,7 @@ class SessionHistory(object):
             query = "SELECT id, local_uri, remote_uri FROM sessions"
             try:
                 results = list(self.db.queryAll(query))
-            except Exception:
+            except Exception, e:
                 BlinkLogger().log_error(u"Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
             else:
                 for result in results:
@@ -175,7 +175,7 @@ class SessionHistory(object):
                     query = "UPDATE sessions SET local_uri=%s, remote_uri=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(id))
                     try:
                         self.db.queryAll(query)
-                    except Exception:
+                    except Exception, e:
                         BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         elif previous_version.version < 3:
             query = "ALTER TABLE sessions add column 'hidden' INTEGER DEFAULT 0"
@@ -529,9 +529,8 @@ class ChatHistory(object):
                 message.journal_id = journal_id
 
             return True
-        except Exception, e:
-            pass
-        return False
+        except Exception:
+            return False
 
     @run_in_db_thread
     def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
@@ -751,7 +750,7 @@ class FileTransferHistory(object):
             query = "SELECT id, local_uri, remote_uri FROM file_transfers"
             try:
                 results = list(self.db.queryAll(query))
-            except Exception:
+            except Exception, e:
                 BlinkLogger().log_error(u"Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
             else:
                 for result in results:
@@ -761,7 +760,7 @@ class FileTransferHistory(object):
                     query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     try:
                         self.db.queryAll(query)
-                    except Exception:
+                    except Exception, e:
                         BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         TableVersions().set_table_version(FileTransfer.sqlmeta.table, self.__version__)
 
@@ -973,7 +972,7 @@ class SessionHistoryReplicator(object):
                     direction = 'incoming'
                     local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
                     if not len(local_entry):
-                        id=str(uuid.uuid1())
+                        id=str(uuid1())
                         participants = ""
                         focus = "0"
                         local_uri = str(account.id)
@@ -1060,7 +1059,7 @@ class SessionHistoryReplicator(object):
                     direction = 'outgoing'
                     local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
                     if not len(local_entry):
-                        id=str(uuid.uuid1())
+                        id=str(uuid1())
                         participants = ""
                         focus = "0"
                         local_uri = str(account.id)

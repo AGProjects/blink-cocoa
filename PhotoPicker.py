@@ -229,7 +229,7 @@ class PhotoPicker(NSObject):
                 filename = os.path.join(photos_folder, f)
                 checksum = md5sum(filename)
                 try:
-                    _seen_file = seen_md5sum[filename]
+                    seen_md5sum[filename]
                 except KeyError:
                     seen_md5sum[filename] = checksum
                     image = NSImage.alloc().initWithContentsOfFile_(p)
