@@ -1652,15 +1652,41 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         contacts = []
         settings = SIPSimpleSettings()
         count = settings.contacts.maximum_calls
+        skip_target = set()
         for result in results:
             target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
+            contact = getFirstContactMatchingURI(target_uri)
+
+            if isinstance(self, MissedCallsBlinkGroup):
+                # skip missed calls that happened before any successful call
+                if result.duration > 0:
+                    if contact:
+                        for uri in contact.uris:
+                            if uri is None:
+                                continue
+                            skip_target.add(uri.uri)
+                    else:
+                        skip_target.add(target_uri)
+                    continue
+
+                if result.direction == 'outgoing':
+                    if contact:
+                        for uri in contact.uris:
+                            if uri is None:
+                                continue
+                            skip_target.add(uri.uri)
+                    else:
+                        skip_target.add(target_uri)
+                    continue
+
+                if target_uri in skip_target:
+                    continue
 
             if seen.has_key(target_uri):
                 seen[target_uri] += 1
             else:
                 seen[target_uri] = 1
-                getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
-                contact = getFirstContactMatchingURI(target_uri)
                 if contact:
                     name = contact.name
                     icon = contact.avatar.icon
@@ -1677,7 +1703,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
 
         for blink_contact in contacts:
             if seen[blink_contact.uri] > 1:
-                new_detail = blink_contact.detail + u' and %d other times' % seen[blink_contact.uri]
+                new_detail = blink_contact.detail + u' and %d other time%s' % (seen[blink_contact.uri] - 1, 's' if seen[blink_contact.uri] > 2 else '')
                 blink_contact.detail = new_detail
             self.contacts.append(blink_contact)
 
@@ -1691,7 +1717,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
         super(MissedCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='incoming', status='missed', count=100, remote_focus="0")
+        return SessionHistory().get_entries(count=200, remote_focus="0")
 
 
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
