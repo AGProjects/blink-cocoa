@@ -66,7 +66,7 @@ from sipsimple.util import ISOTimestamp
 
 import ChatWindowController
 from BlinkLogger import BlinkLogger
-from ChatViewController import MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
+from ChatViewController import ChatViewController, MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
 from ContactListModel import encode_icon, decode_icon
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
