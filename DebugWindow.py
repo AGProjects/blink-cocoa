@@ -1,8 +1,22 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSFontAttributeName,
+                    NSForegroundColorAttributeName,
+                    NSOnState,
+                    NSOffState)
+from Foundation import (NSAttributedString,
+                        NSBundle,
+                        NSColor,
+                        NSDictionary,
+                        NSFont,
+                        NSMakeRange,
+                        NSMutableAttributedString,
+                        NSNotificationCenter,
+                        NSObject,
+                        NSString,
+                        NSUserDefaults)
+import objc
 
 from datetime import datetime
 

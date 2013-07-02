@@ -1,8 +1,11 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+import Foundation
+from Foundation import (NSObject,
+                        NSUserDefaults,
+                        NSNotificationCenter)
+from AppKit import NSApp, EMGenericKeychainItem
 
 import cjson
 import platform
@@ -18,7 +21,7 @@ from sipsimple.account import AccountManager, Account
 from sipsimple.threading import run_in_thread
 
 from zope.interface import implements
-from util import *
+from util import allocate_autorelease_pool, DictDiffer
 
 from BlinkLogger import BlinkLogger
 
@@ -57,7 +60,7 @@ class iCloudManager(NSObject):
 
     def start(self):
         BlinkLogger().log_debug(u"Starting iCloud Manager")
-        self.cloud_storage = NSUbiquitousKeyValueStore.defaultStore()
+        self.cloud_storage = Foundation.NSUbiquitousKeyValueStore.defaultStore()
         self.cloud_storage.synchronize()
         BlinkLogger().log_debug(u"%.1f out of 64.0 KB of iCloud storage space used" % (self.storage_size/1024))
 

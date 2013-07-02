@@ -1,9 +1,15 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from Foundation import (NSBundle,
+                        NSMakeRect,
+                        NSObject,
+                        NSScreen,
+                        NSUserDefaults,
+                        NSView)
+import objc
 import QTKit
+
 
 class VideoMirrorWindowController(NSObject):
     window = objc.IBOutlet()

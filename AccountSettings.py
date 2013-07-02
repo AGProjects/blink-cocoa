@@ -1,13 +1,26 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-import urlparse
-
-from Foundation import *
-from AppKit import *
+from AppKit import (NSFileHandlingPanelOKButton,
+                    NSOpenPanel,
+                    NSRunAlertPanel,
+                    NSSavePanel,
+                    NSWorkspace)
+from Foundation import (NSBundle,
+                        NSIndexSet,
+                        NSNotFound,
+                        NSObject,
+                        NSURL,
+                        NSURLCredential,
+                        NSURLCredentialPersistenceForSession,
+                        NSURLRequest,
+                        NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 from WebKit import WebActionOriginalURLKey
+import objc
 
 from BlinkLogger import BlinkLogger
+
+import urlparse
 
 accountWindowList = []
 

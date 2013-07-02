@@ -1,20 +1,41 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import (NSApp,
+                    NSCancelButton,
+                    NSDragOperationGeneric,
+                    NSEventTrackingRunLoopMode,
+                    NSFileHandlingPanelOKButton,
+                    NSOKButton,
+                    NSOffState,
+                    NSOnState,
+                    NSRunAlertPanel,
+                    NSTableViewDropOn,
+                    NSTableViewDropAbove)
+from Foundation import (NSArray,
+                        NSBundle,
+                        NSImage,
+                        NSImageView,
+                        NSMenuItem,
+                        NSMutableArray,
+                        NSObject,
+                        NSOpenPanel,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSString,
+                        NSTimer)
+import objc
 
 import urlparse
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.addressbook import ContactURI
 from sipsimple.core import SIPCoreError, SIPURI
 from zope.interface import implements
-from util import *
 
 from VirtualGroups import VirtualGroup
+from util import allocate_autorelease_pool, checkValidPhoneNumber, format_uri_type, run_in_gui_thread
 
 
 class MyImageThing(NSImageView):

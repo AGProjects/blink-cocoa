@@ -1,13 +1,27 @@
 # Copyright (C) 2010-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import (NSApp,
+                    NSCancelButton,
+                    NSDragOperationNone,
+                    NSDragOperationGeneric,
+                    NSLeftMouseUp,
+                    NSOffState,
+                    NSOKButton,
+                    NSOnState,
+                    NSRunAlertPanel)
+from Foundation import (NSArray,
+                        NSBundle,
+                        NSDate,
+                        NSEvent,
+                        NSMenu,
+                        NSMenuItem,
+                        NSObject)
+import objc
 
 import cPickle
 import random
 import re
-import string
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -15,12 +29,12 @@ from resources import ApplicationData
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPCoreError, SIPURI
-from sipsimple.threading import run_in_twisted_thread
-from util import allocate_autorelease_pool, run_in_gui_thread, sip_prefix_pattern
 from zope.interface import implements
 
 from SIPManager import SIPManager
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
+from util import allocate_autorelease_pool, run_in_gui_thread, sip_prefix_pattern
+
 
 def random_room():
     return random.choice('123456789') + ''.join(random.choice('0123456789') for x in range(6))

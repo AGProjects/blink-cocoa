@@ -1,9 +1,55 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import (NSBackingStoreBuffered,
+                    NSBorderlessWindowMask,
+                    NSCenterTextAlignment,
+                    NSCompositeSourceOver,
+                    NSFontAttributeName,
+                    NSForegroundColorAttributeName,
+                    NSImageOnly,
+                    NSLineBreakByTruncatingTail,
+                    NSMomentaryChangeButton,
+                    NSParagraphStyleAttributeName,
+                    NSProgressIndicatorSpinningStyle,
+                    NSShadowAttributeName,
+                    NSShadowlessSquareBezelStyle,
+                    NSSmallControlSize,
+                    NSSmallSquareBezelStyle,
+                    NSTrackingActiveInActiveApp,
+                    NSTrackingMouseEnteredAndExited,
+                    NSViewMaxXMargin,
+                    NSViewMaxYMargin)
+from Foundation import (NSAttributedString,
+                        NSBezierPath,
+                        NSBitmapImageRep,
+                        NSButton,
+                        NSColor,
+                        NSDictionary,
+                        NSEvent,
+                        NSFont,
+                        NSGradient,
+                        NSHeight,
+                        NSImage,
+                        NSImageView,
+                        NSMakePoint,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSMaxX,
+                        NSMinX,
+                        NSMutableDictionary,
+                        NSParagraphStyle,
+                        NSProgressIndicator,
+                        NSShadow,
+                        NSString,
+                        NSTrackingArea,
+                        NSView,
+                        NSWidth,
+                        NSWindow,
+                        NSZeroPoint,
+                        NSZeroRect)
 import objc
+
 
 MIN_TAB_WIDTH = 100
 TAB_WIDTH = 220

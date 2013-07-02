@@ -4,10 +4,8 @@
 from Foundation import *
 from AppKit import *
 from util import allocate_autorelease_pool
-from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.account import BonjourAccount
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact
 
 class ContactCell(NSTextFieldCell):
     contact = None

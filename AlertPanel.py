@@ -1,8 +1,36 @@
 # Copyright (C) 2009-2013 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSApp,
+                    NSCriticalRequest,
+                    NSEventTrackingRunLoopMode,
+                    NSNibOwner,
+                    NSNibTopLevelObjects,
+                    NSRectFill,
+                    NSStatusWindowLevel)
+from Foundation import (NSBezierPath,
+                        NSBox,
+                        NSBundle,
+                        NSColor,
+                        NSHeight,
+                        NSImage,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSMaxX,
+                        NSMutableArray,
+                        NSMutableDictionary,
+                        NSNotificationCenter,
+                        NSNumber,
+                        NSObject,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSScreen,
+                        NSSpeechRecognizer,
+                        NSSpeechSynthesizer,
+                        NSTimer,
+                        NSUserDefaults,
+                        NSWidth)
+import objc
 
 import random
 import time
@@ -18,7 +46,8 @@ from zope.interface import implements
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 
-from util import *
+from util import format_identity_to_string, format_size, run_in_gui_thread
+
 
 ACCEPT = 0
 ACCEPT_CHAT = 1

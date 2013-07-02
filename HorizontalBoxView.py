@@ -1,8 +1,12 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from Foundation import (NSView,
+                        NSWidth,
+                        NSHeight,
+                        NSTextField)
+from AppKit import NSRectFill
+
 
 class HorizontalBoxView(NSView):
     def initWithFrame_(self, frame):

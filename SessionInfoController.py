@@ -1,19 +1,32 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from AppKit import NSDefaultRunLoopMode, NSForegroundColorAttributeName, NSModalPanelRunLoopMode
+from Foundation import (NSAttributedString,
+                        NSBezierPath,
+                        NSBundle,
+                        NSColor,
+                        NSDictionary,
+                        NSGradient,
+                        NSGraphicsContext,
+                        NSInsetRect,
+                        NSObject,
+                        NSRect,
+                        NSRunLoop,
+                        NSTimer,
+                        NSView)
+import objc
+
 import datetime
 import time
 import re
 
-from AppKit import *
-from Foundation import *
-
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
-from util import *
 
-from sipsimple.configuration.settings import SIPSimpleSettings
+from MediaStream import STREAM_CONNECTED
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 from MediaStream import *
 
@@ -564,7 +577,7 @@ class CBGraphView(NSView):
 
             # disable anti-aliasing since it looks bad
             shouldAA = NSGraphicsContext.currentContext().shouldAntialias()
-            NSGraphicsContext.currentContext().setShouldAntialias_(NO)
+            NSGraphicsContext.currentContext().setShouldAntialias_(False)
 
             # draw each bar
             barRect.origin.x = insetBounds.size.width - self.lineWidth + 2

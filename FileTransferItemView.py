@@ -1,8 +1,17 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import NSCompositeSourceOver
+from Foundation import (NSBundle,
+                        NSColor,
+                        NSHeight,
+                        NSImage,
+                        NSMakePoint,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSView,
+                        NSWorkspace)
+import objc
 
 import os
 

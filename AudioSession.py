@@ -1,19 +1,45 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from AppKit import (NSApp,
+                    NSCompositeSourceOver,
+                    NSDragOperationAll,
+                    NSDragOperationCopy,
+                    NSDragOperationNone,
+                    NSDragPboard,
+                    NSFilenamesPboardType,
+                    NSFontAttributeName,
+                    NSLeftMouseUp,
+                    NSStringPboardType)
+from Foundation import (NSArray,
+                        NSBezierPath,
+                        NSColor,
+                        NSDate,
+                        NSDictionary,
+                        NSEvent,
+                        NSFont,
+                        NSImage,
+                        NSInsetRect,
+                        NSMakePoint,
+                        NSMakeRect,
+                        NSMaxY,
+                        NSMenu,
+                        NSPasteboard,
+                        NSString,
+                        NSView,
+                        NSWidth,
+                        NSZeroPoint)
+import objc
+
 import os
 import re
 import time
 import unicodedata
 
-from AppKit import *
-from Foundation import *
+from sipsimple.threading import call_in_thread
 
 from VerticalBoxView import VerticalBoxView
-from SIPManager import SIPManager
-
 from util import format_identity_to_string
-from sipsimple.threading import call_in_thread
 
 
 class AudioSession(NSView):

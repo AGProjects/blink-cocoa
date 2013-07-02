@@ -31,6 +31,42 @@ __all__ = ['BlinkContact',
            'presence_status_for_contact',
            'presence_status_icons']
 
+from AppKit import (NSAlertDefaultReturn,
+                        NSApp,
+                        NSDragOperationCopy,
+                        NSDragOperationGeneric,
+                        NSDragOperationMove,
+                        NSDragOperationNone,
+                        NSEventTrackingRunLoopMode,
+                        NSFilenamesPboardType,
+                        NSLeftMouseUp,
+                        NSOutlineViewDropOnItemIndex,
+                        NSOutlineViewItemDidCollapseNotification,
+                        NSOutlineViewItemDidExpandNotification,
+                        NSPNGFileType,
+                        NSRunAlertPanel,
+                        NSTIFFCompressionLZW)
+from Foundation import (NSArray,
+                        NSBitmapImageRep,
+                        NSBundle,
+                        NSData,
+                        NSDate,
+                        NSEvent,
+                        NSImage,
+                        NSIndexSet,
+                        NSMakeSize,
+                        NSMenu,
+                        NSNotificationCenter,
+                        NSObject,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSString,
+                        NSTimer,
+                        NSURL,
+                        NSWorkspace)
+import AddressBook
+import objc
+
 import base64
 import bisect
 import datetime
@@ -42,10 +78,6 @@ import unicodedata
 import urllib
 import uuid
 import time
-
-import AddressBook
-from Foundation import *
-from AppKit import *
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -72,9 +104,9 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
-
 from resources import ApplicationData, Resources
-from util import *
+from util import allocate_autorelease_pool, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, BLINK_URL_TOKEN
+
 
 ICON_SIZE = 128
 

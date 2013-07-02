@@ -1,10 +1,40 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSApp,
+                    NSCenterTextAlignment,
+                    NSImageOnly,
+                    NSLeftMouseUp,
+                    NSLeftTextAlignment,
+                    NSMomentaryChangeButton,
+                    NSRectFill,
+                    NSSmallSquareBezelStyle,
+                    NSViewHeightSizable,
+                    NSViewMaxXMargin,
+                    NSViewMaxYMargin,
+                    NSViewMinXMargin,
+                    NSViewMinYMargin,
+                    NSViewWidthSizable)
+from Foundation import (NSArray,
+                        NSBezierPath,
+                        NSButton,
+                        NSColor,
+                        NSDate,
+                        NSEvent,
+                        NSFont,
+                        NSMakePoint,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSMenu,
+                        NSMenuItem,
+                        NSMutableDictionary,
+                        NSPointFromString,
+                        NSString,
+                        NSTextField,
+                        NSView)
+
 from ContactListModel import presence_status_icons
-from util import *
+from util import allocate_autorelease_pool
 
 
 country_iso_map = {

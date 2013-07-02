@@ -5,8 +5,36 @@ import re
 import os
 import platform
 
-from AppKit import *
-from Foundation import *
+from Foundation import (NSArray,
+                        NSBezierPath,
+                        NSBundle,
+                        NSColor,
+                        NSImage,
+                        NSIndexSet,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSNotificationCenter,
+                        NSScrollView,
+                        NSString,
+                        NSTabViewItem,
+                        NSURL,
+                        NSUserDefaults,
+                        NSWindowController,
+                        NSWorkspace)
+from AppKit import (NSAccessibilityTitleAttribute,
+                    NSAlertDefaultReturn,
+                    NSApp,
+                    NSDragOperationGeneric,
+                    NSNoTabsBezelBorder,
+                    NSOnState,
+                    NSOffState,
+                    NSRunAlertPanel,
+                    NSTableViewDropAbove,
+                    NSTableViewDropOn,
+                    NSTopTabsBezelBorder,
+                    NSViewHeightSizable,
+                    NSViewWidthSizable)
+import objc
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null

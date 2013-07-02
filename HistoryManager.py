@@ -1,17 +1,29 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
+from AppKit import (NSApp,
+                    NSEventTrackingRunLoopMode,
+                    NSMutableURLRequest,
+                    NSRunLoop,
+                    NSRunLoopCommonModes,
+                    NSString,
+                    NSTimer,
+                    NSUTF8StringEncoding,
+                    NSURL,
+                    NSURLConnection,
+                    NSURLCredential,
+                    NSURLCredentialPersistenceForSession,
+                    NSURLRequest,
+                    NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 
 import cjson
 import cPickle
-from datetime import datetime
 import os
 import time
 import urlparse
 import urllib
-import uuid
-
+from datetime import datetime
+from uuid import uuid1
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -28,12 +40,13 @@ from twisted.internet.threads import deferToThreadPool
 from twisted.python.threadpool import ThreadPool
 
 from BlinkLogger import BlinkLogger
-from EncryptionWrappers import *
+from EncryptionWrappers import encryptor, decryptor
 from resources import ApplicationData
-from util import *
+from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
 
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.core import SIPURI
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implements
@@ -527,7 +540,6 @@ class ChatHistory(object):
             message = results.getOne()
             if message.journal_id != journal_id:
                 message.journal_id = journal_id
-
             return True
         except Exception:
             return False

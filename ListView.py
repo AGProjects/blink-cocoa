@@ -1,8 +1,15 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSRectFill,
+                    NSWindowBelow,
+                    NSWindowDidBecomeKeyNotification,
+                    NSWindowDidResignKeyNotification)
+from Foundation import (NSColor,
+                        NSMaxY,
+                        NSNotificationCenter,
+                        NSWidth)
+
 from VerticalBoxView import VerticalBoxView
 from util import osx_version
 

@@ -5,7 +5,7 @@ __all__ = ['MusicApplications']
 
 from Foundation import NSAppleScript
 
-from application.notification import NotificationCenter, IObserver, NotificationData
+from application.notification import NotificationCenter, IObserver
 from application.python.types import Singleton
 from application.python import Null
 
@@ -13,8 +13,6 @@ from sipsimple.threading import run_in_thread
 
 from util import allocate_autorelease_pool
 from zope.interface import implements
-
-from BlinkLogger import BlinkLogger
 
 
 class MusicApplications(object):
@@ -160,7 +158,6 @@ class VLCInterface(ITunesInterface):
     @run_in_thread('iTunes-interface')
     @allocate_autorelease_pool
     def resume(self):
-        notification_center = NotificationCenter()
         script = NSAppleScript.alloc().initWithSource_(self.check_active_script)
         result, error_info = script.executeAndReturnError_(None)
         if result and result.booleanValue():

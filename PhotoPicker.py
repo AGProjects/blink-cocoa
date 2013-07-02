@@ -1,20 +1,50 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from AppKit import (NSApp,
+                    NSCancelButton,
+                    NSCompositeCopy,
+                    NSEvenOddWindingRule,
+                    NSFrameRect,
+                    NSRunAlertPanel,
+                    NSOKButton)
+from Foundation import (CIImage,
+                        NSArray,
+                        NSBezierPath,
+                        NSBox,
+                        NSBundle,
+                        NSCIImageRep,
+                        NSCollectionView,
+                        NSColor,
+                        NSDictionary,
+                        NSHeight,
+                        NSImage,
+                        NSImageView,
+                        NSIndexSet,
+                        NSLock,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSMaxX,
+                        NSMaxY,
+                        NSMinX,
+                        NSMinY,
+                        NSMutableArray,
+                        NSObject,
+                        NSOpenPanel,
+                        NSWidth,
+                        NSZeroRect)
+import objc
+import QTKit
+
 import os
 import datetime
 import hashlib
 import unicodedata
 
-import Quartz
-from Foundation import *
-from AppKit import *
-import QTKit
-from Quartz import CoreVideo
-
 from application.system import makedirs
-from resources import ApplicationData
 from sipsimple.configuration.settings import SIPSimpleSettings
+
+from resources import ApplicationData
 
 
 class IconViewBox(NSBox):
@@ -260,7 +290,7 @@ class PhotoPicker(NSObject):
             self.captureView.setHidden_(False)
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(False)
-            self.cancelButton.setHidden_(TRUE)
+            self.cancelButton.setHidden_(True)
             self.setButton.setEnabled_(False)
 
     def captureOutput_didOutputVideoFrame_withSampleBuffer_fromConnection_(self, captureOutput, videoFrame, sampleBuffer, connection):
@@ -275,7 +305,7 @@ class PhotoPicker(NSObject):
                 self.captureSession.startRunning()
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(False)
-            self.cancelButton.setHidden_(TRUE)
+            self.cancelButton.setHidden_(True)
             self.setButton.setEnabled_(False)
         elif sender.tag() == 6: # Cancel
             self.photoView.setHidden_(False)

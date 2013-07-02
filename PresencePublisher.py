@@ -1,20 +1,22 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import NSEventTrackingRunLoopMode
+from Foundation import (NSBundle,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer)
 
 import cjson
 import hashlib
 import objc
 import socket
 import uuid
-from eventlib.green import urllib2
 import urlparse
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from datetime import datetime
+from eventlib.green import urllib2
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.account.bonjour import BonjourPresenceState
 from sipsimple.account.xcap import Icon, OfflineStatus
@@ -26,7 +28,8 @@ from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread, Command
 from twisted.internet import reactor
 from zope.interface import implements
-from util import *
+
+from util import allocate_autorelease_pool, run_in_gui_thread, BLINK_URL_TOKEN
 
 from BlinkLogger import BlinkLogger
 

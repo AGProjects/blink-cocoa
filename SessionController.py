@@ -1,22 +1,33 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-import cjson
+from AppKit import (NSAlertDefaultReturn,
+                    NSApp,
+                    NSEventTrackingRunLoopMode,
+                    NSRunAlertPanel)
+from Foundation import (NSBundle,
+                        NSObject,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer,
+                        NSURL,
+                        NSWorkspace)
+import objc
+
 import hashlib
 import re
 import time
 import socket
 import urllib
-import urlparse
 import uuid
 
 from itertools import chain
+from datetime import datetime
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.types import Singleton
-
-from datetime import datetime, timedelta
+from zope.interface import implements
 
 from resources import Resources
 from sipsimple.account import Account, AccountManager, BonjourAccount
@@ -26,14 +37,8 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
-from sipsimple.util import ISOTimestamp
-
 from sipsimple.threading.green import run_in_green_thread
-
-from zope.interface import implements
-
-from AppKit import *
-from Foundation import *
+from sipsimple.util import ISOTimestamp
 
 from AlertPanel import AlertPanel
 from AudioController import AudioController
@@ -45,16 +50,16 @@ from ScreenSharingController import ScreenSharingController, ScreenSharingServer
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
-from MediaStream import *
+from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
+from MediaStream import STREAM_IDLE, STREAM_FAILED
 from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
-from HistoryManager import SessionHistoryReplicator, ChatHistoryReplicator
 
 from interfaces.itunes import MusicApplications
+from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread
 
-from util import *
 
 SessionIdentifierSerial = 0
 OUTBOUND_AUDIO_CALLS = 0

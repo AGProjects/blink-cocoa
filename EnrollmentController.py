@@ -1,8 +1,18 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from Foundation import (NSObject,
+                        NSBundle,
+                        NSUserDefaults,
+                        NSFullUserName)
+from AppKit import (NSApp,
+                    NSCancelButton,
+                    NSOKButton,
+                    NSOnState,
+                    NSRunAlertPanel,
+                    NSURL,
+                    NSWorkspace)
+import objc
 
 import cjson
 import datetime
@@ -17,7 +27,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.account import Account, AccountManager, BonjourAccount
+from sipsimple.account import Account, AccountManager
 
 from util import allocate_autorelease_pool
 from zope.interface import implements

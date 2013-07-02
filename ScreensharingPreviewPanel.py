@@ -1,8 +1,10 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import NSDefaultRunLoopMode, NSModalPanelRunLoopMode
+from Foundation import NSBundle, NSObject, NSRunLoop, NSTimer
+import objc
+
 
 class ScreensharingPreviewPanel(NSObject):
 

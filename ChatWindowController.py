@@ -1,15 +1,60 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
-from WebKit import *
-from Quartz import *
-
-import os
-import re
-import time
-import urllib
+from AppKit import (NSAlertDefaultReturn,
+                    NSApp,
+                    NSCommandKeyMask,
+                    NSDragOperationAll,
+                    NSDragOperationNone,
+                    NSEventTrackingRunLoopMode,
+                    NSFilenamesPboardType,
+                    NSFitPagination,
+                    NSLeftMouseUp,
+                    NSOffState,
+                    NSOnState,
+                    NSPortraitOrientation,
+                    NSRunAlertPanel,
+                    NSTableViewDropAbove,
+                    NSTableViewSelectionDidChangeNotification,
+                    NSSplitViewDidResizeSubviewsNotification,
+                    NSStringPboardType,
+                    NSWindowDocumentIconButton)
+from Foundation import (CFURLCreateStringByAddingPercentEscapes,
+                        kCFStringEncodingUTF8,
+                        NSArray,
+                        NSBundle,
+                        NSColor,
+                        NSDate,
+                        NSEvent,
+                        NSImage,
+                        NSIndexSet,
+                        NSMakeSize,
+                        NSMenu,
+                        NSMenuItem,
+                        NSNotFound,
+                        NSNotificationCenter,
+                        NSObject, 
+                        NSPasteboard,
+                        NSPrintInfo,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSString,
+                        NSTimer,
+                        NSTabViewItem,
+                        NSURL,
+                        NSWindowController,
+                        NSWorkspace,
+                        NSZeroPoint)
+from Quartz import (CGWindowListCopyWindowInfo,
+                    kCGNullWindowID,
+                    kCGWindowBounds,
+                    kCGWindowIsOnscreen,
+                    kCGWindowListOptionOnScreenOnly,
+                    kCGWindowListExcludeDesktopElements,
+                    kCGWindowName,
+                    kCGWindowNumber,
+                    kCGWindowOwnerName)
+import objc
 
 from zope.interface import implements
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -21,13 +66,9 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
 from urllib import unquote
-from util import *
+import urllib
 
-import FancyTabSwitcher
-import ParticipantsTableView
-
-from BlinkLogger import BlinkLogger
-from ChatPrivateMessageController import ChatPrivateMessageController
+from MediaStream import *
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact, BlinkMyselfConferenceContact
@@ -38,6 +79,13 @@ from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
+
+import FancyTabSwitcher
+from util import *
+
+import os
+import re
+import time
 
 
 CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT = 314

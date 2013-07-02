@@ -1,18 +1,24 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
+from AppKit import NSOnState, NSOffState
+from Foundation import (NSBundle,
+                        NSImage,
+                        NSObject,
+                        NSURL,
+                        NSURLRequest,
+                        NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 import objc
-from Foundation import *
-from AppKit import *
+
+from urllib import unquote
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
-from util import *
-from urllib import unquote
 
 from BlinkLogger import BlinkLogger
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 class NSURLRequest(objc.Category(NSURLRequest)):

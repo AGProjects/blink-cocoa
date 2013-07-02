@@ -4,10 +4,24 @@
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
            'MSG_STATE_SENDING', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED']
 
-from Foundation import *
-from AppKit import *
-from WebKit import WebView
-from WebKit import WebViewProgressFinishedNotification, WebActionOriginalURLKey
+from AppKit import (NSCommandKeyMask,
+                    NSDragOperationNone,
+                    NSDragOperationCopy,
+                    NSFilenamesPboardType,
+                    NSShiftKeyMask,
+                    NSTextDidChangeNotification)
+from Foundation import (NSArray,
+                        NSDate,
+                        NSMakeRange,
+                        NSNotificationCenter,
+                        NSObject,
+                        NSTextView,
+                        NSTimer,
+                        NSURL,
+                        NSURLRequest,
+                        NSWorkspace)
+from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
+import objc
 
 import calendar
 import cgi
@@ -17,12 +31,12 @@ import re
 import time
 import urllib
 
-from application.notification import NotificationCenter, NotificationData
+from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import ISOTimestamp
 
 from SmileyManager import SmileyManager
-from util import escape_html, format_identity_to_string
+from util import escape_html
 
 
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent

@@ -1,8 +1,75 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSAccessibilityUnignoredDescendant,
+                    NSAccessibilityDescriptionAttribute,
+                    NSAccessibilityChildrenAttribute,
+                    NSAccessibilityRoleDescriptionAttribute,
+                    NSAlertAlternateReturn,
+                    NSAlertDefaultReturn,
+                    NSApp,
+                    NSCompositeSourceOver,
+                    NSDragOperationMove,
+                    NSDragOperationCopy,
+                    NSDragOperationNone,
+                    NSDragOperationAll,
+                    NSFilenamesPboardType,
+                    NSFloatingWindowLevel,
+                    NSFontAttributeName,
+                    NSForegroundColorAttributeName,
+                    NSGetInformationalAlertPanel,
+                    NSKeyDown,
+                    NSLeftMouseUp,
+                    NSLineBreakByTruncatingTail,
+                    NSModalPanelRunLoopMode,
+                    NSNormalWindowLevel,
+                    NSOnState,
+                    NSOffState,
+                    NSOutlineViewSelectionDidChangeNotification,
+                    NSParagraphStyleAttributeName,
+                    NSPNGFileType,
+                    NSReleaseAlertPanel,
+                    NSRunAlertPanel,
+                    NSRunContinuesResponse,
+                    NSSplitViewDidResizeSubviewsNotification,
+                    NSTableViewSelectionDidChangeNotification,
+                    NSTableViewDropAbove,
+                    NSVariableStatusItemLength)
+from Foundation import (NSArray,
+                        NSAttributedString,
+                        NSBezierPath,
+                        NSBitmapImageRep,
+                        NSColor,
+                        NSDate,
+                        NSDefaultRunLoopMode,
+                        NSDictionary,
+                        NSEvent,
+                        NSFont,
+                        NSGraphicsContext,
+                        NSHeight,
+                        NSImage,
+                        NSImageView,
+                        NSIndexSet,
+                        NSMakeSize,
+                        NSMenu,
+                        NSMenuItem,
+                        NSMinY,
+                        NSMutableAttributedString,
+                        NSMakeRange,
+                        NSMakeRect,
+                        NSNotFound,
+                        NSNotificationCenter,
+                        NSParagraphStyle,
+                        NSRunLoop,
+                        NSStatusBar,
+                        NSString,
+                        NSTimer,
+                        NSURL,
+                        NSUserDefaults,
+                        NSWindowController,
+                        NSWorkspace,
+                        NSZeroPoint,
+                        NSZeroRect)
 import objc
 import QTKit
 
@@ -21,14 +88,12 @@ from application.notification import NotificationCenter, IObserver, Notification
 from application.python import Null
 from application.system import unlink
 from sipsimple.account import AccountManager, Account, BonjourAccount
-from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Policy, unique_id
+from sipsimple.addressbook import AddressbookManager, ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.conference import AudioConference
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, SIPCoreError
-from sipsimple.session import IllegalStateError
-from sipsimple.session import SessionManager
 from sipsimple.util import ISOTimestamp
 from sipsimple.threading import call_in_thread, run_in_thread
 from sipsimple.threading.green import run_in_green_thread
@@ -57,13 +122,24 @@ from FileTransferWindowController import openFileTransferSelectionDialog
 from ConferenceController import random_room, default_conference_server, JoinConferenceWindowController, AddParticipantsWindowController
 from PresenceInfoController import PresenceInfoController
 from SessionController import SessionControllersManager
-from SIPManager import SIPManager, MWIData
+from SIPManager import MWIData
 from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
 from VideoMirrorWindowController import VideoMirrorWindowController
 from resources import ApplicationData, Resources
-from util import *
+from util import (allocate_autorelease_pool,
+                  format_identity_to_string,
+                  format_uri_type,
+                  is_anonymous,
+                  is_sip_aor_format,
+                  normalize_sip_uri_for_outgoing_session,
+                  run_in_gui_thread,
+                  sip_prefix_pattern,
+                  sipuri_components_from_string,
+                  translate_alpha2digit,
+                  AccountInfo)
+
 
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
 PARTICIPANTS_MENU_ADD_CONTACT = 301

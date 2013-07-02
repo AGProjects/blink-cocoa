@@ -1,8 +1,15 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import (NSApp,
+                    NSInformationalRequest,
+                    NSOKButton)
+from Foundation import (NSBundle,
+                        NSHeight,
+                        NSMakeRect,
+                        NSObject,
+                        NSOpenPanel)
+import objc
 
 import unicodedata
 
@@ -15,11 +22,9 @@ import ListView
 from BlinkLogger import BlinkLogger
 from HistoryManager import FileTransferHistory
 from FileTransferItemView import FileTransferItemView
-from util import allocate_autorelease_pool, run_in_gui_thread
-
-import SIPManager
 from FileTransferSession import IncomingFileTransferHandler, OutgoingPushFileTransferHandler, OutgoingPullFileTransferHandler
-from util import format_size
+from util import allocate_autorelease_pool, run_in_gui_thread, format_size
+
 
 def openFileTransferSelectionDialog(account, dest_uri):
     if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):

@@ -7,15 +7,15 @@ __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 
            'BLINK_URL_TOKEN',
            'AccountInfo', 'DictDiffer']
 
+from AppKit import NSApp, NSRunAlertPanel
+from Foundation import NSAutoreleasePool, NSThread
+
 import platform
 import re
 import shlex
 from datetime import datetime
 
 from application.python.decorator import decorator, preserve_signature
-
-from AppKit import NSApp, NSRunAlertPanel
-from Foundation import NSAutoreleasePool, NSThread
 
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import SIPURI, FrozenSIPURI, SIPCoreError

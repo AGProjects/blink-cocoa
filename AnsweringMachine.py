@@ -21,7 +21,8 @@ from sipsimple.util import ISOTimestamp
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
 from resources import Resources
-from util import *
+from util import allocate_autorelease_pool, format_identity_to_string
+
 
 class AnsweringMachine(object):
     implements(IObserver)

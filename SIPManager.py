@@ -3,14 +3,12 @@
 
 from __future__ import with_statement
 
-from Foundation import *
-from AppKit import *
+from Foundation import NSBundle
+from AppKit import NSApp, NSRunAlertPanel
 
 import cjson
 import os
 import re
-import time
-import uuid
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -33,7 +31,6 @@ from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.account.bonjour import _bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
 from sipsimple.addressbook import Contact, Group
 from sipsimple.configuration import DefaultValue
-from sipsimple.audio import WavePlayer
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
@@ -48,7 +45,7 @@ from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.contact import BlinkContactExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
-from util import *
+from util import allocate_autorelease_pool, format_identity_to_string, run_in_gui_thread
 
 
 class SIPManager(object):

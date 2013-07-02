@@ -1,8 +1,15 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSCompositeSourceOver,
+                    NSFontAttributeName,
+                    NSForegroundColorAttributeName)
+from Foundation import (NSColor,
+                        NSDictionary,
+                        NSFont,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSTextFieldCell)
 
 
 class ConferenceFileCell(NSTextFieldCell):

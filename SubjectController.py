@@ -1,8 +1,9 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import NSApp, NSCancelButton, NSOKButton
+from Foundation import NSBundle, NSObject
+import objc
 
 
 class SubjectController(NSObject):

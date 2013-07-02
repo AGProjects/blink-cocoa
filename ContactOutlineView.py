@@ -1,8 +1,16 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
+from AppKit import (NSApp,
+                    NSArray,
+                    NSIndexSet,
+                    NSNotFound,
+                    NSOutlineView,
+                    NSPasteboard,
+                    NSStringPboardType)
+
 from ContactListModel import BlinkContact, BlinkGroup
+
 
 class ContactOutlineView(NSOutlineView):
     def menuForEvent_(self, event):

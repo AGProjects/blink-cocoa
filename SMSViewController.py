@@ -1,8 +1,27 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSApp,
+                    NSFontAttributeName,
+                    NSForegroundColorAttributeName)
+from Foundation import (NSAttributedString,
+                        NSBundle,              
+                        NSColor,
+                        NSDate,
+                        NSDictionary,
+                        NSFont,
+                        NSImage,
+                        NSMakePoint,
+                        NSMakeSize,
+                        NSMaxX,
+                        NSMenuItem,
+                        NSObject,
+                        NSSplitView,
+                        NSString,
+                        NSTimer,
+                        NSWorkspace)
+import objc
+from WebKit import WebActionOriginalURLKey
 
 import datetime
 import hashlib
@@ -14,7 +33,7 @@ from zope.interface import implements
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.lookup import DNSLookup
+from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
@@ -22,11 +41,11 @@ from sipsimple.util import ISOTimestamp
 
 
 from BlinkLogger import BlinkLogger
-from ChatViewController import *
+from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
-from SIPManager import SIPManager
-from util import *
+from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
+
 
 MAX_MESSAGE_LENGTH = 1300
 

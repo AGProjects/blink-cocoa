@@ -1,9 +1,49 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
-from Quartz import *
+from AppKit import (NSApp,
+                    NSCompositeSourceOver,
+                    NSEventTrackingRunLoopMode,
+                    NSFontAttributeName,
+                    NSImageCompressionFactor,
+                    NSInformationalRequest,
+                    NSJPEGFileType,
+                    NSSplitViewDidResizeSubviewsNotification,
+                    NSSplitViewDividerStyleThick,
+                    NSSplitViewDividerStyleThin,
+                    NSToolbarPrintItemIdentifier,
+                    NSWindowBelow)
+from Foundation import (NSAttributedString,
+                        NSBitmapImageRep,
+                        NSBundle,
+                        NSColor,
+                        NSDate,
+                        NSDictionary,
+                        NSFont,
+                        NSImage,
+                        NSMakeRect,
+                        NSMakeSize,
+                        NSMenuItem,
+                        NSNotificationCenter,
+                        NSObject,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSScreen,
+                        NSTask,
+                        NSTaskDidTerminateNotification,
+                        NSTimer,
+                        NSUserDefaults,
+                        NSZeroSize)
+from Quartz import (CGDisplayBounds,
+                    CGImageGetWidth,
+                    CGMainDisplayID,
+                    CGWindowListCopyWindowInfo,
+                    CGWindowListCreateImage,
+                    kCGWindowImageBoundsIgnoreFraming,
+                    kCGWindowListExcludeDesktopElements,
+                    kCGWindowListOptionIncludingWindow,
+                    kCGWindowNumber)
+import objc
 
 import datetime
 import hashlib
@@ -13,12 +53,10 @@ import unicodedata
 import uuid
 
 from application.notification import IObserver, NotificationCenter, NotificationData
-from application.system import makedirs
 from application.python import Null
 from itertools import chain
 from zope.interface import implements
 
-from resources import ApplicationData
 from sipsimple.account import BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
@@ -26,22 +64,22 @@ from sipsimple.streams.applications.chat import CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
-from util import *
-
 import ChatWindowController
-
 from BlinkLogger import BlinkLogger
-from ChatViewController import *
+from ChatViewController import MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
 from ContactListModel import encode_icon, decode_icon
-
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
-from MediaStream import *
+from MediaStream import MediaStream, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_INCOMING, STREAM_CONNECTING, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from ScreensharingPreviewPanel import ScreensharingPreviewPanel
+from resources import ApplicationData
+from util import allocate_autorelease_pool, format_identity_to_string, format_size, html2txt, image_file_extension_pattern, sipuri_components_from_string, run_in_gui_thread
 
+
+# Copied from Carbon.h
 kUIModeNormal = 0
 kUIModeContentSuppressed = 1
 kUIModeContentHidden = 2

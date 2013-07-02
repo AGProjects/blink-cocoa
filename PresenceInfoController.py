@@ -1,22 +1,28 @@
 # Copyright (C) 2009-2012 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import NSApp
+from Foundation import (NSAttributedString,
+                        NSBundle,
+                        NSImage,
+                        NSMakeRange,
+                        NSMakeSize,
+                        NSNumber,
+                        NSObject)
+import objc
 
 import datetime
 import urllib
-import random
 from itertools import chain
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.payloads.pidf import Device, Person, Service
 from zope.interface import implements
-from util import *
-import WorldMapView
 
 from ContactListModel import presence_status_for_contact
+import WorldMapView
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 
 SPLITTER_HEIGHT = 300

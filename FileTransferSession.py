@@ -1,6 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from Foundation import NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
+
 import hashlib
 import datetime
 import os
@@ -11,7 +13,6 @@ import uuid
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null, limit
-from application.system import makedirs
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import ToHeader, SIPURI
@@ -28,11 +29,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import FileTransferHistory, ChatHistory
-from MediaStream import *
-
-from util import *
-
-from Foundation import NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
+from util import allocate_autorelease_pool, format_size, format_identity_to_string
 
 
 def format_duration(t):

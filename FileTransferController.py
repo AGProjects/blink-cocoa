@@ -1,8 +1,9 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from MediaStream import *
 from FileTransferSession import IncomingFileTransferHandler
+from MediaStream import MediaStream
+
 
 class FileTransferController(MediaStream):
     """

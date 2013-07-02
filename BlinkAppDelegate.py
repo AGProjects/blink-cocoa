@@ -3,21 +3,36 @@
 
 from __future__ import with_statement
 
-from Foundation import *
-from AppKit import *
+from Foundation import (NSAppleEventManager,
+                        NSBundle,
+                        NSDistributedNotificationCenter,
+                        NSFileManager,
+                        NSImage,
+                        NSImageView,
+                        NSMakeRect,
+                        NSNotificationSuspensionBehaviorDeliverImmediately,
+                        NSThread,
+                        NSObject)
+from AppKit import (NSAlertDefaultReturn,
+                    NSApp,
+                    NSInformationalRequest,
+                    NSRunAlertPanel,
+                    NSTerminateLater,
+                    NSTerminateNow,
+                    NSWorkspace,
+                    NSWorkspaceWillSleepNotification,
+                    NSWorkspaceDidWakeNotification)
+import Foundation
 import LaunchServices
 import objc
 import time
 
-from random import randint
 import os
 import platform
-import re
 import shutil
 import struct
-import unicodedata
 
-from application.notification import NotificationCenter, IObserver, NotificationData
+from application.notification import NotificationCenter, IObserver
 from application import log
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
@@ -33,6 +48,7 @@ from BlinkLogger import BlinkLogger
 from EnrollmentController import EnrollmentController
 
 import PreferencesController
+from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, call_in_gui_thread, run_in_gui_thread, external_url_pattern
 
@@ -115,10 +131,10 @@ class BlinkAppDelegate(NSObject):
         major, minor = platform.mac_ver()[0].split('.')[0:2]
         if (int(major) == 10 and int(minor) >= 8) or int(major) > 10:
             if self.ui_notification_center is None:
-                self.ui_notification_center = NSUserNotificationCenter.defaultUserNotificationCenter()
+                self.ui_notification_center = Foundation.NSUserNotificationCenter.defaultUserNotificationCenter()
                 self.ui_notification_center.setDelegate_(self)
 
-            notification = NSUserNotification.alloc().init()
+            notification = Foundation.NSUserNotification.alloc().init()
             notification.setTitle_(title)
             if subtitle is not None:
                 notification.setSubtitle_(subtitle)

@@ -1,11 +1,23 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSApp,
+                    NSCancelButton,
+                    NSFontAttributeName,
+                    NSOKButton)
+from Foundation import (NSAttributedString,
+                        NSBundle,
+                        NSDictionary,
+                        NSFont,
+                        NSImage,
+                        NSMakeSize,
+                        NSMenuItem,
+                        NSObject)
+import objc
 
 from ChatViewController import ChatInputTextView
 from SmileyManager import SmileyManager
+
 
 class ChatPrivateMessageController(NSObject):
     window = objc.IBOutlet()

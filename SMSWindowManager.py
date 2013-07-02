@@ -1,8 +1,15 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import NSApp, NSPortraitOrientation, NSFitPagination
+from Foundation import (NSBundle,
+                        NSImage,
+                        NSNotFound,
+                        NSObject,
+                        NSPrintInfo,
+                        NSTabViewItem,
+                        NSWindowController)
+import objc
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -14,11 +21,10 @@ from sipsimple.payloads.iscomposing import IsComposingMessage
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
 from sipsimple.util import ISOTimestamp
 
-import SIPManager
-
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
-from util import *
+from util import allocate_autorelease_pool, format_identity_to_string, html2txt, run_in_gui_thread
+
 
 class SMSWindowController(NSWindowController):
     implements(IObserver)

@@ -1,8 +1,31 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import (NSAccessibilityChildrenAttribute,
+                    NSAccessibilityDescriptionAttribute,
+                    NSAccessibilityRoleDescriptionAttribute,
+                    NSAccessibilityTitleAttribute,
+                    NSAccessibilityUnignoredDescendant,
+                    NSApp,
+                    NSCommandKeyMask,
+                    NSEventTrackingRunLoopMode,
+                    NSLeftMouseUp)
+from Foundation import (NSBundle,
+                        NSColor,
+                        NSDate,
+                        NSEvent,
+                        NSHeight,
+                        NSImage,
+                        NSMaxX,
+                        NSMenu,
+                        NSMinX,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSString,
+                        NSThread,
+                        NSTimer,
+                        NSZeroPoint)
+import objc
 
 import datetime
 import os
@@ -24,18 +47,17 @@ from sipsimple.streams import AudioStream
 from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
-import AudioSession
 
+import AudioSession
 from AnsweringMachine import AnsweringMachine
 from BlinkLogger import BlinkLogger
 from ContactListModel import BonjourBlinkContact, BlinkPresenceContact
 from HistoryManager import ChatHistory
 from MediaStream import *
 from SIPManager import SIPManager
-from SessionInfoController import ice_candidates
 
 from resources import Resources
-from util import *
+from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, translate_alpha2digit, run_in_gui_thread
 
 
 RecordingImages = []

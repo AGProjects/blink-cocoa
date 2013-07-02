@@ -1,9 +1,10 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from Foundation import NSView
 from QTKit import QTMovie
+import objc
+
 
 class VideoView(NSView):
     # TODO: replace this view with an OpenGL view that can stream from pjmedia video buffer -adi

@@ -1,17 +1,38 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from Foundation import (NSBundle,
+                        NSImage,
+                        NSStatusBar,
+                        NSMakeSize,
+                        NSMenu,
+                        NSObject,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer,
+                        NSURL,
+                        NSWorkspace)
+from AppKit import NSEventTrackingRunLoopMode, NSRunAlertPanel
+import objc
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
-from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams.msrp import ScreenSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
 
 from BlinkLogger import BlinkLogger
-from MediaStream import *
+from MediaStream import (MediaStream,
+                         STREAM_CONNECTED,
+                         STREAM_CONNECTING,
+                         STREAM_INCOMING,
+                         STREAM_PROPOSING,
+                         STREAM_DISCONNECTING,
+                         STREAM_CANCELLING,
+                         STREAM_IDLE,
+                         STREAM_FAILED,
+                         STATE_DNS_FAILED,
+                         STATE_FAILED,
+                         STATE_CONNECTED)
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 

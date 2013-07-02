@@ -1,8 +1,47 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import *
-from Foundation import *
+from AppKit import (NSAccessibilityTitleAttribute,
+                    NSApp,
+                    NSBezelBorder,
+                    NSDragOperationGeneric,
+                    NSDragOperationNone,
+                    NSEventTrackingRunLoopMode,
+                    NSOnState,
+                    NSOffState,
+                    NSOKButton,
+                    NSRightTextAlignment,
+                    NSRoundedBezelStyle,
+                    NSRunAlertPanel,
+                    NSSmallControlSize,
+                    NSSwitchButton,
+                    NSTableViewDropOn,
+                    NSTableViewDropAbove)
+from Foundation import (NSArray,
+                        NSBundle,
+                        NSButton,
+                        NSButtonCell,
+                        NSHeight,
+                        NSImage,
+                        NSMakeRect,
+                        NSMenuItem,
+                        NSNumber,
+                        NSNumberFormatter,
+                        NSTableView,
+                        NSTableColumn,
+                        NSTextField,
+                        NSTextFieldCell,
+                        NSOpenPanel,
+                        NSObject,
+                        NSPopUpButton,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSScrollView,
+                        NSSecureTextField,
+                        NSString,
+                        NSTimer,
+                        NSView)
+import objc
 
 import os
 import re
@@ -14,7 +53,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
-from sipsimple.configuration.datatypes import *
+from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 

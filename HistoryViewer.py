@@ -1,20 +1,47 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import *
-from AppKit import *
+from AppKit import (NSAlertDefaultReturn,
+                    NSApp,
+                    NSBackspaceCharacter,
+                    NSDeleteCharacter,
+                    NSDeleteFunctionKey,
+                    NSFitPagination,
+                    NSLeftMouseUp,
+                    NSPortraitOrientation,
+                    NSProgressIndicatorSpinningStyle,
+                    NSRunAlertPanel,
+                    NSTableViewSelectionDidChangeNotification,
+                    NSToolbarPrintItemIdentifier)
+from Foundation import (NSBundle,
+                        NSDate,
+                        NSDictionary,
+                        NSEvent,
+                        NSImage,
+                        NSIndexSet,
+                        NSMenu,
+                        NSMutableArray,
+                        NSNotificationCenter,
+                        NSPrintInfo,
+                        NSSortDescriptor,
+                        NSTableView,
+                        NSWindowController,
+                        NSZeroPoint)
+import objc
+
 import datetime
 
-from application.notification import IObserver, NotificationCenter, NotificationData
+from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
-from util import *
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
+from util import allocate_autorelease_pool, is_anonymous ,sipuri_components_from_string, run_in_gui_thread
+
 
 SQL_LIMIT=1000
 MAX_MESSAGES_PER_PAGE=15
