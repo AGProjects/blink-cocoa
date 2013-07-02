@@ -26,12 +26,6 @@ class VerticalBoxView(NSView):
         self.border = border
 
     def didAddSubview_(self, subview):
-        minimumHeight = self.spacing * (self.subviews().count()-1) + self.border*2
-        for view in self.subviews():
-            if hasattr(view, "expand"):
-                expandCount += 1
-            else:
-                minimumHeight += NSHeight(view.frame())
         self.relayout()
 
     def isFlipped(self):
@@ -72,7 +66,7 @@ class VerticalBoxView(NSView):
 
         expandedHeight= 0
         if expandCount > 0:
-            expandedHeight= (NSHeight(frame) - minimumHeight) / expandedCount
+            expandedHeight= (NSHeight(frame) - minimumHeight) / expandCount
 
         y = self.border
         for view in self.subviews():
