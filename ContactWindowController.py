@@ -3107,6 +3107,31 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_(group)
             item.setState_(NSOnState if group == selected_group else NSOffState)
 
+        self.groupMenu.addItem_(NSMenuItem.separatorItem())
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Special Groups', "", "")
+        item.setEnabled_(False)
+
+        settings = SIPSimpleSettings()
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.missed_calls_group.name, "toggleHistoryGroup:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.missed_calls_group)
+        item.setState_(NSOnState if settings.contacts.enable_missed_calls_group else NSOffState)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.incoming_calls_group.name, "toggleHistoryGroup:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.incoming_calls_group)
+        item.setState_(NSOnState if settings.contacts.enable_incoming_calls_group else NSOffState)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.outgoing_calls_group.name, "toggleHistoryGroup:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.outgoing_calls_group)
+        item.setState_(NSOnState if settings.contacts.enable_outgoing_calls_group else NSOffState)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.online_contacts_group.name, "toggleHistoryGroup:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.online_contacts_group)
+        item.setState_(NSOnState if settings.contacts.enable_online_group else NSOffState)
+
     def updateHistoryMenu(self):
         if self.historyMenu.numberOfItems() < 6:
             if NSApp.delegate().applicationName != 'Blink Lite':
@@ -3152,6 +3177,21 @@ class ContactWindowController(NSWindowController):
             if group.group is not None:
                 group.group.expanded = True
                 group.group.save()
+
+    @objc.IBAction
+    def toggleHistoryGroup_(self, sender):
+        settings = SIPSimpleSettings()
+        group = sender.representedObject()
+        if group == self.model.missed_calls_group:
+            settings.contacts.enable_missed_calls_group = not settings.contacts.enable_missed_calls_group
+        elif group == self.model.incoming_calls_group:
+            settings.contacts.enable_incoming_calls_group = not settings.contacts.enable_incoming_calls_group
+        elif group == self.model.outgoing_calls_group:
+            settings.contacts.enable_outgoing_calls_group = not settings.contacts.enable_outgoing_calls_group
+        elif group == self.model.online_contacts_group:
+            settings.contacts.enable_online_group = not settings.contacts.enable_online_group
+        settings.save()
+
 
     @objc.IBAction
     def showChatWindowForAccountWithTargetUri_(self, sender):
@@ -4272,7 +4312,7 @@ class ContactWindowController(NSWindowController):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete...", "deleteItem:", "")
             lastItem.setEnabled_(item.deletable)
             lastItem.setRepresentedObject_(item)
-            
+
             grp_submenu = NSMenu.alloc().init()
             grp_submenu.setAutoenablesItems_(False)
             grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(u'To First Position', "moveGroupToIndex:", "")
@@ -4285,7 +4325,7 @@ class ContactWindowController(NSWindowController):
                 grp_item.setRepresentedObject_({'group': item, 'index': index+1})
             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Move Group", "", "")
             self.contactContextMenu.setSubmenu_forItem_(grp_submenu, mitem)
-                
+
             if isinstance(item, HistoryBlinkGroup):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Hidden Entries", "showHiddenEntries:", "")
