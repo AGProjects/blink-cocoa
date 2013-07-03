@@ -116,7 +116,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup
+from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -704,6 +704,20 @@ class ContactWindowController(NSWindowController):
         elif isinstance(group, OutgoingCallsBlinkGroup):
             SessionHistory().unhide_outgoing_entries()
         self.model.reload_history_groups()
+
+    @objc.IBAction
+    def hideGroup_(self, sender):
+        settings = SIPSimpleSettings()
+        group = sender.representedObject()
+        if isinstance(group, MissedCallsBlinkGroup):
+            settings.contacts.enable_missed_calls_group = False
+        elif isinstance(group, IncomingCallsBlinkGroup):
+            settings.contacts.enable_incoming_calls_group = False
+        elif isinstance(group, OutgoingCallsBlinkGroup):
+            settings.contacts.enable_outgoing_calls_group = False
+        elif isinstance(group, OnlineGroup):
+            settings.contacts.enable_online_group = False
+        settings.save()
 
     @run_in_green_thread
     def setHistoryPeriod_(self, sender):
@@ -1805,6 +1819,7 @@ class ContactWindowController(NSWindowController):
         self.refreshContactsList()
         self.searchContacts()
 
+    
     @objc.IBAction
     def renameGroup_(self, sender):
         group = sender.representedObject()
@@ -4359,13 +4374,21 @@ class ContactWindowController(NSWindowController):
                 mitem.setRepresentedObject_(item)
 
         elif isinstance(item, BlinkGroup):
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('%s Group' % item.name, "", "")
+            lastItem.setEnabled_(False)
+            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            
             if item.add_contact_allowed:
                 self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add Contact...", "addContact:", "")
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename...", "renameGroup:", "")
             lastItem.setRepresentedObject_(item)
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete...", "deleteItem:", "")
-            lastItem.setEnabled_(item.deletable)
-            lastItem.setRepresentedObject_(item)
+            if isinstance(item, HistoryBlinkGroup) or isinstance(item, OnlineGroup):
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide", "hideGroup:", "")
+                lastItem.setRepresentedObject_(item)
+            else:
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete...", "deleteItem:", "")
+                lastItem.setEnabled_(item.deletable)
+                lastItem.setRepresentedObject_(item)
 
             grp_submenu = NSMenu.alloc().init()
             grp_submenu.setAutoenablesItems_(False)
