@@ -320,6 +320,7 @@ class ContactWindowController(NSWindowController):
     speech_synthesizer = None
     speech_synthesizer_active = False
     scheduled_conferences = set()
+    my_device_is_active = True
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -1819,7 +1820,7 @@ class ContactWindowController(NSWindowController):
         self.refreshContactsList()
         self.searchContacts()
 
-    
+
     @objc.IBAction
     def renameGroup_(self, sender):
         group = sender.representedObject()
@@ -2637,10 +2638,20 @@ class ContactWindowController(NSWindowController):
             try:
                 last_published_timestamp = self.presencePublisher.last_service_timestamp[notification.sender.id]
             except KeyError:
+                if self.my_device_is_active:
+                    BlinkLogger().log_info('Another device of mine became active')
+                self.my_device_is_active = False
                 return
             else:
                 if last_published_timestamp.value >= service.timestamp.value:
+                    if not self.my_device_is_active:
+                        BlinkLogger().log_info('My device is now active')
+                    self.my_device_is_active = True
                     return
+                else:
+                    if self.my_device_is_active:
+                        BlinkLogger().log_info('Another device of mine became active')
+                    self.my_device_is_active = False
 
             try:
                 selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
@@ -4377,7 +4388,7 @@ class ContactWindowController(NSWindowController):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('%s Group' % item.name, "", "")
             lastItem.setEnabled_(False)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-            
+
             if item.add_contact_allowed:
                 self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add Contact...", "addContact:", "")
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename...", "renameGroup:", "")

@@ -284,7 +284,7 @@ class SessionControllersManager(object):
         stream_type_list = list(set(stream.type for stream in streams))
 
         if NSApp.delegate().contactsWindowController.hasContactMatchingURI(session.remote_identity.uri):
-            if settings.chat.auto_accept and stream_type_list == ['chat']:
+            if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
@@ -294,9 +294,10 @@ class SessionControllersManager(object):
             return
 
         if stream_type_list == ['file-transfer'] and streams[0].file_selector.name.decode("utf8").startswith('xscreencapture'):
-            BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
-            self.startIncomingSession(session, streams)
-            return
+            if NSApp.delegate().contactsWindowController.my_device_is_active:
+                BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
+                self.startIncomingSession(session, streams)
+                return
 
         try:
             session.send_ring_indication()

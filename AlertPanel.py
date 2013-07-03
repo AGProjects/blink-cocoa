@@ -305,7 +305,7 @@ class AlertPanel(NSObject, object):
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
             fileIcon.setFrame_(frame)
             fileIcon.setHidden_(False)
-            if settings.file_transfer.auto_accept:
+            if settings.file_transfer.auto_accept and NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info(u"Auto answer enabled for file transfers from known contacts")
                 self.enableAutoAnswer(view, session, random.uniform(10, 20))
 
@@ -363,7 +363,7 @@ class AlertPanel(NSObject, object):
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)
 
-            if caller_contact.auto_answer:
+            if caller_contact.auto_answer and NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info(u"Auto answer enabled for this contact")
                 self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 

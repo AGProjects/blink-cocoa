@@ -2783,7 +2783,7 @@ class ContactListModel(CustomListModel):
         self.blocked_contacts_group.load_group()
         self.online_contacts_group.load_group()
         self.addressbook_group.load_group()
-        
+
         settings = SIPSimpleSettings()
 
         self.missed_calls_group.setInitialPeriod(settings.contacts.missed_calls_period)
