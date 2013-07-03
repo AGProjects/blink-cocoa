@@ -1650,6 +1650,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
     type = None    # To be defined by a subclass
     deletable = False
     ignore_search = True
+    days = None
 
     add_contact_allowed = False
     remove_contact_allowed = False
@@ -1661,6 +1662,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "firstLoadTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+        self.after_date=None
 
     def firstLoadTimer_(self, timer):
         self.load_history()
@@ -1668,8 +1670,22 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.timer.invalidate()
             self.timer = None
 
+    def setInitialPeriod(self, days):
+        self.days = days
+        after_date=datetime.datetime.now()-datetime.timedelta(days=days)
+        self.after_date=after_date.strftime("%Y-%m-%d")
+
+    def setPeriod_(self, days):
+        self.days = days
+        after_date=datetime.datetime.now()-datetime.timedelta(days=days)
+        self.after_date=after_date.strftime("%Y-%m-%d")
+        results = self.get_history_entries()
+        self.refresh_contacts(results)
+
     @run_in_green_thread
     def load_history(self):
+        if self.days is None:
+            return
         results = self.get_history_entries()
         self.refresh_contacts(results)
 
@@ -1680,7 +1696,6 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         seen = {}
         contacts = []
         settings = SIPSimpleSettings()
-        count = settings.contacts.maximum_calls
         skip_target = set()
         session_ids = {}
         for result in results:
@@ -1736,9 +1751,6 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 blink_contact.contact = contact
                 contacts.append(blink_contact)
 
-            if len(seen) >= count:
-                break
-
         for blink_contact in contacts:
             k = blink_contact.contact if blink_contact.contact is not None else blink_contact.uri
             try:
@@ -1760,7 +1772,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
         super(MissedCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(count=200, remote_focus="0", hidden=0)
+        return SessionHistory().get_entries(remote_focus="0", hidden=0, after_date=self.after_date, count=500)
 
 
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
@@ -1770,7 +1782,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
         super(OutgoingCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='outgoing', count=100, remote_focus="0", hidden=0)
+        return SessionHistory().get_entries(direction='outgoing', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
 
 
 class IncomingCallsBlinkGroup(HistoryBlinkGroup):
@@ -1780,7 +1792,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
         super(IncomingCallsBlinkGroup, self).__init__(name)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='incoming', status='completed', count=100, remote_focus="0", hidden=0)
+        return SessionHistory().get_entries(direction='incoming', status='completed', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
 
 
 class AddressBookBlinkGroup(VirtualBlinkGroup):
@@ -2771,9 +2783,17 @@ class ContactListModel(CustomListModel):
         self.blocked_contacts_group.load_group()
         self.online_contacts_group.load_group()
         self.addressbook_group.load_group()
+        
+        settings = SIPSimpleSettings()
+
+        self.missed_calls_group.setInitialPeriod(settings.contacts.missed_calls_period)
         self.missed_calls_group.load_group()
-        self.outgoing_calls_group.load_group()
+
+        self.incoming_calls_group.setInitialPeriod(settings.contacts.incoming_calls_period)
         self.incoming_calls_group.load_group()
+
+        self.outgoing_calls_group.setInitialPeriod(settings.contacts.outgoing_calls_period)
+        self.outgoing_calls_group.load_group()
 
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
@@ -2872,16 +2892,6 @@ class ContactListModel(CustomListModel):
                 self.groupsList.remove(self.online_contacts_group)
                 self.saveGroupPosition()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
-        if notification.data.modified.has_key("contacts.maximum_calls"):
-            if settings.contacts.enable_missed_calls_group:
-                self.missed_calls_group.load_history()
-
-            if settings.contacts.enable_outgoing_calls_group:
-                self.outgoing_calls_group.load_history()
-
-            if settings.contacts.enable_incoming_calls_group:
-                self.incoming_calls_group.load_history()
 
         if isinstance(notification.sender, Account):
             account = notification.sender

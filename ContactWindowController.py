@@ -83,6 +83,7 @@ import string
 import ldap
 import uuid
 from collections import deque
+from itertools import chain
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -688,7 +689,7 @@ class ContactWindowController(NSWindowController):
         self.searchBox.setStringValue_(sender.representedObject())
 
     @run_in_green_thread
-    def hideHistoryEntryInMenu_(self, sender):
+    def hideHistoryEntries_(self, sender):
         session_ids = sender.representedObject()
         SessionHistory().hide_entries(session_ids)
         self.model.reload_history_groups()
@@ -703,6 +704,21 @@ class ContactWindowController(NSWindowController):
         elif isinstance(group, OutgoingCallsBlinkGroup):
             SessionHistory().unhide_outgoing_entries()
         self.model.reload_history_groups()
+
+    @run_in_green_thread
+    def setHistoryPeriod_(self, sender):
+        object = sender.representedObject()
+        group = object['group']
+        group.setPeriod_(object['days'])
+
+        settings = SIPSimpleSettings()
+        if isinstance(group, MissedCallsBlinkGroup):
+            settings.contacts.missed_calls_period = object['days']
+        elif isinstance(group, IncomingCallsBlinkGroup):
+            settings.contacts.incoming_calls_period = object['days']
+        elif isinstance(group, OutgoingCallsBlinkGroup):
+            settings.contacts.outgoing_calls_period = object['days']
+        settings.save()
 
     @objc.IBAction
     def showPendingRequests_(self, sender):
@@ -4241,7 +4257,7 @@ class ContactWindowController(NSWindowController):
                 if history_contact is not None:
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
                     mitem.setRepresentedObject_(unicode(history_contact.uri))
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntryInMenu:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntries:", "")
                     mitem.setRepresentedObject_(history_contact.session_ids)
 
             elif history_contact is not None and not is_anonymous(history_contact.uris[0].uri):
@@ -4257,7 +4273,7 @@ class ContactWindowController(NSWindowController):
 
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
                     mitem.setRepresentedObject_(unicode(history_contact.uri))
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntryInMenu:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntries:", "")
                     mitem.setRepresentedObject_(history_contact.session_ids)
 
                 if not self.hasContactMatchingURI(history_contact.uri):
@@ -4369,6 +4385,26 @@ class ContactWindowController(NSWindowController):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Hidden Entries", "showHiddenEntries:", "")
                 lastItem.setEnabled_(item)
                 lastItem.setRepresentedObject_(item)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entries", "hideHistoryEntries:", "")
+                session_ids = list(chain(*(history_contact.session_ids for history_contact in item.contacts)))
+                lastItem.setEnabled_(bool(session_ids))
+                lastItem.setRepresentedObject_(session_ids)
+
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Select Period", "", "")
+                period_submenu = NSMenu.alloc().init()
+                self.contactContextMenu.setSubmenu_forItem_(period_submenu, lastItem)
+
+                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_('Last Day', "setHistoryPeriod:", "")
+                p_item.setRepresentedObject_({'group': item, 'days': 2})
+                p_item.setState_(NSOnState if item.days == 2 else NSOffState)
+
+                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_('Last Week', "setHistoryPeriod:", "")
+                p_item.setRepresentedObject_({'group': item, 'days': 7})
+                p_item.setState_(NSOnState if item.days == 7 else NSOffState)
+
+                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_('Last Month', "setHistoryPeriod:", "")
+                p_item.setState_(NSOnState if item.days == 30 else NSOffState)
+                p_item.setRepresentedObject_({'group': item, 'days': 30})
 
     def menuWillOpen_(self, menu):
         def setupAudioDeviceMenu(menu, tag, devices, option_name, selector):

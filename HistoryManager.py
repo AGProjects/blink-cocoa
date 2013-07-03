@@ -226,7 +226,7 @@ class SessionHistory(object):
             return False
 
     @run_in_db_thread
-    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden):
+    def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden, after_date):
         query='1=1'
         if call_id:
             query += " and sip_callid = %s" % SessionHistoryEntry.sqlrepr(call_id)
@@ -242,7 +242,9 @@ class SessionHistory(object):
             query += " and remote_focus = %s" % SessionHistoryEntry.sqlrepr(remote_focus)
         if hidden is not None:
             query += " and hidden = %s" % SessionHistoryEntry.sqlrepr(hidden)
-
+        if after_date:
+            query += " and start_time >= %s" % SessionHistoryEntry.sqlrepr(after_date)
+    
         if remote_uris:
             remote_uris_sql = ''
             for uri in remote_uris:
@@ -257,8 +259,8 @@ class SessionHistory(object):
             BlinkLogger().log_error(u"Error getting entries from sessions history table: %s" % e)
             return []
 
-    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None, hidden=None):
-        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden))
+    def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None, hidden=None, after_date=None):
+        return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden, after_date))
 
     def hide_entries(self, session_ids):
         return block_on(self._hide_entries(session_ids))

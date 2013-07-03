@@ -105,7 +105,9 @@ class ContactsSettings(SettingsGroup):
     enable_outgoing_calls_group = Setting(type=bool, default=False)
     enable_blocked_group = Setting(type=bool, default=False)
     enable_online_group = Setting(type=bool, default=False)
-    maximum_calls = Setting(type=NonNegativeInteger, default=5)
+    missed_calls_period = Setting(type=NonNegativeInteger, default=7)
+    incoming_calls_period = Setting(type=NonNegativeInteger, default=7)
+    outgoing_calls_period = Setting(type=NonNegativeInteger, default=7)
 
 
 class PresenceStateSettings(SettingsGroup):

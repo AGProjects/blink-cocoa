@@ -171,7 +171,6 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['contacts.enable_incoming_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_outgoing_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_missed_calls_group'] = HiddenOption
-            PreferenceOptionTypes['contacts.maximum_calls'] = HiddenOption
 
             for identifier in ('answering_machine', 'advanced'):
                 try:
