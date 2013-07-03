@@ -244,7 +244,7 @@ class SessionHistory(object):
             query += " and hidden = %s" % SessionHistoryEntry.sqlrepr(hidden)
         if after_date:
             query += " and start_time >= %s" % SessionHistoryEntry.sqlrepr(after_date)
-    
+
         if remote_uris:
             remote_uris_sql = ''
             for uri in remote_uris:

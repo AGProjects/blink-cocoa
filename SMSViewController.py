@@ -5,7 +5,7 @@ from AppKit import (NSApp,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName)
 from Foundation import (NSAttributedString,
-                        NSBundle,              
+                        NSBundle,
                         NSColor,
                         NSDate,
                         NSDictionary,
