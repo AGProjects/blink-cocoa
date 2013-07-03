@@ -4256,6 +4256,12 @@ class ContactWindowController(NSWindowController):
                             mitem.setEnabled_(True)
 
             if isinstance(item, BlinkPresenceContact):
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Automatically Answer Calls", "setAutoAnswer:", "")
+                mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+                mitem.setState_(NSOnState if item.auto_answer else NSOffState)
+
+            if isinstance(item, BlinkPresenceContact):
                 if item not in self.model.bonjour_group.contacts:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     all_uris = []
