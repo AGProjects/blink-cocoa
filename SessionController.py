@@ -217,12 +217,18 @@ class SessionControllersManager(object):
             nc_title = 'Incompatible Media'
             nc_body = 'Call from %s refused' % match_contact.name
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
-            session.reject(488, 'Incompatible media')
+            try:
+                session.reject(488, 'Incompatible media')
+            except IllegalStateError, e:
+                print e
             return
 
         if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
             BlinkLogger().log_info(u"Blocked contact rejected")
-            session.reject(603, 'Not Acceptable Here')
+            try:
+                session.reject(603, 'Not Acceptable Here')
+            except IllegalStateError, e:
+                print e
             nc_title = 'Blocked Contact Rejected'
             nc_body = 'Call from %s refused' % caller_name
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
@@ -232,7 +238,10 @@ class SessionControllersManager(object):
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
         if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
             BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
-            session.reject(486, 'Busy Here')
+            try:
+                session.reject(486, 'Busy Here')
+            except IllegalStateError, e:
+                print e
             return
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount():
@@ -241,7 +250,10 @@ class SessionControllersManager(object):
                 nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
                 BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % caller_name)
-                session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+                try:
+                    session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+                except IllegalStateError, e:
+                    print e
                 return
 
             if session.account.audio.reject_anonymous:
@@ -250,7 +262,10 @@ class SessionControllersManager(object):
                     nc_body = 'Call refused'
                     NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=None)
                     BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
-                    session.reject(603, 'Anonymous Not Acceptable')
+                    try:
+                        session.reject(603, 'Anonymous Not Acceptable')
+                    except IllegalStateError, e:
+                        print e
                     return
 
             if session.account.audio.reject_unauthorized_contacts:
@@ -260,14 +275,20 @@ class SessionControllersManager(object):
                         nc_body = 'Call from %s refused' % caller_name
                         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
                         BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
-                        session.reject(603, 'Not Acceptable Here')
+                        try:
+                            session.reject(603, 'Not Acceptable Here')
+                        except IllegalStateError, e:
+                            print e
                         return
                 else:
                     BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
                     nc_title = 'Unauthorized Caller Rejected'
                     nc_body = 'Call refused from blocked contact'
                     NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
-                    session.reject(603, 'Not Acceptable Here')
+                    try:
+                        session.reject(603, 'Not Acceptable Here')
+                    except IllegalStateError, e:
+                        print e
                     return
 
         # at this stage call is allowed and will alert the user
@@ -1033,8 +1054,8 @@ class SessionController(NSObject):
                 self.log_info(u"Error initializing incoming session, rejecting it: %s" % exc)
                 try:
                     self.session.reject(500)
-                except IllegalDirectionError:
-                    pass
+                except (IllegalDirectionError, IllegalStateError), e:
+                    print e
                 log_data = NotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
                 self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
@@ -1465,15 +1486,15 @@ class SessionController(NSObject):
             self.log_info("Transfer request rejected by user")
             try:
                 self.session.reject_transfer()
-            except IllegalDirectionError:
-                pass
+            except (IllegalDirectionError, IllegalStateError), e:
+                print e
         self.transfer_window = None
 
     def reject(self, code, reason):
         if self.session is not None:
             try:
                 self.session.reject(code, reason)
-            except IllegalStateError:
+            except (IllegalDirectionError, IllegalStateError),e:
                 pass
 
     @allocate_autorelease_pool

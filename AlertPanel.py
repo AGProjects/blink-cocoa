@@ -39,9 +39,10 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.session import SessionManager
+from sipsimple.session import SessionManager, IllegalStateError
 from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, ScreenSharingStream
 from zope.interface import implements
+
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
@@ -889,7 +890,10 @@ class AlertPanel(NSObject, object):
         self.removeSession(session)
 
     def rejectSession(self, session, code=603, reason=None):
-        session.reject(code, reason)
+        try:
+            session.reject(code, reason)
+        except IllegalStateError, e:
+            print e
         self.removeSession(session)
 
     def cancelSession(self, session, reason):
