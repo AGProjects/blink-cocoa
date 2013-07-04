@@ -481,16 +481,16 @@ class BlinkConferenceContact(BlinkContact):
         self.screensharing_url = None
         self.presence_contact = presence_contact
         if presence_contact is not None:
-            NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
+            NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
         self.presence_note = None
         self.init_presence_state()
         self.updatePresenceState()
 
     def setPresenceContact_(self, presence_contact):
         if self.presence_contact is None and presence_contact is not None:
-            NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChaged", sender=presence_contact)
+            NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged", sender=presence_contact)
         elif self.presence_contact is not None and presence_contact is None:
-            NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
+            NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
         self.presence_contact = presence_contact
         self.updatePresenceState()
 
@@ -498,7 +498,7 @@ class BlinkConferenceContact(BlinkContact):
     def destroy(self):
         super(BlinkConferenceContact, self).destroy()
         if self.presence_contact is not None:
-            NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChaged", sender=self.presence_contact)
+            NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
             self.presence_contact = None
 
     @run_in_gui_thread
@@ -506,7 +506,7 @@ class BlinkConferenceContact(BlinkContact):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def _NH_BlinkContactPresenceHasChaged(self, notification):
+    def _NH_BlinkContactPresenceHasChanged(self, notification):
         self.updatePresenceState()
 
     def init_presence_state(self):
@@ -1109,7 +1109,8 @@ class BlinkPresenceContact(BlinkContact):
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
 
-        NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+        if log:
+            NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
     @allocate_autorelease_pool
     @run_in_green_thread
@@ -1185,12 +1186,14 @@ class BlinkPresenceContact(BlinkContact):
                 online_contact._clone_presence_state(other=self)
                 model.online_contacts_group.contacts.append(online_contact)
                 model.online_contacts_group.sortContacts()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                return True
         else:
             if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
-                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+                return True
+
+        return False
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
@@ -1342,7 +1345,7 @@ class BlinkPresenceContact(BlinkContact):
         presence_notes = []
         if detail != self.detail:
             self.detail = detail
-            NotificationCenter().post_notification("BlinkContactPresenceHasChaged", sender=self)
+            NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
 class BlinkOnlineContact(BlinkPresenceContact):
     pass
@@ -2276,7 +2279,6 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="SIPApplicationWillEnd")
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
         self.nc.add_observer(self, name="SIPAccountGotPresenceWinfo")
-        self.nc.add_observer(self, name="BlinkContactPresenceHasChaged")
 
 
         ns_nc = NSNotificationCenter.defaultCenter()
@@ -3356,13 +3358,6 @@ class ContactListModel(CustomListModel):
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
-
-    @allocate_autorelease_pool
-    def _NH_BlinkContactPresenceHasChaged(self, notification):
-        groups = (group for group in self.groupsList if notification.sender in group.contacts)
-        for group in groups:
-            self.contactOutline.reloadItem_reloadChildren_(group, True)
-        groups = None
 
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)

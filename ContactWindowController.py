@@ -949,6 +949,7 @@ class ContactWindowController(NSWindowController):
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         self.speech_synthesizer_active = False
 
+    @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map
         BlinkLogger().log_debug('Got availability %s for %d SIP addresses for account %s' % ('full state' if notification.data.full_state else 'update', len(resource_map.keys()), notification.sender.id))
@@ -976,11 +977,15 @@ class ContactWindowController(NSWindowController):
                     changed_blink_contacts.append((blink_contact,group))
 
         for blink_contact, group in changed_blink_contacts:
+            self.contactOutline.reloadItem_reloadChildren_(group, True)
             if isinstance(group, AllContactsBlinkGroup):
-                blink_contact.addToOrRemoveFromOnlineGroup()
+                online_group_changed = blink_contact.addToOrRemoveFromOnlineGroup()
+                if online_group_changed:
+                    self.contactOutline.reloadItem_reloadChildren_(self.model.online_contacts_group, True)
 
         if changed_blink_contacts:
             BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (len(changed_blink_contacts), len(blink_contacts_set)))
+    
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()

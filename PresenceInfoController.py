@@ -51,7 +51,7 @@ class PresenceInfoController(NSObject):
         self.notification_center = NotificationCenter()
         NSBundle.loadNibNamed_owner_("PresenceInfoPanel", self)
         self.statusLabel.setStringValue_("")
-        NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChaged")
+        NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -59,7 +59,7 @@ class PresenceInfoController(NSObject):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def _NH_BlinkContactPresenceHasChaged(self, notification):
+    def _NH_BlinkContactPresenceHasChanged(self, notification):
         if self.contact == notification.sender:
             self.render_pidf()
 
