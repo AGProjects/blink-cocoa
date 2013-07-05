@@ -364,9 +364,10 @@ class AlertPanel(NSObject, object):
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)
 
-            if caller_contact.auto_answer and NSApp.delegate().contactsWindowController.my_device_is_active:
-                BlinkLogger().log_info(u"Auto answer enabled for this contact")
-                self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
+            if not is_update_proposal:
+                if caller_contact.auto_answer and NSApp.delegate().contactsWindowController.my_device_is_active:
+                    BlinkLogger().log_info(u"Auto answer enabled for this contact")
+                    self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
         fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
         fromT.sizeToFit()
