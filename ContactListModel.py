@@ -2932,8 +2932,6 @@ class ContactListModel(CustomListModel):
         if not note and record.presence is not None and record.presence.state is not None:
             note = record.presence.state.title()
 
-        BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
-
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.not_filtered_contacts):
             blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
             blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
@@ -2947,11 +2945,12 @@ class ContactListModel(CustomListModel):
                 tcp_neighbours = (n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tcp')
                 udp_neighbours = (n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'udp')
                 if uri.transport == 'tls':
-                    BlinkLogger().log_debug(u"Bonjour TLS neighbour does not exists, adding %s %s" % (display_name, uri))
+                    BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
                     blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
                     blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
                     self.bonjour_group.contacts.append(blink_contact)
+
                     for tcp_neighbour in tcp_neighbours:
                         BlinkLogger().log_debug(u"Bonjour neighbour already has a TLS contact, removing %s %s" % (display_name, uri))
                         self.bonjour_group.contacts.remove(tcp_neighbour)
@@ -2959,7 +2958,7 @@ class ContactListModel(CustomListModel):
                         BlinkLogger().log_debug(u"Bonjour neighbour already has a TLS contact, removing %s %s" % (display_name, uri))
                         self.bonjour_group.contacts.remove(udp_neighbour)
                 elif uri.transport == 'tcp' and not tls_neighbours:
-                    BlinkLogger().log_debug(u"Bonjour TCP neighbour does not exists, adding %s %s" % (display_name, uri))
+                    BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
                     blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
                     blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
@@ -2974,7 +2973,7 @@ class ContactListModel(CustomListModel):
                     blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
                     self.bonjour_group.contacts.append(blink_contact)
             else:
-                BlinkLogger().log_debug(u"Bonjour neighbour does not exists, adding %s %s" % (display_name, uri))
+                BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
                 blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
                 blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
                 blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)

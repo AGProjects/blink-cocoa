@@ -167,7 +167,7 @@ class SIPManager(object):
         with open(ca_path, "w") as f:
             os.chmod(ca_path, 0600)
             f.write(ca)
-        BlinkLogger().log_info(u"Added default Certificate Authority to %s" % ca_path)
+        BlinkLogger().log_debug(u"Added default Certificate Authority to %s" % ca_path)
         settings.tls.ca_list = ca_path
         settings.save()
 
@@ -203,7 +203,7 @@ class SIPManager(object):
             os.chmod(ca_path, 0600)
             f.write(ca_list)
             f.close()
-            BlinkLogger().log_info(u"Added new Certificate Authority to %s" % ca_path)
+            BlinkLogger().log_debug(u"Added new Certificate Authority to %s" % ca_path)
             must_save_ca = True
 
         if must_save_ca:
@@ -421,7 +421,6 @@ class SIPManager(object):
         settings = SIPSimpleSettings()
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
         BlinkLogger().log_info(u"SIP User Agent: %s" % settings.user_agent)
-        BlinkLogger().log_info(u"SIP device ID: %s" % settings.instance_id)
 
         self.migratePasswordsToKeychain()
         self.cleanupIcons()
@@ -469,6 +468,7 @@ class SIPManager(object):
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
         BlinkLogger().log_info(u"Core started")
+        BlinkLogger().log_info(u"SIP device ID: %s" % settings.instance_id)
         codecs_print = []
         for codec in settings.rtp.audio_codec_list:
             codecs_print.append(beautify_audio_codec(codec))
@@ -478,7 +478,7 @@ class SIPManager(object):
         if bonjour_account.enabled:
             for transport in settings.sip.transport_list:
                 try:
-                    BlinkLogger().log_info(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
+                    BlinkLogger().log_debug(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
                 except KeyError:
                     pass
 
