@@ -38,7 +38,7 @@ from sipsimple.util import ISOTimestamp
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
-from ContactListModel import BlinkConferenceContact, BlinkPresenceContact
+from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
 from util import allocate_autorelease_pool, is_anonymous ,sipuri_components_from_string, run_in_gui_thread
 
@@ -133,8 +133,8 @@ class HistoryViewer(NSWindowController):
             BlinkLogger().log_debug('Starting History Viewer')
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
-            self.all_contacts = BlinkConferenceContact('Any Address', name=u'All Contacts')
-            self.bonjour_contact = BlinkConferenceContact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+            self.all_contacts = BlinkHistoryViewerContact('Any Address', name=u'All Contacts')
+            self.bonjour_contact = BlinkHistoryViewerContact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
@@ -225,7 +225,7 @@ class HistoryViewer(NSWindowController):
                             break
                     if contact_exist:
                         continue
-                    contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon)
+                    contact = BlinkHistoryViewerContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon)
                     for contact_uri in found_contact.uris:
                         found_uris.append(contact_uri.uri)
                     self.contacts.append(contact)
@@ -235,7 +235,7 @@ class HistoryViewer(NSWindowController):
                     if uri in found_uris:
                         continue
                     found_uris.append(uri)
-                    contact = BlinkConferenceContact(unicode(uri), name=unicode(uri))
+                    contact = BlinkHistoryViewerContact(unicode(uri), name=unicode(uri))
 
                 try:
                     index = self.contacts.index(contact)
@@ -253,14 +253,14 @@ class HistoryViewer(NSWindowController):
                             break
                     if contact_exist:
                         continue
-                    contact = BlinkConferenceContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon, presence_contact=found_contact if isinstance(found_contact, BlinkPresenceContact) else None)
+                    contact = BlinkHistoryViewerContact(found_contact.uri, name=found_contact.name, icon=found_contact.icon, presence_contact=found_contact if isinstance(found_contact, BlinkPresenceContact) else None)
                     for contact_uri in found_contact.uris:
                         found_uris.append(contact_uri.uri)
                 else:
                     if row[0] in found_uris:
                         continue
                     found_uris.append(row[0])
-                    contact = BlinkConferenceContact(unicode(row[0]), name=unicode(row[0]))
+                    contact = BlinkHistoryViewerContact(unicode(row[0]), name=unicode(row[0]))
 
                 self.contacts.append(contact)
 

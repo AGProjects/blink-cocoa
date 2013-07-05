@@ -579,6 +579,10 @@ class BlinkConferenceContact(BlinkContact):
         NotificationCenter().post_notification("BlinkConferenceContactPresenceHasChanged", sender=self)
 
 
+class BlinkHistoryViewerContact(BlinkConferenceContact):
+    pass
+
+
 class BlinkMyselfConferenceContact(BlinkContact):
     """Contact representation for conference drawer UI for myself"""
 

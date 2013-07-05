@@ -19,7 +19,7 @@ from Foundation import (NSBezierPath,
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import BonjourAccount
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, BlinkHistoryViewerContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
 from util import allocate_autorelease_pool
 
 
@@ -92,7 +92,7 @@ class ContactCell(NSTextFieldCell):
 
     @allocate_autorelease_pool
     def drawActiveMedia(self):
-        if not hasattr(self.contact, "active_media"):
+        if type(self.contact) not in (BlinkConferenceContact, BlinkMyselfConferenceContact):
             return
 
         padding = 16
@@ -127,6 +127,14 @@ class ContactCell(NSTextFieldCell):
             if not blink_contact.contact.presence.subscribe:
                 return
             status = presence_status_for_contact(blink_contact, self.contact.uri)
+        elif isinstance(self.contact, BlinkHistoryViewerContact):
+            blink_contact = self.contact.presence_contact
+            if not isinstance(blink_contact, BlinkPresenceContact):
+                return
+            if not blink_contact.contact.presence.subscribe:
+                return
+            status = presence_status_for_contact(blink_contact, self.contact.uri)
+
         elif isinstance(self.contact, HistoryBlinkContact):
             blink_contact = self.contact.contact
             if not isinstance(blink_contact, BlinkPresenceContact):
@@ -174,7 +182,7 @@ class ContactCell(NSTextFieldCell):
 
         # presence bar
         frame.size.width = 5
-        if hasattr(self.contact, "active_media"):
+        if type(self.contact) in (BlinkConferenceContact, BlinkMyselfConferenceContact):
             frame.size.height = 14
             frame.origin.y += 15
         frame.origin.x = self.view.frame().size.width - 6
