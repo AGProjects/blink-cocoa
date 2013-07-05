@@ -3389,7 +3389,7 @@ class ContactListModel(CustomListModel):
                         group.save()
 
     def createInitialGroupAndContacts(self):
-        BlinkLogger().log_info(u"Creating initial contacts...")
+        BlinkLogger().log_debug(u"Creating initial contacts")
 
         group = Group(id='test')
         group.name = 'Test'

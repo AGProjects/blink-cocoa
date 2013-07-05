@@ -166,7 +166,7 @@ class SessionHistory(object):
             else:
                 try:
                     SessionHistoryEntry.createTable()
-                    BlinkLogger().log_info(u"Created table %s" % SessionHistoryEntry.sqlmeta.table)
+                    BlinkLogger().log_debug(u"Created sessions table %s" % SessionHistoryEntry.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
         except Exception, e:
@@ -409,7 +409,7 @@ class ChatHistory(object):
             else:
                 try:
                     ChatMessage.createTable()
-                    BlinkLogger().log_info(u"Created history table %s" % ChatMessage.sqlmeta.table)
+                    BlinkLogger().log_debug(u"Created history table %s" % ChatMessage.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
         except Exception, e:
@@ -752,7 +752,7 @@ class FileTransferHistory(object):
             else:
                 try:
                     FileTransfer.createTable()
-                    BlinkLogger().log_info(u"Created file history table %s" % FileTransfer.sqlmeta.table)
+                    BlinkLogger().log_debug(u"Created file history table %s" % FileTransfer.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (FileTransfer.sqlmeta.table, e))
         except Exception, e:
