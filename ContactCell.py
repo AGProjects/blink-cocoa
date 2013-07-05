@@ -86,7 +86,7 @@ class ContactCell(NSTextFieldCell):
         frame = self.frame
         frame.origin.y += 15
         if self.contact.detail:
-            rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width-10, frame.size.height)
+            rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width - 25, frame.size.height)
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
             self.contact.detail.drawInRect_withAttributes_(rect, attrs)
 
