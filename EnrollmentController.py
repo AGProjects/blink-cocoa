@@ -87,6 +87,7 @@ class EnrollmentController(NSObject):
         super(EnrollmentController, self).dealloc()
 
     def runModal(self):
+        BlinkLogger().log_info('Starting Enrollment')
         self.newDisplayNameText.setStringValue_(NSFullUserName() or "")
         self.displayNameText.setStringValue_(NSFullUserName() or "")
 

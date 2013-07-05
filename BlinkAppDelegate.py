@@ -89,6 +89,7 @@ class BlinkAppDelegate(NSObject):
     missedCalls = 0
     missedChats = 0
     urisToOpen = []
+    wait_for_enrollment = False
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -202,8 +203,6 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
-        BlinkLogger().log_debug(u"Starting User Interface")
-
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 
         config_file = ApplicationData.get('config')
@@ -221,6 +220,7 @@ class BlinkAppDelegate(NSObject):
                 self.backend.fetch_account()
                 accounts = AccountManager().get_accounts()
                 if not accounts or (first_run and accounts == [BonjourAccount()]):
+                    self.wait_for_enrollment = True
                     self.enroll()
                 break
 
@@ -242,7 +242,10 @@ class BlinkAppDelegate(NSObject):
                 return
 
         # window should be shown only after enrollment check
-        self.contactsWindowController.showWindow_(None)
+        if self.wait_for_enrollment:
+            BlinkLogger().log_info('Starting Main User Interface')
+            self.contactsWindowController.showWindow_(None)
+            self.wait_for_enrollment = False
 
         self.contactsWindowController.setupFinished()
 
