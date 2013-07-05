@@ -1157,16 +1157,18 @@ class ContactWindowController(NSWindowController):
         self.loadPresenceStateAtStart()
         self.setSpeechSynthesis()
 
+        if not NSApp.delegate().wait_for_enrollment:
+            BlinkLogger().log_info('Starting Main User Interface')
+            self.showWindow_(None)
+
     def _NH_SIPApplicationDidStart(self, notification):
+        BlinkLogger().log_info('Application is ready')
         self.callPendingURIs()
         self.refreshLdapDirectory()
         self.updateHistoryMenu()
         self.setSelectedInputAudioDeviceForLevelMeter()
         self.updateAudioDeviceLabel()
         self.removePresenceContactForOurselves()
-        if not NSApp.delegate().wait_for_enrollment:
-            BlinkLogger().log_info('Starting Main User Interface')
-            self.showWindow_(None)
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
