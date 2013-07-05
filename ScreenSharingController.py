@@ -202,8 +202,6 @@ class ScreenSharingController(MediaStream):
                 NSWorkspace.sharedWorkspace().openURL_(url)
         else:
             self.statusWindow.makeKeyAndOrderFront_(None)
-
-        if self.direction == "passive":
             #self.statusItem.update(self, newstate)
             if self.statusLabel and self.statusWindow:
                 if newstate == STREAM_CONNECTED:
