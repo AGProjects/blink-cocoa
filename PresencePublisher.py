@@ -116,7 +116,6 @@ class PresencePublisher(object):
     presenceStateBeforeIdle = None
     wakeup_timer = None
     location = None
-    xcap_caps_discovered = set()
     last_service_timestamp = {}
     last_logged_status = None
 
@@ -187,9 +186,6 @@ class PresencePublisher(object):
                         self.get_location([account])
 
             if set(['xcap.enabled', 'xcap.xcap_root']).intersection(notification.data.modified):
-                if not account.xcap.enabled:
-                    # TODO: if we ever allow changing the account id in Blink this needs to be fixed -Saul
-                    self.xcap_caps_discovered.discard(account.id)
 
                 if account.xcap.enabled and account.xcap.discovered:
                     if account.xcap_manager is not None:
@@ -210,7 +206,6 @@ class PresencePublisher(object):
 
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
         account = notification.sender.account
-        self.xcap_caps_discovered.add(account.id)
         if account.enabled and account.presence.enabled:
             account.presence_state = self.build_pidf(account)
 
@@ -365,7 +360,7 @@ class PresencePublisher(object):
             elif self.location['country']:
                 service.map = cipid.Map(self.location['country'])
 
-        if (account.id in self.xcap_caps_discovered and account.xcap_manager is not None and
+        if (account.id in account.xcap.discovered and account.xcap_manager is not None and
                 account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
             icon = account.xcap_manager.status_icon
             service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
