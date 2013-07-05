@@ -358,7 +358,7 @@ class SessionControllersManager(object):
 
     @run_in_gui_thread
     def _NH_BlinkSessionDidEnd(self, session_controller, data):
-        if session_controller.session.direction == "incoming":
+        if session_controller.session is not None and session_controller.session.direction == "incoming":
             if session_controller.accounting_for_answering_machine:
                 self.log_incoming_session_missed(session_controller, data)
             else:
