@@ -212,6 +212,7 @@ class PresencePublisher(object):
     def _NH_XCAPManagerDidReloadData(self, notification):
         offline_status = notification.data.offline_status
         status_icon = notification.data.status_icon
+        # TODO: republish icon if it changed -adi
         settings = SIPSimpleSettings()
         save = False
 
