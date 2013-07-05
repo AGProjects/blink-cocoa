@@ -10,6 +10,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSFilenamesPboardType,
                     NSFitPagination,
                     NSLeftMouseUp,
+                    NSModalPanelRunLoopMode,
                     NSOffState,
                     NSOnState,
                     NSPortraitOrientation,
@@ -25,6 +26,7 @@ from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         NSBundle,
                         NSColor,
                         NSDate,
+                        NSDefaultRunLoopMode,
                         NSEvent,
                         NSImage,
                         NSIndexSet,
@@ -143,6 +145,7 @@ class ChatWindowController(NSWindowController):
 
     conferenceFilesView = objc.IBOutlet()
     participantsView = objc.IBOutlet()
+    refresh_drawer_counter = 1
 
     timer = None
 
@@ -192,6 +195,10 @@ class ChatWindowController(NSWindowController):
             ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
             ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
 
+            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshDrawerTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+            
             self.backend = SIPManager()
 
             if self.backend.is_muted():
@@ -1321,8 +1328,16 @@ class ChatWindowController(NSWindowController):
 
             self.toolbar.validateVisibleItems()
 
+    def refreshDrawerTimer_(self, timer):
+        if self.refresh_drawer_counter:
+            self.refresh_drawer_counter = 0
+            self.refreshDrawerIfNecessary()
+
     @run_in_gui_thread
     def refreshDrawer(self):
+        self.refresh_drawer_counter += 1
+
+    def refreshDrawerIfNecessary(self):
         session = self.selectedSessionController()
 
         participants, self.participants = self.participants, []

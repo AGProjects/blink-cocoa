@@ -321,6 +321,7 @@ class ContactWindowController(NSWindowController):
     speech_synthesizer_active = False
     scheduled_conferences = set()
     my_device_is_active = True
+    refresh_contacts_counter = 0
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -407,7 +408,6 @@ class ContactWindowController(NSWindowController):
 
         self.sessionControllersManager = SessionControllersManager()
 
-        self.refreshContactsList()
         self.updateStartSessionButtons()
 
         # never show debug window when application launches
@@ -487,9 +487,13 @@ class ContactWindowController(NSWindowController):
             dot.unlockFocus()
             self.presence_dots[i] = dot
 
-        self.conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSDefaultRunLoopMode)
+        conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(conference_timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(conference_timer, NSDefaultRunLoopMode)
+
+        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshContactsTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
 
         self.loaded = True
 
@@ -1176,9 +1180,8 @@ class ContactWindowController(NSWindowController):
         self.showAudioDrawer()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
-        self.refreshContactsList()
-        self.searchContacts()
-
+        self.refresh_contacts_counter += 1
+        
     def _NH_BlinkSessionChangedState(self, notification):
         self.toggleOnThePhonePresenceActivity()
 
@@ -1604,6 +1607,12 @@ class ContactWindowController(NSWindowController):
         self.model.addGroup()
         self.refreshContactsList()
         self.searchContacts()
+
+    def refreshContactsTimer_(self, timer):
+        if self.refresh_contacts_counter:
+            self.refresh_contacts_counter = 0
+            self.refreshContactsList()
+            self.searchContacts()
 
     def startConferenceTimer_(self, timer):
         for conference in self.scheduled_conferences.copy():

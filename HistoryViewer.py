@@ -12,10 +12,12 @@ from AppKit import (NSAlertDefaultReturn,
                     NSProgressIndicatorSpinningStyle,
                     NSRunAlertPanel,
                     NSTableViewSelectionDidChangeNotification,
+                    NSModalPanelRunLoopMode,
                     NSToolbarPrintItemIdentifier)
 from Foundation import (NSBundle,
                         NSDate,
                         NSDictionary,
+                        NSDefaultRunLoopMode,
                         NSEvent,
                         NSImage,
                         NSIndexSet,
@@ -23,8 +25,10 @@ from Foundation import (NSBundle,
                         NSMutableArray,
                         NSNotificationCenter,
                         NSPrintInfo,
+                        NSRunLoop,
                         NSSortDescriptor,
                         NSTableView,
+                        NSTimer,
                         NSWindowController,
                         NSZeroPoint)
 import objc
@@ -100,6 +104,7 @@ class HistoryViewer(NSWindowController):
     search_media = None
     after_date = None
     before_date = None
+    refresh_contacts_counter = 1
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file-transfer', 5: 'audio-recording', 6: 'availability', 7: 'voicemail', 8: 'missed-call'}
@@ -167,6 +172,11 @@ class HistoryViewer(NSWindowController):
 
     def awakeFromNib(self):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
+
+        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshContactsTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+
         self.contactTable.setDoubleAction_("doubleClick:")
 
     def close_(self, sender):
@@ -672,8 +682,13 @@ class HistoryViewer(NSWindowController):
                 self.refreshContacts()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
-        self.refreshContacts()
-        self.toolbar.validateVisibleItems()
+        self.refresh_contacts_counter += 1
+
+    def refreshContactsTimer_(self, timer):
+        if self.refresh_contacts_counter:
+            self.refresh_contacts_counter = 0
+            self.refreshContacts()
+            self.toolbar.validateVisibleItems()
 
     def _NH_BlinkTableViewSelectionChaged(self, notification):
         self.selectedTableView = notification.sender
