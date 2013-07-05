@@ -57,6 +57,9 @@ import BlinkAppDelegate
 import ContactWindowController
 import growl
 
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+
 # pass control to AppKit
 from PyObjCTools import AppHelper
 AppHelper.runEventLoop()
