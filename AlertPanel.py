@@ -359,20 +359,23 @@ class AlertPanel(NSObject, object):
         frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
         captionT.setFrame_(frame)
 
+        has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
         caller_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri)
         if caller_contact:
             if caller_contact.icon:
                 photoImage.setImage_(caller_contact.icon)
 
-            if not is_update_proposal:
-                if caller_contact.auto_answer and NSApp.delegate().contactsWindowController.my_device_is_active:
+            if not is_update_proposal and caller_contact.auto_answer and NSApp.delegate().contactsWindowController.my_device_is_active:
+                if has_audio_streams:
+                    if not NSApp.delegate().contactsWindowController.has_audio:
+                        BlinkLogger().log_info(u"Auto answer enabled for this contact")
+                        self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
+                else:
                     BlinkLogger().log_info(u"Auto answer enabled for this contact")
                     self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
         fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
         fromT.sizeToFit()
-
-        has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
 
         if has_audio_streams:
             outdev = settings.audio.output_device
