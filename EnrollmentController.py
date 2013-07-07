@@ -9,6 +9,7 @@ from AppKit import (NSApp,
                     NSCancelButton,
                     NSOKButton,
                     NSOnState,
+                    NSOffState,
                     NSRunAlertPanel,
                     NSURL,
                     NSWorkspace)
@@ -36,7 +37,6 @@ from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 
 
-ALLOWED_DOMAINS = []
 
 class EnrollmentController(NSObject):
     implements(IObserver)
@@ -65,6 +65,7 @@ class EnrollmentController(NSObject):
     nextButton = objc.IBOutlet()
     purchaseProLabel = objc.IBOutlet()
     syncWithiCloudCheckbox = objc.IBOutlet()
+    allowed_domains = []
 
 
     def init(self):
@@ -80,6 +81,13 @@ class EnrollmentController(NSObject):
 
             if NSApp.delegate().contactsWindowController.first_run:
                 NotificationCenter().add_observer(self, name='SIPAccountManagerDidAddAccount')
+
+            if NSApp.delegate().applicationName == 'SIP2SIP':
+                self.allowed_domains = ['sip2sip.info']
+                self.syncWithiCloudCheckbox.setHidden_(True)
+                self.syncWithiCloudCheckbox.setState_(NSOffState)
+                self.domainButton.setHidden_(True)
+                self.addressText.cell().setPlaceholderString_('user@sip2sip.info')
 
         return self
 
@@ -139,10 +147,10 @@ class EnrollmentController(NSObject):
                                 "OK", None, None)
                 return False
 
-            if ALLOWED_DOMAINS:
+            if self.allowed_domains:
                 domain = address.split("@")[1]
-                if domain not in ALLOWED_DOMAINS:
-                    NSRunAlertPanel("Sign In to SIP Account", "Invalid domain name chosen. Valid domain names are: %s" % ",".join(ALLOWED_DOMAINS), "OK", None, None)
+                if domain not in self.allowed_domains:
+                    NSRunAlertPanel("Sign In to SIP Account", "Invalid domain name chosen. Valid domain names are: %s" % ",".join(self.allowed_domains), "OK", None, None)
                     return False
 
             if not password:
@@ -200,6 +208,12 @@ class EnrollmentController(NSObject):
             account.auth.password = password
             account.enabled = True
             account.gui.sync_with_icloud = sync_with_icloud
+            if account.id.domain == 'sip2sip.info':
+                account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
+                account.ldap.hostname = "ldap.sipthor.net"
+                account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
+                account.ldap.enabled = True
+
             account.save()
         except ValueError, e:
             NSRunAlertPanel("Sign In to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)

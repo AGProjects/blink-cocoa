@@ -107,6 +107,7 @@ class PreferencesController(NSWindowController, object):
     def showWindow_(self, sender):
         if not self.window():
             NSBundle.loadNibNamed_owner_("PreferencesWindow", self)
+            self.addButton.setEnabled_(SIPManager().validateAddAccountAction())
             self.buttonClicked_(self.advancedToggle)
             self.window().setTitle_(u'Accounts')
 
@@ -179,6 +180,9 @@ class PreferencesController(NSWindowController, object):
                 except StopIteration:
                     pass
             self.sync_with_icloud_checkbox.setHidden_(True)
+        elif NSApp.delegate().applicationName == 'SIP2SIP':
+            self.sync_with_icloud_checkbox.setHidden_(True)
+
         else:
             major, minor = platform.mac_ver()[0].split('.')[0:2]
             self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)

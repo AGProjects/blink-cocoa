@@ -198,7 +198,7 @@ class ChatWindowController(NSWindowController):
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshDrawerTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
-            
+
             self.backend = SIPManager()
 
             if self.backend.is_muted():

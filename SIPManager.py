@@ -84,6 +84,9 @@ class SIPManager(object):
         self._delegate = delegate
 
     def migratePasswordsToKeychain(self):
+        if NSApp.delegate().applicationName == 'SIP2SIP':
+            return
+
         account_manager = AccountManager()
         configuration_manager = ConfigurationManager()
         bonjour_account = BonjourAccount()
@@ -428,6 +431,10 @@ class SIPManager(object):
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
+        if NSApp.delegate().applicationName == 'SIP2SIP':
+            settings.service_provider.about_url = 'http://wiki.sip2sip.info/projects/sip2sip/wiki/DataStoragePolicy'
+            settings.service_provider.help_url  = 'http://wiki.sip2sip.info'
+            settings.service_provider.name = 'SIP2SIP'
         settings.save()
         BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
         BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
@@ -447,16 +454,6 @@ class SIPManager(object):
             if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
                 account.tls.certificate = DefaultValue
                 must_save = True
-
-            if account.id.domain == "sip2sip.info":
-                if account.server.settings_url is None:
-                    account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
-                    must_save = True
-                if not account.ldap.hostname:
-                    account.ldap.hostname = "ldap.sipthor.net"
-                    account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
-                    account.ldap.enabled = True
-                    must_save = True
 
             if must_save:
                 account.save()
@@ -610,6 +607,8 @@ class SIPManager(object):
     def validateAddAccountAction(self):
         if NSApp.delegate().applicationName == 'Blink Lite':
             return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) <= 2
+        elif NSApp.delegate().applicationName == 'SIP2SIP':
+            return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) < 1
         return True
 
 

@@ -987,7 +987,7 @@ class ContactWindowController(NSWindowController):
 
         if changed_blink_contacts:
             BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (len(changed_blink_contacts), len(blink_contacts_set)))
-    
+
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()
@@ -1144,7 +1144,7 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
         settings = SIPSimpleSettings()
-        if settings.service_provider.name:
+        if settings.service_provider.name and NSApp.delegate().applicationName != 'SIP2SIP':
             window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
             self.window().setTitle_(window_title)
         if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
@@ -1181,7 +1181,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkContactsHaveChanged(self, notification):
         self.refresh_contacts_counter += 1
-        
+
     def _NH_BlinkSessionChangedState(self, notification):
         self.toggleOnThePhonePresenceActivity()
 
