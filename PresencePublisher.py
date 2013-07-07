@@ -125,6 +125,7 @@ class PresencePublisher(object):
     def __init__(self, owner):
         self.owner = owner
         BlinkLogger().log_debug('Starting Presence Publisher')
+        NotificationCenter().add_observer(self, name="SIPApplicationWillStart")
         NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
 
     @allocate_autorelease_pool
@@ -133,7 +134,7 @@ class PresencePublisher(object):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def _NH_SIPApplicationDidStart(self, notification):
+    def _NH_SIPApplicationWillStart(self, notification):
         nc = NotificationCenter()
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="SIPAccountDidDiscoverXCAPSupport")
@@ -142,6 +143,7 @@ class PresencePublisher(object):
         nc.add_observer(self, name="XCAPManagerDidReloadData")
         nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
 
+    def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         if settings.presence_state.timestamp is None:
             settings.presence_state.timestamp = ISOTimestamp.now()
@@ -159,9 +161,6 @@ class PresencePublisher(object):
         offline_pidf = self.build_offline_pidf(account)
         offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
         account.xcap_manager.set_offline_status(offline_status)
-        status_icon = self.build_status_icon()
-        icon = Icon(status_icon, 'image/png') if status_icon is not None else None
-        account.xcap_manager.set_status_icon(icon)
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         if self.wakeup_timer is None:
@@ -210,35 +209,30 @@ class PresencePublisher(object):
             account.presence_state = self.build_pidf(account)
 
     def _NH_XCAPManagerDidReloadData(self, notification):
+        account = notification.sender.account
+        settings = SIPSimpleSettings()
+
         offline_status = notification.data.offline_status
         status_icon = notification.data.status_icon
-        # TODO: republish icon if it changed -adi
-        settings = SIPSimpleSettings()
-        save = False
 
-        if offline_status:
-            offline_pidf = offline_status.pidf
-            try:
-                service = next(offline_pidf.services)
-                note = next(iter(service.notes))
-            except StopIteration:
-                settings.presence_state.offline_note = None
-            else:
-                settings.presence_state.offline_note = unicode(note)
-            save = True
-        elif settings.presence_state.offline_note:
-            settings.presence_state.offline_note = None
-            save = True
+        try:
+            offline_note = next(note for service in offline_status.pidf.services for note in service.notes)
+        except (AttributeError, StopIteration):
+            offline_note = None
+
+        settings.presence_state.offline_note = offline_note
+        settings.save()
 
         if status_icon:
-            # TODO: convert icon to PNG before saving it
-            self.owner.saveUserIcon(status_icon.data)
-
-        if save:
-            settings.save()
+            icon_hash = hashlib.sha512(status_icon.data).hexdigest()
+            if not settings.presence_state.icon or settings.presence_state.icon.hash != icon_hash:
+                # TODO: convert icon to PNG before saving it
+                self.owner.saveUserIcon(status_icon.data)
+        else:
+            if settings.presence_state.icon:
+                self.set_status_icon(account)
 
         # Cleanup old base64 encoded icons from payload
-        account = notification.sender.account
         if account.id not in self._cleanedup_accounts:
             self._cleanup_icons(account)
 
@@ -361,8 +355,7 @@ class PresencePublisher(object):
             elif self.location['country']:
                 service.map = cipid.Map(self.location['country'])
 
-        if (account.id in account.xcap.discovered and account.xcap_manager is not None and
-                account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
+        if (account.id and account.xcap.discovered and account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
             icon = account.xcap_manager.status_icon
             service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
 
@@ -470,12 +463,15 @@ class PresencePublisher(object):
                 offline_status = OfflineStatus(offline_pidf) if offline_pidf is not None else None
                 account.xcap_manager.set_offline_status(offline_status)
 
-    def set_status_icon(self):
+    def set_status_icon(self, account=None):
         status_icon = self.build_status_icon()
         icon = Icon(status_icon, 'image/png') if status_icon is not None else None
-        for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
-            if account.xcap_manager is not None:
-                account.xcap_manager.set_status_icon(icon)
+        if account is not None:
+            account.xcap_manager.set_status_icon(icon)
+        else:
+            for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.xcap.enabled and account.xcap.discovered):
+                if account.xcap_manager is not None:
+                    account.xcap_manager.set_status_icon(icon)
 
     @run_in_green_thread
     def get_location(self, accounts):

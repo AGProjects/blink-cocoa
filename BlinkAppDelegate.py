@@ -112,7 +112,6 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
 
-
             def purge_screenshots():
                 screenshots_folder = ApplicationData.get('.tmp_screenshots')
                 if os.path.exists(screenshots_folder):
