@@ -84,6 +84,7 @@ class EnrollmentController(NSObject):
         return self
 
     def dealloc(self):
+        NotificationCenter().discard_observer(self, name='SIPAccountManagerDidAddAccount')
         super(EnrollmentController, self).dealloc()
 
     def runModal(self):

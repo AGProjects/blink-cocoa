@@ -679,8 +679,6 @@ class ContactWindowController(NSWindowController):
 
         self.contactOutline.reloadData()
 
-        self.accountSelectionChanged_(self.accountPopUp)
-
         #selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
         #self.setMainTabView(selected_tab if selected_tab else "contacts")
 
