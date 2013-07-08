@@ -216,6 +216,7 @@ class AudioController(MediaStream):
     def dealloc(self):
         self.notification_center = None
         self.sessionController = None
+        self.stream = None
         if self.timer is not None and self.timer.isValid():
             self.timer.invalidate()
         self.timer = None
