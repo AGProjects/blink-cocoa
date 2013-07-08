@@ -304,6 +304,7 @@ class ScreenSharingController(MediaStream):
         self.stream = None
         self.sessionController = None
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+        BlinkLogger().log_debug(u"Dealloc %s" % self)
         super(ScreenSharingController, self).dealloc()
 
 class ScreenSharingViewerController(ScreenSharingController):

@@ -1395,6 +1395,7 @@ class ChatController(MediaStream):
         self.history = None
         self.backend = None
 
+        BlinkLogger().log_debug(u"Dealloc %s" % self)
         super(ChatController, self).dealloc()
 
 

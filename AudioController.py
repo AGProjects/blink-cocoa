@@ -223,6 +223,7 @@ class AudioController(MediaStream):
         self.hangup_reason = None
         self.view.removeFromSuperview()
         self.view.release()
+        BlinkLogger().log_debug(u"Dealloc %s" % self)
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
