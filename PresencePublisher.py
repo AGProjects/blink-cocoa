@@ -355,7 +355,7 @@ class PresencePublisher(object):
             elif self.location['country']:
                 service.map = cipid.Map(self.location['country'])
 
-        if (account.id and account.xcap.discovered and account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
+        if (account.xcap.discovered and account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
             icon = account.xcap_manager.status_icon
             service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
 
