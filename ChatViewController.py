@@ -4,7 +4,8 @@
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
            'MSG_STATE_SENDING', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED']
 
-from AppKit import (NSCommandKeyMask,
+from AppKit import (NSApp,
+                    NSCommandKeyMask,
                     NSDragOperationNone,
                     NSDragOperationCopy,
                     NSFilenamesPboardType,
@@ -235,6 +236,11 @@ class ChatViewController(NSObject):
             self.inputText.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
             self.inputText.setOwner(self)
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "textDidChange:", NSTextDidChangeNotification, self.inputText)
+        session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.delegate.sessionController.remoteSIPAddress)
+        if session_contact and session_contact.contact.disable_smileys:
+            self.expandSmileys = False
+            self.toggleSmileys(False)
+
         self.messageQueue = []
 
     def setContentFile_(self, path):

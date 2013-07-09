@@ -935,6 +935,10 @@ class ChatController(MediaStream):
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
                 sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
                 self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
+                blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.sessionController.remoteSIPAddress)
+                if blink_contact:
+                    blink_contact.contact.disable_smileys = not blink_contact.contact.disable_smileys
+                    blink_contact.contact.save()
 
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 sender.setImage_(NSImage.imageNamed_("editor"))
