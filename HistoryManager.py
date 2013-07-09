@@ -1292,7 +1292,6 @@ class ChatHistoryReplicator(object):
 
         if not success:
             try:
-                error_message = journal['error_message']
                 BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
                 BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
@@ -1329,7 +1328,6 @@ class ChatHistoryReplicator(object):
 
         if not success:
             try:
-                error_message = journal['error_message']
                 BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
                 BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
@@ -1397,7 +1395,7 @@ class ChatHistoryReplicator(object):
                     elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                     if elapsed_hours < 36:
                         try:
-                            log = notify_data[data['remote_uri']]
+                            notify_data[data['remote_uri']]
                         except KeyError:
                             notify_data[data['remote_uri']] = 1
                         else:
