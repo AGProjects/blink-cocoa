@@ -98,6 +98,7 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='SIPSessionGotProposal')
         self.notification_center.add_observer(self, name='SIPSessionGotRejectProposal')
         self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         self.notification_center.add_observer(self, name='MediaStreamDidInitialize')
         self.notification_center.add_observer(self, name='MediaStreamDidEnd')
         self.notification_center.add_observer(self, name='MediaStreamDidFail')
@@ -185,6 +186,12 @@ class SessionControllersManager(object):
     def _NH_MediaStreamDidInitialize(self, stream, data):
         if stream.type == 'audio':
             self.activeAudioStreams.add(stream)
+
+    def _NH_SystemWillSleep(self, sender, data):
+        self.notification_center.remove_observer(self, name='SIPSessionNewIncoming')
+
+    def _NH_SystemDidWakeUpFromSleep(self, sender, data):
+        self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
 
     def _NH_MediaStreamDidEnd(self, stream, data):
         if self.pause_music:
