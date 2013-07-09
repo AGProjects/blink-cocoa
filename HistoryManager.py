@@ -1234,10 +1234,7 @@ class ChatHistoryReplicator(object):
         except KeyError:
             return
 
-        try:
-            entries = self.outgoing_entries[account]
-        except KeyError:
-            self.outgoing_entries[account] = {}
+        self.outgoing_entries.setdefault(account, {})
 
         try:
             acc = AccountManager().get_account(account)
