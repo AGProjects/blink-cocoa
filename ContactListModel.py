@@ -153,7 +153,7 @@ def presence_status_for_contact(contact, uri=None):
             uri = 'sip:%s' % uri
             pidfs = set()
             for value in contact.pidfs_map[uri].values():
-                for p in value['pidf_list']:
+                for p in value:
                     pidfs.add(p)
 
         except KeyError:
@@ -679,7 +679,7 @@ class BlinkPresenceContact(BlinkContact):
         pidfs = set()
         for key in self.pidfs_map.keys():
             for account in self.pidfs_map[key].keys():
-                pidfs_for_account = self.pidfs_map[key][account]['pidf_list']
+                pidfs_for_account = self.pidfs_map[key][account]
                 found = False
                 for pidf in pidfs_for_account:
                     for old_pidf in pidfs:
@@ -801,23 +801,19 @@ class BlinkPresenceContact(BlinkContact):
             self.old_resource_state = resource.state
 
             old_pidf_list_for_uri = []
-
-            try:
-                old_pidf_list_for_uri = self.pidfs_map[uri][account]['pidf_list']
-            except KeyError:
-                if resource.pidf_list:
-                    changes = True
-            else:
-                if old_pidf_list_for_uri != resource.pidf_list:
-                    changes = True
-
-
             if uri not in self.pidfs_map.keys():
                 self.pidfs_map[uri] = {}
 
-            self.pidfs_map[uri][account] = {'pidf_list': resource.pidf_list,
-                                            'timestamp': ISOTimestamp.now()
-                                           }
+            try:
+                old_pidf_list_for_uri = self.pidfs_map[uri][account]
+            except KeyError:
+                if resource.pidf_list:
+                    self.pidfs_map[uri][account] = resource.pidf_list
+                    changes = True
+            else:
+                if old_pidf_list_for_uri != resource.pidf_list:
+                    self.pidfs_map[uri][account] = resource.pidf_list
+                    changes = True
 
         if full_state:
             # purge old uris
