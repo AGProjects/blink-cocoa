@@ -689,6 +689,21 @@ class BlinkPresenceContact(BlinkContact):
                         pidfs.add(pidf)
         return pidfs
 
+    def account_has_pidfs_for_uris(self, account, uris):
+        has_pidfs = False
+        for key in self.pidfs_map.keys():
+            if key not in uris:
+                continue
+
+            try:
+                pidfs_for_account = self.pidfs_map[key][account]
+            except KeyError:
+                pass
+            else:
+                has_pidfs = True
+
+        return has_pidfs
+
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
@@ -1022,21 +1037,7 @@ class BlinkPresenceContact(BlinkContact):
                                 pass
                             else:
                                 log_line = u"Availability of device %s of %s (%s) is %s" % (device_text, self.name, uri_text, device_wining_status)
-                                account = AccountManager().default_account
                                 BlinkLogger().log_debug(log_line)
-                                message= '<h3>Availability Information</h3>'
-                                message += '<p>%s' % log_line
-                                media_type = 'availability'
-                                local_uri = str(account)
-                                remote_uri = sip_prefix_pattern.sub("", str(urllib.unquote(pidf.entity)))
-                                direction = 'incoming'
-                                status = 'delivered'
-                                cpim_from = remote_uri
-                                cpim_to = local_uri
-                                timestamp = str(ISOTimestamp.now())
-                                id=str(uuid.uuid1())
-
-                                NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
 
             self.presence_state['devices'] = devices
             self.presence_state['urls'] = urls
@@ -1087,7 +1088,26 @@ class BlinkPresenceContact(BlinkContact):
                     pass
                 else:
                     if log:
-                        BlinkLogger().log_info('Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status))
+                        log_line = 'Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status)
+                        BlinkLogger().log_info(log_line)
+
+                        message= '<h3>Availability Information</h3>'
+                        message += '<p>%s' % log_line
+                        media_type = 'availability'
+                        try:
+                            all_uris = list(uri.uri for uri in self.uris if '@' in uri.uri)
+                            account = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and self.account_has_pidfs_for_uris(account.id, all_uris)).next()
+                        except StopIteration:
+                            account = AccountManager().default_account
+
+                        local_uri = str(account.id)
+                        remote_uri = self.uri
+                        cpim_from = remote_uri
+                        cpim_to = local_uri
+                        timestamp = str(ISOTimestamp.now())
+                        id=str(uuid.uuid1())
+
+                        NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
 
                     if self.old_presence_status == 'offline' or status == 'offline':
                         ui_notify = False
