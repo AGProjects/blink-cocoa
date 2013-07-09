@@ -573,8 +573,30 @@ class SIPManager(object):
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             if spectrum >=20:
                 BlinkLogger().log_info(u"For best quality please disable 'Use ambient noise reduction' option in System Sound Input Preferences")
-
             settings.save()
+        elif 'audio.sample_rate' in data.modified:
+            settings = SIPSimpleSettings()
+            spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
+            if settings.audio.sample_rate == 48000:
+                settings.audio.enable_aec = False
+                settings.audio.tail_length = 0
+                settings.save()
+            else:
+                settings.audio.enable_aec = True
+                settings.audio.tail_length = 15
+                settings.save()
+        elif 'audio.tail_length' in data.modified:
+            settings = SIPSimpleSettings()
+            if settings.audio.tail_length == 0:
+                settings.audio.enable_aec = False
+                settings.audio.sample_rate == 48000
+                settings.save()
+            else:
+                if settings.audio.sample_rate == 48000:
+                    settings.audio.sample_rate == 32000
+                settings.audio.enable_aec = True
+                settings.save()
+
 
     @run_in_green_thread
     def _NH_SystemWillSleep(self, sender, data):
