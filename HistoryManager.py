@@ -195,7 +195,7 @@ class SessionHistory(object):
             try:
                 self.db.queryAll(query)
                 BlinkLogger().log_info(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
-            except Exception:
+            except Exception, e:
                 BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
@@ -422,7 +422,7 @@ class ChatHistory(object):
             query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
             try:
                 results = list(self.db.queryAll(query))
-            except Exception:
+            except Exception, e:
                 BlinkLogger().log_error(u"Error selecting table %s: %s" % (ChatMessage.sqlmeta.table, e))
             else:
                 for result in results:
@@ -434,7 +434,7 @@ class ChatHistory(object):
                     query = "UPDATE chat_messages SET local_uri=%s, remote_uri=%s, cpim_from=%s, cpim_to=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(cpim_from), SessionHistoryEntry.sqlrepr(cpim_to), SessionHistoryEntry.sqlrepr(id))
                     try:
                         self.db.queryAll(query)
-                    except Exception:
+                    except Exception, e:
                         BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         else:
             next_upgrade_version = previous_version.version
@@ -459,7 +459,7 @@ class ChatHistory(object):
 
             try:
                 self.db.queryAll(query)
-            except Exception:
+            except Exception, e:
                 BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
