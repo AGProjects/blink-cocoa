@@ -833,12 +833,12 @@ class BlinkPresenceContact(BlinkContact):
                         pass
 
         if len(old_pidfs) == len(self.pidfs) and len(old_pidfs) == 0:
-            return False
+            changes = False
 
         if old_pidfs != self.pidfs:
             changes = True
 
-        if not changes and full_state:
+        if not changes:
             BlinkLogger().log_debug('PIDF list for %s has not changed' % self.name)
             return False
 
@@ -1191,7 +1191,9 @@ class BlinkPresenceContact(BlinkContact):
             if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
-                return True
+            else:
+                online_contact._clone_presence_state(other=self)
+            return True
 
         return False
 
@@ -2322,7 +2324,7 @@ class ContactListModel(CustomListModel):
 
     def getPresenceContactsMatchingURI(self, uri, exact_match=False):
         try:
-            return list((blink_contact, group) for group in self.groupsList for blink_contact in group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.matchesURI(uri, exact_match))
+            return list((blink_contact, group) for group in self.groupsList if group != self.online_contacts_group for blink_contact in group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact.presence.subscribe and blink_contact.matchesURI(uri, exact_match))
         except StopIteration:
             return None
 
