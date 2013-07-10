@@ -115,29 +115,29 @@ class ContactCell(NSTextFieldCell):
     @allocate_autorelease_pool
     def drawPresenceIcon(self):
         status = 'offline'
-        if isinstance(self.contact, BlinkMyselfConferenceContact):
+        if type(self.contact) is BlinkMyselfConferenceContact:
             account = self.contact.account
             if account.enabled and account.presence.enabled:
                 settings = SIPSimpleSettings()
                 status = settings.presence_state.status.lower()
-        elif isinstance(self.contact, BlinkConferenceContact):
+        elif type(self.contact) is BlinkConferenceContact:
             blink_contact = self.contact.presence_contact
-            if not isinstance(blink_contact, BlinkPresenceContact):
+            if type(blink_contact) is not BlinkPresenceContact:
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
             status = presence_status_for_contact(blink_contact, self.contact.uri)
-        elif isinstance(self.contact, BlinkHistoryViewerContact):
+        elif type(self.contact) is BlinkHistoryViewerContact:
             blink_contact = self.contact.presence_contact
-            if not isinstance(blink_contact, BlinkPresenceContact):
+            if type(blink_contact) is not BlinkPresenceContact:
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
-            status = presence_status_for_contact(blink_contact, self.contact.uri)
+            status = presence_status_for_contact(blink_contact)
 
-        elif isinstance(self.contact, HistoryBlinkContact):
+        elif type(self.contact) is HistoryBlinkContact:
             blink_contact = self.contact.contact
-            if not isinstance(blink_contact, BlinkPresenceContact):
+            if type(blink_contact) is not BlinkPresenceContact:
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
@@ -147,17 +147,17 @@ class ContactCell(NSTextFieldCell):
             if not blink_contact.contact.presence.subscribe:
                 return
             status = presence_status_for_contact(blink_contact)
-        elif isinstance(self.contact, BonjourBlinkContact):
+        elif type(self.contact) is BonjourBlinkContact:
             account = BonjourAccount()
             if not account.presence.enabled:
                 return
             blink_contact = self.contact
             status = presence_status_for_contact(blink_contact)
-        elif isinstance(self.contact, SystemAddressBookBlinkContact):
+        elif type(self.contact) is SystemAddressBookBlinkContact:
             return
-        elif isinstance(self.contact, LdapSearchResultContact):
+        elif type(self.contact) is LdapSearchResultContact:
             return
-        elif isinstance(self.contact, SearchResultContact):
+        elif type(self.contact) is SearchResultContact:
             return
 
         if not status:
@@ -168,7 +168,7 @@ class ContactCell(NSTextFieldCell):
             pass
 
         has_locations = None
-        if isinstance(self.contact, BlinkPresenceContact):
+        if type(self.contact) is BlinkPresenceContact:
             try:
                 has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             except KeyError:
