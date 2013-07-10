@@ -591,7 +591,7 @@ class AudioController(MediaStream):
     def updateSRTPIcon(self):
         if self.stream and self.stream.srtp_active:
             frame = self.audioStatus.frame()
-            frame.origin.x = NSMaxX(self.srtpIcon.frame())
+            frame.origin.x = NSMaxX(self.srtpIcon.frame()) - 1
             self.audioStatus.setFrame_(frame)
             self.srtpIcon.setHidden_(False)
         else:
