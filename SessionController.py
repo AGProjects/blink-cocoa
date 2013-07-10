@@ -311,7 +311,7 @@ class SessionControllersManager(object):
         settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
 
-        if self.contact:
+        if match_contact:
             if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
