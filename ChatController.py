@@ -188,6 +188,10 @@ class ChatController(MediaStream):
 
         self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
 
+        if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_smileys:
+            self.chatViewController.expandSmileys = False
+            self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
+
         self.chatViewController.setAccount_(self.sessionController.account)
         self.chatViewController.resetRenderedMessages()
 

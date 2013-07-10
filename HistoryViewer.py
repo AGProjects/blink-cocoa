@@ -497,6 +497,14 @@ class HistoryViewer(NSWindowController):
                     self.search_local = None
                     if self.contacts[row].presence_contact is not None:
                         self.search_uris = list(unicode(contact_uri.uri) for contact_uri in self.contacts[row].presence_contact.uris)
+                        self.chatViewController.expandSmileys = not self.contacts[row].presence_contact.contact.disable_smileys
+                        self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
+                        try:
+                            item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'smileys').next()
+                        except StopIteration:
+                            pass
+                        else:
+                            item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
                     else:
                         self.search_uris = (self.contacts[row].uri,)
                 self.refreshDailyEntries()
@@ -602,6 +610,12 @@ class HistoryViewer(NSWindowController):
             self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
+
+            row = self.contactTable.selectedRow()
+            if row and row > 1 and self.contacts[row].presence_contact is not None:
+                self.contacts[row].presence_contact.contact.disable_smileys = not self.contacts[row].presence_contact.contact.disable_smileys
+                self.contacts[row].presence_contact.contact.save()
+
         elif sender.itemIdentifier() == 'delete':
             if self.selectedTableView == self.contactTable:
                 try:
