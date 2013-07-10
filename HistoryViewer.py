@@ -170,6 +170,20 @@ class HistoryViewer(NSWindowController):
 
             self.selectedTableView = self.contactTable
 
+    def setAfterPeriod(self, days):
+        if days <= 2:
+            tag = 1
+        elif days <= 7:
+            tag = 2
+        elif days <= 31:
+            tag = 3
+        else:
+            tag =5
+
+        self.after_date = self.period_array[tag].strftime("%Y-%m-%d")
+        self.before_date = None
+        self.afterDate.selectItemWithTag_(tag)
+
     def awakeFromNib(self):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
 

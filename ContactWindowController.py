@@ -3729,6 +3729,13 @@ class ContactWindowController(NSWindowController):
         self.historyViewer.filterByURIs(sender.representedObject())
 
     @objc.IBAction
+    def viewHistoryForContact_(self, sender):
+        self.showHistoryViewer_(None)
+        object = sender.representedObject()
+        self.historyViewer.setAfterPeriod(object['days'])
+        self.historyViewer.filterByURIs(object['uris'])
+
+    @objc.IBAction
     def recordingClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
@@ -4313,8 +4320,19 @@ class ContactWindowController(NSWindowController):
                 if NSApp.delegate().applicationName != 'Blink Lite':
                     if history_contact not in self.model.bonjour_group.contacts:
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistory:", "")
-                        mitem.setRepresentedObject_((unicode(item.uri),))
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistoryForContact:", "")
+                        group = self.contactOutline.parentForItem_(history_contact)
+                        settings = SIPSimpleSettings()
+                        if isinstance(group, MissedCallsBlinkGroup):
+                            days = settings.contacts.missed_calls_period
+                        elif isinstance(group, IncomingCallsBlinkGroup):
+                            days = settings.contacts.incoming_calls_period
+                        elif isinstance(group, OutgoingCallsBlinkGroup):
+                            days = settings.contacts.outgoing_calls_period
+                        else:
+                            days = 2
+
+                        mitem.setRepresentedObject_({'uris': (unicode(item.uri),), 'days': days})
 
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)

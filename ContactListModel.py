@@ -1727,7 +1727,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
             contact = getFirstContactMatchingURI(target_uri)
-            k = contact if contact is not None else target_uri
+            k = contact if contact is not None else result.remote_uri
 
             if isinstance(self, MissedCallsBlinkGroup):
                 # skip missed calls that happened before any successful call
@@ -1771,7 +1771,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 else:
                     icon = None
                 name = 'Anonymous' if is_anonymous(target_uri) else name
-                blink_contact = HistoryBlinkContact(target_uri, icon=icon , name=name)
+                blink_contact = HistoryBlinkContact(result.remote_uri, icon=icon , name=name)
                 blink_contact.detail = u'%s call %s' % (self.type.capitalize(), format_date(result.start_time))
                 blink_contact.contact = contact
                 contacts.append(blink_contact)
@@ -1782,9 +1782,12 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 blink_contact.session_ids = session_ids[k]
             except KeyError:
                 pass
-            if seen[k] > 1:
-                new_detail = blink_contact.detail + u' and %d other time%s' % (seen[k] - 1, 's' if seen[k] > 2 else '')
-                blink_contact.detail = new_detail
+            try:
+                if seen[k] > 1:
+                    new_detail = blink_contact.detail + u' and %d other time%s' % (seen[k] - 1, 's' if seen[k] > 2 else '')
+                    blink_contact.detail = new_detail
+            except KeyError:
+                pass
             self.contacts.append(blink_contact)
 
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
