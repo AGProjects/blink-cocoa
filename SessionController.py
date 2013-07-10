@@ -87,7 +87,7 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='AudioStreamGotDTMF')
         self.notification_center.add_observer(self, name='BlinkSessionDidEnd')
         self.notification_center.add_observer(self, name='BlinkSessionDidFail')
-        self.notification_center.add_observer(self, name='BlinkWillTerminate')
+        self.notification_center.add_observer(self, name='BlinkShouldTerminate')
         self.notification_center.add_observer(self, name='SIPApplicationDidStart')
         self.notification_center.add_observer(self, name='SIPApplicationWillEnd')
         self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
@@ -137,7 +137,7 @@ class SessionControllersManager(object):
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
             self.redial_uri = fancy_uri
 
-    def _NH_BlinkWillTerminate(self, sender, data):
+    def _NH_BlinkShouldTerminate(self, sender, data):
         self.closeAllSessions()
 
     def _NH_SIPApplicationWillEnd(self, sender, data):

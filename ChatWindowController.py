@@ -147,7 +147,7 @@ class ChatWindowController(NSWindowController):
     participantsView = objc.IBOutlet()
     refresh_drawer_counter = 1
 
-    timer = None
+    contact_timer = None
 
     def init(self):
         self = super(ChatWindowController, self).init()
@@ -170,6 +170,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="AudioStreamDidStartRecordingAudio")
             self.notification_center.add_observer(self, name="AudioStreamDidStopRecordingAudio")
+            self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
             self.notification_center.add_observer(self, name="BlinkAudioStreamChangedHoldState")
             self.notification_center.add_observer(self, name="BlinkColaborativeEditorContentHasChanged")
             self.notification_center.add_observer(self, name="BlinkConferenceGotUpdate")
@@ -188,16 +189,16 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkConferenceContactPresenceHasChanged")
             self.notification_center.add_observer(self, name="SIPAccountGotSelfPresenceState")
             self.notification_center.add_observer(self, name="SIPAccountDidDeactivate")
-            self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
+            self.notification_center.add_observer(self, name="SIPApplicationWillEnd")
 
             ns_nc = NSNotificationCenter.defaultCenter()
             ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
             ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
             ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
 
-            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshDrawerTimer:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+            self.refresh_drawer_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshDrawerTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_drawer_timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_drawer_timer, NSDefaultRunLoopMode)
 
             self.backend = SIPManager()
 
@@ -226,14 +227,14 @@ class ChatWindowController(NSWindowController):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     def addTimer(self):
-        if not self.timer:
-            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+        if not self.contact_timer:
+            self.contact_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateContactTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.contact_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.contact_timer, NSEventTrackingRunLoopMode)
 
-    def removeTimer(self):
-        if self.timer:
-           self.timer.invalidate()
+    def removeContactTimer(self):
+        if self.contact_timer:
+           self.contact_timer.invalidate()
 
     def setOwnIcon(self):
         self.own_icon = None
@@ -248,7 +249,7 @@ class ChatWindowController(NSWindowController):
         frame.origin.y = 14
         self.screenSharingPopUpButton.setFrame_(frame)
 
-    def updateTimer_(self, timer):
+    def updateContactTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
         session = self.selectedSessionController()
         if session:
@@ -443,6 +444,11 @@ class ChatWindowController(NSWindowController):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    def _NH_SIPApplicationWillEnd(self, sender, data):
+        self.refresh_drawer_timer.invalidate()
+        if self.contact_timer:
+            self.contact_timer.invalidate()
+
     def _NH_BonjourAccountPresenceStateDidChange(self, sender, data):
         selectedSession = self.selectedSessionController()
         if selectedSession:
@@ -624,7 +630,7 @@ class ChatWindowController(NSWindowController):
             self.window().performClose_(None)
 
     def windowWillClose_(self, sender):
-        self.removeTimer()
+        self.removeContactTimer()
 
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])

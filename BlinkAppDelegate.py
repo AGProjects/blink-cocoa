@@ -261,7 +261,7 @@ class BlinkAppDelegate(NSObject):
     def applicationShouldTerminate_(self, sender):
         BlinkLogger().log_debug('Application will terminate')
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
-        NotificationCenter().post_notification("BlinkWillTerminate", None)
+        NotificationCenter().post_notification("BlinkShouldTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
         SIPApplication().stop()
 
@@ -288,7 +288,7 @@ class BlinkAppDelegate(NSObject):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
 
     def applicationWillTerminate_(self, notification):
-        pass
+        NotificationCenter().post_notification("BlinkWillTerminate", None)
 
     def computerDidWake_(self, notification):
         self.wake_up_timestamp = int(time.time())

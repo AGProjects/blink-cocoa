@@ -397,7 +397,6 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="VirtualGroupWasDeleted")
         nc.add_observer(self, name="VirtualGroupDidChange")
         nc.add_observer(self, name="SIPSessionLoggedToHistory")
-
         nc.add_observer(self, sender=AccountManager())
 
         ns_nc = NSNotificationCenter.defaultCenter()
@@ -487,13 +486,13 @@ class ContactWindowController(NSWindowController):
             dot.unlockFocus()
             self.presence_dots[i] = dot
 
-        conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(conference_timer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(conference_timer, NSDefaultRunLoopMode)
+        self.conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSDefaultRunLoopMode)
 
-        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshContactsTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+        self.refresh_contacts_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshContactsTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_contacts_timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_contacts_timer, NSDefaultRunLoopMode)
 
         self.loaded = True
 
@@ -1140,6 +1139,10 @@ class ContactWindowController(NSWindowController):
         if self.audioInputSessionForLevelMeter.isRunning():
             self.audioInputSessionForLevelMeter.stopRunning()
             self.audioInputSessionForLevelMeter = None
+
+        self.audioLevelTimer.invalidate()
+        self.conference_timer.invalidate()
+        self.refresh_contacts_timer.invalidate()
 
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
