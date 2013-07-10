@@ -126,7 +126,7 @@ class ContactCell(NSTextFieldCell):
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
-            status = presence_status_for_contact(blink_contact, self.contact.uri)
+            status = presence_status_for_contact(blink_contact)
         elif type(self.contact) is BlinkHistoryViewerContact:
             blink_contact = self.contact.presence_contact
             if type(blink_contact) is not BlinkPresenceContact:
