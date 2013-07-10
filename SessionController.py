@@ -311,7 +311,7 @@ class SessionControllersManager(object):
         settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
 
-        if NSApp.delegate().contactsWindowController.hasContactMatchingURI(session.remote_identity.uri):
+        if self.contact:
             if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
@@ -871,7 +871,7 @@ class SessionController(NSObject):
         self.mustShowDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
-
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
@@ -915,6 +915,7 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.call_id = session._invitation.call_id
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
         self.initInfoPanel()
 
         # used for accounting
@@ -960,6 +961,7 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.initInfoPanel()
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
@@ -1192,6 +1194,7 @@ class SessionController(NSObject):
         self.call_id = None
         self.from_tag = None
         self.to_tag = None
+        self.contact = None
         for item in self.invited_participants:
             item.destroy()
         self.invited_participants = []
@@ -1709,8 +1712,7 @@ class SessionController(NSObject):
                 session.reject_proposal()
                 return
 
-            caller_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri)
-            if caller_contact and caller_contact.auto_answer:
+            if self.contact and self.contact.auto_answer:
                 self.log_info(u"Automatically accepting addition of %s streams for established session from %s" % (",".join(stream_type_list), format_identity_to_string(session.remote_identity)))
                 self.acceptIncomingProposal(streams)
                 return
@@ -1739,7 +1741,7 @@ class SessionController(NSObject):
                         self.acceptIncomingProposal(accepted_streams)
                         return
 
-            if caller_contact:
+            if self.contact:
                 if settings.chat.auto_accept and stream_type_list == ['chat']:
                     self.log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(streams)
