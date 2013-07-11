@@ -569,10 +569,10 @@ class SIPManager(object):
             settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
             settings.audio.sample_rate = 32000 if settings.audio.enable_aec and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
-            BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, spectrum))
+            BlinkLogger().log_info(u"Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum))
             BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
             if spectrum >=20:
-                BlinkLogger().log_info(u"For best quality please disable 'Use ambient noise reduction' option in System Sound Input Preferences")
+                BlinkLogger().log_info(u"For studio quality disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section.")
             settings.save()
         elif 'audio.sample_rate' in data.modified:
             settings = SIPSimpleSettings()

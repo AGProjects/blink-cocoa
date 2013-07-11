@@ -66,6 +66,7 @@ class PreferencesController(NSWindowController, object):
     registration_tls_icon = objc.IBOutlet()
     sync_with_icloud_checkbox = objc.IBOutlet()
     selected_proxy_radio_button = objc.IBOutlet()
+    sectionHelpPlaceholder = objc.IBOutlet()
 
     addButton = objc.IBOutlet()
     removeButton = objc.IBOutlet()
@@ -221,45 +222,56 @@ class PreferencesController(NSWindowController, object):
         if section == 'accounts':
             self.mainTabView.selectTabViewItemWithIdentifier_("accounts")
             self.window().setTitle_(u'Accounts')
+            self.sectionHelpPlaceholder.setHidden_(True)
         elif section == 'audio':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
             self.sectionDescription.setStringValue_(u'Audio Settings')
+            self.sectionHelpPlaceholder.setHidden_(False)
+            self.sectionHelpPlaceholder.setStringValue_(u'Change settings related to audio devices and audio processing')
             self.window().setTitle_(u'Audio')
         elif section == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
             self.sectionDescription.setStringValue_(u'Answering Machine Settings')
             self.window().setTitle_(u'Answering Machine')
+            self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
             self.sectionDescription.setStringValue_(u'Chat Settings')
             self.window().setTitle_(u'Chat')
+            self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'file-transfer':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("file_transfer")
             self.sectionDescription.setStringValue_(u'File Transfer Settings')
             self.window().setTitle_(u'File Transfer')
+            self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'screen-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("screen_sharing_server")
             self.sectionDescription.setStringValue_(u'Screen Sharing Settings')
             self.window().setTitle_(u'Screen Sharing')
+            self.sectionHelpPlaceholder.setHidden_(False)
+            self.sectionHelpPlaceholder.setStringValue_(u'Enable Screen Sharing in System Preferences > Sharing section. Click on the "Computer Settings..." button and check the option "Anyone may request permission to control screen"')
         elif section == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
             self.sectionDescription.setStringValue_(u'Sound Alerts')
             self.window().setTitle_(u'Alerts')
+            self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'contacts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("contacts")
             self.sectionDescription.setStringValue_(u'Contacts Settings')
             self.window().setTitle_(u'Contacts')
+            self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'advanced':
             self.sectionDescription.setStringValue_(u'Advanced Settings')
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.window().setTitle_(u'Advanced')
+            self.sectionHelpPlaceholder.setStringValue_('Do not change these settings unless you understand the consequences')
         elif section == 'help':
             self.window().setTitle_(u'Help')
             NSApp.delegate().contactsWindowController.showHelp('#preferences')
@@ -707,6 +719,16 @@ class PreferencesController(NSWindowController, object):
                 if account == sender:
                     self.selected_proxy_radio_button.selectCellWithTag_(sender.sip.selected_proxy)
 
+        if 'audio.enable_aec' in notification.data.modified:
+            settings = SIPSimpleSettings()
+            settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
+            settings.audio.sample_rate = 32000 if settings.audio.enable_aec and settings.audio.sample_rate not in ('16000', '32000') else 48000
+            spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
+            help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum. " % (settings.audio.sample_rate/1000, spectrum)
+            if spectrum >=20:
+                help_line += "For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
+            self.sectionHelpPlaceholder.setStringValue_(help_line)
+
         self.updateRegistrationStatus()
 
     def _NH_AudioDevicesDidChange(self, notification):
@@ -748,7 +770,7 @@ class PreferencesController(NSWindowController, object):
                 cell.setImage_(None)
                 cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration disabled'), NSAccessibilityTitleAttribute)
 
-    def diplay_outbound_proxy_radio_if_needed(self, account):
+    def display_outbound_proxy_radio_if_needed(self, account):
         tab = self.advancedTabView.selectedTabViewItem()
         if account is not BonjourAccount():
             self.selected_proxy_radio_button.setHidden_(False if tab.identifier() == 'sip' and self.advancedToggle.state() == NSOnState else True)
@@ -768,7 +790,7 @@ class PreferencesController(NSWindowController, object):
             if account is not BonjourAccount():
                 userdef.setInteger_forKey_(section, "SelectedAdvancedSection")
                 if tabView == self.advancedTabView:
-                    self.diplay_outbound_proxy_radio_if_needed(account)
+                    self.display_outbound_proxy_radio_if_needed(account)
             else:
                 userdef.setInteger_forKey_(section, "SelectedAdvancedBonjourSection")
 
@@ -798,7 +820,7 @@ class PreferencesController(NSWindowController, object):
                 self.addressText.setHidden_(False)
                 sv.viewWithTag_(20).setHidden_(False)
                 sv.viewWithTag_(21).setHidden_(False)
-            self.diplay_outbound_proxy_radio_if_needed(account)
+            self.display_outbound_proxy_radio_if_needed(account)
 
         else:
             self.addressText.setStringValue_("Please select an account")
@@ -882,7 +904,7 @@ class PreferencesController(NSWindowController, object):
                 self.advancedTabView.setHidden_(True)
             account_info = self.selectedAccount()
             if account_info:
-                self.diplay_outbound_proxy_radio_if_needed(account_info.account)
+                self.display_outbound_proxy_radio_if_needed(account_info.account)
         elif sender == self.addButton:
             self.addAccount()
         elif sender == self.removeButton:
