@@ -2321,7 +2321,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def groupButtonClicked_(self, sender):
         # IM button
-        point = sender.convertPointToBase_(NSZeroPoint)
+        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                                                                                                                   NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                                                                                                                   sender.window().graphicsContext(), 0, 1, 0)
@@ -2353,9 +2353,7 @@ class ContactWindowController(NSWindowController):
                     media_type = "audio"
             elif sender.selectedSegment() == 1:
                 # IM button
-                point = sender.convertPointToBase_(NSZeroPoint)
-                point.x -= sender.widthForSegment_(0)
-                point.y -= 2 *  NSHeight(sender.frame())
+                point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                 sender.window().graphicsContext(), 0, 1, 0)
@@ -2363,9 +2361,7 @@ class ContactWindowController(NSWindowController):
                 return
             elif sender.selectedSegment() == 2:
                 # DS button
-                point = sender.convertPointToBase_(NSZeroPoint)
-                #point.x += sender.widthForSegment_(0) + sender.widthForSegment_(1)
-                point.y -= 2 * NSHeight(sender.frame())
+                point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                 sender.window().graphicsContext(), 0, 1, 0)
