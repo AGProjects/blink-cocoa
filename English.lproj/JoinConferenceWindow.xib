@@ -57,8 +57,8 @@
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
-				<string key="NSWindowContentMaxSize">{511, 391}</string>
-				<string key="NSWindowContentMinSize">{511, 391}</string>
+				<string key="NSWindowContentMaxSize">{511, 424}</string>
+				<string key="NSWindowContentMinSize">{511, 424}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -258,6 +258,7 @@
 							<string key="NSFrame">{{400, 15}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="184305114">
 								<int key="NSCellFlags">67108864</int>
@@ -303,7 +304,7 @@
 							<string key="NSFrame">{{194, 88}, {63, 18}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="978401457"/>
+							<reference key="NSNextKeyView" ref="378546027"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="953486802">
 								<int key="NSCellFlags">-2080374784</int>
@@ -472,7 +473,7 @@
 									<string key="NSFrame">{{224, 17}, {15, 102}}</string>
 									<reference key="NSSuperview" ref="299104774"/>
 									<reference key="NSWindow"/>
-									<reference key="NSNextKeyView" ref="378546027"/>
+									<reference key="NSNextKeyView" ref="192413560"/>
 									<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 									<reference key="NSTarget" ref="299104774"/>
 									<string key="NSAction">_doScroller:</string>
@@ -711,7 +712,7 @@
 							<string key="NSFrame">{{133, 61}, {360, 18}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="192413560"/>
+							<reference key="NSNextKeyView" ref="978401457"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="766808218">
@@ -739,8 +740,8 @@
 					<reference key="NSNextKeyView" ref="437378405"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
-				<string key="NSMinSize">{511, 413}</string>
-				<string key="NSMaxSize">{511, 413}</string>
+				<string key="NSMinSize">{511, 446}</string>
+				<string key="NSMaxSize">{511, 446}</string>
 				<string key="NSFrameAutosaveName">startConferenceWindow</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
