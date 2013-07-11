@@ -322,6 +322,7 @@ class ContactWindowController(NSWindowController):
     scheduled_conferences = set()
     my_device_is_active = True
     refresh_contacts_counter = 0
+    sync_presence_at_start = False
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -2660,11 +2661,17 @@ class ContactWindowController(NSWindowController):
             except IndexError:
                 note = ''
 
+            change = False
+            must_publish = False
+
             try:
                 last_published_timestamp = self.presencePublisher.last_service_timestamp[notification.sender.id]
             except KeyError:
                 if self.my_device_is_active:
-                    BlinkLogger().log_info('Another device of mine became active')
+                    if not self.sync_presence_at_start:
+                        BlinkLogger().log_info('Another device of mine is active')
+                    else:
+                        BlinkLogger().log_info('Another device of mine became active')
                 self.my_device_is_active = False
                 return
             else:
@@ -2674,6 +2681,12 @@ class ContactWindowController(NSWindowController):
                     self.my_device_is_active = True
                     return
                 else:
+                    if not self.sync_presence_at_start:
+                        settings.presence_state.timestamp = ISOTimestamp.now()
+                        self.sync_presence_at_start = True
+                        must_publish = True
+                        change = True
+
                     if self.my_device_is_active:
                         BlinkLogger().log_info('Another device of mine became active')
                     self.my_device_is_active = False
@@ -2683,7 +2696,6 @@ class ContactWindowController(NSWindowController):
             except StopIteration:
                 return
 
-            change = False
             if note != settings.presence_state.note:
                 self.presenceNoteText.setStringValue_(note)
                 settings.presence_state.note = note
@@ -2721,6 +2733,9 @@ class ContactWindowController(NSWindowController):
                 history_object = dict(selected_presence_activity)
                 history_object['note'] = note
                 self.savePresenceActivityToHistory(history_object)
+
+            if must_publish:
+                self.presencePublisher.publish()
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
