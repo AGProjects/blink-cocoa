@@ -22,7 +22,7 @@ from zope.interface import implements
 
 from ContactListModel import presence_status_for_contact
 import WorldMapView
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import allocate_autorelease_pool, run_in_gui_thread, sip_prefix_pattern
 
 
 SPLITTER_HEIGHT = 300
