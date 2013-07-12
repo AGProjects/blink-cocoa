@@ -566,6 +566,7 @@ class AddParticipantsWindowController(NSObject):
     participant = objc.IBOutlet()
     participantsTable = objc.IBOutlet()
     target = objc.IBOutlet()
+    startWhenParticipantsAvailable = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()

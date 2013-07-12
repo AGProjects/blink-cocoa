@@ -602,6 +602,8 @@ class BlinkMyselfConferenceContact(BlinkContact):
 
         super(BlinkMyselfConferenceContact, self).__init__(uri, name=name, icon=own_icon)
         self.active_media = []
+        self.screensharing_url = None
+        self.presence_note = None
 
 
 class BlinkPendingWatcher(BlinkContact):
