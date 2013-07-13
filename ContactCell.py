@@ -63,13 +63,17 @@ class ContactCell(NSTextFieldCell):
         self.frame = frame
         self.view = view
 
-        icon = self.contact.avatar.icon
-        self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
+        try:
+            icon = self.contact.avatar.icon
+            self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
 
-        self.drawActiveMedia()
-        self.drawFirstLine()
-        self.drawSecondLine()
-        self.drawPresenceIcon()
+            self.drawActiveMedia()
+            self.drawFirstLine()
+            self.drawSecondLine()
+            self.drawPresenceIcon()
+        except Exception:
+            pass
+
 
     @allocate_autorelease_pool
     def drawFirstLine(self):
