@@ -254,9 +254,9 @@ class BlinkAppDelegate(NSObject):
 
 
     def killSelfAfterTimeout_(self, arg):
-        # wait 4 seconds then kill self
+        # wait 8 seconds then kill self
         import time
-        time.sleep(4)
+        time.sleep(8)
         import os
         import signal
         BlinkLogger().log_info(u"Forcing termination of apparently hanged Blink process")
