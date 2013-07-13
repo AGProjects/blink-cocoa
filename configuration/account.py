@@ -77,6 +77,7 @@ class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
     use_srtp_without_tls = Setting(type=bool, default=True)
     hangup_on_timeout = Setting(type=bool, default=True)
+    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
 
 
 class BonjourRTPSettingsExtension(RTPSettings):
@@ -93,9 +94,9 @@ class SIPSettingsExtension(SIPSettings):
     always_use_my_proxy = Setting(type=bool, default=True)
     register = Setting(type=bool, default=True)
     do_not_disturb_code = Setting(type=NonNegativeInteger, default=486, nillable=False)
-    register_interval = Setting(type=NonNegativeInteger, default=300)
-    subscribe_interval = Setting(type=NonNegativeInteger, default=300)
-    publish_interval = Setting(type=NonNegativeInteger, default=300)
+    register_interval = Setting(type=NonNegativeInteger, default=600)
+    subscribe_interval = Setting(type=NonNegativeInteger, default=600)
+    publish_interval = Setting(type=NonNegativeInteger, default=600)
 
 
 class ServerSettings(SettingsGroup):
