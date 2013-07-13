@@ -1400,7 +1400,6 @@
 							<string key="NSFrame">{{0, 32}, {274, 350}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="977201501"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="954578565">
 									<string key="NSIdentifier">contacts</string>
@@ -2281,7 +2280,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="NSFrame">{{232, 6}, {29, 25}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="722602892">
 								<int key="NSCellFlags">67108864</int>
@@ -2350,7 +2348,6 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="NSFrame">{{221, 0}, {28, 25}}</string>
 						<reference key="NSSuperview" ref="396422209"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="336037291">
 							<int key="NSCellFlags">67108864</int>
@@ -2473,7 +2470,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 												<string key="NSFrameSize">{234, 16}</string>
 												<reference key="NSSuperview" ref="854858918"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="455551467"/>
+												<reference key="NSNextKeyView" ref="60000382"/>
 												<string key="NSClassName">ListView</string>
 											</object>
 										</array>
@@ -2516,7 +2513,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="NSFrameSize">{255, 356}</string>
 								<reference key="NSSuperview" ref="912902537"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="60000382"/>
+								<reference key="NSNextKeyView" ref="854858918"/>
 								<int key="NSsFlags">133650</int>
 								<reference key="NSVScroller" ref="455551467"/>
 								<reference key="NSHScroller" ref="60000382"/>
@@ -2539,7 +2536,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 												<string key="NSFrameSize">{253, 36}</string>
 												<reference key="NSSuperview" ref="56636289"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="838722735"/>
+												<reference key="NSNextKeyView" ref="910683784"/>
 												<bool key="NSEnabled">YES</bool>
 												<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 												<bool key="NSControlAllowsExpansionToolTips">YES</bool>
@@ -2656,7 +2653,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 								<string key="NSFrame">{{0, 357}, {255, 0}}</string>
 								<reference key="NSSuperview" ref="912902537"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="910683784"/>
+								<reference key="NSNextKeyView" ref="56636289"/>
 								<int key="NSsFlags">133714</int>
 								<reference key="NSVScroller" ref="435476791"/>
 								<reference key="NSHScroller" ref="910683784"/>
@@ -4793,6 +4790,14 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<reference key="destination" ref="31572174"/>
 					</object>
 					<int key="connectionID">1867</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">checkForUpdates:</string>
+						<reference key="source" ref="900429702"/>
+						<reference key="destination" ref="134419964"/>
+					</object>
+					<int key="connectionID">1868</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBAccessibilityConnection" key="connection">
@@ -7685,7 +7690,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">1867</int>
+			<int key="maxID">1868</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -7815,6 +7820,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="backToContacts:">id</string>
 						<string key="backupContacts:">id</string>
 						<string key="blockContact:">id</string>
+						<string key="checkForUpdates:">id</string>
 						<string key="clearSearchField:">id</string>
 						<string key="close:">id</string>
 						<string key="conferenceClicked:">id</string>
@@ -7829,6 +7835,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="goToBackupContactsFolderClicked:">id</string>
 						<string key="groupButtonClicked:">id</string>
 						<string key="hangupAllClicked:">id</string>
+						<string key="hideGroup:">id</string>
 						<string key="joinConferenceClicked:">id</string>
 						<string key="mergeContacts:">id</string>
 						<string key="moveGroupToIndex:">id</string>
@@ -7884,10 +7891,12 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="toggleAutoAccept:">id</string>
 						<string key="toggleChatPrivacy:">id</string>
 						<string key="toggleDialPadClicked:">id</string>
+						<string key="toggleHistoryGroup:">id</string>
 						<string key="toggleMirrorWindow:">id</string>
 						<string key="toogleExpand:">id</string>
 						<string key="userClickedParticipantMenu:">id</string>
 						<string key="viewHistory:">id</string>
+						<string key="viewHistoryForContact:">id</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="actionInfosByName">
 						<object class="IBActionInfo" key="accountSelectionChanged:">
@@ -7924,6 +7933,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="blockContact:">
 							<string key="name">blockContact:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="checkForUpdates:">
+							<string key="name">checkForUpdates:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="clearSearchField:">
@@ -7980,6 +7993,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="hangupAllClicked:">
 							<string key="name">hangupAllClicked:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="hideGroup:">
+							<string key="name">hideGroup:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="joinConferenceClicked:">
@@ -8202,6 +8219,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 							<string key="name">toggleDialPadClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="toggleHistoryGroup:">
+							<string key="name">toggleHistoryGroup:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="toggleMirrorWindow:">
 							<string key="name">toggleMirrorWindow:</string>
 							<string key="candidateClassName">id</string>
@@ -8216,6 +8237,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBActionInfo" key="viewHistory:">
 							<string key="name">viewHistory:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="viewHistoryForContact:">
+							<string key="name">viewHistoryForContact:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 					</dictionary>
@@ -8652,6 +8677,7 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						<string key="registration_tls_icon">id</string>
 						<string key="removeButton">id</string>
 						<string key="sectionDescription">id</string>
+						<string key="sectionHelpPlaceholder">id</string>
 						<string key="selected_proxy_radio_button">id</string>
 						<string key="sync_with_icloud_checkbox">id</string>
 						<string key="toolbar">id</string>
@@ -8711,6 +8737,10 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="sectionDescription">
 							<string key="name">sectionDescription</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="sectionHelpPlaceholder">
+							<string key="name">sectionHelpPlaceholder</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="selected_proxy_radio_button">

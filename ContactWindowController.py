@@ -1887,6 +1887,10 @@ class ContactWindowController(NSWindowController):
             self.setStatusBarIcon(status)
 
     @objc.IBAction
+    def checkForUpdates_(self, sender):
+        NSApp.delegate().updater.sp.checkForUpdates_(None)
+
+    @objc.IBAction
     def muteClicked_(self, sender):
         if sender != self.muteButton:
             if self.backend.is_muted():
@@ -3018,11 +3022,12 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(False)
         else:
-            self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
             self.blinkMenu.itemWithTag_(8).setHidden_(sylkserver_exists)
             self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
+            if NSApp.delegate().applicationName != 'SIP2SIP':
+                self.blinkMenu.itemWithTag_(2).setHidden_(True)
 
         if settings.service_provider.name:
             if settings.service_provider.about_url or settings.service_provider.help_url:

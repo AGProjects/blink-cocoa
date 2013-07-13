@@ -919,6 +919,10 @@
 		1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FBD0E0212EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
+		1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
+		1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
+		1FBF2B4517915410002E110B /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
+		1FBF2B4E17916768002E110B /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4D17916768002E110B /* Updater.xib */; };
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
@@ -1412,6 +1416,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */,
+				1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */,
 				1F35D0A717894FFF00C6FE38 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F35D0A817894FFF00C6FE38 /* libgnutls-extra.26.dylib in Copy Frameworks */,
 				1F35D0A917894FFF00C6FE38 /* libgnutls.26.dylib in Copy Frameworks */,
@@ -1769,6 +1774,9 @@
 		1FB9B1181095BFF500284E18 /* ring_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_tone.wav; path = sounds/ring_tone.wav; sourceTree = "<group>"; };
 		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
+		1FBF2B3D179151D9002E110B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
+		1FBF2B4417915410002E110B /* Updater.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Updater.py; sourceTree = "<group>"; };
+		1FBF2B4D17916768002E110B /* Updater.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Updater.xib; sourceTree = "<group>"; };
 		1FC66DE7139E17D600D03D71 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
@@ -1987,6 +1995,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */,
 				1F35D06917894FFF00C6FE38 /* libpython2.7.dylib in Frameworks */,
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
@@ -2119,6 +2128,7 @@
 		1F2271F012B551AC0010A8B2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1FBF2B3D179151D9002E110B /* Sparkle.framework */,
 				DE4E6F0F174F9C0900E1D5F9 /* Python.framework */,
 				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
 				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
@@ -2617,6 +2627,8 @@
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
+				1FBF2B4D17916768002E110B /* Updater.xib */,
+				1FBF2B4417915410002E110B /* Updater.py */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
 				2B2400FE1018AB9400079580 /* util.py */,
@@ -3293,6 +3305,8 @@
 				1F35D06217894FFF00C6FE38 /* MergeContacts.xib in Resources */,
 				1F35D06317894FFF00C6FE38 /* MergeContactController.py in Resources */,
 				1F35D06417894FFF00C6FE38 /* hangup_16.png in Resources */,
+				1FBF2B4517915410002E110B /* Updater.py in Resources */,
+				1FBF2B4E17916768002E110B /* Updater.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4203,6 +4217,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/sip2sip.dst;
@@ -4229,6 +4244,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
+				PROVISIONING_PROFILE = "6F8C9F49-F54A-496E-816A-5D956A923B6A";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4240,6 +4256,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DSTROOT = /tmp/sip2sip.dst;
@@ -4265,6 +4282,7 @@
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
+				PROVISIONING_PROFILE = "6F8C9F49-F54A-496E-816A-5D956A923B6A";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;

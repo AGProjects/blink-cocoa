@@ -120,6 +120,10 @@ class BlinkAppDelegate(NSObject):
                     except EnvironmentError:
                         pass
 
+            if self.applicationName == 'SIP2SIP':
+                from Updater import Updater
+                self.updater = Updater()
+
             call_in_thread('file-io', purge_screenshots)
 
         return self
@@ -317,13 +321,11 @@ class BlinkAppDelegate(NSObject):
             vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
 
             if self.applicationName == 'Blink Pro':
-                target = "Pro"
+                self.aboutVersion.setStringValue_("Version Pro %s build %s\n%s" % (version, build, vdate))
             elif self.applicationName == 'Blink Lite':
-                target = "Lite"
+                self.aboutVersion.setStringValue_("Version Lite %s build %s\n%s" % (version, build, vdate))
             else:
-                target = ''
-
-            self.aboutVersion.setStringValue_("Version %s %s build %s\n%s" % (target, version, build, vdate))
+                self.aboutVersion.setStringValue_("Version %s\n%s" % (version, vdate))
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 

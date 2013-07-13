@@ -1,0 +1,19 @@
+
+SIP2SIP
+-------
+
+This is a special release of Blink SIP client designed for SIP2SIP.info
+service.  It may be used only in combination with a SIP account from
+http://SIP2SIP.info.
+
+Copyright (c) 2013 AG Projects
+http://ag-projects.com
+
+Homepage: http://sip2sip.info
+
+
+License
+-------
+
+See LICENSE file.
+
