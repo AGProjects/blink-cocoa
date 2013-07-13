@@ -818,7 +818,7 @@ class AudioController(MediaStream):
                 text += 'Latency %ss' % latency
                 send_qos_notify = True
                 qos_data.latency = '%ss' % latency
-            elif rtt > 100:
+            elif rtt > 200:
                 text += 'Latency %dms' % rtt
                 send_qos_notify = True
                 qos_data.latency = '%sms' % rtt
