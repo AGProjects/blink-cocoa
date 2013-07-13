@@ -90,6 +90,7 @@ class BlinkAppDelegate(NSObject):
     missedChats = 0
     urisToOpen = []
     wait_for_enrollment = False
+    updater = None
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -120,8 +121,11 @@ class BlinkAppDelegate(NSObject):
                     except EnvironmentError:
                         pass
 
-            if self.applicationName == 'SIP2SIP':
+            try:
                 from Updater import Updater
+            except ImportError:
+                pass
+            else:
                 self.updater = Updater()
 
             call_in_thread('file-io', purge_screenshots)
@@ -327,6 +331,7 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.aboutVersion.setStringValue_("Version %s\n%s" % (version, vdate))
 
+        self.aboutSlogan.setStringValue_('Special edition of Blink SIP Client for SIP2SIP')
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
     def normalizeExternalURL(self, url):

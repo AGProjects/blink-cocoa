@@ -101,7 +101,7 @@ from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
 from zope.interface import implements
 
-#from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
+from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
 
 import ContactOutlineView
 import ListView
@@ -778,6 +778,8 @@ class ContactWindowController(NSWindowController):
     def showChangelog_(self, sender):
         if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
+        elif NSApp.delegate().applicationName == 'SIP2SIP':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-sip2sip.phtml"))
         else:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
 
@@ -1148,9 +1150,12 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
         settings = SIPSimpleSettings()
-        if settings.service_provider.name and NSApp.delegate().applicationName != 'SIP2SIP':
-            window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
-            self.window().setTitle_(window_title)
+        if NSApp.delegate().applicationName == 'SIP2SIP':
+            self.window().setTitle_('SIP2SIP Beta Release')
+        else:
+            if settings.service_provider.name:
+                window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
+                self.window().setTitle_(window_title)
         if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
             path = settings.presence_state.icon.path
         else:
@@ -3012,22 +3017,26 @@ class ContactWindowController(NSWindowController):
         self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationNamePrint)
         self.blinkMenu.itemWithTag_(10).setTitle_('Hide %s' % NSApp.delegate().applicationNamePrint)
         self.blinkMenu.itemWithTag_(11).setTitle_('Quit %s' % NSApp.delegate().applicationNamePrint)
-        #find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
-        #sylkserver_exists = find_sylkserver[2] is not None
+        find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
+        sylkserver_exists = find_sylkserver[2] is not None
         sylkserver_exists = True
 
+        self.blinkMenu.itemWithTag_(2).setHidden_(bool(NSApp.delegate().updater is None))
         if NSApp.delegate().applicationName == 'Blink Lite':
-            self.blinkMenu.itemWithTag_(2).setHidden_(True)
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(False)
-            self.blinkMenu.itemWithTag_(8).setHidden_(False)
+            self.blinkMenu.itemWithTag_(8).setHidden_(True)
+            self.blinkMenu.itemWithTag_(9).setHidden_(True)
+        elif NSApp.delegate().applicationName == 'SIP2SIP':
+            self.blinkMenu.itemWithTag_(3).setHidden_(True)
+            self.blinkMenu.itemWithTag_(7).setHidden_(False)
+            self.blinkMenu.itemWithTag_(8).setHidden_(sylkserver_exists)
+            self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
         else:
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(True)
-            self.blinkMenu.itemWithTag_(8).setHidden_(sylkserver_exists)
-            self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
-            if NSApp.delegate().applicationName != 'SIP2SIP':
-                self.blinkMenu.itemWithTag_(2).setHidden_(True)
+            self.blinkMenu.itemWithTag_(8).setHidden_(True)
+            self.blinkMenu.itemWithTag_(9).setHidden_(True)
 
         if settings.service_provider.name:
             if settings.service_provider.about_url or settings.service_provider.help_url:

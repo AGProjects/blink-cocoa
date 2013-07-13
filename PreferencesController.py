@@ -182,6 +182,12 @@ class PreferencesController(NSWindowController, object):
                     pass
             self.sync_with_icloud_checkbox.setHidden_(True)
         elif NSApp.delegate().applicationName == 'SIP2SIP':
+            for identifier in ('contacts', 'advanced'):
+                try:
+                    item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
+                    self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
+                except StopIteration:
+                    pass
             self.sync_with_icloud_checkbox.setHidden_(True)
 
         else:
@@ -327,6 +333,9 @@ class PreferencesController(NSWindowController, object):
         frame = self.advancedTabView.frame()
         for section in (section for section in sections if section not in DisabledAccountPreferenceSections):
             if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'chat', 'pstn', 'ldap', 'web_alert'):
+                continue
+
+            if NSApp.delegate().applicationName == 'SIP2SIP' and section in ('auth', 'sip', 'xcap', 'ldap', 'nat_traversal', 'web_alert', 'conference', 'message_summary', 'chat', 'sms', 'msrp', 'gui', 'sound'):
                 continue
 
             if section == 'tls':

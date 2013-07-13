@@ -432,7 +432,6 @@ class SIPManager(object):
         settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
         settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
         if NSApp.delegate().applicationName == 'SIP2SIP':
-            settings.service_provider.about_url = 'http://wiki.sip2sip.info/projects/sip2sip/wiki/DataStoragePolicy'
             settings.service_provider.help_url  = 'http://wiki.sip2sip.info'
             settings.service_provider.name = 'SIP2SIP'
         settings.save()
