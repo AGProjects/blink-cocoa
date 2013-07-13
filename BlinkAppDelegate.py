@@ -331,7 +331,9 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.aboutVersion.setStringValue_("Version %s\n%s" % (version, vdate))
 
-        self.aboutSlogan.setStringValue_('Special edition of Blink SIP Client for SIP2SIP')
+        if self.applicationName == 'SIP2SIP':
+            self.aboutSlogan.setStringValue_('Special edition of Blink SIP Client for SIP2SIP')
+
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
     def normalizeExternalURL(self, url):
