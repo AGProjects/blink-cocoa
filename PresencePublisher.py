@@ -118,6 +118,7 @@ class PresencePublisher(object):
     location = None
     last_service_timestamp = {}
     last_logged_status = None
+    first_start_logged = False
 
     # Cleanup old base64 encoded icons
     _cleanedup_accounts = set()
@@ -423,6 +424,10 @@ class PresencePublisher(object):
         activity_object = selected_item.representedObject()
         if activity_object is None:
             return None
+
+        if not self.first_start_logged:
+            BlinkLogger().log_info('My device is now active')
+            self.first_start_logged = True
 
         if self.last_logged_status != activity_object['extended_status']:
             BlinkLogger().log_info(u"My availability changed to %s" % activity_object['extended_status'])
