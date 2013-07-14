@@ -687,6 +687,14 @@ class ContactWindowController(NSWindowController):
         NSNotificationCenter.defaultCenter().removeObserver_(self)
 
     def showWindow_(self, sender):
+        if NSApp.delegate().applicationName == 'SIP2SIP':
+            self.window().setTitle_('SIP2SIP Beta Release')
+        else:
+            settings = SIPSimpleSettings()
+            if settings.service_provider.name:
+                window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
+                self.window().setTitle_(window_title)
+
         super(ContactWindowController, self).showWindow_(sender)
 
     def copyToSearchBar_(self, sender):
@@ -1150,12 +1158,6 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
         settings = SIPSimpleSettings()
-        if NSApp.delegate().applicationName == 'SIP2SIP':
-            self.window().setTitle_('SIP2SIP Beta Release')
-        else:
-            if settings.service_provider.name:
-                window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
-                self.window().setTitle_(window_title)
         if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
             path = settings.presence_state.icon.path
         else:
