@@ -37,7 +37,7 @@ class AudioSettingsExtension(SettingsGroup):
 
 
 class ChatSettingsExtension(SettingsGroup):
-    disable_replication = Setting(type=bool, default=osx_version != '10.6')
+    disable_replication = Setting(type=bool, default=False)
     replication_password = KeychainPasswordSetting(type=str, default='', label='ChatReplication')
 
 
