@@ -679,10 +679,26 @@ class ChatHistory(object):
         return block_on(self._get_messages(msgid, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
 
     @run_in_db_thread
+    def delete_journaled_messages(self, account, journal_ids, after_date):
+        # TODO
+        return
+        journal_id_sql = ""
+        for journal_id in journal_ids:
+             journal_id_sql += '%s,' % ChatMessage.sqlrepr(journal_id)
+             journal_id_sql = journal_id_sql.rstrip(",")
+                 
+        query = "delete from chat_messages where local_uri=%s and journal_id != '' and journal_id not in (%s) and date >= %s" % (ChatMessage.sqlrepr(account), journal_id_sql, ChatMessage.sqlrepr(after_date))
+
+        try:
+            self.db.queryAll(query)
+        except Exception, e:
+            BlinkLogger().log_error(u"Error deleting messages from chat history table: %s" % e)
+
+    @run_in_db_thread
     def delete_messages(self, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None):
-        query = "delete from chat_messages where 1=1"
+        where =  " where 1=1 "
         if local_uri:
-            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+            where += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)
@@ -691,17 +707,21 @@ class ChatHistory(object):
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
             remote_uri_sql = remote_uri_sql.rstrip(",)")
             remote_uri_sql = remote_uri_sql.lstrip("(")
-            query += " and remote_uri in (%s)" % remote_uri_sql
+            where += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
-             query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+             where += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
         if date:
-             query += " and date = %s" % ChatMessage.sqlrepr(date)
+             where += " and date = %s" % ChatMessage.sqlrepr(date)
         if after_date:
-            query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+            where += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
-            query += " and date < %s" % ChatMessage.sqlrepr(before_date)
+            where += " and date < %s" % ChatMessage.sqlrepr(before_date)
         try:
-            return self.db.queryAll(query)
+            query = "select journal_id, local_uri from chat_messages %s and journal_id != ''" % where
+            entries = list(self.db.queryAll(query))
+            NotificationCenter().post_notification('ChatReplicationJournalEntryDeleted', sender=self, data=NotificationData(entries=entries))
+            query = "delete from chat_messages %s" % where
+            self.db.queryAll(query)
         except Exception, e:
             BlinkLogger().log_error(u"Error deleting messages from chat history table: %s" % e)
             return False
@@ -1162,10 +1182,13 @@ class ChatHistoryReplicator(object):
     implements(IObserver)
 
     outgoing_entries = {}
+    for_delete_entries = {}
     incoming_entries = {}
     connections_for_outgoing_replication = {}
     connections_for_incoming_replication = {}
+    connections_for_delete_replication = {}
     last_journal_timestamp = {}
+    replication_server_summary = {}
     disabled_accounts = set()
     paused = False
     debug = False
@@ -1175,6 +1198,7 @@ class ChatHistoryReplicator(object):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name='BlinkWillTerminate')
         notification_center.add_observer(self, name='ChatReplicationJournalEntryAdded')
+        notification_center.add_observer(self, name='ChatReplicationJournalEntryDeleted')
         notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         notification_center.add_observer(self, name='SIPAccountManagerDidStart')
         notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
@@ -1182,6 +1206,12 @@ class ChatHistoryReplicator(object):
         try:
             with open(ApplicationData.get('chat_replication_journal.pickle'), 'r') as f:
                 self.outgoing_entries = cPickle.load(f)
+        except (IOError, cPickle.UnpicklingError):
+            pass
+
+        try:
+            with open(ApplicationData.get('chat_replication_delete_journal.pickle'), 'r') as f:
+                self.for_delete_entries = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
             pass
 
@@ -1194,6 +1224,13 @@ class ChatHistoryReplicator(object):
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(45.0, self, "updateTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
+
+    def save_delete_journal_on_disk(self):
+        storage_path = ApplicationData.get('chat_replication_delete_journal.pickle')
+        try:
+            cPickle.dump(self.for_delete_entries, open(storage_path, "w+"))
+        except (cPickle.PickleError, IOError):
+            pass
 
     def save_journal_on_disk(self):
         storage_path = ApplicationData.get('chat_replication_journal.pickle')
@@ -1216,6 +1253,7 @@ class ChatHistoryReplicator(object):
 
     def _NH_BlinkWillTerminate(self, sender, data):
         self.save_journal_on_disk()
+        self.save_delete_journal_on_disk()
         self.save_journal_timestamp_on_disk()
 
     def _NH_SystemWillSleep(self, sender, data):
@@ -1227,6 +1265,22 @@ class ChatHistoryReplicator(object):
 
     def _NH_SIPAccountManagerDidStart(self, sender, data):
         self.updateTimer_(None)
+
+    def _NH_ChatReplicationJournalEntryDeleted(self, sender, data):
+        for entry in data.entries:
+            journal_id = entry[0]
+            account = entry[1]
+            try:
+                acc = AccountManager().get_account(account)
+            except KeyError:
+                continue
+            else:
+                if acc.chat.disable_replication:
+                    continue
+
+                self.for_delete_entries.setdefault(account, set())
+                self.for_delete_entries[account].add(journal_id)
+                BlinkLogger().log_debug(u"Scheduling deletion of chat journal id %s for account %s" % (journal_id, account))
 
     def _NH_ChatReplicationJournalEntryAdded(self, sender, data):
         try:
@@ -1243,10 +1297,11 @@ class ChatHistoryReplicator(object):
         else:
             if acc.chat.disable_replication:
                 return
+
             try:
                 entry = cjson.encode(data.entry)
             except (TypeError, cjson.EncodeError), e:
-                BlinkLogger().log_debug(u"Failed to json encode replication data for %s: %s" % (account, e))
+                BlinkLogger().log_debug("Failed to json encode replication data for %s: %s" % (account, e))
                 return
 
             replication_password = acc.chat.replication_password
@@ -1335,6 +1390,27 @@ class ChatHistoryReplicator(object):
             return
 
         try:
+            results = journal['summary']
+        except KeyError:
+            pass
+        else:
+            try:
+                first_row = results[0]
+                last_row = results[-1]
+            except IndexError:
+                pass
+            else:
+                self.replication_server_summary[account] = results
+                oldest = datetime.fromtimestamp(int(first_row['timestamp'])).strftime('%Y-%m-%d %H:%M:%S')
+                BlinkLogger().log_info(u"Account %s has %d messages on chat replication server since %s" % (account, len(results), oldest))
+                try:
+                    journal_ids = (result['journal_id'] for result in results)
+                except KeyError:
+                    pass
+                else:
+                    ChatHistory().delete_journaled_messages(str(account), journal_ids, oldest)
+
+        try:
             results = journal['results']
         except KeyError:
             BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
@@ -1382,7 +1458,7 @@ class ChatHistoryReplicator(object):
             try:
                 data = cjson.decode(data)
             except (TypeError, cjson.DecodeError), e:
-                BlinkLogger().log_debug(u"Failed to decode server journal for %s: %s" % (account, e))
+                BlinkLogger().log_info("Failed to decode server journal id %s for %s: %s" % (journal_id, account, e))
                 continue
 
             if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
@@ -1427,37 +1503,68 @@ class ChatHistoryReplicator(object):
     def updateTimer_(self, timer):
         if self.paused:
             return
-
         accounts = (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.enabled and not account.chat.disable_replication and account.server.settings_url and account.id not in self.disabled_accounts)
         for account in accounts:
             try:
                 if self.outgoing_entries[account.id]:
                     connection = None
-                    try:
-                        connection = self.connections_for_outgoing_replication[account.id]['connection']
-                    except KeyError:
-                        pass
-
-                    if not connection:
-                        try:
-                            entries = cjson.encode(self.outgoing_entries[account.id])
-                        except (TypeError, cjson.EncodeError), e:
-                            BlinkLogger().log_debug(u"Failed to encode chat journal entries for %s: %s" % (account, e))
-                        else:
-                            query_string = "action=put_journal_entries&realm=%s" % account.id.domain
-                            url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-                            nsurl = NSURL.URLWithString_(url)
-                            settings = SIPSimpleSettings()
-                            query_string_variables = {'uuid': settings.instance_id, 'data': entries}
-                            query_string = urllib.urlencode(query_string_variables)
-                            data = NSString.stringWithString_(query_string)
-                            request = NSMutableURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
-                            request.setHTTPMethod_("POST")
-                            request.setHTTPBody_(data.dataUsingEncoding_(NSUTF8StringEncoding))
-                            connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
-                            self.connections_for_outgoing_replication[account.id] = {'postData': self.outgoing_entries[account.id], 'responseData': '', 'authRequestCount': 0, 'connection': connection, 'url': url}
             except KeyError:
                 pass
+            else:
+                try:
+                    connection = self.connections_for_outgoing_replication[account.id]['connection']
+                except KeyError:
+                    pass
+
+                if not connection:
+                    try:
+                        entries = cjson.encode(self.outgoing_entries[account.id])
+                    except (TypeError, cjson.EncodeError), e:
+                        BlinkLogger().log_debug("Failed to encode chat journal entries for %s: %s" % (account, e))
+                    else:
+                        query_string = "action=put_journal_entries&realm=%s" % account.id.domain
+                        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+                        nsurl = NSURL.URLWithString_(url)
+                        settings = SIPSimpleSettings()
+                        query_string_variables = {'uuid': settings.instance_id, 'data': entries}
+                        query_string = urllib.urlencode(query_string_variables)
+                        data = NSString.stringWithString_(query_string)
+                        request = NSMutableURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+                        request.setHTTPMethod_("POST")
+                        request.setHTTPBody_(data.dataUsingEncoding_(NSUTF8StringEncoding))
+                        connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
+                        self.connections_for_outgoing_replication[account.id] = {'postData': self.outgoing_entries[account.id], 'responseData': '', 'authRequestCount': 0, 'connection': connection, 'url': url}
+
+            try:
+                if self.for_delete_entries[account.id]:
+                    connection = None
+            except KeyError:
+                pass
+            else:
+                BlinkLogger().log_debug("Removing journal entries for %s from replication server" % account.id)
+                try:
+                    connection = self.connections_for_delete_replication[account.id]['connection']
+                except KeyError:
+                    pass
+
+                if not connection:
+                    try:
+                        entries = cjson.encode(list(self.for_delete_entries[account.id]))
+                    except (TypeError, cjson.EncodeError), e:
+                        BlinkLogger().log_debug("Failed to encode chat journal delete entries for %s: %s" % (account, e))
+                    else:
+                        query_string = "action=delete_journal_entries&realm=%s" % account.id.domain
+                        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+                        nsurl = NSURL.URLWithString_(url)
+                        settings = SIPSimpleSettings()
+                        query_string_variables = {'data': entries}
+                        query_string = urllib.urlencode(query_string_variables)
+                        data = NSString.stringWithString_(query_string)
+                        request = NSMutableURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
+                        request.setHTTPMethod_("POST")
+                        request.setHTTPBody_(data.dataUsingEncoding_(NSUTF8StringEncoding))
+                        connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
+                        self.connections_for_delete_replication[account.id] = {'postData': self.for_delete_entries[account.id], 'responseData': '', 'authRequestCount': 0, 'connection': connection, 'url': url}
 
             connection = None
             try:
@@ -1485,7 +1592,13 @@ class ChatHistoryReplicator(object):
     def startConnectionForIncomingReplication(self, account, after_timestamp):
         settings = SIPSimpleSettings()
         query_string_variables = {'realm': account.id.domain, 'action': 'get_journal_entries', 'except_uuid': settings.instance_id, 'after_timestamp': after_timestamp}
+        try:
+            self.replication_server_summary[account.id]
+        except KeyError:
+            query_string_variables['summary']=1
+
         query_string = "&".join(("%s=%s" % (key, value) for key, value in query_string_variables.items()))
+
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         BlinkLogger().log_debug(u"Retrieving chat history for %s from %s" % (account.id, url))
         nsurl = NSURL.URLWithString_(url)
@@ -1509,6 +1622,13 @@ class ChatHistoryReplicator(object):
         else:
             self.connections_for_incoming_replication[key]['responseData'] = self.connections_for_incoming_replication[key]['responseData'] + str(data)
 
+        try:
+            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+        except StopIteration:
+            pass
+        else:
+            self.connections_for_delete_replication[key]['responseData'] = self.connections_for_delete_replication[key]['responseData'] + str(data)
+
     def connectionDidFinishLoading_(self, connection):
         try:
             key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
@@ -1527,8 +1647,8 @@ class ChatHistoryReplicator(object):
                 self.connections_for_outgoing_replication[account.id]['connection'] = None
                 try:
                     data = cjson.decode(self.connections_for_outgoing_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError):
-                    BlinkLogger().log_debug(u"Failed to parse journal for %s from %s" % (key, self.connections_for_outgoing_replication[key]['url']))
+                except (TypeError, cjson.DecodeError), e:
+                    BlinkLogger().log_info("Failed to parse journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
                 else:
                     self.updateLocalHistoryWithRemoteJournalId(data, key)
 
@@ -1562,11 +1682,57 @@ class ChatHistoryReplicator(object):
             else:
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError):
-                    BlinkLogger().log_debug(u"Failed to parse journal for %s from %s" % (key, self.connections_for_incoming_replication[key]['url']))
+                except (TypeError, cjson.DecodeError), e:
+                    BlinkLogger().log_info("Failed to parse journal for %s from %s: e" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
+
+        try:
+            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+        except StopIteration:
+            pass
+        else:
+            BlinkLogger().log_debug(u"Delete journal entries for %s pushed to %s" % (key, self.connections_for_delete_replication[key]['url']))
+            try:
+                account = AccountManager().get_account(key)
+            except KeyError:
+                try:
+                    del self.connections_for_delete_replication[key]
+                except KeyError:
+                    pass
+            else:
+                self.connections_for_delete_replication[account.id]['connection'] = None
+                try:
+                    data = cjson.decode(self.connections_for_delete_replication[key]['responseData'])
+                except (TypeError, cjson.DecodeError), e:
+                    BlinkLogger().log_info("Failed to parse journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
+                else:
+                    try:
+                        result = data['success']
+                    except KeyError:
+                        BlinkLogger().log_debug(u"Invalid answer from history server of %s for delete journal entries" % account.id)
+                    else:
+                        if not result:
+                            try:
+                                error_message = data['error_message']
+                            except KeyError:
+                                BlinkLogger().log_debug(u"Invalid answer from history server of %s" % account.id)
+                            else:
+                                BlinkLogger().log_debug(u"Delete journal entries failed for account %s: %s" % (account.id, error_message))
+                        else:
+                            BlinkLogger().log_debug(u"Delete journal entries succeeded for account %s" % account.id)
+
+                    try:
+                        for entry in self.connections_for_delete_replication[key]['postData'].copy():
+                            self.for_delete_entries[account.id].discard(entry)
+                    except KeyError:
+                        pass
+
+                    try:
+                        del self.connections_for_delete_replication[key]
+                    except KeyError:
+                        pass
 
     def connection_didFailWithError_(self, connection, error):
         try:
@@ -1595,6 +1761,20 @@ class ChatHistoryReplicator(object):
                 BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], error))
                 self.connections_for_incoming_replication[key]['connection'] = None
                 del self.connections_for_incoming_replication[key]
+
+        try:
+            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+        except StopIteration:
+            return
+        else:
+            try:
+                connection = self.connections_for_delete_replication[key]['connection']
+            except KeyError:
+                pass
+            else:
+                BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], error))
+                self.connections_for_delete_replication[key]['connection'] = None
+                del self.connections_for_delete_replication[key]
 
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
@@ -1635,3 +1815,21 @@ class ChatHistoryReplicator(object):
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
 
+        try:
+            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+        except StopIteration:
+            pass
+        else:
+            try:
+                account = AccountManager().get_account(key)
+            except KeyError:
+                pass
+            else:
+                try:
+                    self.connections_for_delete_replication[key]['authRequestCount'] += 1
+                except KeyError:
+                    self.connections_for_delete_replication[key]['authRequestCount'] = 1
+
+                if self.connections_for_delete_replication[key]['authRequestCount'] < 2:
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
+                    challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)

@@ -2965,7 +2965,6 @@ class ContactListModel(CustomListModel):
             blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
             blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
             self.bonjour_group.not_filtered_contacts.append(blink_contact)
-
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
             same_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host)
             if same_neighbours:
