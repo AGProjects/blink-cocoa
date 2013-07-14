@@ -1506,11 +1506,11 @@ class ChatHistoryReplicator(object):
         accounts = (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.enabled and not account.chat.disable_replication and account.server.settings_url and account.id not in self.disabled_accounts)
         for account in accounts:
             try:
-                if self.outgoing_entries[account.id]:
-                    connection = None
+                outgoing_entries = self.outgoing_entries[account.id]
             except KeyError:
                 pass
             else:
+                connection = None
                 try:
                     connection = self.connections_for_outgoing_replication[account.id]['connection']
                 except KeyError:
@@ -1518,7 +1518,7 @@ class ChatHistoryReplicator(object):
 
                 if not connection:
                     try:
-                        entries = cjson.encode(self.outgoing_entries[account.id])
+                        entries = cjson.encode(outgoing_entries)
                     except (TypeError, cjson.EncodeError), e:
                         BlinkLogger().log_debug("Failed to encode chat journal entries for %s: %s" % (account, e))
                     else:
@@ -1536,11 +1536,11 @@ class ChatHistoryReplicator(object):
                         self.connections_for_outgoing_replication[account.id] = {'postData': self.outgoing_entries[account.id], 'responseData': '', 'authRequestCount': 0, 'connection': connection, 'url': url}
 
             try:
-                if self.for_delete_entries[account.id]:
-                    connection = None
+                delete_entries = self.for_delete_entries[account.id]
             except KeyError:
                 pass
             else:
+                connection = None
                 BlinkLogger().log_debug("Removing journal entries for %s from replication server" % account.id)
                 try:
                     connection = self.connections_for_delete_replication[account.id]['connection']
@@ -1549,7 +1549,7 @@ class ChatHistoryReplicator(object):
 
                 if not connection:
                     try:
-                        entries = cjson.encode(list(self.for_delete_entries[account.id]))
+                        entries = cjson.encode(list(delete_entries))
                     except (TypeError, cjson.EncodeError), e:
                         BlinkLogger().log_debug("Failed to encode chat journal delete entries for %s: %s" % (account, e))
                     else:
