@@ -61,7 +61,6 @@ class SIPManager(object):
         self._app = SIPApplication()
         self._delegate = None
         self._selected_account = None
-        self._version = None
         self.ip_address_monitor = IPAddressMonitor()
         self.bonjour_disabled_on_sleep = False
         self.bonjour_conference_services = BonjourConferenceServices()
@@ -124,7 +123,6 @@ class SIPManager(object):
             configuration_manager.save()
 
     def init(self):
-        self._version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
 
         Account.register_extension(AccountExtension)
         BonjourAccount.register_extension(BonjourAccountExtension)
@@ -422,7 +420,8 @@ class SIPManager(object):
 
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
-        settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, self._version)
+        _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
+        settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, _version)
         BlinkLogger().log_info(u"SIP User Agent: %s" % settings.user_agent)
 
         self.migratePasswordsToKeychain()
