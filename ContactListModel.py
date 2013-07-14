@@ -2943,6 +2943,7 @@ class ContactListModel(CustomListModel):
 
     def _NH_SIPAccountDidDeactivate(self, notification):
         if notification.sender is BonjourAccount():
+            self.bonjour_group.not_filtered_contacts = []
             self.bonjour_group.contacts = []
             self.groupsList.remove(self.bonjour_group)
             self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
