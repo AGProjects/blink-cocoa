@@ -1325,7 +1325,7 @@ class ChatHistoryReplicator(object):
                 pass
 
     def disableReplication(self, account, reason=None):
-        BlinkLogger().log_debug(u"Disabled chat history replication for %s" % account)
+        BlinkLogger().log_debug(u"Disabled chat history replication for %s: %s" % (account, reason))
         self.disabled_accounts.add(account)
 
     def get_last_journal_timestamp(self, account):
@@ -1342,7 +1342,7 @@ class ChatHistoryReplicator(object):
             success = journal['success']
         except KeyError:
             BlinkLogger().log_debug(u"Invalid answer from history server")
-            self.disableReplication(account)
+            self.disableReplication(account, 'Invalid server answer')
             return
 
         if not success:
@@ -1350,7 +1350,9 @@ class ChatHistoryReplicator(object):
                 BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
                 BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
-            self.disableReplication(account)
+                self.disableReplication(account)
+            else:
+                self.disableReplication(account, journal['error_message'])
             return
 
         try:
@@ -1358,7 +1360,7 @@ class ChatHistoryReplicator(object):
         except KeyError:
             if self.debug:
                 BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
-            self.disableReplication(account)
+            self.disableReplication(account, 'No results')
             return
 
         for entry in results:
@@ -1378,7 +1380,7 @@ class ChatHistoryReplicator(object):
             success = journal['success']
         except KeyError:
             BlinkLogger().log_debug(u"Invalid answer from history server of %s" % account)
-            self.disableReplication(account)
+            self.disableReplication(account, 'Invalid answer')
             return
 
         if not success:
@@ -1386,7 +1388,9 @@ class ChatHistoryReplicator(object):
                 BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
                 BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
-            self.disableReplication(account)
+                self.disableReplication(account)
+            else:
+                self.disableReplication(account, journal['error_message'])
             return
 
         try:
@@ -1414,7 +1418,7 @@ class ChatHistoryReplicator(object):
             results = journal['results']
         except KeyError:
             BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
-            self.disableReplication(account)
+            self.disableReplication(account, 'No results')
             return
 
         replication_password = None
@@ -1452,7 +1456,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = decryptor_function(data, b64_decode=True)
                 except Exception, e:
-                    BlinkLogger().log_debug(u"Failed to decrypt replication results for %s: %s" % (account, e))
+                    BlinkLogger().log_debug(u"Failed to decrypt server journal id %s for %s: %s" % (journal_id, account, e))
                     continue
 
             try:
