@@ -321,7 +321,6 @@ class ContactWindowController(NSWindowController):
     speech_synthesizer_active = False
     scheduled_conferences = set()
     my_device_is_active = True
-    refresh_contacts_counter = 0
     sync_presence_at_start = False
 
     def awakeFromNib(self):
@@ -491,10 +490,6 @@ class ContactWindowController(NSWindowController):
         self.conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSDefaultRunLoopMode)
-
-        self.refresh_contacts_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshContactsTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_contacts_timer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_contacts_timer, NSDefaultRunLoopMode)
 
         self.loaded = True
 
@@ -704,7 +699,7 @@ class ContactWindowController(NSWindowController):
     def hideHistoryEntries_(self, sender):
         session_ids = sender.representedObject()
         SessionHistory().hide_entries(session_ids)
-        self.model.reload_history_groups()
+        self.model.reload_history_groups(force_reload=True)
 
     @run_in_green_thread
     def showHiddenEntries_(self, sender):
@@ -715,7 +710,7 @@ class ContactWindowController(NSWindowController):
             SessionHistory().unhide_incoming_entries()
         elif isinstance(group, OutgoingCallsBlinkGroup):
             SessionHistory().unhide_outgoing_entries()
-        self.model.reload_history_groups()
+        self.model.reload_history_groups(force_reload=True)
 
     @objc.IBAction
     def hideGroup_(self, sender):
@@ -892,11 +887,16 @@ class ContactWindowController(NSWindowController):
     def activeAccount(self):
         return self.accountPopUp.selectedItem().representedObject()
 
-    def refreshContactsList(self):
-        self.contactOutline.reloadData()
-        for group in self.model.groupsList:
-            if group.group is not None and group.group.expanded:
-                self.contactOutline.expandItem_expandChildren_(group, False)
+    def refreshContactsList(self, sender=None):
+        if sender is None:
+            sender = self.model
+        if sender is self.model:
+            self.contactOutline.reloadData()
+            for group in self.model.groupsList:
+                if group.group is not None and group.group.expanded:
+                    self.contactOutline.expandItem_expandChildren_(group, False)
+        else:
+            self.contactOutline.reloadItem_reloadChildren_(sender, True)
 
     def getSelectedContacts(self, includeGroups=False):
         contacts = []
@@ -990,11 +990,11 @@ class ContactWindowController(NSWindowController):
                     changed_blink_contacts.append((blink_contact,group))
 
         for blink_contact, group in changed_blink_contacts:
-            self.contactOutline.reloadItem_reloadChildren_(group, True)
+            self.contactOutline.reloadItem_reloadChildren_(blink_contact, False)
             if isinstance(group, AllContactsBlinkGroup):
                 online_group_changed = blink_contact.addToOrRemoveFromOnlineGroup()
                 if online_group_changed:
-                    self.contactOutline.reloadItem_reloadChildren_(self.model.online_contacts_group, True)
+                    self.contactOutline.reloadItem_reloadChildren_(online_group_changed, True)
 
         if changed_blink_contacts:
             BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (len(changed_blink_contacts), len(blink_contacts_set)))
@@ -1181,8 +1181,6 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkShouldTerminate(self, notification):
         NotificationCenter().remove_observer(self, name="BlinkContactsHaveChanged")
-        self.refresh_contacts_counter = 0
-        self.refresh_contacts_timer.invalidate()
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
@@ -1196,7 +1194,8 @@ class ContactWindowController(NSWindowController):
         self.showAudioDrawer()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
-        self.refresh_contacts_counter += 1
+        self.refreshContactsList(notification.sender)
+        self.searchContacts()
 
     def _NH_BlinkSessionChangedState(self, notification):
         self.toggleOnThePhonePresenceActivity()
@@ -1624,12 +1623,6 @@ class ContactWindowController(NSWindowController):
         self.refreshContactsList()
         self.searchContacts()
 
-    def refreshContactsTimer_(self, timer):
-        if self.refresh_contacts_counter:
-            self.refresh_contacts_counter = 0
-            self.refreshContactsList()
-            self.searchContacts()
-
     def startConferenceTimer_(self, timer):
         for conference in self.scheduled_conferences.copy():
             start_now = True
@@ -1846,12 +1839,14 @@ class ContactWindowController(NSWindowController):
             return
         if isinstance(item, BlinkGroup):
             self.model.deleteGroup(item)
+            self.refreshContactsList()
+            self.searchContacts()
         else:
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:
                 self.model.deleteContact(item)
-        self.refreshContactsList()
-        self.searchContacts()
+                self.refreshContactsList()
+                self.searchContacts()
 
 
     @objc.IBAction

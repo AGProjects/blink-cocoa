@@ -496,10 +496,10 @@ class BlinkConferenceContact(BlinkContact):
 
     @allocate_autorelease_pool
     def destroy(self):
-        super(BlinkConferenceContact, self).destroy()
         if self.presence_contact is not None:
             NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
             self.presence_contact = None
+        super(BlinkConferenceContact, self).destroy()
 
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -673,6 +673,7 @@ class BlinkPresenceContact(BlinkContact):
         self.timer = None
         self.application_will_end = False
         NotificationCenter().add_observer(self, name="SIPAccountDidDeactivate")
+        NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().add_observer(self, name="SystemWillSleep")
 
@@ -740,6 +741,7 @@ class BlinkPresenceContact(BlinkContact):
     @allocate_autorelease_pool
     def destroy(self):
         NotificationCenter().remove_observer(self, name="SIPAccountDidDeactivate")
+        NotificationCenter().remove_observer(self, name="CFGSettingsObjectDidChange")
         NotificationCenter().remove_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().remove_observer(self, name="SystemWillSleep")
         self.contact = None
@@ -764,11 +766,20 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = {}
         self.init_presence_state()
 
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        if self.application_will_end:
+            return
+        if isinstance(notification.sender, Account) and 'presence.enabled' in notification.data.modified:
+            if not notification.sender.presence.enabled:
+                self.purge_pidfs_for_account(notification.sender.id)
+
     def _NH_SIPAccountDidDeactivate(self, notification):
         if self.application_will_end:
             return
+        self.purge_pidfs_for_account(notification.sender.id)
 
-        account = notification.sender.id
+    def purge_pidfs_for_account(self, account):
+        changes = False
         for key, value in self.pidfs_map.copy().iteritems():
             for acc in value.keys():
                 if acc == account:
@@ -776,6 +787,8 @@ class BlinkPresenceContact(BlinkContact):
                         del self.pidfs_map[key][account]
                     except KeyError:
                         pass
+                    else:
+                        changes = True
 
         for key, value in self.pidfs_map.copy().iteritems():
             if not value:
@@ -783,8 +796,18 @@ class BlinkPresenceContact(BlinkContact):
                     del self.pidfs_map[key]
                 except KeyError:
                     pass
+                else:
+                    changes = True
 
         self.handle_pidfs()
+        if changes:
+            if type(self) is BlinkOnlineContact:
+                if not self.pidfs_map:
+                    NotificationCenter().post_notification("BlinkOnlineContactMustBeRemoved", sender=self)
+                else:
+                    NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+            else:
+                NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     def handle_presence_resources(self, resources, account, full_state=False, log=False):
         # log should be set only for contacts in all contacs group
@@ -856,8 +879,10 @@ class BlinkPresenceContact(BlinkContact):
             changes = True
 
         if not changes:
-            BlinkLogger().log_debug('PIDF list for %s has not changed' % self.name)
+            BlinkLogger().log_debug('PIDF list for %s has not changed: %d' % (self.name, len(self.pidfs)))
             return False
+        else:
+            BlinkLogger().log_debug('PIDF list for %s: %d' % (self.name, len(self.pidfs)))
 
         self.handle_pidfs(log)
         return True
@@ -1208,16 +1233,17 @@ class BlinkPresenceContact(BlinkContact):
                 online_contact._clone_presence_state(other=self)
                 model.online_contacts_group.contacts.append(online_contact)
                 model.online_contacts_group.sortContacts()
-                return True
+                return model.online_contacts_group
         else:
             if status in (None, "offline"):
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
+                return model.online_contacts_group
             else:
                 online_contact._clone_presence_state(other=self)
-            return True
+                return online_contact
 
-        return False
+        return None
 
     def _get_favorite(self):
         addressbook_manager = AddressbookManager()
@@ -1406,6 +1432,10 @@ class BonjourBlinkContact(BlinkContact):
     def matchesURI(self, uri, exact_match=False):
         candidate = self.split_uri(uri)
         return (self.username, self.domain) == (candidate[0], candidate[1])
+
+    def destroy(self):
+        self.bonjour_neighbour = None
+        super(BonjourBlinkContact, self).destroy()
 
 
 class SearchResultContact(BlinkContact):
@@ -1682,6 +1712,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
     add_contact_allowed = False
     remove_contact_allowed = False
     delete_contact_allowed = False
+    last_results = []
 
     def __init__(self, name):
         super(HistoryBlinkGroup, self).__init__(name)
@@ -1710,16 +1741,20 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         self.refresh_contacts(results)
 
     @run_in_green_thread
-    def load_history(self):
+    def load_history(self, force_reload=False):
         if self.days is None:
             return
         results = self.get_history_entries()
-        self.refresh_contacts(results)
+        if self.last_results != results or force_reload:
+            self.last_results = results
+            self.refresh_contacts(results)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def refresh_contacts(self, results):
-        self.contacts = []
+        for blink_contact in self.contacts:
+            self.contacts.remove(blink_contact)
+            blink_contact.destroy()
         seen = {}
         contacts = []
         settings = SIPSimpleSettings()
@@ -2143,6 +2178,7 @@ class CustomListModel(NSObject):
 
                         if targetGroup.group.id != 'favorites' and sourceGroup.remove_contact_allowed:
                             sourceGroup.group.contacts.remove(sourceContact.contact)
+                            sourceContact.contact.destroy()
                             sourceGroup.group.save()
 
                     row = table.rowForItem_(sourceContact)
@@ -2283,6 +2319,8 @@ class ContactListModel(CustomListModel):
         handler(notification)
 
     def awakeFromNib(self):
+
+        self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         self.nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
         self.nc.add_observer(self, name="BonjourAccountDidRemoveNeighbour")
@@ -2307,7 +2345,6 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
         self.nc.add_observer(self, name="SIPAccountGotPresenceWinfo")
 
-
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "groupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
@@ -2330,7 +2367,7 @@ class ContactListModel(CustomListModel):
         settings = SIPSimpleSettings()
         if settings.contacts.enable_address_book:
             self.addressbook_group.loadAddressBook()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.addressbook_group)
 
     def hasContactMatchingURI(self, uri, exact_match=False):
         return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
@@ -2652,7 +2689,7 @@ class ContactListModel(CustomListModel):
                 self.contactOutline.scrollRowToVisible_(0)
 
             self.pending_watchers_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.pending_watchers_group)
         elif self.pending_watchers_group in self.groupsList:
             self.groupsList.remove(self.pending_watchers_group)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
@@ -2840,17 +2877,17 @@ class ContactListModel(CustomListModel):
         self.contact_backup_timer = None
 
     @run_in_gui_thread
-    def reload_history_groups(self):
+    def reload_history_groups(self, force_reload=False):
         if NSApp.delegate().applicationName != 'Blink Lite':
             settings = SIPSimpleSettings()
         if settings.contacts.enable_missed_calls_group:
-            self.missed_calls_group.load_history()
+            self.missed_calls_group.load_history(force_reload)
 
         if settings.contacts.enable_outgoing_calls_group:
-            self.outgoing_calls_group.load_history()
+            self.outgoing_calls_group.load_history(force_reload)
 
         if settings.contacts.enable_incoming_calls_group:
-            self.incoming_calls_group.load_history()
+            self.incoming_calls_group.load_history(force_reload)
 
     def _NH_AudioCallLoggedToHistory(self, notification):
         self.reload_history_groups()
@@ -2863,7 +2900,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.addressbook_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.addressbook_group)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.groupsList:
                 self.groupsList.remove(self.addressbook_group)
                 self.saveGroupPosition()
@@ -2875,6 +2912,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.incoming_calls_group)
                 self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.incoming_calls_group)
             elif not settings.contacts.enable_incoming_calls_group and self.incoming_calls_group in self.groupsList:
                 self.groupsList.remove(self.incoming_calls_group)
                 self.saveGroupPosition()
@@ -2886,6 +2924,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.outgoing_calls_group)
                 self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.outgoing_calls_group)
             elif not settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group in self.groupsList:
                 self.groupsList.remove(self.outgoing_calls_group)
                 self.saveGroupPosition()
@@ -2896,6 +2935,7 @@ class ContactListModel(CustomListModel):
                 self.missed_calls_group.load_history()
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.missed_calls_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.missed_calls_group)
                 self.saveGroupPosition()
             elif not settings.contacts.enable_missed_calls_group and self.missed_calls_group in self.groupsList:
                 self.groupsList.remove(self.missed_calls_group)
@@ -2907,6 +2947,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.blocked_contacts_group)
                 self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.blocked_contacts_group)
             elif not settings.contacts.enable_blocked_group and self.blocked_contacts_group in self.groupsList:
                 self.groupsList.remove(self.blocked_contacts_group)
                 self.saveGroupPosition()
@@ -2917,6 +2958,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.online_contacts_group)
                 self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.online_contacts_group)
             elif not settings.contacts.enable_online_group and self.online_contacts_group in self.groupsList:
                 self.groupsList.remove(self.online_contacts_group)
                 self.saveGroupPosition()
@@ -2933,8 +2975,8 @@ class ContactListModel(CustomListModel):
             positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None]
             positions.sort()
             self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             self.nc.post_notification("BonjourGroupWasActivated", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
         else:
             try:
                 del self.active_watchers_map[notification.sender.id]
@@ -2943,11 +2985,17 @@ class ContactListModel(CustomListModel):
 
     def _NH_SIPAccountDidDeactivate(self, notification):
         if notification.sender is BonjourAccount():
-            self.bonjour_group.not_filtered_contacts = []
-            self.bonjour_group.contacts = []
+            for blink_contact in  self.bonjour_group.not_filtered_contacts:
+                self.bonjour_group.not_filtered_contacts.remove(blink_contact)
+                blink_contact.destroy()
+
+            for blink_contact in self.bonjour_group.contacts:
+                self.bonjour_group.contacts.remove(blink_contact)
+                blink_contact.destroy()
+
             self.groupsList.remove(self.bonjour_group)
             self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -2981,9 +3029,11 @@ class ContactListModel(CustomListModel):
                     for tcp_neighbour in tcp_neighbours:
                         BlinkLogger().log_debug(u"Bonjour neighbour already has a TLS contact, removing %s %s" % (display_name, uri))
                         self.bonjour_group.contacts.remove(tcp_neighbour)
+                        tcp_neighbour.destroy()
                     for udp_neighbour in udp_neighbours:
                         BlinkLogger().log_debug(u"Bonjour neighbour already has a TLS contact, removing %s %s" % (display_name, uri))
                         self.bonjour_group.contacts.remove(udp_neighbour)
+                        udp_neighbour.destroy()
                 elif uri.transport == 'tcp' and not tls_neighbours:
                     BlinkLogger().log_info(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
@@ -2993,6 +3043,7 @@ class ContactListModel(CustomListModel):
                     for udp_neighbour in udp_neighbours:
                         BlinkLogger().log_debug(u"Bonjour neighbour already has a TCP contact, removing %s %s" % (display_name, uri))
                         self.bonjour_group.contacts.remove(udp_neighbour)
+                        udp_neighbour.destroy()
                 elif uri.transport == 'udp' and not tcp_neighbours and not tls_neighbours:
                     BlinkLogger().log_debug(u"Bonjour UDP neighbour does not exists, adding %s %s" % (display_name, uri))
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
@@ -3007,7 +3058,7 @@ class ContactListModel(CustomListModel):
                 self.bonjour_group.contacts.append(blink_contact)
 
             self.bonjour_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
 
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
@@ -3033,7 +3084,7 @@ class ContactListModel(CustomListModel):
             blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
             blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
             self.bonjour_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=blink_contact)
 
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         name = notification.data.neighbour.name
@@ -3070,7 +3121,17 @@ class ContactListModel(CustomListModel):
                         self.bonjour_group.contacts.append(n)
 
             self.bonjour_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
+
+    def _NH_BlinkOnlineContactMustBeRemoved(self, notification):
+        blink_contact = notification.sender
+        try:
+            self.online_contacts_group.contacts.remove(blink_contact)
+            blink_contact.destroy()
+        except IndexError:
+            pass
+        else:
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.online_contacts_group)
 
     def _NH_AddressbookPolicyWasActivated(self, notification):
         policy = notification.sender
@@ -3080,6 +3141,7 @@ class ContactListModel(CustomListModel):
             policy_contact = BlinkBlockedPresenceContact(policy)
             self.blocked_contacts_group.contacts.append(policy_contact)
             self.blocked_contacts_group.sortContacts()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.blocked_contacts_group)
 
             # remove from pending group
             try:
@@ -3089,7 +3151,6 @@ class ContactListModel(CustomListModel):
             else:
                 self.pending_watchers_group.contacts.remove(gui_watcher)
                 self.renderPendingWatchersGroupIfNecessary()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookPolicyWasDeleted(self, notification):
         policy = notification.sender
@@ -3119,7 +3180,6 @@ class ContactListModel(CustomListModel):
 
             if changes:
                 self.renderPendingWatchersGroupIfNecessary()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
@@ -3127,11 +3187,12 @@ class ContactListModel(CustomListModel):
         blink_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
         self.all_contacts_group.contacts.append(blink_contact)
         self.all_contacts_group.sortContacts()
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self.all_contacts_group)
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
             blink_contact = BlinkPresenceContact(contact)
             self.no_group.contacts.append(blink_contact)
             self.no_group.sortContacts()
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.no_group)
 
         if contact.presence.policy != 'default':
             for address in contact.uris:
@@ -3179,9 +3240,10 @@ class ContactListModel(CustomListModel):
 
                 if icon_attributes.intersection(notification.data.modified):
                     blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=blink_contact)
+
             [g.sortContacts() for g in groups]
 
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         if contact.presence.policy != 'default':
             for address in contact.uris:
