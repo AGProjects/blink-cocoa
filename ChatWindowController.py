@@ -641,10 +641,6 @@ class ChatWindowController(NSWindowController):
             if ret != NSAlertDefaultReturn:
                 return False
 
-        for blink_contact in self.participants:
-            self.participants.remove(blink_contact)
-            blink_contact.destroy()
-
         self.window().close()
         self.closing = True
 
@@ -1350,14 +1346,10 @@ class ChatWindowController(NSWindowController):
     def refreshDrawerIfNecessary(self):
         session = self.selectedSessionController()
 
-        participants = self.participants
+        participants, self.participants = self.participants, []
         for item in set(participants).difference(session.invited_participants if session else []):
             item.destroy()
         del participants
-
-        for blink_contact in self.participants:
-            self.participants.remove(blink_contact)
-            blink_contact.destroy()
 
         self.updateTitle()
 
