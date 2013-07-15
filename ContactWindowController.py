@@ -1181,6 +1181,9 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkShouldTerminate(self, notification):
         NotificationCenter().remove_observer(self, name="BlinkContactsHaveChanged")
+        self.model.groupsList = []
+        self.refreshContactsList()
+        self.window().orderOut_(self)
 
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
