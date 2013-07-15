@@ -2145,6 +2145,7 @@ class CustomListModel(NSObject):
                 if table.selectedRow() >= 0:
                     table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(table.rowForItem_(g)), False)
                 self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
                 return True
             else:
                 # Dragging a contact
@@ -2175,11 +2176,13 @@ class CustomListModel(NSObject):
                         else:
                             targetGroup.group.contacts.add(sourceContact.contact)
                         targetGroup.group.save()
+                        self.nc.post_notification("BlinkContactsHaveChanged", sender=targetGroup)
 
                         if targetGroup.group.id != 'favorites' and sourceGroup.remove_contact_allowed:
                             sourceGroup.group.contacts.remove(sourceContact.contact)
                             sourceContact.contact.destroy()
                             sourceGroup.group.save()
+                            self.nc.post_notification("BlinkContactsHaveChanged", sender=sourceGroup)
 
                     row = table.rowForItem_(sourceContact)
                     if row>=0:
@@ -2230,6 +2233,8 @@ class CustomListModel(NSObject):
                             targetContact.contact.save()
                         if isinstance(sourceContact, BlinkPresenceContact):
                             sourceContact.contact.delete()
+
+                    self.nc.post_notification("BlinkContactsHaveChanged", sender=targetGroup)
 
                     return True
 
@@ -2671,10 +2676,12 @@ class ContactListModel(CustomListModel):
         unlink(path)
 
     def renderPendingWatchersGroupIfNecessary(self, bring_in_focus=False):
+        added = False
         if self.pending_watchers_group.contacts:
             if self.pending_watchers_group not in self.groupsList:
                 self.groupsList.insert(0, self.pending_watchers_group)
                 self.saveGroupPosition()
+                added = True
 
             if bring_in_focus:
                 index = self.groupsList.index(self.pending_watchers_group)
@@ -2682,6 +2689,7 @@ class ContactListModel(CustomListModel):
                     self.groupsList.remove(self.pending_watchers_group)
                     self.groupsList.insert(0, self.pending_watchers_group)
                     self.saveGroupPosition()
+                    added = True
 
                 if not self.pending_watchers_group.group.expanded:
                     self.pending_watchers_group.group.expanded = True
@@ -2689,7 +2697,7 @@ class ContactListModel(CustomListModel):
                 self.contactOutline.scrollRowToVisible_(0)
 
             self.pending_watchers_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.pending_watchers_group)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self if added else self.pending_watchers_group)
         elif self.pending_watchers_group in self.groupsList:
             self.groupsList.remove(self.pending_watchers_group)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
