@@ -3090,11 +3090,11 @@ class ContactListModel(CustomListModel):
         name = notification.data.neighbour.name
 
         try:
-            blink_contact = (blink_contact for blink_contact in self.bonjour_group.not_filtered_contacts if blink_contact.bonjour_neighbour==notification.data.neighbour).next()
+            all_blink_contact = (blink_contact for blink_contact in self.bonjour_group.not_filtered_contacts if blink_contact.bonjour_neighbour==notification.data.neighbour).next()
         except StopIteration:
             pass
         else:
-            self.bonjour_group.not_filtered_contacts.remove(blink_contact)
+            self.bonjour_group.not_filtered_contacts.remove(all_blink_contact)
 
         try:
             blink_contact = (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==notification.data.neighbour).next()
@@ -3120,6 +3120,8 @@ class ContactListModel(CustomListModel):
                     for n in udp_neighbours:
                         self.bonjour_group.contacts.append(n)
 
+            all_blink_contact.destroy()
+            blink_contact.destroy()
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
 
@@ -3127,10 +3129,10 @@ class ContactListModel(CustomListModel):
         blink_contact = notification.sender
         try:
             self.online_contacts_group.contacts.remove(blink_contact)
-            blink_contact.destroy()
         except IndexError:
             pass
         else:
+            blink_contact.destroy()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.online_contacts_group)
 
     def _NH_AddressbookPolicyWasActivated(self, notification):
