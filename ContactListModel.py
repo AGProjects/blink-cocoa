@@ -1875,7 +1875,10 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
 
     def loadAddressBook(self):
         BlinkLogger().log_debug('Loading Contacts from System Address Book')
-        self.contacts = []
+        for blink_contact in self.contacts:
+            self.contacts.remove(blink_contact)
+            blink_contact.destroy()
+
         book = AddressBook.ABAddressBook.sharedAddressBook()
         if book is None:
             return
