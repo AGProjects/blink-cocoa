@@ -2327,7 +2327,6 @@ class ContactListModel(CustomListModel):
         handler(notification)
 
     def awakeFromNib(self):
-
         self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         self.nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
@@ -3004,9 +3003,13 @@ class ContactListModel(CustomListModel):
                 self.bonjour_group.contacts.remove(blink_contact)
                 blink_contact.destroy()
 
-            self.groupsList.remove(self.bonjour_group)
-            self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            try:
+                self.groupsList.remove(self.bonjour_group)
+            except ValueError:
+                pass
+            else:
+                self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
