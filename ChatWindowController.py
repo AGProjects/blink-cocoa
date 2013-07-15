@@ -172,6 +172,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="AudioStreamDidStopRecordingAudio")
             self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
             self.notification_center.add_observer(self, name="BlinkAudioStreamChangedHoldState")
+            self.notification_center.add_observer(self, name="BlinkShouldTerminate")
             self.notification_center.add_observer(self, name="BlinkColaborativeEditorContentHasChanged")
             self.notification_center.add_observer(self, name="BlinkConferenceGotUpdate")
             self.notification_center.add_observer(self, name="BlinkContactsHaveChanged")
@@ -443,6 +444,10 @@ class ChatWindowController(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
+
+    def _NH_BlinkShouldTerminate(self, sender, data):
+        if self.window():
+            self.window().orderOut_(self)
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.refresh_drawer_timer.invalidate()

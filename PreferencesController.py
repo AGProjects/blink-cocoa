@@ -105,6 +105,10 @@ class PreferencesController(NSWindowController, object):
 
             return self
 
+    def _NH_BlinkShouldTerminate(self, notification):
+        if self.window():
+            self.window().orderOut_(self)
+
     def showWindow_(self, sender):
         if not self.window():
             NSBundle.loadNibNamed_owner_("PreferencesWindow", self)

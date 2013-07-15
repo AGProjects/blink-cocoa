@@ -55,6 +55,7 @@ class FileTransferWindowController(NSObject, object):
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
         NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
         NotificationCenter().add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
+        NotificationCenter().add_observer(self, name="BlinkShouldTerminate")
 
         NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
 
@@ -139,6 +140,10 @@ class FileTransferWindowController(NSObject, object):
     @objc.IBAction
     def close_(self, sender):
         self.window.close()
+
+    def _NH_BlinkShouldTerminate(self, sender, data):
+        if self.window:
+            self.window.orderOut_(self)
 
     @objc.IBAction
     def showWindow_(self, sender):

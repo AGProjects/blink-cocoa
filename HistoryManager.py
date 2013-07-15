@@ -686,7 +686,7 @@ class ChatHistory(object):
         for journal_id in journal_ids:
              journal_id_sql += '%s,' % ChatMessage.sqlrepr(journal_id)
              journal_id_sql = journal_id_sql.rstrip(",")
-                 
+
         query = "delete from chat_messages where local_uri=%s and journal_id != '' and journal_id not in (%s) and date >= %s" % (ChatMessage.sqlrepr(account), journal_id_sql, ChatMessage.sqlrepr(after_date))
 
         try:

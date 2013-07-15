@@ -147,6 +147,7 @@ class HistoryViewer(NSWindowController):
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
             self.notification_center.add_observer(self, name='BlinkTableViewSelectionChaged')
             self.notification_center.add_observer(self, name='BlinkConferenceContactPresenceHasChanged')
+            self.notification_center.add_observer(self, name='BlinkShouldTerminate')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
@@ -696,6 +697,10 @@ class HistoryViewer(NSWindowController):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_BlinkShouldTerminate(self, notification):
+        if self.window():
+            self.window().orderOut_(self)
 
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
         if notification.data.local_party != 'bonjour':
