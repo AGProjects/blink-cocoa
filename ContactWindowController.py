@@ -4367,9 +4367,9 @@ class ContactWindowController(NSWindowController):
 
                         mitem.setRepresentedObject_({'uris': (unicode(item.uri),), 'days': days})
 
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
-                    self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
-                    self.get_last_calls_entries_for_contact(history_contact)
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
+                        self.get_last_calls_entries_for_contact(history_contact)
 
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
                     mitem.setRepresentedObject_(unicode(history_contact.uri))
