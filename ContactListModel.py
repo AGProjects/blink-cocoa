@@ -2976,7 +2976,7 @@ class ContactListModel(CustomListModel):
             positions.sort()
             self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
             self.nc.post_notification("BonjourGroupWasActivated", sender=self)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         else:
             try:
                 del self.active_watchers_map[notification.sender.id]
@@ -2995,7 +2995,7 @@ class ContactListModel(CustomListModel):
 
             self.groupsList.remove(self.bonjour_group)
             self.nc.post_notification("BonjourGroupWasDeactivated", sender=self)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
