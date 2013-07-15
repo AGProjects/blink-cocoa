@@ -767,10 +767,11 @@ class SessionControllersManager(object):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
 
     def closeAllSessions(self):
-        BlinkLogger().log_info('Ending all sessions')
+        if self.sessionControllers:
+            BlinkLogger().log_info('Ending all sessions')
 
-        for session in self.sessionControllers[:]:
-            session.end()
+            for session in self.sessionControllers[:]:
+                session.end()
 
     @run_in_gui_thread
     def show_web_alert_page(self, session):
