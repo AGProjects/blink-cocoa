@@ -744,16 +744,23 @@ class PreferencesController(NSWindowController, object):
             settings.audio.echo_canceller.tail_length = settings.audio.aec_parameter
             settings.save()
 
-        if 'audio.enable_aec' in notification.data.modified:
+        if 'audio.sample_rate' in notification.data.modified:
             settings = SIPSimpleSettings()
-            settings.audio.echo_canceller.enabled = settings.audio.enable_aec
-            settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum)
             if spectrum >=20:
                 help_line += ".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
-            settings.save()
             self.sectionHelpPlaceholder.setStringValue_(help_line)
+
+        if 'audio.enable_aec' in notification.data.modified:
+            settings = SIPSimpleSettings()
+            settings.audio.echo_canceller.enabled = settings.audio.enable_aec
+            new_sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
+            if not NSApp.delegate().contactsWindowController.has_audio:
+                settings.audio.sample_rate = new_sample_rate
+                settings.save()
+            else:
+                NSApp.delegate().contactsWindowController.new_audio_sample_rate = new_sample_rate
 
         self.updateRegistrationStatus()
 
