@@ -335,6 +335,7 @@ class BlinkContact(NSObject):
     deletable = True
     auto_answer = False
     default_preferred_media = 'audio'
+    dealloc_timer = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -388,7 +389,16 @@ class BlinkContact(NSObject):
         super(BlinkContact, self).dealloc()
 
     def destroy(self):
-        pass
+        # workaround to keep the object alive as cocoa still sends delegate outline view messages to deallocated contacts
+        self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "deallocTimer:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+        self.retain()
+
+    def deallocTimer_(self, timer):
+        self.dealloc_timer.invalidate()
+        self.dealloc_timer = None
+        self.release()
 
     def _set_username_and_domain(self):
         # save username and domain to speed up name lookups in the contacts list
@@ -630,8 +640,8 @@ class BlinkBlockedPresenceContact(BlinkContact):
         self.avatar = BlockedPolicyAvatar()
 
     def destroy(self):
-        super(BlinkBlockedPresenceContact, self).destroy()
         self.policy = None
+        super(BlinkBlockedPresenceContact, self).destroy()
 
 
 class BlinkPresenceContactAttribute(object):
