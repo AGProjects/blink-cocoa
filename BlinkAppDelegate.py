@@ -251,11 +251,11 @@ class BlinkAppDelegate(NSObject):
         # window should be shown only after enrollment check
         if self.wait_for_enrollment:
             BlinkLogger().log_info('Starting Main User Interface')
+            self.contactsWindowController.model.moveBonjourGroupFirst()
             self.contactsWindowController.showWindow_(None)
             self.wait_for_enrollment = False
 
         self.contactsWindowController.setupFinished()
-
 
     def killSelfAfterTimeout_(self, arg):
         # wait 8 seconds then kill self

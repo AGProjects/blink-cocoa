@@ -1602,10 +1602,11 @@ class VirtualBlinkGroup(BlinkGroup):
     """ Base class for Virtual Groups managed by Blink """
     type = None    # To be defined by a subclass
 
-    def __init__(self, name=u''):
+    def __init__(self, name=u'', expanded=False):
         self.contacts = []
         self.group = None
         self.name = name
+        self.init_expanded = expanded
 
     def load_group(self):
         vgm = VirtualGroupsManager()
@@ -1614,7 +1615,7 @@ class VirtualBlinkGroup(BlinkGroup):
         except KeyError:
             group = VirtualGroup(id=self.type)
             group.name = self.name
-            group.expanded = False
+            group.expanded = self.init_expanded
             group.position = None
             group.save()
         self.group = group
@@ -1630,8 +1631,8 @@ class BonjourBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Bonjour Neighbours'):
-        super(BonjourBlinkGroup, self).__init__(name)
+    def __init__(self, name=u'Bonjour Neighbours', expanded=True):
+        super(BonjourBlinkGroup, self).__init__(name, expanded)
         self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
         self.original_position = None
 
@@ -1645,8 +1646,8 @@ class NoBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = True
 
-    def __init__(self, name=u'No Group'):
-        super(NoBlinkGroup, self).__init__(name)
+    def __init__(self, name=u'No Group', expanded=False):
+        super(NoBlinkGroup, self).__init__(name, expanded)
 
 
 class PendingWatchersGroup(VirtualBlinkGroup):
@@ -1658,8 +1659,8 @@ class PendingWatchersGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'New Contact Requests'):
-        super(PendingWatchersGroup, self).__init__(name)
+    def __init__(self, name=u'New Contact Requests', expanded=False):
+        super(PendingWatchersGroup, self).__init__(name, expanded)
 
 
 class BlockedGroup(VirtualBlinkGroup):
@@ -1671,8 +1672,8 @@ class BlockedGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Blocked Contacts'):
-        super(BlockedGroup, self).__init__(name)
+    def __init__(self, name=u'Blocked Contacts', expanded=False):
+        super(BlockedGroup, self).__init__(name, expanded)
 
 
 class OnlineGroup(VirtualBlinkGroup):
@@ -1684,8 +1685,8 @@ class OnlineGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Online Contacts'):
-        super(OnlineGroup, self).__init__(name)
+    def __init__(self, name=u'Online Contacts', expanded=True):
+        super(OnlineGroup, self).__init__(name, expanded)
 
 
 class AllContactsBlinkGroup(VirtualBlinkGroup):
@@ -1698,8 +1699,8 @@ class AllContactsBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = True
 
-    def __init__(self, name=u'All Contacts'):
-        super(AllContactsBlinkGroup, self).__init__(name)
+    def __init__(self, name=u'All Contacts', expanded=False):
+        super(AllContactsBlinkGroup, self).__init__(name, expanded)
 
 
 class HistoryBlinkGroup(VirtualBlinkGroup):
@@ -1714,8 +1715,8 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
     delete_contact_allowed = False
     last_results = []
 
-    def __init__(self, name):
-        super(HistoryBlinkGroup, self).__init__(name)
+    def __init__(self, name, expanded=False):
+        super(HistoryBlinkGroup, self).__init__(name, expanded)
         # contacts are not yet loaded when building this group so we cannot lookup contacts just yet
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "firstLoadTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
@@ -1834,7 +1835,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
     type = 'missed'
 
     def __init__(self, name=u'Missed Calls'):
-        super(MissedCallsBlinkGroup, self).__init__(name)
+        super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
         return SessionHistory().get_entries(remote_focus="0", hidden=0, after_date=self.after_date, count=500)
@@ -1844,7 +1845,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'outgoing'
 
     def __init__(self, name=u'Outgoing Calls'):
-        super(OutgoingCallsBlinkGroup, self).__init__(name)
+        super(OutgoingCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='outgoing', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
@@ -1854,7 +1855,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'incoming'
 
     def __init__(self, name=u'Incoming Calls'):
-        super(IncomingCallsBlinkGroup, self).__init__(name)
+        super(IncomingCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='completed', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
@@ -1871,7 +1872,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
     delete_contact_allowed = False
 
     def __init__(self, name=u'Address Book'):
-        super(AddressBookBlinkGroup, self).__init__(name)
+        super(AddressBookBlinkGroup, self).__init__(name, expanded=False)
 
     def loadAddressBook(self):
         BlinkLogger().log_debug('Loading Contacts from System Address Book')
