@@ -238,7 +238,14 @@ class PreferencesController(NSWindowController, object):
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
             self.sectionDescription.setStringValue_(u'Audio Settings')
             self.sectionHelpPlaceholder.setHidden_(False)
-            self.sectionHelpPlaceholder.setStringValue_(u'Change settings related to audio devices and audio processing')
+            settings = SIPSimpleSettings()
+            settings.audio.echo_canceller.enabled = settings.audio.enable_aec
+            settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
+            spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
+            help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum)
+            if spectrum >=20:
+                help_line += ".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
+            self.sectionHelpPlaceholder.setStringValue_(help_line)
             self.window().setTitle_(u'Audio')
         elif section == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
@@ -264,7 +271,7 @@ class PreferencesController(NSWindowController, object):
             self.sectionDescription.setStringValue_(u'Screen Sharing Settings')
             self.window().setTitle_(u'Screen Sharing')
             self.sectionHelpPlaceholder.setHidden_(False)
-            self.sectionHelpPlaceholder.setStringValue_(u'Enable Screen Sharing in System Preferences > Sharing section. Click on the "Computer Settings..." button and check the option "Anyone may request permission to control screen"')
+            self.sectionHelpPlaceholder.setStringValue_(u'Enable Screen Sharing in System Preferences > Sharing section.\nClick on the "Computer Settings..." button and check the option "Anyone may request permission to control screen".')
         elif section == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
@@ -742,9 +749,9 @@ class PreferencesController(NSWindowController, object):
             settings.audio.echo_canceller.enabled = settings.audio.enable_aec
             settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
-            help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum. " % (settings.audio.sample_rate/1000, spectrum)
+            help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum)
             if spectrum >=20:
-                help_line += "For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
+                help_line += ".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
             settings.save()
             self.sectionHelpPlaceholder.setStringValue_(help_line)
 
