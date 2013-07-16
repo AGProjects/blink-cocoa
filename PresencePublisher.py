@@ -358,7 +358,8 @@ class PresencePublisher(object):
 
         if (account.xcap.discovered and account.xcap_manager is not None and account.xcap_manager.status_icon is not None and account.xcap_manager.status_icon.content is not None):
             icon = account.xcap_manager.status_icon
-            service.icon = cipid.Icon("%s#%s%s" % (icon.uri, BLINK_URL_TOKEN, icon.etag))
+            if icon:
+                service.icon = cipid.Icon("%s#%s%s" % (icon.url, BLINK_URL_TOKEN, icon.etag))
 
         if account.presence.homepage is not None:
             service.homepage = cipid.Homepage(account.presence.homepage)
