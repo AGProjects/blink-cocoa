@@ -1620,7 +1620,7 @@ PreferenceOptionTypes = {
 "Digits" : DigitsOption,
 "HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
-"audio.aec_parameter": AecSliderOption,
+"audio.aec_clock_skew": AecSliderOption,
 "audio.alert_device" : AudioOutputDeviceOption,
 "audio.directory" : HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
@@ -1762,7 +1762,7 @@ SectionNames = {
                        }
 
 GeneralSettingsOrder = {
-                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'aec_parameter'],
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'aec_clock_skew'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
