@@ -3006,7 +3006,9 @@ class ContactWindowController(NSWindowController):
         self.showHelp()
 
     def showHelp(self, append_url=''):
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if NSApp.delegate().applicationName == 'SIP2SIP':
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://projects.ag-projects.com/projects/blinkc/wiki/Help_For_SIP2SIP"+append_url))
+        elif NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://help-lite.icanblink.com"+append_url))
         else:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://help-pro.icanblink.com"+append_url))
