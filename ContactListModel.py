@@ -3501,9 +3501,8 @@ class ContactListModel(CustomListModel):
         group.expanded = True
 
         test_contacts = {
-                        "200901@login.zipdx.com":       { 'name': "VUC http://vuc.me", 'preferred_media': "audio", 'id': 'test_zipdx' },
                         "3333@sip2sip.info":            { 'name': "Call Test",         'preferred_media': "audio", 'id': 'test_audio' },
-                        "4444@sip2sip.info":            { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
+                        "echo@conference.sip2sip.info": { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
                         "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
                         }
 
