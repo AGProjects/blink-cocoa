@@ -44,7 +44,7 @@
 					<object class="NSTextField" id="57195746">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{4, 31}, {198, 14}}</string>
+						<string key="NSFrame">{{4, 31}, {127, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="465782229"/>
@@ -53,7 +53,7 @@
 						<object class="NSTextFieldCell" key="NSCell" id="336454722">
 							<int key="NSCellFlags">68157504</int>
 							<int key="NSCellFlags2">272761856</int>
-							<string key="NSContents">Acoustic Echo Canceller Clock Skew:</string>
+							<string key="NSContents">AEC Sound Card Delay:</string>
 							<object class="NSFont" key="NSSupport" id="26">
 								<string key="NSName">LucidaGrande</string>
 								<double key="NSSize">11</double>
@@ -85,7 +85,7 @@
 					<object class="NSTextField" id="465782229">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{200, 31}, {38, 14}}</string>
+						<string key="NSFrame">{{131, 31}, {38, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="344199141"/>
@@ -132,10 +132,9 @@
 					<object class="NSButton" id="344199141">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{238, 30}, {56, 16}}</string>
+						<string key="NSFrame">{{232, 30}, {62, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="966093218">
@@ -249,8 +248,8 @@
 						<array class="NSMutableArray" key="children">
 							<reference ref="990277071"/>
 							<reference ref="57195746"/>
-							<reference ref="465782229"/>
 							<reference ref="344199141"/>
+							<reference ref="465782229"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -377,14 +376,6 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
-					<string key="className">HorizontalBoxView</string>
-					<string key="superclassName">NSView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/HorizontalBoxView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
 					<string key="className">NSObject</string>
 					<string key="superclassName">objc</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
@@ -394,7 +385,7 @@
 				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">Option</string>
-					<string key="superclassName">HorizontalBoxView</string>
+					<string key="superclassName">object</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/Option.h</string>

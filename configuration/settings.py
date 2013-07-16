@@ -35,7 +35,7 @@ class AudioSettingsExtension(AudioSettings):
     sample_rate = Setting(type=SampleRate, default=32000)
     echo_canceller = EchoCancellerSettingsExtension
     enable_aec = RuntimeSetting(type=bool, default=True)
-    aec_clock_skew = RuntimeSetting(type=NonNegativeInteger, default=15)
+    sound_card_delay = RuntimeSetting(type=NonNegativeInteger, default=15)
     automatic_device_switch = Setting(type=bool, default=True)
 
 

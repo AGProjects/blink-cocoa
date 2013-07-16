@@ -292,7 +292,7 @@ class BlinkAppDelegate(NSObject):
         settings = SIPSimpleSettings()
         self.debug = settings.gui.extended_debug
         settings.audio.enable_aec = settings.audio.echo_canceller.enabled
-        settings.audio.aec_clock_skew = settings.audio.echo_canceller.tail_length
+        settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)

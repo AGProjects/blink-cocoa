@@ -1620,12 +1620,12 @@ PreferenceOptionTypes = {
 "Digits" : DigitsOption,
 "HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
-"audio.aec_clock_skew": AecSliderOption,
+"audio.sound_card_delay": AecSliderOption,
 "audio.alert_device" : AudioOutputDeviceOption,
 "audio.directory" : HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
-"audio.sample_rate": HiddenOption,
+#"audio.sample_rate": HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.replication_password": HiddenOption,
 "contacts.missed_calls_period": HiddenOption,
@@ -1762,7 +1762,7 @@ SectionNames = {
                        }
 
 GeneralSettingsOrder = {
-                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'aec_clock_skew'],
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],

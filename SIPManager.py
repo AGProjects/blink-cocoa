@@ -574,9 +574,11 @@ class SIPManager(object):
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             if settings.audio.sample_rate == 48000:
                 settings.audio.echo_canceller.enabled = False
+                settings.audio.enable_aec = False
                 settings.save()
             else:
                 settings.audio.echo_canceller.enabled = True
+                settings.audio.enable_aec = True
                 settings.save()
 
     @run_in_green_thread
