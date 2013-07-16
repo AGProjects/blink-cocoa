@@ -450,7 +450,8 @@ class ChatWindowController(NSWindowController):
             self.window().orderOut_(self)
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
-        self.refresh_drawer_timer.invalidate()
+        if self.refresh_drawer_timer:
+            self.refresh_drawer_timer.invalidate()
         if self.contact_timer:
             self.contact_timer.invalidate()
 

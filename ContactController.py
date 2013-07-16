@@ -101,8 +101,9 @@ class AddContactController(NSObject):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def deallocTimer_(self, timer):
-        self.dealloc_timer.invalidate()
-        self.dealloc_timer = None
+        if self.dealloc_timer:
+            self.dealloc_timer.invalidate()
+            self.dealloc_timer = None
         self.all_groups = None
         self.belonging_groups = None
         self.uris = None

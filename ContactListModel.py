@@ -396,8 +396,9 @@ class BlinkContact(NSObject):
         self.retain()
 
     def deallocTimer_(self, timer):
-        self.dealloc_timer.invalidate()
-        self.dealloc_timer = None
+        if self.dealloc_timer:
+            self.dealloc_timer.invalidate()
+            self.dealloc_timer = None
         self.release()
 
     def _set_username_and_domain(self):
