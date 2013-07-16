@@ -1205,6 +1205,46 @@ class NightVolumeOption(Option):
             self.slider.setEnabled_(False)
 
 
+class AecSliderOption(Option):
+
+    view = objc.IBOutlet()
+    slider = objc.IBOutlet()
+    labelText = objc.IBOutlet()
+    resetButton = objc.IBOutlet()
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 244, 50))
+
+    def __init__(self, object, name, option, description=None):
+        Option.__init__(self, object, name, option, description)
+        self.caption = makeLabel('')
+        self.setSpacing_(8)
+        self.addSubview_(self.caption)
+
+        NSBundle.loadNibNamed_owner_("AecSlider", self)
+
+        self.addSubview_(self.view)
+
+    @objc.IBAction
+    def reset_(self, sender):
+        self.labelText.setStringValue_("15 ms")
+        self.slider.setIntegerValue_(15)
+        self.store()
+
+    @objc.IBAction
+    def changeValue_(self, sender):
+        self.labelText.setStringValue_("%i ms" % (sender.integerValue()))
+        self.store()
+
+    def _store(self):
+        self.set(self.slider.integerValue())
+
+    def restore(self):
+        value = self.get()
+        self.slider.setIntegerValue_(value)
+        self.labelText.setStringValue_("%i ms"%value)
+
+
 class AnsweringMessageOption(Option):
     implements(IObserver)
 
@@ -1580,6 +1620,7 @@ PreferenceOptionTypes = {
 "Digits" : DigitsOption,
 "HTTPURL": NullableUnicodeOption,
 "answering_machine.unavailable_message" : AnsweringMessageOption,
+"audio.aec_parameter": AecSliderOption,
 "audio.alert_device" : AudioOutputDeviceOption,
 "audio.directory" : HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
@@ -1721,7 +1762,7 @@ SectionNames = {
                        }
 
 GeneralSettingsOrder = {
-                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory'],
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'aec_parameter'],
                        'answering_machine': ['enabled'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],

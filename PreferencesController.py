@@ -732,6 +732,11 @@ class PreferencesController(NSWindowController, object):
                 if account == sender:
                     self.selected_proxy_radio_button.selectCellWithTag_(sender.sip.selected_proxy)
 
+        if 'audio.aec_parameter' in notification.data.modified:
+            settings = SIPSimpleSettings()
+            settings.audio.echo_canceller.tail_length = settings.audio.aec_parameter
+            settings.save()
+
         if 'audio.enable_aec' in notification.data.modified:
             settings = SIPSimpleSettings()
             settings.audio.echo_canceller.enabled = settings.audio.enable_aec

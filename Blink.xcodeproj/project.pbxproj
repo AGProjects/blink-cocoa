@@ -848,6 +848,10 @@
 		1F9A27D5179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
 		1F9A27D6179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
 		1F9A27D7179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
+		1F9A27DD1795452100672B73 /* AecSlider.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27E21795452100672B73 /* AecSlider.xib */; };
+		1F9A27DE1795452100672B73 /* AecSlider.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27E21795452100672B73 /* AecSlider.xib */; };
+		1F9A27DF1795452100672B73 /* AecSlider.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27E21795452100672B73 /* AecSlider.xib */; };
+		1F9A27E01795452100672B73 /* AecSlider.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27E21795452100672B73 /* AecSlider.xib */; };
 		1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
 		1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
 		1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
@@ -1737,6 +1741,7 @@
 		1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Clearcom.entitlements; sourceTree = "<group>"; };
 		1F94DEA8168B758D00168FBA /* blink-gold.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-gold.icns"; sourceTree = "<group>"; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
+		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin-setup.py"; sourceTree = "<group>"; };
@@ -2498,6 +2503,7 @@
 				2B5DE51F0FFC5D0500701821 /* PreferencesController.py */,
 				2B8F17D31008318700E0775C /* PreferenceOptions.py */,
 				1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */,
+				1F9A27E21795452100672B73 /* AecSlider.xib */,
 			);
 			name = Preferences;
 			sourceTree = "<group>";
@@ -3070,6 +3076,7 @@
 				1F72E53B16A027F600837311 /* MergeContactController.py in Resources */,
 				1F7E0486176DC43D0006FF31 /* hangup_16.png in Resources */,
 				1F9A27D5179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
+				1F9A27DE1795452100672B73 /* AecSlider.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3315,6 +3322,7 @@
 				1FBF2B4517915410002E110B /* Updater.py in Resources */,
 				1FBF2B4E17916768002E110B /* Updater.xib in Resources */,
 				1F9A27D7179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
+				1F9A27E01795452100672B73 /* AecSlider.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3556,6 +3564,7 @@
 				1F72E53C16A027F600837311 /* MergeContactController.py in Resources */,
 				1F7E0487176DC43D0006FF31 /* hangup_16.png in Resources */,
 				1F9A27D6179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
+				1F9A27DF1795452100672B73 /* AecSlider.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3795,6 +3804,7 @@
 				1F72E53A16A027F600837311 /* MergeContactController.py in Resources */,
 				1F7E0485176DC43D0006FF31 /* hangup_16.png in Resources */,
 				1F9A27D4179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
+				1F9A27DD1795452100672B73 /* AecSlider.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3942,6 +3952,14 @@
 				1F87B6EE1477D57000BDF25A /* English */,
 			);
 			name = NightVolumeSetting.xib;
+			sourceTree = "<group>";
+		};
+		1F9A27E21795452100672B73 /* AecSlider.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F9A27E11795452100672B73 /* en */,
+			);
+			name = AecSlider.xib;
 			sourceTree = "<group>";
 		};
 		1FAA83A91656745500C4C212 /* BlockedContact.xib */ = {
