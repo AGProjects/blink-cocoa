@@ -2921,7 +2921,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.addressbook_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.addressbook_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_address_book and self.addressbook_group in self.groupsList:
                 self.groupsList.remove(self.addressbook_group)
                 self.saveGroupPosition()
@@ -2933,7 +2933,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.incoming_calls_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.incoming_calls_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_incoming_calls_group and self.incoming_calls_group in self.groupsList:
                 self.groupsList.remove(self.incoming_calls_group)
                 self.saveGroupPosition()
@@ -2945,7 +2945,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.outgoing_calls_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.outgoing_calls_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_outgoing_calls_group and self.outgoing_calls_group in self.groupsList:
                 self.groupsList.remove(self.outgoing_calls_group)
                 self.saveGroupPosition()
@@ -2956,7 +2956,7 @@ class ContactListModel(CustomListModel):
                 self.missed_calls_group.load_history()
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.missed_calls_group)
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.missed_calls_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
                 self.saveGroupPosition()
             elif not settings.contacts.enable_missed_calls_group and self.missed_calls_group in self.groupsList:
                 self.groupsList.remove(self.missed_calls_group)
@@ -2968,7 +2968,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.blocked_contacts_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.blocked_contacts_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_blocked_group and self.blocked_contacts_group in self.groupsList:
                 self.groupsList.remove(self.blocked_contacts_group)
                 self.saveGroupPosition()
@@ -2979,7 +2979,7 @@ class ContactListModel(CustomListModel):
                 position = len(self.groupsList) if self.groupsList else 0
                 self.groupsList.insert(position, self.online_contacts_group)
                 self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self.online_contacts_group)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
             elif not settings.contacts.enable_online_group and self.online_contacts_group in self.groupsList:
                 self.groupsList.remove(self.online_contacts_group)
                 self.saveGroupPosition()
