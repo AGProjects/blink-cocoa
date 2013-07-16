@@ -428,14 +428,13 @@ class SIPManager(object):
         self.cleanupIcons()
 
         # Set audio settings compatible with AEC and Noise Supressor
-        settings.audio.sample_rate = 32000 if settings.audio.enable_aec else 48000
-        settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
+        settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled else 48000
         if NSApp.delegate().applicationName == 'SIP2SIP':
             settings.service_provider.help_url  = 'http://wiki.sip2sip.info'
             settings.service_provider.name = 'SIP2SIP'
         settings.save()
         BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
-        BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
+        BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
 
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
@@ -561,14 +560,12 @@ class SIPManager(object):
                 if not account.message_summary.enabled:
                     MWIData.remove(account)
 
-        if 'audio.enable_aec' in data.modified:
+        if 'audio.echo_canceller.enabled' in data.modified:
             settings = SIPSimpleSettings()
-            BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
-            settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
-            settings.audio.sample_rate = 32000 if settings.audio.enable_aec and settings.audio.sample_rate not in ('16000', '32000') else 48000
+            settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             BlinkLogger().log_info(u"Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum))
-            BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.enable_aec else 'disabled'))
+            BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
             if spectrum >=20:
                 BlinkLogger().log_info(u"For studio quality disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section.")
             settings.save()
@@ -576,25 +573,11 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             if settings.audio.sample_rate == 48000:
-                settings.audio.enable_aec = False
-                settings.audio.tail_length = 0
+                settings.audio.echo_canceller.enabled = False
                 settings.save()
             else:
-                settings.audio.enable_aec = True
-                settings.audio.tail_length = 15
+                settings.audio.echo_canceller.enabled = True
                 settings.save()
-        elif 'audio.tail_length' in data.modified:
-            settings = SIPSimpleSettings()
-            if settings.audio.tail_length == 0:
-                settings.audio.enable_aec = False
-                settings.audio.sample_rate == 48000
-                settings.save()
-            else:
-                if settings.audio.sample_rate == 48000:
-                    settings.audio.sample_rate == 32000
-                settings.audio.enable_aec = True
-                settings.save()
-
 
     @run_in_green_thread
     def _NH_SystemWillSleep(self, sender, data):

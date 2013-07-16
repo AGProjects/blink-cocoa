@@ -7,9 +7,9 @@ Blink settings extensions.
 
 __all__ = ['SIPSimpleSettingsExtension']
 
-from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
+from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
-from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
+from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
@@ -22,15 +22,20 @@ class AnsweringMachineSettings(SettingsGroup):
     unavailable_message = Setting(type=AnsweringMachineSoundFile, default=AnsweringMachineSoundFile(AnsweringMachineSoundFile.DefaultSoundFile('unavailable_message.wav')), nillable=True)
 
 
+class EchoCancellerSettingsExtension(EchoCancellerSettings):
+    enabled = Setting(type=bool, default=True)
+    tail_length = Setting(type=NonNegativeInteger, default=15)
+
+
 class AudioSettingsExtension(AudioSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('history'))
     alert_device = Setting(type=unicode, default=u'system_default', nillable=True)
     input_device = Setting(type=unicode, default=u'system_default', nillable=True)
     output_device = Setting(type=unicode, default=u'system_default', nillable=True)
     sample_rate = Setting(type=SampleRate, default=32000)
-    tail_length = Setting(type=NonNegativeInteger, default=15)
+    echo_canceller = EchoCancellerSettingsExtension
+    enable_aec = RuntimeSetting(type=bool, default=True)
     automatic_device_switch = Setting(type=bool, default=True)
-    enable_aec = Setting(type=bool, default=True)
 
 
 class ChatSettingsExtension(ChatSettings):

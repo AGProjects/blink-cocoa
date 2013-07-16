@@ -1585,7 +1585,6 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.sample_rate": HiddenOption,
-"audio.tail_length": HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.replication_password": HiddenOption,
 "contacts.missed_calls_period": HiddenOption,
@@ -1762,7 +1761,7 @@ UnitOptions = {
 ToolTips = {
              'audio.auto_transfer' : 'Automatically accept transfer requests from remote party',
              'audio.call_waiting' : 'If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress',
-             'audio.enable_aec': 'If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.',
+             'audio.echo_canceller.enabled': 'If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.',
              'auth.username': 'Enter authentication username if different than the SIP Address username',
              'chat.replication_password': 'Enter a password to encrypt the content of your messages on the replication server',
              'gui.account_label': 'Label displayed in account popup up menu instead of the sip address',

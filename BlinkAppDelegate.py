@@ -291,6 +291,7 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         self.debug = settings.gui.extended_debug
+        settings.audio.enable_aec = settings.audio.echo_canceller.enabled
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)

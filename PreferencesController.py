@@ -379,7 +379,7 @@ class PreferencesController(NSWindowController, object):
         section_view.setDocumentView_(settings_box_view)
 
         unordered_options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
-        assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
+        #assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
         try:
             options = AccountSettingsOrder[section_name] if forAccount else GeneralSettingsOrder[section_name]
             remaining_options = [opt for opt in unordered_options if opt not in options]
@@ -734,12 +734,13 @@ class PreferencesController(NSWindowController, object):
 
         if 'audio.enable_aec' in notification.data.modified:
             settings = SIPSimpleSettings()
-            settings.audio.tail_length = 15 if settings.audio.enable_aec else 0
-            settings.audio.sample_rate = 32000 if settings.audio.enable_aec and settings.audio.sample_rate not in ('16000', '32000') else 48000
+            settings.audio.echo_canceller.enabled = settings.audio.enable_aec
+            settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum. " % (settings.audio.sample_rate/1000, spectrum)
             if spectrum >=20:
                 help_line += "For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
+            settings.save()
             self.sectionHelpPlaceholder.setStringValue_(help_line)
 
         self.updateRegistrationStatus()

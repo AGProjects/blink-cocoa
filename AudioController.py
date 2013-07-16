@@ -549,7 +549,7 @@ class AudioController(MediaStream):
                 codec = beautify_audio_codec(self.stream.codec)
                 if self.stream.codec == 'opus':
                     settings = SIPSimpleSettings()
-                    if settings.audio.enable_aec:
+                    if settings.audio.echo_canceller.enabled:
                         sample_rate =  32
                 if self.stream.sample_rate >= 32000:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
@@ -1156,7 +1156,7 @@ class AudioController(MediaStream):
         codec = beautify_audio_codec(self.stream.codec)
         if self.stream.codec == 'opus':
             settings = SIPSimpleSettings()
-            if settings.audio.enable_aec:
+            if settings.audio.echo_canceller.enabled:
                 sample_rate =  32
         self.sessionController.log_info("Audio stream established to %s:%s using %s %0.fkHz codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec, sample_rate))
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)

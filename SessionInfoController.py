@@ -288,7 +288,7 @@ class SessionInfoController(NSObject):
                 try:
                     settings = SIPSimpleSettings()
                     sample_rate = self.audio_stream.stream.sample_rate/1000
-                    if self.audio_stream.stream.codec == 'opus' and settings.audio.enable_aec:
+                    if self.audio_stream.stream.codec == 'opus' and settings.audio.echo_canceller.enabled:
                         sample_rate =  32
                     self.audio_sample_rate.setStringValue_("%0.fkHz" % sample_rate)
                 except TypeError:
