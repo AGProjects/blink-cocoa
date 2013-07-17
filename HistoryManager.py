@@ -1406,7 +1406,7 @@ class ChatHistoryReplicator(object):
             else:
                 self.replication_server_summary[account] = results
                 oldest = datetime.fromtimestamp(int(first_row['timestamp'])).strftime('%Y-%m-%d %H:%M:%S')
-                BlinkLogger().log_info(u"Account %s has %d messages on chat replication server since %s" % (account, len(results), oldest))
+                BlinkLogger().log_debug(u"Account %s has %d messages on chat replication server since %s" % (account, len(results), oldest))
                 try:
                     journal_ids = (result['journal_id'] for result in results)
                 except KeyError:
