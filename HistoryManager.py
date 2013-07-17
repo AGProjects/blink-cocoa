@@ -593,7 +593,7 @@ class ChatHistory(object):
             if before_date:
                 query += " and date < %s" % ChatMessage.sqlrepr(before_date)
 
-            query += " group by date, media_type order by date desc, local_uri asc"
+            query += " group by date, media_type, remote_uri order by date desc, local_uri asc"
 
         elif local_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages"
@@ -607,7 +607,7 @@ class ChatHistory(object):
             if before_date:
                 query += " and date < %s" % ChatMessage.sqlrepr(before_date)
 
-            query += " group by date, remote_uri, media_type"
+            query += " group by date, remote_uri, media_type, local_uri"
 
             if order_text:
                 query += " order by %s" % order_text
