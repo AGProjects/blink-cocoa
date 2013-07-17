@@ -120,11 +120,11 @@
 							<reference key="NSControlView" ref="990277071"/>
 							<double key="NSMaxValue">50</double>
 							<double key="NSMinValue">0.0</double>
-							<double key="NSValue">15</double>
+							<double key="NSValue">15.306122448979592</double>
 							<double key="NSAltIncValue">0.0</double>
 							<int key="NSNumberOfTickMarks">50</int>
 							<int key="NSTickMarkPosition">0</int>
-							<bool key="NSAllowsTickMarkValuesOnly">NO</bool>
+							<bool key="NSAllowsTickMarkValuesOnly">YES</bool>
 							<bool key="NSVertical">NO</bool>
 						</object>
 						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>

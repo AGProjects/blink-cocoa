@@ -1216,6 +1216,7 @@ class AecSliderOption(Option):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 244, 50))
 
     def __init__(self, object, name, option, description=None):
+        self.default_value = SIPSimpleSettings.audio.echo_canceller.tail_length.default
         Option.__init__(self, object, name, option, description)
         self.caption = makeLabel('')
         self.setSpacing_(8)
@@ -1227,8 +1228,8 @@ class AecSliderOption(Option):
 
     @objc.IBAction
     def reset_(self, sender):
-        self.labelText.setStringValue_("15 ms")
-        self.slider.setIntegerValue_(15)
+        self.labelText.setStringValue_("%d ms" % self.default_value)
+        self.slider.setIntegerValue_(self.default_value)
         self.store()
 
     @objc.IBAction
