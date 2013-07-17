@@ -1741,7 +1741,7 @@
 		1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Clearcom.entitlements; sourceTree = "<group>"; };
 		1F94DEA8168B758D00168FBA /* blink-gold.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-gold.icns"; sourceTree = "<group>"; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
-		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
+		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin-setup.py"; sourceTree = "<group>"; };
