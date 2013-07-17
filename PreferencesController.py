@@ -45,7 +45,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from EnrollmentController import EnrollmentController
-from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
+from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSliderOption, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SampleRateOption, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
@@ -396,6 +396,13 @@ class PreferencesController(NSWindowController, object):
 
         if NSApp.delegate().applicationName == 'Blink Lite':
             PreferenceOptionTypes['web_alert.alert_url'] = HiddenOption
+
+        if not NSApp.delegate().debug:
+            PreferenceOptionTypes['audio.sound_card_delay'] = HiddenOption
+            PreferenceOptionTypes['audio.sample_rate'] = HiddenOption
+        else:
+            PreferenceOptionTypes['audio.sound_card_delay'] = AecSliderOption
+            PreferenceOptionTypes['audio.sample_rate'] = SampleRateOption
 
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
