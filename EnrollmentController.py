@@ -112,7 +112,6 @@ class EnrollmentController(NSObject):
     def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
         NotificationCenter().remove_observer(self, name='SIPAccountManagerDidAddAccount')
         if self.window.isVisible():
-            AccountManager().default_account = data.account
             self.window.makeKeyAndOrderFront_(None)
             NSApp.stopModalWithCode_(NSCancelButton)
 
