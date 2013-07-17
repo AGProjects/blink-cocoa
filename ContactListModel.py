@@ -3146,6 +3146,7 @@ class ContactListModel(CustomListModel):
                     for n in udp_neighbours:
                         self.bonjour_group.contacts.append(n)
 
+            all_blink_contact.destroy()
             blink_contact.destroy()
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
