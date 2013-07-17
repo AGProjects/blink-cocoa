@@ -890,10 +890,7 @@ class BlinkPresenceContact(BlinkContact):
             changes = True
 
         if not changes:
-            BlinkLogger().log_debug('PIDF list for %s has not changed: %d' % (self.name, len(self.pidfs)))
             return False
-        else:
-            BlinkLogger().log_debug('PIDF list for %s: %d' % (self.name, len(self.pidfs)))
 
         self.handle_pidfs(log)
         return True
