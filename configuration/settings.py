@@ -24,7 +24,7 @@ class AnsweringMachineSettings(SettingsGroup):
 
 class EchoCancellerSettingsExtension(EchoCancellerSettings):
     enabled = Setting(type=bool, default=True)
-    tail_length = Setting(type=NonNegativeInteger, default=15)
+    tail_length = Setting(type=NonNegativeInteger, default=5)
 
 
 class AudioSettingsExtension(AudioSettings):
@@ -35,7 +35,7 @@ class AudioSettingsExtension(AudioSettings):
     sample_rate = Setting(type=SampleRate, default=32000)
     echo_canceller = EchoCancellerSettingsExtension
     enable_aec = RuntimeSetting(type=bool, default=True)
-    sound_card_delay = RuntimeSetting(type=NonNegativeInteger, default=15)
+    sound_card_delay = RuntimeSetting(type=NonNegativeInteger, default=5)
     automatic_device_switch = Setting(type=bool, default=True)
 
 
