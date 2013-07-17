@@ -952,9 +952,9 @@ class ChatController(MediaStream):
                 contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
-                    contactWindow.historyViewer.filterByURIs(('bonjour', ), media_type='chat')
+                    contactWindow.historyViewer.filterByURIs(('bonjour', ))
                 else:
-                    contactWindow.historyViewer.filterByURIs((format_identity_to_string(self.sessionController.target_uri),), media_type='chat')
+                    contactWindow.historyViewer.filterByURIs((format_identity_to_string(self.sessionController.target_uri),))
 
     def userClickedScreenshotMenu_(self, sender):
         screenshots_folder = ApplicationData.get('.tmp_screenshots')
