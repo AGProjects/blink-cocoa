@@ -1358,9 +1358,8 @@ class ChatHistoryReplicator(object):
         try:
             results = journal['results']
         except KeyError:
-            if self.debug:
-                BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
-            self.disableReplication(account, 'No results')
+            BlinkLogger().log_debug(u"No outgoing results returned by history server push of %s" % account)
+            #self.disableReplication(account, 'No results')
             return
 
         for entry in results:
@@ -1417,8 +1416,8 @@ class ChatHistoryReplicator(object):
         try:
             results = journal['results']
         except KeyError:
-            BlinkLogger().log_debug(u"No results returned by history server of %s" % account)
-            self.disableReplication(account, 'No results')
+            BlinkLogger().log_debug(u"No incoming results returned by history server of %s" % account)
+            #self.disableReplication(account, 'No results')
             return
 
         replication_password = None
@@ -1520,7 +1519,7 @@ class ChatHistoryReplicator(object):
                 except KeyError:
                     pass
 
-                if not connection:
+                if not connection and outgoing_entries:
                     try:
                         entries = cjson.encode(outgoing_entries)
                     except (TypeError, cjson.EncodeError), e:
@@ -1551,7 +1550,7 @@ class ChatHistoryReplicator(object):
                 except KeyError:
                     pass
 
-                if not connection:
+                if not connection and delete_entries:
                     try:
                         entries = cjson.encode(list(delete_entries))
                     except (TypeError, cjson.EncodeError), e:
