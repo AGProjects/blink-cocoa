@@ -66,6 +66,9 @@ class MediaStream(NSObject):
     def remoteParty(self):
         return self.sessionController.remoteParty if self.sessionController else '?'
 
+    def reset(self):
+        self.status = STREAM_IDLE
+
     def removeFromSession(self):
         self.sessionController.removeStreamHandler(self)
 

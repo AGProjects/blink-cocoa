@@ -125,6 +125,10 @@ class AudioController(MediaStream):
     def createStream(self):
         return AudioStream()
 
+    def reset(self):
+        self.stream = AudioStream()
+        super(AudioController, self).reset()
+
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
         BlinkLogger().log_debug(u"Creating %s" % self)

@@ -1191,7 +1191,6 @@ class SessionController(NSObject):
         self.streams_log = []
         self.remote_conference_has_audio = False
         self.open_chat_window_only = False
-        self.destroyInfoPanel()
         self.call_id = None
         self.from_tag = None
         self.to_tag = None
@@ -1291,13 +1290,11 @@ class SessionController(NSObject):
                     add_streams.append(streamController.stream)
 
             else:
-                self.log_info("%s controller already exists: %s"% (stype, self.streamHandlers))
-                if stype == 'chat':
-                    streamController = self.streamHandlerOfType('chat')
-                    handlerClass = StreamHandlerForType[stype]
-                    stream = handlerClass.createStream()
-                    streamController.stream = stream
+                self.log_debug("%s controller already exists: %s"% (stype, self.streamHandlers))
+                streamController = self.streamHandlerOfType(stype)
+                streamController.reset()
 
+                if stype == 'chat':
                     if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:
                         # starts outgoing chat session
                         if self.streamHandlers == [streamController]:
@@ -1622,9 +1619,13 @@ class SessionController(NSObject):
             status = u"Session Failed"
             self.failureReason = "failed"
 
-        self.log_info("Session cancelled by %s"%data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
-        log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
-        self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
+        self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
+
+        must_retry = data.code == 408 and data.originator == 'local' and len(self.routes) > 1
+
+        if not must_retry:
+            log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
+            self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
         self.changeSessionState(STATE_FAILED, status)
 
@@ -1657,7 +1658,7 @@ class SessionController(NSObject):
                     self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
         # local timeout while we have an alternative route
-        elif data.code == 408 and data.originator == 'local' and len(self.routes) > 1:
+        elif must_retry:
             self.log_info('Trying alternative route')
             self.routes.pop(0)
             self.try_next_hop = True
