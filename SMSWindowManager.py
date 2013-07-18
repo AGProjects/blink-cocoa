@@ -37,6 +37,8 @@ class SMSWindowController(NSWindowController):
         if self:
             self._owner = owner
             NSBundle.loadNibNamed_owner_("SMSSession", self)
+            self.notification_center = NotificationCenter()
+            self.notification_center.add_observer(self, name="BlinkShouldTerminate")
             self.unreadMessageCounts = {}
         return self
 
@@ -57,6 +59,16 @@ class SMSWindowController(NSWindowController):
         else:
             title = u"Instant Messages"
         self.window().setTitle_(title)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_BlinkShouldTerminate(self, sender, data):
+        if self.window():
+            self.window().orderOut_(self)
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
@@ -138,6 +150,7 @@ class SMSWindowController(NSWindowController):
             self.tabSwitcher.removeTabViewItem_(item)
         if self in SMSWindowManager().windows:
             SMSWindowManager().windows.remove(self)
+        self.notification_center.remove_observer(self, name="BlinkShouldTerminate")
         return True
 
     @objc.IBAction
