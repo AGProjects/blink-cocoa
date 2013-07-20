@@ -351,10 +351,13 @@ class SessionHistory(object):
         if before_date:
             query += " and start_time < %s" % ChatMessage.sqlrepr(before_date)
         try:
-            return self.db.queryAll(query)
+            self.db.queryAll(query)
         except Exception, e:
             BlinkLogger().log_error(u"Error deleting messages from session history table: %s" % e)
             return False
+        else:
+            self.db.queryAll('vacuum')
+            return True
 
 
 class ChatMessage(SQLObject):
@@ -725,6 +728,9 @@ class ChatHistory(object):
         except Exception, e:
             BlinkLogger().log_error(u"Error deleting messages from chat history table: %s" % e)
             return False
+        else:
+            self.db.queryAll('vacuum')
+            return True
 
 class FileTransfer(SQLObject):
     class sqlmeta:
@@ -847,10 +853,13 @@ class FileTransferHistory(object):
     def delete_transfers(self):
         query = "delete from file_transfers"
         try:
-            return self.db.queryAll(query)
+            self.db.queryAll(query)
         except Exception, e:
             BlinkLogger().log_error(u"Error deleting transfers from history table: %s" % e)
             return False
+        else:
+            self.db.queryAll('vacuum')
+            return True
 
 
 class SessionHistoryReplicator(object):
