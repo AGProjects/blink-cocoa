@@ -154,7 +154,6 @@ class ChatWindowController(NSWindowController):
         if self:
             BlinkLogger().log_info('Starting Chat Window Controller')
             smileys = SmileyManager()
-            smileys.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
             self.closing = False
             self.participants = []
             self.conference_shared_files = []

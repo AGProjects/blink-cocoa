@@ -1,11 +1,12 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from Foundation import NSBundle
+
 import os
+
 from application.python.types import Singleton
-
 from util import escape_html
-
 
 SMILEY_STYLE="MSN"
 
@@ -19,8 +20,7 @@ class SmileyManager(object):
         self.smileys = {}
         self.smileys_html = {}
         self.smiley_keys = []
-        self.theme = None
-
+        self.load_theme(str(NSBundle.mainBundle().resourcePath())+"/smileys" , "default")
 
     def load_theme(self, smiley_theme_directory, name="default"):
         self.smiley_directory = smiley_theme_directory
