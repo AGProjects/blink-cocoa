@@ -57,6 +57,7 @@ from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
 from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress
 from sipsimple.configuration.settings import SIPSimpleSettings
+from configuration.settings import EchoCancellerSettingsExtension
 from zope.interface import implements
 
 from HorizontalBoxView import HorizontalBoxView
@@ -1216,7 +1217,7 @@ class AecSliderOption(Option):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 244, 50))
 
     def __init__(self, object, name, option, description=None):
-        self.default_value = SIPSimpleSettings.audio.echo_canceller.tail_length.default
+        self.default_value = EchoCancellerSettingsExtension.tail_length.default
         Option.__init__(self, object, name, option, description)
         self.caption = makeLabel('')
         self.setSpacing_(8)
