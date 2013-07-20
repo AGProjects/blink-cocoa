@@ -1846,7 +1846,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
         super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(remote_focus="0", hidden=0, after_date=self.after_date, count=500)
+        return SessionHistory().get_entries(remote_focus="0", hidden=0, after_date=self.after_date, count=200)
 
 
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):

@@ -144,7 +144,7 @@ class SessionHistoryEntry(SQLObject):
 
 class SessionHistory(object):
     __metaclass__ = Singleton
-    __version__ = 3
+    __version__ = 4
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -197,6 +197,28 @@ class SessionHistory(object):
                 BlinkLogger().log_info(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+        if previous_version.version < 4:
+            query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON sessions (sip_callid)"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info(u"Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+            query = "CREATE INDEX IF NOT EXISTS sip_fromtag_index ON sessions (sip_fromtag)"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info(u"Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error adding index sip_fromtag_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+            query = "CREATE INDEX IF NOT EXISTS start_time_index ON sessions (start_time)"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info(u"Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
@@ -313,7 +335,7 @@ class SessionHistory(object):
 
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
-        query="select local_uri, remote_uri from sessions where media_types like '%chat%' and local_uri <> 'bonjour'order by start_time desc limit 100"
+        query="select local_uri, remote_uri from sessions where media_types like '%chat%' and local_uri <> 'bonjour' order by start_time desc limit 100"
         results = []
         try:
             rows = list(self.db.queryAll(query))
@@ -390,7 +412,7 @@ class ChatMessage(SQLObject):
 
 class ChatHistory(object):
     __metaclass__ = Singleton
-    __version__ = 3
+    __version__ = 4
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -450,20 +472,34 @@ class ChatHistory(object):
             except dberrors.OperationalError, e:
                 if not str(e).startswith('duplicate column name'):
                     BlinkLogger().log_error(u"Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
-                    return
             query = "alter table chat_messages add column 'journal_id' TEXT";
             try:
                 self.db.queryAll(query)
             except dberrors.OperationalError, e:
                 if not str(e).startswith('duplicate column name'):
                     BlinkLogger().log_error(u"Error adding column journal_id to table %s: %s" % (ChatMessage.sqlmeta.table, e))
-                    return
-            query = "UPDATE chat_messages SET uuid = %s, journal_id = '0'" % SessionHistoryEntry.sqlrepr(settings.instance_id)
 
+            query = "UPDATE chat_messages SET uuid = %s, journal_id = '0'" % SessionHistoryEntry.sqlrepr(settings.instance_id)
             try:
                 self.db.queryAll(query)
             except Exception, e:
                 BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
+
+        if next_upgrade_version < 4:
+            query = "CREATE INDEX IF NOT EXISTS date_index ON chat_messages (date)"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info(u"Added index date_index to table %s" % ChatMessage.sqlmeta.table)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error adding index date_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+
+            query = "CREATE INDEX IF NOT EXISTS time_index ON chat_messages (time)"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info(u"Added index time_index to table %s" % ChatMessage.sqlmeta.table)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error adding index time_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
@@ -1695,7 +1731,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_info("Failed to parse journal for %s from %s: e" % (key, self.connections_for_incoming_replication[key]['url'], e))
+                    BlinkLogger().log_info("Failed to parse journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
