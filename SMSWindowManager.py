@@ -150,7 +150,7 @@ class SMSWindowController(NSWindowController):
             self.tabSwitcher.removeTabViewItem_(item)
         if self in SMSWindowManager().windows:
             SMSWindowManager().windows.remove(self)
-        self.notification_center.remove_observer(self, name="BlinkShouldTerminate")
+            self.notification_center.remove_observer(self, name="BlinkShouldTerminate")
         return True
 
     @objc.IBAction
