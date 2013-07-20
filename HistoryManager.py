@@ -30,7 +30,7 @@ from application.python import Null
 from application.python.decorator import decorator, preserve_signature
 from application.python.types import Singleton
 from application.system import makedirs
-from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex, DESC
+from sqlobject import SQLObject, StringCol, DateTimeCol, DateCol, IntCol, UnicodeCol, DatabaseIndex, DESC, SQLObjectNotFound
 from sqlobject import connectionForURI
 from sqlobject import dberrors
 
@@ -489,22 +489,26 @@ class ChatHistory(object):
             query = "CREATE INDEX IF NOT EXISTS date_index ON chat_messages (date)"
             try:
                 self.db.queryAll(query)
-                BlinkLogger().log_info(u"Added index date_index to table %s" % ChatMessage.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index date_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
             query = "CREATE INDEX IF NOT EXISTS time_index ON chat_messages (time)"
             try:
                 self.db.queryAll(query)
-                BlinkLogger().log_info(u"Added index time_index to table %s" % ChatMessage.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index time_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+
+            query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON chat_messages (sip_callid)"
+            try:
+                self.db.queryAll(query)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False):
+    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id=''):
         try:
             if not journal_id and not skip_replication:
                 settings = SIPSimpleSettings()
@@ -525,7 +529,8 @@ class ChatHistory(object):
                     'body'                : body,
                     'content_type'        : content_type,
                     'private'             : private,
-                    'status'              : status
+                    'status'              : status,
+                    'call_id'             : call_id
                 }
 
                 notification_center = NotificationCenter()
@@ -538,8 +543,16 @@ class ChatHistory(object):
                     time_entry          = datetime.utcnow()
                     date_entry          = datetime.utcnow().date()
 
+            if call_id and media_type == 'sms':
+                try:
+                    results = ChatMessage.selectBy(sip_callid=call_id)
+                    message = results.getOne()
+                except SQLObjectNotFound:
+                    pass
+
             ChatMessage(
                           msgid               = msgid,
+                          sip_callid          = call_id,
                           time                = time_entry,
                           date                = date_entry,
                           media_type          = media_type,
@@ -681,10 +694,12 @@ class ChatHistory(object):
         return block_on(self._get_daily_entries(local_uri, remote_uri, media_type, search_text, order_text, after_date, before_date))
 
     @run_in_db_thread
-    def _get_messages(self, msgid, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count):
+    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count):
         query='1=1'
         if msgid:
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
+        if call_id:
+            query += " and sip_callid=%s" % ChatMessage.sqlrepr(call_id)
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         if remote_uri:
@@ -714,8 +729,8 @@ class ChatHistory(object):
             BlinkLogger().log_error(u"Error getting chat messages from chat history table: %s" % e)
             return []
 
-    def get_messages(self, msgid=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=50):
-        return block_on(self._get_messages(msgid, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
+    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=50):
+        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
 
     @run_in_db_thread
     def delete_journaled_messages(self, account, journal_ids, after_date):
@@ -1512,7 +1527,13 @@ class ChatHistoryReplicator(object):
             if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
                 try:
                     self.last_journal_timestamp[account]['msgid_list'].append(data['msgid'])
-                    ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id)
+                    try:
+                        call_id = data['call_id']
+                    except KeyError:
+                        call_id = ''
+                        data['call_id'] = ''
+
+                    ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id, call_id=call_id)
                     now = datetime(*time.localtime()[:6])
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
                     elapsed = now - start_time

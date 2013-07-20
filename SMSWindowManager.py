@@ -282,7 +282,7 @@ class SMSWindowManagerClass(NSObject):
 
         is_cpim = False
         cpim_message = None
-        replication_message = False
+        is_replication_message = False
 
         if data.content_type == 'message/cpim':
             try:
@@ -296,7 +296,7 @@ class SMSWindowManagerClass(NSObject):
                 content_type = cpim_message.content_type
                 sender_identity = cpim_message.sender or data.from_header
                 if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
-                    replication_message = True
+                    is_replication_message = True
                     window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
                 else:
                     window_tab_identity = data.from_header
@@ -328,13 +328,13 @@ class SMSWindowManagerClass(NSObject):
             return
 
         # display the message
-        note_new_message = False if replication_message else True
+        note_new_message = False if is_replication_message else True
         viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         replication_state = None
         replication_timestamp = None
 
-        if replication_message:
+        if is_replication_message:
             replicated_response_code = data.headers.get('X-Replication-Code', Null).body
             if replicated_response_code == '202':
                 replication_state = 'deferred'
@@ -348,10 +348,10 @@ class SMSWindowManagerClass(NSObject):
             except Exception:
                 replication_timestamp = ISOTimestamp.now()
 
-        viewer.gotMessage(sender_identity, body, is_html, replication_state, replication_timestamp)
+        viewer.gotMessage(sender_identity, call_id, body, is_html, is_replication_message, replication_timestamp)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
-        if replication_message:
+        if is_replication_message:
             return
 
         if not self.windowForViewer(viewer).window().isKeyWindow():

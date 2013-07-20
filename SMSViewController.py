@@ -51,7 +51,7 @@ MAX_MESSAGE_LENGTH = 1300
 
 
 class MessageInfo(object):
-    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, content_type=None, status=None):
+    def __init__(self, msgid, call_id='', direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, content_type=None, status=None):
         self.msgid = msgid
         self.direction = direction
         self.sender = sender
@@ -60,6 +60,8 @@ class MessageInfo(object):
         self.text = text
         self.content_type = content_type
         self.status = status
+        self.call_id = call_id
+
 
 class SMSSplitView(NSSplitView):
     text = None
@@ -184,7 +186,7 @@ class SMSViewController(NSObject):
         this_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
-    def gotMessage(self, sender, message, is_html=False, state=None, timestamp=None):
+    def gotMessage(self, sender, call_id, message, is_html=False, is_replication_message=False, timestamp=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or ISOTimestamp.now()
@@ -198,8 +200,9 @@ class SMSViewController(NSObject):
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
         # save to history
-        message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
-        self.add_to_history(message)
+        if not is_replication_message:
+            message = MessageInfo(msgid, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=message, content_type="html" if is_html else "text", status="delivered")
+            self.add_to_history(message)
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -268,6 +271,7 @@ class SMSViewController(NSObject):
             else:
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_DELIVERED)
                 message.status='delivered'
+            message.call_id = call_id
             self.add_to_history(message)
 
         self.notification_center.remove_observer(self, sender=sender)
@@ -280,6 +284,7 @@ class SMSViewController(NSObject):
         if message.content_type != "application/im-iscomposing+xml":
             self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
             message.status='failed'
+            message.call_id = call_id
             self.add_to_history(message)
             BlinkLogger().log_info(u"Outgoing SMS %s from %s to %s delivery failed: %s" % (call_id, self.local_uri, self.remote_uri, data.reason))
 
@@ -293,7 +298,7 @@ class SMSViewController(NSObject):
         cpim_timestamp = str(message.timestamp)
         content_type="html" if "html" in message.content_type else "text"
 
-        self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status)
+        self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status, call_id=message.call_id)
 
     def composeReplicationMessage(self, sent_message, response_code):
         if isinstance(self.account, Account):
