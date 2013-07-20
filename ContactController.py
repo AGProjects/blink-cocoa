@@ -37,6 +37,8 @@ from zope.interface import implements
 from VirtualGroups import VirtualGroup
 from util import allocate_autorelease_pool, checkValidPhoneNumber, format_uri_type, run_in_gui_thread
 
+XMPP_DOMAINS= ['jit.si', 'gmail.com', 'comm.unicate.me']
+
 
 class MyImageThing(NSImageView):
     def mouseDown_(self, event):
@@ -363,6 +365,14 @@ class AddContactController(NSObject):
                 contact_uri.uri = uri
                 if uri.startswith(('https:', 'http:')):
                     contact_uri.type = 'URL'
+
+                elif '@' in uri:
+                    domain = uri.partition("@")[-1]
+                    domain = domain if ':' not in domain else domain.partition(":")[0]
+                    if domain in XMPP_DOMAINS or 'jabb' in domain or 'xmpp' in domain or domain.endswith('.im') or domain.startswith('im.'):
+                        contact_uri.type = 'XMPP'
+                        if len(self.uris) == 1:
+                            self.preferredMedia.selectCellWithTag_(2)
 
             elif column == 1:
                 contact_uri.type = str(cell.itemAtIndex_(object).title())
