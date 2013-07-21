@@ -2665,6 +2665,9 @@ class ContactWindowController(NSWindowController):
             if service.timestamp is None:
                 continue
 
+            if service.device_info is None or service.device_info.description is None:
+                continue
+
             status = str(service.status.extended)
             notes = sorted([unicode(note) for note in service.notes if note])
             try:
@@ -2680,9 +2683,9 @@ class ContactWindowController(NSWindowController):
             except KeyError:
                 if self.my_device_is_active:
                     if not self.sync_presence_at_start:
-                        BlinkLogger().log_info('Another device of mine is active')
+                        BlinkLogger().log_info('Another device of mine (%s) is active' % service.device_info.description.value)
                     else:
-                        BlinkLogger().log_info('Another device of mine became active')
+                        BlinkLogger().log_info('Another device of mine (%s) became active' % service.device_info.description.value)
                 self.my_device_is_active = False
                 return
             else:
@@ -2690,16 +2693,19 @@ class ContactWindowController(NSWindowController):
                     if not self.my_device_is_active:
                         BlinkLogger().log_info('My device is now active')
                     self.my_device_is_active = True
-                    return
+                    self.sync_presence_at_start = True
+                    break
                 else:
                     if not self.sync_presence_at_start:
+                        BlinkLogger().log_info('Become active at start')
                         settings.presence_state.timestamp = ISOTimestamp.now()
+                        settings.save()
                         self.sync_presence_at_start = True
                         must_publish = True
                         change = True
 
                     if self.my_device_is_active:
-                        BlinkLogger().log_info('Another device of mine became active')
+                        BlinkLogger().log_info('Another device of mine (%s) became active' % service.device_info.description.value)
                     self.my_device_is_active = False
 
             try:
