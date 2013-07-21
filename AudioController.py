@@ -551,10 +551,6 @@ class AudioController(MediaStream):
             elif self.stream.sample_rate and self.stream.codec:
                 sample_rate = self.stream.sample_rate/1000
                 codec = beautify_audio_codec(self.stream.codec)
-                if self.stream.codec == 'opus':
-                    settings = SIPSimpleSettings()
-                    if settings.audio.echo_canceller.enabled:
-                        sample_rate =  32
                 if self.stream.sample_rate >= 32000:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     hd_label = 'UWB Audio'
