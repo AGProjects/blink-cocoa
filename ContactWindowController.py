@@ -323,6 +323,7 @@ class ContactWindowController(NSWindowController):
     my_device_is_active = True
     sync_presence_at_start = False
     new_audio_sample_rate = None
+    last_status_per_device =  {}
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -2659,16 +2660,19 @@ class ContactWindowController(NSWindowController):
             if own_service_id == service.id:
                 continue
 
-            if service.user_input is not None and service.user_input.value == 'idle':
-                continue
-
             if service.timestamp is None:
                 continue
 
-            if service.device_info is None or service.device_info.description is None:
-                continue
+            device_description = 'unknown'
+            if service.device_info is not None and service.device_info.description is not None:
+                device_description = service.device_info.description.value
 
             status = str(service.status.extended)
+            try:
+                selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
+            except StopIteration:
+                contrinue
+
             notes = sorted([unicode(note) for note in service.notes if note])
             try:
                 note = notes[0]
@@ -2683,35 +2687,37 @@ class ContactWindowController(NSWindowController):
             except KeyError:
                 if self.my_device_is_active:
                     if not self.sync_presence_at_start:
-                        BlinkLogger().log_info('Another device of mine (%s) is active' % service.device_info.description.value)
+                        BlinkLogger().log_info('Another device of mine (%s) is active' % device_description)
                     else:
-                        BlinkLogger().log_info('Another device of mine (%s) became active' % service.device_info.description.value)
+                        BlinkLogger().log_info('Another device of mine (%s) became active' % device_description)
                 self.my_device_is_active = False
                 return
             else:
                 if last_published_timestamp.value >= service.timestamp.value:
-                    if not self.my_device_is_active:
-                        BlinkLogger().log_info('My device is now active')
                     self.my_device_is_active = True
                     self.sync_presence_at_start = True
                     break
                 else:
+                    try:
+                        last_status = self.last_status_per_device[device_description]
+                    except KeyError:
+                        BlinkLogger().log_info('My availability changed on device %s to %s' % (device_description, status))
+                    else:
+                        if last_status != status:
+                            BlinkLogger().log_info('My availability changed on device %s to %s' % (device_description, status))
+
+                    self.last_status_per_device[device_description] = status
+
                     if not self.sync_presence_at_start:
-                        BlinkLogger().log_info('Become active at start')
+                        BlinkLogger().log_info('Will become active at start')
                         settings.presence_state.timestamp = ISOTimestamp.now()
-                        settings.save()
                         self.sync_presence_at_start = True
                         must_publish = True
                         change = True
 
                     if self.my_device_is_active:
-                        BlinkLogger().log_info('Another device of mine (%s) became active' % service.device_info.description.value)
+                        BlinkLogger().log_info('Another device of mine (%s) is active' % device_description)
                     self.my_device_is_active = False
-
-            try:
-                selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
-            except StopIteration:
-                return
 
             if note != settings.presence_state.note:
                 self.presenceNoteText.setStringValue_(note)
@@ -2753,6 +2759,15 @@ class ContactWindowController(NSWindowController):
 
             if must_publish:
                 self.presencePublisher.publish()
+
+        try:
+            my_last_status = self.last_status_per_device[own_service_id]
+        except KeyError:
+            BlinkLogger().log_info('My device is now %s' % ('active' if self.my_device_is_active else 'passive'))
+        else:
+            if my_last_status != self.my_device_is_active:
+                BlinkLogger().log_info('My device is now %s' % ('active' if self.my_device_is_active else 'passive'))
+        self.last_status_per_device[own_service_id] = self.my_device_is_active
 
     @objc.IBAction
     def presenceNoteChanged_(self, sender):
@@ -2801,7 +2816,7 @@ class ContactWindowController(NSWindowController):
         if settings.presence_state.status == status:
             # if is the same status, delete existing note
             presence_note = ''
-        if settings.presence_state.status == 'Invisible':
+        if status == 'Invisible':
             presence_note = ''
 
         if settings.presence_state.status != status:

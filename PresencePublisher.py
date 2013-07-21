@@ -427,7 +427,7 @@ class PresencePublisher(object):
             return None
 
         if not self.first_start_logged:
-            BlinkLogger().log_info('My device is now active')
+            BlinkLogger().log_info('My device has started and is active')
             self.first_start_logged = True
 
         if self.last_logged_status != activity_object['extended_status']:
