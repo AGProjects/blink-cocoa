@@ -194,7 +194,7 @@ class SessionHistory(object):
             query = "ALTER TABLE sessions add column 'hidden' INTEGER DEFAULT 0"
             try:
                 self.db.queryAll(query)
-                BlinkLogger().log_info(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                BlinkLogger().log_debug(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
@@ -202,21 +202,21 @@ class SessionHistory(object):
             query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON sessions (sip_callid)"
             try:
                 self.db.queryAll(query)
-                BlinkLogger().log_info(u"Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                BlinkLogger().log_debug(u"Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
             query = "CREATE INDEX IF NOT EXISTS sip_fromtag_index ON sessions (sip_fromtag)"
             try:
                 self.db.queryAll(query)
-                BlinkLogger().log_info(u"Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                BlinkLogger().log_debug(u"Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index sip_fromtag_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
             query = "CREATE INDEX IF NOT EXISTS start_time_index ON sessions (start_time)"
             try:
                 self.db.queryAll(query)
-                BlinkLogger().log_info(u"Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                BlinkLogger().log_debug(u"Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
@@ -1146,7 +1146,7 @@ class SessionHistoryReplicator(object):
         except (KeyError, ValueError):
             pass
         except Exception, e:
-            BlinkLogger().log_info(u"Error: %s" % e)
+            BlinkLogger().log_error(u"Error: %s" % e)
 
         try:
             if calls['placed']:
@@ -1213,7 +1213,7 @@ class SessionHistoryReplicator(object):
         except (KeyError, ValueError):
             pass
         except Exception, e:
-            BlinkLogger().log_info(u"Error: %s" % e)
+            BlinkLogger().log_error(u"Error: %s" % e)
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
@@ -1521,7 +1521,7 @@ class ChatHistoryReplicator(object):
             try:
                 data = cjson.decode(data)
             except (TypeError, cjson.DecodeError), e:
-                BlinkLogger().log_info("Failed to decode server journal id %s for %s: %s" % (journal_id, account, e))
+                BlinkLogger().log_error("Failed to decode server journal id %s for %s: %s" % (journal_id, account, e))
                 continue
 
             if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
@@ -1563,7 +1563,7 @@ class ChatHistoryReplicator(object):
         if notify_data:
             for key in notify_data.keys():
                 log_text = '%d new chat messages for %s retrieved from history server' % (notify_data[key], key)
-                BlinkLogger().log_info(log_text)
+                BlinkLogger().log_debug(log_text)
         else:
             BlinkLogger().log_debug('Local history is already in sync with server history for %s' % account)
 
@@ -1717,7 +1717,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_outgoing_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_info("Failed to parse journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
+                    BlinkLogger().log_error("Failed to parse journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
                 else:
                     self.updateLocalHistoryWithRemoteJournalId(data, key)
 
@@ -1752,7 +1752,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_info("Failed to parse journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
+                    BlinkLogger().log_error("Failed to parse journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
@@ -1775,7 +1775,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_delete_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_info("Failed to parse journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
+                    BlinkLogger().log_error("Failed to parse journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
                 else:
                     try:
                         result = data['success']
