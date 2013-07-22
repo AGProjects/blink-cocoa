@@ -137,12 +137,21 @@ class AddContactController(NSObject):
             #for uri in self.uris:
             #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
             #        uri.uri = uri.uri + ';xmpp'
+            if self.preferredMedia.selectedCell().tag() == 1:
+                preferred_media = 'audio'
+            elif self.preferredMedia.selectedCell().tag() == 2:
+                preferred_media = 'chat'
+            elif self.preferredMedia.selectedCell().tag() == 3:
+                preferred_media = 'chat,audio'
+            else:
+                preferred_media = 'audio'
+
             contact = {'default_uri'     : self.default_uri,
                        'uris'            : self.uris,
                        'name'            : unicode(self.nameText.stringValue()),
                        'groups'          : self.belonging_groups,
                        'icon'            : None if self.photoImage.image() == self.defaultPhotoImage else self.photoImage.image(),
-                       'preferred_media' : "audio" if self.preferredMedia.selectedCell().tag() == 1 else "chat",
+                       'preferred_media' : preferred_media,
                        'subscriptions'   : self.subscriptions
                         }
             return contact
@@ -425,7 +434,13 @@ class EditContactController(AddContactController):
 
         self.nameText.setStringValue_(blink_contact.name or "")
         self.photoImage.setImage_(blink_contact.icon)
-        self.preferredMedia.selectCellWithTag_(2 if blink_contact.preferred_media == "chat" else 1)
+        if blink_contact.preferred_media == 'chat':
+            self.preferredMedia.selectCellWithTag_(2)
+        elif blink_contact.preferred_media == 'audio':
+            self.preferredMedia.selectCellWithTag_(1)
+        elif blink_contact.preferred_media in ('chat,audio', 'audio,chat'):
+            self.preferredMedia.selectCellWithTag_(3)
+
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         for item in blink_contact.contact.uris:
             type = format_uri_type(item.type)
@@ -461,13 +476,21 @@ class EditContactController(AddContactController):
             #for uri in self.uris:
             #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
             #        uri.uri = uri.uri + ';xmpp'
+            if self.preferredMedia.selectedCell().tag() == 1:
+                preferred_media = 'audio'
+            elif self.preferredMedia.selectedCell().tag() == 2:
+                preferred_media = 'chat'
+            elif self.preferredMedia.selectedCell().tag() == 3:
+                preferred_media = 'chat,audio'
+            else:
+                preferred_media = 'audio'
             contact = {
                     'default_uri'     : self.default_uri,
                     'uris'            : self.uris,
                     'name'            : unicode(self.nameText.stringValue()),
                     'groups'          : self.belonging_groups,
                     'icon'            : None if self.photoImage.image() is self.defaultPhotoImage else self.photoImage.image(),
-                    'preferred_media' : "audio" if self.preferredMedia.selectedCell().tag() == 1 else "chat",
+                    'preferred_media' : preferred_media,
                     'subscriptions'   : self.subscriptions
                     }
             return contact
