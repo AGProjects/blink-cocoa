@@ -24,7 +24,7 @@ class AnsweringMachineSettings(SettingsGroup):
 
 class EchoCancellerSettingsExtension(EchoCancellerSettings):
     enabled = Setting(type=bool, default=True)
-    tail_length = Setting(type=NonNegativeInteger, default=1)
+    tail_length = Setting(type=NonNegativeInteger, default=2)
 
 
 class AudioSettingsExtension(AudioSettings):
