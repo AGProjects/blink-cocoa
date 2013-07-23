@@ -2365,7 +2365,7 @@ class ContactWindowController(NSWindowController):
                     media_type=('chat', 'audio')
                 elif contact.preferred_media == "chat":
                     media_type = "chat"
-                elif contact.preferred_media == "chat,audio":
+                elif contact.preferred_media in ("chat+audio", "audio+chat"):
                     media_type = ("chat", "audio")
                 else:
                     media_type = "audio"

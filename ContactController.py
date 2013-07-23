@@ -57,11 +57,12 @@ class AddContactController(NSObject):
     defaultButton = objc.IBOutlet()
     subscribePopUp = objc.IBOutlet()
     photoImage = objc.IBOutlet()
-    preferredMedia = objc.IBOutlet()
+    preferredMediaPopUpButton = objc.IBOutlet()
     addressTable = objc.IBOutlet()
     addressTypesPopUpButton = objc.IBOutlet()
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = None
+    media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3}
 
     def __new__(cls, *args, **kwargs):
         from ContactListModel import DefaultUserAvatar
@@ -74,6 +75,7 @@ class AddContactController(NSObject):
         self.dealloc_timer = None
 
         self.default_uri = None
+        self.preferred_media = 'audio'
         self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
         self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
@@ -137,21 +139,12 @@ class AddContactController(NSObject):
             #for uri in self.uris:
             #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
             #        uri.uri = uri.uri + ';xmpp'
-            if self.preferredMedia.selectedCell().tag() == 1:
-                preferred_media = 'audio'
-            elif self.preferredMedia.selectedCell().tag() == 2:
-                preferred_media = 'chat'
-            elif self.preferredMedia.selectedCell().tag() == 3:
-                preferred_media = 'chat,audio'
-            else:
-                preferred_media = 'audio'
-
             contact = {'default_uri'     : self.default_uri,
                        'uris'            : self.uris,
                        'name'            : unicode(self.nameText.stringValue()),
                        'groups'          : self.belonging_groups,
                        'icon'            : None if self.photoImage.image() == self.defaultPhotoImage else self.photoImage.image(),
-                       'preferred_media' : preferred_media,
+                       'preferred_media' : self.preferred_media,
                        'subscriptions'   : self.subscriptions
                         }
             return contact
@@ -235,6 +228,33 @@ class AddContactController(NSObject):
         elif index  == 8:
             self.subscriptions['dialog']['policy'] = 'allow' if self.subscriptions['dialog']['policy'] == 'block' else 'block'
         self.updateSubscriptionMenus()
+
+    @objc.IBAction
+    def preferredMediaPopUpClicked_(self, sender):
+        item = self.preferredMediaPopUpButton.selectedItem()
+        try:
+            self.preferred_media = (media for media in self.media_tags.keys() if self.media_tags[media] == item.tag()).next()
+        except StopIteration:
+            self.preferred_media == 'audio'
+
+        self.updatePreferredMediaMenus()
+
+    def updatePreferredMediaMenus(self):
+        items = self.preferredMediaPopUpButton.itemArray()
+        for menu_item in items:
+            if menu_item.tag() == 1:
+                menu_item.setState_(NSOnState if self.preferred_media == 'audio' else NSOffState)
+            elif menu_item.tag() == 2:
+                menu_item.setState_(NSOnState if self.preferred_media == 'chat' else NSOffState)
+            elif menu_item.tag() == 3:
+                menu_item.setState_(NSOnState if self.preferred_media == 'audio+chat' else NSOffState)
+
+        try:
+            tag = self.media_tags[self.preferred_media]
+        except KeyError:
+            tag = 1
+
+        self.preferredMediaPopUpButton.selectItemWithTag_(tag)
 
     def updateSubscriptionMenus(self):
         self.subscribePopUp.selectItemAtIndex_(0)
@@ -381,7 +401,8 @@ class AddContactController(NSObject):
                     if domain in XMPP_DOMAINS or 'jabb' in domain or 'xmpp' in domain or domain.endswith('.im') or domain.startswith('im.'):
                         contact_uri.type = 'XMPP'
                         if len(self.uris) == 1:
-                            self.preferredMedia.selectCellWithTag_(2)
+                            self.preferred_media = 'chat'
+                            self.updateSubscriptionMenus()
 
             elif column == 1:
                 contact_uri.type = str(cell.itemAtIndex_(object).title())
@@ -434,13 +455,7 @@ class EditContactController(AddContactController):
 
         self.nameText.setStringValue_(blink_contact.name or "")
         self.photoImage.setImage_(blink_contact.icon)
-        if blink_contact.preferred_media == 'chat':
-            self.preferredMedia.selectCellWithTag_(2)
-        elif blink_contact.preferred_media == 'audio':
-            self.preferredMedia.selectCellWithTag_(1)
-        elif blink_contact.preferred_media in ('chat,audio', 'audio,chat'):
-            self.preferredMedia.selectCellWithTag_(3)
-
+        self.preferred_media = blink_contact.preferred_media
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         for item in blink_contact.contact.uris:
             type = format_uri_type(item.type)
@@ -466,6 +481,7 @@ class EditContactController(AddContactController):
         }
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
+        self.updatePreferredMediaMenus()
         self.loadGroupNames()
 
     def runModal(self):
@@ -476,21 +492,13 @@ class EditContactController(AddContactController):
             #for uri in self.uris:
             #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
             #        uri.uri = uri.uri + ';xmpp'
-            if self.preferredMedia.selectedCell().tag() == 1:
-                preferred_media = 'audio'
-            elif self.preferredMedia.selectedCell().tag() == 2:
-                preferred_media = 'chat'
-            elif self.preferredMedia.selectedCell().tag() == 3:
-                preferred_media = 'chat,audio'
-            else:
-                preferred_media = 'audio'
             contact = {
                     'default_uri'     : self.default_uri,
                     'uris'            : self.uris,
                     'name'            : unicode(self.nameText.stringValue()),
                     'groups'          : self.belonging_groups,
                     'icon'            : None if self.photoImage.image() is self.defaultPhotoImage else self.photoImage.image(),
-                    'preferred_media' : preferred_media,
+                    'preferred_media' : self.preferred_media,
                     'subscriptions'   : self.subscriptions
                     }
             return contact
