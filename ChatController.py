@@ -1225,7 +1225,7 @@ class ChatController(MediaStream):
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
                 reason = 'Remote party failed to establish the connection' if data.reason == 'Internal Server Error' else '%s (%s)' % (data.reason,data.code)
-                message = "Proposal rejected: %s (%s)" % (reason, data.code) if data.code != 200 else "Proposal rejected"
+                message = "Proposal rejected: %s" % reason if data.code != 200 else "Proposal rejected"
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
