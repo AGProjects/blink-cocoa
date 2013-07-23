@@ -68,8 +68,6 @@ class SessionInfoController(NSObject):
     audio_packet_loss = objc.IBOutlet()
     audio_rtt_graph = objc.IBOutlet()
     audio_packet_loss_graph = objc.IBOutlet()
-    audio_jitter = objc.IBOutlet()
-    audio_jitter_graph = objc.IBOutlet()
     audio_srtp_lock = objc.IBOutlet()
 
     chat_local_endpoint = objc.IBOutlet()
@@ -116,12 +114,6 @@ class SessionInfoController(NSObject):
         self.audio_packet_loss_graph.setAboveLimit_(3) # if higher than 3% show red color
         self.audio_packet_loss_graph.setLineColor_(NSColor.greenColor())
         self.audio_packet_loss_graph.setMinimumHeigth_(5)
-
-        self.audio_jitter_graph.setLineWidth_(1.0)
-        self.audio_jitter_graph.setLineSpacing_(1.0)
-        self.audio_jitter_graph.setAboveLimit_(50) # if higher than 50 ms show red color
-        self.audio_jitter_graph.setLineColor_(NSColor.yellowColor())
-        self.audio_jitter_graph.setMinimumHeigth_(100)
 
         self.resetSession()
         self.updatePanelValues()
@@ -206,7 +198,6 @@ class SessionInfoController(NSObject):
         self.audio_ice_remote_candidate.setStringValue_('')
         self.audio_rtt.setStringValue_('')
         self.audio_packet_loss.setStringValue_('')
-        self.audio_jitter.setStringValue_('')
 
     def resetChat(self):
         self.chat_local_endpoint.setStringValue_('')
@@ -266,7 +257,6 @@ class SessionInfoController(NSObject):
 
             self.audio_rtt_graph.setDataQueue_needsDisplay_(self.audio_stream.rtt_history, True if self.window.isVisible() else False)
             self.audio_packet_loss_graph.setDataQueue_needsDisplay_(self.audio_stream.loss_history, True if self.window.isVisible() else False)
-            self.audio_jitter_graph.setDataQueue_needsDisplay_(self.audio_stream.jitter_history, True if self.window.isVisible() else False)
 
             rtt = self.audio_stream.statistics['rtt']
             if rtt > 1000:
@@ -280,7 +270,6 @@ class SessionInfoController(NSObject):
 
             self.audio_rtt.setStringValue_(text)
             self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'] if self.audio_stream.statistics['loss'] else '')
-            self.audio_jitter.setStringValue_('%.1f ms' % self.audio_stream.statistics['jitter'])
 
             if self.audio_stream.stream.codec and self.audio_stream.stream.sample_rate:
                 codec = beautify_audio_codec(self.audio_stream.stream.codec)
@@ -466,7 +455,6 @@ class SessionInfoController(NSObject):
 
     def dealloc(self):
         self.audio_packet_loss_graph.removeFromSuperview()
-        self.audio_jitter_graph.removeFromSuperview()
         self.audio_rtt_graph.removeFromSuperview()
         super(SessionInfoController, self).dealloc()
 
