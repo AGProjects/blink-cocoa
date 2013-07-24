@@ -1308,8 +1308,9 @@ class ChatController(MediaStream):
             self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
         else:
-            #self.sessionController.end()
-            self.sessionController.endStream(self)
+            # it we have more than chat, we could just stop the chat stream only but is counter intuitive in the GUI so we end the whole session
+            self.sessionController.end()
+            #self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
 
     # lifetime of a chat controler: possible deallocation paths
