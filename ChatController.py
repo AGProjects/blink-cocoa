@@ -1297,20 +1297,19 @@ class ChatController(MediaStream):
         else:
             self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
-    def endStream(self):
+    def endStream(self, closeTab=False):
         if self.status != STREAM_DISCONNECTING:
             self.sessionControllersManager.ringer.stop_ringing(self.sessionController.session)
 
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
-        elif self.session and self.stream and (self.sessionController.streamHandlers == [self] or self.session.remote_focus):
-            self.sessionController.end()
-            self.changeStatus(STREAM_DISCONNECTING)
         else:
-            # it we have more than chat, we could just stop the chat stream only but is counter intuitive in the GUI so we end the whole session
-            self.sessionController.end()
-            #self.sessionController.endStream(self)
+            if closeTab:
+                self.sessionController.endStream(self)
+            else:
+                # it we have more than chat, we could just stop the chat stream only but is counter intuitive in the GUI so we end the whole session
+                self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
 
     # lifetime of a chat controler: possible deallocation paths
@@ -1320,7 +1319,7 @@ class ChatController(MediaStream):
     # 4. User clicks on disconnect button: endStream -> reset
 
     def closeTab(self):
-        self.endStream()
+        self.endStream(True)
         self.reset()
         self.closeWindow()
         self.startDeallocTimer()
