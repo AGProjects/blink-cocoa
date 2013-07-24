@@ -869,7 +869,15 @@ class AudioController(MediaStream):
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             item = menu.itemWithTag_(10) # add Chat
-            item.setEnabled_(can_propose and not self.sessionController.hasStreamOfType("chat") and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
+            item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
+            if not self.sessionController.hasStreamOfType("chat"):
+                item.setTitle_('Add Chat')
+            else:
+                chatStream = self.sessionController.streamHandlerOfType("chat")
+                if chatStream:
+                    item.setTitle_('Remove Chat' if chatStream.status == STREAM_CONNECTED else 'Add Chat')
+                else:
+                    item.setTitle_('Add Chat')
 
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
@@ -920,8 +928,20 @@ class AudioController(MediaStream):
     def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 10: # add chat
-            NSApp.delegate().contactsWindowController.drawer.close()
-            self.sessionController.addChatToSession()
+            if not self.sessionController.hasStreamOfType("chat"):
+                NSApp.delegate().contactsWindowController.drawer.close()
+                self.sessionController.addChatToSession()
+            else:
+                chatStream = self.sessionController.streamHandlerOfType("chat")
+                print chatStream
+                if chatStream:
+                    print chatStream.status
+                    if chatStream.status != STREAM_CONNECTED:
+                        self.sessionController.addChatToSession()
+                    else:
+                        self.sessionController.removeChatFromSession()
+                else:
+                    self.sessionController.removeChatFromSession()
         elif tag == 14: # add video
             NSApp.delegate().contactsWindowController.drawer.close()
             self.sessionController.addVideoToSession()
