@@ -1401,15 +1401,15 @@ class ChatHistoryReplicator(object):
         try:
             success = journal['success']
         except KeyError:
-            BlinkLogger().log_debug(u"Invalid answer from history server")
+            BlinkLogger().log_debug(u"Invalid answer from chat history server")
             self.disableReplication(account, 'Invalid server answer')
             return
 
         if not success:
             try:
-                BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
+                BlinkLogger().log_debug(u"Error from chat history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
-                BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
+                BlinkLogger().log_debug(u"Unknown error from chat history server of %s" % account)
                 self.disableReplication(account)
             else:
                 self.disableReplication(account, journal['error_message'])
@@ -1418,7 +1418,7 @@ class ChatHistoryReplicator(object):
         try:
             results = journal['results']
         except KeyError:
-            BlinkLogger().log_debug(u"No outgoing results returned by history server push of %s" % account)
+            BlinkLogger().log_debug(u"No outgoing results returned by chat history server push of %s" % account)
             #self.disableReplication(account, 'No results')
             return
 
@@ -1427,7 +1427,7 @@ class ChatHistoryReplicator(object):
                 msgid          = entry['id']
                 journal_id     = str(entry['journal_id'])
             except KeyError:
-                BlinkLogger().log_debug(u"Failed to update journal id from history server of %s" % account)
+                BlinkLogger().log_debug(u"Failed to update journal id from chat history server of %s" % account)
             else:
                 BlinkLogger().log_debug(u"Update local chat history message %s with remote journal id %s" % (msgid, journal_id))
                 ChatHistory().update_from_journal_put_results(msgid, journal_id)
@@ -1438,15 +1438,15 @@ class ChatHistoryReplicator(object):
         try:
             success = journal['success']
         except KeyError:
-            BlinkLogger().log_debug(u"Invalid answer from history server of %s" % account)
+            BlinkLogger().log_debug(u"Invalid answer from chat history server of %s" % account)
             self.disableReplication(account, 'Invalid answer')
             return
 
         if not success:
             try:
-                BlinkLogger().log_debug(u"Error from history server of %s: %s" % (account, journal['error_message']))
+                BlinkLogger().log_debug(u"Error from chat history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
-                BlinkLogger().log_debug(u"Unknown error from history server of %s" % account)
+                BlinkLogger().log_debug(u"Unknown error from chat history server of %s" % account)
                 self.disableReplication(account)
             else:
                 self.disableReplication(account, journal['error_message'])
@@ -1465,7 +1465,7 @@ class ChatHistoryReplicator(object):
             else:
                 self.replication_server_summary[account] = results
                 oldest = datetime.fromtimestamp(int(first_row['timestamp'])).strftime('%Y-%m-%d %H:%M:%S')
-                BlinkLogger().log_debug(u"Account %s has %d messages on chat replication server since %s" % (account, len(results), oldest))
+                BlinkLogger().log_debug(u"Account %s has %d messages on chat history server since %s" % (account, len(results), oldest))
                 try:
                     journal_ids = (result['journal_id'] for result in results)
                 except KeyError:
@@ -1476,9 +1476,11 @@ class ChatHistoryReplicator(object):
         try:
             results = journal['results']
         except KeyError:
-            BlinkLogger().log_debug(u"No incoming results returned by history server of %s" % account)
+            BlinkLogger().log_debug(u"No incoming results returned by chat history server of %s" % account)
             #self.disableReplication(account, 'No results')
             return
+        else:
+            BlinkLogger().log_debug(u"Received %s results from chat history server of %s" % (len(results) or 'no new', account))
 
         replication_password = None
         try:
@@ -1506,7 +1508,7 @@ class ChatHistoryReplicator(object):
                         self.last_journal_timestamp[account] = {'timestamp': timestamp, 'msgid_list': []}
 
             except KeyError:
-                BlinkLogger().log_debug(u"Failed to parse history server results for %s" % account)
+                BlinkLogger().log_debug(u"Failed to parse chat history server results for %s" % account)
                 self.disableReplication(account)
                 return
 
@@ -1515,13 +1517,13 @@ class ChatHistoryReplicator(object):
                 try:
                     data = decryptor_function(data, b64_decode=True)
                 except Exception, e:
-                    BlinkLogger().log_debug(u"Failed to decrypt server journal id %s for %s: %s" % (journal_id, account, e))
+                    BlinkLogger().log_debug(u"Failed to decrypt chat history server journal id %s for %s: %s" % (journal_id, account, e))
                     continue
 
             try:
                 data = cjson.decode(data)
             except (TypeError, cjson.DecodeError), e:
-                BlinkLogger().log_error("Failed to decode server journal id %s for %s: %s" % (journal_id, account, e))
+                BlinkLogger().log_error("Failed to decode chat history server journal id %s for %s: %s" % (journal_id, account, e))
                 continue
 
             if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
@@ -1557,15 +1559,15 @@ class ChatHistoryReplicator(object):
                         BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
 
                 except KeyError:
-                    BlinkLogger().log_debug(u"Failed to apply server journal to local history database for %s" % account)
+                    BlinkLogger().log_debug(u"Failed to apply chat history server journal to local chat history database for %s" % account)
                     return
 
         if notify_data:
             for key in notify_data.keys():
-                log_text = '%d new chat messages for %s retrieved from history server' % (notify_data[key], key)
+                log_text = '%d new chat messages for %s retrieved from chat history server' % (notify_data[key], key)
                 BlinkLogger().log_debug(log_text)
         else:
-            BlinkLogger().log_debug('Local history is already in sync with server history for %s' % account)
+            BlinkLogger().log_debug('Local chat history is in sync with chat history server for %s' % account)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1616,7 +1618,7 @@ class ChatHistoryReplicator(object):
                     pass
 
                 if not connection and delete_entries:
-                    BlinkLogger().log_debug("Removing journal entries for %s from replication server" % account.id)
+                    BlinkLogger().log_debug("Removing journal entries for %s from chat history server" % account.id)
                     try:
                         entries = cjson.encode(list(delete_entries))
                     except (TypeError, cjson.EncodeError), e:
@@ -1669,7 +1671,7 @@ class ChatHistoryReplicator(object):
         query_string = "&".join(("%s=%s" % (key, value) for key, value in query_string_variables.items()))
 
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        BlinkLogger().log_debug(u"Retrieving chat history for %s from %s" % (account.id, url))
+        BlinkLogger().log_debug(u"Retrieving chat history for %s from %s after %s" % (account.id, url, datetime.fromtimestamp(after_timestamp).strftime("%Y-%m-%d %H:%M:%S")))
         nsurl = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
@@ -1704,7 +1706,7 @@ class ChatHistoryReplicator(object):
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Outgoing journal for %s pushed to %s" % (key, self.connections_for_outgoing_replication[key]['url']))
+            BlinkLogger().log_debug(u"Outgoing chat journal for %s pushed to %s" % (key, self.connections_for_outgoing_replication[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -1717,7 +1719,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_outgoing_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_error("Failed to parse journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
+                    BlinkLogger().log_error("Failed to parse chat journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
                 else:
                     self.updateLocalHistoryWithRemoteJournalId(data, key)
 
@@ -1752,7 +1754,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_error("Failed to parse journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
+                    BlinkLogger().log_error("Failed to parse chat journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
@@ -1762,7 +1764,7 @@ class ChatHistoryReplicator(object):
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Delete journal entries for %s pushed to %s" % (key, self.connections_for_delete_replication[key]['url']))
+            BlinkLogger().log_debug(u"Delete chat journal entries for %s pushed to %s" % (key, self.connections_for_delete_replication[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -1775,18 +1777,18 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_delete_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_error("Failed to parse journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
+                    BlinkLogger().log_error("Failed to parse chat journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
                 else:
                     try:
                         result = data['success']
                     except KeyError:
-                        BlinkLogger().log_debug(u"Invalid answer from history server of %s for delete journal entries" % account.id)
+                        BlinkLogger().log_debug(u"Invalid answer from chat history server of %s for delete journal entries" % account.id)
                     else:
                         if not result:
                             try:
                                 error_message = data['error_message']
                             except KeyError:
-                                BlinkLogger().log_debug(u"Invalid answer from history server of %s" % account.id)
+                                BlinkLogger().log_debug(u"Invalid answer from chat history server of %s" % account.id)
                             else:
                                 BlinkLogger().log_debug(u"Delete journal entries failed for account %s: %s" % (account.id, error_message))
                         else:
