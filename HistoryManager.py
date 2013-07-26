@@ -1610,13 +1610,13 @@ class ChatHistoryReplicator(object):
                 pass
             else:
                 connection = None
-                BlinkLogger().log_debug("Removing journal entries for %s from replication server" % account.id)
                 try:
                     connection = self.connections_for_delete_replication[account.id]['connection']
                 except KeyError:
                     pass
 
                 if not connection and delete_entries:
+                    BlinkLogger().log_debug("Removing journal entries for %s from replication server" % account.id)
                     try:
                         entries = cjson.encode(list(delete_entries))
                     except (TypeError, cjson.EncodeError), e:
