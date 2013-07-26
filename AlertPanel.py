@@ -393,11 +393,11 @@ class AlertPanel(NSObject, object):
                 if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
                     self.deviceLabel.setStringValue_(u"Using Built-in Microphone and Output")
                 else:
-                    self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev, indev))
+                    self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev.strip(), indev.strip()))
             else:
-                self.deviceLabel.setStringValue_(u"Using audio device %s" % outdev)
+                self.deviceLabel.setStringValue_(u"Using audio device %s" % outdev.strip())
 
-            BlinkLogger().log_info(u"Using input/output audio devices: %s/%s" % (indev, outdev))
+            BlinkLogger().log_info(u"Using input/output audio devices: %s/%s" % (indev.strip(), outdev.strip()))
 
             self.deviceLabel.sizeToFit()
             self.deviceLabel.setHidden_(False)

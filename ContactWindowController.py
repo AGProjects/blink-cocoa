@@ -4570,7 +4570,7 @@ class ContactWindowController(NSWindowController):
 
             default_device = self.backend._app.engine.default_output_device if tag in (401, 403) else self.backend._app.engine.default_input_device
 
-            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("System Default (%s)" % default_device , selector, "", index)
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("System Default (%s)" % default_device.strip() , selector, "", index)
             item.setRepresentedObject_("system_default")
             item.setTarget_(self)
             item.setTag_(tag*100+1)
@@ -4580,7 +4580,7 @@ class ContactWindowController(NSWindowController):
 
             i = 2
             for dev in devices:
-                dev_title = 'Built-in Microphone' if dev.startswith('Built-in Microp') else dev
+                dev_title = 'Built-in Microphone' if dev.startswith('Built-in Microp') else dev.strip()
                 item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev_title, selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)
@@ -4608,7 +4608,7 @@ class ContactWindowController(NSWindowController):
                 index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
                 i = 0
                 for dev in devices:
-                    item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
+                    item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), selector, "", index)
                     if settings.audio.input_device == dev and settings.audio.output_device == dev:
                         state = NSOnState
                     elif dev == u'Built-in Microphone and Output' and (settings.audio.input_device is not None and settings.audio.input_device.startswith('Built-in Mic')) and settings.audio.output_device == u'Built-in Output':
