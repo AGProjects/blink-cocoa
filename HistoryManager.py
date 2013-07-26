@@ -1281,7 +1281,7 @@ class ChatHistoryReplicator(object):
         except (IOError, cPickle.UnpicklingError):
             pass
 
-        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(45.0, self, "updateTimer:", None, True)
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(80.0, self, "updateTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
