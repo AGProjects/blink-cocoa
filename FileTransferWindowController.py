@@ -65,7 +65,7 @@ class FileTransferWindowController(NSObject, object):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_previous_transfers(self, active_items=[]):
-        results = FileTransferHistory().get_transfers(20)
+        results = FileTransferHistory().get_transfers(10)
         transfers = [transfer for transfer in reversed(results) if transfer.transfer_id not in active_items]
         self.render_previous_transfers(transfers)
 
