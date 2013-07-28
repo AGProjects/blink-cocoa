@@ -3509,9 +3509,7 @@ class ContactListModel(CustomListModel):
         group.expanded = True
 
         test_contacts = {
-                        "3333@sip2sip.info":            { 'name': "Call Test",         'preferred_media': "audio", 'id': 'test_audio' },
-                        "echo@conference.sip2sip.info": { 'name': "Echo Test",         'preferred_media': "audio", 'id': 'test_microphone' },
-                        "test@conference.sip2sip.info": { 'name': "Conference Test",   'preferred_media': "chat" , 'id': 'test_conference'}
+                        "echo@conference.sip2sip.info": { 'name': "Test Call", 'preferred_media': "audio+chat", 'id': 'test_microphone' }
                         }
 
         for uri, data in test_contacts.iteritems():
