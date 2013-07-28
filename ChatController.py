@@ -653,7 +653,7 @@ class ChatController(MediaStream):
                 elif zoom_factor == 7:
                     self.zoom_period_label = 'ten years'
 
-                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', after_date=after_date)
+                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', after_date=after_date, count=10000)
             else:
                 results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
 
