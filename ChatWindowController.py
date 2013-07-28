@@ -803,7 +803,8 @@ class ChatWindowController(NSWindowController):
 
             if message:
                 chat_stream = session.streamHandlerOfType("chat")
-                chat_stream.handler.send(message, recipient, True)
+                chat_stream.outgoing_message_handler.send(message, recipient, True)
+
 
     def setNickname(self):
         session = self.selectedSessionController()
