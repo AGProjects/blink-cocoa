@@ -156,6 +156,8 @@ class ChatController(MediaStream):
 
     screenshot_task = None
     dealloc_timer = None
+    zoom_period_label = ''
+    message_count_from_history = 0
 
     nickname_request_map = {} # message id -> nickname
 
@@ -407,6 +409,11 @@ class ChatController(MediaStream):
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
 
+    def scroll_back_in_time(self):
+        self.chatViewController.clear()
+        self.chatViewController.resetRenderedMessages()
+        self.replay_history()
+
     def updateToolbarMuteIcon(self):
         if self.fullScreenVideoPanel:
             try:
@@ -612,8 +619,43 @@ class ChatController(MediaStream):
     def replay_history(self):
         if not self:
             return
+
         if self.sessionController.account is not BonjourAccount():
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
+            zoom_factor = self.chatViewController.scrolling_zoom_factor
+            if zoom_factor > 7:
+                zoom_factor = 7
+
+            if zoom_factor:
+                period_array = {
+                                1: datetime.datetime.now()-datetime.timedelta(days=2),
+                                2: datetime.datetime.now()-datetime.timedelta(days=7),
+                                3: datetime.datetime.now()-datetime.timedelta(days=31),
+                                4: datetime.datetime.now()-datetime.timedelta(days=90),
+                                5: datetime.datetime.now()-datetime.timedelta(days=180),
+                                6: datetime.datetime.now()-datetime.timedelta(days=365),
+                                7: datetime.datetime.now()-datetime.timedelta(days=3650)
+                            }
+
+                after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
+
+                if zoom_factor == 1:
+                    self.zoom_period_label = 'day'
+                elif zoom_factor == 2:
+                    self.zoom_period_label = 'week'
+                elif zoom_factor == 3:
+                    self.zoom_period_label = 'month'
+                elif zoom_factor == 4:
+                    self.zoom_period_label = 'three months'
+                elif zoom_factor == 5:
+                    self.zoom_period_label = 'six months'
+                elif zoom_factor == 6:
+                    self.zoom_period_label = 'year'
+                elif zoom_factor == 7:
+                    self.zoom_period_label = 'ten years'
+
+                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', after_date=after_date)
+            else:
+                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
 
             # build a list of previously failed messages
             last_failed_messages=[]
@@ -635,6 +677,44 @@ class ChatController(MediaStream):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def render_history_messages(self, messages):
+        if self.chatViewController.scrolling_zoom_factor:
+            if not self.message_count_from_history:
+                self.message_count_from_history = len(messages)
+                self.chatViewController.lastMessagesLabel.setStringValue_('Displaying messages from last %s' % self.zoom_period_label)
+            else:
+                if self.message_count_from_history == len(messages):
+                    self.chatViewController.setHandleScrolling_(False)
+                    self.chatViewController.lastMessagesLabel.setStringValue_('Displaying messages from last %s. There are no previous messages.' % self.zoom_period_label)
+                else:
+                    self.chatViewController.lastMessagesLabel.setStringValue_('Displaying messages from last %s' % self.zoom_period_label)
+        else:
+            self.message_count_from_history = len(messages)
+            if len(messages):
+                self.chatViewController.lastMessagesLabel.setStringValue_('Scroll up for going back in time')
+            else:
+                self.chatViewController.setHandleScrolling_(False)
+                self.chatViewController.lastMessagesLabel.setStringValue_('There are no previous messages')
+
+        if len(messages):
+            message = messages[0]
+            delta = datetime.date.today() - message.date
+
+            if not self.chatViewController.scrolling_zoom_factor:
+                if delta.days <= 2:
+                    self.chatViewController.scrolling_zoom_factor = 1
+                elif delta.days <= 7:
+                    self.chatViewController.scrolling_zoom_factor = 2
+                elif delta.days <= 31:
+                    self.chatViewController.scrolling_zoom_factor = 3
+                elif delta.days <= 90:
+                    self.chatViewController.scrolling_zoom_factor = 4
+                elif delta.days <= 180:
+                    self.chatViewController.scrolling_zoom_factor = 5
+                elif delta.days <= 365:
+                    self.chatViewController.scrolling_zoom_factor = 6
+                elif delta.days <= 3650:
+                    self.chatViewController.scrolling_zoom_factor = 7
+
         for message in messages:
             if message.direction == 'outgoing':
                 icon = NSApp.delegate().contactsWindowController.iconPathForSelf()

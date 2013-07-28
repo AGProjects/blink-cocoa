@@ -153,6 +153,7 @@ class HistoryViewer(NSWindowController):
             self.searchText.cell().setPlaceholderString_("Type text and press Enter")
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+            self.chatViewController.setHandleScrolling_(False)
             self.entriesView.setShouldCloseWithWindow_(False)
 
             for c in ('remote_uri', 'local_uri', 'date', 'type'):

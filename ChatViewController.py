@@ -197,6 +197,7 @@ class ChatViewController(NSObject):
     outputView = objc.IBOutlet()
     inputText = objc.IBOutlet()
     inputView = objc.IBOutlet()
+    lastMessagesLabel = objc.IBOutlet()
 
     splitterHeight = None
 
@@ -220,7 +221,13 @@ class ChatViewController(NSObject):
     # timer is triggered every TYPING_IDLE_TIMEOUT, and a new is-composing msg is sent
     typingTimer = None
 
+    scrollingTimer = None
+
+    handle_scrolling = True
+    scrolling_zoom_factor = 0
+
     editor_has_changed = False
+    scrolling_back = False
 
     def resetRenderedMessages(self):
         self.rendered_messages=set()
@@ -238,6 +245,9 @@ class ChatViewController(NSObject):
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "textDidChange:", NSTextDidChangeNotification, self.inputText)
 
         self.messageQueue = []
+
+    def setHandleScrolling_(self, scrolling):
+        self.handle_scrolling = scrolling
 
     def setContentFile_(self, path):
         self.finishedLoading = False
@@ -421,7 +431,40 @@ class ChatViewController(NSObject):
     def isSelectorExcludedFromWebScript_(self, sel):
         if sel == "collaborativeEditorisTyping":
             return False
+        if sel == "isScrolling:":
+            return False
         return True
+
+    def isScrolling_(self, scrollTop):
+        if not self.handle_scrolling:
+            return
+        if scrollTop < 0:
+            if self.scrollingTimer is None:
+                self.scrollingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "scrollTimerDelay:", None, False)
+            self.scrolling_back = True
+        else:
+            self.scrolling_back = False
+            if self.scrollingTimer is not None:
+                self.scrollingTimer.invalidate()
+                self.scrollingTimer = None
+
+            if scrollTop == 0:
+                last_label = self.lastMessagesLabel.stringValue()
+                new_label = 'Keep scrolling up for more than one second to load older messages'
+                if last_label != new_label:
+                    self.lastMessagesLabel.setStringValue_(new_label)
+                    NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", last_label, False)
+
+    def showLastScrollLabel_(self, timer):
+        last_label= timer.userInfo()
+        if last_label not in ('Scroll up for going back in time', 'Loading more messages...'):
+            self.lastMessagesLabel.setStringValue_(last_label)
+
+    def scrollTimerDelay_(self, timer):
+        if self.scrolling_back:
+            self.scrolling_zoom_factor += 1
+            self.lastMessagesLabel.setStringValue_('Loading more messages...')
+            self.delegate.scroll_back_in_time()
 
     def collaborativeEditorisTyping(self):
         self.editor_has_changed = True
@@ -446,5 +489,9 @@ class ChatViewController(NSObject):
     def dealloc(self):
         if self.typingTimer:
             self.typingTimer.invalidate()
+            self.typingTimer = None
+        if self.scrollingTimer:
+            self.scrollingTimer.invalidate()
+            self.scrollingTimer = None
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         super(ChatViewController, self).dealloc()
