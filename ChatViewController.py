@@ -448,7 +448,7 @@ class ChatViewController(NSObject):
                 self.scrollingTimer.invalidate()
                 self.scrollingTimer = None
 
-            if scrollTop == 0:
+            if scrollTop == 0 and self.handle_scrolling:
                 last_label = self.lastMessagesLabel.stringValue()
                 new_label = 'Keep scrolling up for more than one second to load older messages'
                 if last_label != new_label:

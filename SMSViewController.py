@@ -472,19 +472,20 @@ class SMSViewController(NSObject):
             after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
 
             if zoom_factor == 1:
-                self.zoom_period_label = 'day'
+                self.zoom_period_label = 'Displaying messages from last day'
             elif zoom_factor == 2:
-                self.zoom_period_label = 'week'
+                self.zoom_period_label = 'Displaying messages from last week'
             elif zoom_factor == 3:
-                self.zoom_period_label = 'month'
+                self.zoom_period_label = 'Displaying messages from last month'
             elif zoom_factor == 4:
-                self.zoom_period_label = 'three months'
+                self.zoom_period_label = 'Displaying messages from last three months'
             elif zoom_factor == 5:
-                self.zoom_period_label = 'six months'
+                self.zoom_period_label = 'Displaying messages from last six months'
             elif zoom_factor == 6:
-                self.zoom_period_label = 'year'
+                self.zoom_period_label = 'Displaying messages from last year'
             elif zoom_factor == 7:
-                self.zoom_period_label = 'ten years'
+                self.zoom_period_label = 'Displaying all messages'
+                self.chatViewController.setHandleScrolling_(False)
 
             results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', after_date=after_date, count=10000)
         else:
@@ -499,13 +500,14 @@ class SMSViewController(NSObject):
         if self.chatViewController.scrolling_zoom_factor:
             if not self.message_count_from_history:
                 self.message_count_from_history = len(messages)
-                self.chatViewController.lastMessagesLabel.setStringValue_('Displaying messages from last %s' % self.zoom_period_label)
+                self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
             else:
                 if self.message_count_from_history == len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.chatViewController.lastMessagesLabel.setStringValue_('Displaying messages from last %s. There are no previous messages.' % self.zoom_period_label)
+                    self.chatViewController.lastMessagesLabel.setStringValue_('%s. There are no previous messages.' % self.zoom_period_label)
+                    self.chatViewController.setHandleScrolling_(False)
                 else:
-                    self.chatViewController.lastMessagesLabel.setStringValue_('Displaying messages from last %s' % self.zoom_period_label)
+                    self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
         else:
             self.message_count_from_history = len(messages)
             if len(messages):
