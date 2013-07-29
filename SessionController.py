@@ -117,6 +117,14 @@ class SessionControllersManager(object):
     def alertPanel(self):
         return NSApp.delegate().contactsWindowController.alertPanel
 
+    @property
+    def audioSessions(self):
+        return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("audio"))
+
+    @property
+    def chatSessions(self):
+        return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("chat"))
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
