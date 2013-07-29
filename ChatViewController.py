@@ -291,17 +291,17 @@ class ChatViewController(NSObject):
         if state == MSG_STATE_DELIVERED:
             is_private = 1 if private else "null"
             script = "markDelivered('%s',%s)"%(msgid, is_private)
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+            self.executeJavaScript(script)
         elif state == MSG_STATE_DEFERRED:
             script = "markDeferred('%s')"%msgid
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+            self.executeJavaScript(script)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+            self.executeJavaScript(script)
 
     def clear(self):
         if self.finishedLoading:
-            self.outputView.stringByEvaluatingJavaScriptFromString_("clear()")
+            self.executeJavaScript("clear()")
         else:
             self.messageQueue = []
 
@@ -318,7 +318,7 @@ class ChatViewController(NSObject):
         script = """renderSystemMessage("%s", "%s", %s)""" % (processHTMLText(text), timestamp, is_error)
 
         if self.finishedLoading:
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+            self.executeJavaScript(script)
         else:
             self.messageQueue.append(script)
 
@@ -349,7 +349,7 @@ class ChatViewController(NSObject):
         script = """renderMessage('%s', '%s', '%s', '%s', "%s", '%s', '%s', %s)""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private)
 
         if self.finishedLoading:
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+            self.executeJavaScript(script)
         else:
             self.messageQueue.append(script)
 
@@ -363,7 +363,7 @@ class ChatViewController(NSObject):
     def updateMessage(self, msgid, text, is_html, expandSmileys):
         text = processHTMLText(text, expandSmileys, is_html)
         script = """updateMessageBodyContent('%s', "%s")""" % (msgid, text)
-        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+        self.executeJavaScript(script)
 
     def toggleCollaborationEditor(self, editor_status):
         if editor_status:
@@ -380,7 +380,7 @@ class ChatViewController(NSObject):
         self.inputView.setFrame_(frame)
 
         script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
-        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+        self.executeJavaScript(script)
 
     def hideCollaborationEditor(self):
         if self.splitterHeight is not None:
@@ -389,10 +389,17 @@ class ChatViewController(NSObject):
             self.inputView.setFrame_(frame)
 
         script = "hideCollaborationEditor()"
-        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
+        self.executeJavaScript(script)
 
     def scrollToBottom(self):
         script = "scrollToBottom()"
+        self.executeJavaScript(script)
+
+    def scrollToId(self, id):
+        script = """scrollToId("%s")""" % id
+        self.executeJavaScript(script)
+
+    def executeJavaScript(self, script):
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
     def webviewFinishedLoading_(self, notification):
@@ -433,6 +440,7 @@ class ChatViewController(NSObject):
             return False
         if sel == "isScrolling:":
             return False
+
         return True
 
     def isScrolling_(self, scrollTop):

@@ -211,6 +211,7 @@ body
 var lastSender;
 var lastTimestamp;
 
+
 function clear()
 {
   var chat_session;
@@ -408,6 +409,13 @@ function scrollToBottom()
 {
     window.scroll(0, document.body.scrollHeight);
 }
+
+function scrollToId(id)
+{
+   ele = document.getElementById(id);
+   window.scrollTo(ele.offsetLeft,ele.offsetTop);
+}
+
 
 function showCollaborationEditor(form_id, collaboration_url)
 {

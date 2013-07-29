@@ -410,9 +410,14 @@ class ChatController(MediaStream):
          self.replay_history()
 
     def scroll_back_in_time(self):
+        try:
+            msgid = self.history_msgid_list[0]
+        except IndexError:
+            msgid = None
+
         self.chatViewController.clear()
         self.chatViewController.resetRenderedMessages()
-        self.replay_history()
+        self.replay_history(msgid)
 
     def updateToolbarMuteIcon(self):
         if self.fullScreenVideoPanel:
@@ -616,7 +621,7 @@ class ChatController(MediaStream):
 
     @run_in_green_thread
     @allocate_autorelease_pool
-    def replay_history(self):
+    def replay_history(self, scrollToMessageId=None):
         if not self:
             return
 
@@ -671,13 +676,13 @@ class ChatController(MediaStream):
             # messages_to_render = [row for row in reversed(list(results)) if row not in last_failed_messages]
             messages_to_render = [row for row in reversed(list(results))]
             #self.resend_last_failed_message(last_failed_messages)
-            self.render_history_messages(messages_to_render)
+            self.render_history_messages(messages_to_render, scrollToMessageId)
 
         self.send_pending_message()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
-    def render_history_messages(self, messages):
+    def render_history_messages(self, messages, scrollToMessageId=None):
         if self.chatViewController.scrolling_zoom_factor:
             if not self.message_count_from_history:
                 self.message_count_from_history = len(messages)
@@ -730,6 +735,10 @@ class ChatController(MediaStream):
 
             if self.chatViewController:
                 self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+
+
+        if scrollToMessageId is not None:
+            self.chatViewController.scrollToId(scrollToMessageId)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
