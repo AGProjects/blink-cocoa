@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2013 AG Projects. See LICENSE for details.
 #
 
 import datetime
@@ -17,7 +17,7 @@ from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 
 from resources import Resources
-from util import allocate_autorelease_pool
+from util import allocate_autorelease_pool, run_in_gui_thread
 
 from BlinkLogger import BlinkLogger
 
@@ -46,7 +46,7 @@ class Ringer(object):
     filesend_sessions = {}
     filerecv_sessions = {}
     active_sessions = set()
-    on_hold_session_count = 0
+    on_hold_audio_sessions = set()
 
     audio_primary_ringtone = None
     audio_secondary_ringtone = None
@@ -362,8 +362,13 @@ class Ringer(object):
         if has_audio:
             self.play_hangup()
         NotificationCenter().remove_observer(self, sender=session)
+
         self.active_sessions.discard(session)
         self.stop_ringing(session)
+
+        self.on_hold_audio_sessions.discard(session)
+        if self.secondary_hold_tone and len(self.on_hold_audio_sessions) == 0:
+            self.secondary_hold_tone.stop()
 
     def _NH_SIPSessionGotProposal(self, notification):
         session = notification.sender
@@ -396,16 +401,20 @@ class Ringer(object):
     def _NH_AudioStreamDidChangeHoldState(self, notification):
         data = notification.data
         settings = SIPSimpleSettings()
+        session = notification.sender.session
+
+        if data.on_hold:
+            self.on_hold_audio_sessions.add(session)
+        else:
+            self.on_hold_audio_sessions.discard(session)
+
         if not settings.audio.silent:
-            if data.on_hold:
-                self.on_hold_session_count += 1
-            else:
-                self.on_hold_session_count -= 1
             if self.secondary_hold_tone:
-                if self.on_hold_session_count == 1:
+                if len(self.on_hold_audio_sessions) == 1:
                     self.secondary_hold_tone.start()
-                elif self.on_hold_session_count == 0:
+                elif len(self.on_hold_audio_sessions) == 0:
                     self.secondary_hold_tone.stop()
+
             if data.on_hold and data.originator == 'remote' and self.initial_hold_tone and not self.initial_hold_tone.is_active:
                 self.initial_hold_tone.start()
 
