@@ -172,7 +172,7 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
             self.notification_center.add_observer(self, name="BlinkAudioStreamChangedHoldState")
             self.notification_center.add_observer(self, name="BlinkShouldTerminate")
-            self.notification_center.add_observer(self, name="BlinkColaborativeEditorContentHasChanged")
+            self.notification_center.add_observer(self, name="BlinkCollaborationEditorContentHasChanged")
             self.notification_center.add_observer(self, name="BlinkConferenceGotUpdate")
             self.notification_center.add_observer(self, name="BlinkContactsHaveChanged")
             self.notification_center.add_observer(self, name="BlinkGotProposal")
@@ -551,7 +551,7 @@ class ChatWindowController(NSWindowController):
             self.muteButton.setState_(NSOffState)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-    def _NH_BlinkColaborativeEditorContentHasChanged(self, sender, data):
+    def _NH_BlinkCollaborationEditorContentHasChanged(self, sender, data):
         if not sender.editorStatus:
             self.noteSession_isComposing_(sender.delegate.sessionController, True)
         self.revalidateToolbar()

@@ -688,7 +688,7 @@ class ChatController(MediaStream):
                 self.message_count_from_history = len(messages)
                 self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
             else:
-                if self.message_count_from_history == len(messages):
+                if self.message_count_from_history >= len(messages):
                     self.chatViewController.setHandleScrolling_(False)
                     self.chatViewController.lastMessagesLabel.setStringValue_('%s. There are no previous messages.' % self.zoom_period_label)
                     self.chatViewController.setHandleScrolling_(False)

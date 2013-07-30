@@ -225,9 +225,11 @@ class ChatViewController(NSObject):
 
     handle_scrolling = True
     scrolling_zoom_factor = 0
+    last_scrolling_label = ''
 
     editor_has_changed = False
     scrolling_back = False
+    collaboration_editor_active = False
 
     def resetRenderedMessages(self):
         self.rendered_messages=set()
@@ -372,6 +374,9 @@ class ChatViewController(NSObject):
             self.hideCollaborationEditor()
 
     def showCollaborationEditor(self):
+        self.collaboration_editor_active = True
+        self.last_scrolling_label = self.lastMessagesLabel.stringValue()
+        self.lastMessagesLabel.setStringValue_('Click on Editor toolbar button to switch back to the chat session')
         settings = SIPSimpleSettings()
 
         frame=self.inputView.frame()
@@ -383,6 +388,8 @@ class ChatViewController(NSObject):
         self.executeJavaScript(script)
 
     def hideCollaborationEditor(self):
+        self.lastMessagesLabel.setStringValue_(self.last_scrolling_label)
+        self.collaboration_editor_active = False
         if self.splitterHeight is not None:
             frame=self.inputView.frame()
             frame.size.height = self.splitterHeight
@@ -444,8 +451,9 @@ class ChatViewController(NSObject):
         return True
 
     def isScrolling_(self, scrollTop):
-        if not self.handle_scrolling:
+        if not self.handle_scrolling or self.collaboration_editor_active:
             return
+
         if scrollTop < 0:
             if self.scrollingTimer is None:
                 self.scrollingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "scrollTimerDelay:", None, False)
@@ -457,16 +465,16 @@ class ChatViewController(NSObject):
                 self.scrollingTimer = None
 
             if scrollTop == 0 and self.handle_scrolling:
-                last_label = self.lastMessagesLabel.stringValue()
+                self.last_scrolling_label = self.lastMessagesLabel.stringValue()
                 new_label = 'Keep scrolling up for more than one second to load older messages'
-                if last_label != new_label:
+                if self.last_scrolling_label != new_label:
                     self.lastMessagesLabel.setStringValue_(new_label)
-                    NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", last_label, False)
+                    NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", self.last_scrolling_label, False)
 
     def showLastScrollLabel_(self, timer):
-        last_label= timer.userInfo()
-        if last_label not in ('Scroll up for going back in time', 'Loading more messages...'):
-            self.lastMessagesLabel.setStringValue_(last_label)
+        self.last_scrolling_label= timer.userInfo()
+        if self.last_scrolling_label not in ('Scroll up for going back in time', 'Loading more messages...'):
+            self.lastMessagesLabel.setStringValue_(self.last_scrolling_label)
 
     def scrollTimerDelay_(self, timer):
         if self.scrolling_back:
@@ -478,7 +486,7 @@ class ChatViewController(NSObject):
         self.editor_has_changed = True
         self.delegate.resetIsComposingTimer(5)
 
-        NotificationCenter().post_notification("BlinkColaborativeEditorContentHasChanged", sender=self)
+        NotificationCenter().post_notification("BlinkCollaborationEditorContentHasChanged", sender=self)
 
     def webView_didClearWindowObject_forFrame_(self, sender, windowObject, frame):
         windowObject.setValue_forKey_(self, "blink")
