@@ -1770,33 +1770,47 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         settings = SIPSimpleSettings()
         skip_target = set()
         session_ids = {}
+        last_missed_call_start_time = {}
+
         for result in results:
             target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
             contact = getFirstContactMatchingURI(target_uri)
             k = contact if contact is not None else result.remote_uri
-
             if isinstance(self, MissedCallsBlinkGroup):
-                # skip missed calls that happened before any successful call
-                if result.duration > 0 and result.am_filename != '':
-                    if contact:
-                        for uri in contact.uris:
-                            if uri is None:
-                                continue
-                            skip_target.add(uri.uri)
-                    else:
-                        skip_target.add(target_uri)
-                    continue
+                if result.direction == 'incoming':
+                    if result.status == 'missed':
+                        try:
+                            _last_missed_call_start_time = last_missed_call_start_time[k]
+                        except KeyError:
+                            last_missed_call_start_time[target_uri] = result.start_time
 
-                if result.direction == 'outgoing':
-                    if contact:
-                        for uri in contact.uris:
-                            if uri is None:
-                                continue
-                            skip_target.add(uri.uri)
-                    else:
+
+                    # skip missed calls that happened before any successful incoming call
+                    if result.duration > 0 or result.am_filename != '':
+                        try:
+                            _last_missed_call_start_time = last_missed_call_start_time[target_uri]
+                        except KeyError:
+                            if contact:
+                                for uri in contact.uris:
+                                    if uri is None:
+                                        continue
+                                    skip_target.add(uri.uri)
+                            skip_target.add(target_uri)
+                            continue
+
+                # skip missed calls that happened before any outgoing call
+                elif result.direction == 'outgoing':
+                    try:
+                        _last_missed_call_start_time = last_missed_call_start_time[target_uri]
+                    except KeyError:
+                        if contact:
+                            for uri in contact.uris:
+                                if uri is None:
+                                    continue
+                                skip_target.add(uri.uri)
                         skip_target.add(target_uri)
-                    continue
+                        continue
 
                 if target_uri in skip_target:
                     continue
@@ -1807,6 +1821,9 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                     session_ids[k]=[result.id]
                 else:
                     current_session_ids.append(result.id)
+
+                if result.status != 'missed':
+                    continue
 
             if seen.has_key(k):
                 seen[k] += 1
@@ -1856,7 +1873,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
         super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
-        return SessionHistory().get_entries(remote_focus="0", hidden=0, after_date=self.after_date, count=200)
+        return SessionHistory().get_entries(hidden=0, after_date=self.after_date, count=200)
 
 
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
