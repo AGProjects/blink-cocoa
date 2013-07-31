@@ -1839,6 +1839,11 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
 
             except KeyError:
                 pass
+
+            if len(blink_contact.answering_machine_filenames):
+                new_detail = blink_contact.detail + u' (%d Voice Message%s)' % (len(blink_contact.answering_machine_filenames), ('s' if len(blink_contact.answering_machine_filenames) > 1 else ''))
+                blink_contact.detail = new_detail
+
             self.contacts.append(blink_contact)
 
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
