@@ -635,7 +635,7 @@ class AlertPanel(NSObject, object):
             self.acceptAudioStreamAnsweringMachine(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Call answer by voicemail in %i s" % remaining
+        text = "Answering Machine starts in %is" % remaining
         info["label"].setStringValue_(text)
 
     def timerTickAutoAnswer_(self, timer):

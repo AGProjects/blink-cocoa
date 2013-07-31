@@ -122,8 +122,8 @@
 							<object class="NSMutableString" key="NSToolbarItemIdentifier">
 								<characters key="NS.bytes">5AD724EF-E683-47C3-ADCD-0E20F3598E83</characters>
 							</object>
-							<string key="NSToolbarItemLabel">Voicemail</string>
-							<string key="NSToolbarItemPaletteLabel">Voicemail</string>
+							<string key="NSToolbarItemLabel">Machine</string>
+							<string key="NSToolbarItemPaletteLabel">Machine</string>
 							<string key="NSToolbarItemToolTip"/>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
@@ -355,7 +355,7 @@
 							</object>
 						</object>
 					</dictionary>
-					<array key="NSToolbarIBAllowedItems">
+					<array class="NSMutableArray" key="NSToolbarIBAllowedItems">
 						<reference ref="340133350"/>
 						<reference ref="1056865415"/>
 						<reference ref="938967298"/>
@@ -474,7 +474,7 @@
 																<int key="NSvFlags">256</int>
 																<string key="NSFrameSize">{283, 360}</string>
 																<reference key="NSSuperview" ref="610364781"/>
-																<reference key="NSNextKeyView" ref="398299239"/>
+																<reference key="NSNextKeyView" ref="736749453"/>
 																<bool key="NSEnabled">YES</bool>
 																<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 																<bool key="NSControlAllowsExpansionToolTips">YES</bool>
@@ -688,7 +688,7 @@
 												</array>
 												<string key="NSFrame">{{17, 34}, {285, 378}}</string>
 												<reference key="NSSuperview" ref="350117869"/>
-												<reference key="NSNextKeyView" ref="736749453"/>
+												<reference key="NSNextKeyView" ref="610364781"/>
 												<int key="NSsFlags">133650</int>
 												<reference key="NSVScroller" ref="398299239"/>
 												<reference key="NSHScroller" ref="736749453"/>
@@ -1215,7 +1215,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 												<string key="NSFrame">{{14, 0}, {692, 33}}</string>
 												<reference key="NSSuperview" ref="917581225"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="1010782047"/>
+												<reference key="NSNextKeyView"/>
 												<string key="NSReuseIdentifierKey">_NS:1535</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSTextFieldCell" key="NSCell" id="171221138">
@@ -2088,11 +2088,6 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 						<reference key="parent" ref="917581225"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">259</int>
-						<reference key="object" ref="1056865415"/>
-						<reference key="parent" ref="91223958"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">263</int>
 						<reference key="object" ref="938967298"/>
 						<reference key="parent" ref="91223958"/>
@@ -2143,11 +2138,6 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<object class="IBObjectRecord">
 						<int key="objectID">288</int>
 						<reference key="object" ref="131532713"/>
-						<reference key="parent" ref="91223958"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">290</int>
-						<reference key="object" ref="397551737"/>
 						<reference key="parent" ref="91223958"/>
 					</object>
 					<object class="IBObjectRecord">
@@ -2226,6 +2216,16 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 						<int key="objectID">334</int>
 						<reference key="object" ref="171221138"/>
 						<reference key="parent" ref="92118373"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">290</int>
+						<reference key="object" ref="397551737"/>
+						<reference key="parent" ref="91223958"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">259</int>
+						<reference key="object" ref="1056865415"/>
+						<reference key="parent" ref="91223958"/>
 					</object>
 				</array>
 			</object>
