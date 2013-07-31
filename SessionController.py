@@ -552,7 +552,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, data.timestamp, data.timestamp, duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -589,7 +589,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -623,7 +623,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
@@ -658,7 +658,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
@@ -695,7 +695,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, data.timestamp, data.timestamp, 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
@@ -737,7 +737,7 @@ class SessionControllersManager(object):
 
         duration = session.end_time - session.start_time
 
-        self.add_to_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag)
+        self.add_to_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, session.start_time, session.end_time, duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -767,8 +767,8 @@ class SessionControllersManager(object):
         return duration_print
 
     @run_in_green_thread
-    def add_to_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
-        SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag)
+    def add_to_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename):
+        SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename)
 
     @run_in_green_thread
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
@@ -844,6 +844,7 @@ class SessionController(NSObject):
     from_tag = None
     to_tag = None
     dealloc_timer = None
+    answering_machine_filename = ''
 
     @property
     def sessionControllersManager(self):
@@ -1997,6 +1998,8 @@ class SessionController(NSObject):
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.startDeallocTimer()
 
+    def _NH_AnsweringMachineRecordingDidEnd(self, sender, data):
+        self.answering_machine_filename = data.filename
 
 class CallTransferWindowController(NSObject):
     window = objc.IBOutlet()

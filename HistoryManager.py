@@ -139,12 +139,13 @@ class SessionHistoryEntry(SQLObject):
     session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
     local_idx         = DatabaseIndex('local_uri')
     remote_idx        = DatabaseIndex('remote_uri')
-    hidden            = IntCol(default=0)
+    hidden            = IntCol(default=0),
+    am_filename       = UnicodeCol(sqlType='LONGTEXT')
 
 
 class SessionHistory(object):
     __metaclass__ = Singleton
-    __version__ = 4
+    __version__ = 5
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -220,10 +221,18 @@ class SessionHistory(object):
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
+        if previous_version.version < 5:
+            query = "ALTER TABLE sessions add column 'am_filename' LONGTEXT DEFAULT ''"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_debug(u"Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
+            except Exception, e:
+                BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag):
+    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
@@ -240,7 +249,8 @@ class SessionHistory(object):
                           participants        = participants,
                           sip_callid          = call_id,
                           sip_fromtag         = from_tag,
-                          sip_totag           = to_tag
+                          sip_totag           = to_tag,
+                          am_filename         = am_filename
                           )
             return True
         except Exception, e:
@@ -1099,7 +1109,7 @@ class SessionHistoryReplicator(object):
                         success = 'completed' if duration > 0 else 'missed'
 
                         BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
-                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '')
                         if 'audio' in media:
                             direction = 'incoming'
                             status = 'delivered'
@@ -1189,7 +1199,7 @@ class SessionHistoryReplicator(object):
                             success = 'cancelled' if status == "487" else 'failed'
 
                         BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
-                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag)
+                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '')
                         if 'audio' in media:
                             local_uri = local_uri
                             remote_uri = remote_uri
