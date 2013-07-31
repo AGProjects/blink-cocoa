@@ -4360,6 +4360,7 @@ class ContactWindowController(NSWindowController):
                     history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
                     recordings = self.backend.get_audio_recordings(all_uris)[-10:]
+
                     if recordings:
                         audio_recordings_submenu = NSMenu.alloc().init()
                         for dt, name, f in recordings:
@@ -4369,6 +4370,18 @@ class ContactWindowController(NSWindowController):
 
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
                         self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
+
+                        if history_contact and history_contact.answering_machine_filenames:
+                            voice_messages_submenu = NSMenu.alloc().init()
+                            for dt, name, f in recordings:
+                                if f not in history_contact.answering_machine_filenames:
+                                    continue
+                                r_item = voice_messages_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                                r_item.setTarget_(self)
+                                r_item.setRepresentedObject_(f)
+
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('Voice Messages', "", "")
+                            self.contactContextMenu.setSubmenu_forItem_(voice_messages_submenu, mitem)
 
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
@@ -4422,6 +4435,18 @@ class ContactWindowController(NSWindowController):
 
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
                     self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
+
+                    if history_contact.answering_machine_filenames:
+                        voice_messages_submenu = NSMenu.alloc().init()
+                        for dt, name, f in recordings:
+                            if f not in history_contact.answering_machine_filenames:
+                                continue
+                            r_item = voice_messages_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                            r_item.setTarget_(self)
+                            r_item.setRepresentedObject_(f)
+
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('Voice Messages', "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(voice_messages_submenu, mitem)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

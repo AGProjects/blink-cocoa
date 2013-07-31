@@ -1414,6 +1414,7 @@ class HistoryBlinkContact(BlinkContact):
     editable = False
     deletable = False
     session_ids = None
+    answering_machine_filenames = set()
 
 
 class BonjourBlinkContact(BlinkContact):
@@ -1777,7 +1778,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
 
             if isinstance(self, MissedCallsBlinkGroup):
                 # skip missed calls that happened before any successful call
-                if result.duration > 0:
+                if result.duration > 0 and result.am_filename != '':
                     if contact:
                         for uri in contact.uris:
                             if uri is None:
@@ -1817,7 +1818,10 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 else:
                     icon = None
                 name = 'Anonymous' if is_anonymous(target_uri) else name
-                blink_contact = HistoryBlinkContact(result.remote_uri, icon=icon , name=name)
+                blink_contact = HistoryBlinkContact(result.remote_uri, icon=icon, name=name)
+                blink_contact.answering_machine_filenames = set()
+                if len(result.am_filename):
+                    blink_contact.answering_machine_filenames.add(result.am_filename)
                 blink_contact.detail = u'%s call %s' % (self.type.capitalize(), format_date(result.start_time))
                 blink_contact.contact = contact
                 contacts.append(blink_contact)
@@ -1832,6 +1836,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 if seen[k] > 1:
                     new_detail = blink_contact.detail + u' and %d other time%s' % (seen[k] - 1, 's' if seen[k] > 2 else '')
                     blink_contact.detail = new_detail
+
             except KeyError:
                 pass
             self.contacts.append(blink_contact)
