@@ -451,7 +451,7 @@ class AlertPanel(NSObject, object):
         if not has_audio_streams or is_update_proposal:
             panelVmB.setHidden_(True)
         else:
-            panelVmB.setHidden_(False)
+            panelVmB.setHidden_(not settings.answering_machine.show_in_alert_panel)
 
         if not self.isConferencing:
             panelConfB.setHidden_(True)

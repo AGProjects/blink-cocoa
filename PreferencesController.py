@@ -253,7 +253,7 @@ class PreferencesController(NSWindowController, object):
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
             self.sectionDescription.setStringValue_(u'Answering Machine Settings')
             self.window().setTitle_(u'Answering Machine')
-            self.sectionHelpPlaceholder.setStringValue_('')
+            self.sectionHelpPlaceholder.setStringValue_(u'When enabled, Answering Machine will auto answer the call after the predefined delay')
         elif section == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
