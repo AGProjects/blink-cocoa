@@ -126,7 +126,9 @@ class AudioController(MediaStream):
         return AudioStream()
 
     def reset(self):
+        self.notification_center.remove_observer(self, sender=self.stream)
         self.stream = AudioStream()
+        self.notification_center.add_observer(self, sender=self.stream)
         super(AudioController, self).reset()
 
     def initWithOwner_stream_(self, scontroller, stream):
@@ -140,7 +142,6 @@ class AudioController(MediaStream):
         self.jitter_history = deque(maxlen=300)
 
         self.notification_center = NotificationCenter()
-        self.notification_center.add_observer(self, sender=stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
 
         self.ice_negotiation_status = u'Disabled' if not self.sessionController.account.nat_traversal.use_ice else None
@@ -232,6 +233,7 @@ class AudioController(MediaStream):
 
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
         self.notification_center.add_observer(self, sender=self.sessionController)
+
         if is_answering_machine:
             self.sessionController.accounting_for_answering_machine = True
             self.sessionController.log_info("Sending session to answering machine")
@@ -253,6 +255,7 @@ class AudioController(MediaStream):
 
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.sessionController)
+        self.notification_center.add_observer(self, sender=self.stream)
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         NSApp.delegate().contactsWindowController.showAudioSession(self)
@@ -1232,7 +1235,6 @@ class AudioController(MediaStream):
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
-        self.notification_center.remove_observer(self, sender=self.stream)
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -1257,7 +1259,6 @@ class AudioController(MediaStream):
                     self.changeStatus(STREAM_IDLE, "Audio Removed")
                 else:
                     self.changeStatus(STREAM_IDLE, "Session Ended")
-        self.notification_center.remove_observer(self, sender=self.stream)
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
@@ -1276,11 +1277,11 @@ class AudioController(MediaStream):
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
-        if data.failure_reason == 'DNS Lookup Failed':
-            self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.remove_observer(self, sender=self.stream)
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
+        self.notification_center.remove_observer(self, sender=self.stream)
 
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
