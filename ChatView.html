@@ -222,13 +222,13 @@ function clear()
 function formatTimestamp(timestamp)
 {
     return timestamp;
-   
+
     var ts = timestamp.split(" ");
     var date = ts[0];
     var time = ts[1];
-   
+
     var ts = time.split(":");
-   
+
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
@@ -238,9 +238,9 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
   var content;
   var idstr;
   var message_class;
- 
+
   timestamp = formatTimestamp(timestamp);
- 
+
   chat_session = document.getElementById("chat_session");
 
   status = ''
@@ -268,7 +268,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       box_class = default_box_class;
       status = timestamp;
   }
- 
+
   if (content != null)
       content.id = "";
 
@@ -300,12 +300,12 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
             "<span class='body'>"+text+"</span>"+
         "</div>"+
     "</div>"+
-    "</div>"; 
+    "</div>";
   }
 
   lastSender = sender;
   lastTimestamp = timestamp;
- 
+
   scrollToBottom();
 }
 
@@ -321,18 +321,18 @@ function renderSystemMessage(text, timestamp, is_error)
 {
   var chat_session;
   var content;
- 
+
   timestamp = formatTimestamp(timestamp);
- 
+
   chat_session = document.getElementById("chat_session");
   content = document.getElementById("content");
- 
+
   if (is_error == null) {
       sys_class = "sys"
   } else {
       sys_class = "sys_error"
   }
- 
+
   if (content != null)
       content.id = "";
 
@@ -345,9 +345,9 @@ function renderSystemMessage(text, timestamp, is_error)
     "</div>";
 
   lastSender = "";
- 
+
   scrollToBottom();
- 
+
   return 0;
 }
 
@@ -393,7 +393,7 @@ function markFailed(msgid)
   var msg = document.getElementById(msgid);
   if (msg != null)
     msg.className = "msgbox_failed";
-   
+
   msg = document.getElementById('t'+msgid)
   if (msg != null)
       msg.style.display = "block";
@@ -542,7 +542,7 @@ function showDisabledCollaborationEditor() {
   "<TABLE STYLE='height: 85%; width: 100%'>"+
   "<TR><TD><TEXTAREA disabled='disabled' STYLE='width: 100%; height:100%' onchange='javascript:blink.collaborativeEditorisTyping();'></TEXTAREA></TD></TR>"+
   "</TABLE>";
- 
+
   chat_session.style.display = "none";
   collaboration_editor.style.display = "block";
 
@@ -553,7 +553,7 @@ function showDisabledCollaborationEditor() {
 function hideCollaborationEditor() {
   var collaboration_editor = document.getElementById("collaboration_editor");
   var chat_session = document.getElementById("chat_session");
- 
+
   collaboration_editor.style.display = "none";
   chat_session.style.display = "block";
 
