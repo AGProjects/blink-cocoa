@@ -1273,11 +1273,11 @@ class AudioController(MediaStream):
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
-        self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.discard_observer(self, sender=self.stream)
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
-        self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.discard_observer(self, sender=self.stream)
 
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
