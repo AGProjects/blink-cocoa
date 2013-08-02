@@ -147,14 +147,14 @@
 							<object class="NSTextField" id="451930086">
 								<reference key="NSNextResponder" ref="563972716"/>
 								<int key="NSvFlags">266</int>
-								<string key="NSFrame">{{-3, 303}, {325, 14}}</string>
+								<string key="NSFrame">{{17, 303}, {305, 14}}</string>
 								<reference key="NSSuperview" ref="563972716"/>
 								<reference key="NSWindow"/>
 								<string key="NSReuseIdentifierKey">_NS:1535</string>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSTextFieldCell" key="NSCell" id="161786954">
 									<int key="NSCellFlags">68157504</int>
-									<int key="NSCellFlags2">138544128</int>
+									<int key="NSCellFlags2">4326400</int>
 									<string key="NSContents">Previous messages</string>
 									<object class="NSFont" key="NSSupport">
 										<string key="NSName">LucidaGrande</string>

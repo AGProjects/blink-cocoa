@@ -148,7 +148,7 @@
 							<object class="NSTextField" id="131228892">
 								<reference key="NSNextResponder" ref="114616325"/>
 								<int key="NSvFlags">266</int>
-								<string key="NSFrame">{{-3, 405}, {324, 14}}</string>
+								<string key="NSFrame">{{17, 405}, {304, 14}}</string>
 								<reference key="NSSuperview" ref="114616325"/>
 								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView" ref="291604928"/>
@@ -156,7 +156,7 @@
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSTextFieldCell" key="NSCell" id="615064036">
 									<int key="NSCellFlags">68157504</int>
-									<int key="NSCellFlags2">138544128</int>
+									<int key="NSCellFlags2">4326400</int>
 									<string key="NSContents">Previous messages</string>
 									<object class="NSFont" key="NSSupport">
 										<string key="NSName">LucidaGrande</string>
@@ -262,7 +262,7 @@
 												<string key="NSFrameSize">{467, 63}</string>
 												<reference key="NSSuperview" ref="990089647"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="846183669"/>
+												<reference key="NSNextKeyView" ref="993419595"/>
 												<object class="NSTextContainer" key="NSTextContainer" id="521967624">
 													<object class="NSLayoutManager" key="NSLayoutManager">
 														<object class="NSTextStorage" key="NSTextStorage">
@@ -381,7 +381,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 								<string key="NSFrameSize">{468, 65}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="993419595"/>
+								<reference key="NSNextKeyView" ref="990089647"/>
 								<int key="NSsFlags">133778</int>
 								<reference key="NSVScroller" ref="846183669"/>
 								<reference key="NSHScroller" ref="993419595"/>
@@ -396,7 +396,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 								<string key="NSFrame">{{466, 37}, {34, 30}}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="237726633">
 									<int key="NSCellFlags">-2076180416</int>
