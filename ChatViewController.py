@@ -472,7 +472,8 @@ class ChatViewController(NSObject):
                 NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", None, False)
 
     def showLastScrollLabel_(self, timer):
-        self.lastMessagesLabel.setStringValue_(self.delegate.zoom_period_label)
+        if self.delegate.zoom_period_label != '':
+            self.lastMessagesLabel.setStringValue_(self.delegate.zoom_period_label)
 
     def scrollTimerDelay_(self, timer):
         if self.scrolling_back:
