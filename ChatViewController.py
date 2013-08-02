@@ -199,6 +199,7 @@ class ChatViewController(NSObject):
     inputView = objc.IBOutlet()
     lastMessagesLabel = objc.IBOutlet()
     loadingProgressIndicator = objc.IBOutlet()
+    searchMessagesBox = objc.IBOutlet()
 
     splitterHeight = None
 
@@ -206,6 +207,7 @@ class ChatViewController(NSObject):
     account = None
     rendered_messages = None
     finishedLoading = False
+    search_text = None
 
     expandSmileys = True
     editorStatus = False
@@ -247,6 +249,30 @@ class ChatViewController(NSObject):
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "textDidChange:", NSTextDidChangeNotification, self.inputText)
 
         self.messageQueue = []
+
+    @objc.IBAction
+    def searchMessages_(self, sender):
+        self.search_text = unicode(self.searchMessagesBox.stringValue()).strip()
+        if len(self.search_text) == 0:
+            self.search_text = None
+
+        if self.search_text is not None:
+            for entry in self.rendered_messages:
+                if self.search_text.lower() in entry.text.lower():
+                    self.messageVisible(entry.msgid)
+                else:
+                    self.messageHidden(entry.msgid)
+        else:
+            for entry in self.rendered_messages:
+                self.messageVisible(entry.msgid)
+
+    def messageVisible(self, msgid):
+        script = """messageVisible('%s')""" % msgid
+        self.executeJavaScript(script)
+
+    def messageHidden(self, msgid):
+        script = """messageHidden('%s')""" % msgid
+        self.executeJavaScript(script)
 
     def setHandleScrolling_(self, scrolling):
         self.handle_scrolling = scrolling

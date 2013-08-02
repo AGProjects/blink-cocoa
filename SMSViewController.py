@@ -485,13 +485,12 @@ class SMSViewController(NSObject):
                 self.zoom_period_label = 'Displaying all messages'
                 self.chatViewController.setHandleScrolling_(False)
 
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', after_date=after_date, count=10000)
+            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
         else:
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries)
+            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
         messages = [row for row in reversed(results)]
         self.render_history_messages(messages)
-        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -546,6 +545,8 @@ class SMSViewController(NSObject):
             is_html = False if message.content_type == 'text' else True
 
             self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+
+        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument()

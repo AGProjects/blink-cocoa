@@ -172,6 +172,10 @@ body
   display: none;
 }
 
+.visible {
+    display: block;
+}
+
 .state {
   color: #436294;
   font-family: Lucida Grande, Helvetica, Arial;
@@ -274,7 +278,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
 
   if (show_sending_state == 'yes') {
     chat_session.innerHTML +=
-    "<div>"+
+    "<div id='c"+msgid+"'>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
     "<div class='"+box_class+"' id='"+msgid+"'>"+
          "<div class='header'>"+
@@ -289,6 +293,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "</div>";
   } else {
     chat_session.innerHTML +=
+    "<div id='c"+msgid+"'>"+
     "<div>"+
     "<img class='photobox' src='file:"+iconpath+"'/>"+
     "<div class='"+box_class+"'>"+
@@ -372,6 +377,21 @@ function markDelivered(msgid, private)
     msg.style.display = "none";
 }
 
+function messageHidden(msgid)
+{
+    var container = document.getElementById('c'+msgid);
+    if (container != null)
+       container.className = "hidden";
+
+}
+
+function messageVisible(msgid)
+{
+    var container = document.getElementById('c'+msgid);
+    if (container != null)
+       container.className = "visible";
+
+}
 
 function markDeferred(msgid)
 {
