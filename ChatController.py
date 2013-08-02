@@ -622,6 +622,12 @@ class ChatController(MediaStream):
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self, scrollToMessageId=None):
+        blink_contact = self.sessionController.contact
+        if not blink_contact:
+            remote_uris = self.remote_uri
+        else:
+            remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
+
         if not self:
             return
 
@@ -656,9 +662,9 @@ class ChatController(MediaStream):
                     self.zoom_period_label = 'Displaying all messages'
                     self.chatViewController.setHandleScrolling_(False)
 
-                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', after_date=after_date, count=10000)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type='chat', after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
             else:
-                results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='chat', count=self.showHistoryEntries)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type='chat', count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
             # build a list of previously failed messages
             last_failed_messages=[]
@@ -1028,7 +1034,7 @@ class ChatController(MediaStream):
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
                 sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
                 self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
-                blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.sessionController.remoteSIPAddress)
+                blink_contact = self.sessionController.contact
                 if blink_contact:
                     blink_contact.contact.disable_smileys = not blink_contact.contact.disable_smileys
                     blink_contact.contact.save()
