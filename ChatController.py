@@ -726,6 +726,7 @@ class ChatController(MediaStream):
                 else:
                     self.chatViewController.scrolling_zoom_factor = 7
 
+        call_id = None
         for message in messages:
             if message.direction == 'outgoing':
                 icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
@@ -738,6 +739,9 @@ class ChatController(MediaStream):
             private = bool(int(message.private))
 
             if self.chatViewController:
+                if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
+                    self.chatViewController.showSystemMessage('Session established', timestamp, False)
+                call_id = message.sip_callid
                 self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
 
         if scrollToMessageId is not None:
