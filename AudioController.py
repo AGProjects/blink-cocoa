@@ -232,6 +232,7 @@ class AudioController(MediaStream):
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
+        self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
 
         if is_answering_machine:
