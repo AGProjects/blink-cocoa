@@ -76,7 +76,7 @@ class HistoryViewer(NSWindowController):
 
     entriesView = objc.IBOutlet()
 
-    afterDate = objc.IBOutlet()
+    period = objc.IBOutlet()
     searchText = objc.IBOutlet()
     searchMedia = objc.IBOutlet()
     searchContactBox = objc.IBOutlet()
@@ -112,10 +112,15 @@ class HistoryViewer(NSWindowController):
                     1: datetime.datetime.now()-datetime.timedelta(days=1),
                     2: datetime.datetime.now()-datetime.timedelta(days=7),
                     3: datetime.datetime.now()-datetime.timedelta(days=31),
-                    4: datetime.datetime.now()-datetime.timedelta(days=31),
-                    5: datetime.datetime.now()-datetime.timedelta(days=90),
-                    6: datetime.datetime.now()-datetime.timedelta(days=180),
-                    7: datetime.datetime.now()-datetime.timedelta(days=365)
+                    4: datetime.datetime.now()-datetime.timedelta(days=90),
+                    5: datetime.datetime.now()-datetime.timedelta(days=180),
+                    6: datetime.datetime.now()-datetime.timedelta(days=365),
+                    -1: datetime.datetime.now()-datetime.timedelta(days=1),
+                    -2: datetime.datetime.now()-datetime.timedelta(days=7),
+                    -3: datetime.datetime.now()-datetime.timedelta(days=31),
+                    -4: datetime.datetime.now()-datetime.timedelta(days=90),
+                    -5: datetime.datetime.now()-datetime.timedelta(days=180),
+                    -6: datetime.datetime.now()-datetime.timedelta(days=365)
                     }
 
     def format_media_type(self, media_type):
@@ -163,28 +168,59 @@ class HistoryViewer(NSWindowController):
 
             self.chat_history = ChatHistory()
             self.session_history = SessionHistory()
-
-            tag = self.afterDate.selectedItem().tag()
-            if tag < 4:
-                self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
-            else:
-                self.before_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+            self.setPeriod(1)
 
             self.selectedTableView = self.contactTable
 
-    def setAfterPeriod(self, days):
-        if days <= 2:
+    def setPeriod(self, days):
+        if days <= -365:
+            tag = -6
+        elif days <= -180:
+            tag = -5
+        elif days <= -90:
+            tag = -4
+        elif days <= -31:
+            tag = -3
+        elif days <= -7:
+            tag = -2
+        elif days <= -1:
+            tag = -1
+        elif days <= 1:
             tag = 1
         elif days <= 7:
             tag = 2
         elif days <= 31:
             tag = 3
+        elif days <= 90:
+            tag = 4
+        elif days <= 180:
+            tag = 5
+        elif days <= 365:
+            tag = 6
         else:
-            tag =5
+            tag = 0
 
-        self.after_date = self.period_array[tag].strftime("%Y-%m-%d")
-        self.before_date = None
-        self.afterDate.selectItemWithTag_(tag)
+        if tag == 0:
+            self.before_date = None
+            self.after_date = None
+        elif tag < 0:
+            try:
+                date = self.period_array[tag]
+            except KeyError:
+                date = None
+
+            self.before_date = date
+            self.after_date = None
+        else:
+            try:
+                date = self.period_array[tag]
+            except KeyError:
+                date = None
+
+            self.after_date = date
+            self.before_date = None
+
+        self.period.selectItemWithTag_(tag)
 
     def awakeFromNib(self):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
@@ -595,14 +631,28 @@ class HistoryViewer(NSWindowController):
         self.refreshMessages()
 
     @objc.IBAction
-    def filterByDateChanged_(self, sender):
+    def filterByPeriodChanged_(self, sender):
         tag = sender.selectedItem().tag()
-        if tag < 4:
-            self.after_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
+
+        if tag == 0:
             self.before_date = None
-        else:
-            self.before_date = self.period_array[tag].strftime("%Y-%m-%d") if self.period_array[tag] else None
             self.after_date = None
+        elif tag < 0:
+            try:
+                date = self.period_array[tag]
+            except KeyError:
+                date = None
+
+            self.before_date = date
+            self.after_date = None
+        else:
+            try:
+                date = self.period_array[tag]
+            except KeyError:
+                date = None
+
+            self.after_date = date
+            self.before_date = None
 
         self.refreshContacts()
         self.refreshDailyEntries()
@@ -657,7 +707,7 @@ class HistoryViewer(NSWindowController):
 
     def showDeleteConfirmationDialog(self, row):
         media_print = self.search_media or 'All'
-        tag = self.afterDate.selectedItem().tag()
+        tag = self.period.selectedItem().tag()
 
         period = '%s %s' % (' newer than' if tag < 4 else ' older than', self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
 

@@ -3796,7 +3796,7 @@ class ContactWindowController(NSWindowController):
     def viewHistoryForContact_(self, sender):
         self.showHistoryViewer_(None)
         object = sender.representedObject()
-        self.historyViewer.setAfterPeriod(object['days'])
+        self.historyViewer.setPeriod(object['days'])
         self.historyViewer.filterByURIs(object['uris'])
 
     @objc.IBAction

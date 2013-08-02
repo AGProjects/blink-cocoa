@@ -1044,6 +1044,22 @@ class ChatController(MediaStream):
                     contactWindow.historyViewer.filterByURIs(('bonjour', ))
                 else:
                     contactWindow.historyViewer.filterByURIs((format_identity_to_string(self.sessionController.target_uri),))
+                if self.chatViewController.scrolling_zoom_factor:
+                    if self.chatViewController.scrolling_zoom_factor == 1:
+                        days = 1
+                    elif self.chatViewController.scrolling_zoom_factor == 2:
+                        days = 7
+                    elif self.chatViewController.scrolling_zoom_factor == 3:
+                        days = 31
+                    elif self.chatViewController.scrolling_zoom_factor == 4:
+                        days = 90
+                    elif self.chatViewController.scrolling_zoom_factor == 5:
+                        days = 180
+                    elif self.chatViewController.scrolling_zoom_factor == 6:
+                        days = 365
+                    elif self.chatViewController.scrolling_zoom_factor == 7:
+                        days = 3650
+                contactWindow.historyViewer.setPeriod(days)
 
     def userClickedScreenshotMenu_(self, sender):
         screenshots_folder = ApplicationData.get('.tmp_screenshots')
