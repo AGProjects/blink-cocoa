@@ -198,6 +198,7 @@ class ChatViewController(NSObject):
     inputText = objc.IBOutlet()
     inputView = objc.IBOutlet()
     lastMessagesLabel = objc.IBOutlet()
+    loadingProgressIndicator = objc.IBOutlet()
 
     splitterHeight = None
 
@@ -225,7 +226,6 @@ class ChatViewController(NSObject):
 
     handle_scrolling = True
     scrolling_zoom_factor = 0
-    last_scrolling_label = ''
 
     editor_has_changed = False
     scrolling_back = False
@@ -465,21 +465,37 @@ class ChatViewController(NSObject):
                 self.scrollingTimer = None
 
             if scrollTop == 0 and self.handle_scrolling:
-                self.last_scrolling_label = self.lastMessagesLabel.stringValue()
+                current_label = self.lastMessagesLabel.stringValue()
                 new_label = 'Keep scrolling up for more than one second to load older messages'
-                if self.last_scrolling_label != new_label:
+                if current_label != new_label and 'Loading' not in current_label:
                     self.lastMessagesLabel.setStringValue_(new_label)
-                    NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", self.last_scrolling_label, False)
+                NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", None, False)
 
     def showLastScrollLabel_(self, timer):
-        self.last_scrolling_label= timer.userInfo()
-        if self.last_scrolling_label not in ('Scroll up for going back in time', 'Loading more messages...'):
-            self.lastMessagesLabel.setStringValue_(self.last_scrolling_label)
+        self.lastMessagesLabel.setStringValue_(self.delegate.zoom_period_label)
 
     def scrollTimerDelay_(self, timer):
         if self.scrolling_back:
             self.scrolling_zoom_factor += 1
-            self.lastMessagesLabel.setStringValue_('Loading more messages...')
+            if self.scrolling_zoom_factor > 7:
+                self.scrolling_zoom_factor = 7
+            self.loadingProgressIndicator.startAnimation_(None)
+            self.lastMessagesLabel.setStringValue_('Loading messages...')
+            if self.scrolling_zoom_factor == 1:
+                zoom_period_label = 'Loading messages from last day...'
+            elif self.scrolling_zoom_factor == 2:
+                zoom_period_label = 'Loading messages from last week...'
+            elif self.scrolling_zoom_factor == 3:
+                zoom_period_label = 'Loading messages from last month...'
+            elif self.scrolling_zoom_factor == 4:
+                zoom_period_label = 'Loading messages from last three months...'
+            elif self.scrolling_zoom_factor == 5:
+                zoom_period_label = 'Loading messages from last six months...'
+            elif self.scrolling_zoom_factor == 6:
+                zoom_period_label = 'Loading messages from last year...'
+            elif self.scrolling_zoom_factor == 7:
+                zoom_period_label = 'Loading all messages...'
+            self.lastMessagesLabel.setStringValue_(zoom_period_label)
             self.delegate.scroll_back_in_time()
 
     def collaborativeEditorisTyping(self):

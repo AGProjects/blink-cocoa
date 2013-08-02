@@ -409,16 +409,6 @@ class ChatController(MediaStream):
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
 
-    def scroll_back_in_time(self):
-        try:
-            msgid = self.history_msgid_list[0]
-        except IndexError:
-            msgid = None
-
-        self.chatViewController.clear()
-        self.chatViewController.resetRenderedMessages()
-        self.replay_history(msgid)
-
     def updateToolbarMuteIcon(self):
         if self.fullScreenVideoPanel:
             try:
@@ -619,6 +609,16 @@ class ChatController(MediaStream):
 
             self.video_frame_visible = False
 
+    def scroll_back_in_time(self):
+        try:
+            msgid = self.history_msgid_list[0]
+        except IndexError:
+            msgid = None
+
+        self.chatViewController.clear()
+        self.chatViewController.resetRenderedMessages()
+        self.replay_history(msgid)
+
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self, scrollToMessageId=None):
@@ -627,9 +627,6 @@ class ChatController(MediaStream):
 
         if self.sessionController.account is not BonjourAccount():
             zoom_factor = self.chatViewController.scrolling_zoom_factor
-            if zoom_factor > 7:
-                zoom_factor = 7
-
             if zoom_factor:
                 period_array = {
                                 1: datetime.datetime.now()-datetime.timedelta(days=2),
@@ -690,7 +687,8 @@ class ChatController(MediaStream):
             else:
                 if self.message_count_from_history >= len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.chatViewController.lastMessagesLabel.setStringValue_('%s. There are no previous messages.' % self.zoom_period_label)
+                    self.zoom_period_label = '%s. There are no previous messages.' % self.zoom_period_label
+                    self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
                     self.chatViewController.setHandleScrolling_(False)
                 else:
                     self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
@@ -736,9 +734,9 @@ class ChatController(MediaStream):
             if self.chatViewController:
                 self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
 
-
         if scrollToMessageId is not None:
             self.chatViewController.scrollToId(scrollToMessageId)
+        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
     @allocate_autorelease_pool
     @run_in_gui_thread

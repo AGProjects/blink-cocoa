@@ -455,8 +455,6 @@ class SMSViewController(NSObject):
     @run_in_green_thread
     def replay_history(self):
         zoom_factor = self.chatViewController.scrolling_zoom_factor
-        if zoom_factor > 7:
-            zoom_factor = 7
 
         if zoom_factor:
             period_array = {
@@ -493,6 +491,7 @@ class SMSViewController(NSObject):
 
         messages = [row for row in reversed(results)]
         self.render_history_messages(messages)
+        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
