@@ -722,7 +722,14 @@ class ChatHistory(object):
             remote_uri_sql = remote_uri_sql.lstrip("(")
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
-            query += " and media_type=%s" % ChatMessage.sqlrepr(media_type)
+            if media_type is not tuple:
+                media_type = (media_type,)
+            media_type_sql = ""
+            for media in media_type:
+                media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+            media_type_sql = media_type_sql.rstrip(",)")
+            media_type_sql = media_type_sql.lstrip("(")
+            query += " and media_type in (%s)" % media_type_sql
         if search_text:
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         if date:

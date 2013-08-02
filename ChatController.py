@@ -662,9 +662,9 @@ class ChatController(MediaStream):
                     self.zoom_period_label = 'Displaying all messages'
                     self.chatViewController.setHandleScrolling_(False)
 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type='chat', after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type='chat', count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
             # build a list of previously failed messages
             last_failed_messages=[]
