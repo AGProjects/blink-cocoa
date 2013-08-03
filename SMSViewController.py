@@ -454,6 +454,13 @@ class SMSViewController(NSObject):
 
     @run_in_green_thread
     def replay_history(self):
+        blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
+        if not blink_contact:
+            remote_uris = self.remote_uri
+        else:
+            remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
+
+
         zoom_factor = self.chatViewController.scrolling_zoom_factor
 
         if zoom_factor:
@@ -485,9 +492,9 @@ class SMSViewController(NSObject):
                 self.zoom_period_label = 'Displaying all messages'
                 self.chatViewController.setHandleScrolling_(False)
 
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
+            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
         else:
-            results = self.history.get_messages(local_uri=self.local_uri, remote_uri=self.remote_uri, media_type='sms', count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
         messages = [row for row in reversed(results)]
         self.render_history_messages(messages)
@@ -534,7 +541,22 @@ class SMSViewController(NSObject):
                 elif delta.days <= 3650:
                     self.chatViewController.scrolling_zoom_factor = 7
 
+        call_id = None
+        seen_sms = {}
+        last_media_type = 'sms'
+        last_chat_timestamp = None
         for message in messages:
+            if message.status == 'failed':
+                continue
+
+            if message.sip_callid != '' and message.media_type == 'sms':
+                try:
+                    seen = seen_sms[message.sip_callid]
+                except KeyError:
+                    seen_sms[message.sip_callid] = True
+                else:
+                    continue
+
             if message.direction == 'outgoing':
                 icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             else:
@@ -544,7 +566,19 @@ class SMSViewController(NSObject):
             timestamp=ISOTimestamp(message.cpim_timestamp)
             is_html = False if message.content_type == 'text' else True
 
+            if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
+                self.chatViewController.showSystemMessage('Chat session established', timestamp, False)
+
+            if message.media_type == 'sms' and last_media_type == 'chat':
+                self.chatViewController.showSystemMessage('Chat session ended', last_chat_timestamp, False)
+                self.chatViewController.showSystemMessage('Instant messages', timestamp, False)
+
             self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+
+            call_id = message.sip_callid
+            last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
+            if message.media_type == 'chat':
+                last_chat_timestamp = timestamp
 
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
