@@ -1375,6 +1375,8 @@ class ChatController(MediaStream):
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.showSystemMessage(close_message, ISOTimestamp.now())
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
+        self.outgoing_message_handler.setDisconnected()
+        self.screensharing_handler.setDisconnected()
         self.reset()
 
     def _NH_MediaStreamDidFail(self, sender, data):
@@ -1438,6 +1440,10 @@ class ChatController(MediaStream):
 
     def closeTab(self):
         self.endStream(True)
+        if self.outgoing_message_handler:
+            self.outgoing_message_handler.setDisconnected()
+        if self.screensharing_handler:
+            self.screensharing_handler.setDisconnected()
         self.reset()
         self.closeWindow()
         self.startDeallocTimer()
@@ -1461,12 +1467,6 @@ class ChatController(MediaStream):
 
         self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
         self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, False)
-
-        if self.outgoing_message_handler:
-            self.outgoing_message_handler.setDisconnected()
-
-        if self.screensharing_handler:
-            self.screensharing_handler.setDisconnected()
 
     def startDeallocTimer(self):
         self.removeFromSession()
@@ -1693,7 +1693,6 @@ class OutgoingMessageHandler(NSObject):
                     self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
 
     def setDisconnected(self):
-        self.connected = False
         self.connected = False
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
         for msgid in pending:
