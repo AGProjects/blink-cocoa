@@ -253,6 +253,8 @@ class SessionHistory(object):
                           am_filename         = am_filename
                           )
             return True
+        except dberrors.DuplicateEntryError:
+            return True
         except Exception, e:
             BlinkLogger().log_error(u"Error adding record %s to sessions table: %s" % (session_id, e))
             return False
