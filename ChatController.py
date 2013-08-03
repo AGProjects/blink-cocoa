@@ -622,14 +622,14 @@ class ChatController(MediaStream):
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self, scrollToMessageId=None):
+        if not self:
+            return
+
         blink_contact = self.sessionController.contact
         if not blink_contact:
             remote_uris = self.remote_uri
         else:
             remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
-
-        if not self:
-            return
 
         if self.sessionController.account is not BonjourAccount():
             zoom_factor = self.chatViewController.scrolling_zoom_factor
@@ -727,7 +727,22 @@ class ChatController(MediaStream):
                     self.chatViewController.scrolling_zoom_factor = 7
 
         call_id = None
+        seen_sms = {}
+        last_media_type = None
+        last_chat_timestamp = None
+
         for message in messages:
+            if message.status == 'failed':
+                continue
+
+            if message.sip_callid != '' and message.media_type == 'sms':
+                try:
+                    seen = seen_sms[message.sip_callid]
+                except KeyError:
+                    seen_sms[message.sip_callid] = True
+                else:
+                    continue
+
             if message.direction == 'outgoing':
                 icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             else:
@@ -739,10 +754,19 @@ class ChatController(MediaStream):
             private = bool(int(message.private))
 
             if self.chatViewController:
-                if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
-                    self.chatViewController.showSystemMessage('Session established', timestamp, False)
-                call_id = message.sip_callid
+                if call_id is not None and call_id != message.sip_callid and  message.media_type == 'chat':
+                    self.chatViewController.showSystemMessage('Chat session established', timestamp, False)
+
+                if message.media_type == 'sms' and last_media_type == 'chat':
+                    self.chatViewController.showSystemMessage('Chat session ended', last_chat_timestamp, False)
+                    self.chatViewController.showSystemMessage('Instant messages', timestamp, False)
+
                 self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+
+            call_id = message.sip_callid
+            last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
+            if message.media_type == 'chat':
+                last_chat_timestamp = timestamp
 
         if scrollToMessageId is not None:
             self.chatViewController.scrollToId(scrollToMessageId)
@@ -1350,7 +1374,7 @@ class ChatController(MediaStream):
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
-        self.showSystemMessage("Session established", ISOTimestamp.now())
+        self.showSystemMessage("Chat session established", ISOTimestamp.now())
 
         # Set nickname if available
         nickname = self.sessionController.nickname

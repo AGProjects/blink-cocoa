@@ -233,6 +233,10 @@ class ChatViewController(NSObject):
     scrolling_back = False
     collaboration_editor_active = False
 
+    @property
+    def sessionController(self):
+        return self.delegate.sessionController
+
     def resetRenderedMessages(self):
         self.rendered_messages=set()
 
