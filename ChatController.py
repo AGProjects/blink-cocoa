@@ -1363,7 +1363,8 @@ class ChatController(MediaStream):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
         self.changeStatus(STREAM_CONNECTED)
-        self.sendOwnIcon()
+        if self.sessionController.account is BonjourAccount():
+            self.sendOwnIcon()
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.mediastream_ended = True
