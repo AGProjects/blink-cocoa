@@ -1596,7 +1596,7 @@ class OutgoingMessageHandler(NSObject):
                 id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
-                BlinkLogger().log_error(u"Error sending message: %s" % e)
+                BlinkLogger().log_error(u"Error sending private message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
                 message.status='failed'
                 self.add_to_history(message)
@@ -1606,7 +1606,7 @@ class OutgoingMessageHandler(NSObject):
                 id = self.stream.send_message(message.text, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
-                BlinkLogger().log_error(u"Error sending message: %s" % e)
+                BlinkLogger().log_error(u"Error sending message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
                 message.status='failed'
                 self.add_to_history(message)
@@ -1703,6 +1703,7 @@ class OutgoingMessageHandler(NSObject):
                 pass
             else:
                 message.status = 'failed'
+                BlinkLogger().log_error(u"Error flushing pending message %s" % msgid)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED)
                 self.add_to_history(message)
 
@@ -1713,6 +1714,7 @@ class OutgoingMessageHandler(NSObject):
             except KeyError:
                 pass
             else:
+                BlinkLogger().log_error(u"Error, no report received for message %s" % msgid)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED)
                 self.add_to_history(message)
 
@@ -1754,6 +1756,7 @@ class OutgoingMessageHandler(NSObject):
                 except KeyError:
                     pass
                 message.status='failed'
+                BlinkLogger().log_error(u"Error, chat message %s was not delivered" % msgid)
                 self.markMessage(message, MSG_STATE_FAILED)
                 self.add_to_history(message)
         except KeyError:
