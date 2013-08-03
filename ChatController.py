@@ -136,7 +136,7 @@ class ChatController(MediaStream):
     sessionController = None
     stream = None
     finishedLoading = False
-    showHistoryEntries = 20
+    showHistoryEntries = 50
     mustShowUnreadMessages = False
 
     history = None
