@@ -1015,6 +1015,9 @@ class SessionController(NSObject):
     def log_debug(self, text):
         BlinkLogger().log_debug(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
 
+    def log_error(self, text):
+        BlinkLogger().log_error(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
+
     def isActive(self):
         return self.state in (STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP)
 

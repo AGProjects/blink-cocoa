@@ -1596,7 +1596,7 @@ class OutgoingMessageHandler(NSObject):
                 id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
-                BlinkLogger().log_error(u"Error sending private message %s: %s" % (msgid, e))
+                self.delegate.sessionController.log_error(u"Error sending private chat message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
                 message.status='failed'
                 self.add_to_history(message)
@@ -1606,7 +1606,7 @@ class OutgoingMessageHandler(NSObject):
                 id = self.stream.send_message(message.text, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
-                BlinkLogger().log_error(u"Error sending message %s: %s" % (msgid, e))
+                self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
                 message.status='failed'
                 self.add_to_history(message)
@@ -1645,8 +1645,8 @@ class OutgoingMessageHandler(NSObject):
                 try:
                     self._send(msgid)
                 except Exception, e:
-                    BlinkLogger().log_error(u"Error sending message: %s" % e)
-                    self.delegate.showSystemMessage("Error sending message", timestamp, True)
+                    self.delegate.sessionController.log_error(u"Error sending chat message: %s" % e)
+                    self.delegate.showSystemMessage("Message delivery failure", timestamp, True)
                 else:
                     self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
             else:
@@ -1666,8 +1666,8 @@ class OutgoingMessageHandler(NSObject):
             try:
                 self._send(msgid)
             except Exception, e:
-                BlinkLogger().log_error(u"Error sending message: %s" % e)
-                self.delegate.showSystemMessage("Error sending message", timestamp, True)
+                self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
+                self.delegate.showSystemMessage("Message delivery failure", timestamp, True)
             else:
                 self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
         else:
@@ -1688,7 +1688,7 @@ class OutgoingMessageHandler(NSObject):
             else:
                 sent = self._send(msgid)
                 if not sent:
-                    BlinkLogger().log_error(u"Error sending queued message: %s" % msgid)
+                    self.delegate.sessionController.log_error(u"Error sending queued message: %s" % msgid)
                 else:
                     self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
 
@@ -1702,7 +1702,7 @@ class OutgoingMessageHandler(NSObject):
                 pass
             else:
                 message.status = 'failed'
-                BlinkLogger().log_error(u"Error flushing pending message %s" % msgid)
+                self.delegate.sessionController.log_error(u"Error sending chat message %s" % msgid)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED)
                 self.add_to_history(message)
 
@@ -1713,7 +1713,7 @@ class OutgoingMessageHandler(NSObject):
             except KeyError:
                 pass
             else:
-                BlinkLogger().log_error(u"Error, no report received for message %s" % msgid)
+                self.delegate.sessionController.log_error(u"No delivery report received for chat message %s" % msgid)
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED)
                 self.add_to_history(message)
 
@@ -1755,7 +1755,7 @@ class OutgoingMessageHandler(NSObject):
                 except KeyError:
                     pass
                 message.status='failed'
-                BlinkLogger().log_error(u"Error, chat message %s was not delivered" % msgid)
+                self.delegate.sessionController.log_error(u"Chat message %s to %s was not delivered" % message.msgid)
                 self.markMessage(message, MSG_STATE_FAILED)
                 self.add_to_history(message)
         except KeyError:
@@ -1936,9 +1936,9 @@ class ConferenceScreenSharingHandler(object):
             #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
 
             if self.log_first_frame:
-                BlinkLogger().log_info('Sending %s bytes %s screen width' % (format_size(len(jpeg)), image.size().width))
+                self.sessionController.log_info('Sending %s bytes %s screen width' % (format_size(len(jpeg)), image.size().width))
                 self.log_first_frame = False
-            BlinkLogger().log_debug('Sending %s bytes %s screen width ' % (format_size(len(jpeg)), image.size().width))
+            self.sessionController.log_debug('Sending %s bytes %s screen width ' % (format_size(len(jpeg)), image.size().width))
             self.may_send = False
             if self.stream:
                 self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=ISOTimestamp.now())
