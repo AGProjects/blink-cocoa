@@ -75,6 +75,7 @@ import objc
 import QTKit
 
 import cPickle
+import datetime
 import hashlib
 import os
 import re
@@ -82,7 +83,9 @@ import random
 import string
 import ldap
 import uuid
+
 from collections import deque
+from dateutil.tz import tzlocal
 from itertools import chain
 
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -957,6 +960,21 @@ class ContactWindowController(NSWindowController):
                 if self.speech_synthesizer is None:
                     self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
                     self.speech_synthesizer.setDelegate_(self)
+
+                settings = SIPSimpleSettings()
+                this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+                volume = 0.8
+
+                if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                    elif this_hour >=  settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                self.speech_synthesizer.setVolume_(volume)
+
                 self.speech_synthesizer_active = True
                 speak_text = '%s is now available' % contact.name
                 self.speech_synthesizer.startSpeakingString_(speak_text)
@@ -1661,15 +1679,30 @@ class ContactWindowController(NSWindowController):
             if not start_now:
                 continue
 
-            message = u"%s are now available. Start conference now?" % label
 
             settings = SIPSimpleSettings()
             if not self.speech_synthesizer_active and not self.has_audio and not settings.audio.silent:
                 if self.speech_synthesizer is None:
                     self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
                     self.speech_synthesizer.setDelegate_(self)
+
+                settings = SIPSimpleSettings()
+                this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+                volume = 0.8
+
+                if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                    elif this_hour >=  settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                self.speech_synthesizer.setVolume_(volume)
+
+                speak_text = u"%s are now available. Start conference now?" % label
                 self.speech_synthesizer_active = True
-                self.speech_synthesizer.startSpeakingString_(message)
+                self.speech_synthesizer.startSpeakingString_(speak_text)
 
             NSApp.activateIgnoringOtherApps_(True)
             ret = NSRunAlertPanel(u'Start Scheduled Conference', message, u"Start Now", u"Cancel", None)
@@ -1700,6 +1733,20 @@ class ContactWindowController(NSWindowController):
                 if self.speech_synthesizer is None:
                     self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
                     self.speech_synthesizer.setDelegate_(self)
+
+                settings = SIPSimpleSettings()
+                this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+                volume = 0.8
+                if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+                    if this_hour < settings.sounds.night_volume.end_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                    elif this_hour >=  settings.sounds.night_volume.start_hour:
+                        volume = settings.sounds.night_volume.volume/100.0
+                self.speech_synthesizer.setVolume_(volume)
+
                 self.speech_synthesizer_active = True
                 speak_text = 'Conference Scheduled'
                 self.speech_synthesizer.startSpeakingString_(speak_text)

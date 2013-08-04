@@ -34,6 +34,9 @@ import objc
 
 import random
 import time
+import datetime
+
+from dateutil.tz import tzlocal
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -164,6 +167,19 @@ class AlertPanel(NSObject, object):
 
     def startSpeaking_(self, timer):
         settings = SIPSimpleSettings()
+        this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+        volume = 0.8
+
+        if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+            if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                volume = settings.sounds.night_volume.volume/100.0
+        elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+            if this_hour < settings.sounds.night_volume.end_hour:
+                volume = settings.sounds.night_volume.volume/100.0
+            elif this_hour >=  settings.sounds.night_volume.start_hour:
+                volume = settings.sounds.night_volume.volume/100.0
+        self.speech_synthesizer.setVolume_(volume)
+
         if self.speak_text and not settings.audio.silent:
             self.muteBeforeSpeechWillStart()
             self.speech_synthesizer.startSpeakingString_(self.speak_text)
