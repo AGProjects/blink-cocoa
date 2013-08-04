@@ -2673,7 +2673,7 @@ class ContactWindowController(NSWindowController):
             try:
                 selected_presence_activity = (item['represented_object'] for item in PresenceActivityList if item['represented_object']['extended_status'] == status).next()
             except (StopIteration, KeyError):
-                contrinue
+                continue
 
             notes = sorted([unicode(note) for note in service.notes if note])
             try:
