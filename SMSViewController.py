@@ -138,6 +138,7 @@ class SMSViewController(NSObject):
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
+        self.chatViewController.close()
         super(SMSViewController, self).dealloc()
 
     def awakeFromNib(self):
