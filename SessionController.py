@@ -156,16 +156,14 @@ class SessionControllersManager(object):
         if self.pause_music:
             self.incomingSessions.discard(session)
             if not self.activeAudioStreams and not self.incomingSessions:
-                music_applications = MusicApplications()
-                music_applications.resume()
+                MusicApplications().resume()
 
     def _NH_SIPSessionDidStart(self, session, data):
         self.incomingSessions.discard(session)
         if self.pause_music:
             if all(stream.type != 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
+                    MusicApplications().resume()
 
         if session.direction == 'incoming':
             if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
@@ -175,21 +173,18 @@ class SessionControllersManager(object):
         if self.pause_music:
             self.incomingSessions.discard(session)
             if not self.activeAudioStreams and not self.incomingSessions:
-                music_applications = MusicApplications()
-                music_applications.resume()
+                MusicApplications().resume()
 
     def _NH_SIPSessionGotProposal(self, session, data):
         if self.pause_music:
             if any(stream.type == 'audio' for stream in data.streams):
-                music_applications = MusicApplications()
-                music_applications.pause()
+                MusicApplications().resume()
 
     def _NH_SIPSessionGotRejectProposal(self, session, data):
         if self.pause_music:
             if any(stream.type == 'audio' for stream in data.streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
+                    MusicApplications().resume()
 
     def _NH_MediaStreamDidInitialize(self, stream, data):
         if stream.type == 'audio':
@@ -208,16 +203,14 @@ class SessionControllersManager(object):
                 # TODO: check if session has other streams and if yes, resume itunes
                 # in case of session ends, resume is handled by the Session Controller
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
+                    MusicApplications().resume()
 
     def _NH_MediaStreamDidFail(self, stream, data):
         if self.pause_music:
             if stream.type == "audio":
                 self.activeAudioStreams.discard(stream)
                 if not self.activeAudioStreams and not self.incomingSessions:
-                    music_applications = MusicApplications()
-                    music_applications.resume()
+                    MusicApplications().resume()
 
 
     @run_in_gui_thread
@@ -310,8 +303,7 @@ class SessionControllersManager(object):
         self.incomingSessions.add(session)
 
         if self.pause_music:
-            music_applications = MusicApplications()
-            music_applications.pause()
+            MusicApplications().pause()
 
         self.ringer.add_incoming(session, streams)
         session.blink_supported_streams = streams
@@ -1346,9 +1338,8 @@ class SessionController(NSObject):
                     if self.sessionControllersManager.pause_music:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
-                            music_applications = MusicApplications()
-                            music_applications.pause()
-                            self.notification_center.add_observer(self, sender=music_applications)
+                            MusicApplications().pause()
+                            self.notification_center.add_observer(self, sender=MusicApplications())
                         else:
                             self.waitingForITunes = False
 
