@@ -319,7 +319,6 @@ function updateMessageBodyContent(msgid, text)
   body = document.getElementById('b'+msgid)
   if (body != null)
     body.innerHTML = "<span class='body'>"+text+"</span>";
-    scrollToBottom();
 }
 
 function renderSystemMessage(msgid, text, timestamp, is_error)
@@ -583,7 +582,6 @@ function hideCollaborationEditor() {
   collaboration_editor.style.display = "none";
   chat_session.style.display = "block";
 
-  scrollToBottom();
 }
 
 
