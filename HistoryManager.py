@@ -1271,6 +1271,7 @@ class ChatHistoryReplicator(object):
     disabled_accounts = set()
     paused = False
     debug = False
+    sync_counter = {}
 
     def __init__(self):
         BlinkLogger().log_debug('Starting Chat History Replicator')
@@ -1455,6 +1456,13 @@ class ChatHistoryReplicator(object):
     @allocate_autorelease_pool
     def addLocalHistoryFromRemoteJournalEntries(self, journal, account):
         try:
+            counter = self.sync_counter[account]
+        except KeyError:
+            self.sync_counter[account] = 1
+        else:
+            self.sync_counter[account] += 1
+
+        try:
             success = journal['success']
         except KeyError:
             BlinkLogger().log_debug(u"Invalid answer from chat history server of %s" % account)
@@ -1567,7 +1575,7 @@ class ChatHistoryReplicator(object):
                         else:
                             notify_data[data['remote_uri']] += 1
 
-                        if data['media_type'] == 'chat':
+                        if data['media_type'] == 'chat' and self.sync_counter[account] > 1:
                             notification_data = NotificationData()
                             notification_data.chat_message = data
                             NotificationCenter().post_notification('ChatReplicationJournalEntryReceived', sender=self, data=notification_data)
