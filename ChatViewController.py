@@ -31,6 +31,8 @@ import os
 import re
 import time
 import urllib
+import uuid
+
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -57,10 +59,14 @@ _url_pattern_exact = re.compile("^((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)$
 
 
 class ChatMessageObject(object):
-    def __init__(self, msgid, text, is_html):
+    def __init__(self, call_id, msgid, text, is_html, timestamp=None, media_type='chat'):
+        self.call_id = call_id
         self.msgid = msgid
         self.text = text
         self.is_html = is_html
+        self.timestamp = timestamp
+        self.media_type = media_type
+
 
 def processHTMLText(text, usesmileys=True, is_html=False):
     def suball(pat, repl, html):
@@ -200,14 +206,17 @@ class ChatViewController(NSObject):
     lastMessagesLabel = objc.IBOutlet()
     loadingProgressIndicator = objc.IBOutlet()
     searchMessagesBox = objc.IBOutlet()
+    showRelatedMessagesButton = objc.IBOutlet()
 
     splitterHeight = None
 
     delegate = objc.IBOutlet() # ChatController
     account = None
-    rendered_messages = None
+    rendered_messages = set()
     finishedLoading = False
     search_text = None
+    related_messages = []
+    show_related_messages = False
 
     expandSmileys = True
     editorStatus = False
@@ -238,7 +247,7 @@ class ChatViewController(NSObject):
         return self.delegate.sessionController
 
     def resetRenderedMessages(self):
-        self.rendered_messages=set()
+        self.rendered_messages=[]
 
     def setAccount_(self, account):
         self.account = account
@@ -255,27 +264,106 @@ class ChatViewController(NSObject):
         self.messageQueue = []
 
     @objc.IBAction
+    def showRelatedMessages_(self, sender):
+        self.show_related_messages = True
+        self.searchMessages_(None)
+        self.showRelatedMessagesButton.setHidden_(True)
+
+    @objc.IBAction
     def searchMessages_(self, sender):
+        for message in self.rendered_messages:
+            self.unmarkFound(message.msgid)
+
         self.search_text = unicode(self.searchMessagesBox.stringValue()).strip()
         if len(self.search_text) == 0:
             self.search_text = None
 
+        call_ids = set()
+        visible_ids = set()
         if self.search_text is not None:
-            for entry in self.rendered_messages:
-                if self.search_text.lower() in entry.text.lower():
-                    self.messageVisible(entry.msgid)
-                else:
-                    self.messageHidden(entry.msgid)
-        else:
-            for entry in self.rendered_messages:
-                self.messageVisible(entry.msgid)
+            for message in self.rendered_messages:
+                if self.search_text.lower() in message.text.lower():
+                    if message.call_id:
+                        call_ids.add(message.call_id)
+                        if message.media_type == 'sms':
+                            pivot_timestamp = message.timestamp
+                            try:
+                                pivot_index = self.rendered_messages.index(message)
+                            except ValueError:
+                                pass
+                            else:
+                                index = pivot_index
+                                while True:
+                                    index -= 1
+                                    if index <= 0:
+                                        break
 
-    def messageVisible(self, msgid):
-        script = """messageVisible('%s')""" % msgid
+                                    try:
+                                        previous_message = self.rendered_messages[index]
+                                    except IndexError:
+                                        break
+
+                                    if previous_message.media_type != 'sms':
+                                        break
+
+                                    timediff = pivot_timestamp - previous_message.timestamp
+                                    if timediff.seconds < 3600:
+                                        call_ids.add(previous_message.call_id)
+                                    else:
+                                        break
+
+                                index = pivot_index
+                                while True:
+                                    index += 1
+
+                                    try:
+                                        next_message = self.rendered_messages[index]
+                                    except IndexError:
+                                        break
+
+                                    if next_message.media_type != 'sms':
+                                        break
+
+                                    timediff = next_message.timestamp - pivot_timestamp
+
+                                    if timediff.seconds < 3600:
+                                        call_ids.add(next_message.call_id)
+                                    else:
+                                        break
+
+                    self.htmlBoxVisible('c%s' % message.msgid)
+                    self.markFound(message.msgid)
+                    visible_ids.add(message.msgid)
+                else:
+                    self.htmlBoxHidden('c%s' % message.msgid)
+        else:
+            for message in self.rendered_messages:
+                self.htmlBoxVisible('c%s' % message.msgid)
+
+        self.related_messages = (message for call_id in call_ids for message in self.rendered_messages if message.call_id == call_id if call_id not in visible_ids)
+
+        if self.show_related_messages:
+            for message in self.related_messages:
+                self.htmlBoxVisible('c%s' % message.msgid)
+            self.show_related_messages = False
+
+        if len(list(self.related_messages)):
+            self.showRelatedMessagesButton.setHidden_(False)
+
+    def htmlBoxVisible(self, msgid):
+        script = """htmlBoxVisible('%s')""" % msgid
         self.executeJavaScript(script)
 
-    def messageHidden(self, msgid):
-        script = """messageHidden('%s')""" % msgid
+    def htmlBoxHidden(self, msgid):
+        script = """htmlBoxHidden('%s')""" % msgid
+        self.executeJavaScript(script)
+
+    def markFound(self, msgid):
+        script = """markFound('%s')""" % msgid
+        self.executeJavaScript(script)
+
+    def unmarkFound(self, msgid):
+        script = """unmarkFound('%s')""" % msgid
         self.executeJavaScript(script)
 
     def setHandleScrolling_(self, scrolling):
@@ -337,7 +425,11 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue = []
 
-    def showSystemMessage(self, text, timestamp=None, is_error=False):
+    def showSystemMessage(self, call_id, text, timestamp=None, is_error=False):
+        msgid = str(uuid.uuid1())
+        rendered_message = ChatMessageObject(call_id, msgid, text, False, timestamp)
+        self.rendered_messages.append(rendered_message)
+
         if timestamp is None:
             timestamp = ISOTimestamp.now()
         if isinstance(timestamp, datetime.datetime):
@@ -347,20 +439,20 @@ class ChatViewController(NSObject):
                 timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         is_error = 1 if is_error else "null"
-        script = """renderSystemMessage("%s", "%s", %s)""" % (processHTMLText(text), timestamp, is_error)
+        script = """renderSystemMessage('%s', "%s", "%s", %s)""" % (msgid, processHTMLText(text), timestamp, is_error)
 
         if self.finishedLoading:
             self.executeJavaScript(script)
         else:
             self.messageQueue.append(script)
 
-    def showMessage(self, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False):
+    def showMessage(self, call_id, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat'):
         if not history_entry and not self.delegate.isOutputFrameVisible():
             self.delegate.showChatViewWhileVideoActive()
 
-        # keep track of rendered messages to toggle the smileys
-        rendered_message = ChatMessageObject(msgid, text, is_html)
-        self.rendered_messages.add(rendered_message)
+        # keep track of rendered messages to toggle the smileys or search their content later
+        rendered_message = ChatMessageObject(call_id, msgid, text, is_html, timestamp, media_type)
+        self.rendered_messages.append(rendered_message)
 
         if timestamp.date() != datetime.date.today():
             displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))

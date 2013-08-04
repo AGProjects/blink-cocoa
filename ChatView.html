@@ -322,7 +322,7 @@ function updateMessageBodyContent(msgid, text)
     scrollToBottom();
 }
 
-function renderSystemMessage(text, timestamp, is_error)
+function renderSystemMessage(msgid, text, timestamp, is_error)
 {
   var chat_session;
   var content;
@@ -342,11 +342,13 @@ function renderSystemMessage(text, timestamp, is_error)
       content.id = "";
 
   chat_session.innerHTML +=
+    "<div id='c"+msgid+"'>"+
     "<div class="+sys_class+">"+
             "<div class='systimestamp'>"+timestamp+"</div>"+
             "<div class='sysmsg'>"+
                 text+
             "</div>"+
+    "</div>"+
     "</div>";
 
   lastSender = "";
@@ -377,20 +379,34 @@ function markDelivered(msgid, private)
     msg.style.display = "none";
 }
 
-function messageHidden(msgid)
+function htmlBoxHidden(id)
 {
-    var container = document.getElementById('c'+msgid);
+    var container = document.getElementById(id);
     if (container != null)
        container.className = "hidden";
 
 }
 
-function messageVisible(msgid)
+function htmlBoxVisible(id)
 {
-    var container = document.getElementById('c'+msgid);
+    var container = document.getElementById(id);
     if (container != null)
        container.className = "visible";
 
+}
+
+function markFound(msgid)
+{
+    var msg = document.getElementById('b'+msgid)
+    if (msg != null)
+        msg.style.color = "red";
+}
+
+function unmarkFound(msgid)
+{
+    var msg = document.getElementById('b'+msgid)
+    if (msg != null)
+    msg.style.color = "#404040";
 }
 
 function markDeferred(msgid)

@@ -265,7 +265,7 @@ class ChatController(MediaStream):
 
     def showSystemMessage(self, message, timestamp, is_error=False):
         if self.chatViewController:
-            self.chatViewController.showSystemMessage(message, timestamp, is_error)
+            self.chatViewController.showSystemMessage(self.sessionController.call_id, message, timestamp, is_error)
 
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
@@ -755,13 +755,13 @@ class ChatController(MediaStream):
 
             if self.chatViewController:
                 if call_id is not None and call_id != message.sip_callid and  message.media_type == 'chat':
-                    self.chatViewController.showSystemMessage('Chat session established', timestamp, False)
+                    self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session established', timestamp, False)
 
                 if message.media_type == 'sms' and last_media_type == 'chat':
-                    self.chatViewController.showSystemMessage('Chat session ended', last_chat_timestamp, False)
-                    self.chatViewController.showSystemMessage('Instant messages', timestamp, False)
+                    self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session ended', last_chat_timestamp, False)
+                    self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
 
-                self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
@@ -1245,7 +1245,7 @@ class ChatController(MediaStream):
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender), self.session.remote_focus)
             recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             if self.chatViewController:
-                self.chatViewController.showMessage(msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered", is_html=is_html)
+                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered", is_html=is_html, media_type='chat')
 
             tab = self.chatViewController.outputView.window()
             tab_is_key = tab.isKeyWindow() if tab else False
@@ -1329,7 +1329,7 @@ class ChatController(MediaStream):
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
             timestamp = ISOTimestamp.now()
             if self.chatViewController:
-                self.chatViewController.showMessage(str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True)
+                self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         reason = data.failure_reason or data.reason
@@ -1373,7 +1373,7 @@ class ChatController(MediaStream):
         self.mediastream_started = True
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
-        self.sessionController.log_info(u"Chat stream established to %s" % endpoint)
+        self.sessionController.log_info(u"Chat session established to %s" % endpoint)
         self.showSystemMessage("Chat session established", ISOTimestamp.now())
 
         # Set nickname if available
@@ -1392,7 +1392,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.mediastream_ended = True
-        self.sessionController.log_info(u"Chat stream ended")
+        self.sessionController.log_info(u"Chat session ended")
         self.notification_center.remove_observer(self, sender=sender)
         self.notification_center.remove_observer(self, sender=self.sessionController)
         if self.mediastream_started:
@@ -1405,7 +1405,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.mediastream_failed = True
-        self.sessionController.log_info(u"Chat stream failed: %s" % data.reason)
+        self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
             reason = 'Connection has been closed'
         elif data.reason == 'A TLS packet with unexpected length was received.':
@@ -1432,7 +1432,7 @@ class ChatController(MediaStream):
 
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(data['cpim_to'])
         timestamp = ISOTimestamp(data['cpim_timestamp'])
-        self.chatViewController.showMessage(data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True)
+        self.chatViewController.showMessage(data['call_id'], data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True, media_type='chat')
 
     def resetIsComposingTimer(self, refresh):
         if self.remoteTypingTimer:
@@ -1670,12 +1670,12 @@ class OutgoingMessageHandler(NSObject):
                     self._send(msgid)
                 except Exception, e:
                     self.delegate.sessionController.log_error(u"Error sending chat message: %s" % e)
-                    self.delegate.showSystemMessage("Message delivery failure", timestamp, True)
+                    self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Message delivery failure", timestamp, True)
                 else:
-                    self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
+                    self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
             else:
                 self.messages[msgid].pending=True
-                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
 
         return True
 
@@ -1691,12 +1691,12 @@ class OutgoingMessageHandler(NSObject):
                 self._send(msgid)
             except Exception, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
-                self.delegate.showSystemMessage("Message delivery failure", timestamp, True)
+                self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Message delivery failure", timestamp, True)
             else:
-                self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
         else:
             self.messages[msgid].pending=True
-            self.delegate.showMessage(msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
+            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
 
     def setConnected(self, stream):
         self.no_report_received_messages = {}
@@ -1797,7 +1797,7 @@ class OutgoingMessageHandler(NSObject):
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         private = "1" if message.private else "0"
-        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status)
+        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status, call_id=self.delegate.sessionController.call_id)
 
 
 class ConferenceScreenSharingHandler(object):

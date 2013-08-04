@@ -1560,6 +1560,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self)
 
     def _NH_SIPSessionWillStart(self, sender, data):
+        self.call_id = sender._invitation.call_id
         self.log_info("Session will start")
 
     def _NH_SIPSessionDidStart(self, sender, data):

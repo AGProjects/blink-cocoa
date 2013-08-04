@@ -200,7 +200,7 @@ class SMSViewController(NSObject):
         hash.update(message.encode('utf-8')+str(timestamp)+str(sender))
         msgid = hash.hexdigest()
 
-        self.chatViewController.showMessage(msgid, 'incoming', format_identity_to_string(sender), icon, message, timestamp, is_html=is_html, state="delivered")
+        self.chatViewController.showMessage(call_id, msgid, 'incoming', format_identity_to_string(sender), icon, message, timestamp, is_html=is_html, state="delivered", media_type='sms')
 
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
@@ -347,7 +347,7 @@ class SMSViewController(NSObject):
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         BlinkLogger().log_error(u"DNS Lookup failed: %s" % msg)
-        self.chatViewController.showSystemMessage("Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
+        self.chatViewController.showSystemMessage("", "Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
         for msgid, text, content_type in self.queue:
             message = self.messages.pop(msgid)
             if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
@@ -401,10 +401,11 @@ class SMSViewController(NSObject):
         hash = hashlib.sha1()
         hash.update(text.encode("utf-8")+str(timestamp))
         msgid = hash.hexdigest()
+        call_id = ''
 
         if content_type != "application/im-iscomposing+xml":
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
-            self.chatViewController.showMessage(msgid, 'outgoing', None, icon, text, timestamp, state="sent")
+            self.chatViewController.showMessage(call_id, msgid, 'outgoing', None, icon, text, timestamp, state="sent", media_type='sms')
 
             recipient=CPIMIdentity(self.target_uri, self.display_name)
             self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
@@ -567,13 +568,13 @@ class SMSViewController(NSObject):
             is_html = False if message.content_type == 'text' else True
 
             if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
-                self.chatViewController.showSystemMessage('Chat session established', timestamp, False)
+                self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session established', timestamp, False)
 
             if message.media_type == 'sms' and last_media_type == 'chat':
-                self.chatViewController.showSystemMessage('Chat session ended', last_chat_timestamp, False)
-                self.chatViewController.showSystemMessage('Instant messages', timestamp, False)
+                self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session ended', last_chat_timestamp, False)
+                self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
 
-            self.chatViewController.showMessage(message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True)
+            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type='sms')
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
