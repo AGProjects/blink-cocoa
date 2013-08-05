@@ -3591,7 +3591,7 @@ class ContactWindowController(NSWindowController):
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
 
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed Calls", "", "")
         lastItem.setEnabled_(False)
         for item in entries['missed']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
@@ -3607,7 +3607,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming Calls", "", "")
         lastItem.setEnabled_(False)
         for item in entries['incoming']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
@@ -3623,7 +3623,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing Calls", "", "")
         lastItem.setEnabled_(False)
         for item in entries['outgoing']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
